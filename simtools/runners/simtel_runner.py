@@ -5,12 +5,9 @@ import os
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.runners.runner_services import RunnerServices
 
 __all__ = ["InvalidOutputFileError", "SimtelExecutionError", "SimtelRunner"]
-
-# pylint: disable=no-member
-# The line above is needed because there are methods which are used in this class
-# but are implemented in the classes inheriting from it.
 
 
 class SimtelExecutionError(Exception):
@@ -23,7 +20,7 @@ class InvalidOutputFileError(Exception):
 
 class SimtelRunner:
     """
-    SimtelRunner is the base class of the sim_telarray interfaces.
+    Base class for running sim_telarray simulations.
 
     Parameters
     ----------
@@ -33,16 +30,20 @@ class SimtelRunner:
         Instance label. Important for output file naming.
     """
 
-    def __init__(self, simtel_path, label=None):
+    def __init__(self, simtel_path, label=None, corsika_config=None, use_multipipe=False):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
 
         self._simtel_path = Path(simtel_path)
         self.label = label
-        self._script_dir = None
-        self._script_file = None
+        self._base_directory = None
 
         self.runs_per_set = 1
+
+        self.runner_service = RunnerServices(corsika_config, label)
+        self._directory = self.runner_service.load_data_directories(
+            "corsika_simtel" if use_multipipe else "simtel"
+        )
 
     def __repr__(self):
         """Return a string representation of the SimtelRunner object."""
@@ -70,24 +71,17 @@ class SimtelRunner:
         """
         self._logger.debug("Creating run bash script")
 
-        self._script_dir = self._base_directory.joinpath("scripts")
-        self._script_dir.mkdir(parents=True, exist_ok=True)
-        self._script_file = self._script_dir.joinpath(
-            f"run{run_number if run_number is not None else ''}-simtel"
-        )
-        self._logger.debug(f"Run bash script - {self._script_file}")
+        script_file_path = self.get_file_name(file_type="sub_script", run_number=run_number)
+
+        self._logger.debug(f"Run bash script - {script_file_path}")
 
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
-        command = self._make_run_command(input_file=input_file, run_number=run_number)
-        with self._script_file.open("w", encoding="utf-8") as file:
+        command = self._make_run_command(run_number=run_number, input_file=input_file)
+        with script_file_path.open("w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
-
-            # Make sure to exit on failed commands and report their error code
             file.write("set -e\n")
             file.write("set -o pipefail\n")
-
-            # Setting SECONDS variable to measure runtime
             file.write("\nSECONDS=0\n")
 
             if extra_commands is not None:
@@ -100,13 +94,12 @@ class SimtelRunner:
             for _ in range(n):
                 file.write(f"{command}\n\n")
 
-            # Printing out runtime
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        os.system(f"chmod ug+x {self._script_file}")
-        return self._script_file
+        os.system(f"chmod ug+x {script_file_path}")
+        return script_file_path
 
-    def run(self, test=False, force=False, input_file=None, run_number=None):
+    def run(self, test=False, input_file=None, run_number=None):
         """
         Make run command and run sim_telarray.
 
@@ -114,8 +107,6 @@ class SimtelRunner:
         ----------
         test: bool
             If True, make simulations faster.
-        force: bool
-            If True, remove possible existing output files and run again.
         input_file: str or Path
             Full path of the input CORSIKA file.
         run_number: int
@@ -123,39 +114,21 @@ class SimtelRunner:
         """
         self._logger.debug("Running sim_telarray")
 
-        if not hasattr(self, "_make_run_command"):
-            msg = "run method cannot be executed without the _make_run_command method"
-            self._logger.error(msg)
-            raise RuntimeError(msg)
-
-        if not self._shall_run() and not force:
-            self._logger.info("Skipping because output exists and force = False")
-            return
-
-        command = self._make_run_command(input_file=input_file, run_number=run_number)
+        command = self._make_run_command(run_number=run_number, input_file=input_file)
 
         if test:
             self._logger.info(f"Running (test) with command: {command}")
             self._run_simtel_and_check_output(command)
         else:
             self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
-            self._run_simtel_and_check_output(command)
-
-            for _ in range(self.runs_per_set - 1):
+            for _ in range(self.runs_per_set):
                 self._run_simtel_and_check_output(command)
 
         self._check_run_result(run_number=run_number)
 
-    @staticmethod
-    def _simtel_failed(sys_output):
-        """Test if simtel process ended successfully.
-
-        Returns
-        -------
-        bool
-            1 if sys_output is different than 0, and 1 otherwise.
-        """
-        return sys_output != 0
+    def _check_run_result(self, run_number=None):  # pylint: disable=all
+        """Check if simtel output file exists."""
+        pass
 
     def _raise_simtel_error(self):
         """
@@ -184,19 +157,20 @@ class SimtelRunner:
         SimtelExecutionError
             if run was not successful.
         """
-        sys_output = os.system(command)
-        if self._simtel_failed(sys_output):
+        if os.system(command) != 0:
             self._raise_simtel_error()
 
-    def _shall_run(self):
+    def _make_run_command(self, run_number=None, input_file=None):
         self._logger.debug(
-            "shall_run is being called from the base class - returning False -"
+            "make_run_command is being called from the base class - "
             "it should be implemented in the sub class"
         )
-        return False
+        input_file = input_file if input_file else "nofile"
+        run_number = run_number if run_number else 1
+        return f"{input_file}-{run_number}"
 
     @staticmethod
-    def _config_option(par, value=None, weak_option=False):
+    def get_config_option(par, value=None, weak_option=False):
         """
         Build sim_telarray command.
 
@@ -218,3 +192,33 @@ class SimtelRunner:
         c = f" {option_syntax} {par}"
         c += f"={value}" if value is not None else ""
         return c
+
+    def get_resources(self, run_number=None):
+        """Return computing resources used."""
+        return self.runner_service.get_resources(run_number)
+
+    def get_file_name(self, simulation_software="simtel", file_type=None, run_number=None, mode=""):
+        """
+        Get the full path of a file for a given run number.
+
+        Parameters
+        ----------
+        simulation_software: str
+            Simulation software.
+        file_type: str
+            File type.
+        run_number: int
+            Run number.
+
+        Returns
+        -------
+        str
+            File name with full path.
+        """
+        if simulation_software.lower() != "simtel":
+            raise ValueError(
+                f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
+            )
+        return self.runner_service.get_file_name(
+            file_type=file_type, run_number=run_number, mode=mode
+        )

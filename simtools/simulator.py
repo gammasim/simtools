@@ -3,20 +3,17 @@
 import logging
 import re
 from collections import defaultdict
-from copy import copy
 from pathlib import Path
 
-import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
-from simtools.corsika.corsika_runner import CorsikaRunner
-from simtools.corsika_simtel.corsika_simtel_runner import CorsikaSimtelRunner
-from simtools.io_operations import io_handler
+from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
+from simtools.runners.corsika_runner import CorsikaRunner
+from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simulator_array import SimulatorArray
-from simtools.utils import names
 
 __all__ = [
     "Simulator",
@@ -30,115 +27,55 @@ class InvalidRunsToSimulateError(Exception):
 
 class Simulator:
     """
-    Simulator is responsible for managing simulation of showers and array of telescopes.
+    Simulator is managing the simulation of showers and of the array of telescopes.
 
-    It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.
+    It interfaces with simulation software packages (e.g., CORSIKA or sim_telarray).
 
-    The configuration is set as a dict config_data or a yaml \
-    file config_file.
-
-    Example of config_data for shower simulations:
-
-    .. code-block:: python
-
-        config_data = {
-            'data_directory': '.',
-            'site': 'South',
-            'layout_name': 'Prod5',
-            'run_range': [1, 100],
-            'nshow': 10,
-            'primary': 'gamma',
-            'erange': [100 * u.GeV, 1 * u.TeV],
-            'eslope': -2,
-            'zenith': 20 * u.deg,
-            'azimuth': 0 * u.deg,
-            'viewcone': 0 * u.deg,
-            'cscat': [10, 1500 * u.m, 0]
-        }
-
-    Example of config_data for array simulations:
-
-    .. code-block:: python
-
-        config_data = {
-            'data_directory': '(..)/data',
-            'primary': 'gamma',
-            'zenith': 20 * u.deg,
-            'azimuth': 0 * u.deg,
-            'viewcone': 0 * u.deg,
-            # ArrayModel
-            'site': 'North',
-            'layout_name': '1LST',
-            'model_version': 'Prod5',
-            'default': {
-                'LST': '1'
-            },
-            'MST-01': 'FlashCam-D'
-        }
+    The configuration is set as a dict corresponding to the command line configuration groups
+    (especially simulation_software, simulation_model, simulation_parameters).
 
     Parameters
     ----------
-    simulation_software: str
-        Simulation software to be used (choices: [corsika, simtel, corsika_simtel])
-    simulator_source_path: str or Path
-        Location of executables for simulation software \
-            (e.g. path with CORSIKA or sim_telarray)
+    args_dict : dict
+        Configuration dictionary
+        (includes simulation_software, simulation_model, simulation_parameters groups).
     label: str
         Instance label.
-    config_data: dict
-        Simulator configuration data.
     submit_engine: str
         Job submission command.
     extra_commands: str or list of str
-        Extra commands to be added to the run script before the run command,
+        Extra commands to be added to the run script before the run command.
     mongo_db_config: dict
         MongoDB configuration.
-    model_version: str
-        Simulation model version.
     test: bool
-        If True, no jobs are submitted; only run scripts are prepared
+        If True, no jobs are submitted; only run scripts are prepared.
     """
 
     def __init__(
         self,
-        simulation_software,
-        simulator_source_path,
-        config_data,
+        args_dict,
         label=None,
         submit_engine=None,
         extra_commands=None,
         mongo_db_config=None,
-        model_version=None,
         test=False,
     ):
         """Initialize Simulator class."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug(f"Init Simulator {simulation_software}")
+        self.args_dict = args_dict
 
+        self.simulation_software = self.args_dict["simulation_software"]
+        self._logger.debug(f"Init Simulator {self.simulation_software}")
         self.label = label
-        self.simulation_software = simulation_software
-        self.runs = []
+
+        self.runs = self._initialize_run_list()
         self._results = defaultdict(list)
-        self.test = test
-
-        self._corsika_config_data = None
-        self._corsika_parameters_file = None
-        self.config = None
-        self.array_model = None
-        self._simulation_runner = None
-
-        self.io_handler = io_handler.IOHandler()
-        self._output_directory = self.io_handler.get_output_directory(
-            self.label, self.simulation_software
-        )
-        self._simulator_source_path = Path(simulator_source_path)
+        self._test = test
         self._submit_engine = submit_engine
         self._extra_commands = extra_commands
-        self._mongo_db_config = mongo_db_config
-        self._model_version = model_version
 
-        self._load_configuration_and_simulation_model(config_data)
-        self._set_simulation_runner()
+        self.array_model = self._initialize_array_model(mongo_db_config)
+        self._simulation_runner = self._initialize_simulation_runner()
 
     @property
     def simulation_software(self):
@@ -162,77 +99,59 @@ class Simulator:
 
         """
         if simulation_software not in ["simtel", "corsika", "corsika_simtel"]:
+            self._logger.error(f"Invalid simulation software: {simulation_software}")
             raise gen.InvalidConfigDataError
         self._simulation_software = simulation_software.lower()
 
-    def _load_configuration_and_simulation_model(self, config_data):
+    def _initialize_array_model(self, mongo_db_config):
         """
-        Load configuration data and initialize simulation models.
+        Initialize array simulation model.
 
         Parameters
         ----------
-        config_data: dict
-            Simulator configuration data.
+        mongo_db_config: dict
+            Database configuration.
 
+        Returns
+        -------
+        ArrayModel
+            ArrayModel object.
         """
-        self._load_corsika_config_and_model(config_data)
-        self._load_sim_tel_config_and_model(config_data)
-
-        self.array_model = ArrayModel(
+        return ArrayModel(
             label=self.label,
-            site=config_data["common"]["site"],
-            layout_name=config_data["common"]["layout_name"],
-            parameters_to_change=config_data,
-            mongo_db_config=self._mongo_db_config,
-            model_version=self._model_version,
+            site=self.args_dict.get("site"),
+            layout_name=self.args_dict.get("array_layout_name"),
+            mongo_db_config=mongo_db_config,
+            model_version=self.args_dict.get("model_version", None),
         )
 
-    def _load_corsika_config_and_model(self, config_data):
+    def _initialize_run_list(self):
         """
-        Load configuration data for CORSIKA shower simulation.
+        Initialize run list using the configuration values 'run_number_start' and 'number_of_runs'.
 
-        Validate configuration data for CORSIKA shower simulation and
-        remove entries not needed for CorsikaRunner.
+        Returns
+        -------
+        list
+            List of run numbers.
 
-        Parameters
-        ----------
-        config_data: dict
-            Simulator configuration data.
-
+        Raises
+        ------
+        KeyError
+            If 'run_number_start' or 'number_of_runs' are not found in the configuration.
         """
-        self._corsika_config_data = copy(config_data["common"])
-        self._corsika_config_data.update(copy(config_data["showers"]))
-        self.runs = self._validate_run_list_and_range(
-            self._corsika_config_data.pop("run_list", None),
-            self._corsika_config_data.pop("run_range", None),
-        )
-        for key in ("site", "layout_name"):
-            try:
-                self._corsika_config_data.pop(key)
-            except KeyError:
-                pass
-
-        self._corsika_parameters_file = self._corsika_config_data.pop(
-            "corsika_parameters_file", None
-        )
-
-    def _load_sim_tel_config_and_model(self, config_data):
-        """
-        Load array model and configuration parameters for array simulations.
-
-        Parameters
-        ----------
-        config_data: dict
-            Simulator configuration data.
-
-        """
-        _rest_config = self._collect_array_model_parameters(config_data)
-
-        _parameter_file = self.io_handler.get_input_data_file(
-            "parameters", "array-simulator_parameters.yml"
-        )
-        _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
-        self.config = gen.validate_config_data(_rest_config, _parameters, ignore_unidentified=True)
+        try:
+            return self._validate_run_list_and_range(
+                run_list=None,
+                run_range=[
+                    self.args_dict["run_number_start"],
+                    self.args_dict["run_number_start"] + self.args_dict["number_of_runs"],
+                ],
+            )
+        except KeyError as exc:
+            self._logger.error(
+                "Error in initializing run list (missing 'run_number_start' or 'number_of_runs')"
+            )
+            raise exc
 
     def _validate_run_list_and_range(self, run_list, run_range):
         """
@@ -265,8 +184,6 @@ class Simulator:
                 msg = "run_list must contain only integers."
                 self._logger.error(msg)
                 raise InvalidRunsToSimulateError
-
-            self._logger.debug(f"run_list: {run_list}")
             validated_runs = list(run_list)
 
         if run_range is not None:
@@ -275,88 +192,51 @@ class Simulator:
                 self._logger.error(msg)
                 raise InvalidRunsToSimulateError
 
-            run_range = np.arange(run_range[0], run_range[1] + 1)
+            run_range = np.arange(run_range[0], run_range[1])
             self._logger.debug(f"run_range: {run_range}")
             validated_runs.extend(list(run_range))
 
         validated_runs_unique = sorted(set(validated_runs))
+        self._logger.info(f"run_list: {validated_runs_unique}")
         return list(validated_runs_unique)
 
-    def _collect_array_model_parameters(self, config_data):
+    def _initialize_simulation_runner(self):
         """
-        Separate configuration and model parameters from configuration data.
+        Initialize corsika configuration and simulation runners.
 
-        Parameters
-        ----------
-        config_data: dict
-
-
+        Returns
+        -------
+        CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
+            Simulation runner object.
         """
-        _merged_config = copy(config_data["common"])
-        if "array" in config_data:
-            _merged_config.update(copy(config_data["array"]))
-        _rest_data = copy(_merged_config)
+        corsika_config = CorsikaConfig(
+            array_model=self.array_model,
+            label=self.label,
+            args_dict=self.args_dict,
+        )
 
-        # Reading telescope keys
-        tel_keys = []
-        for key in _rest_data.keys():
-            try:
-                names.validate_telescope_name(key)
-                tel_keys.append(key)
-            except ValueError:
-                pass
-        return _rest_data
+        runner_class = {
+            "corsika": CorsikaRunner,
+            "simtel": SimulatorArray,
+            "corsika_simtel": CorsikaSimtelRunner,
+        }.get(self.simulation_software)
 
-    def _set_simulation_runner(self):
-        """Set simulation runners."""
-        common_args = {
-            "label": self.label,
-            "simtel_path": self._simulator_source_path,
-            "array_model": self.array_model,
-        }
-        corsika_args = {
-            "corsika_parameters_file": self._corsika_parameters_file,
-            "corsika_config_data": self._corsika_config_data,
-        }
-        simtel_args = {}
-        if self.simulation_software in ["simtel", "corsika_simtel"]:
-            simtel_args = {
-                "config_data": {
-                    "simtel_data_directory": self.config.data_directory,
-                    "primary": self.config.primary,
-                    "zenith_angle": self.config.zenith_angle * u.deg,
-                    "azimuth_angle": self.config.azimuth_angle * u.deg,
-                },
-            }
-
-        if self.simulation_software == "corsika":
-            self._set_corsika_runner(common_args | corsika_args)
-        if self.simulation_software == "simtel":
-            self._set_simtel_runner(common_args | simtel_args)
-        if self.simulation_software == "corsika_simtel":
-            self._set_corsika_simtel_runner(common_args, corsika_args, simtel_args)
-
-    def _set_corsika_runner(self, simulator_args):
-        """Create CorsikaRunner."""
-        self._simulation_runner = CorsikaRunner(**simulator_args)
-
-    def _set_simtel_runner(self, simulator_args):
-        """Create a SimulatorArray."""
-        self._simulation_runner = SimulatorArray(**simulator_args)
-
-    def _set_corsika_simtel_runner(self, common_args, corsika_args, simtel_args):
-        """Create CorsikaRunner."""
-        self._simulation_runner = CorsikaSimtelRunner(common_args, corsika_args, simtel_args)
+        return runner_class(
+            label=self.label,
+            corsika_config=corsika_config,
+            simtel_path=self.args_dict.get("simtel_path"),
+            keep_seeds=False,
+            use_multipipe=runner_class is CorsikaSimtelRunner,
+        )
 
     def _fill_results_without_run(self, input_file_list):
         """
-        Fill in the results dict without calling submit.
+        Fill results dict without calling submit (e.g., for testing).
 
         Parameters
         ----------
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
-
         """
         input_file_list = self._enforce_list_type(input_file_list)
 
@@ -374,7 +254,6 @@ class Simulator:
         ----------
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
-
         """
         self._logger.info(f"Submission command: {self._submit_engine}")
 
@@ -386,46 +265,23 @@ class Simulator:
             f"run{'s' if len(runs_and_files_to_submit) > 1 else ''}"
         )
 
-        for run, file in runs_and_files_to_submit.items():
+        for run_number, input_file in runs_and_files_to_submit.items():
             run_script = self._simulation_runner.prepare_run_script(
-                run_number=run, input_file=file, extra_commands=self._extra_commands
+                run_number=run_number, input_file=input_file, extra_commands=self._extra_commands
             )
 
-            job_manager = JobManager(submit_engine=self._submit_engine, test=self.test)
+            job_manager = JobManager(submit_engine=self._submit_engine, test=self._test)
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self._simulation_runner.get_file_name(
-                    file_type="sub_log", **self._simulation_runner.get_info_for_file_name(run)
+                    file_type="sub_log", run_number=run_number
                 ),
                 log_file=self._simulation_runner.get_file_name(
-                    file_type=(
-                        "corsika_autoinputs_log" if self.simulation_software == "corsika" else "log"
-                    ),
-                    **self._simulation_runner.get_info_for_file_name(run),
+                    file_type=("log"), run_number=run_number
                 ),
             )
 
-            self._fill_results(file, run)
-
-    def file_list(self, input_file_list=None):
-        """
-        List output files obtained with simulation run.
-
-        Parameters
-        ----------
-        input_file_list: str or list of str
-            Single file or list of files of shower simulations.
-
-        """
-        runs_and_files_to_submit = self._get_runs_and_files_to_submit(
-            input_file_list=input_file_list
-        )
-
-        for run, _ in runs_and_files_to_submit.items():
-            output_file_name = self._simulation_runner.get_file_name(
-                file_type="output", **self._simulation_runner.get_info_for_file_name(run)
-            )
-            print(f"{output_file_name!s} (file exists: {Path.exists(output_file_name)})")
+            self._fill_results(input_file, run_number)
 
     def _get_runs_and_files_to_submit(self, input_file_list=None):
         """
@@ -446,27 +302,33 @@ class Simulator:
 
         """
         _runs_and_files = {}
+        self._logger.debug(f"Getting runs and files to submit ({input_file_list})")
 
         if self.simulation_software == "simtel":
-            _file_list = self._enforce_list_type(input_file_list)
-            for file in _file_list:
-                _runs_and_files[self._guess_run_from_file(file)] = file
-        if self.simulation_software in ["corsika", "corsika_simtel"]:
-            _run_list = self._get_runs_to_simulate()
-            for run in _run_list:
-                _runs_and_files[run] = None
-
+            input_file_list = self._enforce_list_type(input_file_list)
+            _runs_and_files = {self._guess_run_from_file(file): file for file in input_file_list}
+        elif self.simulation_software in ["corsika", "corsika_simtel"]:
+            _runs_and_files = {run: None for run in self._get_runs_to_simulate()}
         return _runs_and_files
 
     @staticmethod
     def _enforce_list_type(input_file_list):
-        """Enforce the input list to be a list."""
+        """
+        Enforce the input list to be a list.
+
+        Parameters
+        ----------
+        input_file_list: str or list of str
+            Single file or list of files of shower simulations.
+
+        Returns
+        -------
+        list
+            List of input files.
+        """
         if not input_file_list:
             return []
-        if not isinstance(input_file_list, list):
-            return [input_file_list]
-
-        return input_file_list
+        return input_file_list if isinstance(input_file_list, list) else [input_file_list]
 
     def _guess_run_from_file(self, file):
         """
@@ -491,42 +353,45 @@ class Simulator:
             run_str = re.search(r"run\d*", file_name).group()
             return int(run_str[3:])
         except (ValueError, AttributeError):
-            msg = f"Run number could not be guessed from {file_name} using run = 1"
-            self._logger.warning(msg)
+            self._logger.warning(f"Run number could not be guessed from {file_name} using run = 1")
             return 1
 
-    def _fill_results(self, file, run):
+    def _fill_results(self, file, run_number):
         """
-        Fill the results dict with input, output and log files.
+        Fill the results dict with input, output, hist, and log files.
 
         Parameters
         ----------
         file: str
             input file name
-        run: int
+        run_number: int
             run number
 
         """
-        info_for_file_name = self._simulation_runner.get_info_for_file_name(run)
         self._results["output"].append(
-            str(self._simulation_runner.get_file_name(file_type="output", **info_for_file_name))
+            str(self._simulation_runner.get_file_name(file_type="output", run_number=run_number))
         )
         self._results["sub_out"].append(
             str(
                 self._simulation_runner.get_file_name(
-                    file_type="sub_log", **info_for_file_name, mode="out"
+                    file_type="sub_log", run_number=run_number, mode="out"
                 )
             )
         )
+
         if self.simulation_software in ["simtel", "corsika_simtel"]:
             self._results["log"].append(
-                str(self._simulation_runner.get_file_name(file_type="log", **info_for_file_name))
+                str(
+                    self._simulation_runner.get_file_name(
+                        simulation_software="simtel", file_type="log", run_number=run_number
+                    )
+                )
             )
             self._results["input"].append(str(file))
             self._results["hist"].append(
                 str(
                     self._simulation_runner.get_file_name(
-                        file_type="histogram", **info_for_file_name
+                        simulation_software="simtel", file_type="histogram", run_number=run_number
                     )
                 )
             )
@@ -534,7 +399,7 @@ class Simulator:
             self._results["corsika_autoinputs_log"].append(
                 str(
                     self._simulation_runner.get_file_name(
-                        file_type="corsika_autoinputs_log", **info_for_file_name
+                        simulation_software="corsika", file_type="log", run_number=run_number
                     )
                 )
             )
@@ -542,103 +407,47 @@ class Simulator:
             self._results["hist"].append(None)
             self._results["log"].append(None)
 
-    def get_list_of_output_files(self, run_list=None, run_range=None):
+    def get_file_list(self, file_type="output"):
         """
-        Get list of output files.
+        Get list of files generated by simulations.
+
+        Options are "input", "output", "hist", "log".
+        Not all file types are available for all simulation types.
+        Returns an empty list for an unknown file type.
 
         Parameters
         ----------
-        run_list: list
-            List of run numbers.
-        run_range: list
-            List of len 2 with the limits of the range of the run numbers.
+        file_type : str
+            File type to be listed.
 
         Returns
         -------
         list
-            List with the full path of all the output files.
+            List with the full path of all output files.
 
         """
-        self._logger.info("Getting list of output files")
+        self._logger.info(f"Getting list of {file_type} files")
+        return self._results[file_type]
 
-        if run_list or run_range or len(self._results["output"]) == 0:
-            runs_to_list = self._get_runs_to_simulate(run_list=run_list, run_range=run_range)
-
-            for run in runs_to_list:
-                output_file_name = self._simulation_runner.get_file_name(
-                    file_type="output", **self._simulation_runner.get_info_for_file_name(run)
-                )
-                self._results["output"].append(str(output_file_name))
-        return self._results["output"]
-
-    def get_list_of_histogram_files(self):
+    def print_list_of_files(self, file_type="output"):
         """
-        Get list of histogram files.
+        Print list of output files generated by simulations.
 
-        (not applicable to all simulation types)
+        Options are "input", "output", "hist", "log".
 
-        Returns
-        -------
-        list
-            List with the full path of all the histogram files.
+        Parameters
+        ----------
+        file_type : str
+            File type to be listed.
+
         """
-        self._logger.info("Getting list of histogram files")
-        return self._results["hist"]
-
-    def get_list_of_input_files(self):
-        """
-        Get list of input files.
-
-        Returns
-        -------
-        list
-            List with the full path of all the input files.
-        """
-        self._logger.info("Getting list of input files")
-        return self._results["input"]
-
-    def get_list_of_log_files(self):
-        """
-        Get list of log files.
-
-        Returns
-        -------
-        list
-            List with the full path of all the log files.
-        """
-        self._logger.info("Getting list of log files")
-        if self.simulation_software in ["simtel", "corsika_simtel"]:
-            return self._results["log"]
-        return self._results["corsika_autoinputs_log"]
-
-    def print_list_of_output_files(self):
-        """Print list of output files."""
-        self._logger.info("Printing list of output files")
-        self._print_list_of_files(which="output")
-
-    def print_list_of_histogram_files(self):
-        """Print list of histogram files."""
-        self._logger.info("Printing list of histogram files")
-        self._print_list_of_files(which="hist")
-
-    def print_list_of_input_files(self):
-        """Print list of output files."""
-        self._logger.info("Printing list of input files")
-        self._print_list_of_files(which="input")
-
-    def print_list_of_log_files(self):
-        """Print list of log files."""
-        self._logger.info("Printing list of log files")
-        if self.simulation_software in ["simtel", "corsika_simtel"]:
-            self._print_list_of_files(which="log")
-        else:
-            self._print_list_of_files(which="corsika_autoinputs_log")
+        self._logger.info(f"Printing list of {file_type} files")
+        for file in self._results[file_type]:
+            print(file)
 
     def _make_resources_report(self, input_file_list):
         """
-        Prepare a simple report on computing resources used.
-
-        Includes wall clock time per run only at this point.
+        Prepare a simple report on computing wall clock time used in the simulations.
 
         Parameters
         ----------
@@ -653,7 +462,7 @@ class Simulator:
         """
         if len(self._results["sub_out"]) == 0:
             if input_file_list is None:
-                return {"Walltime/run [sec]": np.nan}
+                return {"Wall time/run [sec]": np.nan}
             self._fill_results_without_run(input_file_list)
 
         runtime = []
@@ -667,10 +476,10 @@ class Simulator:
         mean_runtime = np.mean(runtime)
 
         resource_summary = {}
-        resource_summary["Walltime/run [sec]"] = mean_runtime
+        resource_summary["Wall time/run [sec]"] = mean_runtime
         if "n_events" in _resources and _resources["n_events"] > 0:
             resource_summary["#events/run"] = _resources["n_events"]
-            resource_summary["Walltime/1000 events [sec]"] = (
+            resource_summary["Wall time/1000 events [sec]"] = (
                 mean_runtime * 1000 / _resources["n_events"]
             )
 
@@ -713,27 +522,5 @@ class Simulator:
 
         """
         if run_list is None and run_range is None:
-            if self.runs is None:
-                msg = "Runs to simulate were not given as arguments nor in config_data - aborting"
-                self._logger.error(msg)
-                return []
-
-            return self.runs
-
+            return [] if self.runs is None else self.runs
         return self._validate_run_list_and_range(run_list, run_range)
-
-    def _print_list_of_files(self, which):
-        """
-        Print list of files of a certain type.
-
-        Parameters
-        ----------
-        which str
-            file type (e.g., log)
-
-        """
-        if which not in self._results:
-            self._logger.error(f"Invalid file type {which}")
-            raise KeyError
-        for file in self._results[which]:
-            print(file)

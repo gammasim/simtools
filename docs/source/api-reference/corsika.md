@@ -13,16 +13,6 @@ Support modules for running CORSIKA.
    :members:
 ```
 
-## corsika_default_config
-
-(corsika-default-config-1)=
-
-```{eval-rst}
-.. automodule:: corsika.corsika_default_config
-   :members:
-
-```
-
 ## corsika_histograms
 
 (corsika-histograms-1)=
@@ -39,14 +29,5 @@ Support modules for running CORSIKA.
 
 ```{eval-rst}
 .. automodule:: corsika.corsika_histograms_visualize
-   :members:
-```
-
-## corsika_runner
-
-(corsika-runner-1)=
-
-```{eval-rst}
-.. automodule:: corsika.corsika_runner
    :members:
 ```

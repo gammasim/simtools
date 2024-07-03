@@ -146,33 +146,7 @@ def _parse(label, description, usage):
         required=False,
         default=None,
     )
-    input_group = config.parser.add_mutually_exclusive_group()
-    input_group.add_argument(
-        "--array_element_list",
-        help="List of array elements (telescopes) to plot (e.g., LSTN-01, LSTN-02, MSTN).",
-        nargs="+",
-        type=str,
-        required=False,
-        default=None,
-    )
-    input_group.add_argument(
-        "--array_layout_file",
-        help="File(s) with the list of array elements (astropy table format).",
-        nargs="+",
-        type=str,
-        required=False,
-        default=None,
-    )
-    input_group.add_argument(
-        "--array_layout_name",
-        help="Name of the array layout (as predefined).",
-        nargs="+",
-        type=str,
-        required=False,
-        default=None,
-    )
-
-    return config.initialize(db_config=True, simulation_model="site")
+    return config.initialize(db_config=True, simulation_model=["site", "layout", "layout_file"])
 
 
 def _get_site_from_telescope_list_name(telescope_list_file):
@@ -370,27 +344,26 @@ def _layouts_from_db(args_dict, db_config, rotate_angle):
         List of array layouts.
     """
     layouts = []
-    for layout_name in args_dict["array_layout_name"]:
-        array_model = ArrayModel(
-            mongo_db_config=db_config,
-            model_version=args_dict["model_version"],
-            site=args_dict["site"],
-            layout_name=layout_name,
-        )
-        layouts.append(
-            {
-                "array_elements": array_model.export_array_elements_as_table(
-                    coordinate_system=args_dict["coordinate_system"]
-                ),
-                "plot_file_name": _get_plot_file_name(
-                    figure_name=args_dict["figure_name"],
-                    layout_name=layout_name,
-                    site=args_dict["site"],
-                    coordinate_system=args_dict["coordinate_system"],
-                    rotate_angle=rotate_angle,
-                ),
-            }
-        )
+    array_model = ArrayModel(
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
+        site=args_dict["site"],
+        layout_name=args_dict["array_layout_name"],
+    )
+    layouts.append(
+        {
+            "array_elements": array_model.export_array_elements_as_table(
+                coordinate_system=args_dict["coordinate_system"]
+            ),
+            "plot_file_name": _get_plot_file_name(
+                figure_name=args_dict["figure_name"],
+                layout_name=args_dict["array_layout_name"],
+                site=args_dict["site"],
+                coordinate_system=args_dict["coordinate_system"],
+                rotate_angle=rotate_angle,
+            ),
+        }
+    )
     return layouts
 
 

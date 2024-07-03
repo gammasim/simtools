@@ -86,21 +86,6 @@ def _parse(label, description):
         action="store_true",
         required=False,
     )
-    input_group.add_argument(
-        "--array_element_list",
-        help="List of array elements (telescopes) to plot (e.g., LSTN-01, LSTN-02, MSTN).",
-        nargs="+",
-        type=str,
-        required=False,
-        default=None,
-    )
-    input_group.add_argument(
-        "--array_layout_name",
-        help="Name of the array layout (as predefined).",
-        type=str,
-        required=False,
-        default=None,
-    )
     config.parser.add_argument(
         "--coordinate_system",
         help="Coordinate system for the array layout.",
@@ -109,7 +94,7 @@ def _parse(label, description):
         default="ground",
         choices=["ground", "utm"],
     )
-    return config.initialize(db_config=True, simulation_model="site", output=True)
+    return config.initialize(db_config=True, simulation_model=["site", "layout"], output=True)
 
 
 def _layout_from_db(args_dict, db_config):
