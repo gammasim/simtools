@@ -76,7 +76,7 @@ def test_submit_htcondor(mock_gen, job_submitter, mocker):
         "htcondor", job_submitter.engines["htcondor"] + " script.sh.condor"
     )
     mock_file().write.assert_has_calls(
-        ["Executable = script.sh\n", "Output = output.out\n"],
+        [call("Executable = script.sh\n"), call("Output = output.out\n")],
         any_order=True,
     )
 
