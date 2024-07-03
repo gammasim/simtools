@@ -170,11 +170,7 @@ def main():  # noqa: D103
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     simulator = Simulator(
-        label=args_dict.get("label"),
-        args_dict=args_dict,
-        submit_engine=args_dict["submit_engine"],
-        test=args_dict["test"],
-        mongo_db_config=db_config,
+        label=args_dict.get("label"), args_dict=args_dict, mongo_db_config=db_config
     )
 
     simulator.simulate()
