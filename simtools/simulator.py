@@ -41,24 +41,18 @@ class Simulator:
         (includes simulation_software, simulation_model, simulation_parameters groups).
     label: str
         Instance label.
-    submit_engine: str
-        Job submission command.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command.
     mongo_db_config: dict
         MongoDB configuration.
-    test: bool
-        If True, no jobs are submitted; only run scripts are prepared.
     """
 
     def __init__(
         self,
         args_dict,
         label=None,
-        submit_engine=None,
         extra_commands=None,
         mongo_db_config=None,
-        test=False,
     ):
         """Initialize Simulator class."""
         self._logger = logging.getLogger(__name__)
@@ -70,8 +64,8 @@ class Simulator:
 
         self.runs = self._initialize_run_list()
         self._results = defaultdict(list)
-        self._test = test
-        self._submit_engine = submit_engine
+        self._test = self.args_dict.get("test", False)
+        self._submit_engine = self.args_dict.get("submit_engine", "local")
         self._extra_commands = extra_commands
 
         self.array_model = self._initialize_array_model(mongo_db_config)
