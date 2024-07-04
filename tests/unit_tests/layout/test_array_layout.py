@@ -166,6 +166,19 @@ def test_add_tel(
     test_one_site(array_layout_south_instance, 2181.0, "LSTS-05")
 
 
+def check_table_columns(_table, add_geocode, asset_code, sequence_number):
+    """Helper function for test_build_layout to check table columns."""
+    if add_geocode:
+        assert "geo_code" in _table.colnames
+    elif asset_code and not sequence_number:
+        assert "asset_code" not in _table.colnames
+    elif not asset_code and sequence_number:
+        assert "sequence_number" not in _table.colnames
+    elif asset_code and sequence_number:
+        assert "asset_code" in _table.colnames
+        assert "sequence_number" in _table.colnames
+
+
 def test_build_layout(
     array_layout_north_four_lst_instance,
     array_layout_south_four_lst_instance,
@@ -205,14 +218,12 @@ def test_build_layout(
             yy=-57.5 * u.m,
             tel_corsika_z=0 * u.m,
         )
-        if add_geocode:
-            for tel in layout._telescope_list:
+        for tel in layout._telescope_list:
+            if add_geocode:
                 tel.geo_code = "test_geo_code"
-        if asset_code:
-            for tel in layout._telescope_list:
+            if asset_code:
                 tel.asset_code = "test_asset_code"
-        if sequence_number:
-            for tel in layout._telescope_list:
+            if sequence_number:
                 tel.sequence_number = 1
 
         layout.convert_coordinates()
@@ -228,15 +239,7 @@ def test_build_layout(
 
         assert isinstance(_table, QTable)
 
-        if add_geocode:
-            assert "geo_code" in _table.colnames
-        elif asset_code and not sequence_number:
-            assert "asset_code" not in _table.colnames
-        elif not asset_code and sequence_number:
-            assert "sequence_number" not in _table.colnames
-        elif asset_code and sequence_number:
-            assert "asset_code" in _table.colnames
-            assert "sequence_number" in _table.colnames
+        check_table_columns(_table, add_geocode, asset_code, sequence_number)
 
     test_one_site(array_layout_north_four_lst_instance, "North")
     test_one_site(array_layout_south_four_lst_instance, "South")
