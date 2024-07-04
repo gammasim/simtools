@@ -3,6 +3,7 @@
 import gzip
 import logging
 from copy import copy
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -187,7 +188,7 @@ def test_process_rx(
         label="empty_file",
     )
     with gzip.open(tmp_test_directory / "empty_file.gz", "wb"):
-        pass
+        assert Path(tmp_test_directory / "empty_file.gz").is_file()
     with pytest.raises(IndexError):
         ray._process_rx(file=tmp_test_directory / "empty_file.gz")
         assert "Invalid output from rx" in caplog.text

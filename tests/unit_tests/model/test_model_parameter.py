@@ -164,7 +164,7 @@ def test_updating_export_model_files(db_config, io_handler):
     # Exporting config file
     tel.export_config_file()
     logger.debug(
-        "tel._is_exported_model_files should be True because export_config_file" " was called."
+        "tel._is_exported_model_files should be True because export_config_file was called."
     )
     assert tel._is_exported_model_files_up_to_date
 
