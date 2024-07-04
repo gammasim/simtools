@@ -53,8 +53,8 @@ def test_plot_2ds(corsika_histograms_instance_set_histograms):
         "plot_2d_direction",
         "plot_2d_num_photons_per_telescope",
     ]:
-        function = getattr(corsika_histograms_visualize, function_label)
-        figs = function(corsika_histograms_instance_set_histograms)
+        _function = getattr(corsika_histograms_visualize, function_label)
+        figs = _function(corsika_histograms_instance_set_histograms)
         assert isinstance(figs, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
 
@@ -111,8 +111,8 @@ def test_plot_1ds(corsika_histograms_instance_set_histograms):
         "plot_photon_per_event_distr",
         "plot_photon_per_telescope_distr",
     ]:
-        function = getattr(corsika_histograms_visualize, function_label)
-        figs = function(corsika_histograms_instance_set_histograms)
+        _function = getattr(corsika_histograms_visualize, function_label)
+        figs = _function(corsika_histograms_instance_set_histograms)
         assert isinstance(figs, list)
         assert all(isinstance(fig, plt.Figure) for fig in figs)
 
@@ -136,8 +136,8 @@ def test_save_figs_to_pdf(corsika_histograms_instance_set_histograms, io_handler
         "plot_photon_per_event_distr",
         "plot_photon_per_telescope_distr",
     ]:
-        function = getattr(corsika_histograms_visualize, function_label)
-        figs = function(corsika_histograms_instance_set_histograms)
+        _function = getattr(corsika_histograms_visualize, function_label)
+        figs = _function(corsika_histograms_instance_set_histograms)
         figs_list.append(figs)
     figs_list = np.array(figs_list).flatten()
     corsika_histograms_visualize.save_figs_to_pdf(figs_list, output_file)

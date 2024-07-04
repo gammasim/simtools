@@ -16,7 +16,17 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_write(tmp_test_directory):
+@pytest.fixture()
+def test_file_2():
+    return "test_file_2.ecsv"
+
+
+@pytest.fixture()
+def ascii_format():
+    return "ascii.ecsv"
+
+
+def test_write(tmp_test_directory, test_file_2, ascii_format):
     # both none (no exception expected)
     w_1 = writer.ModelDataWriter()
     w_1.write(metadata=None, product_data=None)
@@ -35,12 +45,12 @@ def test_write(tmp_test_directory):
     # both not none
     data = {"pixel": [25, 30, 28]}
     small_table = Table(data)
-    w_1.product_data_file = tmp_test_directory.join("test_file_2.ecsv")
+    w_1.product_data_file = tmp_test_directory.join(test_file_2)
     w_1.write(metadata=_metadata, product_data=small_table)
     assert Path(w_1.product_data_file).exists()
 
     # check that table and metadata is good
-    table = Table.read(w_1.product_data_file, format="ascii.ecsv")
+    table = Table.read(w_1.product_data_file, format=ascii_format)
     assert "pixel" in table.colnames
     assert "NAME" in table.meta.keys()
 
@@ -69,7 +79,7 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
         )
 
 
-def test_dump(args_dict, tmp_test_directory):
+def test_dump(args_dict, tmp_test_directory, test_file_2):
     _metadata = {"name": "test_metadata"}
     empty_table = Table()
 
@@ -99,20 +109,20 @@ def test_dump(args_dict, tmp_test_directory):
     # explicitly set output_file
     writer.ModelDataWriter().dump(
         args_dict=args_dict,
-        output_file="test_file_2.ecsv",
+        output_file=test_file_2,
         metadata=_metadata,
         product_data=empty_table,
         validate_schema_file=None,
     )
-    assert Path(args_dict["output_path"]).joinpath("test_file_2.ecsv").exists()
+    assert Path(args_dict["output_path"]).joinpath(test_file_2).exists()
 
 
-def test_validate_and_transform(tmp_test_directory):
+def test_validate_and_transform(tmp_test_directory, ascii_format):
     w_1 = writer.ModelDataWriter()
     with pytest.raises(TypeError):
         w_1.validate_and_transform(product_data=None, validate_schema_file=None)
 
-    _table = Table.read("tests/resources/MLTdata-preproduction.ecsv", format="ascii.ecsv")
+    _table = Table.read("tests/resources/MLTdata-preproduction.ecsv", format=ascii_format)
     return_table = w_1.validate_and_transform(
         product_data=_table,
         validate_schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
@@ -147,10 +157,10 @@ def test_write_metadata_to_yml(tmp_test_directory):
         )
 
 
-def test_astropy_data_format():
+def test_astropy_data_format(ascii_format):
     assert writer.ModelDataWriter._astropy_data_format("hdf5") == "hdf5"
-    assert writer.ModelDataWriter._astropy_data_format("ecsv") == "ascii.ecsv"
-    assert writer.ModelDataWriter._astropy_data_format("ascii.ecsv") == "ascii.ecsv"
+    assert writer.ModelDataWriter._astropy_data_format("ecsv") == ascii_format
+    assert writer.ModelDataWriter._astropy_data_format(ascii_format) == ascii_format
 
 
 def test_jsonnumpy_encoder():

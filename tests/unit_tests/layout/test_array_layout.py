@@ -230,17 +230,13 @@ def test_build_layout(
 
         if add_geocode:
             assert "geo_code" in _table.colnames
-            return
-        if asset_code and not sequence_number:
+        elif asset_code and not sequence_number:
             assert "asset_code" not in _table.colnames
-            return
-        if not asset_code and sequence_number:
+        elif not asset_code and sequence_number:
             assert "sequence_number" not in _table.colnames
-            return
-        if asset_code and sequence_number:
+        elif asset_code and sequence_number:
             assert "asset_code" in _table.colnames
             assert "sequence_number" in _table.colnames
-            return
 
     test_one_site(array_layout_north_four_lst_instance, "North")
     test_one_site(array_layout_south_four_lst_instance, "South")
@@ -380,7 +376,7 @@ def test_try_set_coordinate(
                 InvalidTelescopeListFileError,
                 match="Missing required row with telescope_name or asset_code/sequence_number",
             ):
-                tel = instance._load_telescope_names(row)
+                instance._load_telescope_names(row)
 
     test_one_site(
         array_layout_north_instance, telescope_north_test_file, manual_xx_north, manual_yy_north
@@ -480,15 +476,14 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
 
 def test_read_table_from_json_file(db_config, model_version):
 
+    ground_table_file = "tests/resources/array_element_position_ground.json"
     layout = ArrayLayout(
         mongo_db_config=db_config,
         site="North",
         model_version=model_version,
-        telescope_list_file="tests/resources/array_element_position_ground.json",
+        telescope_list_file=ground_table_file,
     )
-    ground_table = layout._read_table_from_json_file(
-        "tests/resources/array_element_position_ground.json"
-    )
+    ground_table = layout._read_table_from_json_file(ground_table_file)
     assert isinstance(ground_table, QTable)
     assert "position_x" in ground_table.colnames
 

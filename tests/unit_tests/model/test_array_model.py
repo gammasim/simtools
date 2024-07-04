@@ -58,10 +58,11 @@ def test_site(array_model):
 
 
 def test_get_single_telescope_info_from_array_config(db_config, model_version, io_handler):
+    pulse_shape_file = "LST_pulse_shape_7dynode_high_intensity_pix1s.dat"
     parameters_to_change = {
         "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
             "name": "MSTN-05",
-            "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat",
+            "fadc_pulse_shape": pulse_shape_file,
         },
     }
     am = ArrayModel(
@@ -75,12 +76,12 @@ def test_get_single_telescope_info_from_array_config(db_config, model_version, i
 
     assert am._get_single_telescope_info_from_array_config("LSTN-01", parameters_to_change) == {}
     assert am._get_single_telescope_info_from_array_config("MSTN-05", parameters_to_change) == {
-        "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat"
+        "fadc_pulse_shape": pulse_shape_file
     }
 
     parameters_missing_name = {
         "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
-            "fadc_pulse_shape": "LST_pulse_shape_7dynode_high_intensity_pix1s.dat",
+            "fadc_pulse_shape": pulse_shape_file,
         },
     }
     with pytest.raises(
@@ -141,11 +142,12 @@ def test_exporting_config_files(db_config, io_handler, model_version):
     am.export_simtel_telescope_config_files()
     am.export_simtel_array_config_file()
 
+    test_cfg = "_test.cfg"
     list_of_export_files = [
         "CTA-LST_lightguide_eff_2020-04-12_average.dat",
-        "CTA-North-LSTN-01-" + model_version + "_test.cfg",
-        "CTA-North-MSTN-01-" + model_version + "_test.cfg",
-        "CTA-test_layout-North-" + model_version + "_test.cfg",
+        "CTA-North-LSTN-01-" + model_version + test_cfg,
+        "CTA-North-MSTN-01-" + model_version + test_cfg,
+        "CTA-test_layout-North-" + model_version + test_cfg,
         "array_coordinates_LaPalma_alpha.dat",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",

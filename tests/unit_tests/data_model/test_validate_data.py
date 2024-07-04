@@ -18,7 +18,17 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def test_validate_and_transform(caplog):
+@pytest.fixture()
+def mirror_file():
+    return "tests/resources/MLTdata-preproduction.ecsv"
+
+
+@pytest.fixture()
+def mirror_2f_schema_file():
+    return "tests/resources/MST_mirror_2f_measurements.schema.yml"
+
+
+def test_validate_and_transform(caplog, mirror_file, mirror_2f_schema_file):
     data_validator = validate_data.DataValidator()
     # no input file defined
     with caplog.at_level(logging.ERROR):
@@ -26,8 +36,8 @@ def test_validate_and_transform(caplog):
             data_validator.validate_and_transform()
     assert "No data or data table to validate" in caplog.text
 
-    data_validator.data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
-    data_validator.schema_file_name = "tests/resources/MST_mirror_2f_measurements.schema.yml"
+    data_validator.data_file_name = mirror_file
+    data_validator.schema_file_name = mirror_2f_schema_file
     with caplog.at_level(logging.INFO):
         _table = data_validator.validate_and_transform()
         assert isinstance(_table, Table)
@@ -41,12 +51,12 @@ def test_validate_and_transform(caplog):
     assert "Validating data from:" in caplog.text
 
 
-def test_validate_data_file(caplog):
+def test_validate_data_file(caplog, mirror_file):
     data_validator = validate_data.DataValidator()
     # no input file defined, should pass
     data_validator.validate_data_file()
 
-    data_validator.data_file_name = "tests/resources/MLTdata-preproduction.ecsv"
+    data_validator.data_file_name = mirror_file
     with caplog.at_level(logging.INFO):
         data_validator.validate_data_file()
     assert "Validating tabled data from:" in caplog.text
@@ -69,22 +79,22 @@ def test_validate_parameter_and_file_name():
         data_validator.validate_parameter_and_file_name()
 
 
-def test_validate_data_columns(tmp_test_directory, caplog):
+def test_validate_data_columns(tmp_test_directory, caplog, mirror_file, mirror_2f_schema_file):
     data_validator = validate_data.DataValidator()
     with pytest.raises(TypeError):
         data_validator._validate_data_table()
 
     data_validator_1 = validate_data.DataValidator(
         schema_file=None,
-        data_file="tests/resources/MLTdata-preproduction.ecsv",
+        data_file=mirror_file,
     )
     data_validator_1.validate_data_file()
     with pytest.raises(TypeError):
         data_validator_1._validate_data_table()
 
     data_validator_3 = validate_data.DataValidator(
-        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
-        data_file="tests/resources/MLTdata-preproduction.ecsv",
+        schema_file=mirror_2f_schema_file,
+        data_file=mirror_file,
     )
     data_validator_3.validate_data_file()
     data_validator_3._validate_data_table()
@@ -450,7 +460,7 @@ def test_check_for_not_a_number():
         data_validator._check_for_not_a_number(np.nan, "wavelength")
 
 
-def test_read_validation_schema(tmp_test_directory):
+def test_read_validation_schema(tmp_test_directory, mirror_2f_schema_file):
     data_validator = validate_data.DataValidator()
 
     # no file given
@@ -458,9 +468,7 @@ def test_read_validation_schema(tmp_test_directory):
         data_validator._read_validation_schema(schema_file=None)
 
     # file given
-    data_validator._read_validation_schema(
-        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml"
-    )
+    data_validator._read_validation_schema(schema_file=mirror_2f_schema_file)
 
     # file does not exist
     with pytest.raises(FileNotFoundError):
@@ -468,7 +476,7 @@ def test_read_validation_schema(tmp_test_directory):
 
     # file given and parameter name given
     data_validator._read_validation_schema(
-        schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
+        schema_file=mirror_2f_schema_file,
         parameter="mirror_2f_measurement",
     )
 
@@ -476,7 +484,7 @@ def test_read_validation_schema(tmp_test_directory):
     # that the schema file is read from the temporary directory with the
     # correct path / name
     shutil.copy(
-        "tests/resources/MST_mirror_2f_measurements.schema.yml",
+        mirror_2f_schema_file,
         tmp_test_directory / "mirror_2f_measurement.schema.yml",
     )
     data_validator._read_validation_schema(
