@@ -27,6 +27,12 @@ url_desy = "https://www.desy.de"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
+@pytest.fixture()
+def test_data():
+    "Test data to be written in a file."
+    return "Test data"
+
+
 def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
@@ -120,7 +126,7 @@ def test_validate_config_data(args_dict, io_handler, caplog) -> None:
         "dict_par": {"blah": 10, "bleh": 5 * u.m},
     }
     with pytest.raises(MissingRequiredConfigEntryError):
-        validated_data = gen.validate_config_data(config_data=config_data, parameters=parameters)
+        gen.validate_config_data(config_data=config_data, parameters=parameters)
         assert "Required entry in config_data" in caplog.text
 
     # Test that a default value is set for a missing parameter.
@@ -275,10 +281,10 @@ def test_program_is_executable(caplog) -> None:
     assert "PATH environment variable is not set." in caplog.text
 
 
-def test_get_file_age(tmp_test_directory) -> None:
+def test_get_file_age(tmp_test_directory, test_data) -> None:
     # Create a temporary file and wait for 1 seconds before accessing it
     with open(tmp_test_directory / "test_file.txt", "w", encoding="utf-8") as file:
-        file.write("Test data")
+        file.write(test_data)
 
     time.sleep(1)
 
@@ -392,39 +398,38 @@ def test_collect_final_lines(tmp_test_directory) -> None:
         gen.collect_final_lines("no_such_file.txt", 10)
 
     # Test with empty file.
-    file = tmp_test_directory / "empty_file.txt"
-    with open(file, "w"):
-        pass
-    assert gen.collect_final_lines(file, 10) == ""
+    _file = tmp_test_directory / "empty_file.txt"
+    Path(_file).touch()
+    assert gen.collect_final_lines(_file, 10) == ""
 
     # Test with one line file.
-    file = tmp_test_directory / "one_line_file.txt"
-    with open(file, "w") as f:
+    _file = tmp_test_directory / "one_line_file.txt"
+    with open(_file, "w") as f:
         f.write("Line 1")
-    assert gen.collect_final_lines(file, 1) == "Line 1"
+    assert gen.collect_final_lines(_file, 1) == "Line 1"
 
     # In the following tests the \n in the output are removed, but in the actual print statements,
     # where the original function is used, they are still present in the string representation.
 
     # Test with multiple lines file.
-    file = tmp_test_directory / "multiple_lines_file.txt"
-    with open(file, "w") as f:
+    _file = tmp_test_directory / "multiple_lines_file.txt"
+    with open(_file, "w") as f:
         f.write("Line 1\nLine 2\nLine 3")
-    assert gen.collect_final_lines(file, 2) == "Line 2Line 3"
+    assert gen.collect_final_lines(_file, 2) == "Line 2Line 3"
 
     # Test with file with n_lines lines.
-    file = tmp_test_directory / "n_lines_file.txt"
-    with open(file, "w") as f:
+    _file = tmp_test_directory / "n_lines_file.txt"
+    with open(_file, "w") as f:
         for i in range(10):
             f.write(f"Line {i}\n")
         f.write("Line 10")
-    assert gen.collect_final_lines(file, 3) == "Line 8Line 9Line 10"
+    assert gen.collect_final_lines(_file, 3) == "Line 8Line 9Line 10"
 
     # Test with file compressed in gzip.
-    file = tmp_test_directory / "compressed_file.txt.gz"
-    with gzip.open(file, "wb") as f:
+    _file = tmp_test_directory / "compressed_file.txt.gz"
+    with gzip.open(_file, "wb") as f:
         f.write(b"Line 1\nLine 2\nLine 3")
-    assert gen.collect_final_lines(file, 2) == "Line 2Line 3"
+    assert gen.collect_final_lines(_file, 2) == "Line 2Line 3"
 
 
 def test_log_level_from_user() -> None:
@@ -469,13 +474,13 @@ def test_copy_as_list() -> None:
     assert gen.copy_as_list(123) == [123]
 
 
-def test_find_file_in_current_directory(tmp_test_directory) -> None:
+def test_find_file_in_current_directory(tmp_test_directory, test_data) -> None:
     """
     Test finding a file in the temp test directory directory.
     """
     file_name = tmp_test_directory / "test.txt"
-    with open(file_name, "w") as file:
-        file.write("Test data")
+    with open(file_name, "w") as _file:
+        _file.write(test_data)
     file_path = gen.find_file(file_name, tmp_test_directory)
     assert file_path == file_name
 
@@ -491,15 +496,15 @@ def test_find_file_in_non_existing_directory(tmp_test_directory) -> None:
         gen.find_file(file_name, loc)
 
 
-def test_find_file_recursively(tmp_test_directory) -> None:
+def test_find_file_recursively(tmp_test_directory, test_data) -> None:
     """
     Test finding a file recursively.
     """
     file_name = "test_1.txt"
     test_directory_sub_dir = tmp_test_directory / "test"
     Path(test_directory_sub_dir).mkdir(parents=True, exist_ok=True)
-    with open(test_directory_sub_dir / file_name, "w", encoding="utf-8") as file:
-        file.write("Test data")
+    with open(test_directory_sub_dir / file_name, "w", encoding="utf-8") as _file:
+        _file.write(test_data)
     loc = tmp_test_directory
     file_path = gen.find_file(file_name, loc)
     assert file_path == Path(loc).joinpath("test").joinpath(file_name)
@@ -510,7 +515,7 @@ def test_find_file_recursively(tmp_test_directory) -> None:
     with open(
         test_directory_sub_dir / "unrelated_sub_dir" / "unrelated_file.txt", "w", encoding="utf-8"
     ) as file:
-        file.write("Test data")
+        file.write(test_data)
     loc = tmp_test_directory
     with pytest.raises(FileNotFoundError):
         gen.find_file(file_name, loc)
@@ -546,30 +551,30 @@ def test_is_url():
 
 
 def test_collect_data_dict_from_json():
-    file = "tests/resources/reference_point_altitude.json"
-    data = gen.collect_data_from_file_or_dict(file, None)
+    _file = "tests/resources/reference_point_altitude.json"
+    data = gen.collect_data_from_file_or_dict(_file, None)
     assert len(data) == 6
     assert data["unit"] == "m"
 
 
 def test_collect_data_from_http():
-    file = "tests/resources/test_parameters.yml"
+    _file = "tests/resources/test_parameters.yml"
     url = url_simtools
 
-    data = gen.collect_data_from_http(url + file)
+    data = gen.collect_data_from_http(url + _file)
     assert isinstance(data, dict)
 
-    file = "tests/resources/reference_point_altitude.json"
-    data = gen.collect_data_from_http(url + file)
+    _file = "tests/resources/reference_point_altitude.json"
+    data = gen.collect_data_from_http(url + _file)
     assert isinstance(data, dict)
 
-    file = "tests/resources/simtel_output_files.txt"
+    _file = "tests/resources/simtel_output_files.txt"
     with pytest.raises(InvalidConfigDataError):
-        data = gen.collect_data_from_http(url + file)
+        gen.collect_data_from_http(url + _file)
 
     url = "https://raw.githubusercontent.com/gammasim/simtools/not_right/"
     with pytest.raises(InvalidConfigDataError):
-        data = gen.collect_data_from_http(url + file)
+        gen.collect_data_from_http(url + _file)
 
 
 def test_join_url_or_path():
