@@ -624,7 +624,8 @@ class CommandLineParser(argparse.ArgumentParser):
             if azimuth_angle in azimuth_map:
                 return azimuth_map[azimuth_angle]
             raise argparse.ArgumentTypeError(
-                "The azimuth angle can only be one of " f"(north, south, east, west), not {angle}"
+                "The azimuth angle given as string can only be one of "
+                f"(north, south, east, west), not {angle}. Otherwise use numerical values."
             )
         return None
 
