@@ -341,16 +341,27 @@ class SimtelConfigReader:
         if dtype == "bool":
             column = np.array([bool(int(item)) for item in column])
 
-        if len(column) == 1:
-            return (
-                (np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1)
-                if column[0] is not None
-                else (None, 1)
-            )
+        return self._process_column(column, dtype)
 
+    def _process_column(self, column, dtype):
+        """
+        Process and return column prepared in _add_value_from_simtel_cfg.
+
+        Parameters
+        ----------
+        column: list
+            List of strings to process.
+        dtype: str
+            Data type to convert value to.
+        """
+        if len(column) == 1:
+            if column[0] is not None:
+                array_dtype = np.dtype(dtype) if dtype else None
+                processed_value = np.array(column, dtype=array_dtype)[0]
+                return processed_value, 1
+            return None, 1
         if len(column) > 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
-
         return None, None
 
     def _get_type_and_dimension_from_simtel_cfg(self, column):
