@@ -90,7 +90,7 @@ def test_parse_quantity_pair(caplog):
 
 
 def test_parse_integer_and_quantity(caplog):
-    for test_string in ["5 1500 m", "5 1500m", "5 1500.0 m"]:
+    for test_string in ["5 1500 m", "5 1500m", "5 1500.0 m", "(5, <Quantity 1500 m>)"]:
         c_pair = parser.CommandLineParser.parse_integer_and_quantity(test_string)
         assert c_pair[0] == 5
         assert pytest.approx(c_pair[1].value) == 1500.0
