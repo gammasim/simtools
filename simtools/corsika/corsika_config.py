@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 
 import simtools.utils.general as gen
+from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io_operations import io_handler
 
 __all__ = [
@@ -34,7 +35,7 @@ class CorsikaConfig:
     label : str
         Instance label.
     args_dict : dict
-        Configuration dictionary.
+    Configuration dictionary.
     """
 
     def __init__(self, array_model, args_dict, label=None):
@@ -43,12 +44,12 @@ class CorsikaConfig:
         self._logger.debug("Init CorsikaConfig")
 
         self.label = label
-        self.primary = None
         self.zenith_angle = None
         self.azimuth_angle = None
         self._run_number = None
         self.args_dict = args_dict
         self.config_file_path = None
+        self.primary_particle = self._set_primary_particle(args_dict)
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
@@ -105,9 +106,7 @@ class CorsikaConfig:
         return {
             "EVTNR": [self.args_dict["event_number_first_shower"]],
             "NSHOW": [self.args_dict["nshow"]],
-            "PRMPAR": [
-                self._convert_primary_input_and_store_primary_name(self.args_dict["primary"])
-            ],
+            "PRMPAR": [self.primary_particle.corsika7_id],
             "ESLOPE": [self.args_dict["eslope"]],
             "ERANGE": [
                 self.args_dict["erange"][0].to("GeV").value,
@@ -148,36 +147,35 @@ class CorsikaConfig:
         """
         return (az + 180) % 360
 
-    def _convert_primary_input_and_store_primary_name(self, value):
+    @property
+    def primary(self):
+        """Primary particle name."""
+        return self.primary_particle.name
+
+    def _set_primary_particle(self, args_dict):
         """
-        Convert a primary name into the CORSIKA particle ID.
+        Set primary particle from input dictionary.
 
         Parameters
         ----------
-        value: str
-            Input primary name (e.g gamma, proton ...)
-
-        Raises
-        ------
-        InvalidPrimary
-            If the input name is not found.
+        args_dict: dict
+            Input dictionary.
 
         Returns
         -------
-        int
-            Respective number of the given primary.
+        PrimaryParticle
+            Primary particle.
 
-        Notes
-        -----
-        TODO - this will be replaced using the 'particle' PDG package.
         """
-        for prim_name, prim_info in self._corsika_default_parameters["PRIMARIES"].items():
-            if value.upper() == prim_name or value.upper() in prim_info["names"]:
-                self.primary = prim_name.lower()
-                return prim_info["number"]
-        msg = f"Primary not valid: {value}"
-        self._logger.error(msg)
-        raise InvalidCorsikaInputError(msg)
+        if not args_dict:
+            return PrimaryParticle()
+        if args_dict.get("primary_id_type") == "common_name":
+            return PrimaryParticle(name=args_dict.get("primary"))
+        if args_dict.get("primary_id_type") == "corsika7_id":
+            return PrimaryParticle(corsika7_id=int(args_dict.get("primary")))
+        if args_dict.get("primary_id_type") == "pdg_id":
+            return PrimaryParticle(pdg_id=int(args_dict.get("primary")))
+        return PrimaryParticle()
 
     def get_config_parameter(self, par_name):
         """
@@ -263,7 +261,7 @@ class CorsikaConfig:
             file.write(text_site_parameters)
 
             file.write("\n* [ IACT ENV PARAMETERS ]\n")
-            file.write(f"IACT setenv PRMNAME {self.primary}\n")
+            file.write(f"IACT setenv PRMNAME {self.primary_particle.name}\n")
             file.write(f"IACT setenv ZA {int(self.config['THETAP'][0])}\n")
             file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
@@ -349,7 +347,7 @@ class CorsikaConfig:
         )
 
         base_name = (
-            f"{self.primary}_{self.array_model.site}_{self.array_model.layout_name}_"
+            f"{self.primary_particle.name}_{self.array_model.site}_{self.array_model.layout_name}_"
             f"za{int(self.config['THETAP'][0]):03}-"
             f"azm{self.azimuth_angle:03}deg"
             f"{view_cone}{file_label}"

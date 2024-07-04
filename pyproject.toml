@@ -35,6 +35,7 @@ dependencies = [
   "jsonschema",
   "matplotlib",
   "numpy",
+  "particle",
   "pymongo",
   "pyproj",
   "python-dotenv",
