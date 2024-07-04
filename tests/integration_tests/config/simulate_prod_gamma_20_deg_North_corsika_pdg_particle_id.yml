@@ -1,4 +1,4 @@
-simulate_prod_gamma_20_deg_North_corsika_pdg_particle_id.ymlCTA_SIMPIPE:
+CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
   TEST_NAME: gamma_20_deg_corsika_pdg_particle_id
   CONFIGURATION:

@@ -352,6 +352,7 @@ def corsika_config_data():
         "eslope": -2,
         "core_scatter": (10, 1400.0 * u.m),
         "primary": "proton",
+        "primary_id_type": "common_name",
         "data_directory": "simtools-output",
     }
 
