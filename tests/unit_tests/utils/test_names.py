@@ -9,6 +9,11 @@ from simtools.utils import names
 logging.getLogger().setLevel(logging.DEBUG)
 
 
+@pytest.fixture()
+def ecsv_suffix():
+    return ".ecsv"
+
+
 def test_get_list_of_telescope_types():
     assert names.get_list_of_telescope_types(array_element_class="telescopes", site=None) == [
         "LSTN",
@@ -153,7 +158,7 @@ def test_get_telescope_type_from_telescope_name():
             names.get_telescope_type_from_telescope_name(_name)
 
 
-def test_generate_file_name_camera_efficiency():
+def test_generate_file_name_camera_efficiency(ecsv_suffix):
 
     site = "South"
     telescope_model_name = "LSTS-01"
@@ -164,7 +169,7 @@ def test_generate_file_name_camera_efficiency():
     assert (
         names.generate_file_name(
             "camera-efficiency-table",
-            ".ecsv",
+            ecsv_suffix,
             site,
             telescope_model_name,
             zenith_angle,
@@ -208,7 +213,7 @@ def test_generate_file_name_camera_efficiency():
     assert (
         names.generate_file_name(
             "camera-efficiency-table",
-            ".ecsv",
+            ecsv_suffix,
             site,
             telescope_model_name,
             zenith_angle,
@@ -250,7 +255,7 @@ def test_generate_file_name_camera_efficiency():
     assert (
         names.generate_file_name(
             "camera-efficiency-table",
-            ".ecsv",
+            ecsv_suffix,
             site,
             telescope_model_name,
             zenith_angle,
@@ -337,7 +342,7 @@ def test_layout_telescope_list_file_name():
     )
 
 
-def test_generate_file_name_ray_tracing():
+def test_generate_file_name_ray_tracing(ecsv_suffix):
     assert (
         names.generate_file_name(
             file_type="Photons",
@@ -371,7 +376,7 @@ def test_generate_file_name_ray_tracing():
     assert (
         names.generate_file_name(
             file_type="ray-tracing",
-            suffix=".ecsv",
+            suffix=ecsv_suffix,
             site="South",
             telescope_model_name="LSTS-01",
             source_distance=10.5,
@@ -383,7 +388,7 @@ def test_generate_file_name_ray_tracing():
     assert (
         names.generate_file_name(
             file_type="ray-tracing",
-            suffix=".ecsv",
+            suffix=ecsv_suffix,
             site="South",
             telescope_model_name="LSTS-01",
             source_distance=10.5,

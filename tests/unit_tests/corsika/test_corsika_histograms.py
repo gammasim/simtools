@@ -18,6 +18,21 @@ from simtools.corsika.corsika_histograms import (
 from simtools.io_operations.hdf5_handler import read_hdf5
 
 
+@pytest.fixture()
+def x_axis_string():
+    return "x axis"
+
+
+@pytest.fixture()
+def y_axis_string():
+    return "y axis"
+
+
+@pytest.fixture()
+def z_axis_string():
+    return "z axis"
+
+
 def test_init(corsika_histograms_instance, corsika_output_file_name):
     assert corsika_histograms_instance.input_file.name == Path(corsika_output_file_name).name
     with pytest.raises(FileNotFoundError):
@@ -89,12 +104,14 @@ def test_hist_config_default_config(corsika_histograms_instance, caplog):
     assert hist_config == corsika_histograms_instance._create_histogram_default_config()
 
 
-def test_hist_config_custom_config(corsika_histograms_instance):
+def test_hist_config_custom_config(
+    corsika_histograms_instance, x_axis_string, y_axis_string, z_axis_string
+):
     custom_config = {
         "hist_position": {
-            "x axis": {"bins": 100, "start": -1000, "stop": 1000, "scale": "linear"},
-            "y axis": {"bins": 100, "start": -1000, "stop": 1000, "scale": "linear"},
-            "z axis": {"bins": 80, "start": 200, "stop": 1000, "scale": "linear"},
+            x_axis_string: {"bins": 100, "start": -1000, "stop": 1000, "scale": "linear"},
+            y_axis_string: {"bins": 100, "start": -1000, "stop": 1000, "scale": "linear"},
+            z_axis_string: {"bins": 80, "start": 200, "stop": 1000, "scale": "linear"},
         },
         "hist_direction": {
             "azimuth": {"bins": 36, "start": 0, "stop": 360, "scale": "linear"},
@@ -249,24 +266,26 @@ def test_set_histograms_3_telescopes_3_histograms(corsika_histograms_instance):
         assert np.sum(corsika_histograms_instance.hist_position[i_hist].view()) == hist_sum[i_hist]
 
 
-def test_set_histograms_passing_config(corsika_histograms_instance):
+def test_set_histograms_passing_config(
+    corsika_histograms_instance, x_axis_string, y_axis_string, z_axis_string
+):
     new_hist_config = copy.copy(corsika_histograms_instance.hist_config)
     xy_maximum = 500 * u.m
     xy_bin = 100
     new_hist_config["hist_position"] = {
-        "x axis": {
+        x_axis_string: {
             "bins": xy_bin,
             "start": -xy_maximum,
             "stop": xy_maximum,
             "scale": "linear",
         },
-        "y axis": {
+        y_axis_string: {
             "bins": xy_bin,
             "start": -xy_maximum,
             "stop": xy_maximum,
             "scale": "linear",
         },
-        "z axis": {
+        z_axis_string: {
             "bins": 80,
             "start": 200 * u.nm,
             "stop": 1000 * u.nm,
@@ -823,7 +842,9 @@ def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, 
     )
 
 
-def test_dict_2d_distributions(corsika_histograms_instance_set_histograms):
+def test_dict_2d_distributions(
+    corsika_histograms_instance_set_histograms, x_axis_string, y_axis_string
+):
     expected_dict_2d_distributions = {
         "counts": {
             "function": "get_2d_photon_position_distr",
@@ -831,11 +852,11 @@ def test_dict_2d_distributions(corsika_histograms_instance_set_histograms):
             "title": "Photon count distribution on the ground",
             "x bin edges": "x position on the ground",
             "x axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
-                "x axis"
+                x_axis_string
             ]["start"].unit,
             "y bin edges": "y position on the ground",
             "y axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
-                "y axis"
+                y_axis_string
             ]["start"].unit,
         }
     }
