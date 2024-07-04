@@ -90,14 +90,9 @@ class SimtelConfigReader:
         """
         self._logger.debug(f"Getting validated parameter dictionary for {telescope_name}")
 
-        type_value = (
-            "string"
-            if self.parameter_dict.get("type") == "str"
-            else (
-                "boolean"
-                if self.parameter_dict.get("type") == "bool"
-                else self.parameter_dict.get("type")
-            )
+        type_mapping = {"str": "string", "bool": "boolean"}
+        type_value = type_mapping.get(
+            self.parameter_dict.get("type"), self.parameter_dict.get("type")
         )
 
         _json_dict = {
