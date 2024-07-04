@@ -35,7 +35,7 @@ class CorsikaConfig:
     label : str
         Instance label.
     args_dict : dict
-    Configuration dictionary.
+        Configuration dictionary.
     """
 
     def __init__(self, array_model, args_dict, label=None):
