@@ -132,6 +132,52 @@ class SimtelConfigReader:
             file_name=file_name, data_dict=dict_to_write
         )
 
+    def _should_skip_limits_check(self, data_type):
+        """Check if limits should be skipped."""
+        return data_type == "limits" and self.parameter_dict.get("type") == "bool"
+
+    def _get_schema_values(self, data_type):
+        """Check schema values for limits and defaults."""
+        try:
+            if data_type == "limits":
+                _from_schema = [
+                    self.schema_dict["data"][0]["allowed_range"].get("min"),
+                    self.schema_dict["data"][0]["allowed_range"].get("max"),
+                ]
+                return _from_schema[0] if _from_schema[1] is None else _from_schema
+            if len(self.schema_dict["data"]) == 1:
+                return self.schema_dict["data"][0]["default"]
+            return [data.get("default") for data in self.schema_dict["data"]]
+        except (KeyError, IndexError):
+            return None
+
+    @staticmethod
+    def _values_match(_from_simtel, _from_schema):
+        """Check if values match (are close for floats)."""
+        try:
+            if not isinstance(_from_schema, list | np.ndarray) and _from_simtel == _from_schema:
+                return True
+        except ValueError:
+            pass
+
+        try:
+            if np.all(np.isclose(_from_simtel, _from_schema)):
+                return True
+        except (TypeError, ValueError):
+            pass
+
+        return False
+
+    def _log_mismatch_warning(self, data_type, _from_simtel, _from_schema):
+        """Log mismatch warning."""
+        self._logger.warning(f"Values for {data_type} do not match:")
+        self._logger.warning(
+            f"  from simtel: {self.simtel_parameter_name} {_from_simtel} ({type(_from_simtel)})"
+        )
+        self._logger.warning(
+            f"  from schema: {self.parameter_name} {_from_schema} ({type(_from_schema)})"
+        )
+
     def compare_simtel_config_with_schema(self):
         """
         Compare limits and defaults reported by simtel_array with schema.
@@ -139,61 +185,19 @@ class SimtelConfigReader:
         This is mostly for debugging purposes and includes simple printing.
         Check for differences in 'default' and 'limits' entries.
         """
-
-        def _should_skip_limits_check(data_type):
-            return data_type == "limits" and self.parameter_dict.get("type") == "bool"
-
-        def _get_schema_values(data_type):
-            try:
-                if data_type == "limits":
-                    _from_schema = [
-                        self.schema_dict["data"][0]["allowed_range"].get("min"),
-                        self.schema_dict["data"][0]["allowed_range"].get("max"),
-                    ]
-                    return _from_schema[0] if _from_schema[1] is None else _from_schema
-                if len(self.schema_dict["data"]) == 1:
-                    return self.schema_dict["data"][0]["default"]
-                return [data.get("default") for data in self.schema_dict["data"]]
-            except (KeyError, IndexError):
-                return None
-
-        def _values_match(_from_simtel, _from_schema):
-            try:
-                if not isinstance(_from_schema, list | np.ndarray) and _from_simtel == _from_schema:
-                    return True
-            except ValueError:
-                pass
-
-            try:
-                if np.all(np.isclose(_from_simtel, _from_schema)):
-                    return True
-            except (TypeError, ValueError):
-                pass
-
-            return False
-
-        def _log_mismatch_warning(data_type, _from_simtel, _from_schema):
-            self._logger.warning(f"Values for {data_type} do not match:")
-            self._logger.warning(
-                f"  from simtel: {self.simtel_parameter_name} {_from_simtel} ({type(_from_simtel)})"
-            )
-            self._logger.warning(
-                f"  from schema: {self.parameter_name} {_from_schema} ({type(_from_schema)})"
-            )
-
         for data_type in ["default", "limits"]:
             _from_simtel = self.parameter_dict.get(data_type)
-            if _should_skip_limits_check(data_type):
+            if self._should_skip_limits_check(data_type):
                 continue
 
-            _from_schema = _get_schema_values(data_type)
+            _from_schema = self._get_schema_values(data_type)
             if isinstance(_from_schema, list):
                 _from_schema = np.array(_from_schema, dtype=np.dtype(self.parameter_dict["type"]))
 
-            if _values_match(_from_simtel, _from_schema):
+            if self._values_match(_from_simtel, _from_schema):
                 self._logger.debug(f"Values for {data_type} match")
             else:
-                _log_mismatch_warning(data_type, _from_simtel, _from_schema)
+                self._log_mismatch_warning(data_type, _from_simtel, _from_schema)
 
     def _read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
         """
@@ -332,18 +336,17 @@ class SimtelConfigReader:
             except TypeError:
                 # extend array to required length using previous value
                 column.extend([column[-1]] * (n_dim - len(column)))
-        if len(except_from_all) > 0:
-            for index, value in except_from_all.items():
-                column[int(index)] = value
+        for index, value in except_from_all.items():
+            column[int(index)] = value
         if dtype == "bool":
             column = np.array([bool(int(item)) for item in column])
 
         if len(column) == 1:
-            if column[0] is not None:
-                processed_value = np.array(column, dtype=np.dtype(dtype) if dtype else None)[0]
-            else:
-                processed_value = None
-            return processed_value, 1
+            return (
+                (np.array(column, dtype=np.dtype(dtype) if dtype else None)[0], 1)
+                if column[0] is not None
+                else (None, 1)
+            )
 
         if len(column) > 1:
             return np.array(column, dtype=np.dtype(dtype) if dtype else None), len(column)
