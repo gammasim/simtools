@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+gdd541bd Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g6de1871 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c0f6c66c"></script>
+    <script src="../../_static/documentation_options.js?v=29fee4d5"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdd541bd Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6de1871 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1027,18 +1027,21 @@ document.write(`
                 <span class="s2">&quot;The azimuth angle provided is not a valid astropy.Quantity. &quot;</span>
                 <span class="s2">&quot;Will check if it is (north, south, east, west) instead&quot;</span>
             <span class="p">)</span>
-        <span class="n">azimuth_map</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;north&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-            <span class="s2">&quot;south&quot;</span><span class="p">:</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-            <span class="s2">&quot;east&quot;</span><span class="p">:</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-            <span class="s2">&quot;west&quot;</span><span class="p">:</span> <span class="mi">270</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">in</span> <span class="n">azimuth_map</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">azimuth_map</span><span class="p">[</span><span class="n">azimuth_angle</span><span class="p">]</span>
-        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
-            <span class="s2">&quot;The azimuth angle can only be one of &quot;</span> <span class="sa">f</span><span class="s2">&quot;(north, south, east, west), not </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span></div>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">azimuth_map</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;north&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                <span class="s2">&quot;south&quot;</span><span class="p">:</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                <span class="s2">&quot;east&quot;</span><span class="p">:</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                <span class="s2">&quot;west&quot;</span><span class="p">:</span> <span class="mi">270</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">in</span> <span class="n">azimuth_map</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">azimuth_map</span><span class="p">[</span><span class="n">azimuth_angle</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
+                <span class="s2">&quot;The azimuth angle given as string can only be one of &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(north, south, east, west), not </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">. Otherwise use numerical values.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="CommandLineParser.parse_quantity_pair">
@@ -1082,7 +1085,8 @@ document.write(`
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        input_string: str</span>
-<span class="sd">            The input string (e.g., &quot;5 1500 m&quot;).</span>
+<span class="sd">            The input string (e.g., &quot;5 1500 m&quot;) or</span>
+<span class="sd">            a tuple converted to string (e.g., &quot;(5, &lt;Quantity 1500 m&gt;)&quot;).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1092,8 +1096,14 @@ document.write(`
 <span class="sd">        ------</span>
 <span class="sd">        ValueError: If the input string does not match the required format.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)&quot;</span>
-        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">input_string</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="c1"># tuple converted to string: &quot;(5, &lt;Quantity 1500 m&gt;)&quot;</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">char</span> <span class="ow">in</span> <span class="n">input_string</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">]):</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\((\d+), &lt;Quantity ([\d.]+) (.+)&gt;\)&quot;</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">input_string</span><span class="p">)</span>
+        <span class="c1"># string with integer and quantity: &quot;5 1500 m&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)&quot;</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">input_string</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input string does not contain an integer and a astropy quantity.&quot;</span><span class="p">)</span>
