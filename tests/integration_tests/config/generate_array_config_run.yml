@@ -2,6 +2,7 @@ CTA_SIMPIPE:
   APPLICATION: simtools-generate-array-config
   TEST_NAME: run
   CONFIGURATION:
-    ARRAY_CONFIG: ./tests/resources/array_config_test.yml
+    SITE: North
+    ARRAY_LAYOUT_NAME: test_layout
     MODEL_VERSION: prod6
     OUTPUT_PATH: simtools-output
