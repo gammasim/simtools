@@ -210,19 +210,20 @@ class CommandLineParser(argparse.ArgumentParser):
         """Initialize job submission arguments for simulator."""
         _job_group = self.add_argument_group("job submission")
         _job_group.add_argument(
-            "--submit_command",
+            "--submit_engine",
             help="job submission command",
             type=str,
             required=True,
             choices=[
                 "qsub",
-                "condor_submit",
+                "htcondor",
                 "local",
             ],
+            default="local",
         )
         _job_group.add_argument(
-            "--extra_submit_options",
-            help="additional options for submission command",
+            "--submit_options",
+            help="additional options (comma separated) for submission command",
             type=str,
             required=False,
         )
