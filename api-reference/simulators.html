@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Simulator &#8212; simtools v0.1.dev1+g598d572 Manual</title>
+    <title>Simulator &#8212; simtools v0.1.dev1+gfb4df6d Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b63e96f8"></script>
+    <script src="../_static/documentation_options.js?v=f8e6ae2c"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g598d572 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gfb4df6d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -210,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/plot_array_layout.html">plot_array_layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_prod.html">simulate_prod</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/submit_data_from_external.html">submit_data_from_external</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_camera_efficiency.html">validate_camera_efficiency</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_camera_fov.html">validate_camera_fov</a></li>
@@ -231,7 +230,6 @@
 <li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="corsika_simtel.html">CORSIKA and sim_telarray</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="io_operations.html">I/O</a></li>
@@ -240,6 +238,7 @@
 <li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Simulator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
@@ -453,15 +452,8 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">simulator</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.InvalidRunsToSimulateError"><code class="docutils literal notranslate"><span class="pre">InvalidRunsToSimulateError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.file_list"><code class="docutils literal notranslate"><span class="pre">Simulator.file_list()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_list_of_histogram_files"><code class="docutils literal notranslate"><span class="pre">Simulator.get_list_of_histogram_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_list_of_input_files"><code class="docutils literal notranslate"><span class="pre">Simulator.get_list_of_input_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_list_of_log_files"><code class="docutils literal notranslate"><span class="pre">Simulator.get_list_of_log_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_list_of_output_files"><code class="docutils literal notranslate"><span class="pre">Simulator.get_list_of_output_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_histogram_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_histogram_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_input_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_input_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_log_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_log_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_output_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_output_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_file_list"><code class="docutils literal notranslate"><span class="pre">Simulator.get_file_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.resources"><code class="docutils literal notranslate"><span class="pre">Simulator.resources()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.simulate"><code class="docutils literal notranslate"><span class="pre">Simulator.simulate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.simulation_software"><code class="docutils literal notranslate"><span class="pre">Simulator.simulation_software</span></code></a></li>
@@ -494,142 +486,47 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="simulator.Simulator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulator.</span></span><span class="sig-name descname"><span class="pre">Simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulator_source_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator" title="Link to this definition">#</a></dt>
-<dd><p>Simulator is responsible for managing simulation of showers and array of telescopes.</p>
-<p>It interfaces with simulation software-specific packages, like CORSIKA or sim_telarray.</p>
-<p>The configuration is set as a dict config_data or a yaml     file config_file.</p>
-<p>Example of config_data for shower simulations:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config_data</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;data_directory&#39;</span><span class="p">:</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;South&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;layout_name&#39;</span><span class="p">:</span> <span class="s1">&#39;Prod5&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;run_range&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span>
-    <span class="s1">&#39;nshow&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-    <span class="s1">&#39;primary&#39;</span><span class="p">:</span> <span class="s1">&#39;gamma&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;erange&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">],</span>
-    <span class="s1">&#39;eslope&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span>
-    <span class="s1">&#39;zenith&#39;</span><span class="p">:</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-    <span class="s1">&#39;azimuth&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-    <span class="s1">&#39;viewcone&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-    <span class="s1">&#39;cscat&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1500</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Example of config_data for array simulations:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config_data</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;data_directory&#39;</span><span class="p">:</span> <span class="s1">&#39;(..)/data&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;primary&#39;</span><span class="p">:</span> <span class="s1">&#39;gamma&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;zenith&#39;</span><span class="p">:</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-    <span class="s1">&#39;azimuth&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-    <span class="s1">&#39;viewcone&#39;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-    <span class="c1"># ArrayModel</span>
-    <span class="s1">&#39;site&#39;</span><span class="p">:</span> <span class="s1">&#39;North&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;layout_name&#39;</span><span class="p">:</span> <span class="s1">&#39;1LST&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;model_version&#39;</span><span class="p">:</span> <span class="s1">&#39;Prod5&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;LST&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span>
-    <span class="p">},</span>
-    <span class="s1">&#39;MST-01&#39;</span><span class="p">:</span> <span class="s1">&#39;FlashCam-D&#39;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulator.</span></span><span class="sig-name descname"><span class="pre">Simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_commands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator" title="Link to this definition">#</a></dt>
+<dd><p>Simulator is managing the simulation of showers and of the array of telescopes.</p>
+<p>It interfaces with simulation software packages (e.g., CORSIKA or sim_telarray).</p>
+<p>The configuration is set as a dict corresponding to the command line configuration groups
+(especially simulation_software, simulation_model, simulation_parameters).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>simulation_software: str</strong></dt><dd><p>Simulation software to be used (choices: [corsika, simtel, corsika_simtel])</p>
-</dd>
-<dt><strong>simulator_source_path: str or Path</strong></dt><dd><p>Location of executables for simulation software             (e.g. path with CORSIKA or sim_telarray)</p>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Configuration dictionary
+(includes simulation_software, simulation_model, simulation_parameters groups).</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>
-<dt><strong>config_data: dict</strong></dt><dd><p>Simulator configuration data.</p>
-</dd>
 <dt><strong>submit_command: str</strong></dt><dd><p>Job submission command.</p>
 </dd>
-<dt><strong>extra_commands: str or list of str</strong></dt><dd><p>Extra commands to be added to the run script before the run command,</p>
+<dt><strong>extra_commands: str or list of str</strong></dt><dd><p>Extra commands to be added to the run script before the run command.</p>
 </dd>
 <dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
 </dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Simulation model version.</p>
-</dd>
-<dt><strong>test: bool</strong></dt><dd><p>If True, no jobs are submitted; only run scripts are prepared</p>
+<dt><strong>test: bool</strong></dt><dd><p>If True, no jobs are submitted; only run scripts are prepared.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.file_list">
-<span class="sig-name descname"><span class="pre">file_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.file_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.file_list" title="Link to this definition">#</a></dt>
-<dd><p>List output files obtained with simulation run.</p>
+<dt class="sig sig-object py" id="simulator.Simulator.get_file_list">
+<span class="sig-name descname"><span class="pre">get_file_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.get_file_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_file_list" title="Link to this definition">#</a></dt>
+<dd><p>Get list of files generated by simulations.</p>
+<p>Options are “input”, “output”, “hist”, “log”.
+Not all file types are available for all simulation types.
+Returns an empty list for an unknown file type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>input_file_list: str or list of str</strong></dt><dd><p>Single file or list of files of shower simulations.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.get_list_of_histogram_files">
-<span class="sig-name descname"><span class="pre">get_list_of_histogram_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.get_list_of_histogram_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_histogram_files" title="Link to this definition">#</a></dt>
-<dd><p>Get list of histogram files.</p>
-<p>(not applicable to all simulation types)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>list</dt><dd><p>List with the full path of all the histogram files.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.get_list_of_input_files">
-<span class="sig-name descname"><span class="pre">get_list_of_input_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.get_list_of_input_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_input_files" title="Link to this definition">#</a></dt>
-<dd><p>Get list of input files.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>list</dt><dd><p>List with the full path of all the input files.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.get_list_of_log_files">
-<span class="sig-name descname"><span class="pre">get_list_of_log_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.get_list_of_log_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_log_files" title="Link to this definition">#</a></dt>
-<dd><p>Get list of log files.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>list</dt><dd><p>List with the full path of all the log files.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.get_list_of_output_files">
-<span class="sig-name descname"><span class="pre">get_list_of_output_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.get_list_of_output_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.get_list_of_output_files" title="Link to this definition">#</a></dt>
-<dd><p>Get list of output files.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>run_list: list</strong></dt><dd><p>List of run numbers.</p>
-</dd>
-<dt><strong>run_range: list</strong></dt><dd><p>List of len 2 with the limits of the range of the run numbers.</p>
+<dt><strong>file_type</strong><span class="classifier">str</span></dt><dd><p>File type to be listed.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List with the full path of all the output files.</p>
+<dt>list</dt><dd><p>List with the full path of all output files.</p>
 </dd>
 </dl>
 </dd>
@@ -637,27 +534,18 @@ document.write(`
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.print_list_of_histogram_files">
-<span class="sig-name descname"><span class="pre">print_list_of_histogram_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.print_list_of_histogram_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_histogram_files" title="Link to this definition">#</a></dt>
-<dd><p>Print list of histogram files.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.print_list_of_input_files">
-<span class="sig-name descname"><span class="pre">print_list_of_input_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.print_list_of_input_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_input_files" title="Link to this definition">#</a></dt>
-<dd><p>Print list of output files.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.print_list_of_log_files">
-<span class="sig-name descname"><span class="pre">print_list_of_log_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.print_list_of_log_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_log_files" title="Link to this definition">#</a></dt>
-<dd><p>Print list of log files.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulator.Simulator.print_list_of_output_files">
-<span class="sig-name descname"><span class="pre">print_list_of_output_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.print_list_of_output_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_output_files" title="Link to this definition">#</a></dt>
-<dd><p>Print list of output files.</p>
+<dt class="sig sig-object py" id="simulator.Simulator.print_list_of_files">
+<span class="sig-name descname"><span class="pre">print_list_of_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulator.html#Simulator.print_list_of_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulator.Simulator.print_list_of_files" title="Link to this definition">#</a></dt>
+<dd><p>Print list of output files generated by simulations.</p>
+<p>Options are “input”, “output”, “hist”, “log”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_type</strong><span class="classifier">str</span></dt><dd><p>File type to be listed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -748,15 +636,8 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">simulator</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.InvalidRunsToSimulateError"><code class="docutils literal notranslate"><span class="pre">InvalidRunsToSimulateError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.file_list"><code class="docutils literal notranslate"><span class="pre">Simulator.file_list()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_list_of_histogram_files"><code class="docutils literal notranslate"><span class="pre">Simulator.get_list_of_histogram_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_list_of_input_files"><code class="docutils literal notranslate"><span class="pre">Simulator.get_list_of_input_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_list_of_log_files"><code class="docutils literal notranslate"><span class="pre">Simulator.get_list_of_log_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_list_of_output_files"><code class="docutils literal notranslate"><span class="pre">Simulator.get_list_of_output_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_histogram_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_histogram_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_input_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_input_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_log_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_log_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_output_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_output_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.get_file_list"><code class="docutils literal notranslate"><span class="pre">Simulator.get_file_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.print_list_of_files"><code class="docutils literal notranslate"><span class="pre">Simulator.print_list_of_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.resources"><code class="docutils literal notranslate"><span class="pre">Simulator.resources()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.simulate"><code class="docutils literal notranslate"><span class="pre">Simulator.simulate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator.Simulator.simulation_software"><code class="docutils literal notranslate"><span class="pre">Simulator.simulation_software</span></code></a></li>

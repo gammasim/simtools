@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.array_model &#8212; simtools v0.1.dev1+g598d572 Manual</title>
+    <title>model.array_model &#8212; simtools v0.1.dev1+gfb4df6d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b63e96f8"></script>
+    <script src="../../_static/documentation_options.js?v=f8e6ae2c"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g598d572 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gfb4df6d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -209,7 +209,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/plot_array_layout.html">plot_array_layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_prod.html">simulate_prod</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_showers_for_trigger_rates.html">simulate_showers_for_trigger_rates</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/submit_data_from_external.html">submit_data_from_external</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_camera_efficiency.html">validate_camera_efficiency</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_camera_fov.html">validate_camera_fov</a></li>
@@ -230,7 +229,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/camera_efficiency.html">Camera Efficiency</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/configuration_module.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/corsika.html">CORSIKA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../api-reference/corsika_simtel.html">CORSIKA and sim_telarray</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/db_handler.html">Database support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/io_operations.html">I/O</a></li>
@@ -239,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/mc_model.html">MC Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/psf_analysis.html">PSF Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api-reference/runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/simulators.html">Simulator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/utils.html">Utilities</a></li>
@@ -388,14 +387,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">simtools.simtel.simtel_config_writer</span> <span class="kn">import</span> <span class="n">SimtelConfigWriter</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">general</span><span class="p">,</span> <span class="n">names</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ArrayModel&quot;</span><span class="p">,</span> <span class="s2">&quot;InvalidArrayConfigDataError&quot;</span><span class="p">]</span>
-
-
-<div class="viewcode-block" id="InvalidArrayConfigDataError">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.array_model.InvalidArrayConfigDataError">[docs]</a>
-<span class="k">class</span> <span class="nc">InvalidArrayConfigDataError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid array configuration data.&quot;&quot;&quot;</span></div>
-
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ArrayModel&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="ArrayModel">
@@ -419,8 +411,6 @@ document.write(`
 <span class="sd">    array_elements: str, Path, list</span>
 <span class="sd">        Array element definitions (list of array element or path to file with</span>
 <span class="sd">        the array element positions).</span>
-<span class="sd">    parameters_to_change: dict</span>
-<span class="sd">        Dict with the parameters to be changed with respect to the DB model.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -431,7 +421,6 @@ document.write(`
         <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">layout_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">array_elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">parameters_to_change</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize ArrayModel.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -446,13 +435,13 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">array_elements</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span>
-            <span class="n">site</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">,</span> <span class="n">parameters_to_change</span>
+            <span class="n">site</span><span class="p">,</span> <span class="n">array_elements</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_files_exported</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_elements_config</span><span class="p">,</span> <span class="n">parameters_to_change</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_elements_config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize ArrayModel taking different configuration options into account.</span>
 
@@ -462,8 +451,6 @@ document.write(`
 <span class="sd">            Site name.</span>
 <span class="sd">        array_elements_config: str, Path, list</span>
 <span class="sd">            Array element definitions.</span>
-<span class="sd">        parameters_to_change: dict</span>
-<span class="sd">            Dict with the parameters to be changed with respect to the DB model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -496,11 +483,7 @@ document.write(`
             <span class="n">array_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_elements_from_list</span><span class="p">(</span>
                 <span class="n">site_model</span><span class="o">.</span><span class="n">get_array_elements_for_layout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="p">)</span>
             <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory</span><span class="p">()</span>
-        <span class="n">telescope_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_telescope_models</span><span class="p">(</span>
-            <span class="n">site_model</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">,</span> <span class="n">parameters_to_change</span>
-        <span class="p">)</span>
+        <span class="n">telescope_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_telescope_models</span><span class="p">(</span><span class="n">site_model</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">array_elements</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">telescope_model</span>
 
     <span class="nd">@property</span>
@@ -527,11 +510,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">site</span>
 
-    <span class="k">def</span> <span class="nf">_set_config_file_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define and create config file directory.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_build_telescope_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">,</span> <span class="n">parameters_to_change</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_build_telescope_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build the the telescope models for all telescopes of this array.</span>
 
@@ -545,8 +524,6 @@ document.write(`
 <span class="sd">            Site model.</span>
 <span class="sd">        array_elements: dict</span>
 <span class="sd">            Dict with array elements.</span>
-<span class="sd">        parameters_to_change: dict</span>
-<span class="sd">            Dict with the parameters to be changed with respect to the DB model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -564,76 +541,7 @@ document.write(`
                     <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
                     <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
                 <span class="p">)</span>
-            <span class="c1"># Collecting parameters to change from array_config_data</span>
-            <span class="n">pars_to_change</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_telescope_info_from_array_config</span><span class="p">(</span>
-                <span class="n">element_name</span><span class="p">,</span> <span class="n">parameters_to_change</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pars_to_change</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Changing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">pars_to_change</span><span class="p">)</span><span class="si">}</span><span class="s2"> parameters of &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">element_name</span><span class="si">}</span><span class="s2">: &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="o">*</span><span class="n">pars_to_change</span><span class="p">,</span><span class="w"> </span><span class="si">}</span><span class="s2">, ...&quot;</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">element_name</span> <span class="ow">in</span> <span class="n">telescope_model</span><span class="p">:</span>
-                    <span class="n">telescope_model</span><span class="p">[</span><span class="n">element_name</span><span class="p">]</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">pars_to_change</span><span class="p">)</span>
-                    <span class="n">telescope_model</span><span class="p">[</span><span class="n">element_name</span><span class="p">]</span><span class="o">.</span><span class="n">set_extra_label</span><span class="p">(</span><span class="n">element_name</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="n">telescope_model</span>
-
-    <span class="k">def</span> <span class="nf">_get_single_telescope_info_from_array_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tel_name</span><span class="p">,</span> <span class="n">array_config_data</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return telescope information from array configuration data.</span>
-
-<span class="sd">        array_config_data contains the name of default telescope models for each telescope type</span>
-<span class="sd">        and the list of specific telescopes. For each case, the data can be given only as a name \</span>
-<span class="sd">        or as a dict with &#39;name&#39; and parameters to change. This function has to identify these \</span>
-<span class="sd">        two cases and collect the telescope name and the dict with the parameters to change.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        tel_name: str</span>
-<span class="sd">            Name of the telescope at the layout level (LSTN-01, MSTN-05, ...).</span>
-<span class="sd">        array_config_data: dict</span>
-<span class="sd">            Dict with the array config data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">def</span> <span class="nf">_process_single_telescope</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Read array configuration data for a single telescope.</span>
-
-<span class="sd">            Parameters</span>
-<span class="sd">            ----------</span>
-<span class="sd">            data: dict or str</span>
-<span class="sd">                Piece of the array_config_data for one specific telescope.</span>
-
-<span class="sd">            Returns</span>
-<span class="sd">            -------</span>
-<span class="sd">            dict</span>
-<span class="sd">                Dict with the parameters to change.</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="c1"># Case 0: data is dict</span>
-                <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;ArrayConfig has no name for a telescope&quot;</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                    <span class="k">raise</span> <span class="n">InvalidArrayConfigDataError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">pars_to_change</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;name&quot;</span><span class="p">}</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="s2">&quot;Grabbing tel data as dict - &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">pars_to_change</span><span class="p">)</span><span class="si">}</span><span class="s2"> pars to change&quot;</span>
-                <span class="p">)</span>
-                <span class="k">return</span> <span class="n">pars_to_change</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="c1"># Case 1: data is string (only name)</span>
-                <span class="k">return</span> <span class="p">{}</span>
-
-            <span class="c1"># Case 2: data has a wrong type</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;ArrayConfig has wrong input for a telescope&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidArrayConfigDataError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">array_config_data</span> <span class="ow">and</span> <span class="n">tel_name</span> <span class="ow">in</span> <span class="n">array_config_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">_process_single_telescope</span><span class="p">(</span><span class="n">array_config_data</span><span class="p">[</span><span class="n">tel_name</span><span class="p">])</span>
-        <span class="k">return</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="ArrayModel.print_telescope_list">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.array_model.ArrayModel.print_telescope_list">[docs]</a>
@@ -675,7 +583,7 @@ document.write(`
             <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config_file_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_config_directory</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config_file_name</span><span class="p">)</span>
 
         <span class="c1"># Writing parameters to the file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing array configuration file into </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -735,6 +643,8 @@ document.write(`
 <span class="sd">        Path</span>
 <span class="sd">            Path of the config directory path for sim_telarray.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span></div>
 
 

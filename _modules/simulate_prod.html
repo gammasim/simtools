@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db_get_array_layouts_from_db &#8212; simtools v0.1.dev1+gfb4df6d Manual</title>
+    <title>simulate_prod &#8212; simtools v0.1.dev1+gfb4df6d Manual</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/db_get_array_layouts_from_db';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulate_prod';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -296,7 +296,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/db_get_array_layouts_from_db.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simulate_prod.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -370,168 +370,190 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for db_get_array_layouts_from_db</h1><div class="highlight"><pre>
+  <h1>Source code for simulate_prod</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Get list of array layouts or list of elements for a given layout as defined in the db.</span>
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate simulation configuration and run simulations (if required).</span>
 
-<span class="sd">To get the list of pre-defined array layouts, use ``--list_available_layouts``.</span>
+<span class="sd">    Multipipe scripts will be produced as part of this application.</span>
+<span class="sd">    Allows to run array layout simulation including shower and detector simulations</span>
 
-<span class="sd">To get the list of array elements for a given layout, use ``--array_layout_name``.</span>
+<span class="sd">    The entire simulation chain, parts of it, or nothing is executed:</span>
 
-<span class="sd">To get the positions for a set of array elements, use ``--array_element_list``.</span>
-<span class="sd">Listing of array elements follows this logic:</span>
+<span class="sd">    - shower simulations with CORSIKA only</span>
+<span class="sd">    - shower simulations with CORSIKA which are piped directly to sim_telarray using</span>
+<span class="sd">      the sim_telarray multipipe mechanism.</span>
 
-<span class="sd">* explicit listing: e.g., ``-array_element_list MSTN-01, MSTN05``</span>
-<span class="sd">* listing of types: e.g, ``-array_element_list MSTN`` plots all telescopes of type MSTN.</span>
+<span class="sd">    Command line arguments</span>
+<span class="sd">    ----------------------</span>
+<span class="sd">    model_version (str, required)</span>
+<span class="sd">        The telescope model version to use (e.g., Prod5).</span>
+<span class="sd">    site (str, required)</span>
+<span class="sd">        North or South (case insensitive).</span>
+<span class="sd">    primary (str, required)</span>
+<span class="sd">        Name of the primary particle to simulate. The available options are</span>
+<span class="sd">        gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.</span>
+<span class="sd">    azimuth_angle (str or float, required)</span>
+<span class="sd">        Telescope pointing direction in azimuth.</span>
+<span class="sd">        It can be in degrees between 0 and 360 or one of north, south, east or west</span>
+<span class="sd">        (case insensitive). Note that North is 0 degrees and the azimuth grows clockwise,</span>
+<span class="sd">        so East is 90 degrees.</span>
+<span class="sd">    zenith_angle (float, required)</span>
+<span class="sd">        Zenith angle in degrees.</span>
+<span class="sd">    nshow (int, optional)</span>
+<span class="sd">        Number of showers to simulate.</span>
+<span class="sd">        The Number of simulated events depends on the number of times a shower is re-used in the</span>
+<span class="sd">        telescope simulation. The number provided here is before any reuse factors.</span>
+<span class="sd">    start_run (int, required)</span>
+<span class="sd">        Start run number such that the actual run number will be &#39;start_run&#39; + &#39;run&#39;.</span>
+<span class="sd">        This is useful in case a new transform is submitted for the same production.</span>
+<span class="sd">        It allows the transformation system to keep using sequential run numbers without repetition.</span>
+<span class="sd">    run (int, required)</span>
+<span class="sd">        Run number (actual run number will be &#39;start_run&#39; + &#39;run&#39;).</span>
+<span class="sd">    data_directory (str, optional)</span>
+<span class="sd">        The location of the output directories corsika-data and simtel-data.</span>
+<span class="sd">        the label is added to the data_directory, such that the output</span>
+<span class="sd">        will be written to data_directory/label/simtel-data.</span>
+<span class="sd">    pack_for_grid_register (bool, optional)</span>
+<span class="sd">        Set whether to prepare a tarball for registering the output files on the grid.</span>
+<span class="sd">        The files are written to the output_path/directory_for_grid_upload directory.</span>
+<span class="sd">    log_level (str, optional)</span>
+<span class="sd">        Log level to print.</span>
 
-<span class="sd">Command line arguments</span>
-<span class="sd">----------------------</span>
-<span class="sd">list_available_layouts : bool, optional</span>
-<span class="sd">    List available layouts in the database.</span>
-<span class="sd">array_layout_name : str</span>
-<span class="sd">    Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).</span>
-<span class="sd">array_element_list : list</span>
-<span class="sd">    List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).</span>
-<span class="sd">coordinate_system : str, optional</span>
-<span class="sd">    Coordinate system for the array layout (ground or utm).</span>
-<span class="sd">output_file : str, optional</span>
-<span class="sd">    Name of the output file to be saved as astropy table (ecsv file)</span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    Run the application:</span>
 
-<span class="sd">Examples</span>
-<span class="sd">--------</span>
-<span class="sd">List pre-defined array layouts.</span>
+<span class="sd">    .. code-block:: console</span>
 
-<span class="sd">.. code-block:: console</span>
+<span class="sd">        simtools-simulate-prod \\</span>
+<span class="sd">        --model_version Prod5 --site north --primary gamma --azimuth_angle north \\</span>
+<span class="sd">        --zenith_angle 20 --start_run 0 --run 1</span>
 
-<span class="sd">    simtools-db-get-array-layouts-from-db --site North --model_version &quot;2024-02-01&quot;</span>
-
-<span class="sd">Retrieve telescope positions for array layout &#39;test_layout&#39; from database.</span>
-
-<span class="sd">.. code-block:: console</span>
-
-<span class="sd">    simtools-db-get-array-layouts-from-db --site North --model_version &quot;2024-02-01&quot;</span>
-<span class="sd">        --array_layout_name test_layout</span>
-
-<span class="sd">Retrieve telescope positions from database (utm coordinate system) and write to an ecsv files</span>
-
-<span class="sd">.. code-block:: console</span>
-
-<span class="sd">    simtools-db-get-array-layouts-from-db --site North --model_version &quot;2024-02-01&quot;</span>
-<span class="sd">      --array_element_list LSTN-01 LSTN-02 MSTN</span>
-<span class="sd">      --coordinate_system utm</span>
-<span class="sd">      --output_file telescope_positions-test_layout.ecsv</span>
+<span class="sd">    By default the configuration is saved in simtools-output/test-production</span>
+<span class="sd">    together with the actual simulation output in corsika-data and simtel-data within.</span>
+<span class="sd">    The location of the latter directories can be set</span>
+<span class="sd">    to a different location via the option --data_directory,</span>
+<span class="sd">    but the label is always added to the data_directory, such that the output</span>
+<span class="sd">    will be written to data_directory/label/simtel-data.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tarfile</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">simtools.data_model.model_data_writer</span> <span class="k">as</span> <span class="nn">writer</span>
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span> <span class="nn">simtools.model.array_model</span> <span class="kn">import</span> <span class="n">ArrayModel</span>
-<span class="kn">from</span> <span class="nn">simtools.model.site_model</span> <span class="kn">import</span> <span class="n">SiteModel</span>
+<span class="kn">from</span> <span class="nn">simtools.simulator</span> <span class="kn">import</span> <span class="n">Simulator</span>
 
 
-<span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parse command line configuration.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    label : str</span>
-<span class="sd">        Label describing the application.</span>
-<span class="sd">    description : str</span>
-<span class="sd">        Description of the application.</span>
+<span class="sd">    description: str</span>
+<span class="sd">        Application description.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    CommandLineParser</span>
 <span class="sd">        Command line parser object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
 
-    <span class="n">input_group</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
-    <span class="n">input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--list_available_layouts&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List available layouts in the database.&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--data_directory&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;The directory where to save the corsika-data and simtel-data output directories.&quot;</span>
+            <span class="s2">&quot;the label is added to the data_directory, such that the output&quot;</span>
+            <span class="s2">&quot;will be written to data_directory/label/simtel-data.&quot;</span>
+        <span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;./simtools-output/&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--coordinate_system&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Coordinate system for the array layout.&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="s2">&quot;--pack_for_grid_register&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Set whether to prepare a tarball for registering the output files on the grid.&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;ground&quot;</span><span class="p">,</span>
-        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ground&quot;</span><span class="p">,</span> <span class="s2">&quot;utm&quot;</span><span class="p">],</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_model</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;layout&quot;</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">simulation_model</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
+        <span class="n">simulation_configuration</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;software&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_configuration&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_layout_from_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
+<div class="viewcode-block" id="pack_for_register">
+<a class="viewcode-back" href="../user-guide/applications/simulate_prod.html#simulate_prod.pack_for_register">[docs]</a>
+<span class="k">def</span> <span class="nf">pack_for_register</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">simulator</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read array elements and their positions from data base using the layout name.</span>
+<span class="sd">    Pack the output files for registering on the grid.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Dictionary with the command line arguments.</span>
-<span class="sd">    db_config : dict</span>
-<span class="sd">        Database configuration.</span>
+<span class="sd">    logger: logging.Logger</span>
+<span class="sd">        Logger object.</span>
+<span class="sd">    simulator: Simulator</span>
+<span class="sd">        Simulator object.</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    astropy.table.Table</span>
-<span class="sd">        Table with array element positions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">array_model</span> <span class="o">=</span> <span class="n">ArrayModel</span><span class="p">(</span>
-        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-        <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-        <span class="n">layout_name</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-        <span class="n">array_elements</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Packing the output files for registering on the grid&quot;</span><span class="p">)</span>
+    <span class="n">output_files</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">)</span>
+    <span class="n">log_files</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+    <span class="n">histogram_files</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;hist&quot;</span><span class="p">)</span>
+    <span class="n">tar_file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">log_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;log.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;log_hist.tar.gz&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">,</span> <span class="s2">&quot;w:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+        <span class="n">files_to_tar</span> <span class="o">=</span> <span class="n">log_files</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">histogram_files</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">file_to_tar</span> <span class="ow">in</span> <span class="n">files_to_tar</span><span class="p">:</span>
+            <span class="n">tar</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file_to_tar</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">file_to_tar</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">directory_for_grid_upload</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+        <span class="s2">&quot;directory_for_grid_upload&quot;</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">array_model</span><span class="o">.</span><span class="n">export_array_elements_as_table</span><span class="p">(</span>
-        <span class="n">coordinate_system</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">]</span>
-    <span class="p">)</span>
+    <span class="n">directory_for_grid_upload</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">file_to_move</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">output_files</span><span class="p">,</span> <span class="n">tar_file_name</span><span class="p">]:</span>
+        <span class="n">source_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_to_move</span><span class="p">)</span>
+        <span class="n">destination_file</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span> <span class="o">/</span> <span class="n">source_file</span><span class="o">.</span><span class="n">name</span>
+        <span class="c1"># Note that this will overwrite previous files which exist in the directory</span>
+        <span class="c1"># It should be fine for normal production since each run is on a separate node</span>
+        <span class="c1"># so no files are expected there.</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">destination_file</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output files for the grid placed in </span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="main">
-<a class="viewcode-back" href="../user-guide/applications/db_get_array_layouts_from_db.html#db_get_array_layouts_from_db.main">[docs]</a>
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get list of array elements as defined in the db (array layout).&quot;&quot;&quot;</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
-    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
-        <span class="n">label</span><span class="p">,</span>
-        <span class="s2">&quot;Get list of array elements as defined in the db (array layout).&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>  <span class="c1"># noqa: D103</span>
+    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Run simulations for productions&quot;</span><span class="p">)</span>
+
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
 
-    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;list_available_layouts&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Site must be provided to list available layouts.&quot;</span><span class="p">)</span>
-        <span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-            <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_list_of_array_layouts</span><span class="p">())</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Array layout: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">])</span>
-        <span class="n">layout</span> <span class="o">=</span> <span class="n">_layout_from_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">)</span>
-        <span class="n">layout</span><span class="o">.</span><span class="n">pprint</span><span class="p">()</span>
+    <span class="n">simulator</span> <span class="o">=</span> <span class="n">Simulator</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">),</span>
+        <span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
+        <span class="n">submit_command</span><span class="o">=</span><span class="s2">&quot;local&quot;</span><span class="p">,</span>
+        <span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span>
+        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
+    <span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_file_from_default&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-            <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
-                <span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
-                <span class="n">output_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">],</span>
-                <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">product_data</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-            <span class="p">)</span></div>
+    <span class="n">simulator</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
 
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Production run is complete for primary </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;primary&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> showers &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;coming from </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;azimuth_angle&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> azimuth and zenith angle of &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;zenith_angle&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> at the </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> site, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;using the </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;model_version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> simulation model.&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;pack_for_grid_register&quot;</span><span class="p">]:</span>
+        <span class="n">pack_for_register</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">simulator</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
