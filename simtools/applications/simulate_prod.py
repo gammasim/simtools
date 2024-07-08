@@ -114,6 +114,13 @@ def _parse(description=None):
         required=False,
         default=False,
     )
+    config.parser.add_argument(
+        "--save_file_lists",
+        help="Save lists of output and log files.",
+        action="store_true",
+        required=False,
+        default=False,
+    )
     return config.initialize(
         db_config=True,
         simulation_model=["site", "layout", "telescope"],
@@ -182,6 +189,8 @@ def main():  # noqa: D103
 
     if args_dict["pack_for_grid_register"]:
         pack_for_register(logger, simulator, args_dict)
+    if args_dict["save_file_lists"]:
+        simulator.save_file_lists()
 
 
 if __name__ == "__main__":

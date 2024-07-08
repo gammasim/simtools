@@ -9,6 +9,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.io_operations import io_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
@@ -67,6 +68,8 @@ class Simulator:
         self.simulation_software = self.args_dict["simulation_software"]
         self._logger.debug(f"Init Simulator {self.simulation_software}")
         self.label = label
+
+        self.io_handler = io_handler.IOHandler()
 
         self.runs = self._initialize_run_list()
         self._results = defaultdict(list)
@@ -531,3 +534,18 @@ class Simulator:
         if run_list is None and run_range is None:
             return [] if self.runs is None else self.runs
         return self._validate_run_list_and_range(run_list, run_range)
+
+    def save_file_lists(self):
+        """Save files lists for output and log files."""
+        for file_type in ["output", "log", "hist"]:
+            file_name = self.io_handler.get_output_directory(label=self.label).joinpath(
+                f"{file_type}_files.txt"
+            )
+            file_list = self.get_file_list(file_type=file_type)
+            if all(element is not None for element in file_list) and len(file_list) > 0:
+                self._logger.info(f"Saving list of {file_type} files to {file_name}")
+                with open(file_name, "w", encoding="utf-8") as f:
+                    for line in self.get_file_list(file_type=file_type):
+                        f.write(f"{line}\n")
+            else:
+                self._logger.debug(f"No files to save for {file_type} files.")
