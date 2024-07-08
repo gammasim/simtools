@@ -33,16 +33,6 @@ def simulator_camera_efficiency(camera_efficiency_sst, telescope_model_sst, simt
     )
 
 
-def test_shall_run(simulator_camera_efficiency):
-    """
-    Testing here that the file does not exist because no simulations
-    are run in unit tests. This function is tested for the positive case
-    in the integration tests.
-    """
-
-    assert simulator_camera_efficiency._shall_run()
-
-
 def test_make_run_command(simulator_camera_efficiency):
     command = simulator_camera_efficiency._make_run_command()
 
