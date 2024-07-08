@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulate_prod &#8212; simtools v0.1.dev1+g335f3b9 Manual</title>
+    <title>simulate_prod &#8212; simtools v0.1.dev1+g89e4c31 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=ae25d90f"></script>
+    <script src="../_static/documentation_options.js?v=d821a902"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g335f3b9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g89e4c31 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -485,6 +485,13 @@ document.write(`
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--save_file_lists&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save lists of output and log files.&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
         <span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">job_submission</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -553,6 +560,8 @@ document.write(`
 
     <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;pack_for_grid_register&quot;</span><span class="p">]:</span>
         <span class="n">pack_for_register</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">simulator</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;save_file_lists&quot;</span><span class="p">]:</span>
+        <span class="n">simulator</span><span class="o">.</span><span class="n">save_file_lists</span><span class="p">()</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
