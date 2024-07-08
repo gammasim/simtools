@@ -19,6 +19,15 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.fixture()
+def configurator(tmp_test_directory, _mock_settings_env_vars, simtel_path):
+    config = Configurator()
+    config.default_config(
+        ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
+    )
+    return config
+
+
 def test_fill_from_command_line(configurator, args_dict):
     configurator._fill_from_command_line(arg_list=[], require_command_line=False)
     assert args_dict == configurator.config
