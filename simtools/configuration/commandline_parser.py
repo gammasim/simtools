@@ -8,6 +8,7 @@ from pathlib import Path
 import astropy.units as u
 
 import simtools.version
+from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.utils import names
 
 __all__ = [
@@ -299,20 +300,21 @@ class CommandLineParser(argparse.ArgumentParser):
         _configuration_group = self.add_argument_group("simulation configuration")
         _configuration_group.add_argument(
             "--primary",
-            help="Primary particle to simulate.",
+            help=(
+                "Primary particle to simulate. "
+                f"(choices for common names: {', '.join(PrimaryParticle.particle_names().keys())}; "
+                "use '--primary_ID_type' to use other particle ID types)."
+            ),
             type=str.lower,
             required=True,
-            choices=[
-                "gamma",
-                "gamma_diffuse",
-                "electron",
-                "proton",
-                "muon",
-                "helium",
-                "nitrogen",
-                "silicon",
-                "iron",
-            ],
+        )
+        _configuration_group.add_argument(
+            "--primary_id_type",
+            help="Primary particle ID type",
+            type=str,
+            required=False,
+            choices=["common_name", "corsika7_id", "pdg_id"],
+            default="common_name",
         )
         _configuration_group.add_argument(
             "--azimuth_angle",

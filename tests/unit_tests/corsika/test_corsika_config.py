@@ -6,7 +6,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from simtools.corsika.corsika_config import CorsikaConfig, InvalidCorsikaInputError
+from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.corsika.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -58,19 +59,25 @@ def test_rotate_azimuth_by_180deg(io_handler):
     assert pytest.approx(cc._rotate_azimuth_by_180deg(-180.0)) == 0.0
 
 
-def test_convert_primary_input_and_store_primary_name(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
+def test_set_primary_particle(corsika_config):
+    cc = corsika_config
+    assert isinstance(cc._set_primary_particle(args_dict=None), PrimaryParticle)
+    assert isinstance(
+        cc._set_primary_particle(args_dict={"primary_id_type": None}), PrimaryParticle
     )
-    assert cc._convert_primary_input_and_store_primary_name("Gamma") == 1
-    assert cc._convert_primary_input_and_store_primary_name("proton") == 14
-    assert cc._convert_primary_input_and_store_primary_name("Helium") == 402
-    assert cc._convert_primary_input_and_store_primary_name("IRON") == 5626
 
-    with pytest.raises(InvalidCorsikaInputError):
-        cc._convert_primary_input_and_store_primary_name("banana")
+    p_common_name = cc._set_primary_particle(
+        args_dict={"primary": "proton", "primary_id_type": "common_name"}
+    )
+    assert p_common_name.name == "proton"
+
+    p_corsika7_id = cc._set_primary_particle(
+        args_dict={"primary": 14, "primary_id_type": "corsika7_id"}
+    )
+    assert p_corsika7_id.name == "proton"
+
+    p_pdg_id = cc._set_primary_particle(args_dict={"primary": 2212, "primary_id_type": "pdg_id"})
+    assert p_pdg_id.name == "proton"
 
 
 def test_get_config_parameter(io_handler, corsika_config_data, caplog):

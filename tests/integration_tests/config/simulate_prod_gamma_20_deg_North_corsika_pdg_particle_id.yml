@@ -1,0 +1,30 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-simulate-prod
+  TEST_NAME: gamma_20_deg_corsika_pdg_particle_id
+  CONFIGURATION:
+    SIMULATION_SOFTWARE: corsika
+    LABEL: test-production-North-corsika-pdg-particle-id
+    MODEL_VERSION: prod6
+    SITE: North
+    ARRAY_LAYOUT_NAME: test_layout
+    PRIMARY: 22
+    PRIMARY_ID_TYPE: pdg_id
+    RUN_NUMBER_START: 10
+    NUMBER_OF_RUNS: 2
+    AZIMUTH_ANGLE: North
+    ZENITH_ANGLE: 20
+    NSHOW: 10
+    ESLOPE: -2.
+    VIEWCONE: "0 deg 0 deg"
+    ERANGE: "100 GeV 2 TeV"
+    CORE_SCATTER: "10 1400 m"
+    DATA_DIRECTORY: simtools-output
+    OUTPUT_PATH: simtools-output
+    LOG_LEVEL: DEBUG
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: |
+        corsika/data/run000010/run000010_gamma_North_test_layout_za020-azm000deg_test-production-North-corsika-pdg-particle-id_North_test_layout_test-production-North-corsika-pdg-particle-id.zst
+    - OUTPUT_FILE: |
+        corsika/data/run000011/run000011_gamma_North_test_layout_za020-azm000deg_test-production-North-corsika-pdg-particle-id_North_test_layout_test-production-North-corsika-pdg-particle-id.zst
+    - OUTPUT_FILE: |
+        corsika/data/run000010/run10.log

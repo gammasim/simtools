@@ -1,26 +1,3 @@
-PRIMARIES:
-  GAMMA:
-    number: 1
-    names: ['PHOTON']
-  ELECTRON:
-    number: 3
-    names: ['ELECTRONS']
-  PROTON:
-    number: 14
-    names: ['PROTONS']
-  HELIUM:
-    number: 402
-    names: ['HE']
-  NITROGEN:
-    number: 1407
-    names: ['N']
-  SILICON:
-    number: 2500
-    names: ['SI']
-  IRON:
-    number: 5626
-    names: ['FE']
-
 INTERACTION_FLAGS:
   FIXHEI: [0., 0]
   FIXCHI: [0.]

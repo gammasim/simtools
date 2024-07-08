@@ -33,6 +33,7 @@ dependencies:
   - toml
   - pip:
       - ctao-dpps-cosmic-ray-spectra
+      - particle
       - pytest-random-order
 
 # cheatsheet

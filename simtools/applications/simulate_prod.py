@@ -19,8 +19,9 @@ r"""
     site (str, required)
         North or South (case insensitive).
     primary (str, required)
-        Name of the primary particle to simulate. The available options are
-        gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.
+        Name or ID of the primary particle to simulate. Allowed are common names like gamma, proton,
+        or IDs for CORSIKA7 (e.g. 14 for proton) and PDG (e.g. 2212 for proton). Use the
+        'primary_id_type' option to specify the type of ID.
     azimuth_angle (str or float, required)
         Telescope pointing direction in azimuth.
         It can be in degrees between 0 and 360 or one of north, south, east or west
