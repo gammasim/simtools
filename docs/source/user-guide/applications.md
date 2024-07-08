@@ -56,7 +56,6 @@ generate_regular_arrays <applications/generate_regular_arrays>
 plot_array_layout <applications/plot_array_layout>
 simulate_light_emission <applications/simulate_light_emission>
 simulate_prod <applications/simulate_prod>
-simulate_showers_for_trigger_rates <applications/simulate_showers_for_trigger_rates>
 submit_data_from_external <applications/submit_data_from_external>
 validate_camera_efficiency <applications/validate_camera_efficiency>
 validate_camera_fov <applications/validate_camera_fov>

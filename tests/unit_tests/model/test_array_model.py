@@ -7,7 +7,7 @@ import pytest
 from astropy import units as u
 from astropy.table import QTable
 
-from simtools.model.array_model import ArrayModel, InvalidArrayConfigDataError
+from simtools.model.array_model import ArrayModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -55,79 +55,6 @@ def test_input_validation(array_model):
 def test_site(array_model):
     am = array_model
     assert am.site == "North"
-
-
-def test_get_single_telescope_info_from_array_config(db_config, model_version, io_handler):
-    pulse_shape_file = "LST_pulse_shape_7dynode_high_intensity_pix1s.dat"
-    parameters_to_change = {
-        "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
-            "name": "MSTN-05",
-            "fadc_pulse_shape": pulse_shape_file,
-        },
-    }
-    am = ArrayModel(
-        label="test",
-        site="North",
-        layout_name="test_layout",
-        parameters_to_change=parameters_to_change,
-        mongo_db_config=db_config,
-        model_version=model_version,
-    )
-
-    assert am._get_single_telescope_info_from_array_config("LSTN-01", parameters_to_change) == {}
-    assert am._get_single_telescope_info_from_array_config("MSTN-05", parameters_to_change) == {
-        "fadc_pulse_shape": pulse_shape_file
-    }
-
-    parameters_missing_name = {
-        "MSTN-05": {  # change MST pulse shape for testing to LST pulse shape
-            "fadc_pulse_shape": pulse_shape_file,
-        },
-    }
-    with pytest.raises(
-        InvalidArrayConfigDataError, match="ArrayConfig has no name for a telescope"
-    ):
-        ArrayModel(
-            label="test",
-            site="North",
-            layout_name="test_layout",
-            parameters_to_change=parameters_missing_name,
-            mongo_db_config=db_config,
-            model_version=model_version,
-        )
-
-    parameters_with_string = {
-        "MSTN-05": "a string",
-    }
-    am_with_string = ArrayModel(
-        label="test",
-        site="North",
-        layout_name="test_layout",
-        parameters_to_change=parameters_with_string,
-        mongo_db_config=db_config,
-        model_version=model_version,
-    )
-    assert (
-        am_with_string._get_single_telescope_info_from_array_config(
-            "MSTN-05", parameters_with_string
-        )
-        == {}
-    )
-
-    invalid_parameters = {
-        "MSTN-05": 5.0,
-    }
-    with pytest.raises(
-        InvalidArrayConfigDataError, match="ArrayConfig has wrong input for a telescope"
-    ):
-        ArrayModel(
-            label="test",
-            site="North",
-            layout_name="test_layout",
-            parameters_to_change=invalid_parameters,
-            mongo_db_config=db_config,
-            model_version=model_version,
-        )
 
 
 def test_exporting_config_files(db_config, io_handler, model_version):
@@ -197,11 +124,14 @@ def test_get_telescope_position_parameter(array_model, io_handler):
     }
 
 
-def test_set_config_file_directory(array_model, io_handler):
+def test_get_config_file(array_model, io_handler):
     am = array_model
-    _config_dir_1 = am.io_handler.get_output_directory(am.label, "model")
-    am._set_config_file_directory()
-    assert _config_dir_1.is_dir()
+    assert am.get_config_file().name == "CTA-test_layout-North-2024-02-01_test.cfg"
+
+
+def test_get_config_directory(array_model, io_handler):
+    am = array_model
+    assert am.get_config_directory().is_dir()
 
 
 def test_export_array_elements_as_table(array_model, io_handler):
