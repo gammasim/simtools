@@ -9,5 +9,6 @@ auxiliary_files.md
 model_parameters.md
 databases.md
 simulation_software.md
+productions.md
 docker_files.md
 ```
