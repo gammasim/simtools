@@ -300,6 +300,11 @@ class Simulator:
             dictionary with run number as key and (if available) simulation
             file name as value
 
+        Raises
+        ------
+        ValueError
+            If no runs are to be submitted.
+
         """
         _runs_and_files = {}
         self._logger.debug(f"Getting runs and files to submit ({input_file_list})")
@@ -309,6 +314,8 @@ class Simulator:
             _runs_and_files = {self._guess_run_from_file(file): file for file in input_file_list}
         elif self.simulation_software in ["corsika", "corsika_simtel"]:
             _runs_and_files = {run: None for run in self._get_runs_to_simulate()}
+        if len(_runs_and_files) == 0:
+            raise ValueError("No runs to submit.")
         return _runs_and_files
 
     @staticmethod

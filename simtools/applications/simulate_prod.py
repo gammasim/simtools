@@ -12,11 +12,6 @@ r"""
     - shower simulations with CORSIKA which are piped directly to sim_telarray using
       the sim_telarray multipipe mechanism.
 
-    TODO - check if this is still correct
-    This application does not provide a mechanism to submit jobs to a batch system like others
-    in simtools since it is meant to be executed on a grid node
-    (distributed to it by the workload management system).
-
     Command line arguments
     ----------------------
     production_config (str, Path, required)
