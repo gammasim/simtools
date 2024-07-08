@@ -14,9 +14,6 @@ r"""
 
     Command line arguments
     ----------------------
-    production_config (str, Path, required)
-        Simulation configuration file
-        (contains the default setup which can be overwritten by the command line options).
     model_version (str, required)
         The telescope model version to use (e.g., Prod5).
     site (str, required)
@@ -58,9 +55,8 @@ r"""
     .. code-block:: console
 
         simtools-simulate-prod \\
-        --production_config tests/resources/prod_multi_config_test.yml --model_version Prod5 \\
-        --site north --primary gamma --azimuth_angle north --zenith_angle 20 \\
-        --start_run 0 --run 1
+        --model_version Prod5 --site north --primary gamma --azimuth_angle north \\
+        --zenith_angle 20 --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production
     together with the actual simulation output in corsika-data and simtel-data within.
