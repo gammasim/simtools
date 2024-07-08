@@ -30,7 +30,12 @@ def corsika_file():
 
 
 @pytest.fixture()
-def simulations_args_dict(corsika_config_data, model_version, simtel_path):
+def submit_engine():
+    return "local"
+
+
+@pytest.fixture()
+def simulations_args_dict(corsika_config_data, model_version, simtel_path, submit_engine):
     """Return a dictionary with the simulation command line arguments."""
     args_dict = copy.deepcopy(corsika_config_data)
     args_dict["simulation_software"] = "simtel"
@@ -42,6 +47,8 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path):
     args_dict["keep_seeds"] = False
     args_dict["run_number_start"] = 1
     args_dict["nshow"] = 10
+    args_dict["submit_engine"] = submit_engine
+    args_dict["extra_commands"] = None
     return args_dict
 
 
@@ -53,7 +60,6 @@ def array_simulator(io_handler, db_config, simulations_args_dict):
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        submit_command="local",
         mongo_db_config=db_config,
     )
 
@@ -67,7 +73,6 @@ def shower_simulator(io_handler, db_config, simulations_args_dict):
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        submit_command="local",
         mongo_db_config=db_config,
     )
 
@@ -80,7 +85,6 @@ def shower_array_simulator(io_handler, db_config, simulations_args_dict):
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
-        submit_command="local",
         mongo_db_config=db_config,
     )
 
@@ -169,9 +173,9 @@ def test_fill_results_without_run(array_simulator, input_file_list):
     assert array_simulator.runs == [1, 22, 2]
 
 
-def test_simulate_shower_simulator(shower_simulator):
+def test_simulate_shower_simulator(shower_simulator, submit_engine):
     shower_simulator._test = True
-    shower_simulator._submit_command = "local"
+    shower_simulator._submit_engine = submit_engine
     shower_simulator.simulate()
     assert len(shower_simulator._results["output"]) > 0
     assert len(shower_simulator._results["sub_out"]) > 0
@@ -179,18 +183,18 @@ def test_simulate_shower_simulator(shower_simulator):
     assert Path(run_script).exists()
 
 
-def test_simulate_array_simulator(array_simulator, corsika_file):
+def test_simulate_array_simulator(array_simulator, corsika_file, submit_engine):
     array_simulator._test = True
-    array_simulator._submit_command = "local"
+    array_simulator._submit_engine = submit_engine
     array_simulator.simulate(input_file_list=corsika_file)
 
     assert len(array_simulator._results["output"]) > 0
     assert len(array_simulator._results["sub_out"]) > 0
 
 
-def test_simulate_shower_array_simulator(shower_array_simulator):
+def test_simulate_shower_array_simulator(shower_array_simulator, submit_engine):
     shower_array_simulator._test = True
-    shower_array_simulator._submit_command = "local"
+    shower_array_simulator._submit_engine = submit_engine
     shower_array_simulator.simulate()
 
     assert len(shower_array_simulator._results["output"]) > 0

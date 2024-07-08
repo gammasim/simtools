@@ -20,6 +20,7 @@ dependencies:
   - pyproj
   - pytest
   - pytest-cov
+  - pytest-mock
   - pytest-profiling
   - pytest-repeat
   - pytest-xdist

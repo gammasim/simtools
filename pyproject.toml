@@ -57,6 +57,7 @@ optional-dependencies."doc" = [
 optional-dependencies."tests" = [
   "pytest",
   "pytest-cov",
+  "pytest-mock",
   "pytest-profiling",
   "pytest-random-order",
   "pytest-repeat",
