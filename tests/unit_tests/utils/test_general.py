@@ -27,10 +27,7 @@ url_desy = "https://www.desy.de"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
-@pytest.fixture()
-def test_data():
-    "Test data to be written in a file."
-    return "Test data"
+test_data = "Test data"
 
 
 def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) -> None:
@@ -281,7 +278,7 @@ def test_program_is_executable(caplog) -> None:
     assert "PATH environment variable is not set." in caplog.text
 
 
-def test_get_file_age(tmp_test_directory, test_data) -> None:
+def test_get_file_age(tmp_test_directory) -> None:
     # Create a temporary file and wait for 1 seconds before accessing it
     with open(tmp_test_directory / "test_file.txt", "w", encoding="utf-8") as file:
         file.write(test_data)
@@ -474,7 +471,7 @@ def test_copy_as_list() -> None:
     assert gen.copy_as_list(123) == [123]
 
 
-def test_find_file_in_current_directory(tmp_test_directory, test_data) -> None:
+def test_find_file_in_current_directory(tmp_test_directory) -> None:
     """
     Test finding a file in the temp test directory directory.
     """
@@ -496,7 +493,7 @@ def test_find_file_in_non_existing_directory(tmp_test_directory) -> None:
         gen.find_file(file_name, loc)
 
 
-def test_find_file_recursively(tmp_test_directory, test_data) -> None:
+def test_find_file_recursively(tmp_test_directory) -> None:
     """
     Test finding a file recursively.
     """

@@ -14,12 +14,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
-def lst_config_file():
-    """Return the path to test config file for LSTN-01"""
-    return "tests/resources/CTA-North-LSTN-01-Released_test-telescope-model.cfg"
-
-
 def test_get_parameter_dict(telescope_model_lst):
     tel_model = telescope_model_lst
     assert isinstance(tel_model._get_parameter_dict("num_gains"), dict)

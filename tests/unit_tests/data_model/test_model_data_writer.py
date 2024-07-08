@@ -16,17 +16,11 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
-def test_file_2():
-    return "test_file_2.ecsv"
+test_file_2 = "test_file_2.ecsv"
+ascii_format = "ascii.ecsv"
 
 
-@pytest.fixture()
-def ascii_format():
-    return "ascii.ecsv"
-
-
-def test_write(tmp_test_directory, test_file_2, ascii_format):
+def test_write(tmp_test_directory):
     # both none (no exception expected)
     w_1 = writer.ModelDataWriter()
     w_1.write(metadata=None, product_data=None)
@@ -79,7 +73,7 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
         )
 
 
-def test_dump(args_dict, tmp_test_directory, test_file_2):
+def test_dump(args_dict, tmp_test_directory):
     _metadata = {"name": "test_metadata"}
     empty_table = Table()
 
@@ -117,7 +111,7 @@ def test_dump(args_dict, tmp_test_directory, test_file_2):
     assert Path(args_dict["output_path"]).joinpath(test_file_2).exists()
 
 
-def test_validate_and_transform(tmp_test_directory, ascii_format):
+def test_validate_and_transform(tmp_test_directory):
     w_1 = writer.ModelDataWriter()
     with pytest.raises(TypeError):
         w_1.validate_and_transform(product_data=None, validate_schema_file=None)
@@ -157,7 +151,7 @@ def test_write_metadata_to_yml(tmp_test_directory):
         )
 
 
-def test_astropy_data_format(ascii_format):
+def test_astropy_data_format():
     assert writer.ModelDataWriter._astropy_data_format("hdf5") == "hdf5"
     assert writer.ModelDataWriter._astropy_data_format("ecsv") == ascii_format
     assert writer.ModelDataWriter._astropy_data_format(ascii_format) == ascii_format

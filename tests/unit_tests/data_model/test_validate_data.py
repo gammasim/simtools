@@ -18,17 +18,11 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
-def mirror_file():
-    return "tests/resources/MLTdata-preproduction.ecsv"
+mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
+mirror_2f_schema_file = "tests/resources/MST_mirror_2f_measurements.schema.yml"
 
 
-@pytest.fixture()
-def mirror_2f_schema_file():
-    return "tests/resources/MST_mirror_2f_measurements.schema.yml"
-
-
-def test_validate_and_transform(caplog, mirror_file, mirror_2f_schema_file):
+def test_validate_and_transform(caplog):
     data_validator = validate_data.DataValidator()
     # no input file defined
     with caplog.at_level(logging.ERROR):
@@ -51,7 +45,7 @@ def test_validate_and_transform(caplog, mirror_file, mirror_2f_schema_file):
     assert "Validating data from:" in caplog.text
 
 
-def test_validate_data_file(caplog, mirror_file):
+def test_validate_data_file(caplog):
     data_validator = validate_data.DataValidator()
     # no input file defined, should pass
     data_validator.validate_data_file()
@@ -79,7 +73,7 @@ def test_validate_parameter_and_file_name():
         data_validator.validate_parameter_and_file_name()
 
 
-def test_validate_data_columns(tmp_test_directory, caplog, mirror_file, mirror_2f_schema_file):
+def test_validate_data_columns(tmp_test_directory, caplog):
     data_validator = validate_data.DataValidator()
     with pytest.raises(TypeError):
         data_validator._validate_data_table()
@@ -460,7 +454,7 @@ def test_check_for_not_a_number():
         data_validator._check_for_not_a_number(np.nan, "wavelength")
 
 
-def test_read_validation_schema(tmp_test_directory, mirror_2f_schema_file):
+def test_read_validation_schema(tmp_test_directory):
     data_validator = validate_data.DataValidator()
 
     # no file given

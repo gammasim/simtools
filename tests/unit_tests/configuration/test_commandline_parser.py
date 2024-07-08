@@ -12,9 +12,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
-def simulation_model_string():
-    return "simulation model"
+simulation_model_string = "simulation model"
 
 
 def test_site():
@@ -141,7 +139,7 @@ def test_azimuth_angle(caplog):
         assert "The azimuth angle provided is not a valid numerical or string value." in caplog.text
 
 
-def test_initialize_default_arguments(simulation_model_string):
+def test_initialize_default_arguments():
 
     # default arguments
     _parser_1 = parser.CommandLineParser()
@@ -163,7 +161,7 @@ def test_initialize_default_arguments(simulation_model_string):
     assert "output" in [str(group.title) for group in job_groups]
 
 
-def test_simulation_model(simulation_model_string):
+def test_simulation_model():
     # simulation model is none
     _parser_n = parser.CommandLineParser()
     _parser_n.initialize_default_arguments(simulation_model=None)
@@ -217,7 +215,7 @@ def test_db_configuration():
     assert "database configuration" in [str(group.title) for group in job_groups]
 
 
-def test_layout_parsers(simulation_model_string):
+def test_layout_parsers():
     _parser_7 = parser.CommandLineParser()
     _parser_7.initialize_default_arguments(simulation_model=["layout"])
     job_groups = _parser_7._action_groups
