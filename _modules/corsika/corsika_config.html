@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+gc44bc1f Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g335f3b9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=14b679a9"></script>
+    <script src="../../_static/documentation_options.js?v=ae25d90f"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc44bc1f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g335f3b9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -380,6 +380,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
+<span class="kn">from</span> <span class="nn">simtools.corsika.primary_particle</span> <span class="kn">import</span> <span class="n">PrimaryParticle</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -422,12 +423,12 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init CorsikaConfig&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">primary</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">azimuth_angle</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_run_number</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_primary_particle</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span> <span class="o">=</span> <span class="n">array_model</span>
@@ -486,9 +487,7 @@ document.write(`
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;EVTNR&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;event_number_first_shower&quot;</span><span class="p">]],</span>
             <span class="s2">&quot;NSHOW&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;nshow&quot;</span><span class="p">]],</span>
-            <span class="s2">&quot;PRMPAR&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_convert_primary_input_and_store_primary_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;primary&quot;</span><span class="p">])</span>
-            <span class="p">],</span>
+            <span class="s2">&quot;PRMPAR&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span><span class="o">.</span><span class="n">corsika7_id</span><span class="p">],</span>
             <span class="s2">&quot;ESLOPE&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;eslope&quot;</span><span class="p">]],</span>
             <span class="s2">&quot;ERANGE&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;erange&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;GeV&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
@@ -530,36 +529,35 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">az</span> <span class="o">+</span> <span class="mi">180</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span>
 
-    <span class="k">def</span> <span class="nf">_convert_primary_input_and_store_primary_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Primary particle name.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">_set_primary_particle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert a primary name into the CORSIKA particle ID.</span>
+<span class="sd">        Set primary particle from input dictionary.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        value: str</span>
-<span class="sd">            Input primary name (e.g gamma, proton ...)</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        InvalidPrimary</span>
-<span class="sd">            If the input name is not found.</span>
+<span class="sd">        args_dict: dict</span>
+<span class="sd">            Input dictionary.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        int</span>
-<span class="sd">            Respective number of the given primary.</span>
+<span class="sd">        PrimaryParticle</span>
+<span class="sd">            Primary particle.</span>
 
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        TODO - this will be replaced using the &#39;particle&#39; PDG package.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">prim_name</span><span class="p">,</span> <span class="n">prim_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_default_parameters</span><span class="p">[</span><span class="s2">&quot;PRIMARIES&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">prim_name</span> <span class="ow">or</span> <span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">prim_info</span><span class="p">[</span><span class="s2">&quot;names&quot;</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">primary</span> <span class="o">=</span> <span class="n">prim_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-                <span class="k">return</span> <span class="n">prim_info</span><span class="p">[</span><span class="s2">&quot;number&quot;</span><span class="p">]</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Primary not valid: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">InvalidCorsikaInputError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;common_name&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">(</span><span class="n">corsika7_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary&quot;</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">(</span><span class="n">pdg_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary&quot;</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">()</span>
 
 <div class="viewcode-block" id="CorsikaConfig.get_config_parameter">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.get_config_parameter">[docs]</a>
@@ -653,7 +651,7 @@ document.write(`
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_site_parameters</span><span class="p">)</span>
 
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ IACT ENV PARAMETERS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IACT setenv PRMNAME </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IACT setenv PRMNAME </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IACT setenv ZA </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;THETAP&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IACT setenv AZM </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -742,7 +740,7 @@ document.write(`
         <span class="p">)</span>
 
         <span class="n">base_name</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">_&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">_&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;za</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;THETAP&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">-&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;azm</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">deg&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">view_cone</span><span class="si">}{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">&quot;</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulate_prod &#8212; simtools v0.1.dev1+gc44bc1f Manual</title>
+    <title>simulate_prod &#8212; simtools v0.1.dev1+g335f3b9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=14b679a9"></script>
+    <script src="../_static/documentation_options.js?v=ae25d90f"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc44bc1f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g335f3b9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -393,8 +393,9 @@ document.write(`
 <span class="sd">    site (str, required)</span>
 <span class="sd">        North or South (case insensitive).</span>
 <span class="sd">    primary (str, required)</span>
-<span class="sd">        Name of the primary particle to simulate. The available options are</span>
-<span class="sd">        gamma, gamma_diffuse, electron, proton, muon, helium, nitrogen, silicon, and iron.</span>
+<span class="sd">        Name or ID of the primary particle to simulate. Allowed are common names like gamma, proton,</span>
+<span class="sd">        or IDs for CORSIKA7 (e.g. 14 for proton) and PDG (e.g. 2212 for proton). Use the</span>
+<span class="sd">        &#39;primary_id_type&#39; option to specify the type of ID.</span>
 <span class="sd">    azimuth_angle (str or float, required)</span>
 <span class="sd">        Telescope pointing direction in azimuth.</span>
 <span class="sd">        It can be in degrees between 0 and 360 or one of north, south, east or west</span>

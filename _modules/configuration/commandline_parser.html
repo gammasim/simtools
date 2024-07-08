@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+gc44bc1f Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g335f3b9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=14b679a9"></script>
+    <script src="../../_static/documentation_options.js?v=ae25d90f"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc44bc1f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g335f3b9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -382,6 +382,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 
 <span class="kn">import</span> <span class="nn">simtools.version</span>
+<span class="kn">from</span> <span class="nn">simtools.corsika.primary_particle</span> <span class="kn">import</span> <span class="n">PrimaryParticle</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -702,20 +703,21 @@ document.write(`
         <span class="n">_configuration_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation configuration&quot;</span><span class="p">)</span>
         <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--primary&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Primary particle to simulate.&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Primary particle to simulate. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(choices for common names: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PrimaryParticle</span><span class="o">.</span><span class="n">particle_names</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">; &quot;</span>
+                <span class="s2">&quot;use &#39;--primary_ID_type&#39; to use other particle ID types).&quot;</span>
+            <span class="p">),</span>
             <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
             <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
-                <span class="s2">&quot;gamma&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;gamma_diffuse&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;electron&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;proton&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;muon&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;helium&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;nitrogen&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;silicon&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;iron&quot;</span><span class="p">,</span>
-            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;--primary_id_type&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Primary particle ID type&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;common_name&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika7_id&quot;</span><span class="p">,</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">],</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;common_name&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s2">&quot;--azimuth_angle&quot;</span><span class="p">,</span>
