@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Containers (docker files) &#8212; simtools v0.1.dev1+g1fa3697 Manual</title>
+    <title>Containers (docker files) &#8212; simtools v0.1.dev1+g598d572 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=e0fba87b"></script>
+    <script src="../_static/documentation_options.js?v=b63e96f8"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1fa3697 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g598d572 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -451,12 +451,12 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools-package-registry">Simtools package registry</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users">Container for simtools users</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users-simtools-prod">Container for simtools users (simtools-prod)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-simtools-prod-container">Run a simtools-prod container</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-simtools-prod-container">Building a simtools-prod container</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-developers">Container for simtools developers</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-developers-simtools-dev">Container for simtools developers (simtools-dev)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-container-using-the-prepared-docker-image-available-from-repository">Run a container using the prepared Docker image available from repository</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-new-developers-container-locally">Build a new developers container locally</a></li>
 </ul>
@@ -483,8 +483,8 @@ document.write(`
 <p><a class="reference external" href="https://www.docker.com/community-edition#/download">Docker</a> or any compatible software (e.g., <a class="reference external" href="https://podman.io/">podman</a>, <a class="reference external" href="https://apptainer.org/">apptainer</a>) are required to run or build these images.</p>
 <p>Types of docker files and containers available:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#container-for-simtools-users">simtools users</a>: a container with all software installed (CORSIKA, sim_telarray, simtools python environment, simtools). Pull latest release with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-prod:latest</span></code></p></li>
-<li><p><a class="reference internal" href="#container-for-simtools-developers">simtools developers</a>: a container with CORSIKA, sim_telarray, and simtools conda environment installed. Pull latest release with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-dev:latest</span></code></p></li>
+<li><p><a class="reference internal" href="#container-for-simtools-users"><span class="xref myst">simtools users</span></a>: a container with all software installed (CORSIKA, sim_telarray, simtools python environment, simtools). Pull latest release with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-prod:latest</span></code></p></li>
+<li><p><a class="reference internal" href="#container-for-simtools-developers"><span class="xref myst">simtools developers</span></a>: a container with CORSIKA, sim_telarray, and simtools conda environment installed. Pull latest release with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-dev:latest</span></code></p></li>
 <li><p><a class="reference internal" href="#container-for-corsika-and-simtelarray">CORSIKA and sim_telarray</a>: provides containers with the CORSIKA and sim_telarray installed (for different sim_telarray version, hadronic interaction models, CTAO MC productions).
 This provides a base image for the previously listed containers.</p></li>
 </ul>
@@ -499,8 +499,8 @@ This provides a base image for the previously listed containers.</p></li>
 </div>
 <p>Alternatively, delete the image first and pull the latest version from the registry.</p>
 </section>
-<section id="container-for-simtools-users">
-<h2>Container for simtools users<a class="headerlink" href="#container-for-simtools-users" title="Link to this heading">#</a></h2>
+<section id="container-for-simtools-users-simtools-prod">
+<h2>Container for simtools users (simtools-prod)<a class="headerlink" href="#container-for-simtools-users-simtools-prod" title="Link to this heading">#</a></h2>
 <p>Provides a container for simtools users, which includes:</p>
 <ul class="simple">
 <li><p>corsika and sim_telarray</p></li>
@@ -537,8 +537,8 @@ This example uses the docker syntax to mount your local directory for file acces
 <p>Building will take a while and the image is large (~2.1 GB). For using images build on your own, replace in all examples <code class="docutils literal notranslate"><span class="pre">ghcr.io/gammasim/simtools-prod:latest</span></code> by the local image name <code class="docutils literal notranslate"><span class="pre">simtools-prod</span></code>.</p>
 </section>
 </section>
-<section id="container-for-simtools-developers">
-<h2>Container for simtools developers<a class="headerlink" href="#container-for-simtools-developers" title="Link to this heading">#</a></h2>
+<section id="container-for-simtools-developers-simtools-dev">
+<h2>Container for simtools developers (simtools-dev)<a class="headerlink" href="#container-for-simtools-developers-simtools-dev" title="Link to this heading">#</a></h2>
 <p>Provide a container for testing and development of simtools, including:</p>
 <ul class="simple">
 <li><p>CORSIKA and sim_telarray</p></li>
@@ -654,12 +654,12 @@ Download the tar package from MPIK (password applies) with</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools-package-registry">Simtools package registry</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users">Container for simtools users</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users-simtools-prod">Container for simtools users (simtools-prod)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-simtools-prod-container">Run a simtools-prod container</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-simtools-prod-container">Building a simtools-prod container</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-developers">Container for simtools developers</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-developers-simtools-dev">Container for simtools developers (simtools-dev)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-container-using-the-prepared-docker-image-available-from-repository">Run a container using the prepared Docker image available from repository</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-new-developers-container-locally">Build a new developers container locally</a></li>
 </ul>
