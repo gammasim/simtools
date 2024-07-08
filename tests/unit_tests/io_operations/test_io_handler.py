@@ -11,9 +11,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
-def test_file():
-    return "test-file.txt"
+test_file = "test-file.txt"
 
 
 def test_get_output_directory(args_dict, io_handler):
@@ -79,7 +77,7 @@ def test_get_output_directory_plain_output_path(args_dict, io_handler):
     ) == Path(f"{args_dict['output_path']}/output/")
 
 
-def test_get_output_file(args_dict, io_handler, test_file):
+def test_get_output_file(args_dict, io_handler):
     assert io_handler.get_output_file(file_name=test_file, label="test-io-handler") == Path(
         f"{args_dict['output_path']}/output/simtools-output/test-io-handler/{test_file}"
     )
@@ -106,7 +104,7 @@ def test_get_output_file(args_dict, io_handler, test_file):
     ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model/{test_file}")
 
 
-def test_get_data_file(args_dict, io_handler, test_file):
+def test_get_data_file(args_dict, io_handler):
     assert (
         io_handler.get_input_data_file(
             parent_dir="test-io-handler",

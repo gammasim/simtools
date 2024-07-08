@@ -9,9 +9,7 @@ from simtools.utils import names
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
-def ecsv_suffix():
-    return ".ecsv"
+ecsv_suffix = ".ecsv"
 
 
 def test_get_list_of_telescope_types():
@@ -158,7 +156,7 @@ def test_get_telescope_type_from_telescope_name():
             names.get_telescope_type_from_telescope_name(_name)
 
 
-def test_generate_file_name_camera_efficiency(ecsv_suffix):
+def test_generate_file_name_camera_efficiency():
 
     site = "South"
     telescope_model_name = "LSTS-01"
@@ -342,7 +340,7 @@ def test_layout_telescope_list_file_name():
     )
 
 
-def test_generate_file_name_ray_tracing(ecsv_suffix):
+def test_generate_file_name_ray_tracing():
     assert (
         names.generate_file_name(
             file_type="Photons",
