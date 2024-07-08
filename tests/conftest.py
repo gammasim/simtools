@@ -23,10 +23,7 @@ logger = logging.getLogger()
 
 @pytest.fixture()
 def tmp_test_directory(tmpdir_factory):
-    """
-    Sets test directories.
-    Some tests depend on this structure.
-    """
+    """Sets temporary test directories. Some tests depend on this structure."""
 
     tmp_test_dir = tmpdir_factory.mktemp("test-data")
     tmp_sub_dirs = ["resources", "output", "simtel", "model", "application-plots"]
@@ -39,6 +36,7 @@ def tmp_test_directory(tmpdir_factory):
 
 @pytest.fixture()
 def io_handler(tmp_test_directory):
+    """Define io_handler fixture including output and model directories."""
     tmp_io_handler = simtools.io_operations.io_handler.IOHandler()
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
@@ -50,10 +48,7 @@ def io_handler(tmp_test_directory):
 
 @pytest.fixture()
 def _mock_settings_env_vars(tmp_test_directory):
-    """
-    Removes all environment variable from the test system.
-    Explicitly sets those needed.
-    """
+    """Removes all environment variable from the test system and explicitly sets those needed."""
     _url = (
         "https://gitlab.cta-observatory.org/cta-science/simulations/"
         "simulation-model/model_parameters/-/raw/main"
@@ -77,15 +72,13 @@ def _mock_settings_env_vars(tmp_test_directory):
 
 @pytest.fixture()
 def simtel_path():
-    """
-    This fixture does not really set the sim_telarray path because it is used only
-    in unit tests which do not run sim_telarray
-    """
+    """Empty string used as placeholder for simtel_path."""
     return Path("")
 
 
 @pytest.fixture()
 def simtel_path_no_mock():
+    """Simtel path as set by the .env file."""
     load_dotenv(".env")
     simtel_path = Path(os.path.expandvars("$SIMTOOLS_SIMTEL_PATH"))
     if simtel_path.exists():
@@ -95,6 +88,7 @@ def simtel_path_no_mock():
 
 @pytest.fixture()
 def args_dict(tmp_test_directory, simtel_path):
+    """Minimal configuration from command line."""
     return Configurator().default_config(
         (
             "--output_path",
@@ -109,6 +103,7 @@ def args_dict(tmp_test_directory, simtel_path):
 
 @pytest.fixture()
 def args_dict_site(tmp_test_directory, simtel_path):
+    "Configuration include site and telescopes."
     return Configurator().default_config(
         (
             "--output_path",
@@ -128,21 +123,8 @@ def args_dict_site(tmp_test_directory, simtel_path):
 
 
 @pytest.fixture()
-def configurator(tmp_test_directory, _mock_settings_env_vars, simtel_path):
-    config = Configurator()
-    config.default_config(
-        ("--output_path", str(tmp_test_directory), "--simtel_path", str(simtel_path))
-    )
-    return config
-
-
-@pytest.fixture()
 def db_config():
-    """
-    Read DB configuration from tests from .env file and from environmental variables.
-    (this ensures that tests run both locally and with github secrets)
-
-    """
+    """DB configuration from .env file."""
 
     mongo_db_config = {
         key.lower().replace("simtools_", ""): value
@@ -166,6 +148,7 @@ def db_config():
 
 @pytest.fixture()
 def simulation_model_url(db_config):
+    """Simulation model URL from .env file or default."""
     if (
         db_config["db_simulation_model_url"] is None
         or len(db_config["db_simulation_model_url"]) == 0
@@ -179,34 +162,24 @@ def simulation_model_url(db_config):
 
 @pytest.fixture()
 def db(db_config):
+    """Database object with configuration from .env file."""
     return db_handler.DatabaseHandler(mongo_db_config=db_config)
 
 
-@pytest.fixture()
-def db_no_config_file():
-    """
-    Same as db above, but without DB variable defined,
-    since we do not want to set the config file as well.
-    Otherwise it creates a conflict between the config file
-    set by set_db and the one set by set_simtools
-    """
-    return db_handler.DatabaseHandler(mongo_db_config=None)
-
-
 def pytest_addoption(parser):
+    """Model version command line parameter."""
     parser.addoption("--model_version", action="store", default=None)
 
 
 @pytest.fixture()
 def model_version():
-    """
-    Simulation model version used in tests.
-    """
+    """Simulation model version used in tests."""
     return "2024-02-01"
 
 
 @pytest.fixture()
 def array_model_north(io_handler, db_config, model_version):
+    """Array model for North site."""
     return ArrayModel(
         label="test-lst-array",
         site="North",
@@ -218,6 +191,7 @@ def array_model_north(io_handler, db_config, model_version):
 
 @pytest.fixture()
 def array_model_south(io_handler, db_config, model_version):
+    """Array model for South site."""
     return ArrayModel(
         label="test-lst-array",
         site="South",
@@ -229,6 +203,7 @@ def array_model_south(io_handler, db_config, model_version):
 
 @pytest.fixture()
 def site_model_south(db_config, model_version):
+    """Site model for South site."""
     return SiteModel(
         site="South",
         mongo_db_config=db_config,
@@ -239,6 +214,7 @@ def site_model_south(db_config, model_version):
 
 @pytest.fixture()
 def site_model_north(db_config, model_version):
+    """Site model for North site."""
     return SiteModel(
         site="North",
         mongo_db_config=db_config,
@@ -249,6 +225,7 @@ def site_model_north(db_config, model_version):
 
 @pytest.fixture()
 def telescope_model_lst(db_config, io_handler, model_version):
+    """Telescope model LST North."""
     return TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
@@ -260,6 +237,7 @@ def telescope_model_lst(db_config, io_handler, model_version):
 
 @pytest.fixture()
 def telescope_model_mst(db_config, io_handler, model_version):
+    """Telescope model MST South."""
     return TelescopeModel(
         site="South",
         telescope_name="MSTS-design",
@@ -271,6 +249,7 @@ def telescope_model_mst(db_config, io_handler, model_version):
 
 @pytest.fixture()
 def telescope_model_sst(db_config, io_handler, model_version):
+    """Telescope model SST South."""
     return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
@@ -283,6 +262,7 @@ def telescope_model_sst(db_config, io_handler, model_version):
 # TODO - keep prod5 until a complete prod6 model is in the DB
 @pytest.fixture()
 def telescope_model_sst_prod5(db_config, io_handler):
+    """Telescope model SST South (prod5)."""
     return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
@@ -294,36 +274,37 @@ def telescope_model_sst_prod5(db_config, io_handler):
 
 @pytest.fixture()
 def telescope_north_with_calibration_devices_test_file():
+    """Telescope positions North with calibration devices."""
     return "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv"
 
 
 @pytest.fixture()
 def telescope_north_test_file():
+    """Telescope positions North."""
     return "tests/resources/telescope_positions-North-ground.ecsv"
 
 
 @pytest.fixture()
 def telescope_north_utm_test_file():
+    """Telescope positions North (UTM coordinates)."""
     return "tests/resources/telescope_positions-North-utm.ecsv"
 
 
 @pytest.fixture()
-def telescope_north_mercator_test_file():
-    return "tests/resources/telescope_positions-North-mercator.ecsv"
-
-
-@pytest.fixture()
 def telescope_south_test_file():
+    """Telescope positions South."""
     return "tests/resources/telescope_positions-South-ground.ecsv"
 
 
 @pytest.fixture()
 def corsika_output_file_name():
+    """CORSIKA output file name for testing."""
     return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio"
 
 
 @pytest.fixture()
 def corsika_histograms_instance(io_handler, corsika_output_file_name):
+    """Corsika histogram instance."""
     from simtools.corsika.corsika_histograms import CorsikaHistograms
 
     return CorsikaHistograms(
@@ -333,6 +314,7 @@ def corsika_histograms_instance(io_handler, corsika_output_file_name):
 
 @pytest.fixture()
 def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histograms_instance):
+    """Corsika histogram instance (fully configured)."""
     corsika_histograms_instance.set_histograms()
     return corsika_histograms_instance
 
@@ -380,6 +362,8 @@ def corsika_runner(corsika_config, io_handler, simtel_path):
 
 @pytest.fixture()
 def file_has_text():
+    """Check if a file contains a specific text."""
+
     def wrapper(file, text):
         try:
             with (
