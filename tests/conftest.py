@@ -11,10 +11,12 @@ from dotenv import dotenv_values, load_dotenv
 
 import simtools.io_operations.io_handler
 from simtools.configuration.configurator import Configurator
+from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
+from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
 
@@ -176,24 +178,24 @@ def model_version():
 
 
 @pytest.fixture()
-def array_model_north(simulator_config_data_north, io_handler, db_config, model_version):
+def array_model_north(io_handler, db_config, model_version):
     """Array model for North site."""
     return ArrayModel(
         label="test-lst-array",
-        site=simulator_config_data_north["common"]["site"],
-        layout_name=simulator_config_data_north["common"]["layout_name"],
+        site="North",
+        layout_name="test_layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
 
 
 @pytest.fixture()
-def array_model_south(simulator_config_data_south, io_handler, db_config, model_version):
+def array_model_south(io_handler, db_config, model_version):
     """Array model for South site."""
     return ArrayModel(
         label="test-lst-array",
-        site=simulator_config_data_south["common"]["site"],
-        layout_name=simulator_config_data_south["common"]["layout_name"],
+        site="South",
+        layout_name="test_layout",
         mongo_db_config=db_config,
         model_version=model_version,
     )
@@ -318,61 +320,44 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 
 
 @pytest.fixture()
-def simulator_config_data_north(tmp_test_directory):
+def corsika_config_data():
+    """Corsika configuration data (as given by CorsikaConfig)."""
     return {
-        "common": {
-            "site": "North",
-            "layout_name": "test_layout",
-            "data_directory": f"{tmp_test_directory!s}/test-output",
-            "zenith": 20 * u.deg,
-            "azimuth": 0 * u.deg,
-            "primary": "gamma",
-        },
-        "showers": {
-            "eslope": -2.5,
-            "viewcone": [0 * u.deg, 0 * u.deg],
-            "nshow": 10,
-            "erange": [100 * u.GeV, 1 * u.TeV],
-            "cscat": [10, 1400 * u.m, 0],
-            "run_list": [3, 4],
-            "run_range": [6, 10],
-        },
-        "array": {},
+        "nshow": 100,
+        "run_number_start": 0,
+        "number_of_runs": 10,
+        "event_number_first_shower": 1,
+        "zenith_angle": 20 * u.deg,
+        "azimuth_angle": 0.0 * u.deg,
+        "viewcone": (0.0 * u.deg, 5.0 * u.deg),
+        "erange": (10.0 * u.GeV, 10.0 * u.TeV),
+        "eslope": -2,
+        "core_scatter": (10, 1400.0 * u.m),
+        "primary": "proton",
+        "data_directory": "simtools-output",
     }
 
 
 @pytest.fixture()
-def array_config_data(simulator_config_data):
-    return simulator_config_data["common"] | simulator_config_data["array"]
+def corsika_config(io_handler, corsika_config_data, array_model_south):
+    """Corsika configuration object (using array model South)."""
+    corsika_config = CorsikaConfig(
+        array_model=array_model_south,
+        label="test-corsika-config",
+        args_dict=corsika_config_data,
+    )
+    corsika_config.run_number = 1
+    return corsika_config
 
 
 @pytest.fixture()
-def shower_config_data_north(simulator_config_data_north):
-    return simulator_config_data_north["common"] | simulator_config_data_north["showers"]
-
-
-@pytest.fixture()
-def simulator_config_data_south(tmp_test_directory):
-    return {
-        "common": {
-            "site": "South",
-            "layout_name": "test_layout",
-            "data_directory": f"{tmp_test_directory!s}/test-output",
-            "zenith": 20 * u.deg,
-            "azimuth": 0 * u.deg,
-            "primary": "gamma",
-        },
-        "showers": {
-            "eslope": -2.5,
-            "viewcone": [0 * u.deg, 0 * u.deg],
-            "nshow": 10,
-            "erange": [100 * u.GeV, 1 * u.TeV],
-            "cscat": [10, 1400 * u.m, 0],
-            "run_list": [3, 4],
-            "run_range": [6, 10],
-        },
-        "array": {},
-    }
+def corsika_runner(corsika_config, io_handler, simtel_path):
+    return CorsikaRunner(
+        corsika_config=corsika_config,
+        simtel_path=simtel_path,
+        label="test-corsika-runner",
+        use_multipipe=False,
+    )
 
 
 @pytest.fixture()
