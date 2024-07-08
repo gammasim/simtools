@@ -11,6 +11,7 @@ Command line arguments
 ----------------------
 simtel_file_names (str or list):
     Path to the simtel_array file or a list of simtel_array output files.
+    Files can be generated in `simulate_prod` using the `--save_file_lists` option.
 save_tables (bool):
     If true, save the tables with the energy-dependent trigger rate to a ecsv file.
 area_from_distribution (bool):
