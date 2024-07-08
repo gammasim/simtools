@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer guidelines &#8212; simtools v0.1.dev1+gc9b85a4 Manual</title>
+    <title>Testing &#8212; simtools v0.1.dev1+gc9b85a4 Manual</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/testing';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Developer Guidelines" href="developer_guidelines.html" />
-    <link rel="prev" title="Visualization" href="../api-reference/visualization.html" />
+    <link rel="next" title="Generating Documentation" href="documentation.html" />
+    <link rel="prev" title="Developer Guidelines" href="developer_guidelines.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -246,9 +246,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/visualization.html">Visualization</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
@@ -309,7 +309,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/developer-guide/index.md?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/developer-guide/testing.md?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -326,7 +326,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdeveloper-guide/index.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdeveloper-guide/testing.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -356,7 +356,7 @@
       
       
       
-      <li><a href="../_sources/developer-guide/index.md" target="_blank"
+      <li><a href="../_sources/developer-guide/testing.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -427,7 +427,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
 </div></div>
       
     </div>
@@ -438,11 +440,26 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Developer guidelines</h1>
+    <h1>Testing</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pytest-fixtures">Pytest fixtures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-tests">Unit tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-tests">Integration tests</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-versions-for-integration-tests">Model versions for integration tests</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-utilities">Testing utilities</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#profiling-tests">Profiling tests</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -452,18 +469,111 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="developer-guidelines">
-<h1>Developer guidelines<a class="headerlink" href="#developer-guidelines" title="Link to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="continuous_integration.html">Continuous Integration</a></li>
-</ul>
+  <section id="testing">
+<h1>Testing<a class="headerlink" href="#testing" title="Link to this heading">#</a></h1>
+<p>Automatic code testing is absolutely essential for the development of simtools. It ensures that the code is working as expected and that new features do not break existing functionality.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.</p>
 </div>
+<p>The testing should be done at two levels:</p>
+<ul class="simple">
+<li><p>unit tests: test individual modules and functions</p></li>
+<li><p>integration tests: test applications as a whole using typical use cases</p></li>
+</ul>
+<p>The <a class="reference external" href="https://docs.pytest.org">pytest</a> framework is used for testing.
+The test modules are located in
+<a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">simtools/tests</a> separated
+by unit and integration tests.</p>
+<section id="pytest-fixtures">
+<h2>Pytest fixtures<a class="headerlink" href="#pytest-fixtures" title="Link to this heading">#</a></h2>
+<p>General service functions for tests (e.g., DB connection) are defined as <code class="docutils literal notranslate"><span class="pre">pytest.fixtures</span></code> in
+<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/conftest.py">conftest.py</a>.
+This should be used to avoid duplication.</p>
+<p>Define fixtures as local as possible: fixtures which are used in a single test module should be defined at the top of the the same module.</p>
+<p>All fixtures can be listed with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>--fixtures
+</pre></div>
+</div>
+<p>Fixtures should therefore include a docstring.</p>
+</section>
+<section id="unit-tests">
+<h2>Unit tests<a class="headerlink" href="#unit-tests" title="Link to this heading">#</a></h2>
+<p>Unit tests should be written for every module and function and should test the result of individual functions (“units”).
+It is recommended to write unit tests in parallel with the modules to assure that the code is testable.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The simtools project aims for a high test coverage.
+Code lines without coverage should be the exception and the aim should be to achieve a coverage greater than 90%
+(the CTAO quality requirements aim for a coverage of at least 80%).</p>
+</div>
+<p>Check the test coverage with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-n</span> <span class="pre">auto</span> <span class="pre">--cov-report-html</span>&#160; <span class="pre">tests/unit_tests/</span> <span class="pre">tests/integration_tests/</span></code>.
+Coverage reports can be accessed through the <code class="docutils literal notranslate"><span class="pre">htmlcov/index.html</span></code> file.</p>
+<p>Good practice:</p>
+<ul class="simple">
+<li><p>at least one test for every function in a module clearly testing the function’s behavior (including edge cases).</p></li>
+<li><p>sort tests in the testing module in the same sequence as the functions in the module.</p></li>
+<li><p>unit tests need to be fast.</p></li>
+</ul>
+</section>
+<section id="integration-tests">
+<h2>Integration tests<a class="headerlink" href="#integration-tests" title="Link to this heading">#</a></h2>
+<p>Integration tests should be written for every application and cover the most important use cases.
+Integration tests should follow the logic of the existing tests in <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests/integration_tests/">simtools/tests/integration_tests</a>.
+Any configuration file in the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests/integration_tests/config">simtools/tests/integration_tests/config</a> directory is used for testing.</p>
+<p>For testing a single applications, use the <code class="docutils literal notranslate"><span class="pre">-k</span></code> option to select the test by name:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>-v<span class="w"> </span>-k<span class="w"> </span><span class="s2">&quot;simtools-convert-all-model-parameters-from-simtel&quot;</span><span class="w"> </span>tests/integration_tests/test_applications_from_config.py
+</pre></div>
+</div>
+<p>To run a specific tests, use the <code class="docutils literal notranslate"><span class="pre">-k</span></code> option with the test name:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>-v<span class="w"> </span>-k<span class="w"> </span><span class="s2">&quot;simtools-convert-all-model-parameters-from-simtel_num_gains&quot;</span><span class="w"> </span>tests/integration_tests/test_applications_from_config.py
+</pre></div>
+</div>
+<p>This runs to run the tool for the specific test called <code class="docutils literal notranslate"><span class="pre">num_gains</span></code>.</p>
+<p>The integration test module allows for additional output tests (see the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests/integration_tests/config">simtools/tests/integration_tests/config</a> directory for examples).</p>
+<p>Test that a given output file exists:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  INTEGRATION_TESTS:
+    - OUTPUT_FILE: ray-tracing/results/ray-tracing-North-LSTN-01-d11.0km-za20.0deg_validate_optics.ecsv
+</pre></div>
+</div>
+<p>Compare tool output with a given reference files (in the following example with a tolerance of 1.e-2 for floating point comparison):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>REFERENCE_OUTPUT_FILES:
+  - REFERENCE_FILE: ray-tracing/results/ray-tracing-North-LSTN-01-d11.0km-za20.0deg_validate_optics.ecsv
+    TOLERANCE: 1.e-2
+</pre></div>
+</div>
+<p>This is implemented for any astropy table-like file.</p>
+<p>Test for a certain file type:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>- FILE_TYPE: json
+</pre></div>
+</div>
+<section id="model-versions-for-integration-tests">
+<h3>Model versions for integration tests<a class="headerlink" href="#model-versions-for-integration-tests" title="Link to this heading">#</a></h3>
+<p>The integration tests run for two different model versions, defined in the matrix in the <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.github/workflows/CI-integrationtests.yml">CI-integrationtests.yml</a> workflow.</p>
+<p>As model versions and definitions change, not all integration tests will work with all model versions.
+Use the entry <code class="docutils literal notranslate"><span class="pre">MODEL_VERSION_USE_CURRENT</span></code> in the configuration file to fix the model version to the one defined in the configuration file.</p>
+</section>
+</section>
+<section id="testing-utilities">
+<h2>Testing utilities<a class="headerlink" href="#testing-utilities" title="Link to this heading">#</a></h2>
+<p>The <a class="reference external" href="https://pytest-xdist.readthedocs.io/en/latest/">pytest-xdist</a> plugin is part of the developer environment
+and can be used to run unit and integration tests in parallel (e.g., <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-n</span> <span class="pre">4</span></code> to run on four cores in parallel).</p>
+<p>Tests might pass just because they run after an unrelated test. In order to test the independence of unit tests, use the
+<a class="reference external" href="https://pypi.org/project/pytest-random-order/">pytest-random-order</a> plugin with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--random-order</span></code>.</p>
+</section>
+<section id="profiling-tests">
+<h2>Profiling tests<a class="headerlink" href="#profiling-tests" title="Link to this heading">#</a></h2>
+<p>Tests should be reasonably fast.</p>
+<p>To identify slow tests, run the tests with the <code class="docutils literal notranslate"><span class="pre">--durations</span></code> option to list e.g. the 10 slowest tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>--durations<span class="o">=</span><span class="m">10</span>
+</pre></div>
+</div>
+<p>For profiling, use the <a class="reference external" href="https://pypi.org/project/pytest-profiling/">pytest-profiling</a> plugin.
+Example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>--no-cov<span class="w"> </span>--profile<span class="w"> </span>tests/unit_tests/utils/test_general.py
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -478,20 +588,20 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../api-reference/visualization.html"
+       href="developer_guidelines.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Visualization</p>
+        <p class="prev-next-title">Developer Guidelines</p>
       </div>
     </a>
     <a class="right-next"
-       href="developer_guidelines.html"
+       href="documentation.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Developer Guidelines</p>
+        <p class="prev-next-title">Generating Documentation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -501,6 +611,28 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pytest-fixtures">Pytest fixtures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-tests">Unit tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-tests">Integration tests</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-versions-for-integration-tests">Model versions for integration tests</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-utilities">Testing utilities</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#profiling-tests">Profiling tests</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

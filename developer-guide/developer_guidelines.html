@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g6de1871 Manual</title>
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gc9b85a4 Manual</title>
   
   
   
@@ -36,14 +36,14 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=29fee4d5"></script>
+    <script src="../_static/documentation_options.js?v=50cd3b3d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/developer_guidelines';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Generating Documentation" href="documentation.html" />
+    <link rel="next" title="Testing" href="testing.html" />
     <link rel="prev" title="Developer guidelines" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6de1871 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc9b85a4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -248,9 +248,11 @@
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Developer Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="continuous_integration.html">Continuous Integration</a></li>
 </ul>
 </details></li>
 </ul>
@@ -451,7 +453,6 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-setup">Project setup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-version">Python version</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-code">Contributing code</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-and-integration-testing">Unit and Integration Testing</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-applications">Writing Applications</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
@@ -501,7 +502,7 @@ ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/
 <li><p>Set up your coding environment as outlined in the <a class="reference internal" href="#getting_started.md#getting-started"><span class="xref myst">getting started</span></a> section.</p></li>
 <li><p>Start a new feature branch from the main branch (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">new-branch-name</span></code>).</p></li>
 <li><p>Implement your code changes.</p></li>
-<li><p>Add unit tests for new modules and functions.</p></li>
+<li><p>Add unit tests for new modules and functions (see <a class="reference internal" href="testing.html#unit-tests"><span class="std std-ref">unit test section</span></a>).</p></li>
 <li><p>Commit your code changes (use meaningful commit messages) and push them to GitHub.</p></li>
 <li><p>Create a draft pull request on GitHub when all features are implemented.</p></li>
 <li><p>Wait for the CI tests to finish and address any issues that arise.</p></li>
@@ -510,34 +511,6 @@ ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/
 <li><p>After successful review, the pull request can be merged into the main branch.</p></li>
 </ol>
 <p>Note the <a class="reference internal" href="pull_requests.html#id1"><span class="std std-ref">guidelines on pull requests</span></a>.</p>
-</section>
-<section id="unit-and-integration-testing">
-<h2>Unit and Integration Testing<a class="headerlink" href="#unit-and-integration-testing" title="Link to this heading">#</a></h2>
-<p>The pytest framework is used for testing:</p>
-<ul class="simple">
-<li><p>unit tests should be written for every module and function</p></li>
-<li><p>integration tests should be written for every application and cover the most important use cases. Integration tests should follow the logic of the existing tests in <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests/integration_tests/">simtools/tests/integration_tests</a>.</p></li>
-</ul>
-<p>The test modules are located in
-<a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">simtools/tests</a> separated
-by unit and integration tests.
-It is recommended to write unit tests in parallel with the modules to assure that the code is testable.</p>
-<p>General service functions for tests (e.g., DB connection) can be found in
-<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/conftest.py">conftest.py</a>.
-This should be used to avoid duplication.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Developers should expect that code changes affecting several modules are acceptable in case unit tests are successful.</p>
-</div>
-<p>The <a class="reference external" href="https://pytest-xdist.readthedocs.io/en/latest/">pytest-xdist</a> plugin is part of the developer environment
-and can be used to run unit and integration tests in parallel (e.g., <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-n</span> <span class="pre">4</span></code> to run on four cores in parallel).</p>
-<p>Tests might pass just because they run after an unrelated test. In order to test the independence of unit tests, use the
-<a class="reference external" href="https://pypi.org/project/pytest-random-order/">pytest-random-order</a> plugin with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--random-order</span></code>.</p>
-<p>Check the test coverage with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-vv</span> <span class="pre">-n</span> <span class="pre">auto</span> <span class="pre">tests/unit_tests/</span> <span class="pre">tests/integration_tests/</span> <span class="pre">--cov</span></code>.
-Add the <code class="docutils literal notranslate"><span class="pre">--cov-report</span> <span class="pre">html</span></code> option to generate a coverage report in HTML format.</p>
-<p>It might be quite useful to test a single application while developing.
-This can be done with e.g. <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-v</span> <span class="pre">-k</span> <span class="pre">&quot;simtools-convert-all-model-parameters-from-simtel&quot;</span> <span class="pre">tests/integration_tests/test_applications_from_config.py</span></code> to run all the integrations tests for the <code class="docutils literal notranslate"><span class="pre">simtools-convert-all-model-parameters-from-simtel</span></code> application.
-Alternatively, run <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-v</span> <span class="pre">-k</span> <span class="pre">&quot;simtools-convert-all-model-parameters-from-simtel_num_gains&quot;</span> <span class="pre">tests/integration_tests/test_applications_from_config.py</span></code> to run the tool for the specific test called <code class="docutils literal notranslate"><span class="pre">num_gains</span></code>. Test names are found in the yml files in the <code class="docutils literal notranslate"><span class="pre">tests/integration_tests/config</span></code> directory.</p>
 </section>
 <section id="writing-applications">
 <h2>Writing Applications<a class="headerlink" href="#writing-applications" title="Link to this heading">#</a></h2>
@@ -667,11 +640,11 @@ properties. See an example below:</p>
       </div>
     </a>
     <a class="right-next"
-       href="documentation.html"
+       href="testing.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Generating Documentation</p>
+        <p class="prev-next-title">Testing</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -694,7 +667,6 @@ properties. See an example below:</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-setup">Project setup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-version">Python version</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-code">Contributing code</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-and-integration-testing">Unit and Integration Testing</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-applications">Writing Applications</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-corsika-and-sim-telarray">Integration with CORSIKA and sim_telarray</a></li>
