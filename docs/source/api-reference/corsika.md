@@ -13,6 +13,13 @@ Support modules for running CORSIKA.
    :members:
 ```
 
+## primary_particle
+
+```{eval-rst}
+.. automodule:: corsika.primary_particle
+   :members:
+```
+
 ## corsika_histograms
 
 (corsika-histograms-1)=
