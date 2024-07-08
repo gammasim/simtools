@@ -9,6 +9,7 @@ import numpy as np
 
 import simtools.utils.general as gen
 from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.io_operations import io_handler
 from simtools.job_execution.job_manager import JobManager
 from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
@@ -41,24 +42,18 @@ class Simulator:
         (includes simulation_software, simulation_model, simulation_parameters groups).
     label: str
         Instance label.
-    submit_command: str
-        Job submission command.
     extra_commands: str or list of str
         Extra commands to be added to the run script before the run command.
     mongo_db_config: dict
         MongoDB configuration.
-    test: bool
-        If True, no jobs are submitted; only run scripts are prepared.
     """
 
     def __init__(
         self,
         args_dict,
         label=None,
-        submit_command=None,
         extra_commands=None,
         mongo_db_config=None,
-        test=False,
     ):
         """Initialize Simulator class."""
         self._logger = logging.getLogger(__name__)
@@ -68,10 +63,13 @@ class Simulator:
         self._logger.debug(f"Init Simulator {self.simulation_software}")
         self.label = label
 
+        self.io_handler = io_handler.IOHandler()
+
         self.runs = self._initialize_run_list()
         self._results = defaultdict(list)
-        self._test = test
-        self._submit_command = submit_command
+        self._test = self.args_dict.get("test", False)
+        self._submit_engine = self.args_dict.get("submit_engine", "local")
+        self._submit_options = self.args_dict.get("submit_options", None)
         self._extra_commands = extra_commands
 
         self.array_model = self._initialize_array_model(mongo_db_config)
@@ -255,7 +253,7 @@ class Simulator:
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
         """
-        self._logger.info(f"Submission command: {self._submit_command}")
+        self._logger.info(f"Submission command: {self._submit_engine}")
 
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
@@ -270,7 +268,11 @@ class Simulator:
                 run_number=run_number, input_file=input_file, extra_commands=self._extra_commands
             )
 
-            job_manager = JobManager(submit_command=self._submit_command, test=self._test)
+            job_manager = JobManager(
+                submit_engine=self._submit_engine,
+                submit_options=self._submit_options,
+                test=self._test,
+            )
             job_manager.submit(
                 run_script=run_script,
                 run_out_file=self._simulation_runner.get_file_name(
@@ -531,3 +533,18 @@ class Simulator:
         if run_list is None and run_range is None:
             return [] if self.runs is None else self.runs
         return self._validate_run_list_and_range(run_list, run_range)
+
+    def save_file_lists(self):
+        """Save files lists for output and log files."""
+        for file_type in ["output", "log", "hist"]:
+            file_name = self.io_handler.get_output_directory(label=self.label).joinpath(
+                f"{file_type}_files.txt"
+            )
+            file_list = self.get_file_list(file_type=file_type)
+            if all(element is not None for element in file_list) and len(file_list) > 0:
+                self._logger.info(f"Saving list of {file_type} files to {file_name}")
+                with open(file_name, "w", encoding="utf-8") as f:
+                    for line in self.get_file_list(file_type=file_type):
+                        f.write(f"{line}\n")
+            else:
+                self._logger.debug(f"No files to save for {file_type} files.")
