@@ -922,6 +922,38 @@ def get_file_age(file_path):
     return (current_time - modification_time) / 60
 
 
+def _process_dict_keys(input_dict, case_func):
+    """
+    Process dictionary keys recursively.
+
+    Parameters
+    ----------
+    input_dict: dict
+        Dictionary to be processed.
+    case_func: function
+        Function to change case of keys (e.g., str.lower, str.upper).
+
+    Returns
+    -------
+    dict
+        Processed dictionary with keys changed.
+    """
+    output_dict = {}
+    for key, value in input_dict.items():
+        processed_key = case_func(key)
+        if isinstance(value, dict):
+            output_dict[processed_key] = _process_dict_keys(value, case_func)
+        elif isinstance(value, list):
+            processed_list = [
+                _process_dict_keys(item, case_func) if isinstance(item, dict) else item
+                for item in value
+            ]
+            output_dict[processed_key] = processed_list
+        else:
+            output_dict[processed_key] = value
+    return output_dict
+
+
 def change_dict_keys_case(data_dict, lower_case=True):
     """
     Change keys of a dictionary to lower or upper case.
@@ -936,29 +968,14 @@ def change_dict_keys_case(data_dict, lower_case=True):
     lower_case: bool
         Change keys to lower (upper) case if True (False).
     """
-    _return_dict = {}
+    # Determine which case function to use
+    case_func = str.lower if lower_case else str.upper
+
     try:
-        for key in data_dict.keys():
-            if lower_case:
-                _key_changed = key.lower()
-            else:
-                _key_changed = key.upper()
-            if isinstance(data_dict[key], dict):
-                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
-            elif isinstance(data_dict[key], list):
-                _tmp_list = []
-                for _list_entry in data_dict[key]:
-                    if isinstance(_list_entry, dict):
-                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
-                    else:
-                        _tmp_list.append(_list_entry)
-                _return_dict[_key_changed] = _tmp_list
-            else:
-                _return_dict[_key_changed] = data_dict[key]
+        return _process_dict_keys(data_dict, case_func)
     except AttributeError:
         _logger.error(f"Input is not a proper dictionary: {data_dict}")
         raise
-    return _return_dict
 
 
 def remove_substring_recursively_from_dict(data_dict, substring="\n"):
