@@ -402,6 +402,23 @@ class DataValidator:
 
         return False
 
+    @staticmethod
+    def _is_dimensionless(unit):
+        """
+        Check is unit is dimensionless, None, or empty.
+
+        Parameters
+        ----------
+        unit: str
+            unit of data column
+
+        Returns
+        -------
+        bool
+            True if unit is dimensionless, None, or empty
+        """
+        return unit in ("dimensionless", None, "")
+
     def _check_and_convert_units(self, data, unit, col_name):
         """
         Check that input data have an allowed unit.
@@ -441,7 +458,8 @@ class DataValidator:
             column_unit = data.unit
         except AttributeError:
             column_unit = unit
-        if column_unit is None or column_unit == "dimensionless" or column_unit == "":
+
+        if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
             return data, u.dimensionless_unscaled
 
         self._logger.debug(
@@ -450,8 +468,7 @@ class DataValidator:
         )
         try:
             if isinstance(data, u.Quantity | Column):
-                data = data.to(reference_unit)
-                return data, reference_unit
+                return data.to(reference_unit), reference_unit
             if isinstance(data, list | np.ndarray):
                 return [
                     (
