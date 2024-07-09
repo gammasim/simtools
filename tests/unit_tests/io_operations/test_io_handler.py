@@ -11,6 +11,9 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+test_file = "test-file.txt"
+
+
 def test_get_output_directory(args_dict, io_handler):
     # default adding label
     assert io_handler.get_output_directory(label="test-io-handler") == Path(
@@ -75,46 +78,46 @@ def test_get_output_directory_plain_output_path(args_dict, io_handler):
 
 
 def test_get_output_file(args_dict, io_handler):
-    assert io_handler.get_output_file(file_name="test-file.txt", label="test-io-handler") == Path(
-        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/test-file.txt"
+    assert io_handler.get_output_file(file_name=test_file, label="test-io-handler") == Path(
+        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/{test_file}"
     )
 
     assert io_handler.get_output_file(
-        file_name="test-file.txt",
+        file_name=test_file,
         label="test-io-handler",
         dir_type="test",
-    ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/test-file.txt")
+    ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/{test_file}")
 
     assert io_handler.get_output_file(
-        file_name="test-file.txt",
+        file_name=test_file,
         label="test-io-handler",
         sub_dir="model",
     ) == Path(
-        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model/test-file.txt"
+        f"{args_dict['output_path']}/output/simtools-output/test-io-handler/model/{test_file}"
     )
 
     assert io_handler.get_output_file(
-        file_name="test-file.txt",
+        file_name=test_file,
         label="test-io-handler",
         sub_dir="model",
         dir_type="test",
-    ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model/test-file.txt")
+    ) == Path(f"{args_dict['output_path']}/output/test-output/test-io-handler/model/{test_file}")
 
 
 def test_get_data_file(args_dict, io_handler):
     assert (
         io_handler.get_input_data_file(
             parent_dir="test-io-handler",
-            file_name="test-file.txt",
+            file_name=test_file,
         )
-        == Path(f"{args_dict['data_path']}/test-io-handler/test-file.txt").absolute()
+        == Path(f"{args_dict['data_path']}/test-io-handler/{test_file}").absolute()
     )
 
     assert (
-        io_handler.get_input_data_file(file_name="test-file.txt", test=True)
-        == Path("tests/resources/test-file.txt").absolute()
+        io_handler.get_input_data_file(file_name=test_file, test=True)
+        == Path(f"tests/resources/{test_file}").absolute()
     )
 
     io_handler.data_path = None
     with pytest.raises(io_handler_module.IncompleteIOHandlerInitError):
-        io_handler.get_input_data_file(file_name="test-file.txt")
+        io_handler.get_input_data_file(file_name=test_file)

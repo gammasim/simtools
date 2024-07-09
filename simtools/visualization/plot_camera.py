@@ -43,38 +43,8 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     if not is_two_mirror_telescope(camera.telescope_model_name) and not camera_in_sky_coor:
         camera.pixels["y"] = [(-1) * y_val for y_val in camera.pixels["y"]]
 
-    on_pixels, edge_pixels, off_pixels = [], [], []
-
+    on_pixels, edge_pixels, off_pixels = _pixel_type_lists(camera)
     for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
-        shape = None
-        if camera.pixels["pixel_shape"] in (1, 3):
-            shape = mpatches.RegularPolygon(
-                (x, y),
-                numVertices=6,
-                radius=camera.pixels["pixel_diameter"] / np.sqrt(3),
-                orientation=np.deg2rad(camera.pixels["orientation"]),
-            )
-        elif camera.pixels["pixel_shape"] == 2:
-            shape = mpatches.Rectangle(
-                (
-                    x - camera.pixels["pixel_diameter"] / 2.0,
-                    y - camera.pixels["pixel_diameter"] / 2.0,
-                ),
-                width=camera.pixels["pixel_diameter"],
-                height=camera.pixels["pixel_diameter"],
-            )
-
-        if camera.pixels["pix_on"][i_pix]:
-            neighbors = camera.get_neighbour_pixels()[i_pix]
-            if len(neighbors) < 6 and camera.pixels["pixel_shape"] in (1, 3):
-                edge_pixels.append(shape)
-            elif len(neighbors) < 4 and camera.pixels["pixel_shape"] == 2:
-                edge_pixels.append(shape)
-            else:
-                on_pixels.append(shape)
-        else:
-            off_pixels.append(shape)
-
         if camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
             font_size = (
                 4
@@ -188,6 +158,79 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
     plt.tight_layout()
 
     return fig
+
+
+def _pixel_type_lists(camera):
+    """
+    Return on, off, and edge pixel lists.
+
+    Parameters
+    ----------
+    camera : Camera
+        Camera object.
+
+    Returns
+    -------
+    on_pixels : list
+        List of on pixels.
+    edge_pixels : list
+        List of edge pixels.
+    off_pixels : list
+        List of off pixels.
+    """
+    on_pixels, edge_pixels, off_pixels = [], [], []
+
+    for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
+        shape = _pixel_shape(camera, x, y)
+        if camera.pixels["pix_on"][i_pix]:
+            neighbors = camera.get_neighbour_pixels()[i_pix]
+            if len(neighbors) < 6 and camera.pixels["pixel_shape"] in (1, 3):
+                edge_pixels.append(shape)
+            elif len(neighbors) < 4 and camera.pixels["pixel_shape"] == 2:
+                edge_pixels.append(shape)
+            else:
+                on_pixels.append(shape)
+        else:
+            off_pixels.append(shape)
+
+    return on_pixels, edge_pixels, off_pixels
+
+
+def _pixel_shape(camera, x, y):
+    """
+    Return the shape of the pixel.
+
+    Parameters
+    ----------
+    camera : Camera
+        Camera object.
+    x : float
+        x-coordinate of the pixel.
+    y : float
+        y-coordinate of the pixel.
+
+    Returns
+    -------
+    shape : matplotlib.patches.Patch
+        Shape of the pixel.
+    """
+    if camera.pixels["pixel_shape"] in (1, 3):
+        return mpatches.RegularPolygon(
+            (x, y),
+            numVertices=6,
+            radius=camera.pixels["pixel_diameter"] / np.sqrt(3),
+            orientation=np.deg2rad(camera.pixels["orientation"]),
+        )
+    if camera.pixels["pixel_shape"] == 2:
+        return mpatches.Rectangle(
+            (
+                x - camera.pixels["pixel_diameter"] / 2.0,
+                y - camera.pixels["pixel_diameter"] / 2.0,
+            ),
+            width=camera.pixels["pixel_diameter"],
+            height=camera.pixels["pixel_diameter"],
+        )
+    return None
 
 
 def _plot_axes_def(camera, plot, rotate_angle):

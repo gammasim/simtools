@@ -16,6 +16,11 @@ from simtools.data_model import data_reader
 logger = logging.getLogger()
 
 
+@pytest.fixture()
+def reference_point_altitude_file():
+    return "tests/resources/reference_point_altitude.json"
+
+
 def test_read_table_from_file(telescope_north_test_file):
     assert isinstance(
         data_reader.read_table_from_file(telescope_north_test_file),
@@ -46,9 +51,9 @@ def test_read_table_from_file_and_validate(telescope_north_test_file):
     )
 
 
-def test_read_value_from_file(tmp_test_directory):
+def test_read_value_from_file(tmp_test_directory, reference_point_altitude_file):
     assert isinstance(
-        data_reader.read_value_from_file("tests/resources/reference_point_altitude.json"),
+        data_reader.read_value_from_file(reference_point_altitude_file),
         u.quantity.Quantity,
     )
 
@@ -89,12 +94,12 @@ def test_read_value_from_file(tmp_test_directory):
     )
 
 
-def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
+def test_read_value_from_file_and_validate(
+    caplog, tmp_test_directory, reference_point_altitude_file
+):
     # schema file from metadata in file
     with caplog.at_level(logging.DEBUG):
-        data_reader.read_value_from_file(
-            "tests/resources/reference_point_altitude.json", validate=True
-        )
+        data_reader.read_value_from_file(reference_point_altitude_file, validate=True)
         assert "Successful validation of yaml/json file" in caplog.text
 
     # schema explicitly given
@@ -102,7 +107,7 @@ def test_read_value_from_file_and_validate(caplog, tmp_test_directory):
     schema_file = str(schema_dir) + "/reference_point_altitude.schema.yml"
     with caplog.at_level(logging.DEBUG):
         data_reader.read_value_from_file(
-            "tests/resources/reference_point_altitude.json",
+            reference_point_altitude_file,
             schema_file=schema_file,
             validate=True,
         )

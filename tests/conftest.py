@@ -35,12 +35,17 @@ def tmp_test_directory(tmpdir_factory):
 
 
 @pytest.fixture()
-def io_handler(tmp_test_directory):
+def data_path():
+    return "./data/"
+
+
+@pytest.fixture()
+def io_handler(tmp_test_directory, data_path):
     """Define io_handler fixture including output and model directories."""
     tmp_io_handler = simtools.io_operations.io_handler.IOHandler()
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
-        data_path="./data/",
+        data_path=data_path,
         model_path=str(tmp_test_directory) + "/model",
     )
     return tmp_io_handler
@@ -87,14 +92,14 @@ def simtel_path_no_mock():
 
 
 @pytest.fixture()
-def args_dict(tmp_test_directory, simtel_path):
+def args_dict(tmp_test_directory, simtel_path, data_path):
     """Minimal configuration from command line."""
     return Configurator().default_config(
         (
             "--output_path",
             str(tmp_test_directory),
             "--data_path",
-            "./data/",
+            data_path,
             "--simtel_path",
             str(simtel_path),
         ),
@@ -102,14 +107,14 @@ def args_dict(tmp_test_directory, simtel_path):
 
 
 @pytest.fixture()
-def args_dict_site(tmp_test_directory, simtel_path):
+def args_dict_site(tmp_test_directory, simtel_path, data_path):
     "Configuration include site and telescopes."
     return Configurator().default_config(
         (
             "--output_path",
             str(tmp_test_directory),
             "--data_path",
-            "./data/",
+            data_path,
             "--simtel_path",
             str(simtel_path),
             "--site",
@@ -259,7 +264,7 @@ def telescope_model_sst(db_config, io_handler, model_version):
     )
 
 
-# TODO - keep prod5 until a complete prod6 model is in the DB
+# keep prod5 until a complete prod6 model is in the DB
 @pytest.fixture()
 def telescope_model_sst_prod5(db_config, io_handler):
     """Telescope model SST South (prod5)."""

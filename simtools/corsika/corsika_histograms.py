@@ -1360,7 +1360,7 @@ class CorsikaHistograms:
                     )
                 else:
                     hdf5_table_name = (
-                        f"/{self.dict_2d_distributions[property_name]['file name']}" f"_all_tels"
+                        f"/{self.dict_2d_distributions[property_name]['file name']}_all_tels"
                     )
                 table = fill_hdf5_table(
                     hist=hist_2d_list[i_histogram],

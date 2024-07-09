@@ -3,6 +3,7 @@
 import gzip
 import logging
 from copy import copy
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -186,10 +187,11 @@ def test_process_rx(
         config_data=config_data,
         label="empty_file",
     )
-    with gzip.open(tmp_test_directory / "empty_file.gz", "wb"):
-        pass
+    empty_file = tmp_test_directory / "empty_file.gz"
+    with gzip.open(empty_file, "wb"):
+        assert Path(empty_file).is_file()
     with pytest.raises(IndexError):
-        ray._process_rx(file=tmp_test_directory / "empty_file.gz")
+        ray._process_rx(empty_file)
         assert "Invalid output from rx" in caplog.text
     with pytest.raises(FileNotFoundError):
         ray._process_rx(file=tmp_test_directory / "non_existing_file.gz")
