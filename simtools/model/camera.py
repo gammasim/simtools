@@ -79,53 +79,100 @@ class Camera:
         The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated
         clockwise by 30 degrees with respect to those denoted as 1.
         """
-        pixels = {}
-        pixels["pixel_diameter"] = 9999
-        pixels["pixel_shape"] = 9999
-        pixels["pixel_spacing"] = 9999
-        pixels["lightguide_efficiency_angle_file"] = "none"
-        pixels["lightguide_efficiency_wavelength_file"] = "none"
-        pixels["rotate_angle"] = 0
-        pixels["x"] = []
-        pixels["y"] = []
-        pixels["pix_id"] = []
-        pixels["pix_on"] = []
+        pixels = Camera.initialize_pixel_dict()
 
         with open(camera_config_file, encoding="utf-8") as dat_file:
             for line in dat_file:
-                pix_info = line.split()
-                if line.startswith("PixType"):
-                    pixels["pixel_shape"] = int(pix_info[5].strip())
-                    pixels["pixel_diameter"] = float(pix_info[6].strip())
-                    pixels["lightguide_efficiency_angle_file"] = (
-                        pix_info[8].strip().replace('"', "")
-                    )
-                    if len(pix_info) > 9:
-                        pixels["lightguide_efficiency_wavelength_file"] = (
-                            pix_info[9].strip().replace('"', "")
-                        )
-                if line.startswith("Rotate"):
-                    pixels["rotate_angle"] = np.deg2rad(float(pix_info[1].strip()))
-                if line.startswith("Pixel"):
-                    pixels["x"].append(float(pix_info[3].strip()))
-                    pixels["y"].append(float(pix_info[4].strip()))
-                    pixels["pix_id"].append(int(pix_info[1].strip()))
-                    if len(pix_info) > 9:
-                        if int(pix_info[9].strip()) != 0:
-                            pixels["pix_on"].append(True)
-                        else:
-                            pixels["pix_on"].append(False)
-                    else:
-                        pixels["pix_on"].append(True)
+                Camera.process_line(line, pixels)
 
+        Camera.validate_pixels(pixels, camera_config_file)
+
+        return pixels
+
+    @staticmethod
+    def initialize_pixel_dict():
+        """
+        Initialize the pixel dictionary with default values.
+
+        Returns
+        -------
+        dict
+            A dictionary with default pixel properties.
+        """
+        return {
+            "pixel_diameter": 9999,
+            "pixel_shape": 9999,
+            "pixel_spacing": 9999,
+            "lightguide_efficiency_angle_file": "none",
+            "lightguide_efficiency_wavelength_file": "none",
+            "rotate_angle": 0,
+            "x": [],
+            "y": [],
+            "pix_id": [],
+            "pix_on": [],
+        }
+
+    @staticmethod
+    def process_line(line, pixels):
+        """
+        Process a line from the camera config file and update the pixel dictionary.
+
+        Parameters
+        ----------
+        line: string
+            A line from the camera config file.
+        pixels: dict
+            The pixel dictionary to update.
+        """
+        pix_info = line.split()
+
+        if line.startswith("PixType"):
+            pixels["pixel_shape"] = int(pix_info[5].strip())
+            pixels["pixel_diameter"] = float(pix_info[6].strip())
+            pixels["lightguide_efficiency_angle_file"] = pix_info[8].strip().replace('"', "")
+
+            if len(pix_info) > 9:
+                pixels["lightguide_efficiency_wavelength_file"] = (
+                    pix_info[9].strip().replace('"', "")
+                )
+
+        elif line.startswith("Rotate"):
+            pixels["rotate_angle"] = np.deg2rad(float(pix_info[1].strip()))
+
+        elif line.startswith("Pixel"):
+            pixels["x"].append(float(pix_info[3].strip()))
+            pixels["y"].append(float(pix_info[4].strip()))
+            pixels["pix_id"].append(int(pix_info[1].strip()))
+
+            if len(pix_info) > 9:
+                pixels["pix_on"].append(int(pix_info[9].strip()) != 0)
+            else:
+                pixels["pix_on"].append(True)
+
+    @staticmethod
+    def validate_pixels(pixels, camera_config_file):
+        """
+        Validate the pixel dictionary to ensure it has correct values.
+
+        Parameters
+        ----------
+        pixels: dict
+            The pixel dictionary to validate.
+        camera_config_file: string
+            The sim_telarray file name for error messages.
+
+        Raises
+        ------
+        ValueError
+            If the pixel diameter or pixel shape is invalid.
+        """
         if pixels["pixel_diameter"] == 9999:
             raise ValueError(f"Could not read the pixel diameter from {camera_config_file} file")
+
         if pixels["pixel_shape"] not in [1, 2, 3]:
             raise ValueError(
                 f"Pixel shape in {camera_config_file} unrecognized (has to be 1, 2 or 3)"
             )
-
-        return pixels
 
     def _rotate_pixels(self, pixels):
         """
