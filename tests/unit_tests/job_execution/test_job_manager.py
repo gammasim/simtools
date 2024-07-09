@@ -7,6 +7,8 @@ import pytest
 import simtools.job_execution.job_manager as jm
 from simtools.job_execution.job_manager import JobExecutionError
 
+LOG_EXCERPT = "log excerpt"
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
@@ -47,7 +49,7 @@ def job_messages(script_file):
         "job_error_stream": "Job error stream output.err",
         "job_log_stream": "Job log stream output.job",
         "running_locally": "Running script locally",
-        "log_excerpt": "log excerpt",
+        "log_excerpt": LOG_EXCERPT,
     }
 
 
@@ -83,7 +85,7 @@ def test_submit_local(
     mock_gen, job_submitter, mocker, output_log, logfile_log, script_file, job_messages
 ):
     mocker.patch("os.system", return_value=0)
-    mock_gen.get_log_excerpt.return_value = "log excerpt"
+    mock_gen.get_log_excerpt.return_value = LOG_EXCERPT
     mocker.patch("pathlib.Path.exists", return_value=False)
 
     job_submitter.submit(script_file, output_log, logfile_log)
@@ -210,7 +212,7 @@ def test_submit_local_real_failure(
     mocker.patch("pathlib.Path.exists", return_value=True)
     mock_gen.get_file_age.return_value = 4
 
-    mocker.patch("simtools.utils.general.get_log_excerpt", return_value="log excerpt")
+    mocker.patch("simtools.utils.general.get_log_excerpt", return_value=LOG_EXCERPT)
     mocker.patch("simtools.utils.general.get_file_age", return_value=4)
 
     with patch("builtins.open", mock_open(read_data="")):
