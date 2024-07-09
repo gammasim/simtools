@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+g86e980a Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+g9b769aa Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=16029b06"></script>
+    <script src="../_static/documentation_options.js?v=710234db"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g86e980a Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b769aa Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -535,15 +535,19 @@ the util module.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.general.change_dict_keys_case">
 <span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">change_dict_keys_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/general.html#change_dict_keys_case"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.change_dict_keys_case" title="Link to this definition">#</a></dt>
-<dd><p>Change keys of a dictionary to lower or upper case.</p>
-<p>Crawls through the dictionary and changes all keys.
-Takes into account list of dictionaries, as e.g. found in the top level data model.</p>
+<dd><p>Change keys of a dictionary to lower or upper case recursively.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>data_dict: dict</strong></dt><dd><p>Dictionary to be converted.</p>
 </dd>
 <dt><strong>lower_case: bool</strong></dt><dd><p>Change keys to lower (upper) case if True (False).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with keys converted to lower or upper case.</p>
 </dd>
 </dl>
 </dd>

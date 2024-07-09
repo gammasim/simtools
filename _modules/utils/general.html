@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g86e980a Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+g9b769aa Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=16029b06"></script>
+    <script src="../../_static/documentation_options.js?v=710234db"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g86e980a Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b769aa Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -719,6 +719,50 @@ document.write(`
     <span class="k">return</span> <span class="n">value_length</span><span class="p">,</span> <span class="n">undefined_length</span>
 
 
+<span class="k">def</span> <span class="nf">_convert_to_valid_unit</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert argument to the valid unit.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arg: any</span>
+<span class="sd">        The argument value to convert</span>
+<span class="sd">    unit: str or None</span>
+<span class="sd">        The unit to convert to</span>
+<span class="sd">    par_name: str</span>
+<span class="sd">        The parameter name for error messages</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float or int</span>
+<span class="sd">        The converted value</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the argument is not a valid quantity or has an incorrect unit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># In case a entry is None, None should be returned.</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">arg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">arg</span>
+
+    <span class="c1"># Converting strings to Quantity</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Config entry given without unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Config entry given with wrong unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> (should be </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">, is </span><span class="si">{</span><span class="n">arg</span><span class="o">.</span><span class="n">unit</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+
 <span class="k">def</span> <span class="nf">_validate_and_convert_value_with_units</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">value_keys</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate input user parameter for input values with units.</span>
@@ -731,54 +775,41 @@ document.write(`
 <span class="sd">       list of keys if user input was a dict; otherwise None</span>
 <span class="sd">    par_name: str</span>
 <span class="sd">       name of parameter</span>
+<span class="sd">    par_info: dict</span>
+<span class="sd">       parameter information including units</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list, dict</span>
 <span class="sd">        validated and converted input data</span>
 
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    InvalidConfigEntryError</span>
+<span class="sd">        If there are issues with unit validation or if the value entry length is undefined.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">value_length</span><span class="p">,</span> <span class="n">undefined_length</span> <span class="o">=</span> <span class="n">_check_value_entry_length</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">)</span>
-
     <span class="n">par_unit</span> <span class="o">=</span> <span class="n">copy_as_list</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
 
     <span class="k">if</span> <span class="n">undefined_length</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">par_unit</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Config entry with undefined length should have a single unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">InvalidConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">par_unit</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">par_unit</span> <span class="o">*=</span> <span class="n">value_length</span>
-
     <span class="c1"># Checking units and converting them, if needed.</span>
-    <span class="n">value_with_units</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">par_unit</span><span class="p">):</span>
-        <span class="c1"># In case a entry is None, None should be returned.</span>
-        <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">arg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">value_with_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
-            <span class="k">continue</span>
-
-        <span class="c1"># Converting strings to Quantity</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">arg</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Config entry given without unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">is_equivalent</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Config entry given with wrong unit: </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; (should be </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">, is </span><span class="si">{</span><span class="n">arg</span><span class="o">.</span><span class="n">unit</span><span class="si">}</span><span class="s2">)&quot;</span>
-            <span class="p">)</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">value_with_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">value_with_units</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_convert_to_valid_unit</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">par_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">par_unit</span><span class="p">)</span>
+    <span class="p">]</span>
 
     <span class="k">if</span> <span class="n">value_keys</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">value_keys</span><span class="p">,</span> <span class="n">value_with_units</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="p">(</span>
-        <span class="n">value_with_units</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_with_units</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">undefined_length</span> <span class="k">else</span> <span class="n">value_with_units</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">value_with_units</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">undefined_length</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_with_units</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">else</span> <span class="n">value_with_units</span>
     <span class="p">)</span>
 
 
@@ -1301,14 +1332,43 @@ document.write(`
     <span class="k">return</span> <span class="p">(</span><span class="n">current_time</span> <span class="o">-</span> <span class="n">modification_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
 
 
+<span class="k">def</span> <span class="nf">_process_dict_keys</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="n">case_func</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process dictionary keys recursively.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_dict: dict</span>
+<span class="sd">        Dictionary to be processed.</span>
+<span class="sd">    case_func: function</span>
+<span class="sd">        Function to change case of keys (e.g., str.lower, str.upper).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Processed dictionary with keys changed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">processed_key</span> <span class="o">=</span> <span class="n">case_func</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">output_dict</span><span class="p">[</span><span class="n">processed_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_process_dict_keys</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">case_func</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">processed_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">_process_dict_keys</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">case_func</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span>
+            <span class="p">]</span>
+            <span class="n">output_dict</span><span class="p">[</span><span class="n">processed_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">processed_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output_dict</span><span class="p">[</span><span class="n">processed_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">output_dict</span>
+
+
 <div class="viewcode-block" id="change_dict_keys_case">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.change_dict_keys_case">[docs]</a>
 <span class="k">def</span> <span class="nf">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Change keys of a dictionary to lower or upper case.</span>
-
-<span class="sd">    Crawls through the dictionary and changes all keys.</span>
-<span class="sd">    Takes into account list of dictionaries, as e.g. found in the top level data model.</span>
+<span class="sd">    Change keys of a dictionary to lower or upper case recursively.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1316,30 +1376,20 @@ document.write(`
 <span class="sd">        Dictionary to be converted.</span>
 <span class="sd">    lower_case: bool</span>
 <span class="sd">        Change keys to lower (upper) case if True (False).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary with keys converted to lower or upper case.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_return_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># Determine which case function to use</span>
+    <span class="n">case_func</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">lower</span> <span class="k">if</span> <span class="n">lower_case</span> <span class="k">else</span> <span class="nb">str</span><span class="o">.</span><span class="n">upper</span>
+
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">lower_case</span><span class="p">:</span>
-                <span class="n">_key_changed</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">_key_changed</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">lower_case</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">_tmp_list</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">_list_entry</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                        <span class="n">_tmp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">,</span> <span class="n">lower_case</span><span class="p">))</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">_tmp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_list_entry</span><span class="p">)</span>
-                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">_tmp_list</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">_return_dict</span><span class="p">[</span><span class="n">_key_changed</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">_process_dict_keys</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">case_func</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input is not a proper dictionary: </span><span class="si">{</span><span class="n">data_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">raise</span>
-    <span class="k">return</span> <span class="n">_return_dict</span></div>
+        <span class="k">raise</span></div>
 
 
 
@@ -1540,57 +1590,76 @@ document.write(`
     <span class="k">return</span> <span class="kc">False</span>
 
 
+<span class="k">def</span> <span class="nf">_get_value_dtype</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the data type of the given value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value: any</span>
+<span class="sd">        Value to determine the data type.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    type:</span>
+<span class="sd">        Data type of the value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
 <span class="k">def</span> <span class="nf">validate_data_type</span><span class="p">(</span><span class="n">reference_dtype</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_subtypes</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate data type of value or type object against a reference data type.</span>
 
-<span class="sd">    Allow to check for exact data type or allow sub types (e.g. uint is accepted for int).</span>
+<span class="sd">    Allow to check for exact data type or allow subtypes (e.g. uint is accepted for int).</span>
 <span class="sd">    Take into account &#39;file&#39; type as used in the model parameter database.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    reference_dtype: str</span>
 <span class="sd">        Reference data type to be checked against.</span>
-<span class="sd">    value: any</span>
+<span class="sd">    value: any, optional</span>
 <span class="sd">        Value to be checked (if dtype is None).</span>
-<span class="sd">    dtype: type</span>
+<span class="sd">    dtype: type, optional</span>
 <span class="sd">        Type object to be checked (if value is None).</span>
-<span class="sd">    allow_subtypes: bool</span>
+<span class="sd">    allow_subtypes: bool, optional</span>
 <span class="sd">        If True, allow subtypes to be accepted.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    bool:</span>
 <span class="sd">        True if the data type is valid.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="n">dtype</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">dtype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either value or dtype must be given.&quot;</span><span class="p">)</span>
 
-    <span class="c1"># strict comparison</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">_get_value_dtype</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># Strict comparison</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_subtypes</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">reference_dtype</span><span class="p">)</span>
-    <span class="c1"># allow any sub-type of integer or float for success</span>
-    <span class="c1"># dtype is &#39;object&#39; for &#39;file&#39; type and value None</span>
+
+    <span class="c1"># Allow any sub-type of integer or float for success</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="s2">&quot;object&quot;</span><span class="p">))</span> <span class="ow">and</span> <span class="n">reference_dtype</span> <span class="ow">in</span> <span class="p">(</span>
         <span class="s2">&quot;string&quot;</span><span class="p">,</span>
         <span class="s2">&quot;str&quot;</span><span class="p">,</span>
         <span class="s2">&quot;file&quot;</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span>
+
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)</span> <span class="ow">and</span> <span class="n">reference_dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;boolean&quot;</span><span class="p">,</span> <span class="s2">&quot;bool&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span>
-    <span class="c1"># allow ints to be converted to floats</span>
+
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
         <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">reference_dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">reference_dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)</span>
     <span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span>
+
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">reference_dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span>
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.camera &#8212; simtools v0.1.dev1+g86e980a Manual</title>
+    <title>model.camera &#8212; simtools v0.1.dev1+g9b769aa Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=16029b06"></script>
+    <script src="../../_static/documentation_options.js?v=710234db"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g86e980a Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b769aa Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -457,53 +457,109 @@ document.write(`
 <span class="sd">        The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated</span>
 <span class="sd">        clockwise by 30 degrees with respect to those denoted as 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">pixels</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9999</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9999</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_spacing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9999</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_wavelength_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pixels</span> <span class="o">=</span> <span class="n">Camera</span><span class="o">.</span><span class="n">initialize_pixel_dict</span><span class="p">()</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dat_file</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">dat_file</span><span class="p">:</span>
-                <span class="n">pix_info</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;PixType&quot;</span><span class="p">):</span>
-                    <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-                    <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-                    <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">pix_info</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-                    <span class="p">)</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pix_info</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">:</span>
-                        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_wavelength_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">pix_info</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-                        <span class="p">)</span>
-                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Rotate&quot;</span><span class="p">):</span>
-                    <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
-                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Pixel&quot;</span><span class="p">):</span>
-                    <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
-                    <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
-                    <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pix_info</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">Camera</span><span class="o">.</span><span class="n">process_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">pixels</span><span class="p">)</span>
 
+        <span class="n">Camera</span><span class="o">.</span><span class="n">validate_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pixels</span></div>
+
+
+<div class="viewcode-block" id="Camera.initialize_pixel_dict">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.initialize_pixel_dict">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">initialize_pixel_dict</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the pixel dictionary with default values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary with default pixel properties.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;pixel_diameter&quot;</span><span class="p">:</span> <span class="mi">9999</span><span class="p">,</span>
+            <span class="s2">&quot;pixel_shape&quot;</span><span class="p">:</span> <span class="mi">9999</span><span class="p">,</span>
+            <span class="s2">&quot;pixel_spacing&quot;</span><span class="p">:</span> <span class="mi">9999</span><span class="p">,</span>
+            <span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;lightguide_efficiency_wavelength_file&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;rotate_angle&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;pix_id&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;pix_on&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="Camera.process_line">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.process_line">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">process_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">pixels</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process a line from the camera config file and update the pixel dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        line: string</span>
+<span class="sd">            A line from the camera config file.</span>
+<span class="sd">        pixels: dict</span>
+<span class="sd">            The pixel dictionary to update.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pix_info</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;PixType&quot;</span><span class="p">):</span>
+            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_angle_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pix_info</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pix_info</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">:</span>
+                <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;lightguide_efficiency_wavelength_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">pix_info</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Rotate&quot;</span><span class="p">):</span>
+            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;rotate_angle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Pixel&quot;</span><span class="p">):</span>
+            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+            <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pix_info</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">:</span>
+                <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pix_info</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Camera.validate_pixels">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.validate_pixels">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">validate_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate the pixel dictionary to ensure it has correct values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pixels: dict</span>
+<span class="sd">            The pixel dictionary to validate.</span>
+<span class="sd">        camera_config_file: string</span>
+<span class="sd">            The sim_telarray file name for error messages.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the pixel diameter or pixel shape is invalid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">9999</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not read the pixel diameter from </span><span class="si">{</span><span class="n">camera_config_file</span><span class="si">}</span><span class="s2"> file&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Pixel shape in </span><span class="si">{</span><span class="n">camera_config_file</span><span class="si">}</span><span class="s2"> unrecognized (has to be 1, 2 or 3)&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">pixels</span></div>
+            <span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_rotate_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">):</span>
@@ -772,45 +828,66 @@ document.write(`
 <span class="sd">        x_pos : numpy.array_like</span>
 <span class="sd">            x position of each pixel</span>
 <span class="sd">        y_pos : numpy.array_like</span>
-<span class="sd">            y position of each pixels</span>
+<span class="sd">            y position of each pixel</span>
 <span class="sd">        radius : float</span>
-<span class="sd">            radius to consider neighbour.</span>
-<span class="sd">            Should be slightly larger than the pixel diameter.</span>
+<span class="sd">            Radius within which to find neighbours</span>
 <span class="sd">        row_coloumn_dist : float</span>
-<span class="sd">            Maximum distance for pixels in the same row/column to consider when looking for a \</span>
-<span class="sd">            neighbour. Should be around 20% of the pixel diameter.</span>
+<span class="sd">            Distance to consider for row/column adjacency.</span>
+<span class="sd">            Should be around 20% of the pixel diameter.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        neighbours: numpy.array_like</span>
+<span class="sd">        list of lists</span>
 <span class="sd">            Array of neighbour indices in a list for each pixel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># First find the neighbours with the usual method and the original radius</span>
         <span class="c1"># which does not allow for diagonal neighbours.</span>
         <span class="n">neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_neighbours</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">neighbours</span><span class="p">):</span>
             <span class="c1"># Find pixels defined as edge pixels now</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nn</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
                 <span class="c1"># Go over all other pixels and search for ones which are adjacent</span>
                 <span class="c1"># but further than sqrt(2) away</span>
-                <span class="k">for</span> <span class="n">j_pix</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x_pos</span><span class="p">):</span>
-                    <span class="c1"># No need to look at the pixel itself</span>
-                    <span class="c1"># nor at any pixels already in the neighbours list</span>
-                    <span class="k">if</span> <span class="n">j_pix</span> <span class="o">!=</span> <span class="n">i_pix</span> <span class="ow">and</span> <span class="n">j_pix</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nn</span><span class="p">:</span>
-                        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
-                            <span class="p">(</span><span class="n">x_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
-                        <span class="p">)</span>
-                        <span class="c1"># Check if this pixel is in the same row or column</span>
-                        <span class="c1"># and allow it to be ~1.68*diameter away (1.4*1.2 = 1.68)</span>
-                        <span class="c1"># Need to increase the distance because of the curvature</span>
-                        <span class="c1"># of the CHEC camera</span>
-                        <span class="k">if</span> <span class="p">(</span>
-                            <span class="nb">abs</span><span class="p">(</span><span class="n">x_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">row_coloumn_dist</span>
-                            <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">row_coloumn_dist</span>
-                        <span class="p">)</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="mf">1.2</span> <span class="o">*</span> <span class="n">radius</span><span class="p">:</span>
-                            <span class="n">nn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j_pix</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_additional_neighbours</span><span class="p">(</span><span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_coloumn_dist</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">neighbours</span>
+
+    <span class="k">def</span> <span class="nf">_add_additional_neighbours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_coloumn_dist</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add neighbours for a given pixel if they are not already neighbours and are adjacent.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i_pix : int</span>
+<span class="sd">            Index of the pixel to find neighbours for</span>
+<span class="sd">        nn : list</span>
+<span class="sd">            Current list of neighbours for the pixel</span>
+<span class="sd">        x_pos : numpy.array_like</span>
+<span class="sd">            x position of each pixel</span>
+<span class="sd">        y_pos : numpy.array_like</span>
+<span class="sd">            y position of each pixel</span>
+<span class="sd">        radius : float</span>
+<span class="sd">            Radius within which to find neighbours</span>
+<span class="sd">        row_coloumn_dist : float</span>
+<span class="sd">            Distance to consider for row/column adjacency</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">j_pix</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x_pos</span><span class="p">):</span>
+            <span class="c1"># No need to look at the pixel itself</span>
+            <span class="c1"># nor at any pixels already in the neighbours list</span>
+            <span class="k">if</span> <span class="n">j_pix</span> <span class="o">!=</span> <span class="n">i_pix</span> <span class="ow">and</span> <span class="n">j_pix</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nn</span><span class="p">:</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">x_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="p">)</span>
+                <span class="c1"># Check if this pixel is in the same row or column</span>
+                <span class="c1"># and allow it to be ~1.68*diameter away (1.4*1.2 = 1.68)</span>
+                <span class="c1"># Need to increase the distance because of the curvature</span>
+                <span class="c1"># of the CHEC camera</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">abs</span><span class="p">(</span><span class="n">x_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">row_coloumn_dist</span>
+                    <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">row_coloumn_dist</span>
+                <span class="p">)</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="mf">1.2</span> <span class="o">*</span> <span class="n">radius</span><span class="p">:</span>
+                    <span class="n">nn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j_pix</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_calc_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

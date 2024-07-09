@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g86e980a Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g9b769aa Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=16029b06"></script>
+    <script src="../_static/documentation_options.js?v=710234db"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g86e980a Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b769aa Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -481,7 +481,10 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.get_pixel_active_solid_angle"><code class="docutils literal notranslate"><span class="pre">Camera.get_pixel_active_solid_angle()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.get_pixel_diameter"><code class="docutils literal notranslate"><span class="pre">Camera.get_pixel_diameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.get_pixel_shape"><code class="docutils literal notranslate"><span class="pre">Camera.get_pixel_shape()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.initialize_pixel_dict"><code class="docutils literal notranslate"><span class="pre">Camera.initialize_pixel_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.process_line"><code class="docutils literal notranslate"><span class="pre">Camera.process_line()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.read_pixel_list"><code class="docutils literal notranslate"><span class="pre">Camera.read_pixel_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.validate_pixels"><code class="docutils literal notranslate"><span class="pre">Camera.validate_pixels()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -911,6 +914,36 @@ necessary.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.initialize_pixel_dict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialize_pixel_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/camera.html#Camera.initialize_pixel_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.initialize_pixel_dict" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the pixel dictionary with default values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>A dictionary with default pixel properties.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.process_line">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">process_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/camera.html#Camera.process_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.process_line" title="Link to this definition">#</a></dt>
+<dd><p>Process a line from the camera config file and update the pixel dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>line: string</strong></dt><dd><p>A line from the camera config file.</p>
+</dd>
+<dt><strong>pixels: dict</strong></dt><dd><p>The pixel dictionary to update.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="model.camera.Camera.read_pixel_list">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_pixel_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/camera.html#Camera.read_pixel_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.read_pixel_list" title="Link to this definition">#</a></dt>
 <dd><p>Read the pixel layout from the camera config file, assumed to be in a sim_telarray format.</p>
@@ -931,6 +964,28 @@ necessary.</p>
 <p class="rubric">Notes</p>
 <p>The pixel shape can be hexagonal (denoted as 1 or 3) or a square (denoted as 2).         The hexagonal shapes differ in their orientation, where those denoted as 3 are rotated
 clockwise by 30 degrees with respect to those denoted as 1.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.camera.Camera.validate_pixels">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_pixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/camera.html#Camera.validate_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.camera.Camera.validate_pixels" title="Link to this definition">#</a></dt>
+<dd><p>Validate the pixel dictionary to ensure it has correct values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pixels: dict</strong></dt><dd><p>The pixel dictionary to validate.</p>
+</dd>
+<dt><strong>camera_config_file: string</strong></dt><dd><p>The sim_telarray file name for error messages.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the pixel diameter or pixel shape is invalid.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1731,7 +1786,10 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.get_pixel_active_solid_angle"><code class="docutils literal notranslate"><span class="pre">Camera.get_pixel_active_solid_angle()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.get_pixel_diameter"><code class="docutils literal notranslate"><span class="pre">Camera.get_pixel_diameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.get_pixel_shape"><code class="docutils literal notranslate"><span class="pre">Camera.get_pixel_shape()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.initialize_pixel_dict"><code class="docutils literal notranslate"><span class="pre">Camera.initialize_pixel_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.process_line"><code class="docutils literal notranslate"><span class="pre">Camera.process_line()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.read_pixel_list"><code class="docutils literal notranslate"><span class="pre">Camera.read_pixel_list()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.camera.Camera.validate_pixels"><code class="docutils literal notranslate"><span class="pre">Camera.validate_pixels()</span></code></a></li>
 </ul>
 </li>
 </ul>
