@@ -37,10 +37,7 @@ jobs:
       - name: Read .env_template file
         id: read-env
         run: |
-          # Read .env_template and export variables except SIMTOOLS_DB_API_PW and SIMTOOLS_DB_API_USER
-          grep -v '^SIMTOOLS_DB_API_PW\|^SIMTOOLS_DB_API_USER$' .env_template | while read line; do
-            export "$line"
-          done
+          grep -v '^SIMTOOLS_DB_API_PW\|^SIMTOOLS_DB_API_USER\|^#' .env_template | while read line; do echo "$line"; done
 
       - name: Set PATH
         run: |
