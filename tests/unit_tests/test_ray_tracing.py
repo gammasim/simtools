@@ -201,17 +201,18 @@ def test_ray_tracing_invalid_key(ray_tracing_lst, caplog):
     Test the a few methods of the RayTracing class with an invalid key
     """
 
+    invalid_key = "Invalid key"
     with pytest.raises(KeyError):
         ray_tracing_lst.plot_histogram(key="invalid_key")
-        assert "Invalid key" in caplog.text
+        assert invalid_key in caplog.text
 
     with pytest.raises(KeyError):
         ray_tracing_lst.get_mean(key="invalid_key")
-        assert "Invalid key" in caplog.text
+        assert invalid_key in caplog.text
 
     with pytest.raises(KeyError):
         ray_tracing_lst.get_std_dev(key="invalid_key")
-        assert "Invalid key" in caplog.text
+        assert invalid_key in caplog.text
 
 
 def test_ray_tracing_get_std_dev(ray_tracing_lst):
