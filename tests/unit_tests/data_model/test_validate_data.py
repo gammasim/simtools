@@ -248,6 +248,16 @@ def test_check_range(caplog):
             data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "invalid_range")
 
 
+def test_is_dimensionless():
+
+    data_validator = validate_data.DataValidator()
+
+    assert data_validator._is_dimensionless(None)
+    assert data_validator._is_dimensionless("")
+    assert data_validator._is_dimensionless("dimensionless")
+    assert not data_validator._is_dimensionless("kpc")
+
+
 def test_check_and_convert_units():
     data_validator = validate_data.DataValidator()
     data_validator._data_description = get_reference_columns()
