@@ -10,7 +10,7 @@ description: |-
   Buffer limits for input and output of eventio data.
 data:
   - type: int
-    unit: dimensionless
+    unit: byte
     default: 200000000
     allowed_range:
       min: 100000
