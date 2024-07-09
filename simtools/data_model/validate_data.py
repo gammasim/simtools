@@ -248,7 +248,7 @@ class DataValidator:
             try:
                 self.data_table.sort(_columns_by_which_to_reverse_sort, reverse=True)
             except AttributeError:
-                self._logger.error("No data table defined for sorting")
+                self._logger.error("No data table defined for reverse sorting")
                 raise
 
     def _check_data_for_duplicates(self):
@@ -402,6 +402,23 @@ class DataValidator:
 
         return False
 
+    @staticmethod
+    def _is_dimensionless(unit):
+        """
+        Check if unit is dimensionless, None, or empty.
+
+        Parameters
+        ----------
+        unit: str
+            unit of data column
+
+        Returns
+        -------
+        bool
+            True if unit is dimensionless, None, or empty
+        """
+        return unit in ("dimensionless", None, "")
+
     def _check_and_convert_units(self, data, unit, col_name):
         """
         Check that input data have an allowed unit.
@@ -441,7 +458,8 @@ class DataValidator:
             column_unit = data.unit
         except AttributeError:
             column_unit = unit
-        if column_unit is None or column_unit == "dimensionless" or column_unit == "":
+
+        if self._is_dimensionless(column_unit) and self._is_dimensionless(reference_unit):
             return data, u.dimensionless_unscaled
 
         self._logger.debug(
@@ -450,25 +468,50 @@ class DataValidator:
         )
         try:
             if isinstance(data, u.Quantity | Column):
-                data = data.to(reference_unit)
-                return data, reference_unit
+                return data.to(reference_unit), reference_unit
+
             if isinstance(data, list | np.ndarray):
-                return [
-                    (
-                        u.Unit(_to_unit).to(reference_unit) * d
-                        if _to_unit not in (None, "dimensionless", "")
-                        else d
-                    )
-                    for d, _to_unit in zip(data, column_unit)
-                ], reference_unit
+                return self._check_and_convert_units_for_list(data, column_unit, reference_unit)
+
             # ensure that the data type is preserved (e.g., integers)
             return (type(data)(u.Unit(column_unit).to(reference_unit) * data), reference_unit)
-        except u.core.UnitConversionError:
+        except (u.core.UnitConversionError, ValueError) as exc:
             self._logger.error(
                 f"Invalid unit in data column '{col_name}'. "
                 f"Expected type '{reference_unit}', found '{column_unit}'"
             )
-            raise
+            raise u.core.UnitConversionError from exc
+
+    def _check_and_convert_units_for_list(self, data, column_unit, reference_unit):
+        """
+        Check and convert units data in a list or or numpy array.
+
+        Takes into account that data can be dimensionless (with unit 'None', 'dimensionless'
+        or '').
+
+        Parameters
+        ----------
+        data: list
+            list of data
+        column_unit: str
+            unit of data column
+        reference_unit: str
+            reference unit
+
+        Returns
+        -------
+        list
+            converted data
+
+        """
+        return [
+            (
+                u.Unit(_to_unit).to(reference_unit) * d
+                if _to_unit not in (None, "dimensionless", "")
+                else d
+            )
+            for d, _to_unit in zip(data, column_unit)
+        ], reference_unit
 
     def _check_range(self, col_name, col_min, col_max, range_type="allowed_range"):
         """
