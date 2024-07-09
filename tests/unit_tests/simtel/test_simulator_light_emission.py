@@ -84,7 +84,6 @@ def mock_simulator(
         label="test-simtel-light-emission",
     )
 
-    # default_le_config = default_config
     le_application = "xyzls", "layout"
     light_source_type = "led"
     return SimulatorLightEmission(
@@ -119,7 +118,6 @@ def mock_simulator_variable(
         label="test-simtel-light-emission",
     )
 
-    # default_le_config = default_config
     le_application = "xyzls", "variable"
     light_source_type = "led"
     return SimulatorLightEmission(
@@ -154,7 +152,6 @@ def mock_simulator_laser(
         label="test-simtel-light-emission",
     )
 
-    # default_le_config = default_config
     le_application = "ls-beam", "layout"
     light_source_type = "laser"
     return SimulatorLightEmission(
@@ -213,7 +210,6 @@ def test_from_kwargs_with_all_args(
         "label": "test_label",
         "simtel_path": simtel_path,
         "light_source_type": "layout",
-        # "config_data": {"some_param": "value"},
     }
     simulator = SimulatorLightEmission.from_kwargs(**kwargs)
 
@@ -436,7 +432,8 @@ def test_make_simtel_script(mock_simulator):
         mock_simulator._simtel_path.joinpath.return_value = (
             "/path/to/sim_telarray/bin/sim_telarray/"
         )
-        mock_simulator._telescope_model.get_config_file.return_value = "/path/to/config.cfg"
+        path_to_config = "/path/to/config.cfg"
+        mock_simulator._telescope_model.get_config_file.return_value = path_to_config
         mock_simulator._telescope_model.get_parameter_value.side_effect = lambda param: (
             "atm_test" if param == "atmospheric_transmission" else MagicMock()
         )
@@ -462,11 +459,11 @@ def test_make_simtel_script(mock_simulator):
 
         mock_file.assert_has_calls(
             [
-                call("/path/to/config.cfg", encoding="utf-8"),
+                call(path_to_config, encoding="utf-8"),
                 call().__enter__(),
                 call().readlines(),
                 call().__exit__(None, None, None),
-                call("/path/to/config.cfg", "w", encoding="utf-8"),
+                call(path_to_config, "w", encoding="utf-8"),
                 call().__enter__(),
                 call().write("Sample content of config file"),
                 call().__exit__(None, None, None),
