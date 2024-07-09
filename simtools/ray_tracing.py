@@ -475,7 +475,6 @@ class RayTracing:
             containment_diameter_cm = image.get_psf(containment_fraction, "cm")
             containment_diameter_deg = image.get_psf(containment_fraction, "deg")
             centroid_x = image.centroid_x
-            centroid_y = image.centroid_y
             eff_area = image.get_effective_area() * tel_transmission
 
         eff_flen = np.nan if this_off_axis == 0 else centroid_x / tan(this_off_axis * pi / 180.0)
