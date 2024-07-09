@@ -26,6 +26,8 @@ from simtools.visualization import visualize
 
 __all__ = ["RayTracing"]
 
+INVALID_KEY_TO_PLOT = "Invalid key to plot"
+
 
 class RayTracing:
     """
@@ -580,7 +582,7 @@ class RayTracing:
                 self._results["Off-axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
             )
         except KeyError as exc:
-            msg = "Invalid key to plot"
+            msg = INVALID_KEY_TO_PLOT
             self._logger.error(msg)
             raise exc
 
@@ -617,7 +619,7 @@ class RayTracing:
             If key is not among the valid options.
         """
         if key not in self.YLABEL:
-            msg = "Invalid key to plot"
+            msg = INVALID_KEY_TO_PLOT
             self._logger.error(msg)
             raise KeyError(msg)
 
@@ -644,7 +646,7 @@ class RayTracing:
             If key is not among the valid options.
         """
         if key not in self.YLABEL:
-            msg = "Invalid key to plot"
+            msg = INVALID_KEY_TO_PLOT
             self._logger.error(msg)
             raise KeyError(msg)
         return np.mean(self._results[key])
@@ -669,7 +671,7 @@ class RayTracing:
             If key is not among the valid options.
         """
         if key not in self.YLABEL:
-            msg = "Invalid key to plot"
+            msg = INVALID_KEY_TO_PLOT
             self._logger.error(msg)
             raise KeyError(msg)
         return np.std(self._results[key])
