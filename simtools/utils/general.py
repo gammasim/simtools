@@ -330,6 +330,50 @@ def _check_value_entry_length(value, par_name, par_info):
     return value_length, undefined_length
 
 
+def _convert_to_valid_unit(arg, unit, par_name):
+    """
+    Convert argument to the valid unit.
+
+    Parameters
+    ----------
+    arg: any
+        The argument value to convert
+    unit: str or None
+        The unit to convert to
+    par_name: str
+        The parameter name for error messages
+
+    Returns
+    -------
+    float or int
+        The converted value
+
+    Raises
+    ------
+    ValueError
+        If the argument is not a valid quantity or has an incorrect unit.
+    """
+    # In case a entry is None, None should be returned.
+    if unit is None or arg is None:
+        return arg
+
+    # Converting strings to Quantity
+    if isinstance(arg, str):
+        arg = u.Quantity(arg)
+
+    if not isinstance(arg, u.Quantity):
+        msg = f"Config entry given without unit: {par_name}"
+        _logger.error(msg)
+        raise InvalidConfigEntryError(msg)
+
+    if not arg.unit.is_equivalent(unit):
+        msg = f"Config entry given with wrong unit: {par_name} (should be {unit}, is {arg.unit})"
+        _logger.error(msg)
+        raise InvalidConfigEntryError(msg)
+
+    return arg.to(unit).value
+
+
 def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info):
     """
     Validate input user parameter for input values with units.
@@ -342,54 +386,41 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
        list of keys if user input was a dict; otherwise None
     par_name: str
        name of parameter
+    par_info: dict
+       parameter information including units
 
     Returns
     -------
     list, dict
         validated and converted input data
 
+    Raises
+    ------
+    InvalidConfigEntryError
+        If there are issues with unit validation or if the value entry length is undefined.
     """
     value_length, undefined_length = _check_value_entry_length(value, par_name, par_info)
-
     par_unit = copy_as_list(par_info["unit"])
 
     if undefined_length and len(par_unit) != 1:
         msg = f"Config entry with undefined length should have a single unit: {par_name}"
         _logger.error(msg)
         raise InvalidConfigEntryError(msg)
+
     if len(par_unit) == 1:
         par_unit *= value_length
-
     # Checking units and converting them, if needed.
-    value_with_units = []
-    for arg, unit in zip(value, par_unit):
-        # In case a entry is None, None should be returned.
-        if unit is None or arg is None:
-            value_with_units.append(arg)
-            continue
-
-        # Converting strings to Quantity
-        if isinstance(arg, str):
-            arg = u.quantity.Quantity(arg)
-
-        if not isinstance(arg, u.quantity.Quantity):
-            msg = f"Config entry given without unit: {par_name}"
-            _logger.error(msg)
-            raise InvalidConfigEntryError(msg)
-        if not arg.unit.is_equivalent(unit):
-            msg = (
-                f"Config entry given with wrong unit: {par_name}"
-                f" (should be {unit}, is {arg.unit})"
-            )
-            _logger.error(msg)
-            raise InvalidConfigEntryError(msg)
-        value_with_units.append(arg.to(unit).value)
+    value_with_units = [
+        _convert_to_valid_unit(arg, unit, par_name) for arg, unit in zip(value, par_unit)
+    ]
 
     if value_keys:
         return dict(zip(value_keys, value_with_units))
 
     return (
-        value_with_units if len(value_with_units) > 1 or undefined_length else value_with_units[0]
+        value_with_units[0]
+        if not undefined_length and len(value_with_units) == 1
+        else value_with_units
     )
 
 
