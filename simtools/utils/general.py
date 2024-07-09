@@ -924,41 +924,34 @@ def get_file_age(file_path):
 
 def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Change keys of a dictionary to lower or upper case.
-
-    Crawls through the dictionary and changes all keys.
-    Takes into account list of dictionaries, as e.g. found in the top level data model.
+    Change keys of a dictionary to lower or upper case recursively.
 
     Parameters
     ----------
     data_dict: dict
         Dictionary to be converted.
-    lower_case: bool
-        Change keys to lower (upper) case if True (False).
+    lower_case: bool, optional
+        Change keys to lower (True) or upper (False) case. Default is True.
+
+    Returns
+    -------
+    dict
+        Dictionary with keys converted to lower or upper case.
     """
-    _return_dict = {}
-    try:
-        for key in data_dict.keys():
-            if lower_case:
-                _key_changed = key.lower()
-            else:
-                _key_changed = key.upper()
-            if isinstance(data_dict[key], dict):
-                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
-            elif isinstance(data_dict[key], list):
-                _tmp_list = []
-                for _list_entry in data_dict[key]:
-                    if isinstance(_list_entry, dict):
-                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
-                    else:
-                        _tmp_list.append(_list_entry)
-                _return_dict[_key_changed] = _tmp_list
-            else:
-                _return_dict[_key_changed] = data_dict[key]
-    except AttributeError:
-        _logger.error(f"Input is not a proper dictionary: {data_dict}")
-        raise
-    return _return_dict
+    if isinstance(data_dict, dict):
+        return {
+            k.lower() if lower_case else k.upper(): (
+                change_dict_keys_case(v, lower_case) if isinstance(v | (dict, list)) else v
+            )
+            for k, v in data_dict.items()
+        }
+    if isinstance(data_dict, list):
+        return [
+            change_dict_keys_case(item, lower_case) if isinstance(item | (dict, list)) else item
+            for item in data_dict
+        ]
+
+    return data_dict
 
 
 def remove_substring_recursively_from_dict(data_dict, substring="\n"):
