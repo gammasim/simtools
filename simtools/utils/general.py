@@ -330,6 +330,50 @@ def _check_value_entry_length(value, par_name, par_info):
     return value_length, undefined_length
 
 
+def _convert_to_valid_unit(arg, unit, par_name):
+    """
+    Convert argument to the valid unit.
+
+    Parameters
+    ----------
+    arg: any
+        The argument value to convert
+    unit: str or None
+        The unit to convert to
+    par_name: str
+        The parameter name for error messages
+
+    Returns
+    -------
+    float or int
+        The converted value
+
+    Raises
+    ------
+    ValueError
+        If the argument is not a valid quantity or has an incorrect unit.
+    """
+    # In case a entry is None, None should be returned.
+    if unit is None or arg is None:
+        return arg
+
+    # Converting strings to Quantity
+    if isinstance(arg, str):
+        arg = u.Quantity(arg)
+
+    if not isinstance(arg, u.Quantity):
+        msg = f"Config entry given without unit: {par_name}"
+        _logger.error(msg)
+        raise InvalidConfigEntryError(msg)
+
+    if not arg.unit.is_equivalent(unit):
+        msg = f"Config entry given with wrong unit: {par_name} (should be {unit}, is {arg.unit})"
+        _logger.error(msg)
+        raise InvalidConfigEntryError(msg)
+
+    return arg.to(unit).value
+
+
 def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info):
     """
     Validate input user parameter for input values with units.
@@ -342,54 +386,41 @@ def _validate_and_convert_value_with_units(value, value_keys, par_name, par_info
        list of keys if user input was a dict; otherwise None
     par_name: str
        name of parameter
+    par_info: dict
+       parameter information including units
 
     Returns
     -------
     list, dict
         validated and converted input data
 
+    Raises
+    ------
+    InvalidConfigEntryError
+        If there are issues with unit validation or if the value entry length is undefined.
     """
     value_length, undefined_length = _check_value_entry_length(value, par_name, par_info)
-
     par_unit = copy_as_list(par_info["unit"])
 
     if undefined_length and len(par_unit) != 1:
         msg = f"Config entry with undefined length should have a single unit: {par_name}"
         _logger.error(msg)
         raise InvalidConfigEntryError(msg)
+
     if len(par_unit) == 1:
         par_unit *= value_length
-
     # Checking units and converting them, if needed.
-    value_with_units = []
-    for arg, unit in zip(value, par_unit):
-        # In case a entry is None, None should be returned.
-        if unit is None or arg is None:
-            value_with_units.append(arg)
-            continue
-
-        # Converting strings to Quantity
-        if isinstance(arg, str):
-            arg = u.quantity.Quantity(arg)
-
-        if not isinstance(arg, u.quantity.Quantity):
-            msg = f"Config entry given without unit: {par_name}"
-            _logger.error(msg)
-            raise InvalidConfigEntryError(msg)
-        if not arg.unit.is_equivalent(unit):
-            msg = (
-                f"Config entry given with wrong unit: {par_name}"
-                f" (should be {unit}, is {arg.unit})"
-            )
-            _logger.error(msg)
-            raise InvalidConfigEntryError(msg)
-        value_with_units.append(arg.to(unit).value)
+    value_with_units = [
+        _convert_to_valid_unit(arg, unit, par_name) for arg, unit in zip(value, par_unit)
+    ]
 
     if value_keys:
         return dict(zip(value_keys, value_with_units))
 
     return (
-        value_with_units if len(value_with_units) > 1 or undefined_length else value_with_units[0]
+        value_with_units[0]
+        if not undefined_length and len(value_with_units) == 1
+        else value_with_units
     )
 
 
@@ -891,12 +922,41 @@ def get_file_age(file_path):
     return (current_time - modification_time) / 60
 
 
+def _process_dict_keys(input_dict, case_func):
+    """
+    Process dictionary keys recursively.
+
+    Parameters
+    ----------
+    input_dict: dict
+        Dictionary to be processed.
+    case_func: function
+        Function to change case of keys (e.g., str.lower, str.upper).
+
+    Returns
+    -------
+    dict
+        Processed dictionary with keys changed.
+    """
+    output_dict = {}
+    for key, value in input_dict.items():
+        processed_key = case_func(key)
+        if isinstance(value, dict):
+            output_dict[processed_key] = _process_dict_keys(value, case_func)
+        elif isinstance(value, list):
+            processed_list = [
+                _process_dict_keys(item, case_func) if isinstance(item, dict) else item
+                for item in value
+            ]
+            output_dict[processed_key] = processed_list
+        else:
+            output_dict[processed_key] = value
+    return output_dict
+
+
 def change_dict_keys_case(data_dict, lower_case=True):
     """
-    Change keys of a dictionary to lower or upper case.
-
-    Crawls through the dictionary and changes all keys.
-    Takes into account list of dictionaries, as e.g. found in the top level data model.
+    Change keys of a dictionary to lower or upper case recursively.
 
     Parameters
     ----------
@@ -904,30 +964,20 @@ def change_dict_keys_case(data_dict, lower_case=True):
         Dictionary to be converted.
     lower_case: bool
         Change keys to lower (upper) case if True (False).
+
+    Returns
+    -------
+    dict
+        Dictionary with keys converted to lower or upper case.
     """
-    _return_dict = {}
+    # Determine which case function to use
+    case_func = str.lower if lower_case else str.upper
+
     try:
-        for key in data_dict.keys():
-            if lower_case:
-                _key_changed = key.lower()
-            else:
-                _key_changed = key.upper()
-            if isinstance(data_dict[key], dict):
-                _return_dict[_key_changed] = change_dict_keys_case(data_dict[key], lower_case)
-            elif isinstance(data_dict[key], list):
-                _tmp_list = []
-                for _list_entry in data_dict[key]:
-                    if isinstance(_list_entry, dict):
-                        _tmp_list.append(change_dict_keys_case(_list_entry, lower_case))
-                    else:
-                        _tmp_list.append(_list_entry)
-                _return_dict[_key_changed] = _tmp_list
-            else:
-                _return_dict[_key_changed] = data_dict[key]
+        return _process_dict_keys(data_dict, case_func)
     except AttributeError:
         _logger.error(f"Input is not a proper dictionary: {data_dict}")
         raise
-    return _return_dict
 
 
 def remove_substring_recursively_from_dict(data_dict, substring="\n"):
@@ -1121,57 +1171,76 @@ def user_confirm():
     return False
 
 
+def _get_value_dtype(value):
+    """
+    Get the data type of the given value.
+
+    Parameters
+    ----------
+    value: any
+        Value to determine the data type.
+
+    Returns
+    -------
+    type:
+        Data type of the value.
+    """
+    if isinstance(value, (list | np.ndarray)):
+        value = np.array(value)
+        return value.dtype
+
+    return type(value)
+
+
 def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=True):
     """
     Validate data type of value or type object against a reference data type.
 
-    Allow to check for exact data type or allow sub types (e.g. uint is accepted for int).
+    Allow to check for exact data type or allow subtypes (e.g. uint is accepted for int).
     Take into account 'file' type as used in the model parameter database.
 
     Parameters
     ----------
     reference_dtype: str
         Reference data type to be checked against.
-    value: any
+    value: any, optional
         Value to be checked (if dtype is None).
-    dtype: type
+    dtype: type, optional
         Type object to be checked (if value is None).
-    allow_subtypes: bool
+    allow_subtypes: bool, optional
         If True, allow subtypes to be accepted.
 
     Returns
     -------
     bool:
         True if the data type is valid.
-
     """
-    if value is not None and dtype is None:
-        if isinstance(value, list | np.ndarray):
-            value = np.array(value)
-            dtype = value.dtype
-        else:
-            dtype = type(value)
-    elif value is None and dtype is None:
+    if value is None and dtype is None:
         raise ValueError("Either value or dtype must be given.")
 
-    # strict comparison
+    if value is not None and dtype is None:
+        dtype = _get_value_dtype(value)
+
+    # Strict comparison
     if not allow_subtypes:
         return np.issubdtype(dtype, reference_dtype)
-    # allow any sub-type of integer or float for success
-    # dtype is 'object' for 'file' type and value None
+
+    # Allow any sub-type of integer or float for success
     if (np.issubdtype(dtype, np.str_) or np.issubdtype(dtype, "object")) and reference_dtype in (
         "string",
         "str",
         "file",
     ):
         return True
+
     if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
         return True
-    # allow ints to be converted to floats
+
     if np.issubdtype(dtype, np.integer) and (
         np.issubdtype(reference_dtype, np.integer) or np.issubdtype(reference_dtype, np.floating)
     ):
         return True
+
     if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
         return True
 

@@ -186,17 +186,12 @@ class SimulatorLightEmission(SimtelRunner):
         list
             The pointing vector from the calibration device to the telescope.
         """
-        # x_cal = self._calibration_model.get_parameter_value("x_pos")
-        # y_cal = self._calibration_model.get_parameter_value("y_pos")
-        # z_cal = self._calibration_model.get_parameter_value("z_pos")
+        # use DB coordinates later
         x_cal = self.default_le_config["x_pos_ILLN-01"]["default"].to(u.m).value
         y_cal = self.default_le_config["y_pos_ILLN-01"]["default"].to(u.m).value
         z_cal = self.default_le_config["z_pos_ILLN-01"]["default"].to(u.m).value
 
         cal_vect = np.array([x_cal, y_cal, z_cal])
-        # x_tel = self._telescope_model.get_parameter_value("x_pos")
-        # y_tel = self._telescope_model.get_parameter_value("y_pos")
-        # z_tel = self._telescope_model.get_parameter_value("z_pos")
         x_tel = self.default_le_config["x_pos"]["real"].to(u.m).value
         y_tel = self.default_le_config["y_pos"]["real"].to(u.m).value
         z_tel = self.default_le_config["z_pos"]["real"].to(u.m).value

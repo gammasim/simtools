@@ -23,6 +23,10 @@ from simtools.utils.general import collect_data_from_file_or_dict
 from simtools.utils.geometry import convert_2d_to_radial_distr, rotate
 from simtools.utils.names import sanitize_name
 
+X_AXIS_STRING = "x axis"
+Y_AXIS_STRING = "y axis"
+Z_AXIS_STRING = "z axis"
+
 
 class HistogramNotCreatedError(Exception):
     """Exception for histogram not created."""
@@ -394,24 +398,21 @@ class CorsikaHistograms:
         else:
             xy_maximum = 16 * u.m
             xy_bin = 64
-        x_axis = "x axis"
-        y_axis = "y axis"
-        z_axis = "z axis"
         return {
             "hist_position": {
-                x_axis: {
+                X_AXIS_STRING: {
                     "bins": xy_bin,
                     "start": -xy_maximum,
                     "stop": xy_maximum,
                     "scale": "linear",
                 },
-                y_axis: {
+                Y_AXIS_STRING: {
                     "bins": xy_bin,
                     "start": -xy_maximum,
                     "stop": xy_maximum,
                     "scale": "linear",
                 },
-                z_axis: {
+                Z_AXIS_STRING: {
                     "bins": 80,
                     "start": 200 * u.nm,
                     "stop": 1000 * u.nm,
@@ -419,13 +420,13 @@ class CorsikaHistograms:
                 },
             },
             "hist_direction": {
-                x_axis: {
+                X_AXIS_STRING: {
                     "bins": 100,
                     "start": -1,
                     "stop": 1,
                     "scale": "linear",
                 },
-                y_axis: {
+                Y_AXIS_STRING: {
                     "bins": 100,
                     "start": -1,
                     "stop": 1,
@@ -433,13 +434,18 @@ class CorsikaHistograms:
                 },
             },
             "hist_time_altitude": {
-                x_axis: {
+                X_AXIS_STRING: {
                     "bins": 100,
                     "start": -2000 * u.ns,
                     "stop": 2000 * u.ns,
                     "scale": "linear",
                 },
-                y_axis: {"bins": 100, "start": 120 * u.km, "stop": 0 * u.km, "scale": "linear"},
+                Y_AXIS_STRING: {
+                    "bins": 100,
+                    "start": 120 * u.km,
+                    "stop": 0 * u.km,
+                    "scale": "linear",
+                },
             },
         }
 
@@ -464,9 +470,9 @@ class CorsikaHistograms:
             self._logger.error(msg)
             raise ValueError
 
-        all_axes = ["x axis", "y axis"]
+        all_axes = [X_AXIS_STRING, Y_AXIS_STRING]
         if label == "hist_position":
-            all_axes.append("z axis")
+            all_axes.append(Z_AXIS_STRING)
 
         boost_axes = []
         for axis in all_axes:
@@ -894,23 +900,21 @@ class CorsikaHistograms:
             Maximum distance to consider in the 1D histogram (in meters).
         """
         hist_position = "hist_position"
-        x_axis = "x axis"
-        y_axis = "y axis"
         if max_dist is None:
             max_dist = np.amax(
                 [
-                    self.hist_config[hist_position][x_axis]["start"].to(u.m).value,
-                    self.hist_config[hist_position][x_axis]["stop"].to(u.m).value,
-                    self.hist_config[hist_position][y_axis]["start"].to(u.m).value,
-                    self.hist_config[hist_position][y_axis]["stop"].to(u.m).value,
+                    self.hist_config[hist_position][X_AXIS_STRING]["start"].to(u.m).value,
+                    self.hist_config[hist_position][X_AXIS_STRING]["stop"].to(u.m).value,
+                    self.hist_config[hist_position][Y_AXIS_STRING]["start"].to(u.m).value,
+                    self.hist_config[hist_position][Y_AXIS_STRING]["stop"].to(u.m).value,
                 ]
             )
         if bins is None:
             bins = (
                 np.amax(
                     [
-                        self.hist_config[hist_position][x_axis]["bins"],
-                        self.hist_config[hist_position][y_axis]["bins"],
+                        self.hist_config[hist_position][X_AXIS_STRING]["bins"],
+                        self.hist_config[hist_position][Y_AXIS_STRING]["bins"],
                     ]
                 )
                 // 2
@@ -1161,35 +1165,35 @@ class CorsikaHistograms:
                 file_name: "hist_1d_photon_wavelength_distr",
                 title: "Photon wavelength distribution",
                 bin_edges: "wavelength",
-                axis_unit: self.hist_config["hist_position"]["z axis"]["start"].unit,
+                axis_unit: self.hist_config["hist_position"][Z_AXIS_STRING]["start"].unit,
             },
             "counts": {
                 fn_key: "get_photon_radial_distr",
                 file_name: "hist_1d_photon_radial_distr",
                 title: "Radial photon distribution on the ground",
                 bin_edges: "Distance to center",
-                axis_unit: self.hist_config["hist_position"]["x axis"]["start"].unit,
+                axis_unit: self.hist_config["hist_position"][X_AXIS_STRING]["start"].unit,
             },
             "density": {
                 fn_key: "get_photon_density_distr",
                 file_name: "hist_1d_photon_density_distr",
                 title: "Photon density distribution on the ground",
                 bin_edges: "Distance to center",
-                axis_unit: self.hist_config["hist_position"]["x axis"]["start"].unit,
+                axis_unit: self.hist_config["hist_position"][X_AXIS_STRING]["start"].unit,
             },
             "time": {
                 fn_key: "get_photon_time_of_emission_distr",
                 file_name: "hist_1d_photon_time_distr",
                 title: "Photon time of arrival distribution",
                 bin_edges: "Time of arrival",
-                axis_unit: self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
+                axis_unit: self.hist_config["hist_time_altitude"][X_AXIS_STRING]["start"].unit,
             },
             "altitude": {
                 fn_key: "get_photon_altitude_distr",
                 file_name: "hist_1d_photon_altitude_distr",
                 title: "Photon altitude of emission distribution",
                 bin_edges: "Altitude of emission",
-                axis_unit: self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
+                axis_unit: self.hist_config["hist_time_altitude"][Y_AXIS_STRING]["start"].unit,
             },
             "num_photons_per_event": {
                 fn_key: "get_num_photons_per_event_distr",
@@ -1217,13 +1221,14 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
+        axis_unit = "axis unit"
         for _, function_dict in self.dict_1d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             histogram_function = getattr(self, function_dict["function"])
             hist_1d_list, x_bin_edges_list = histogram_function()
-            x_bin_edges_list = x_bin_edges_list * function_dict["axis unit"]
+            x_bin_edges_list = x_bin_edges_list * function_dict[axis_unit]
             if function_dict["function"] == "get_photon_density_distr":
-                histogram_value_unit = 1 / (function_dict["axis unit"] ** 2)
+                histogram_value_unit = 1 / (function_dict[axis_unit] ** 2)
             else:
                 histogram_value_unit = u.dimensionless_unscaled
             hist_1d_list = hist_1d_list * histogram_value_unit
@@ -1281,18 +1286,18 @@ class CorsikaHistograms:
                     file_name: "hist_2d_photon_count_distr",
                     title: "Photon count distribution on the ground",
                     x_bin_edges: "x position on the ground",
-                    x_axis_unit: self.hist_config["hist_position"]["x axis"]["start"].unit,
+                    x_axis_unit: self.hist_config["hist_position"][X_AXIS_STRING]["start"].unit,
                     y_bin_edges: "y position on the ground",
-                    y_axis_unit: self.hist_config["hist_position"]["y axis"]["start"].unit,
+                    y_axis_unit: self.hist_config["hist_position"][Y_AXIS_STRING]["start"].unit,
                 },
                 "density": {
                     fn_key: "get_2d_photon_density_distr",
                     file_name: "hist_2d_photon_density_distr",
                     title: "Photon density distribution on the ground",
                     x_bin_edges: "x position on the ground",
-                    x_axis_unit: self.hist_config["hist_position"]["x axis"]["start"].unit,
+                    x_axis_unit: self.hist_config["hist_position"][X_AXIS_STRING]["start"].unit,
                     y_bin_edges: "y position on the ground",
-                    y_axis_unit: self.hist_config["hist_position"]["y axis"]["start"].unit,
+                    y_axis_unit: self.hist_config["hist_position"][Y_AXIS_STRING]["start"].unit,
                 },
                 "direction": {
                     fn_key: "get_2d_photon_direction_distr",
@@ -1308,9 +1313,13 @@ class CorsikaHistograms:
                     file_name: "hist_2d_photon_time_altitude_distr",
                     title: "Time of arrival vs altitude of emission",
                     x_bin_edges: "Time of arrival",
-                    x_axis_unit: self.hist_config["hist_time_altitude"]["x axis"]["start"].unit,
+                    x_axis_unit: self.hist_config["hist_time_altitude"][X_AXIS_STRING][
+                        "start"
+                    ].unit,
                     y_bin_edges: "Altitude of emission",
-                    y_axis_unit: self.hist_config["hist_time_altitude"]["y axis"]["start"].unit,
+                    y_axis_unit: self.hist_config["hist_time_altitude"][Y_AXIS_STRING][
+                        "start"
+                    ].unit,
                 },
                 "num_photons_per_telescope": {
                     fn_key: "get_2d_num_photons_distr",
@@ -1333,6 +1342,9 @@ class CorsikaHistograms:
         overwrite: bool
             If True overwrites the histograms already saved in the hdf5 file.
         """
+        x_axis_unit = "x axis unit"
+        y_axis_unit = "y axis unit"
+
         for property_name, function_dict in self.dict_2d_distributions.items():
             self._meta_dict["Title"] = sanitize_name(function_dict["title"])
             histogram_function = getattr(self, function_dict["function"])
@@ -1340,16 +1352,16 @@ class CorsikaHistograms:
             hist_2d_list, x_bin_edges_list, y_bin_edges_list = histogram_function()
             if function_dict["function"] == "get_2d_photon_density_distr":
                 histogram_value_unit = 1 / (
-                    self.dict_2d_distributions[property_name]["x axis unit"]
-                    * self.dict_2d_distributions[property_name]["y axis unit"]
+                    self.dict_2d_distributions[property_name][x_axis_unit]
+                    * self.dict_2d_distributions[property_name][y_axis_unit]
                 )
             else:
                 histogram_value_unit = u.dimensionless_unscaled
 
             hist_2d_list, x_bin_edges_list, y_bin_edges_list = (
                 hist_2d_list * histogram_value_unit,
-                x_bin_edges_list * self.dict_2d_distributions[property_name]["x axis unit"],
-                y_bin_edges_list * self.dict_2d_distributions[property_name]["y axis unit"],
+                x_bin_edges_list * self.dict_2d_distributions[property_name][x_axis_unit],
+                y_bin_edges_list * self.dict_2d_distributions[property_name][y_axis_unit],
             )
 
             for i_histogram, _ in enumerate(x_bin_edges_list):

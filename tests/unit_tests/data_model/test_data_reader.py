@@ -15,6 +15,8 @@ from simtools.data_model import data_reader
 
 logger = logging.getLogger()
 
+JSON_TEST_FILE = "test_read_value_from_file_1.json"
+
 
 @pytest.fixture()
 def reference_point_altitude_file():
@@ -64,12 +66,10 @@ def test_read_value_from_file(tmp_test_directory, reference_point_altitude_file)
         data_reader.read_value_from_file(None, validate=False)
 
     test_dict_1 = {"value": 5.0}
-    with open(tmp_test_directory / "test_read_value_from_file_1.json", "w", encoding="utf-8") as f:
+    with open(tmp_test_directory / JSON_TEST_FILE, "w", encoding="utf-8") as f:
         json.dump(test_dict_1, f)
     assert isinstance(
-        data_reader.read_value_from_file(
-            tmp_test_directory / "test_read_value_from_file_1.json", validate=False
-        ),
+        data_reader.read_value_from_file(tmp_test_directory / JSON_TEST_FILE, validate=False),
         float,
     )
 
@@ -115,9 +115,7 @@ def test_read_value_from_file_and_validate(
 
     # no schema given
     test_dict_1 = {"Value": 5.0}
-    with open(tmp_test_directory / "test_read_value_from_file_1.json", "w", encoding="utf-8") as f:
+    with open(tmp_test_directory / JSON_TEST_FILE, "w", encoding="utf-8") as f:
         json.dump(test_dict_1, f)
     with pytest.raises(jsonschema.exceptions.ValidationError):
-        data_reader.read_value_from_file(
-            tmp_test_directory / "test_read_value_from_file_1.json", validate=True
-        )
+        data_reader.read_value_from_file(tmp_test_directory / JSON_TEST_FILE, validate=True)
