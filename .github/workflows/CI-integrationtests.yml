@@ -37,7 +37,7 @@ jobs:
       - name: Read .env_template file
         id: read-env
         run: |
-          grep -v '^SIMTOOLS_DB_API_PW\|^SIMTOOLS_DB_API_USER\|^#' .env_template | while read line; do echo "$line"; done
+          grep -v '^SIMTOOLS_DB_API_PW\|^SIMTOOLS_DB_API_USER\|^#' .env_template | while read line; do echo "$line" >> "$GITHUB_ENV"; done
 
       - name: Set PATH
         run: |
