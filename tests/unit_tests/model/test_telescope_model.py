@@ -21,7 +21,7 @@ def test_get_on_axis_eff_optical_area(telescope_model_lst):
     )  # Value for LST -1
 
 
-# TODO - remove dependency on prod5 as soon as prod6 is complete in DB
+# depends on prod5; prod6 is incomplete in the DB
 def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
@@ -37,7 +37,7 @@ def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
     assert two_dim_dist["z"][4][4] == pytest.approx(0.985199988)
 
 
-# TODO - remove dependency on prod5 as soon as prod6 is complete in DB
+# depends on prod5; prod6 is incomplete in the DB
 def test_read_incidence_angle_distribution(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
 
@@ -52,7 +52,7 @@ def test_read_incidence_angle_distribution(telescope_model_sst_prod5):
     ].value == pytest.approx(0.027980644661989726)
 
 
-# TODO - remove dependency on prod5 as soon as prod6 is complete in DB
+# depends on prod5; prod6 is incomplete in the DB
 def test_calc_average_curve(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
@@ -68,7 +68,7 @@ def test_calc_average_curve(telescope_model_sst_prod5):
     ] == pytest.approx(0.9398265298920796)
 
 
-# TODO - remove dependency on prod5 as soon as prod6 is complete in DB
+# depends on prod5; prod6 is incomplete in the DB
 def test_export_table_to_model_directory(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()

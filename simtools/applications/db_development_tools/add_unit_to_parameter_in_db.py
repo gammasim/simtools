@@ -28,10 +28,8 @@ def main():  # noqa: D103
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    # pars_to_update = ["altitude"]
     pars_to_update = ["ref_long", "ref_lat"]
 
-    # units = ["m"]
     units = ["deg", "deg"]
 
     for site in ["North", "South"]:
