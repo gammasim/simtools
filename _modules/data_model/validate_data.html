@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.validate_data &#8212; simtools v0.1.dev1+gbb7966e Manual</title>
+    <title>data_model.validate_data &#8212; simtools v0.1.dev1+gf109716 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=a60eb60e"></script>
+    <script src="../../_static/documentation_options.js?v=4cac46d1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gbb7966e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf109716 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -633,7 +633,7 @@ document.write(`
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">_columns_by_which_to_reverse_sort</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No data table defined for sorting&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No data table defined for reverse sorting&quot;</span><span class="p">)</span>
                 <span class="k">raise</span>
 
     <span class="k">def</span> <span class="nf">_check_data_for_duplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -787,6 +787,23 @@ document.write(`
 
         <span class="k">return</span> <span class="kc">False</span>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_is_dimensionless</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if unit is dimensionless, None, or empty.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit: str</span>
+<span class="sd">            unit of data column</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if unit is dimensionless, None, or empty</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">unit</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;dimensionless&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_check_and_convert_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">col_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check that input data have an allowed unit.</span>
@@ -826,7 +843,8 @@ document.write(`
             <span class="n">column_unit</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">unit</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="n">column_unit</span> <span class="o">=</span> <span class="n">unit</span>
-        <span class="k">if</span> <span class="n">column_unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">column_unit</span> <span class="o">==</span> <span class="s2">&quot;dimensionless&quot;</span> <span class="ow">or</span> <span class="n">column_unit</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dimensionless</span><span class="p">(</span><span class="n">column_unit</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_dimensionless</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -835,25 +853,50 @@ document.write(`
         <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span> <span class="o">|</span> <span class="n">Column</span><span class="p">):</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">reference_unit</span>
+                <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">),</span> <span class="n">reference_unit</span>
+
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-                <span class="k">return</span> <span class="p">[</span>
-                    <span class="p">(</span>
-                        <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">_to_unit</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">)</span> <span class="o">*</span> <span class="n">d</span>
-                        <span class="k">if</span> <span class="n">_to_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;dimensionless&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-                        <span class="k">else</span> <span class="n">d</span>
-                    <span class="p">)</span>
-                    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">_to_unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">column_unit</span><span class="p">)</span>
-                <span class="p">],</span> <span class="n">reference_unit</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_and_convert_units_for_list</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">column_unit</span><span class="p">,</span> <span class="n">reference_unit</span><span class="p">)</span>
+
             <span class="c1"># ensure that the data type is preserved (e.g., integers)</span>
             <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)(</span><span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">column_unit</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">)</span> <span class="o">*</span> <span class="n">data</span><span class="p">),</span> <span class="n">reference_unit</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">:</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Invalid unit in data column &#39;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Expected type &#39;</span><span class="si">{</span><span class="n">reference_unit</span><span class="si">}</span><span class="s2">&#39;, found &#39;</span><span class="si">{</span><span class="n">column_unit</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span>
+            <span class="k">raise</span> <span class="n">u</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">UnitConversionError</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+    <span class="k">def</span> <span class="nf">_check_and_convert_units_for_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">column_unit</span><span class="p">,</span> <span class="n">reference_unit</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check and convert units data in a list or or numpy array.</span>
+
+<span class="sd">        Takes into account that data can be dimensionless (with unit &#39;None&#39;, &#39;dimensionless&#39;</span>
+<span class="sd">        or &#39;&#39;).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: list</span>
+<span class="sd">            list of data</span>
+<span class="sd">        column_unit: str</span>
+<span class="sd">            unit of data column</span>
+<span class="sd">        reference_unit: str</span>
+<span class="sd">            reference unit</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            converted data</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span>
+                <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">_to_unit</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">reference_unit</span><span class="p">)</span> <span class="o">*</span> <span class="n">d</span>
+                <span class="k">if</span> <span class="n">_to_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;dimensionless&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">d</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">_to_unit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">column_unit</span><span class="p">)</span>
+        <span class="p">],</span> <span class="n">reference_unit</span>
 
     <span class="k">def</span> <span class="nf">_check_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_min</span><span class="p">,</span> <span class="n">col_max</span><span class="p">,</span> <span class="n">range_type</span><span class="o">=</span><span class="s2">&quot;allowed_range&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
