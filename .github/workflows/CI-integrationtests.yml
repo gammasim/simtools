@@ -45,4 +45,9 @@ jobs:
           pip install '.[tests,dev,doc]'
           export PYTHONPATH=$PYTHONPATH:.
           grep -v '^#\|^SIMTOOLS_DB_API_PW\|^SIMTOOLS_DB_API_USER\|^SIMTOOLS_SIMTEL_PATH' .env_template | while read line; do export "$line"; done
+          echo "SIMTOOLS_SIMTEL_PATH $SIMTOOLS_SIMTEL_PATH"
+          echo "SIMTOOLS_DB_API_PORT $SIMTOOLS_DB_API_PORT"
+          echo "SIMTOOLS_DB_SERVER $SIMTOOLS_DB_SERVER"
+          echo "SIMTOOLS_DB_SIMULATION_MODEL $SIMTOOLS_DB_SIMULATION_MODEL"
+          echo "SIMTOOLS_DB_API_AUTHENTICATION_DATABASE $SIMTOOLS_DB_API_AUTHENTICATION_DATABASE"
           pytest --model_version=${{ matrix.type }} --color=yes --durations=20 -n auto --dist loadscope --no-cov tests/integration_tests/
