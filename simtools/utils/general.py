@@ -954,38 +954,6 @@ def _process_dict_keys(input_dict, case_func):
     return output_dict
 
 
-def _process_dict_keys(input_dict, case_func):
-    """
-    Process dictionary keys recursively.
-
-    Parameters
-    ----------
-    input_dict: dict
-        Dictionary to be processed.
-    case_func: function
-        Function to change case of keys (e.g., str.lower, str.upper).
-
-    Returns
-    -------
-    dict
-        Processed dictionary with keys changed.
-    """
-    output_dict = {}
-    for key, value in input_dict.items():
-        processed_key = case_func(key)
-        if isinstance(value, dict):
-            output_dict[processed_key] = _process_dict_keys(value, case_func)
-        elif isinstance(value, list):
-            processed_list = [
-                _process_dict_keys(item, case_func) if isinstance(item, dict) else item
-                for item in value
-            ]
-            output_dict[processed_key] = processed_list
-        else:
-            output_dict[processed_key] = value
-    return output_dict
-
-
 def change_dict_keys_case(data_dict, lower_case=True):
     """
     Change keys of a dictionary to lower or upper case recursively.
