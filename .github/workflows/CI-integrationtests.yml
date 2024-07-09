@@ -3,12 +3,8 @@ name: CI-integrationtests
 # Integration tests for applications
 
 env:
-  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
-  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-  SIMTOOLS_DB_SIMULATION_MODEL: "Staging-CTA-Simulation-Model-v0-3-0"
-  SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
 
 on:
   workflow_dispatch:
@@ -37,6 +33,14 @@ jobs:
 
       - name: checkout
         uses: actions/checkout@v4
+
+      - name: Read .env_template file
+        id: read-env
+        run: |
+          # Read .env_template and export variables except SIMTOOLS_DB_API_PW and SIMTOOLS_DB_API_USER
+          grep -v '^SIMTOOLS_DB_API_PW\|^SIMTOOLS_DB_API_USER$' .env_template | while read line; do
+            export "$line"
+          done
 
       - name: Set PATH
         run: |
