@@ -17,6 +17,10 @@ from simtools.corsika.corsika_histograms import (
 )
 from simtools.io_operations.hdf5_handler import read_hdf5
 
+x_axis_string = "x axis"
+y_axis_string = "y axis"
+z_axis_string = "z axis"
+
 
 def test_init(corsika_histograms_instance, corsika_output_file_name):
     assert corsika_histograms_instance.input_file.name == Path(corsika_output_file_name).name
@@ -92,9 +96,9 @@ def test_hist_config_default_config(corsika_histograms_instance, caplog):
 def test_hist_config_custom_config(corsika_histograms_instance):
     custom_config = {
         "hist_position": {
-            "x axis": {"bins": 100, "start": -1000, "stop": 1000, "scale": "linear"},
-            "y axis": {"bins": 100, "start": -1000, "stop": 1000, "scale": "linear"},
-            "z axis": {"bins": 80, "start": 200, "stop": 1000, "scale": "linear"},
+            x_axis_string: {"bins": 100, "start": -1000, "stop": 1000, "scale": "linear"},
+            y_axis_string: {"bins": 100, "start": -1000, "stop": 1000, "scale": "linear"},
+            z_axis_string: {"bins": 80, "start": 200, "stop": 1000, "scale": "linear"},
         },
         "hist_direction": {
             "azimuth": {"bins": 36, "start": 0, "stop": 360, "scale": "linear"},
@@ -254,19 +258,19 @@ def test_set_histograms_passing_config(corsika_histograms_instance):
     xy_maximum = 500 * u.m
     xy_bin = 100
     new_hist_config["hist_position"] = {
-        "x axis": {
+        x_axis_string: {
             "bins": xy_bin,
             "start": -xy_maximum,
             "stop": xy_maximum,
             "scale": "linear",
         },
-        "y axis": {
+        y_axis_string: {
             "bins": xy_bin,
             "start": -xy_maximum,
             "stop": xy_maximum,
             "scale": "linear",
         },
-        "z axis": {
+        z_axis_string: {
             "bins": 80,
             "start": 200 * u.nm,
             "stop": 1000 * u.nm,
@@ -831,11 +835,11 @@ def test_dict_2d_distributions(corsika_histograms_instance_set_histograms):
             "title": "Photon count distribution on the ground",
             "x bin edges": "x position on the ground",
             "x axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
-                "x axis"
+                x_axis_string
             ]["start"].unit,
             "y bin edges": "y position on the ground",
             "y axis unit": corsika_histograms_instance_set_histograms.hist_config["hist_position"][
-                "y axis"
+                y_axis_string
             ]["start"].unit,
         }
     }

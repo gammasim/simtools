@@ -145,7 +145,6 @@ class HexPixelHandler:
     @staticmethod
     def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
-        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,
@@ -165,7 +164,6 @@ class HexEdgePixelHandler:
     @staticmethod
     def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
-        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,
@@ -185,7 +183,6 @@ class HexOffPixelHandler:
     @staticmethod
     def legend_artist(_, __, ___, handlebox):  # noqa: D102
         x0, y0 = calculate_center(handlebox)
-        # width = height = handlebox.height
         patch = mpatches.RegularPolygon(
             (x0, y0),
             numVertices=6,

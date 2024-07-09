@@ -46,11 +46,11 @@ def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
         )
         _logger.error(msg)
         raise ValueError
-    function = getattr(
+    _function = getattr(
         histograms_instance,
         histograms_instance.dict_2d_distributions[property_name]["function"],
     )
-    hist_values, x_bin_edges, y_bin_edges = function()
+    hist_values, x_bin_edges, y_bin_edges = _function()
 
     all_figs = []
     for i_hist, _ in enumerate(x_bin_edges):
@@ -247,11 +247,11 @@ def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
         _logger.error(msg)
         raise ValueError
 
-    function = getattr(
+    _function = getattr(
         histograms_instance,
         histograms_instance.dict_1d_distributions[property_name]["function"],
     )
-    hist_values, bin_edges = function()
+    hist_values, bin_edges = _function()
     all_figs = []
     for i_hist, _ in enumerate(bin_edges):
         fig, ax = plt.subplots()
