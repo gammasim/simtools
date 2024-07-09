@@ -50,4 +50,6 @@ jobs:
           echo "SIMTOOLS_DB_SERVER $SIMTOOLS_DB_SERVER"
           echo "SIMTOOLS_DB_SIMULATION_MODEL $SIMTOOLS_DB_SIMULATION_MODEL"
           echo "SIMTOOLS_DB_API_AUTHENTICATION_DATABASE $SIMTOOLS_DB_API_AUTHENTICATION_DATABASE"
+          export SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}
+          export SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}
           pytest --model_version=${{ matrix.type }} --color=yes --durations=20 -n auto --dist loadscope --no-cov tests/integration_tests/
