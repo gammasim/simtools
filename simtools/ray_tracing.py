@@ -520,7 +520,7 @@ class RayTracing:
         try:
             rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
                 shlex.split(
-                    f"{self._simtel_path}/sim_telarray/bin/rx " f"-f {containment_fraction:.2f} -v"
+                    f"{self._simtel_path}/sim_telarray/bin/rx -f {containment_fraction:.2f} -v"
                 ),
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
