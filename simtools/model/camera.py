@@ -416,45 +416,66 @@ class Camera:
         x_pos : numpy.array_like
             x position of each pixel
         y_pos : numpy.array_like
-            y position of each pixels
+            y position of each pixel
         radius : float
-            radius to consider neighbour.
-            Should be slightly larger than the pixel diameter.
+            Radius within which to find neighbours
         row_coloumn_dist : float
-            Maximum distance for pixels in the same row/column to consider when looking for a \
-            neighbour. Should be around 20% of the pixel diameter.
+            Distance to consider for row/column adjacency.
+            Should be around 20% of the pixel diameter.
 
         Returns
         -------
-        neighbours: numpy.array_like
+        list of lists
             Array of neighbour indices in a list for each pixel
         """
         # First find the neighbours with the usual method and the original radius
         # which does not allow for diagonal neighbours.
         neighbours = self._find_neighbours(x_pos, y_pos, radius)
+
         for i_pix, nn in enumerate(neighbours):
             # Find pixels defined as edge pixels now
             if len(nn) < 4:
                 # Go over all other pixels and search for ones which are adjacent
                 # but further than sqrt(2) away
-                for j_pix, _ in enumerate(x_pos):
-                    # No need to look at the pixel itself
-                    # nor at any pixels already in the neighbours list
-                    if j_pix != i_pix and j_pix not in nn:
-                        dist = np.sqrt(
-                            (x_pos[i_pix] - x_pos[j_pix]) ** 2 + (y_pos[i_pix] - y_pos[j_pix]) ** 2
-                        )
-                        # Check if this pixel is in the same row or column
-                        # and allow it to be ~1.68*diameter away (1.4*1.2 = 1.68)
-                        # Need to increase the distance because of the curvature
-                        # of the CHEC camera
-                        if (
-                            abs(x_pos[i_pix] - x_pos[j_pix]) < row_coloumn_dist
-                            or abs(y_pos[i_pix] - y_pos[j_pix]) < row_coloumn_dist
-                        ) and dist < 1.2 * radius:
-                            nn.append(j_pix)
+                self._add_additional_neighbours(i_pix, nn, x_pos, y_pos, radius, row_coloumn_dist)
 
         return neighbours
+
+    def _add_additional_neighbours(self, i_pix, nn, x_pos, y_pos, radius, row_coloumn_dist):
+        """
+        Add neighbours for a given pixel if they are not already neighbours and are adjacent.
+
+        Parameters
+        ----------
+        i_pix : int
+            Index of the pixel to find neighbours for
+        nn : list
+            Current list of neighbours for the pixel
+        x_pos : numpy.array_like
+            x position of each pixel
+        y_pos : numpy.array_like
+            y position of each pixel
+        radius : float
+            Radius within which to find neighbours
+        row_coloumn_dist : float
+            Distance to consider for row/column adjacency
+        """
+        for j_pix, _ in enumerate(x_pos):
+            # No need to look at the pixel itself
+            # nor at any pixels already in the neighbours list
+            if j_pix != i_pix and j_pix not in nn:
+                dist = np.sqrt(
+                    (x_pos[i_pix] - x_pos[j_pix]) ** 2 + (y_pos[i_pix] - y_pos[j_pix]) ** 2
+                )
+                # Check if this pixel is in the same row or column
+                # and allow it to be ~1.68*diameter away (1.4*1.2 = 1.68)
+                # Need to increase the distance because of the curvature
+                # of the CHEC camera
+                if (
+                    abs(x_pos[i_pix] - x_pos[j_pix]) < row_coloumn_dist
+                    or abs(y_pos[i_pix] - y_pos[j_pix]) < row_coloumn_dist
+                ) and dist < 1.2 * radius:
+                    nn.append(j_pix)
 
     def _calc_neighbour_pixels(self, pixels):
         """
