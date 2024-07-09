@@ -1203,57 +1203,76 @@ def user_confirm():
     return False
 
 
+def _get_value_dtype(value):
+    """
+    Get the data type of the given value.
+
+    Parameters
+    ----------
+    value: any
+        Value to determine the data type.
+
+    Returns
+    -------
+    type:
+        Data type of the value.
+    """
+    if isinstance(value, (list | np.ndarray)):
+        value = np.array(value)
+        return value.dtype
+
+    return type(value)
+
+
 def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=True):
     """
     Validate data type of value or type object against a reference data type.
 
-    Allow to check for exact data type or allow sub types (e.g. uint is accepted for int).
+    Allow to check for exact data type or allow subtypes (e.g. uint is accepted for int).
     Take into account 'file' type as used in the model parameter database.
 
     Parameters
     ----------
     reference_dtype: str
         Reference data type to be checked against.
-    value: any
+    value: any, optional
         Value to be checked (if dtype is None).
-    dtype: type
+    dtype: type, optional
         Type object to be checked (if value is None).
-    allow_subtypes: bool
+    allow_subtypes: bool, optional
         If True, allow subtypes to be accepted.
 
     Returns
     -------
     bool:
         True if the data type is valid.
-
     """
-    if value is not None and dtype is None:
-        if isinstance(value, list | np.ndarray):
-            value = np.array(value)
-            dtype = value.dtype
-        else:
-            dtype = type(value)
-    elif value is None and dtype is None:
+    if value is None and dtype is None:
         raise ValueError("Either value or dtype must be given.")
 
-    # strict comparison
+    if value is not None and dtype is None:
+        dtype = _get_value_dtype(value)
+
+    # Strict comparison
     if not allow_subtypes:
         return np.issubdtype(dtype, reference_dtype)
-    # allow any sub-type of integer or float for success
-    # dtype is 'object' for 'file' type and value None
+
+    # Allow any sub-type of integer or float for success
     if (np.issubdtype(dtype, np.str_) or np.issubdtype(dtype, "object")) and reference_dtype in (
         "string",
         "str",
         "file",
     ):
         return True
+
     if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
         return True
-    # allow ints to be converted to floats
+
     if np.issubdtype(dtype, np.integer) and (
         np.issubdtype(reference_dtype, np.integer) or np.issubdtype(reference_dtype, np.floating)
     ):
         return True
+
     if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
         return True
 
