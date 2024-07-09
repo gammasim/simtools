@@ -13,6 +13,7 @@ dependencies:
   - myst-parser
   - numpy
   - numpydoc
+  - particle
   - pip
   - pre-commit
   - pylint
@@ -33,10 +34,10 @@ dependencies:
   - toml
   - pip:
       - ctao-dpps-cosmic-ray-spectra
-      - particle
       - pytest-random-order
 
 # cheatsheet
 # create: conda env create -f environment.yml
 # activate: conda activate simtools-dev
-# update: conda env update -f environment.yml --prune
+# update (conda/mamba): conda env update -f environment.yml --prune
+# update (micromamba): micromamba update -f environment.yml
