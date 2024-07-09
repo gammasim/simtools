@@ -8,6 +8,8 @@ import simtools.job_execution.job_manager as jm
 from simtools.job_execution.job_manager import JobExecutionError
 
 LOG_EXCERPT = "log excerpt"
+OS_SYSTEM = "os.system"
+PATHLIB_PATH_EXISTS = "pathlib.Path.exists"
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -84,9 +86,9 @@ def test_check_submission_system(mock_program_is_executable, job_submitter):
 def test_submit_local(
     mock_gen, job_submitter, mocker, output_log, logfile_log, script_file, job_messages
 ):
-    mocker.patch("os.system", return_value=0)
+    mocker.patch(OS_SYSTEM, return_value=0)
     mock_gen.get_log_excerpt.return_value = LOG_EXCERPT
-    mocker.patch("pathlib.Path.exists", return_value=False)
+    mocker.patch(PATHLIB_PATH_EXISTS, return_value=False)
 
     job_submitter.submit(script_file, output_log, logfile_log)
 
@@ -189,9 +191,9 @@ def job_submitter_real():
 def test_submit_local_real(
     mock_gen, job_submitter_real, mocker, output_log, logfile_log, script_file, job_messages
 ):
-    mock_system = mocker.patch("os.system", return_value=0)
+    mock_system = mocker.patch(OS_SYSTEM, return_value=0)
     mock_gen.get_log_excerpt.return_value = job_messages["log_excerpt"]
-    mocker.patch("pathlib.Path.exists", return_value=False)
+    mocker.patch(PATHLIB_PATH_EXISTS, return_value=False)
 
     job_submitter_real.submit(script_file, output_log, logfile_log)
 
@@ -207,9 +209,9 @@ def test_submit_local_real(
 def test_submit_local_real_failure(
     mock_gen, job_submitter_real, mocker, output_log, logfile_log, script_file, job_messages
 ):
-    mock_system = mocker.patch("os.system", return_value=1)
+    mock_system = mocker.patch(OS_SYSTEM, return_value=1)
     mock_gen.get_log_excerpt.return_value = job_messages["log_excerpt"]
-    mocker.patch("pathlib.Path.exists", return_value=True)
+    mocker.patch(PATHLIB_PATH_EXISTS, return_value=True)
     mock_gen.get_file_age.return_value = 4
 
     mocker.patch("simtools.utils.general.get_log_excerpt", return_value=LOG_EXCERPT)
