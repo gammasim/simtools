@@ -405,7 +405,7 @@ class DataValidator:
     @staticmethod
     def _is_dimensionless(unit):
         """
-        Check is unit is dimensionless, None, or empty.
+        Check if unit is dimensionless, None, or empty.
 
         Parameters
         ----------
