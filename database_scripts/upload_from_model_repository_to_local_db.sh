@@ -38,7 +38,7 @@ rm -rf ./tmp_model_parameters
 git clone -b $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH $SIMTOOLS_DB_SIMULATION_MODEL_URL ./tmp_model_parameters
 
 CURRENTDIR=$(pwd)
-cd ./tmp_model_parameters/
+cd ./tmp_model_parameters/ || exit
 
 # setup environment
 filename=".env"
@@ -69,6 +69,6 @@ for dir in "${model_directory}"*/; do
   fi
 done
 
-cd $CURRENTDIR
+cd "$CURRENTDIR" || exit
 
 rm -rf ./tmp_model_parameters
