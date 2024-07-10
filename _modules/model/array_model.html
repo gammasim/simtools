@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.array_model &#8212; simtools v0.1.dev1+gaec1566 Manual</title>
+    <title>model.array_model &#8212; simtools v0.1.dev1+ga9a19bb Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=01d5d33e"></script>
+    <script src="../../_static/documentation_options.js?v=0c013a21"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gaec1566 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga9a19bb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -785,8 +785,8 @@ document.write(`
             <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">pos_z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
             <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># add tests of KeyError after positions calibration_elements are added to DB</span>
                 <span class="n">tel_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">))</span>
-            <span class="c1">#  TODO - tests of KeyError after positions calibration_elements are added to DB</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># not all array elements have a sphere radius</span>
                 <span class="n">tel_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
 
