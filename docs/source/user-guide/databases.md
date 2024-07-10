@@ -92,8 +92,9 @@ The script [setup_local_db.sh](../../database_scripts/setup_local_db.sh) generat
 * downloads a mongoDB docker image
 * starts a container with the image and initialize a new database
 * add a user with 'readWrite' role
+* defines a container network called `simtools-mongo-network` (check with `podman network ls`)
 
-### Filling the local database instance
+### Fill the local database instance
 
 #### Option 1: Fill local database from remote DB dump
 
@@ -111,9 +112,9 @@ Note that database names are hardcoded in the scripts and need to be adjusted ac
 The script `upload_from_model_repository_to_local_db.sh` uses the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) from the CTAO gitlab and
 uploads its contents to the local database instance.
 
-Note that database names are hardcoded in the scripts and need to be adjusted accordingly.
+Note that database names and repository branches are hardcoded in the scripts and need to be adjusted accordingly.
 
-## Purge the local database instance and all networks, images, containers
+### Purge the local database instance and all networks, images, containers
 
 The script `purge_local_db.sh` stops and removes the container and deletes all networks, images, and containers.
 
@@ -121,7 +122,7 @@ The script `purge_local_db.sh` stops and removes the container and deletes all n
 Attention: this script removes all local docker containers, images, and networks without awaiting confirmation.
 :::
 
-## Using the local database instance
+### Using the local database instance
 
 This requires the following changes to the settings of the environmental variables in `.evn`:
 

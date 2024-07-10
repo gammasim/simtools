@@ -7,6 +7,7 @@
 CONTAINER_NAME="simtools-mongodb"
 SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
 SIMTOOLS_DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git"
+SIMTOOLS_DB_SIMULATION_MODEL_BRANCH="main"
 
 # Check if podman is available, if not use docker
 if command -v podman &> /dev/null; then
@@ -34,10 +35,24 @@ db.createUser({
 
 echo "Cloning model parameters from $SIMTOOLS_DB_SIMULATION_MODEL_URL"
 rm -rf ./tmp_model_parameters
-git clone $SIMTOOLS_DB_SIMULATION_MODEL_URL ./tmp_model_parameters
+git clone -b $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH $SIMTOOLS_DB_SIMULATION_MODEL_URL ./tmp_model_parameters
 
-model_directory="./tmp_model_parameters/model_versions/"
+CURRENTDIR=$(pwd)
+cd ./tmp_model_parameters/
 
+# setup environment
+filename=".env"
+cat << EOF > "$filename"
+SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server
+SIMTOOLS_DB_SERVER='localhost'
+SIMTOOLS_DB_API_USER='api' # username for MongoDB
+SIMTOOLS_DB_API_PW='password' # Password for MongoDB
+SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
+SIMTOOLS_DB_SIMULATION_MODEL='$SIMTOOLS_DB_SIMULATION_MODEL'
+EOF
+
+# upload files to DB
+model_directory="./model_versions/"
 for dir in "${model_directory}"*/; do
   model_version=$(basename "${dir}")
   if [ "$model_version" = "metadata" ]; then
@@ -53,5 +68,7 @@ for dir in "${model_directory}"*/; do
     --type "model_parameters"
   fi
 done
+
+cd $CURRENTDIR
 
 rm -rf ./tmp_model_parameters
