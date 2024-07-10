@@ -110,7 +110,10 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_prefix, logge
         Logger object.
     """
     par_dict = gen.collect_data_from_file_or_dict(file_name=file, in_dict=None)
-    logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
+    logger.info(
+        f"Adding the following parameter to the DB: {par_dict['parameter']} "
+        f"(collection {collection} in database {db_name})"
+    )
     db.add_new_parameter(
         db_name=db_name,
         telescope=par_dict["instrument"],
@@ -174,8 +177,8 @@ def _add_model_parameters_to_db(args_dict, db, logger):
         except ValueError:
             if element.name.startswith("OBS"):
                 collection = "sites"
-            elif element.name == "configuration_sim_telarray":
-                collection = "configuration_sim_telarray"
+            elif element.name in {"configuration_sim_telarray", "configuration_corsika"}:
+                collection = element.name
             elif element.name == "Files":
                 logger.info("Files are uploaded with the corresponding model parameters")
                 continue
