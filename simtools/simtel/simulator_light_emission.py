@@ -308,16 +308,10 @@ class SimulatorLightEmission(SimtelRunner):
                     f" -p Gauss:{self._calibration_model.get_parameter_value('led_pulse_sigtime')}"
                 )
                 command += " -a isotropic"  # angular distribution
-                # {self._calibration_model.get_parameter_value('led_pulse_offset')}"
-                # TODO further parameters require modification of application
 
-                # command += f" -s {self._calibration_model.get_parameter_value('led_var_photons')}"
-                # command += f" -s {self._calibration_model.get_parameter_value('pedestal_events')}"
             command += f" -A {self.output_directory}/model/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         elif self.light_source_type == "laser":
-            # TODO: this option requires the atmospheric profiles in the include directory,
-            # or adjusting the application to use a path
             command += " --events 1"
             command += " --bunches 2500000"
             command += " --step 0.1"
@@ -327,8 +321,6 @@ class SimulatorLightEmission(SimtelRunner):
             )
             command += " --lightpulse Gauss:"
             command += f"{self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
-            # command += " --angular-distribution Gauss:0.1" # specify laser angular distribution
-
             x_origin = (
                 self.default_le_config["x_pos_ILLN-01"]["default"]
                 - self.default_le_config["x_pos"]["real"]
@@ -350,11 +342,6 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" --telescope-phi {angle_phi}"
             command += f" --laser-theta {90-angles[2]}"
             command += f" --laser-phi {angles[3]}"  # convention north (x) towards east (-y)
-
-            # further optional properties not used here:
-            # 'laser_external_trigger', 'laser_pulse_exptime',
-            # 'laser_pulse_offset' 'laser_pulse_twidth'
-
             command += f" --atmosphere {self.output_directory}/model/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application[0]}.iact.gz"

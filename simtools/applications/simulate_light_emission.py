@@ -307,9 +307,6 @@ def default_le_configs(le_application):
                 "default": [i * 100 for i in [200, 300, 400, 600, 800, 1200, 2000, 4000]] * u.cm,
                 "names": ["z_position"],
             },
-            # TODO: Hardcoded illuminator 1 coordinates until we have added them to the DB.
-            # When available use the coordinates from CalibrationModel instance directly in
-            # simulator_light_emission.
             "x_pos_ILLN-01": {
                 "len": 1,
                 "unit": u.Unit("m"),
