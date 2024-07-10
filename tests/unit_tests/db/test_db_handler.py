@@ -468,7 +468,7 @@ def test_insert_files_db(db, io_handler, random_id, caplog):
     )
 
 
-def test_get_all_versions(db):
+def test_get_all_versions(db, mocker, caplog):
     # not specifying a telescope model name and parameter
     all_versions = db.get_all_versions(
         telescope_model_name=None,
@@ -497,6 +497,12 @@ def test_get_all_versions(db):
 
     # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
+
+    # no db_name defined
+    mocker.patch.object(db, "_get_db_name", return_value=None)
+    with caplog.at_level(logging.WARNING):
+        assert db.get_all_versions() == []
+    assert "did not return any results. No versions found" in caplog.text
 
 
 def test_get_all_available_array_elements(db, model_version, caplog):
@@ -577,3 +583,9 @@ def test_get_collections(db, db_config):
     collections_from_name = db.get_collections(db_config["db_simulation_model"])
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
+
+
+def test_model_version_empty(db, mocker):
+
+    mocker.patch.object(db, "get_all_versions", return_value=[])
+    assert db.model_version() is None

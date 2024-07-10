@@ -977,7 +977,9 @@ class DatabaseHandler:
         kwargs.pop("type", None)
         db_entry.update(kwargs)
 
-        self._logger.info(f"Will add the following entry to DB:\n{db_entry}")
+        self._logger.info(
+            f"Will add the following entry to DB {db_name} and collection {db_name}:\n{db_entry}"
+        )
 
         collection.insert_one(db_entry)
         for file_to_insert_now in files_to_add_to_db:
@@ -1051,6 +1053,8 @@ class DatabaseHandler:
         _all_versions = self.get_all_versions()
         if version in _all_versions:
             return version
+        if len(_all_versions) == 0:
+            return None
 
         collection = DatabaseHandler.db_client[self._get_db_name(db_name)].metadata
         query = {"Entry": "Simulation-Model-Tags"}
@@ -1159,10 +1163,13 @@ class DatabaseHandler:
             _cache_key = f"{_cache_key}-{query['site']}"
 
         if _cache_key not in DatabaseHandler.model_versions_cached:
-            db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
-            DatabaseHandler.model_versions_cached[_cache_key] = list(
-                {post["version"] for post in db_collection.find(query)}
-            )
+            if self._get_db_name():
+                db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
+                DatabaseHandler.model_versions_cached[_cache_key] = list(
+                    {post["version"] for post in db_collection.find(query)}
+                )
+            else:
+                DatabaseHandler.model_versions_cached[_cache_key] = []
             if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
                 self._logger.warning(
                     f"The query {query} did not return any results. No versions found"
