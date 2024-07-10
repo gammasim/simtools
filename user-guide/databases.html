@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+gae35282 Manual</title>
+    <title>Databases &#8212; simtools v0.1.dev1+g493284f Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=698f9873"></script>
+    <script src="../_static/documentation_options.js?v=02a45045"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gae35282 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g493284f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -461,15 +461,15 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#update-the-database">Update the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-and-use-a-local-copy-of-the-model-parameter-database">Configure and use a local copy of the model parameter database</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#startup-and-configure-local-database-instance">Startup and configure local database instance</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filling-the-local-database-instance">Filling the local database instance</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fill-the-local-database-instance">Fill the local database instance</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-1-fill-local-database-from-remote-db-dump">Option 1: Fill local database from remote DB dump</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-2-fill-local-database-from-model-parameter-repository">Option 2: Fill local database from model parameter repository</a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance-and-all-networks-images-containers">Purge the local database instance and all networks, images, containers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-local-database-instance">Using the local database instance</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance-and-all-networks-images-containers">Purge the local database instance and all networks, images, containers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-local-database-instance">Using the local database instance</a></li>
 </ul>
             </nav>
         </div>
@@ -569,10 +569,11 @@ The following scripts allow to setup and fill a local database running in a cont
 <li><p>downloads a mongoDB docker image</p></li>
 <li><p>starts a container with the image and initialize a new database</p></li>
 <li><p>add a user with ‘readWrite’ role</p></li>
+<li><p>defines a container network called <code class="docutils literal notranslate"><span class="pre">simtools-mongo-network</span></code> (check with <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">network</span> <span class="pre">ls</span></code>)</p></li>
 </ul>
 </section>
-<section id="filling-the-local-database-instance">
-<h3>Filling the local database instance<a class="headerlink" href="#filling-the-local-database-instance" title="Link to this heading">#</a></h3>
+<section id="fill-the-local-database-instance">
+<h3>Fill the local database instance<a class="headerlink" href="#fill-the-local-database-instance" title="Link to this heading">#</a></h3>
 <section id="option-1-fill-local-database-from-remote-db-dump">
 <h4>Option 1: Fill local database from remote DB dump<a class="headerlink" href="#option-1-fill-local-database-from-remote-db-dump" title="Link to this heading">#</a></h4>
 <p>Access to a database dump of the production database is required. It is assumed that the dumps
@@ -585,12 +586,11 @@ are located in the directory <code class="docutils literal notranslate"><span cl
 <h4>Option 2: Fill local database from model parameter repository<a class="headerlink" href="#option-2-fill-local-database-from-model-parameter-repository" title="Link to this heading">#</a></h4>
 <p>The script <code class="docutils literal notranslate"><span class="pre">upload_from_model_repository_to_local_db.sh</span></code> uses the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">model parameter repository</a> from the CTAO gitlab and
 uploads its contents to the local database instance.</p>
-<p>Note that database names are hardcoded in the scripts and need to be adjusted accordingly.</p>
-</section>
+<p>Note that database names and repository branches are hardcoded in the scripts and need to be adjusted accordingly.</p>
 </section>
 </section>
 <section id="purge-the-local-database-instance-and-all-networks-images-containers">
-<h2>Purge the local database instance and all networks, images, containers<a class="headerlink" href="#purge-the-local-database-instance-and-all-networks-images-containers" title="Link to this heading">#</a></h2>
+<h3>Purge the local database instance and all networks, images, containers<a class="headerlink" href="#purge-the-local-database-instance-and-all-networks-images-containers" title="Link to this heading">#</a></h3>
 <p>The script <code class="docutils literal notranslate"><span class="pre">purge_local_db.sh</span></code> stops and removes the container and deletes all networks, images, and containers.</p>
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
@@ -598,7 +598,7 @@ uploads its contents to the local database instance.</p>
 </div>
 </section>
 <section id="using-the-local-database-instance">
-<h2>Using the local database instance<a class="headerlink" href="#using-the-local-database-instance" title="Link to this heading">#</a></h2>
+<h3>Using the local database instance<a class="headerlink" href="#using-the-local-database-instance" title="Link to this heading">#</a></h3>
 <p>This requires the following changes to the settings of the environmental variables in <code class="docutils literal notranslate"><span class="pre">.evn</span></code>:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Environmental<span class="w"> </span>variables
 <span class="go">SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server</span>
@@ -615,6 +615,7 @@ uploads its contents to the local database instance.</p>
 <li><p>set the <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SERVER</span></code> in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to SIMTOOLS_DB_SERVER=’simtools-mongodb’.</p></li>
 <li><p>connect to the local network adding <code class="docutils literal notranslate"><span class="pre">--network</span> <span class="pre">simtools-mongo-network</span></code> to the <code class="docutils literal notranslate"><span class="pre">docker/podman</span> <span class="pre">run</span></code> command, e.g, <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span> <span class="pre">--rm</span> <span class="pre">-it</span> <span class="pre">-v</span> <span class="pre">&quot;$(pwd)/:/workdir/external&quot;</span> <span class="pre">--network</span> <span class="pre">simtools-mongo-network</span> <span class="pre">ghcr.io/gammasim/simtools-dev:latest</span> <span class="pre">bash</span></code></p></li>
 </ul>
+</section>
 </section>
 </section>
 
@@ -674,15 +675,15 @@ uploads its contents to the local database instance.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#update-the-database">Update the database</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-and-use-a-local-copy-of-the-model-parameter-database">Configure and use a local copy of the model parameter database</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#startup-and-configure-local-database-instance">Startup and configure local database instance</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filling-the-local-database-instance">Filling the local database instance</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fill-the-local-database-instance">Fill the local database instance</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-1-fill-local-database-from-remote-db-dump">Option 1: Fill local database from remote DB dump</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#option-2-fill-local-database-from-model-parameter-repository">Option 2: Fill local database from model parameter repository</a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance-and-all-networks-images-containers">Purge the local database instance and all networks, images, containers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-local-database-instance">Using the local database instance</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance-and-all-networks-images-containers">Purge the local database instance and all networks, images, containers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-local-database-instance">Using the local database instance</a></li>
 </ul>
   </nav></div>
 
