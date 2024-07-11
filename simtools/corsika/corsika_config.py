@@ -4,10 +4,12 @@ import logging
 from pathlib import Path
 
 import numpy as np
+from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io_operations import io_handler
+from simtools.model.model_parameter import ModelParameter
 
 __all__ = [
     "CorsikaConfig",
@@ -32,13 +34,15 @@ class CorsikaConfig:
     ----------
     array_model : ArrayModel
         Array model.
-    label : str
-        Instance label.
     args_dict : dict
         Configuration dictionary.
+    db_config : dict
+        MongoDB configuration.
+    label : str
+        Instance label.
     """
 
-    def __init__(self, array_model, args_dict, label=None):
+    def __init__(self, array_model, args_dict, db_config=None, label=None):
         """Initialize CorsikaConfig."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init CorsikaConfig")
@@ -47,14 +51,12 @@ class CorsikaConfig:
         self.zenith_angle = None
         self.azimuth_angle = None
         self._run_number = None
-        self.args_dict = args_dict
         self.config_file_path = None
         self.primary_particle = self._set_primary_particle(args_dict)
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
-        self._corsika_default_parameters = self._load_corsika_default_parameters_file()
-        self.config = self.setup_configuration()
+        self.config = self.fill_corsika_configuration(args_dict, db_config)
         self._is_file_updated = False
 
     def __repr__(self):
@@ -65,71 +67,224 @@ class CorsikaConfig:
             f"layout={self.array_model.layout_name}, label={self.label})"
         )
 
-    def _load_corsika_default_parameters_file(self):
+    def fill_corsika_configuration(self, args_dict, db_config=None):
         """
-        Load CORSIKA parameters.
+        Fill CORSIKA configuration.
 
-        Returns
-        -------
-        corsika_parameters: dict
-            Dictionary with CORSIKA parameters.
+        Dictionary keys are CORSIKA parameter names.
+        Values are converted to CORSIKA-consistent units.
 
-        Notes
-        -----
-        TODO - will be replaced by a call to the CORSIKA configuration collection
-        in the simtools database.
-        """
-        corsika_parameters_file = self.io_handler.get_input_data_file(
-            "parameters", "corsika_parameters.yml"
-        )
-        self._logger.debug(f"Reading CORSIKA default parameters from {corsika_parameters_file}")
-        return gen.collect_data_from_file_or_dict(file_name=corsika_parameters_file, in_dict=None)
 
-    def setup_configuration(self):
-        """
-        Set configuration parameters for CORSIKA and CorsikaConfig.
-
-        Convert values to CORSIKA-consistent units.
+        Parameters
+        ----------
+        args_dict : dict
+            Configuration dictionary.
+        db_config: dict
+            Database configuration.
 
         Returns
         -------
         dict
             Dictionary with CORSIKA parameters.
         """
-        if self.args_dict is None:
+        if args_dict is None:
             return None
-        self._logger.debug("Setting CORSIKA parameters ")
-        self._is_file_updated = False
-        self.azimuth_angle = int(self.args_dict["azimuth_angle"].to("deg").value)
-        self.zenith_angle = self.args_dict["zenith_angle"].to("deg").value
 
+        self._logger.debug("Setting CORSIKA parameters ")
+
+        self._is_file_updated = False
+        self.azimuth_angle = int(args_dict["azimuth_angle"].to("deg").value)
+        self.zenith_angle = args_dict["zenith_angle"].to("deg").value
+
+        self._logger.debug(
+            f"Setting CORSIKA parameters from database ({args_dict['model_version']})"
+        )
+        db_model_parameters = ModelParameter(
+            mongo_db_config=db_config, model_version=args_dict["model_version"]
+        )
+        parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
+
+        config = {}
+        config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
+        config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
+            parameters_from_db
+        )
+        config["CHERENKOV_EMISSION_PARAMETERS"] = self._corsika_configuration_cherenkov_parameters(
+            parameters_from_db
+        )
+        config["DEBUGGING_OUTPUT_PARAMETERS"] = self._corsika_configuration_debugging_parameters()
+        config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(parameters_from_db)
+
+        return config
+
+    def _corsika_configuration_from_user_input(self, args_dict):
+        """
+        Get CORSIKA configuration from user input.
+
+        Parameters
+        ----------
+        args_dict : dict
+            Configuration dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary with CORSIKA parameters.
+        """
         return {
-            "EVTNR": [self.args_dict["event_number_first_shower"]],
-            "NSHOW": [self.args_dict["nshow"]],
+            "EVTNR": [args_dict["event_number_first_shower"]],
+            "NSHOW": [args_dict["nshow"]],
             "PRMPAR": [self.primary_particle.corsika7_id],
-            "ESLOPE": [self.args_dict["eslope"]],
+            "ESLOPE": [args_dict["eslope"]],
             "ERANGE": [
-                self.args_dict["erange"][0].to("GeV").value,
-                self.args_dict["erange"][1].to("GeV").value,
+                args_dict["erange"][0].to("GeV").value,
+                args_dict["erange"][1].to("GeV").value,
             ],
             "THETAP": [
-                float(self.args_dict["zenith_angle"].to("deg").value),
-                float(self.args_dict["zenith_angle"].to("deg").value),
+                float(args_dict["zenith_angle"].to("deg").value),
+                float(args_dict["zenith_angle"].to("deg").value),
             ],
             "PHIP": [
-                self._rotate_azimuth_by_180deg(self.args_dict["azimuth_angle"].to("deg").value),
-                self._rotate_azimuth_by_180deg(self.args_dict["azimuth_angle"].to("deg").value),
+                self._rotate_azimuth_by_180deg(args_dict["azimuth_angle"].to("deg").value),
+                self._rotate_azimuth_by_180deg(args_dict["azimuth_angle"].to("deg").value),
             ],
             "VIEWCONE": [
-                self.args_dict["viewcone"][0].to("deg").value,
-                self.args_dict["viewcone"][1].to("deg").value,
+                args_dict["viewcone"][0].to("deg").value,
+                args_dict["viewcone"][1].to("deg").value,
             ],
             "CSCAT": [
-                self.args_dict["core_scatter"][0],
-                self.args_dict["core_scatter"][1].to("cm").value,
+                args_dict["core_scatter"][0],
+                args_dict["core_scatter"][1].to("cm").value,
                 0.0,
             ],
         }
+
+    def _corsika_configuration_interaction_flags(self, parameters_from_db):
+        """
+        Return CORSIKA interaction flags / parameters.
+
+        Parameters
+        ----------
+        parameters_from_db : dict
+            CORSIKA parameters from the database.
+
+        Returns
+        -------
+        interaction_parameters : dict
+            Dictionary with CORSIKA interaction parameters.
+        """
+        parameters = {}
+        parameters["FIXHEI"] = self._input_config_first_interaction_height(
+            parameters_from_db["corsika_first_interaction_height"]
+        )
+        parameters["FIXCHI"] = [
+            self._input_config_corsika_starting_grammage(
+                parameters_from_db["corsika_starting_grammage"]
+            )
+        ]
+        parameters["TSTART"] = ["T"]
+        parameters["ECUTS"] = self._input_config_corsika_particle_kinetic_energy_cutoff(
+            parameters_from_db["corsika_particle_kinetic_energy_cutoff"]
+        )
+        parameters["MUADDI"] = ["F"]
+        parameters["MUMULT"] = ["T"]
+        parameters["LONGI"] = self._input_config_corsika_longitudinal_parameters(
+            parameters_from_db["corsika_longitudinal_shower_development"]
+        )
+        parameters["MAXPRT"] = ["10"]
+        parameters["ECTMAP"] = ["1.e6"]
+
+        self._logger.debug(f"Interaction parameters: {parameters}")
+        return parameters
+
+    def _input_config_first_interaction_height(self, entry):
+        """Return FIXHEI parameter CORSIKA format."""
+        return [f"{entry['value']*u.Unit(entry['unit']).to('cm'):.2f}", "0"]
+
+    def _input_config_corsika_starting_grammage(self, entry):
+        """Return FIXCHI parameter CORSIKA format."""
+        return f"{entry['value']*u.Unit(entry['unit']).to('g/cm2')}"
+
+    def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
+        """Return ECUTS parameter CORSIKA format."""
+        e_cuts = gen.convert_string_to_list(entry["value"])
+        return [
+            f"{e_cuts[0]*u.Unit(entry['unit']).to('GeV')} "
+            f"{e_cuts[1]*u.Unit(entry['unit']).to('GeV')} "
+            f"{e_cuts[2]*u.Unit(entry['unit']).to('GeV')} "
+            f"{e_cuts[3]*u.Unit(entry['unit']).to('GeV')}"
+        ]
+
+    def _input_config_corsika_longitudinal_parameters(self, entry):
+        """Return LONGI parameter CORSIKA format."""
+        return ["T", f"{entry['value']*u.Unit(entry['unit']).to('g/cm2')}", "F", "F"]
+
+    def _corsika_configuration_cherenkov_parameters(self, parameters_from_db):
+        """
+        Return CORSIKA Cherenkov emission parameters.
+
+        Parameters
+        ----------
+        parameters_from_db : dict
+            CORSIKA parameters from the database.
+
+        Returns
+        -------
+        dict
+            Dictionary with CORSIKA Cherenkov emission parameters.
+        """
+        parameters = {}
+        parameters["CERSIZ"] = [parameters_from_db["corsika_cherenkov_photon_bunch_size"]["value"]]
+        parameters["CERFIL"] = "0"
+        parameters["CWAVLG"] = self._input_config_corsika_cherenkov_wavelength(
+            parameters_from_db["corsika_cherenkov_photon_wavelength_range"]
+        )
+
+        self._logger.debug(f"Cherenkov parameters: {parameters}")
+        return parameters
+
+    def _input_config_corsika_cherenkov_wavelength(self, entry):
+        """Return CWAVLG parameter CORSIKA format."""
+        wavelength_range = gen.convert_string_to_list(entry["value"])
+        return [
+            f"{wavelength_range[0]*u.Unit(entry['unit']).to('nm')}",
+            f"{wavelength_range[1]*u.Unit(entry['unit']).to('nm')}",
+        ]
+
+    def _corsika_configuration_iact_parameters(self, parameters_from_db):
+        """
+        Return CORSIKA IACT parameters.
+
+        Parameters
+        ----------
+        parameters_from_db : dict
+            CORSIKA parameters from the database.
+
+        Returns
+        -------
+        dict
+            Dictionary with CORSIKA IACT parameters.
+        """
+        parameters = {}
+        parameters["SPLIT_AUTO"] = [parameters_from_db["corsika_iact_split_auto"]["value"]]
+        parameters["IO_BUFFER"] = [
+            self._input_config_io_buff(parameters_from_db["corsika_iact_io_buffer"])
+        ]
+        parameters["MAX_BUNCHES"] = [parameters_from_db["corsika_iact_max_bunches"]["value"]]
+        self._logger.debug(f"IACT parameters: {parameters}")
+        return parameters
+
+    def _corsika_configuration_debugging_parameters(self):
+        """Return CORSIKA debugging output parameters."""
+        return {
+            "DEBUG": ["F", 6, "F", 1000000],
+            "DATBAS": ["yes"],
+            "DIRECT": ["/dev/null"],
+        }
+
+    def _input_config_io_buff(self, entry):
+        """Return IO_BUFFER parameter CORSIKA format."""
+        return f"{entry['value']}" f"{entry['unit']}"
 
     def _rotate_azimuth_by_180deg(self, az):
         """
@@ -196,17 +351,21 @@ class CorsikaConfig:
         list
             Value(s) of the parameter.
         """
-        try:
-            par_value = self.config[par_name]
-        except KeyError as exc:
+        par_value = []
+        for _, values in self.config.items():
+            if par_name in values:
+                par_value = values[par_name]
+        if len(par_value) == 0:
             self._logger.error(f"Parameter {par_name} is not a CORSIKA config parameter")
-            raise exc
+            raise KeyError
         return par_value if len(par_value) > 1 else par_value[0]
 
     def print_config_parameter(self):
         """Print CORSIKA config parameters for inspection."""
-        for par, value in self.config.items():
-            print(f"{par} = {value}")
+        for parameter_type, parameter_dict in self.config.items():
+            print(f"Parameter type: {parameter_type}\n")
+            for par, value in parameter_dict.items():
+                print(f"{par} = {value}")
 
     @staticmethod
     def _get_text_single_line(pars, line_begin=""):
@@ -251,7 +410,7 @@ class CorsikaConfig:
 
         with open(self.config_file_path, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
-            text_parameters = self._get_text_single_line(self.config)
+            text_parameters = self._get_text_single_line(self.config["USER_INPUT"])
             file.write(text_parameters)
 
             file.write("\n* [ SITE PARAMETERS ]\n")
@@ -262,7 +421,7 @@ class CorsikaConfig:
 
             file.write("\n* [ IACT ENV PARAMETERS ]\n")
             file.write(f"IACT setenv PRMNAME {self.primary_particle.name}\n")
-            file.write(f"IACT setenv ZA {int(self.config['THETAP'][0])}\n")
+            file.write(f"IACT setenv ZA {int(self.get_config_parameter('THETAP')[0])}\n")
             file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
             file.write("\n* [ SEEDS ]\n")
@@ -273,21 +432,17 @@ class CorsikaConfig:
             file.write(telescope_list_text)
 
             file.write("\n* [ INTERACTION FLAGS ]\n")
-            text_interaction_flags = self._get_text_single_line(
-                self._corsika_default_parameters["INTERACTION_FLAGS"]
-            )
+            text_interaction_flags = self._get_text_single_line(self.config["INTERACTION_FLAGS"])
             file.write(text_interaction_flags)
 
             file.write("\n* [ CHERENKOV EMISSION PARAMETERS ]\n")
             text_cherenkov = self._get_text_single_line(
-                self._corsika_default_parameters["CHERENKOV_EMISSION_PARAMETERS"]
+                self.config["CHERENKOV_EMISSION_PARAMETERS"]
             )
             file.write(text_cherenkov)
 
             file.write("\n* [ DEBUGGING OUTPUT PARAMETERS ]\n")
-            text_debugging = self._get_text_single_line(
-                self._corsika_default_parameters["DEBUGGING_OUTPUT_PARAMETERS"]
-            )
+            text_debugging = self._get_text_single_line(self.config["DEBUGGING_OUTPUT_PARAMETERS"])
             file.write(text_debugging)
 
             file.write("\n* [ OUTPUT FILE ]\n")
@@ -299,7 +454,7 @@ class CorsikaConfig:
 
             file.write("\n* [ IACT TUNING PARAMETERS ]\n")
             text_iact = self._get_text_single_line(
-                self._corsika_default_parameters["IACT_TUNING_PARAMETERS"],
+                self.config["IACT_PARAMETERS"],
                 "IACT ",
             )
             file.write(text_iact)
@@ -340,15 +495,15 @@ class CorsikaConfig:
         """
         file_label = f"_{self.label}" if self.label is not None else ""
 
+        _vc_low = self.get_config_parameter("VIEWCONE")[0]
+        _vc_high = self.get_config_parameter("VIEWCONE")[1]
         view_cone = (
-            f"_cone{int(self.config['VIEWCONE'][0]):d}-{int(self.config['VIEWCONE'][1]):d}"
-            if self.config["VIEWCONE"][0] != 0 or self.config["VIEWCONE"][1] != 0
-            else ""
+            f"_cone{int(_vc_low):d}-" f"{int(_vc_high):d}" if _vc_low != 0 or _vc_high != 0 else ""
         )
 
         base_name = (
             f"{self.primary_particle.name}_{self.array_model.site}_{self.array_model.layout_name}_"
-            f"za{int(self.config['THETAP'][0]):03}-"
+            f"za{int(self.get_config_parameter('THETAP')[0]):03}-"
             f"azm{self.azimuth_angle:03}deg"
             f"{view_cone}{file_label}"
         )
@@ -403,7 +558,7 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        random_seed = self.config["PRMPAR"][0] + self._run_number
+        random_seed = self.get_config_parameter("PRMPAR") + self._run_number
         rng = np.random.default_rng(random_seed)
         corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
         for s in corsika_seeds:
