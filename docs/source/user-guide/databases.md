@@ -122,7 +122,7 @@ The script `purge_local_db.sh` stops and removes the container and deletes all n
 Attention: this script removes all local docker containers, images, and networks without awaiting confirmation.
 :::
 
-### Using the local database instance
+### Use the local database instance (with and without docker)
 
 This requires the following changes to the settings of the environmental variables in `.evn`:
 
