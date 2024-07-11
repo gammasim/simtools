@@ -470,10 +470,12 @@ class DatabaseHandler:
         """
         if simulation_software == "corsika":
             return self.get_corsika_configuration_parameters(model_version)
-        if simulation_software == "sim_telarray":
-            return self.get_sim_telarray_configuration_parameters(
-                site, telescope_model_name, model_version
-            )
+        if simulation_software == "simtel":
+            if site and telescope_model_name:
+                return self.get_sim_telarray_configuration_parameters(
+                    site, telescope_model_name, model_version
+                )
+            return {}
         raise ValueError(f"Unknown simulation software: {simulation_software}")
 
     def get_corsika_configuration_parameters(self, model_version):
@@ -497,9 +499,9 @@ class DatabaseHandler:
             pass
         DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key] = (
             self.read_mongo_db(
-                self._get_db_name(),
-                "corsika",
-                model_version,
+                db_name=self._get_db_name(),
+                telescope_model_name=None,
+                model_version=model_version,
                 run_location=None,
                 collection_name="configuration_corsika",
                 write_files=False,
