@@ -88,7 +88,7 @@ class CorsikaConfig:
             Dictionary with CORSIKA parameters.
         """
         if args_dict is None:
-            return None
+            return {}
 
         self._logger.debug("Setting CORSIKA parameters ")
 
@@ -99,13 +99,18 @@ class CorsikaConfig:
         self._logger.debug(
             f"Setting CORSIKA parameters from database ({args_dict['model_version']})"
         )
+
+        config = {}
+        config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
+
+        if db_config is None:  # all following parameter require DB
+            return config
+
         db_model_parameters = ModelParameter(
             mongo_db_config=db_config, model_version=args_dict["model_version"]
         )
         parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
 
-        config = {}
-        config["USER_INPUT"] = self._corsika_configuration_from_user_input(args_dict)
         config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
             parameters_from_db
         )
@@ -239,7 +244,6 @@ class CorsikaConfig:
         parameters["CWAVLG"] = self._input_config_corsika_cherenkov_wavelength(
             parameters_from_db["corsika_cherenkov_photon_wavelength_range"]
         )
-
         self._logger.debug(f"Cherenkov parameters: {parameters}")
         return parameters
 
