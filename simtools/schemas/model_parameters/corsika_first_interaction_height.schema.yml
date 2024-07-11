@@ -1,0 +1,28 @@
+%YAML 1.2
+---
+title: Schema for corsika_first_interaction_height model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: corsika_first_interaction_height
+description: |-
+  Starting altitude of primary particles in altitude above observation level.
+  This parameter should be set to values other than '0.' for specialized studies
+  only. See CORSIKA manual for details.
+data:
+  - type: float64
+    unit: cm
+    default: 0.
+    allowed_range:
+      min: 0.
+      max: 11280000.0
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Configuration
+simulation_software:
+  - name: corsika
