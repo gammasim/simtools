@@ -23,7 +23,7 @@ data:
     unit: GeV
     default: 0.1
     allowed_range:
-      min: 0.05
+      min: 0.01
     required: true
   - name: electrons
     type: float64
@@ -31,7 +31,7 @@ data:
     unit: GeV
     default: 0.020
     allowed_range:
-      min: 0.05
+      min: 0.00005
     required: true
   - name: gammas
     type: float64
@@ -39,7 +39,7 @@ data:
     unit: GeV
     default: 0.020
     allowed_range:
-      min: 0.05
+      min: 0.00005
     required: true
 activity:
   setting:
