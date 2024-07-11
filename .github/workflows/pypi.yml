@@ -2,9 +2,8 @@
 name: Deploy to PyPi
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 jobs:
   deploy:
