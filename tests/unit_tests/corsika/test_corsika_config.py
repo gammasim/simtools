@@ -41,6 +41,11 @@ def test_repr(corsika_config):
 
 def test_fill_corsika_configuration(io_handler, corsika_config_no_db, corsika_config):
 
+    empty_config = CorsikaConfig(
+        array_model=None, label="test-corsika-config", args_dict=None, db_config=None
+    )
+    assert empty_config.config == {}
+
     assert corsika_config_no_db.get_config_parameter("NSHOW") == 100
     assert corsika_config_no_db.get_config_parameter("THETAP") == [20, 20]
     assert corsika_config_no_db.get_config_parameter("ERANGE") == [10.0, 10000.0]
