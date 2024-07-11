@@ -16,6 +16,7 @@ data:
     default: 0.
     allowed_range:
       min: 0.
+      max: 112.8e5
 activity:
   setting:
     - SetParameterFromExternal
