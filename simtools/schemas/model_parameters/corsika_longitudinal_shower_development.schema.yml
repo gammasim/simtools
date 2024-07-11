@@ -10,7 +10,7 @@ description: |-
   Step size for recording of longitudinal shower development.
   Any value >=1. for the step size enables the recording of the shower development.
 data:
-    type: float64
+  - type: float64
     unit: g/cm2
     default: 20.0
     allowed_range:
