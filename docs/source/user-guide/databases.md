@@ -141,4 +141,8 @@ SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
 For using simtools inside a container:
 
 * set the `SIMTOOLS_DB_SERVER` in the `.env` file to SIMTOOLS_DB_SERVER='simtools-mongodb'.
-* connect to the local network adding `--network simtools-mongo-network` to the `docker/podman run` command, e.g, `podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash`
+* connect to the local network adding `--network simtools-mongo-network` to the `docker/podman run` command, e.g,:
+
+```bash
+podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash
+```
