@@ -54,6 +54,7 @@ jobs:
 
       - name: Test command line tools
         run: |
+          set -e
           # read list of scripts from pyproject.toml and execute them
           scripts=$(grep 'scripts.simtools-' pyproject.toml | sed -e 's/^scripts\.//' -e 's/ =.*$//')
           for script in $scripts; do
