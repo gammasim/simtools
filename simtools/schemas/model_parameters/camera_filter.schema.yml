@@ -10,9 +10,9 @@ name: camera_filter
 description: |-
   Wavelength dependence of the camera filter transmission, independent
   of the pixel type.  The transmission may be given for the average or
-  various incident angles.  In the latter case, the transmission is
+  various incidence angles.  In the latter case, the transmission is
   applied for each photon as a function of both its wavelength and its
-  incident angle.  The efficiency factors will be applied on top of the
+  incidence angle.  The efficiency factors will be applied on top of the
   global par:camera-transmission factor, and on top of any pixel-type
   dependent efficiency (both angular and by wavelength), according to
   the what is listed in par:camera_config_pixel_type.
