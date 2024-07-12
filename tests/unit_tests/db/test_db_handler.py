@@ -558,6 +558,7 @@ def test_parameter_cache_key(db):
 
     assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-2020-06-28"
     assert db._parameter_cache_key("North", None, "Prod5") == "North-2020-06-28"
+    assert db._parameter_cache_key(None, None, "Prod5") == "2020-06-28"
 
 
 def test_model_version(db, caplog):
