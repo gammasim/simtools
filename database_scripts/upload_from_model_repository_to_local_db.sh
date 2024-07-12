@@ -8,7 +8,6 @@ CONTAINER_NAME="simtools-mongodb"
 SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
 SIMTOOLS_DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git"
 SIMTOOLS_DB_SIMULATION_MODEL_BRANCH="main"
-SIMTOOLS_DB_SIMULATION_MODEL_BRANCH="corsika-collection"
 
 # Check if podman is available, if not use docker
 if command -v podman &> /dev/null; then
