@@ -1338,12 +1338,12 @@ class DatabaseHandler:
         str
             Cache key.
         """
-        # TODO TEST THIS FUNCTION
-        parts = [self.model_version(model_version, db_name=db_name)]
+        parts = []
         if site:
             parts.append(site)
         if telescope:
             parts.append(telescope)
+        parts.append(self.model_version(model_version, db_name=db_name))
         return "-".join(parts)
 
     def _reset_parameter_cache(self, site, telescope, model_version, db_name=None):
