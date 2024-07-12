@@ -1172,10 +1172,8 @@ class DatabaseHandler:
                 )
             else:
                 DatabaseHandler.model_versions_cached[_cache_key] = []
-            if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
-                self._logger.warning(
-                    f"The query {query} did not return any results. No versions found"
-                )
+        if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
+            self._logger.warning(f"The query {query} did not return any results. No versions found")
 
         return DatabaseHandler.model_versions_cached[_cache_key]
 
