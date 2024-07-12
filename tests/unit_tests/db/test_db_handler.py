@@ -91,6 +91,7 @@ def test_reading_db_sst(db, model_version):
         assert pars["camera_pixels"] == 2048
 
 
+@pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_get_derived_values(db, model_version):
     logger.info("----Testing reading derived values-----")
     try:
