@@ -52,8 +52,8 @@ class CommandLineParser(argparse.ArgumentParser):
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
             (use: 'version', 'telescope', 'site')
-        simulation_configuration: list
-            List of simulation software configuration parameters to add to list of args.
+        simulation_configuration: Dict
+            Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
@@ -271,8 +271,8 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        simulation_configuration: list
-            List of simulation software configuration parameters.
+        simulation_configuration: Dict
+            Dict of simulation software configuration parameters.
         """
         if simulation_configuration is None:
             return
@@ -280,8 +280,16 @@ class CommandLineParser(argparse.ArgumentParser):
         if "software" in simulation_configuration:
             self._initialize_simulation_software()
         if "corsika_configuration" in simulation_configuration:
-            self._initialize_simulation_configuration()
-            self._initialize_shower_configuration()
+            self._initialize_simulation_configuration(
+                group_name="simulation configuration",
+                selected_parameters=simulation_configuration["corsika_configuration"],
+                available_parameters=self._get_dictionary_with_corsika_configuration(),
+            )
+            self._initialize_simulation_configuration(
+                group_name="shower parameters",
+                selected_parameters=simulation_configuration["corsika_configuration"],
+                available_parameters=self._get_dictionary_with_shower_configuration(),
+            )
 
     def _initialize_simulation_software(self):
         """Initialize simulation software arguments."""
@@ -295,102 +303,131 @@ class CommandLineParser(argparse.ArgumentParser):
             default="corsika_simtel",
         )
 
-    def _initialize_simulation_configuration(self):
-        """Initialize simulation configuration arguments."""
-        _configuration_group = self.add_argument_group("simulation configuration")
-        _configuration_group.add_argument(
-            "--primary",
-            help=(
-                "Primary particle to simulate. "
-                f"(choices for common names: {', '.join(PrimaryParticle.particle_names().keys())}; "
-                "use '--primary_ID_type' to use other particle ID types)."
-            ),
-            type=str.lower,
-            required=True,
-        )
-        _configuration_group.add_argument(
-            "--primary_id_type",
-            help="Primary particle ID type",
-            type=str,
-            required=False,
-            choices=["common_name", "corsika7_id", "pdg_id"],
-            default="common_name",
-        )
-        _configuration_group.add_argument(
-            "--azimuth_angle",
-            help=(
-                "Telescope pointing direction in azimuth. "
-                "It can be in degrees between 0 and 360 or one of north, south, east or west "
-                "North is 0 degrees and the azimuth grows clockwise (East is 90 degrees)."
-            ),
-            type=CommandLineParser.azimuth_angle,
-            required=True,
-        )
-        _configuration_group.add_argument(
-            "--zenith_angle",
-            help="Zenith angle in degrees (between 0 and 180).",
-            type=CommandLineParser.zenith_angle,
-            required=True,
-        )
-        _configuration_group.add_argument(
-            "--nshow",
-            help="Number of showers per run to simulate.",
-            type=int,
-            required=False,
-        )
-        _configuration_group.add_argument(
-            "--run_number_start",
-            help="Run number for the first run.",
-            type=int,
-            required=True,
-            default=1,
-        )
-        _configuration_group.add_argument(
-            "--number_of_runs",
-            help="Number of runs to be simulated.",
-            type=int,
-            required=True,
-            default=1,
-        )
-        _configuration_group.add_argument(
-            "--event_number_first_shower",
-            help="Event number of first shower",
-            type=int,
-            required=False,
-            default=1,
-        )
+    @staticmethod
+    def _get_dictionary_with_corsika_configuration():
+        """Return dictionary with CORSIKA configuration parameters."""
+        return {
+            "primary": {
+                "help": (
+                    "Primary particle to simulate. "
+                    "(choices for common names: "
+                    f"{', '.join(PrimaryParticle.particle_names().keys())}; "
+                    "use '--primary_ID_type' to use other particle ID types)."
+                ),
+                "type": str.lower,
+                "required": True,
+            },
+            "primary_id_type": {
+                "help": "Primary particle ID type",
+                "type": str,
+                "required": False,
+                "choices": ["common_name", "corsika7_id", "pdg_id"],
+                "default": "common_name",
+            },
+            "azimuth_angle": {
+                "help": (
+                    "Telescope pointing direction in azimuth. "
+                    "It can be in degrees between 0 and 360 or one of north, south, east or west. "
+                    "North is 0 degrees and the azimuth grows clockwise (East is 90 degrees)."
+                ),
+                "type": CommandLineParser.azimuth_angle,
+                "required": True,
+            },
+            "zenith_angle": {
+                "help": "Zenith angle in degrees (between 0 and 180).",
+                "type": CommandLineParser.zenith_angle,
+                "required": True,
+            },
+            "nshow": {
+                "help": "Number of showers per run to simulate.",
+                "type": int,
+                "required": False,
+            },
+            "run_number_start": {
+                "help": "Run number for the first run.",
+                "type": int,
+                "required": True,
+                "default": 1,
+            },
+            "number_of_runs": {
+                "help": "Number of runs to be simulated.",
+                "type": int,
+                "required": True,
+                "default": 1,
+            },
+            "event_number_first_shower": {
+                "help": "Event number of first shower",
+                "type": int,
+                "required": False,
+                "default": 1,
+            },
+        }
 
-    def _initialize_shower_configuration(self):
-        """Initialize shower configuration arguments."""
-        shower_config = self.add_argument_group("shower parameters")
-        shower_config.add_argument(
-            "--eslope",
-            help="Slope of the energy spectrum.",
-            type=float,
-            required=False,
-            default=-2.0,
-        )
-        shower_config.add_argument(
-            "--erange",
-            help="Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
-            type=CommandLineParser.parse_quantity_pair,
-            required=False,
-            default=["3 GeV 330 TeV"],
-        )
-        shower_config.add_argument(
-            "--viewcone",
-            help="Viewcone for primary arrival directions (min/max value, e.g. '0 deg 5 deg').",
-            type=CommandLineParser.parse_quantity_pair,
-            required=False,
-            default=["0 deg 0 deg"],
-        )
-        shower_config.add_argument(
-            "--core_scatter",
-            help="Scatter radius for shower cores (number of use; scatter radius).",
-            type=CommandLineParser.parse_integer_and_quantity,
-            required=False,
-            default=["10 1400 m"],
-        )
+    @staticmethod
+    def _get_dictionary_with_shower_configuration():
+        """Return dictionary with shower configuration parameters."""
+        return {
+            "eslope": {
+                "help": "Slope of the energy spectrum.",
+                "type": float,
+                "required": False,
+                "default": -2.0,
+            },
+            "erange": {
+                "help": (
+                    "Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
+                ),
+                "type": CommandLineParser.parse_quantity_pair,
+                "required": False,
+                "default": ["3 GeV 330 TeV"],
+            },
+            "viewcone": {
+                "help": (
+                    "Viewcone for primary arrival directions (min/max value, e.g. '0 deg 5 deg').",
+                ),
+                "type": CommandLineParser.parse_quantity_pair,
+                "required": False,
+                "default": ["0 deg 0 deg"],
+            },
+            "core_scatter": {
+                "help": "Scatter radius for shower cores (number of use; scatter radius).",
+                "type": CommandLineParser.parse_integer_and_quantity,
+                "required": False,
+                "default": ["10 1400 m"],
+            },
+        }
+
+    def _initialize_simulation_configuration(
+        self, group_name, selected_parameters, available_parameters
+    ):
+        """
+        Initialize simulation configuration arguments.
+
+        Parameters
+        ----------
+        group_name : str
+            Name of the group of arguments.
+        selected_parameters : list
+            List of selected parameters to be added to the group.
+        available_parameters : dict
+            Dictionary with available parameters and their configuration.
+
+        Raises
+        ------
+        ValueError
+            If a parameter is not available.
+        """
+        configuration_group = self.add_argument_group(group_name)
+
+        if "all" in selected_parameters:
+            selected_parameters = available_parameters.keys()
+
+        for param in selected_parameters:
+            try:
+                configuration_group.add_argument(f"--{param}", **available_parameters[param])
+            except KeyError as exc:
+                msg = f"Parameter {param} is not available"
+                raise ValueError(msg) from exc
 
     @staticmethod
     def _add_model_option_layout(job_group, add_layout_file):
