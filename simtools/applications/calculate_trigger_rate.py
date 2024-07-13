@@ -98,30 +98,18 @@ def _parse(label, description):
         action="store_true",
     )
 
-    config.parser.add_argument(
-        "--energy_range",
-        help="Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
-        required=False,
-        type=config.parser.parse_quantity_pair,
-        default=None,
+    config_parser, _ = config.initialize(
+        db_config=False,
+        paths=True,
+        simulation_configuration={"corsika_configuration": ["energy_range", "view_cone"]},
     )
-
-    config.parser.add_argument(
-        "--view_cone",
-        help="Viewcone radius for primary arrival directions (min/max value, e.g. '0 deg 5 deg').",
-        required=False,
-        type=config.parser.parse_quantity_pair,
-        default=None,
-    )
-
-    config_parser, _ = config.initialize(db_config=False, paths=True)
 
     return config_parser
 
 
 def _get_simulation_parameters(config_parser):
     """
-    Get energy range and viewcone in the correct form to use in the simtel classes.
+    Get energy range and view cone in the correct form to use in the simtel classes.
 
     Parameters
     ----------
@@ -133,7 +121,7 @@ def _get_simulation_parameters(config_parser):
     list:
         The energy range used in the simulation.
     list:
-        The viewcone used in the simulation.
+        The view cone used in the simulation.
 
     """
     if config_parser["energy_range"] is not None:

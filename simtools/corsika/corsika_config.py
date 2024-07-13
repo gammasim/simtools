@@ -109,8 +109,8 @@ class CorsikaConfig:
             "PRMPAR": [self.primary_particle.corsika7_id],
             "ESLOPE": [self.args_dict["eslope"]],
             "ERANGE": [
-                self.args_dict["erange"][0].to("GeV").value,
-                self.args_dict["erange"][1].to("GeV").value,
+                self.args_dict["energy_range"][0].to("GeV").value,
+                self.args_dict["energy_range"][1].to("GeV").value,
             ],
             "THETAP": [
                 float(self.args_dict["zenith_angle"].to("deg").value),
@@ -121,8 +121,8 @@ class CorsikaConfig:
                 self._rotate_azimuth_by_180deg(self.args_dict["azimuth_angle"].to("deg").value),
             ],
             "VIEWCONE": [
-                self.args_dict["viewcone"][0].to("deg").value,
-                self.args_dict["viewcone"][1].to("deg").value,
+                self.args_dict["view_cone"][0].to("deg").value,
+                self.args_dict["view_cone"][1].to("deg").value,
             ],
             "CSCAT": [
                 self.args_dict["core_scatter"][0],
