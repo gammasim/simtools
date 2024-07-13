@@ -16,6 +16,10 @@ The test modules are located in
 [simtools/tests](https://github.com/gammasim/simtools/tree/main/tests) separated
 by unit and integration tests.
 
+:::{important}
+The rule should be that any discovered bug or issue should trigger the implementation of tests which reproduce the issue and prevent it from reoccurring.
+:::
+
 ## Pytest fixtures
 
 General service functions for tests (e.g., DB connection) are defined as `pytest.fixtures` in
