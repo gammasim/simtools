@@ -2,19 +2,16 @@
 
 # Developer Guidelines
 
-This section provides guidelines for developers of simtools.
-
-If you want to contribute, contact the simtools team using one of the contact points listed at the
-entry page of this documentation.
+This section provides guidelines for developers of simtools. Great that you want to contribute!
+Please contact first the simtools team using one of the contact points listed at the
+entry page of this documentation before working on simtools.
 
 Simtools follows generally the development guidelines of CTAO and
-ctapipe (see [ctapipe development](https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html)).
+ctapipe (see [CTAO development documentation](http://cta-computing.gitlab-pages.cta-observatory.org/documentation/developer-documentation/) and [ctapipe development](https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html)).
 
 ## Project setup
 
-The main code repository for simtools is on GitHub:
-
-[https://github.com/gammasim/simtools](https://github.com/gammasim/simtools)
+The main code repository for simtools is on GitHub: [https://github.com/gammasim/simtools](https://github.com/gammasim/simtools)
 
 The main directories of simtools are:
 
@@ -35,7 +32,7 @@ It is recommended to discuss any code changes with the simtools team before star
 
 The following steps outline how to contribute code to simtools:
 
-01. Set up your coding environment as outlined in the [getting started](getting_started.md#getting-started) section.
+01. Set up your coding environment as outlined in the [getting started](getting_started.md#dvgetting-started) section.
 02. Start a new feature branch from the main branch (`git checkout -b new-branch-name`).
 03. Implement your code changes.
 04. Add unit tests for new modules and functions (see [unit test section](testing.md#unit-tests)).
