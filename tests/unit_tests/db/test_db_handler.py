@@ -62,17 +62,17 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker, caplog):
         assert "Found LATEST in the DB name but no matching versions found in DB." in caplog.text
 
     db_names = [
-        "Staging-CTA-Simulation-Model-v0-3-0",
-        "Staging-CTA-Simulation-Model-v0-2-0",
-        "Staging-CTA-Simulation-Model-v0-1-19",
-        "Staging-CTA-Simulation-Model-v0-3-9",
-        "Staging-CTA-Simulation-Model-v0-3-19",
-        "Staging-CTA-Simulation-Model-v0-3-0",
+        "CTAO-Simulation-Model-v0-3-0",
+        "CTAO-Simulation-Model-v0-2-0",
+        "CTAO-Simulation-Model-v0-1-19",
+        "CTAO-Simulation-Model-v0-3-9",
+        "CTAO-Simulation-Model-v0-3-19",
+        "CTAO-Simulation-Model-v0-3-0",
     ]
     mocker.patch.object(db_copy.db_client, "list_database_names", return_value=db_names)
-    db_copy.mongo_db_config["db_simulation_model"] = "Staging-CTA-Simulation-Model-LATEST"
+    db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-Model-LATEST"
     db_copy._update_db_simulation_model()
-    assert db_copy.mongo_db_config["db_simulation_model"] == "Staging-CTA-Simulation-Model-v0-3-19"
+    assert db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-Model-v0-3-19"
 
 
 def test_reading_db_lst_without_simulation_repo(db, model_version):
