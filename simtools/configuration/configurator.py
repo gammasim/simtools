@@ -129,8 +129,8 @@ class Configurator:
             Add output file configuration to list of args.
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
-        simulation_configuration: list
-            List of simulation software configuration parameters to add to list of args.
+        simulation_configuration: dict
+            Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
         job_submission: bool
