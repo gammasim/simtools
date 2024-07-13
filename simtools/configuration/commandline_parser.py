@@ -373,17 +373,18 @@ class CommandLineParser(argparse.ArgumentParser):
                 "required": False,
                 "default": -2.0,
             },
-            "erange": {
+            "energy_range": {
                 "help": (
-                    "Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
+                    "Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV')."
                 ),
                 "type": CommandLineParser.parse_quantity_pair,
                 "required": False,
                 "default": ["3 GeV 330 TeV"],
             },
-            "viewcone": {
+            "view_cone": {
                 "help": (
-                    "Viewcone for primary arrival directions (min/max value, e.g. '0 deg 5 deg').",
+                    "View cone radius for primary arrival directions "
+                    "(min/max value, e.g. '0 deg 5 deg')."
                 ),
                 "type": CommandLineParser.parse_quantity_pair,
                 "required": False,
@@ -411,11 +412,6 @@ class CommandLineParser(argparse.ArgumentParser):
             List of selected parameters to be added to the group.
         available_parameters : dict
             Dictionary with available parameters and their configuration.
-
-        Raises
-        ------
-        ValueError
-            If a parameter is not available.
         """
         configuration_group = self.add_argument_group(group_name)
 
@@ -425,9 +421,9 @@ class CommandLineParser(argparse.ArgumentParser):
         for param in selected_parameters:
             try:
                 configuration_group.add_argument(f"--{param}", **available_parameters[param])
-            except KeyError as exc:
-                msg = f"Parameter {param} is not available"
-                raise ValueError(msg) from exc
+                print("FFFF", param, available_parameters[param])
+            except KeyError:
+                pass
 
     @staticmethod
     def _add_model_option_layout(job_group, add_layout_file):

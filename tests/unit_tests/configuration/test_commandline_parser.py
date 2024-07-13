@@ -246,4 +246,4 @@ def test_simulation_configuration():
         if str(group.title) == "simulation configuration":
             assert any(action.dest == "primary" for action in group._group_actions)
         if str(group.title) == "shower parameters":
-            assert any(action.dest == "viewcone" for action in group._group_actions)
+            assert any(action.dest == "view_cone" for action in group._group_actions)
