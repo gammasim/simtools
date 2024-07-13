@@ -15,8 +15,8 @@ CTA_SIMPIPE:
     ZENITH_ANGLE: 20
     NSHOW: 10
     ESLOPE: -2.
-    VIEWCONE: "0 deg 0 deg"
-    ERANGE: "100 GeV 2 TeV"
+    VIEW_CONE: "0 deg 0 deg"
+    ENERGY_RANGE: "100 GeV 2 TeV"
     CORE_SCATTER: "10 1400 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output

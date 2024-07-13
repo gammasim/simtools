@@ -421,7 +421,7 @@ class CommandLineParser(argparse.ArgumentParser):
         for param in selected_parameters:
             try:
                 configuration_group.add_argument(f"--{param}", **available_parameters[param])
-                print("FFFF", param, available_parameters[param])
+            # TODO discuss if we want to complicate things and issue an error
             except KeyError:
                 pass
 
@@ -648,21 +648,19 @@ class CommandLineParser(argparse.ArgumentParser):
                 "The azimuth angle provided is not a valid astropy.Quantity. "
                 "Will check if it is (north, south, east, west) instead"
             )
-        if isinstance(angle, str):
-            azimuth_map = {
-                "north": 0 * u.deg,
-                "south": 180 * u.deg,
-                "east": 90 * u.deg,
-                "west": 270 * u.deg,
-            }
-            azimuth_angle = angle.lower()
-            if azimuth_angle in azimuth_map:
-                return azimuth_map[azimuth_angle]
-            raise argparse.ArgumentTypeError(
-                "The azimuth angle given as string can only be one of "
-                f"(north, south, east, west), not {angle}. Otherwise use numerical values."
-            )
-        return None
+        azimuth_map = {
+            "north": 0 * u.deg,
+            "south": 180 * u.deg,
+            "east": 90 * u.deg,
+            "west": 270 * u.deg,
+        }
+        azimuth_angle = angle.lower()
+        if azimuth_angle in azimuth_map:
+            return azimuth_map[azimuth_angle]
+        raise argparse.ArgumentTypeError(
+            "The azimuth angle given as string can only be one of "
+            f"(north, south, east, west), not {angle}. Otherwise use numerical values."
+        )
 
     @staticmethod
     def parse_quantity_pair(string):
