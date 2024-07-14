@@ -2,52 +2,43 @@
 
 # Getting Started
 
-The usage of simtools require the installation of the simtools package, its dependencies,
-and the setting of environment variables to connect to the model database.
-
-## Model Database Access
-
-Simulation model parameters are stored in a MongoDB-type database.
-Many simtools applications depend on access to this database.
-
-:::{note}
-Ask one of the developers for the credentials to access the database.
-:::
-
-Credentials for database access are passed on to simtools applications using environmental variables stored
-in a file named `.env`.
-Copy the template file [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template)
-to a new file named `.env` and update it with the credentials.
+The usage of simtools requires the installation of the [simtools package](installationforusers), its dependencies (mostly [CORISKA/sim_telarray](corsikasimtelarrayinstallation)),
+and the setting of environment variables to [connect to the model database](modeldatabaseaccess).
 
 (installationforusers)=
 
 ## Installation
 
-:::{warning}
-simtools is under rapid development and not ready for production use.
-The following setup is recommended for users who want to test the software.
-:::
+There are four options to install simtools for users:
 
-There are three options to install simtools for users:
-
-- using pip
-- using git and pip
-- download a docker container with all software installed
+- [using conda](condainstallation)
+- [using pip](pipinstallation)
+- using git and pip (this is the recommended method for developers) (see [Developer Installation](../developer-guide/getting_started.md))
+- [using a docker container](dockerinstallation) with all software installed
 
 All simtools applications are available as command-line tools.
 Note the naming of the tool, starting with `simtools-` followed by the application name.
-See {ref}`Applications` for more details.
+See the [applications](applications.md) section for more details.
 
-Note to update the `.env` file with the credentials for database access (see [Model Database Access]).
+Note to update the `.env` file with the credentials for database access (see [Model Database Access](databases.md)).
+
+The conda/pip installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].
+
+(condainstallation)=
+
+### Conda Installation
+
+Prepare and install a conda environment with the simtools package:
+
+```console
+conda env create -n gammasimtools
+conda install gammasimtools --channel conda-forge
+conda activate gammasimtools
+```
 
 (pipinstallation)=
 
 ### Pip Installation
-
-:::{warning}
-The pip-installation of simtools provides limited functionality only
-and is not as well tests as the conda/mamba installation.
-:::
 
 Prepare a python environment (in this example for python version 3.11):
 
@@ -62,21 +53,7 @@ Use pip to install simtools and its dependencies:
 pip install gammasimtools
 ```
 
-The pip installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].
-
-(gitinstallation)=
-
-### Git Installation
-
-Install simtools directly from the GitHub repository:
-
-```console
-git clone https://github.com/gammasim/simtools.git
-cd simtools
-pip install .
-```
-
-The git installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].
+The pip installation method requires to [install CORSIKA/sim_telarray](corsikasimtelarrayinstallation) separately.
 
 (dockerinstallation)=
 
@@ -86,6 +63,8 @@ OCI-compatible images are available for simtools users, developers, and for CORS
 These allows to skip all installation steps and run simtools applications directly.
 
 See the [Docker description](docker_files.md) for more details.
+
+(corsikasimtelarrayinstallation)=
 
 ## Installation of CORSIKA and sim_telarray
 
@@ -103,3 +82,19 @@ tar -czf corsika7.7_simtelarray.tar.gz
 
 The environmental variable `$SIMTOOLS_SIMTEL_PATH` should point towards the CORSIKA/sim_telarray installation
 (recommended to include it in the .env file with all other environment variables).
+
+(modeldatabaseaccess)=
+
+## Model Database Access
+
+Simulation model parameters are stored in a MongoDB-type database.
+Many simtools applications depend on access to this database.
+
+:::{note}
+Ask one of the developers for the credentials to access the database.
+:::
+
+Credentials for database access are passed on to simtools applications using environmental variables stored
+in a file named `.env`.
+Copy the template file [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template)
+to a new file named `.env` and update it with the credentials.

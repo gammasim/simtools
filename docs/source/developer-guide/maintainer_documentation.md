@@ -13,3 +13,7 @@ To prepare a release, the following steps are required:
 1. Pypi deployment is done automatically by the CI/CD pipeline.
 1. Docker images are automatically built, tagged with the version number, and pushed to the [gammasim/simtools](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 1. A DOI is issued automatically by Zenodo.
+
+## Conda feedstock
+
+The conda feedstock for gammasimtools is [this repository](https://github.com/conda-forge/gammasimtools-feedstock).

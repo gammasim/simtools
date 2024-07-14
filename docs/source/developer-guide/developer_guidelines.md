@@ -124,6 +124,10 @@ Note that this is under review and might go away in near future.
 
 ## Input validation
 
+:::{warning}
+This section is deprecated and will be removed in the future.
+:::
+
 Any configurable inputs (e.g. physical parameters) to modules
 must have them validated. The validation assures that the units, type and
 format are correct and also allow for default values.
