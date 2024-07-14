@@ -2,14 +2,14 @@
 
 # Getting Started
 
-The usage of simtools require the installation of the simtools package, its dependencies,
-and the setting of environment variables to connect to the model database.
+The usage of simtools require the [installation of the simtools package](devinstallationfordevelopers), its dependencies,
+and the setting of environment variables to connect to the model database (see also the [user's guide](../user-guide/getting_started.md)).
 
 (devinstallationfordevelopers)=
 
 ## Installation
 
-Developers install simtools directly from the GitHub repository:
+Developers install simtools directly from the [simtools GitHub repository](https://github.com/gammasim/simtools):
 
 ```console
 git clone https://github.com/gammasim/simtools.git

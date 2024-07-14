@@ -44,6 +44,14 @@ To run pylint locally, use:
 pylint $(git ls-files 'simtools/*.py')
 ```
 
+To run ruff locally, use:
+
+```bash
+ruff check
+```
+
+Note the options defined in pyproject.toml for both ruff and pylint.
+
 ### API documentation
 
 Docstrings following the Numpy style must be added to any public function, class or method.
