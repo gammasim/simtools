@@ -46,15 +46,15 @@ class CameraEfficiency:
     ):
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
-        self.io_handler = io_handler.IOHandler()
 
         self._simtel_path = simtel_path
         self.label = label
+        self.test = test
+
+        self.io_handler = io_handler.IOHandler()
         self.telescope_model, self._site_model = self._initialize_simulation_models(
             config_data, db_config
         )
-        self.test = test
-
         self._results = None
         self._has_results = False
 
