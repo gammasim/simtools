@@ -60,7 +60,7 @@ See the [user's guide](https://gammasim.github.io/simtools/user-guide/getting_st
 
 ### Installation for developers
 
-Install simtools from Github with conda/mamba:
+Install simtools from GitHub with conda/mamba:
 
 ```bash
 git clone https://github.com/gammasim/simtools.git

@@ -132,9 +132,9 @@ Any configurable inputs (e.g. physical parameters) to modules
 must have them validated. The validation assures that the units, type and
 format are correct and also allow for default values.
 
-The configurable input must be passed to classes through a dictionary or a yaml
+The configurable input must be passed to classes through a dictionary or a YAML
 file. In the case of a dictionary the parameter is generally called config_data, in the
-case of a yaml file, config_file.
+case of a YAML file, config_file.
 
 The function {ref}`gen.collect_data_from_yaml_or_dict <utilsgeneral>`
 must be used to read these arguments. It identifies which case was given and
@@ -143,11 +143,11 @@ given and not allow_empty.
 
 The validation of the input is done by the function gen.validate_config_data, which
 receives the dictionary with the collected input and a parameter dictionary. The parameter
-dictionary is read from a parameter yaml file in the data/parameters directory.
+dictionary is read from a parameter YAML file in the data/parameters directory.
 The file is read through the function io.get_data_file("parameters", filename)
 (see data files section).
 
-Parameter yaml files contain the list of parameters to be validated and its
+Parameter YAML files contain the list of parameters to be validated and its
 properties. See an example below:
 
 ```yaml
