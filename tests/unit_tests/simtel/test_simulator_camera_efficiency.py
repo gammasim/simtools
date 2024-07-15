@@ -2,6 +2,7 @@
 
 import logging
 
+import astropy.units as u
 import pytest
 
 from simtools.camera_efficiency import CameraEfficiency
@@ -12,22 +13,11 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def camera_efficiency_sst(telescope_model_sst, simtel_path, site_model_south):
-
-    telescope_model_sst.export_model_files()
-    return CameraEfficiency(
-        telescope_model=telescope_model_sst,
-        site_model=site_model_south,
-        simtel_path=simtel_path,
-        test=True,
-    )
-
-
-@pytest.fixture()
-def simulator_camera_efficiency(camera_efficiency_sst, telescope_model_sst, simtel_path):
+def simulator_camera_efficiency(camera_efficiency_sst, simtel_path):
+    camera_efficiency_sst.export_model_files()
     return SimulatorCameraEfficiency(
         simtel_path=simtel_path,
-        telescope_model=telescope_model_sst,
+        telescope_model=camera_efficiency_sst.telescope_model,
         file_simtel=camera_efficiency_sst._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
     )
@@ -74,24 +64,31 @@ def test_check_run_result(simulator_camera_efficiency):
         simulator_camera_efficiency._check_run_result()
 
 
-def test_get_one_dim_distribution(site_model_south, simtel_path, telescope_model_sst_prod5):
+def test_get_one_dim_distribution(io_handler, db_config, simtel_path):
 
     logger.warning(
         "Running test_get_one_dim_distribution using prod5 model "
         " (prod6 model with 1D transmission function)"
     )
-
-    # 2D transmission window not defined in prod6; required prod5 runner
-    telescope_model_sst_prod5.export_model_files()
     camera_efficiency_sst_prod5 = CameraEfficiency(
-        telescope_model=telescope_model_sst_prod5,
-        site_model=site_model_south,
+        config_data={
+            "telescope": "SSTS-05",
+            "site": "South",
+            "model_version": "prod5",
+            "zenith_angle": 20 * u.deg,
+            "azimuth_angle": 0 * u.deg,
+        },
+        db_config=db_config,
         simtel_path=simtel_path,
+        label="validate_camera_efficiency",
         test=True,
     )
+
+    # 2D transmission window not defined in prod6; required prod5 runner
+    camera_efficiency_sst_prod5.export_model_files()
     simulator_camera_efficiency_prod5 = SimulatorCameraEfficiency(
         simtel_path=simtel_path,
-        telescope_model=telescope_model_sst_prod5,
+        telescope_model=camera_efficiency_sst_prod5.telescope_model,
         file_simtel=camera_efficiency_sst_prod5._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
     )
