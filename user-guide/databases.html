@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+g8218f1c Manual</title>
+    <title>Databases &#8212; simtools v0.1.dev1+g636f06d Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=e60d1471"></script>
+    <script src="../_static/documentation_options.js?v=63efd704"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g8218f1c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g636f06d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -496,7 +496,7 @@ This documentation is therefore incomplete.</p>
 </div>
 <section id="model-parameters-db">
 <h3>Model parameters DB<a class="headerlink" href="#model-parameters-db" title="Link to this heading">#</a></h3>
-<p>The name of the model parameter database needs to be indicated by <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_DB_SIMULATION_MODEL</span></code> environmental variable and defined e.g., in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p>
+<p>The name of the model parameter database needs to be indicated by <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_DB_SIMULATION_MODEL</span></code> environmental variable and defined e.g., in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file. Use <code class="docutils literal notranslate"><span class="pre">CTAO-Simulation-Model-LATEST</span></code> to use the latest version of the CTAO simulation model database (simtools will replace <code class="docutils literal notranslate"><span class="pre">LATEST</span></code> with the latest version number).</p>
 <p>Collections:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">telescopes</span></code> with the model parameters for each telescope plus the reference design model</p></li>
@@ -530,7 +530,7 @@ This documentation is therefore incomplete.</p>
 <span class="go">SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person</span>
 <span class="go">SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for MongoDB: ask the responsible person</span>
 <span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
-<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;Staging-CTA-Simulation-Model-v0-3-0&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-Model-LATEST&#39;</span>
 <span class="gp"># </span><span class="nv">SIMTOOLS_DB_SIMULATION_MODEL_URL</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
 <span class="go">SIMTOOLS_SIMTEL_PATH=&#39;/workdir/sim_telarray&#39;</span>
 </pre></div>
@@ -606,10 +606,10 @@ uploads its contents to the local database instance.</p>
 <span class="go">SIMTOOLS_DB_API_USER=&#39;api&#39; # username for MongoDB</span>
 <span class="go">SIMTOOLS_DB_API_PW=&#39;password&#39; # Password for MongoDB</span>
 <span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
-<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;Staging-CTA-Simulation-Model-v0-3-0&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;STAGING-CTA-Simulation-Model-LATEST&#39;</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> is set as an example here to <code class="docutils literal notranslate"><span class="pre">Staging-CTA-Simulation-Model-v0-3-0</span></code> and should be changed accordingly.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> is set as an example here to <code class="docutils literal notranslate"><span class="pre">STAGING-CTAO-Simulation-Model-LATEST</span></code> and should be changed accordingly.</p>
 <p>For using simtools inside a container:</p>
 <ul class="simple">
 <li><p>set the <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SERVER</span></code> in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to SIMTOOLS_DB_SERVER=’simtools-mongodb’.</p></li>
