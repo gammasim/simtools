@@ -14,10 +14,16 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def camera_efficiency_lst(telescope_model_lst, site_model_north, simtel_path):
+def camera_efficiency_lst(io_handler, db_config, model_version, simtel_path):
     return CameraEfficiency(
-        telescope_model=telescope_model_lst,
-        site_model=site_model_north,
+        config_data={
+            "telescope": "LSTN-01",
+            "site": "North",
+            "model_version": model_version,
+            "zenith_angle": 20 * u.deg,
+            "azimuth_angle": 0 * u.deg,
+        },
+        db_config=db_config,
         simtel_path=simtel_path,
         label="validate_camera_efficiency",
         test=True,
@@ -25,10 +31,16 @@ def camera_efficiency_lst(telescope_model_lst, site_model_north, simtel_path):
 
 
 @pytest.fixture()
-def camera_efficiency_sst(telescope_model_sst, site_model_south, simtel_path):
+def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
     return CameraEfficiency(
-        telescope_model=telescope_model_sst,
-        site_model=site_model_south,
+        config_data={
+            "telescope": "SSTS-05",
+            "site": "South",
+            "model_version": model_version,
+            "zenith_angle": 20 * u.deg,
+            "azimuth_angle": 0 * u.deg,
+        },
+        db_config=db_config,
         simtel_path=simtel_path,
         label="validate_camera_efficiency",
         test=True,
@@ -36,7 +48,7 @@ def camera_efficiency_sst(telescope_model_sst, site_model_south, simtel_path):
 
 
 @pytest.fixture()
-def results_file(io_handler):
+def prepare_results_file(io_handler):
     test_file_name = (
         "tests/resources/"
         "camera-efficiency-table-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency.ecsv"
@@ -50,28 +62,6 @@ def results_file(io_handler):
     return output_directory.joinpath(test_file_name)
 
 
-def test_from_kwargs(telescope_model_lst, site_model_north, simtel_path):
-    tel_model = telescope_model_lst
-    label = "test-from-kwargs"
-    zenith_angle = 30 * u.deg
-    ce = CameraEfficiency.from_kwargs(
-        telescope_model=tel_model,
-        site_model=site_model_north,
-        simtel_path=simtel_path,
-        label=label,
-        zenith_angle=zenith_angle,
-        test=True,
-    )
-    assert ce.config.zenith_angle == 30
-
-
-def test_validate_telescope_model(simtel_path, site_model_north):
-    with pytest.raises(ValueError):
-        CameraEfficiency(
-            telescope_model="bla_bla", site_model=site_model_north, simtel_path=simtel_path
-        )
-
-
 def test_load_files(camera_efficiency_lst):
     _name = "camera-efficiency-table-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
     assert camera_efficiency_lst._file["results"].name == _name + ".ecsv"
@@ -80,31 +70,31 @@ def test_load_files(camera_efficiency_lst):
     assert camera_efficiency_lst._file["log"].name == _name + ".log"
 
 
-def test_read_results(camera_efficiency_lst, results_file):
+def test_read_results(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     assert isinstance(camera_efficiency_lst._results, Table)
     assert camera_efficiency_lst._has_results is True
 
 
-def test_calc_camera_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
+def test_calc_camera_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    telescope_model_lst.export_model_files()
+    camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_camera_efficiency() == pytest.approx(
         0.24468117923810984
     )  # Value for Prod5 LST-1
 
 
-def test_calc_tel_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
+def test_calc_tel_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    telescope_model_lst.export_model_files()
+    camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_tel_efficiency() == pytest.approx(
         0.23988884493787524
     )  # Value for Prod5 LST-1
 
 
-def test_calc_tot_efficiency(telescope_model_lst, camera_efficiency_lst, results_file):
+def test_calc_tot_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    telescope_model_lst.export_model_files()
+    camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_tot_efficiency(
         camera_efficiency_lst.calc_tel_efficiency()
     ) == pytest.approx(
@@ -112,7 +102,7 @@ def test_calc_tot_efficiency(telescope_model_lst, camera_efficiency_lst, results
     )  # Value for Prod5 LST-1
 
 
-def test_calc_reflectivity(camera_efficiency_lst, results_file):
+def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     assert camera_efficiency_lst.calc_reflectivity() == pytest.approx(
         0.9167918392938349
@@ -120,30 +110,20 @@ def test_calc_reflectivity(camera_efficiency_lst, results_file):
 
 
 @pytest.mark.xfail(reason="Missing ray_tracing for prod6 in Derived-DB")
-def test_calc_nsb_rate(telescope_model_lst, camera_efficiency_lst, results_file):
+def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    telescope_model_lst.export_model_files()
+    camera_efficiency_lst.export_model_files()
     _, nsb_rate_ref_conditions = camera_efficiency_lst.calc_nsb_rate()
     assert nsb_rate_ref_conditions == pytest.approx(0.24421390533203186)  # Value for Prod5 LST-1
 
 
-def test_export_results(simtel_path, telescope_model_lst, site_model_north, caplog):
-    config_data = {
-        "zenith_angle": 20 * u.deg,
-    }
-    camera_efficiency = CameraEfficiency(
-        telescope_model=telescope_model_lst,
-        site_model=site_model_north,
-        simtel_path=simtel_path,
-        label="export_results",
-        config_data=config_data,
-    )
-    camera_efficiency.export_results()
+def test_export_results(camera_efficiency_lst, caplog):
+    camera_efficiency_lst.export_results()
     assert "Cannot export results because they do not exist" in caplog.text
 
 
-def test_results_summary(telescope_model_lst, camera_efficiency_lst, results_file):
+def test_results_summary(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    telescope_model_lst.export_model_files()
+    camera_efficiency_lst.export_model_files()
     summary = camera_efficiency_lst.results_summary()
     assert "Results summary for LSTN-01" in summary
