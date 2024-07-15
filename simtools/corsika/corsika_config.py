@@ -288,7 +288,7 @@ class CorsikaConfig:
 
     def _input_config_io_buff(self, entry):
         """Return IO_BUFFER parameter CORSIKA format."""
-        return f"{entry['value']}" f"{entry['unit']}"
+        return f"{entry['value']}{entry['unit']}"
 
     def _rotate_azimuth_by_180deg(self, az):
         """
@@ -502,7 +502,7 @@ class CorsikaConfig:
         _vc_low = self.get_config_parameter("VIEWCONE")[0]
         _vc_high = self.get_config_parameter("VIEWCONE")[1]
         view_cone = (
-            f"_cone{int(_vc_low):d}-" f"{int(_vc_high):d}" if _vc_low != 0 or _vc_high != 0 else ""
+            f"_cone{int(_vc_low):d}-{int(_vc_high):d}" if _vc_low != 0 or _vc_high != 0 else ""
         )
 
         base_name = (

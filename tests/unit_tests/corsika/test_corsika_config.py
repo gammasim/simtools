@@ -21,16 +21,21 @@ def corsika_config_no_db(corsika_config_data):
 
 
 @pytest.fixture()
-def corsika_configuration_parameters():
+def gcm2():
+    return "g/cm2"
+
+
+@pytest.fixture()
+def corsika_configuration_parameters(gcm2):
     return {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
         "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
         "corsika_cherenkov_photon_wavelength_range": {"value": "240. 700.", "unit": "nm"},
         "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
         "corsika_particle_kinetic_energy_cutoff": {"value": "0.3 0.1 0.020 0.020", "unit": "GeV"},
-        "corsika_longitudinal_shower_development": {"value": 20.0, "unit": "g/cm2"},
+        "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
         "corsika_iact_split_auto": {"value": 15000000, "unit": None},
-        "corsika_starting_grammage": {"value": 0.0, "unit": "g/cm2"},
+        "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
         "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
     }
 
@@ -100,11 +105,9 @@ def test_input_config_first_interaction_height(corsika_config_no_db):
     ) == ["1000.00", "0"]
 
 
-def test_input_config_corsika_starting_grammage(corsika_config_no_db):
+def test_input_config_corsika_starting_grammage(corsika_config_no_db, gcm2):
     assert (
-        corsika_config_no_db._input_config_corsika_starting_grammage(
-            {"value": 0.0, "unit": "g/cm2"}
-        )
+        corsika_config_no_db._input_config_corsika_starting_grammage({"value": 0.0, "unit": gcm2})
         == "0.0"
     )
     assert (
@@ -124,9 +127,9 @@ def test_input_config_corsika_particle_kinetic_energy_cutoff(corsika_config_no_d
     ) == ["300.0 100.0 20.0 20.0"]
 
 
-def test_input_config_corsika_longitudinal_parameters(corsika_config_no_db):
+def test_input_config_corsika_longitudinal_parameters(corsika_config_no_db, gcm2):
     assert corsika_config_no_db._input_config_corsika_longitudinal_parameters(
-        {"value": 20.0, "unit": "g/cm2"}
+        {"value": 20.0, "unit": gcm2}
     ) == ["T", "20.0", "F", "F"]
     assert corsika_config_no_db._input_config_corsika_longitudinal_parameters(
         {"value": 10.0, "unit": "kg/cm2"}
