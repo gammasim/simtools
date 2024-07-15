@@ -27,9 +27,6 @@ r"""
         Up to which pixel ID to print. To suppress printing of pixel IDs, set to zero\
          (--print_pixels_id 0). To print all pixels, set to 'All'."
 
-    verbosity (str, optional)
-        Log level to print
-
     Example
     -------
     LST - Prod5
