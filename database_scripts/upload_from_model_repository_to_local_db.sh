@@ -5,7 +5,7 @@
 # Requires configuration of local DB in .env file
 
 CONTAINER_NAME="simtools-mongodb"
-SIMTOOLS_DB_SIMULATION_MODEL='Staging-CTA-Simulation-Model-v0-3-0'
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-v0-3-0'  # Name of the database to be created
 SIMTOOLS_DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git"
 SIMTOOLS_DB_SIMULATION_MODEL_BRANCH="main"
 
