@@ -1,12 +1,14 @@
 """Module to handle interaction with DB."""
 
 import logging
+import re
 from pathlib import Path
 from threading import Lock
 
 import gridfs
 import pymongo
 from bson.objectid import ObjectId
+from packaging.version import Version
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
@@ -71,6 +73,7 @@ class DatabaseHandler:
         self.list_of_collections = {}
 
         self._set_up_connection()
+        self._update_db_simulation_model()
 
     def _set_up_connection(self):
         """Open the connection to MongoDB."""
@@ -108,6 +111,43 @@ class DatabaseHandler:
             raise
 
         return _db_client
+
+    def _update_db_simulation_model(self):
+        """
+        Find the latest version (if requested) of the simulation model and update the DB config.
+
+        This is indicated by adding "LATEST" to the name of the simulation model database
+        (field "db_simulation_model" in the database configuration dictionary).
+
+        """
+        try:
+            if not self.mongo_db_config["db_simulation_model"].endswith("LATEST"):
+                return
+        except TypeError:
+            return
+
+        prefix = self.mongo_db_config["db_simulation_model"].replace("LATEST", "")
+        list_of_db_names = self.db_client.list_database_names()
+        filtered_list_of_db_names = [s for s in list_of_db_names if s.startswith(prefix)]
+        versioned_strings = []
+        version_pattern = re.compile(rf"{re.escape(prefix)}v(\d+)-(\d+)-(\d+)")
+
+        for s in filtered_list_of_db_names:
+            match = version_pattern.search(s)
+            if match:
+                version_str = match.group(1) + "." + match.group(2) + "." + match.group(3)
+                version = Version(version_str)
+                versioned_strings.append((s, version))
+
+        if versioned_strings:
+            latest_string, _ = max(versioned_strings, key=lambda x: x[1])
+            self.mongo_db_config["db_simulation_model"] = latest_string
+            self._logger.info(
+                f"Updated the DB simulation model to the latest version {latest_string}"
+            )
+        else:
+            self._logger.error("Found LATEST in the DB name but no matching versions found in DB.")
+            raise ValueError
 
     def get_model_parameters(
         self,
