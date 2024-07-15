@@ -31,23 +31,6 @@ def camera_efficiency_lst(io_handler, db_config, model_version, simtel_path):
 
 
 @pytest.fixture()
-def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
-    return CameraEfficiency(
-        config_data={
-            "telescope": "SSTS-05",
-            "site": "South",
-            "model_version": model_version,
-            "zenith_angle": 20 * u.deg,
-            "azimuth_angle": 0 * u.deg,
-        },
-        db_config=db_config,
-        simtel_path=simtel_path,
-        label="validate_camera_efficiency",
-        test=True,
-    )
-
-
-@pytest.fixture()
 def prepare_results_file(io_handler):
     test_file_name = (
         "tests/resources/"
