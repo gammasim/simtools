@@ -8,21 +8,29 @@ import pytest
 from astropy.table import Table
 
 from simtools.camera_efficiency import CameraEfficiency
+from simtools.model.site_model import SiteModel
+from simtools.model.telescope_model import TelescopeModel
+from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def camera_efficiency_lst(io_handler, db_config, model_version, simtel_path):
+def config_data_lst():
+    return {
+        "telescope": "LSTN-01",
+        "site": "North",
+        "model_version": "Prod5",
+        "zenith_angle": 20 * u.deg,
+        "azimuth_angle": 0 * u.deg,
+    }
+
+
+@pytest.fixture()
+def camera_efficiency_lst(io_handler, db_config, model_version, simtel_path, config_data_lst):
     return CameraEfficiency(
-        config_data={
-            "telescope": "LSTN-01",
-            "site": "North",
-            "model_version": model_version,
-            "zenith_angle": 20 * u.deg,
-            "azimuth_angle": 0 * u.deg,
-        },
+        config_data=config_data_lst,
         db_config=db_config,
         simtel_path=simtel_path,
         label="validate_camera_efficiency",
@@ -45,12 +53,58 @@ def prepare_results_file(io_handler):
     return output_directory.joinpath(test_file_name)
 
 
+def test_reprt(camera_efficiency_lst):
+    assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
+
+
+def test_initialize_simulation_models(db_config, config_data_lst, camera_efficiency_lst):
+    tel_model, site_model = camera_efficiency_lst._initialize_simulation_models(
+        config_data_lst, db_config
+    )
+    assert isinstance(tel_model, TelescopeModel)
+    assert isinstance(site_model, SiteModel)
+
+
+def test_configuration_from_args_dict(camera_efficiency_lst):
+    _config = camera_efficiency_lst._configuration_from_args_dict(
+        {
+            "zenith_angle": 30 * u.deg,
+            "azimuth_angle": 90 * u.deg,
+            "nsb_spectrum": "dark",
+        }
+    )
+    assert isinstance(_config, dict)
+    assert pytest.approx(_config["zenith_angle"]) == 30.0
+    assert pytest.approx(_config["azimuth_angle"]) == 90.0
+    assert _config["nsb_spectrum"] == "dark"
+
+    _config_none = camera_efficiency_lst._configuration_from_args_dict(
+        {
+            "zenith_angle": None,
+            "azimuth_angle": None,
+            "nsb_spectrum": None,
+        }
+    )
+    assert pytest.approx(_config_none["zenith_angle"]) == 20.0
+    assert pytest.approx(_config_none["azimuth_angle"]) == 0.0
+    assert _config_none["nsb_spectrum"] is None
+
+
 def test_load_files(camera_efficiency_lst):
     _name = "camera-efficiency-table-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
     assert camera_efficiency_lst._file["results"].name == _name + ".ecsv"
     _name = "camera-efficiency-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
     assert camera_efficiency_lst._file["simtel"].name == _name + ".dat"
     assert camera_efficiency_lst._file["log"].name == _name + ".log"
+
+
+def test_simulate(io_handler, camera_efficiency_lst, caplog, mocker):
+
+    mock_run = mocker.patch.object(SimulatorCameraEfficiency, "run")
+    with caplog.at_level(logging.INFO):
+        camera_efficiency_lst.simulate()
+        assert "Simulating CameraEfficiency" in caplog.text
+    mock_run.assert_called_once()
 
 
 def test_read_results(camera_efficiency_lst, prepare_results_file):
@@ -100,9 +154,26 @@ def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
     assert nsb_rate_ref_conditions == pytest.approx(0.24421390533203186)  # Value for Prod5 LST-1
 
 
-def test_export_results(camera_efficiency_lst, caplog):
+def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_file):
+    # no results available yet
     camera_efficiency_lst.export_results()
     assert "Cannot export results because they do not exist" in caplog.text
+
+    # results available
+    mocker.patch.object(camera_efficiency_lst, "results_summary", return_value="TestString")
+    camera_efficiency_lst._read_results()
+    mock_file = mocker.mock_open()
+    mocker.patch("builtins.open", mock_file)
+    with caplog.at_level(logging.INFO):
+        camera_efficiency_lst.export_results()
+        assert "Exporting summary results" in caplog.text
+    mock_file().write.assert_called_once_with("TestString")
+
+
+def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.analyze()
+    assert camera_efficiency_lst._has_results is True
 
 
 def test_results_summary(camera_efficiency_lst, prepare_results_file):

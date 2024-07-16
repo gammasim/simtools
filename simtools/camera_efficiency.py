@@ -40,8 +40,8 @@ class CameraEfficiency:
         self,
         simtel_path,
         config_data,
-        db_config=None,
-        label=None,
+        label,
+        db_config,
         test=False,
     ):
         """Initialize the CameraEfficiency class."""
