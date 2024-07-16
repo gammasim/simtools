@@ -421,7 +421,6 @@ class CommandLineParser(argparse.ArgumentParser):
         for param in selected_parameters:
             try:
                 configuration_group.add_argument(f"--{param}", **available_parameters[param])
-            # TODO discuss if we want to complicate things and issue an error
             except KeyError:
                 pass
 
