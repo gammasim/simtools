@@ -176,6 +176,19 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
     assert camera_efficiency_lst._has_results is True
 
 
+def test_analyze_from_file(camera_efficiency_lst, mocker):
+    camera_efficiency_lst._file["simtel"] = (
+        "tests/resources/"
+        "camera-efficiency-North-MSTN-design-za20.0deg_azm000deg_validate_camera_efficiency.dat"
+    )
+    mocker.patch.object(CameraEfficiency, "results_summary", return_value="summary")
+    camera_efficiency_lst.analyze(export=False, force=True)
+    assert camera_efficiency_lst._has_results is True
+    assert isinstance(camera_efficiency_lst._results, Table)
+    assert len(camera_efficiency_lst._results) > 1
+    assert "N4" in camera_efficiency_lst._results.colnames
+
+
 def test_results_summary(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
