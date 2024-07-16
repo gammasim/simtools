@@ -49,7 +49,6 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.camera_efficiency import CameraEfficiency
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler
 
 
 def _parse(label):
@@ -93,10 +92,6 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # Output directory to save files related directly to this app
-    _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
-
     ce = CameraEfficiency(
         db_config=_db_config,
         simtel_path=args_dict["simtel_path"],
@@ -105,26 +100,8 @@ def main():  # noqa: D103
     )
     ce.simulate()
     ce.analyze(force=True)
-
-    # TODO move this into the CameraEfficiency class (all plotting)
-
-    # Plotting the camera efficiency for Cherenkov light
-    fig = ce.plot_cherenkov_efficiency()
-    cherenkov_plot_file_name = label + "_" + ce.telescope_model.name + "_cherenkov"
-    cherenkov_plot_file = output_dir.joinpath(cherenkov_plot_file_name)
-    for f in ["pdf", "png"]:
-        fig.savefig(str(cherenkov_plot_file) + "." + f, format=f, bbox_inches="tight")
-    logger.info(f"Plotted cherenkov efficiency in {cherenkov_plot_file}")
-    fig.clf()
-
-    # Plotting the camera efficiency for NSB light
-    fig = ce.plot_nsb_efficiency()
-    nsb_plot_file_name = label + "_" + ce.telescope_model.name + "_nsb"
-    nsb_plot_file = output_dir.joinpath(nsb_plot_file_name)
-    for f in ["pdf", "png"]:
-        fig.savefig(str(nsb_plot_file) + "." + f, format=f, bbox_inches="tight")
-    logger.info(f"Plotted NSB efficiency in {nsb_plot_file}")
-    fig.clf()
+    ce.plot_efficiency(efficiency_type="Cherenkov", save_fig=True)
+    ce.plot_efficiency(efficiency_type="NSB", save_fig=True)
 
 
 if __name__ == "__main__":
