@@ -55,6 +55,8 @@ class CameraEfficiency:
         self.telescope_model, self._site_model = self._initialize_simulation_models(
             config_data, db_config
         )
+        self.output_dir = self.io_handler.get_output_directory(self.label, sub_dir="plots")
+
         self._results = None
         self._has_results = False
 
@@ -431,55 +433,35 @@ class CameraEfficiency:
         )
         return nsb_rate_provided_spectrum, nsb_rate_ref_conditions
 
-    def plot_cherenkov_efficiency(self):
+    def plot_efficiency(self, efficiency_type, save_fig=False):
         """
-        Plot Cherenkov efficiency vs wavelength.
+        Plot efficiency vs wavelength.
+
+        Parameters
+        ----------
+        efficiency_type: str
+            The type of efficiency to plot (Cherenkov 'C' or NSB 'N')
+        save_fig: bool
+            If True, the figure will be saved to a file.
 
         Returns
         -------
         fig
             The figure instance of pyplot
         """
-        self._logger.info("Plotting Cherenkov efficiency vs wavelength")
+        self._logger.info(f"Plotting {efficiency_type} efficiency vs wavelength")
+
+        _col_type = "C" if efficiency_type == "Cherenkov" else "N"
 
         column_titles = {
             "wl": "Wavelength [nm]",
-            "C1": r"C1: Cherenkov light on ground",
-            "C2": r"C2: C1 $\times$ ref. $\times$ masts",
-            "C3": r"C3: C2 $\times$ filter $\times$ lightguide",
-            "C4": r"C4: C3 $\times$ q.e.",
-            "C4x": r"C4x: C1 $\times$ filter $\times$ lightguide $\times$ q.e.",
-        }
-
-        table_to_plot = Table([self._results[col_now] for col_now in column_titles])
-
-        for column_now, column_title in column_titles.items():
-            table_to_plot.rename_column(column_now, column_title)
-
-        return visualize.plot_table(
-            table_to_plot,
-            y_title="Cherenkov light efficiency",
-            title=f"{self.telescope_model.name} response to Cherenkov light",
-            no_markers=True,
-        )
-
-    def plot_nsb_efficiency(self):
-        """
-        Plot NSB efficiency vs wavelength.
-
-        Returns
-        -------
-        fig
-            The figure instance of pyplot
-        """
-        self._logger.info("Plotting NSB efficiency vs wavelength")
-        column_titles = {
-            "wl": "Wavelength [nm]",
-            "N1": r"N1: NSB light on ground (B\&E)",
-            "N2": r"N2: N1 $\times$ ref. $\times$ masts",
-            "N3": r"N3: N2 $\times$ filter $\times$ lightguide",
-            "N4": r"N4: N3 $\times$ q.e.",
-            "N4x": r"N4x: N1 $\times$ filter $\times$ lightguide $\times$ q.e.",
+            f"{_col_type}1": rf"{_col_type}1: Cherenkov light on ground",
+            f"{_col_type}2": rf"{_col_type}2: {_col_type}1 $\times$ ref. $\times$ masts",
+            f"{_col_type}3": rf"{_col_type}3: {_col_type}2 $\times$ filter $\times$ lightguide",
+            f"{_col_type}4": rf"{_col_type}4: {_col_type}3 $\times$ q.e.",
+            f"{_col_type}4x": (
+                rf"{_col_type}4x: {_col_type}1 $\times$ filter $\times$ lightguide $\times$ q.e.",
+            ),
         }
 
         table_to_plot = Table([self._results[col_now] for col_now in column_titles])
@@ -489,13 +471,33 @@ class CameraEfficiency:
 
         plot = visualize.plot_table(
             table_to_plot,
-            y_title="Nightsky background light efficiency",
-            title=f"{self.telescope_model.name} response to nightsky background light",
+            y_title=f"{efficiency_type} light efficiency",
+            title=f"{self.telescope_model.name} response to {efficiency_type} light",
             no_markers=True,
         )
-
-        plot.gca().set_yscale("log")
-        ylim = plot.gca().get_ylim()
-        plot.gca().set_ylim(1e-3, ylim[1])
-
+        if efficiency_type == "NSB":
+            plot.gca().set_yscale("log")
+            ylim = plot.gca().get_ylim()
+            plot.gca().set_ylim(1e-3, ylim[1])
+        if save_fig:
+            self._save_plot(plot, efficiency_type.lower())
         return plot
+
+    def _save_plot(self, fig, plot_title):
+        """
+        Save plot to pdf and png file.
+
+        Parameters
+        ----------
+        fig
+            The figure instance of pyplot
+        plot_title: str
+            The title of the plot
+        """
+        plot_file = self.output_dir.joinpath(
+            self.label + "_" + self.telescope_model.name + "_" + plot_title
+        )
+        for f in ["pdf", "png"]:
+            fig.savefig(str(plot_file) + "." + f, format=f, bbox_inches="tight")
+        self._logger.info(f"Plotted {plot_title} efficiency in {plot_file}")
+        fig.clf()
