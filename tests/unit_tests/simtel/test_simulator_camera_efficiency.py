@@ -72,7 +72,7 @@ def test_get_one_dim_distribution(io_handler, db_config, simtel_path):
     )
     camera_efficiency_sst_prod5 = CameraEfficiency(
         config_data={
-            "telescope": "SSTS-05",
+            "telescope": "SSTS-design",
             "site": "South",
             "model_version": "prod5",
             "zenith_angle": 20 * u.deg,
