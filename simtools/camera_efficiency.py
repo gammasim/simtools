@@ -150,6 +150,8 @@ class CameraEfficiency:
         """Simulate camera efficiency using testeff."""
         self._logger.info("Simulating CameraEfficiency")
 
+        self.export_model_files()
+
         simtel = SimulatorCameraEfficiency(
             simtel_path=self._simtel_path,
             telescope_model=self.telescope_model,
