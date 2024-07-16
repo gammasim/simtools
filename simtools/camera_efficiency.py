@@ -460,7 +460,7 @@ class CameraEfficiency:
             f"{_col_type}3": rf"{_col_type}3: {_col_type}2 $\times$ filter $\times$ lightguide",
             f"{_col_type}4": rf"{_col_type}4: {_col_type}3 $\times$ q.e.",
             f"{_col_type}4x": (
-                rf"{_col_type}4x: {_col_type}1 $\times$ filter $\times$ lightguide $\times$ q.e.",
+                rf"{_col_type}4x: {_col_type}1 $\times$ filter $\times$ lightguide $\times$ q.e."
             ),
         }
 
