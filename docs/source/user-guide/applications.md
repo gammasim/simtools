@@ -8,7 +8,7 @@ They are the the building blocks of [Simulation System Workflows](https://github
 
 Important: depending on the installation type, applications are named differently:
 
-- developers (see {ref}`InstallationForDevelopers`) call applications as described throughout this documentation: `python applications/<application name> ....`
+- developers (see [installation for developers](../developer-guide/getting_started.md#devinstallationfordevelopers)) call applications as described throughout this documentation: `python applications/<application name> ....`
 - users (see {ref}`InstallationForUsers`) call applications directly as command-line tool. Applications names `simtools-<application name` (with all `_` replaced by `-`)
 
 Each application is configured as described in {ref}`Configuration`.
