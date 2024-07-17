@@ -237,7 +237,7 @@ def test_layout_parsers():
 def test_simulation_configuration():
     _parser_9 = parser.CommandLineParser()
     _parser_9.initialize_default_arguments(
-        simulation_configuration=["software", "corsika_configuration"]
+        simulation_configuration={"software": None, "corsika_configuration": ["all"]}
     )
     job_groups = _parser_9._action_groups
     for group in job_groups:
@@ -246,4 +246,9 @@ def test_simulation_configuration():
         if str(group.title) == "simulation configuration":
             assert any(action.dest == "primary" for action in group._group_actions)
         if str(group.title) == "shower parameters":
-            assert any(action.dest == "viewcone" for action in group._group_actions)
+            assert any(action.dest == "view_cone" for action in group._group_actions)
+
+    _parser_10 = parser.CommandLineParser()
+    _parser_10.initialize_default_arguments(
+        simulation_configuration={"software": None, "corsika_configuration": ["wrong_parameter"]}
+    )
