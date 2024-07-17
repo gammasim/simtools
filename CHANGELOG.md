@@ -1,4 +1,4 @@
-# Change log
+# Changelog
 
 Notable changes relevant for the user of simtools are documented in this file. Please keep this file up to date and stick to the format.
 
@@ -23,7 +23,7 @@ Belows's release statements are incomplete.
 
 ### Fixed
 
-- (bug fixes are not listed)
+- (bugfixes are not listed)
 
 ## Template for new release
 
