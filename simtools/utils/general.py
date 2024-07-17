@@ -54,41 +54,6 @@ class InvalidConfigDataError(Exception):
     """Exception for invalid configuration data."""
 
 
-def _validate_and_convert_value(par_name, par_info, value):
-    """
-    Validate and convert the given value based on parameter information.
-
-    Parameters
-    ----------
-    par_name: str
-        Parameter name.
-    par_info: dict
-        Parameter information.
-    value:
-        Value to be validated and converted.
-
-    Returns
-    -------
-    Validated and converted value.
-
-    Raises
-    ------
-    InvalidConfigEntryError
-        If the value is invalid based on parameter constraints.
-    """
-    if "allowed" in par_info:
-        allowed_values = par_info["allowed"]
-        if value not in allowed_values:
-            msg = f"Invalid value {value} for parameter {par_name}. \
-                Allowed values are {allowed_values}."
-            raise InvalidConfigEntryError(msg)
-
-    if "unit" in par_info and not isinstance(value, u.Quantity):
-        value *= u.Unit(par_info["unit"])
-
-    return value
-
-
 def _process_identified_entry(parameters, key_data, value_data, out_data):
     """
     Process an identified entry in config_data based on parameters and validate the value.
