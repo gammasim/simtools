@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from unittest import mock
 
+import matplotlib.pyplot as plt
 import pytest
 from astropy import units as u
 from dotenv import dotenv_values, load_dotenv
@@ -20,6 +21,12 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _set_matplotlib_backend():
+    """Set matplotlib backend to Agg for testing (plotting without display server)."""
+    plt.switch_backend("Agg")
 
 
 @pytest.fixture()
