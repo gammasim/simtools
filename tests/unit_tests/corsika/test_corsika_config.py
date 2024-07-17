@@ -13,54 +13,176 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
+@pytest.fixture()
+def corsika_config_no_db(corsika_config_data):
+    return CorsikaConfig(
+        array_model=None, label="test-corsika-config", args_dict=corsika_config_data, db_config=None
+    )
+
+
+@pytest.fixture()
+def gcm2():
+    return "g/cm2"
+
+
+@pytest.fixture()
+def corsika_configuration_parameters(gcm2):
+    return {
+        "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
+        "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
+        "corsika_cherenkov_photon_wavelength_range": {"value": "240. 700.", "unit": "nm"},
+        "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
+        "corsika_particle_kinetic_energy_cutoff": {"value": "0.3 0.1 0.020 0.020", "unit": "GeV"},
+        "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
+        "corsika_iact_split_auto": {"value": 15000000, "unit": None},
+        "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
+        "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
+    }
+
+
 def test_repr(corsika_config):
     assert "site" in repr(corsika_config)
 
 
-def test_load_corsika_default_parameters_file(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    corsika_parameters = cc._load_corsika_default_parameters_file()
-    assert isinstance(corsika_parameters, dict)
-    assert "CHERENKOV_EMISSION_PARAMETERS" in corsika_parameters
+def test_fill_corsika_configuration(io_handler, corsika_config_no_db, corsika_config):
 
-
-def test_setup_configuration(io_handler, corsika_config_data):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=corsika_config_data,
+    empty_config = CorsikaConfig(
+        array_model=None, label="test-corsika-config", args_dict=None, db_config=None
     )
-    assert cc.get_config_parameter("NSHOW") == 100
-    assert cc.get_config_parameter("THETAP") == [20, 20]
-    assert cc.get_config_parameter("ERANGE") == [10.0, 10000.0]
+    assert empty_config.config == {}
+
+    assert corsika_config_no_db.get_config_parameter("NSHOW") == 100
+    assert corsika_config_no_db.get_config_parameter("THETAP") == [20, 20]
+    assert corsika_config_no_db.get_config_parameter("ERANGE") == [10.0, 10000.0]
     # Testing conversion between AZM (sim_telarray) and PHIP (corsika)
-    assert cc.get_config_parameter("PHIP") == [180.0, 180.0]
-    assert cc.get_config_parameter("CSCAT") == [10, 140000.0, 0]
+    assert corsika_config_no_db.get_config_parameter("PHIP") == [180.0, 180.0]
+    assert corsika_config_no_db.get_config_parameter("CSCAT") == [10, 140000.0, 0]
 
-    assert isinstance(cc.setup_configuration(), dict)
-    cc.args_dict = None
-    assert cc.setup_configuration() is None
+    # db_config is not None
+    assert pytest.approx(corsika_config.get_config_parameter("CERSIZ")) == 5.0
+    assert corsika_config.get_config_parameter("MAX_BUNCHES") == 1000000
+    assert corsika_config.get_config_parameter("ECUTS") == "0.3 0.1 0.02 0.02"
+
+    for key in [
+        "USER_INPUT",
+        "INTERACTION_FLAGS",
+        "CHERENKOV_EMISSION_PARAMETERS",
+        "DEBUGGING_OUTPUT_PARAMETERS",
+        "IACT_PARAMETERS",
+    ]:
+        assert key in corsika_config.config
 
 
-def test_rotate_azimuth_by_180deg(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
+def test_corsika_configuration_from_user_input(corsika_config_no_db, corsika_config_data):
+    user_dict = corsika_config_no_db._corsika_configuration_from_user_input(corsika_config_data)
+    assert isinstance(user_dict, dict)
+    assert "CSCAT" in user_dict
+    assert isinstance(user_dict["CSCAT"], list)
+
+
+def test_corsika_configuration_interaction_flags(
+    corsika_config_no_db, corsika_configuration_parameters
+):
+    with pytest.raises(KeyError):
+        corsika_config_no_db._corsika_configuration_interaction_flags({})
+
+    parameters = corsika_config_no_db._corsika_configuration_interaction_flags(
+        corsika_configuration_parameters
     )
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(0.0)) == 180.0
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(360.0)) == 180.0
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(450.0)) == 270.0
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(180.0)) == 0.0
-    assert pytest.approx(cc._rotate_azimuth_by_180deg(-180.0)) == 0.0
+    assert isinstance(parameters, dict)
+    assert "ECUTS" in parameters
+    assert parameters["MAXPRT"] == ["10"]
+    assert len(parameters) == 9
 
 
-def test_set_primary_particle(corsika_config):
-    cc = corsika_config
+def test_input_config_first_interaction_height(corsika_config_no_db):
+    assert corsika_config_no_db._input_config_first_interaction_height(
+        {"value": 0.0, "unit": "cm"}
+    ) == ["0.00", "0"]
+
+    assert corsika_config_no_db._input_config_first_interaction_height(
+        {"value": 10.0, "unit": "m"}
+    ) == ["1000.00", "0"]
+
+
+def test_input_config_corsika_starting_grammage(corsika_config_no_db, gcm2):
+    assert (
+        corsika_config_no_db._input_config_corsika_starting_grammage({"value": 0.0, "unit": gcm2})
+        == "0.0"
+    )
+    assert (
+        corsika_config_no_db._input_config_corsika_starting_grammage(
+            {"value": 10.0, "unit": "kg/cm2"}
+        )
+        == "10000.0"
+    )
+
+
+def test_input_config_corsika_particle_kinetic_energy_cutoff(corsika_config_no_db):
+    assert corsika_config_no_db._input_config_corsika_particle_kinetic_energy_cutoff(
+        {"value": "0.3 0.1 0.020 0.020", "unit": "GeV"}
+    ) == ["0.3 0.1 0.02 0.02"]
+    assert corsika_config_no_db._input_config_corsika_particle_kinetic_energy_cutoff(
+        {"value": "0.3 0.1 0.020 0.020", "unit": "TeV"}
+    ) == ["300.0 100.0 20.0 20.0"]
+
+
+def test_input_config_corsika_longitudinal_parameters(corsika_config_no_db, gcm2):
+    assert corsika_config_no_db._input_config_corsika_longitudinal_parameters(
+        {"value": 20.0, "unit": gcm2}
+    ) == ["T", "20.0", "F", "F"]
+    assert corsika_config_no_db._input_config_corsika_longitudinal_parameters(
+        {"value": 10.0, "unit": "kg/cm2"}
+    ) == ["T", "10000.0", "F", "F"]
+
+
+def test_corsika_configuration_cherenkov_parameters(
+    corsika_config_no_db, corsika_configuration_parameters
+):
+    cherenk_dict = corsika_config_no_db._corsika_configuration_cherenkov_parameters(
+        corsika_configuration_parameters
+    )
+    assert isinstance(cherenk_dict, dict)
+    assert "CERSIZ" in cherenk_dict
+    assert isinstance(cherenk_dict["CERSIZ"], list)
+
+
+def test_input_config_corsika_cherenkov_wavelength(corsika_config_no_db):
+    assert corsika_config_no_db._input_config_corsika_cherenkov_wavelength(
+        {"value": "240. 700.", "unit": "nm"}
+    ) == ["240.0", "700.0"]
+
+
+def test_corsika_configuration_iact_parameters(
+    corsika_config_no_db, corsika_configuration_parameters
+):
+    iact_dict = corsika_config_no_db._corsika_configuration_iact_parameters(
+        corsika_configuration_parameters
+    )
+    assert isinstance(iact_dict, dict)
+    assert "MAX_BUNCHES" in iact_dict
+    assert isinstance(iact_dict["MAX_BUNCHES"], list)
+
+
+def test_input_config_io_buff(corsika_config_no_db):
+    assert corsika_config_no_db._input_config_io_buff({"value": 800, "unit": "MB"}) == "800MB"
+
+
+def test_corsika_configuration_debugging_parameters(corsika_config_no_db):
+    assert isinstance(corsika_config_no_db._corsika_configuration_debugging_parameters(), dict)
+    assert len(corsika_config_no_db._corsika_configuration_debugging_parameters()) == 3
+
+
+def test_rotate_azimuth_by_180deg(corsika_config_no_db):
+    assert pytest.approx(corsika_config_no_db._rotate_azimuth_by_180deg(0.0)) == 180.0
+    assert pytest.approx(corsika_config_no_db._rotate_azimuth_by_180deg(360.0)) == 180.0
+    assert pytest.approx(corsika_config_no_db._rotate_azimuth_by_180deg(450.0)) == 270.0
+    assert pytest.approx(corsika_config_no_db._rotate_azimuth_by_180deg(180.0)) == 0.0
+    assert pytest.approx(corsika_config_no_db._rotate_azimuth_by_180deg(-180.0)) == 0.0
+
+
+def test_set_primary_particle(corsika_config_no_db):
+    cc = corsika_config_no_db
     assert isinstance(cc._set_primary_particle(args_dict=None), PrimaryParticle)
     assert isinstance(
         cc._set_primary_particle(args_dict={"primary_id_type": None}), PrimaryParticle
@@ -80,12 +202,8 @@ def test_set_primary_particle(corsika_config):
     assert p_pdg_id.name == "proton"
 
 
-def test_get_config_parameter(io_handler, corsika_config_data, caplog):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=corsika_config_data,
-    )
+def test_get_config_parameter(corsika_config_no_db, caplog):
+    cc = corsika_config_no_db
     assert isinstance(cc.get_config_parameter("NSHOW"), int)
     assert isinstance(cc.get_config_parameter("THETAP"), list)
     with pytest.raises(KeyError):
@@ -93,21 +211,19 @@ def test_get_config_parameter(io_handler, corsika_config_data, caplog):
     assert "Parameter not_really_a_parameter" in caplog.text
 
 
-def test_print_config_parameter(corsika_config, capsys):
+def test_print_config_parameter(corsika_config_no_db, capsys):
     logger.info("test_print_config_parameter")
-    corsika_config.print_config_parameter()
+    corsika_config_no_db.print_config_parameter()
     assert "NSHOW" in capsys.readouterr().out
 
 
-def test_get_text_single_line(io_handler):
-    cc = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    assert cc._get_text_single_line({"EVTNR": [1], "RUNNR": [10]}) == "EVTNR 1 \nRUNNR 10 \n"
+def test_get_text_single_line(corsika_config_no_db):
     assert (
-        cc._get_text_single_line(
+        corsika_config_no_db._get_text_single_line({"EVTNR": [1], "RUNNR": [10]})
+        == "EVTNR 1 \nRUNNR 10 \n"
+    )
+    assert (
+        corsika_config_no_db._get_text_single_line(
             {"SPLIT_AUTO": ["15M"], "IO_BUFFER": ["800MB"], "MAX_BUNCHES": ["1000000"]}, "IACT "
         )
         == "IACT SPLIT_AUTO 15M \nIACT IO_BUFFER 800MB \nIACT MAX_BUNCHES 1000000 \n"
@@ -173,17 +289,12 @@ def test_set_output_file_and_directory(corsika_config):
     assert isinstance(cc.config_file_path, pathlib.Path)
 
 
-def test_write_seeds(io_handler):
+def test_write_seeds(corsika_config_no_db):
     mock_file = Mock()
-    corsika_config = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    corsika_config.run_number = 10
-    corsika_config.config = {"PRMPAR": [14]}
+    corsika_config_no_db.run_number = 10
+    corsika_config_no_db.config = {"USER_INPUT": {"PRMPAR": [14]}}
     with patch("io.open", return_value=mock_file):
-        corsika_config._write_seeds(mock_file)
+        corsika_config_no_db._write_seeds(mock_file)
     assert mock_file.write.call_count == 4
 
     expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
@@ -199,28 +310,22 @@ def test_get_corsika_telescope_list(corsika_config):
     assert telescope_list_str.count("LSTS") > 0
 
 
-def test_run_number(io_handler):
-    empty_corsika_config = CorsikaConfig(
-        array_model=None,
-        label="test-corsika-config",
-        args_dict=None,
-    )
-    assert empty_corsika_config.run_number is None
-    empty_corsika_config.run_number = 25
-    assert empty_corsika_config.run_number == 25
+def test_run_number(corsika_config_no_db):
+    assert corsika_config_no_db.run_number is None
+    corsika_config_no_db.run_number = 25
+    assert corsika_config_no_db.run_number == 25
 
 
-def test_validate_run_number(corsika_config):
-    # default value from corsika_config
-    assert corsika_config.validate_run_number(None) == 1
-    assert corsika_config.validate_run_number(1)
-    assert corsika_config.validate_run_number(123456)
+def test_validate_run_number(corsika_config_no_db):
+    assert corsika_config_no_db.validate_run_number(None) is None
+    assert corsika_config_no_db.validate_run_number(1)
+    assert corsika_config_no_db.validate_run_number(123456)
     with pytest.raises(ValueError, match=r"^could not convert string to float"):
-        corsika_config.validate_run_number("test")
+        corsika_config_no_db.validate_run_number("test")
     invalid_run_number = r"^Invalid type of run number"
     with pytest.raises(ValueError, match=invalid_run_number):
-        corsika_config.validate_run_number(1.5)
+        corsika_config_no_db.validate_run_number(1.5)
     with pytest.raises(ValueError, match=invalid_run_number):
-        corsika_config.validate_run_number(-1)
+        corsika_config_no_db.validate_run_number(-1)
     with pytest.raises(ValueError, match=invalid_run_number):
-        corsika_config.validate_run_number(123456789)
+        corsika_config_no_db.validate_run_number(123456789)
