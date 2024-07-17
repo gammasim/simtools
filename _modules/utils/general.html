@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g7bcf8a3 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+g68435be Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=1e8ceea6"></script>
+    <script src="../../_static/documentation_options.js?v=858a34bd"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7bcf8a3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g68435be Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -440,41 +440,6 @@ document.write(`
 <span class="k">class</span> <span class="nc">InvalidConfigDataError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid configuration data.&quot;&quot;&quot;</span></div>
 
-
-
-<span class="k">def</span> <span class="nf">_validate_and_convert_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate and convert the given value based on parameter information.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    par_name: str</span>
-<span class="sd">        Parameter name.</span>
-<span class="sd">    par_info: dict</span>
-<span class="sd">        Parameter information.</span>
-<span class="sd">    value:</span>
-<span class="sd">        Value to be validated and converted.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Validated and converted value.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    InvalidConfigEntryError</span>
-<span class="sd">        If the value is invalid based on parameter constraints.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;allowed&quot;</span> <span class="ow">in</span> <span class="n">par_info</span><span class="p">:</span>
-        <span class="n">allowed_values</span> <span class="o">=</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;allowed&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_values</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid value </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> for parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2">. </span><span class="se">\</span>
-<span class="s2">                Allowed values are </span><span class="si">{</span><span class="n">allowed_values</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="k">raise</span> <span class="n">InvalidConfigEntryError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="s2">&quot;unit&quot;</span> <span class="ow">in</span> <span class="n">par_info</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
-        <span class="n">value</span> <span class="o">*=</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
-
-    <span class="k">return</span> <span class="n">value</span>
 
 
 <span class="k">def</span> <span class="nf">_process_identified_entry</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">key_data</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">out_data</span><span class="p">):</span>
