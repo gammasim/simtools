@@ -64,7 +64,7 @@ class ModelParameter:
         )
 
         self._parameters = {}
-        self._config_parameters = {}
+        self._simulation_config_parameters = {"corsika": {}, "simtel": {}}
         self._derived = None
         self.collection = collection
         self.label = label
@@ -288,6 +288,40 @@ class ModelParameter:
 
         self._logger.debug(f"Config file path: {self._config_file_path}")
 
+    def get_simulation_software_parameters(self, simulation_software):
+        """
+        Get simulation software parameters.
+
+        Parameters
+        ----------
+        simulation_software: str
+            Simulation software name.
+
+        Returns
+        -------
+        dict
+            Simulation software parameters.
+        """
+        return self._simulation_config_parameters.get(simulation_software)
+
+    def _load_simulation_software_parameter(self):
+        """Read simulation software parameters from DB."""
+        for simulation_software in self._simulation_config_parameters:
+            try:
+                self._simulation_config_parameters[simulation_software] = (
+                    self.db.get_simulation_configuration_parameters(
+                        site=self.site,
+                        telescope_model_name=self.name,
+                        model_version=self.model_version,
+                        simulation_software=simulation_software,
+                    )
+                )
+            except ValueError:
+                self._logger.warning(
+                    f"No {simulation_software} parameters found for "
+                    f"{self.site}, {self.name} (model version {self.model_version})."
+                )
+
     def _load_parameters_from_db(self):
         """Read parameters from DB and store them in _parameters."""
         if self.db is None:
@@ -297,23 +331,14 @@ class ModelParameter:
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.model_version, self.collection, only_applicable=True
             )
-            try:
-                self._config_parameters = self.db.get_sim_telarray_configuration_parameters(
-                    self.site,
-                    self.name,
-                    self.model_version,
-                )
-            except ValueError:
-                self._logger.warning(
-                    f"No sim_telarray configuration parameters found for {self.site}, {self.name}"
-                    f" (model version {self.model_version})."
-                )
 
         if self.site is not None:
             _site_pars = self.db.get_site_parameters(
                 self.site, self.model_version, only_applicable=True
             )
             self._parameters.update(_site_pars)
+
+        self._load_simulation_software_parameter()
 
     def set_extra_label(self, extra_label):
         """
@@ -478,7 +503,9 @@ class ModelParameter:
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self.config_file_path,
             parameters=self.get_simtel_parameters(parameters=self._parameters),
-            config_parameters=self.get_simtel_parameters(parameters=self._config_parameters),
+            config_parameters=self.get_simtel_parameters(
+                parameters=self._simulation_config_parameters["simtel"]
+            ),
         )
 
     @property
