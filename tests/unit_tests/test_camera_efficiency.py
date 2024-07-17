@@ -194,3 +194,18 @@ def test_results_summary(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst.export_model_files()
     summary = camera_efficiency_lst.results_summary()
     assert "Results summary for LSTN-01" in summary
+
+
+def test_plot_efficiency(camera_efficiency_lst, mocker, prepare_results_file):
+    camera_efficiency_lst._read_results()
+    camera_efficiency_lst.export_model_files()
+    plot_table_mock = mocker.patch("simtools.visualization.visualize.plot_table")
+    camera_efficiency_lst.plot_efficiency(efficiency_type="NSB")
+    plot_table_mock.assert_called_once()
+
+
+def test_save_plot(camera_efficiency_lst, mocker, caplog):
+    fig_mock = mocker.MagicMock()
+    with caplog.at_level(logging.INFO):
+        camera_efficiency_lst._save_plot(fig_mock, "test_plot")
+        assert "Plotted test_plot efficiency in" in caplog.text
