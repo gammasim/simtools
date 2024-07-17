@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Generating Documentation &#8212; simtools v0.1.dev1+gf4c8e5f Manual</title>
+    <title>Generating Documentation &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=68f23756"></script>
+    <script src="../_static/documentation_options.js?v=5020f11e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf4c8e5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ce2b0b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -247,12 +247,14 @@
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintainer_documentation.html">Maintainer documentation</a></li>
 </ul>
 </details></li>
 </ul>
@@ -472,7 +474,7 @@ This is done automatically with each merge into the main branch, see the
 <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.github/workflows/CI-docs.yml%3E">GitHub Action workflow CI-docs</a>.</p>
 <p>Docstrings are written in RST format following the <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/index.html">numpydoc</a> standard.
 Documentation pages are written in Markdown (<a class="reference external" href="https://myst-parser.readthedocs.io/en/latest/index.html">MyST flavor</a>, although RST
-is also possible (but not preferred).</p>
+is also possible (but not preferred)).</p>
 <div class="admonition caution">
 <p class="admonition-title">Caution</p>
 <p>Each application requires a small RST file (e.g., <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docs/source/get_file_from_db.rst%5D">get_file_from_db.rst</a>)
@@ -493,7 +495,7 @@ file <code class="docutils literal notranslate"><span class="pre">./build/html/i
 <section id="hints-for-markdown">
 <h2>Hints for Markdown<a class="headerlink" href="#hints-for-markdown" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>links to other files relative to current file: <code class="docutils literal notranslate"><span class="pre">[mongoDB</span> <span class="pre">databases](databases.md#databases)</span></code> results in <a class="reference internal" href="#databases.md#databases"><span class="xref myst">mongoDB databases</span></a>.</p></li>
+<li><p>links to other files relative to current file: <code class="docutils literal notranslate"><span class="pre">[mongoDB</span> <span class="pre">databases](../user-guide/databases.md#databases)</span></code> results in <a class="reference internal" href="../user-guide/databases.html#databases"><span class="std std-ref">mongoDB databases</span></a>.</p></li>
 </ul>
 </section>
 </section>

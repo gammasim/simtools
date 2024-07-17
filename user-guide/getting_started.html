@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Getting Started &#8212; simtools v0.1.dev1+gf4c8e5f Manual</title>
+    <title>Getting Started &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=68f23756"></script>
+    <script src="../_static/documentation_options.js?v=5020f11e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf4c8e5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ce2b0b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -247,12 +247,14 @@
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../developer-guide/index.html">Developer Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/developer_guidelines.html">Developer Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/testing.html">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/documentation.html">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/coding_guidelines.html">Coding Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/maintainer_documentation.html">Maintainer documentation</a></li>
 </ul>
 </details></li>
 </ul>
@@ -450,17 +452,14 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-database-access">Model Database Access</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-users">Installation for Users</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-installation">Conda Installation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip-installation">Pip Installation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#git-installation">Git Installation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#container-docker">Container (docker)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-developers">Installation for Developers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-of-corsika-and-sim-telarray">Installation of CORSIKA and sim_telarray</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-environment-for-developers">Docker Environment for Developers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-installation">Testing your installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-database-access">Model Database Access</a></li>
 </ul>
             </nav>
         </div>
@@ -474,45 +473,33 @@ document.write(`
                   
   <section id="getting-started">
 <span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
-<p>The usage of simtools require the installation of the simtools package, its dependencies,
-and the setting of environment variables to connect to the model database.</p>
-<section id="model-database-access">
-<h2>Model Database Access<a class="headerlink" href="#model-database-access" title="Link to this heading">#</a></h2>
-<p>Simulation model parameters are stored in a MongoDB-type database.
-Many simtools applications depend on access to this database.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Ask one of the developers for the credentials to access the database.</p>
-</div>
-<p>Credentials for database access are passed on to simtools applications using environmental variables stored
-in a file named <code class="docutils literal notranslate"><span class="pre">.env</span></code>.
-Copy the template file <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.env_template">.env_template</a>
-to a new file named <code class="docutils literal notranslate"><span class="pre">.env</span></code> and update it with the credentials.</p>
-</section>
-<section id="installation-for-users">
-<span id="installationforusers"></span><h2>Installation for Users<a class="headerlink" href="#installation-for-users" title="Link to this heading">#</a></h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>simtools is under rapid development and not ready for production use.
-The following setup is recommended for users who want to test the software.</p>
-</div>
-<p>There are three options to install simtools for users:</p>
+<p>The usage of simtools requires the installation of the <a class="reference internal" href="#installationforusers"><span class="std std-ref">simtools package</span></a>, its dependencies (mostly <a class="reference internal" href="#corsikasimtelarrayinstallation"><span class="std std-ref">CORISKA/sim_telarray</span></a>),
+and the setting of environment variables to <a class="reference internal" href="#modeldatabaseaccess"><span class="std std-ref">connect to the model database</span></a>.</p>
+<section id="installation">
+<span id="installationforusers"></span><h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p>There are four options to install simtools for users:</p>
 <ul class="simple">
-<li><p>using pip</p></li>
-<li><p>using git and pip</p></li>
-<li><p>download a docker container with all software installed</p></li>
+<li><p><a class="reference internal" href="#condainstallation"><span class="std std-ref">using conda</span></a></p></li>
+<li><p><a class="reference internal" href="#pipinstallation"><span class="std std-ref">using pip</span></a></p></li>
+<li><p>using Git and pip (this is the recommended method for developers) (see <a class="reference internal" href="../developer-guide/getting_started.html"><span class="std std-doc">Developer Installation</span></a>)</p></li>
+<li><p><a class="reference internal" href="#dockerinstallation"><span class="std std-ref">using a docker container</span></a> with all software installed</p></li>
 </ul>
 <p>All simtools applications are available as command-line tools.
 Note the naming of the tool, starting with <code class="docutils literal notranslate"><span class="pre">simtools-</span></code> followed by the application name.
-See <a class="reference internal" href="applications.html#applications"><span class="std std-ref">simtools Applications</span></a> for more details.</p>
-<p>Note to update the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file with the credentials for database access (see [Model Database Access]).</p>
+See the <a class="reference internal" href="applications.html"><span class="std std-doc">applications</span></a> section for more details.</p>
+<p>Note to update the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file with the credentials for database access (see <a class="reference internal" href="databases.html"><span class="std std-doc">Model Database Access</span></a>).</p>
+<p>The conda/pip installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].</p>
+<section id="conda-installation">
+<span id="condainstallation"></span><h3>Conda Installation<a class="headerlink" href="#conda-installation" title="Link to this heading">#</a></h3>
+<p>Prepare and install a conda environment with the simtools package:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">conda env create -n gammasimtools</span>
+<span class="go">conda install gammasimtools --channel conda-forge</span>
+<span class="go">conda activate gammasimtools</span>
+</pre></div>
+</div>
+</section>
 <section id="pip-installation">
 <span id="pipinstallation"></span><h3>Pip Installation<a class="headerlink" href="#pip-installation" title="Link to this heading">#</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The pip-installation of simtools provides limited functionality only
-and is not as well tests as the conda/mamba installation.</p>
-</div>
 <p>Prepare a python environment (in this example for python version 3.11):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mamba create --name simtools-prod python=3.11</span>
 <span class="go">mamba activate simtools-prod</span>
@@ -522,17 +509,7 @@ and is not as well tests as the conda/mamba installation.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install gammasimtools</span>
 </pre></div>
 </div>
-<p>The pip installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].</p>
-</section>
-<section id="git-installation">
-<span id="gitinstallation"></span><h3>Git Installation<a class="headerlink" href="#git-installation" title="Link to this heading">#</a></h3>
-<p>Install simtools directly from the GitHub repository:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/gammasim/simtools.git</span>
-<span class="go">cd simtools</span>
-<span class="go">pip install .</span>
-</pre></div>
-</div>
-<p>The git installation method requires to install CORSIKA/sim_telarray separately, see [CorsikaSimTelarrayInstallation].</p>
+<p>The pip installation method requires to <a class="reference internal" href="#corsikasimtelarrayinstallation"><span class="std std-ref">install CORSIKA/sim_telarray</span></a> separately.</p>
 </section>
 <section id="container-docker">
 <span id="dockerinstallation"></span><h3>Container (docker)<a class="headerlink" href="#container-docker" title="Link to this heading">#</a></h3>
@@ -540,20 +517,6 @@ and is not as well tests as the conda/mamba installation.</p>
 These allows to skip all installation steps and run simtools applications directly.</p>
 <p>See the <a class="reference internal" href="docker_files.html"><span class="std std-doc">Docker description</span></a> for more details.</p>
 </section>
-</section>
-<section id="installation-for-developers">
-<span id="installationfordevelopers"></span><h2>Installation for Developers<a class="headerlink" href="#installation-for-developers" title="Link to this heading">#</a></h2>
-<p>Developers install simtools directly from the GitHub repository:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/gammasim/simtools.git</span>
-<span class="go">cd simtools</span>
-</pre></div>
-</div>
-<p>Create a conda/mamba virtual environment with the simtools dependencies installed:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mamba env create -f environment.yml</span>
-<span class="go">mamba activate simtools-dev</span>
-<span class="go">pip install -e .</span>
-</pre></div>
-</div>
 </section>
 <section id="installation-of-corsika-and-sim-telarray">
 <span id="corsikasimtelarrayinstallation"></span><h2>Installation of CORSIKA and sim_telarray<a class="headerlink" href="#installation-of-corsika-and-sim-telarray" title="Link to this heading">#</a></h2>
@@ -568,43 +531,19 @@ CTAO users can download both packages from the <a class="reference external" hre
 </div>
 <p>The environmental variable <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_SIMTEL_PATH</span></code> should point towards the CORSIKA/sim_telarray installation
 (recommended to include it in the .env file with all other environment variables).</p>
-<p>Test your complete installation following the instructions in <a class="reference internal" href="#testinginstallation"><span class="std std-ref">this section</span></a>.</p>
 </section>
-<section id="docker-environment-for-developers">
-<h2>Docker Environment for Developers<a class="headerlink" href="#docker-environment-for-developers" title="Link to this heading">#</a></h2>
-<p>Docker containers are available for developers, see the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">Docker file directory</a>.</p>
-<p>Images are available from the <a class="reference external" href="https://github.com/gammasim/simtools/pkgs/container/simtools-dev">GitHub container registry</a> for the latest simtools versions, for each pull request, and the current main branch.</p>
-<p>The docker container has python packages, CORSIKA, and sim_telarray pre-installed.
-Setting up a system to run simtools applications or tests should be a matter of minutes.</p>
-<p>Install Docker and start the Docker application (see
-<a class="reference external" href="https://docs.docker.com/engine/install/">Docker installation page</a>).</p>
-<p>Clone simtools from GitHub into a directory <code class="docutils literal notranslate"><span class="pre">external/simtools</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a working directory</span>
-mkdir<span class="w"> </span>external
-<span class="c1"># clone simtools repository</span>
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/gammasim/simtools.git<span class="w"> </span>external/simtools
-</pre></div>
+<section id="model-database-access">
+<span id="modeldatabaseaccess"></span><h2>Model Database Access<a class="headerlink" href="#model-database-access" title="Link to this heading">#</a></h2>
+<p>Simulation model parameters are stored in a MongoDB-type database.
+Many simtools applications depend on access to this database.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Ask one of the developers for the credentials to access the database.</p>
 </div>
-<p>Start up a container (the image will be downloaded, if it is not available in your environment):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/external:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>ghcr.io/gammasim/simtools-dev:latest<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;source /workdir/env/bin/activate &amp;&amp; cd /workdir/external/simtools &amp;&amp; pip install -e . &amp;&amp; bash&quot;</span>
-</pre></div>
-</div>
-<p>The container includes a CORSIKA and sim_telarray installation;
-the environmental variable <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_SIMTEL_PATH</span></code> and those for the database access are automatically set
-(if variables are set correctly in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file).</p>
-</section>
-<section id="testing-your-installation">
-<span id="testinginstallation"></span><h2>Testing your installation<a class="headerlink" href="#testing-your-installation" title="Link to this heading">#</a></h2>
-<p>Test the simtools installation the docker image by running the unit tests:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pytest tests/unit_tests/</span>
-</pre></div>
-</div>
-<p>Test the simtools plus CORSIKA/sim_telarray installation by running the integration tests:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pytest --no-cov tests/integration_tests/</span>
-</pre></div>
-</div>
+<p>Credentials for database access are passed on to simtools applications using environmental variables stored
+in a file named <code class="docutils literal notranslate"><span class="pre">.env</span></code>.
+Copy the template file <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.env_template">.env_template</a>
+to a new file named <code class="docutils literal notranslate"><span class="pre">.env</span></code> and update it with the credentials.</p>
 </section>
 </section>
 
@@ -653,17 +592,14 @@ the environmental variable <code class="docutils literal notranslate"><span clas
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-database-access">Model Database Access</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-users">Installation for Users</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-installation">Conda Installation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip-installation">Pip Installation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#git-installation">Git Installation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#container-docker">Container (docker)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-developers">Installation for Developers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-of-corsika-and-sim-telarray">Installation of CORSIKA and sim_telarray</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-environment-for-developers">Docker Environment for Developers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-installation">Testing your installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-database-access">Model Database Access</a></li>
 </ul>
   </nav></div>
 

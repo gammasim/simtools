@@ -2,19 +2,16 @@
 
 # Developer Guidelines
 
-This section provides guidelines for developers of simtools.
-
-If you want to contribute, contact the simtools team using one of the contact points listed at the
-entry page of this documentation.
+This section provides guidelines for developers of simtools. Great that you want to contribute!
+Please contact first the simtools team using one of the contact points listed at the
+entry page of this documentation before working on simtools.
 
 Simtools follows generally the development guidelines of CTAO and
-ctapipe (see [ctapipe development](https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html)).
+ctapipe (see [CTAO development documentation](http://cta-computing.gitlab-pages.cta-observatory.org/documentation/developer-documentation/) and [ctapipe development](https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html)).
 
 ## Project setup
 
-The main code repository for simtools is on GitHub:
-
-[https://github.com/gammasim/simtools](https://github.com/gammasim/simtools)
+The main code repository for simtools is on GitHub: [https://github.com/gammasim/simtools](https://github.com/gammasim/simtools)
 
 The main directories of simtools are:
 
@@ -35,7 +32,7 @@ It is recommended to discuss any code changes with the simtools team before star
 
 The following steps outline how to contribute code to simtools:
 
-01. Set up your coding environment as outlined in the [getting started](getting_started.md#getting-started) section.
+01. Set up your coding environment as outlined in the [getting started](getting_started.md#dvgetting-started) section.
 02. Start a new feature branch from the main branch (`git checkout -b new-branch-name`).
 03. Implement your code changes.
 04. Add unit tests for new modules and functions (see [unit test section](testing.md#unit-tests)).
@@ -127,13 +124,17 @@ Note that this is under review and might go away in near future.
 
 ## Input validation
 
+:::{warning}
+This section is deprecated and will be removed in the future.
+:::
+
 Any configurable inputs (e.g. physical parameters) to modules
 must have them validated. The validation assures that the units, type and
 format are correct and also allow for default values.
 
-The configurable input must be passed to classes through a dictionary or a yaml
+The configurable input must be passed to classes through a dictionary or a YAML
 file. In the case of a dictionary the parameter is generally called config_data, in the
-case of a yaml file, config_file.
+case of a YAML file, config_file.
 
 The function {ref}`gen.collect_data_from_yaml_or_dict <utilsgeneral>`
 must be used to read these arguments. It identifies which case was given and
@@ -142,11 +143,11 @@ given and not allow_empty.
 
 The validation of the input is done by the function gen.validate_config_data, which
 receives the dictionary with the collected input and a parameter dictionary. The parameter
-dictionary is read from a parameter yaml file in the data/parameters directory.
+dictionary is read from a parameter YAML file in the data/parameters directory.
 The file is read through the function io.get_data_file("parameters", filename)
 (see data files section).
 
-Parameter yaml files contain the list of parameters to be validated and its
+Parameter YAML files contain the list of parameters to be validated and its
 properties. See an example below:
 
 ```yaml

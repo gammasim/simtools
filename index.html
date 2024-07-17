@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools &#8212; simtools v0.1.dev1+gf4c8e5f Manual</title>
+    <title>simtools &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=68f23756"></script>
+    <script src="_static/documentation_options.js?v=5020f11e"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -136,7 +136,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf4c8e5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ce2b0b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -248,12 +248,14 @@
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="developer-guide/index.html">Developer Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="developer-guide/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer-guide/developer_guidelines.html">Developer Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer-guide/testing.html">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer-guide/documentation.html">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer-guide/pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer-guide/coding_guidelines.html">Coding Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer-guide/continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer-guide/maintainer_documentation.html">Maintainer documentation</a></li>
 </ul>
 </details></li>
 </ul>
@@ -451,7 +453,11 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-users">Installation for users</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-developers">Installation for developers</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">Authors</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#citing-this-software">Citing this Software</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#acknowledgements">Acknowledgements</a></li>
@@ -471,26 +477,21 @@ document.write(`
 <h1>simtools<a class="headerlink" href="#simtools" title="Link to this heading">#</a></h1>
 <p><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/badge/License-BSD_3--Clause-blue.svg" /></a>
 <a class="reference external" href="https://github.com/gammasim/simtools/releases"><img alt="release" src="https://img.shields.io/github/v/release/gammasim/simtools" /></a>
-<a class="reference external" href="https://zenodo.org/badge/latestdoi/195011575"><img alt="DOI" src="https://zenodo.org/badge/195011575.svg" /></a>
+<a class="reference external" href="https://zenodo.org/badge/latestdoi/195011575"><img alt="DOI" src="https://zenodo.org/badge/195011575.svg" /></a></p>
+<p><a class="reference external" href="https://anaconda.org/conda-forge/gammasimtools"><img alt="conda" src="https://anaconda.org/conda-forge/gammasimtools/badges/version.svg" /></a>
 <a class="reference external" href="https://badge.fury.io/py/gammasimtools"><img alt="pypyi" src="https://badge.fury.io/py/gammasimtools.svg" /></a></p>
 <p><a class="reference external" href="https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml"><img alt="CI" src="https://github.com/gammasim/simtools/actions/workflows/CI-unittests.yml/badge.svg" /></a>
 <a class="reference external" href="https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml"><img alt="CI-integrationtest" src="https://github.com/gammasim/simtools/actions/workflows/CI-integrationtests.yml/badge.svg" /></a>
-<a class="reference external" href="https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml"><img alt="CI-docs" src="https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml/badge.svg" /></a>
-<a class="reference external" href="https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&amp;amp;utm_medium=referral&amp;amp;utm_content=&amp;amp;utm_campaign=Badge_grade"><img alt="Quality" src="https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7" /></a>
+<a class="reference external" href="https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml"><img alt="CI-docs" src="https://github.com/gammasim/simtools/actions/workflows/CI-docs.yml/badge.svg" /></a></p>
+<p><a class="reference external" href="https://app.codacy.com/gh/gammasim/simtools/dashboard?utm_source=gh&amp;amp;utm_medium=referral&amp;amp;utm_content=&amp;amp;utm_campaign=Badge_grade"><img alt="Quality" src="https://app.codacy.com/project/badge/Grade/a3f19df7454844059341edd0769e02a7" /></a>
 <a class="reference external" href="https://codecov.io/gh/gammasim/simtools"><img alt="Coverage" src="https://codecov.io/gh/gammasim/simtools/graph/badge.svg?token=AYAIRPARCH" /></a>
 <a class="reference external" href="https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w"><img alt="Coverage" src="https://sonar-cta-dpps.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_AY_ssha9WiFxsX-2oy_w&amp;metric=coverage&amp;token=sqb_ef68b705c0bc7f9800f4ff3f087f1d7f7471ff0e" /></a>
 <a class="reference external" href="https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w"><img alt="Quality Gate Status" src="https://sonar-cta-dpps.zeuthen.desy.de/api/project_badges/measure?project=gammasim_simtools_AY_ssha9WiFxsX-2oy_w&amp;metric=alert_status&amp;token=sqb_ef68b705c0bc7f9800f4ff3f087f1d7f7471ff0e" /></a></p>
 <p>Simulation tools and applications for the <a class="reference external" href="https://www.cta-observatory.org">Cherenkov Telescope Array (CTAO)</a>.</p>
-<p>License: <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/LICENSE">BSD-3</a></p>
-<p>Useful links:
-<a class="reference external" href="https://gammasim.github.io/simtools/">Documentation</a>
-<a class="reference external" href="https://github.com/gammasim/simtools">Source code</a>
-<a class="reference external" href="https://github.com/gammasim/simtools/issues">Issue tracker</a>
-<a class="reference external" href="https://github.com/gammasim/simtools/blob/main/CITATION.cff">Citation</a></p>
 <p>simtools provides:</p>
 <ul class="simple">
 <li><p>libraries for simulation model definition and management</p></li>
-<li><p>model database interface</p></li>
+<li><p>model database interfaces</p></li>
 <li><p>tools for the preparation and configuration of simulation productions</p></li>
 <li><p>applications for simulation model parameter derivation and validation</p></li>
 <li><p>standardized interfaces and data products independent of the underlying simulation software (e.g., <a class="reference external" href="https://www.iap.kit.edu/corsika/">CORSIKA</a>, <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray</a>)</p></li>
@@ -499,7 +500,6 @@ document.write(`
 <p>simtools is one part of the CTAO Simulation Pipeline, which consist of the following components:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.iap.kit.edu/corsika/">CORSIKA</a> air shower simulation code and the <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray</a> telescope simulation code</p></li>
-<li><p><a class="reference external" href="https://github.com/gammasim/workflows">workflows</a> for setting, derivation and validation of simulation model parameters</p></li>
 <li><p><a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">simulation model parameter</a></p></li>
 <li><p><a class="reference external" href="https://gammasim.github.io/simtools/databases.html">databases</a>, especially the model parameter database</p></li>
 </ul>
@@ -510,16 +510,23 @@ Please contact the developers before using it: <a class="reference external" hre
 </div>
 <section id="quick-start">
 <h2>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
-<div class="admonition caution">
-<p class="admonition-title">Caution</p>
-<p>The pip-installation of simtools provides limited functionality only
-and is not as well tested as the conda/mamba installation.</p>
-</div>
-<p>Install simtools with pypi (recommended for users):</p>
+<section id="installation-for-users">
+<h3>Installation for users<a class="headerlink" href="#installation-for-users" title="Link to this heading">#</a></h3>
+<p>Install simtools with pypi:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>gammasimtools
 </pre></div>
 </div>
-<p>Install simtools with mamba (recommended for developers):</p>
+<p>or using conda/mamba:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>gammasimtools
+conda<span class="w"> </span>install<span class="w"> </span>gammasimtools<span class="w"> </span>--channel<span class="w"> </span>conda-forge
+conda<span class="w"> </span>activate<span class="w"> </span>gammasimtools
+</pre></div>
+</div>
+<p>See the <a class="reference external" href="https://gammasim.github.io/simtools/user-guide/getting_started.html">user’s guide</a> for more details.</p>
+</section>
+<section id="installation-for-developers">
+<h3>Installation for developers<a class="headerlink" href="#installation-for-developers" title="Link to this heading">#</a></h3>
+<p>Install simtools from GitHub with conda/mamba:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/gammasim/simtools.git
 <span class="nb">cd</span><span class="w"> </span>simtools
 mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
@@ -527,7 +534,8 @@ conda<span class="w"> </span>activate<span class="w"> </span>simtools
 pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
-<p>For more detail see the <a class="reference external" href="https://gammasim.github.io/simtools/getting_started.html">Getting_Started</a> section of the manual.</p>
+<p>See the <a class="reference external" href="https://gammasim.github.io/simtools/developer-guide/getting_started.html">developer’s guide</a> for more details.</p>
+</section>
 </section>
 <section id="authors">
 <h2>Authors<a class="headerlink" href="#authors" title="Link to this heading">#</a></h2>
@@ -541,7 +549,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </section>
 <section id="citing-this-software">
 <h2>Citing this Software<a class="headerlink" href="#citing-this-software" title="Link to this heading">#</a></h2>
-<p>Please cite this software if it use used for a publication, see the <a class="reference external" href="https://doi.org/10.5281/zenodo.6346696">Zenodo record</a> and <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/CITATION.cff">CITATION.cff</a> .</p>
+<p>Please cite this software if it is used for a publication, see the <a class="reference external" href="https://doi.org/10.5281/zenodo.6346696">Zenodo record</a> and <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/CITATION.cff">CITATION.cff</a> .</p>
 </section>
 <section id="acknowledgements">
 <h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading">#</a></h2>
@@ -595,7 +603,11 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-users">Installation for users</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-for-developers">Installation for developers</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">Authors</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#citing-this-software">Citing this Software</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#acknowledgements">Acknowledgements</a></li>

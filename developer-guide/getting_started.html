@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Pull requests &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
+    <title>Getting Started &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/pull_requests';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/getting_started';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Coding Guidelines" href="coding_guidelines.html" />
-    <link rel="prev" title="Generating Documentation" href="documentation.html" />
+    <link rel="next" title="Developer Guidelines" href="developer_guidelines.html" />
+    <link rel="prev" title="Developer guidelines" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -247,11 +247,11 @@
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="continuous_integration.html">Continuous Integration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="maintainer_documentation.html">Maintainer documentation</a></li>
@@ -311,7 +311,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/developer-guide/pull_requests.md?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/developer-guide/getting_started.md?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -328,7 +328,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdeveloper-guide/pull_requests.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fdeveloper-guide/getting_started.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -358,7 +358,7 @@
       
       
       
-      <li><a href="../_sources/developer-guide/pull_requests.md" target="_blank"
+      <li><a href="../_sources/developer-guide/getting_started.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -442,7 +442,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Pull requests</h1>
+    <h1>Getting Started</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -452,9 +452,9 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-issuing-a-pull-request">Before issuing a pull request</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issuing-a-pull-request">Issuing a pull request</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reviewing-a-pull-request">Reviewing a pull request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-environment-for-developers">Docker Environment for Developers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-installation">Testing your installation</a></li>
 </ul>
             </nav>
         </div>
@@ -466,49 +466,59 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="pull-requests">
-<span id="id1"></span><h1>Pull requests<a class="headerlink" href="#pull-requests" title="Link to this heading">#</a></h1>
-<p>Pull requests are one of our most important and powerful development tools.
-They help to obtain good quality, homogeneous, and maintainable code.</p>
-<p>Both reviewing pull requests and addressing reviewers’ comments is hard.
-The following thoughts might help to obtain an efficient and pleasant reviewing process.</p>
-<section id="before-issuing-a-pull-request">
-<h2>Before issuing a pull request<a class="headerlink" href="#before-issuing-a-pull-request" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>changes and new features shall be discussed with the team before implementation</p></li>
-<li><p>all tests shall pass</p></li>
-<li><p>no conflicts with ‘main’ (best to do a <code class="docutils literal notranslate"><span class="pre">merge</span> <span class="pre">main</span></code> before the pull request)</p></li>
-<li><p>self-review the changes made (e.g., by using the draft pull request feature)</p></li>
-</ul>
+  <section id="getting-started">
+<span id="devgetting-started"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
+<p>The usage of simtools require the <a class="reference internal" href="#devinstallationfordevelopers"><span class="std std-ref">installation of the simtools package</span></a>, its dependencies,
+and the setting of environment variables to connect to the model database (see also the <a class="reference internal" href="../user-guide/getting_started.html"><span class="std std-doc">user’s guide</span></a>).</p>
+<section id="installation">
+<span id="devinstallationfordevelopers"></span><h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p>Developers install simtools directly from the <a class="reference external" href="https://github.com/gammasim/simtools">simtools GitHub repository</a>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/gammasim/simtools.git</span>
+<span class="go">cd simtools</span>
+</pre></div>
+</div>
+<p>Create a conda/mamba virtual environment with the simtools dependencies installed:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mamba env create -f environment.yml</span>
+<span class="go">mamba activate simtools-dev</span>
+<span class="go">pip install -e .</span>
+</pre></div>
+</div>
 </section>
-<section id="issuing-a-pull-request">
-<h2>Issuing a pull request<a class="headerlink" href="#issuing-a-pull-request" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>describe clearly the problem or issue solved by the pull request; do not assume full familiarity of the reviewer with the issue</p></li>
-<li><p>indicate if this a new feature, refactoring, or bugfix</p></li>
-<li><p>describe the main logic of the changes</p></li>
-<li><p>guide the reviewer through the changes; indicate for larger pull requests a logical order for reviewing</p></li>
-<li><p>consider adding code or usage examples</p></li>
-<li><p>add any statement helping reviewers (e.g., indicate which files to review first)</p></li>
-<li><p>pull request should focus on one problem and should be short (even though it is easier to make big ones)</p></li>
-<li><p>if the problem to be solved requires many changes: break down the problem in logical pieces; explain the breakdown of the problem in an issue</p></li>
-</ul>
+<section id="docker-environment-for-developers">
+<h2>Docker Environment for Developers<a class="headerlink" href="#docker-environment-for-developers" title="Link to this heading">#</a></h2>
+<p>Docker containers are available for developers, see the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">Docker file directory</a>.</p>
+<p>Images are available from the <a class="reference external" href="https://github.com/gammasim/simtools/pkgs/container/simtools-dev">GitHub container registry</a> for the latest simtools versions, for each pull request, and the current main branch.</p>
+<p>The docker container has python packages, CORSIKA, and sim_telarray pre-installed.
+Setting up a system to run simtools applications or tests should be a matter of minutes.</p>
+<p>Install Docker and start the Docker application (see
+<a class="reference external" href="https://docs.docker.com/engine/install/">Docker installation page</a>).</p>
+<p>Clone simtools from GitHub into a directory <code class="docutils literal notranslate"><span class="pre">external/simtools</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a working directory</span>
+mkdir<span class="w"> </span>external
+<span class="c1"># clone simtools repository</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/gammasim/simtools.git<span class="w"> </span>external/simtools
+</pre></div>
+</div>
+<p>Start up a container (the image will be downloaded, if it is not available in your environment):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/external:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ghcr.io/gammasim/simtools-dev:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;source /workdir/env/bin/activate &amp;&amp; cd /workdir/external/simtools &amp;&amp; pip install -e . &amp;&amp; bash&quot;</span>
+</pre></div>
+</div>
+<p>The container includes a CORSIKA and sim_telarray installation;
+the environmental variable <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_SIMTEL_PATH</span></code> and those for the database access are automatically set
+(if variables are set correctly in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file).</p>
 </section>
-<section id="reviewing-a-pull-request">
-<h2>Reviewing a pull request<a class="headerlink" href="#reviewing-a-pull-request" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>seek to understand the purpose of the pull request; reach out to the author before reviewing if it is not clear which problem will be solved</p></li>
-<li><p>if you reject the pull request or if you think another approach might be more efficient, request immediately (not after many other patches are implemented); if there is a major issue, focus on that first and indicate that detailed comments will come at a later point</p></li>
-<li><p>indicate on the pull request page (or e.g., in the chat) that you have started reviewing to avoid duplicated reviews</p></li>
-<li><p>propose solutions, not just disagreement; reviewer comments should lead to improvements of the pull request (e.g., a comment saying “I don’t like this” is not helping)</p></li>
-<li><p>accept that there are different solutions (keeping the homogeneity of the code in mind)</p></li>
-<li><p>focus on relevant points</p></li>
-<li><p>discuss the code, not the coder (it is “the code is doing..”, not “you are doing..”). Often logic has been introduced earlier and there is no use of pointing fingers.</p></li>
-<li><p>pull the code locally and execute the new code</p></li>
-<li><p>limit the review to the changes in the pull request. Open an issue or a follow-up pull request for anything else.</p></li>
-<li><p>clearly indicate if you have no time for a review (this is OK if it is known)</p></li>
-<li><p>fix small typos directly</p></li>
-</ul>
+<section id="testing-your-installation">
+<span id="devtestinginstallation"></span><h2>Testing your installation<a class="headerlink" href="#testing-your-installation" title="Link to this heading">#</a></h2>
+<p>Test the simtools installation the docker image by running the unit tests:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pytest tests/unit_tests/</span>
+</pre></div>
+</div>
+<p>Test the simtools plus CORSIKA/sim_telarray installation by running the integration tests:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pytest --no-cov tests/integration_tests/</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -524,20 +534,20 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="documentation.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Generating Documentation</p>
+        <p class="prev-next-title">Developer guidelines</p>
       </div>
     </a>
     <a class="right-next"
-       href="coding_guidelines.html"
+       href="developer_guidelines.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Coding Guidelines</p>
+        <p class="prev-next-title">Developer Guidelines</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -557,9 +567,9 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-issuing-a-pull-request">Before issuing a pull request</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issuing-a-pull-request">Issuing a pull request</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reviewing-a-pull-request">Reviewing a pull request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-environment-for-developers">Docker Environment for Developers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-installation">Testing your installation</a></li>
 </ul>
   </nav></div>
 

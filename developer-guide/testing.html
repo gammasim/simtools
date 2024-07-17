@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Testing &#8212; simtools v0.1.dev1+gf4c8e5f Manual</title>
+    <title>Testing &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=68f23756"></script>
+    <script src="../_static/documentation_options.js?v=5020f11e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf4c8e5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ce2b0b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -247,12 +247,14 @@
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintainer_documentation.html">Maintainer documentation</a></li>
 </ul>
 </details></li>
 </ul>
@@ -485,6 +487,10 @@ document.write(`
 The test modules are located in
 <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/tests">simtools/tests</a> separated
 by unit and integration tests.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The rule should be that any discovered bug or issue should trigger the implementation of tests which reproduce the issue and prevent it from reoccurring.</p>
+</div>
 <section id="pytest-fixtures">
 <h2>Pytest fixtures<a class="headerlink" href="#pytest-fixtures" title="Link to this heading">#</a></h2>
 <p>General service functions for tests (e.g., DB connection) are defined as <code class="docutils literal notranslate"><span class="pre">pytest.fixtures</span></code> in

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gf4c8e5f Manual</title>
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=68f23756"></script>
+    <script src="../_static/documentation_options.js?v=5020f11e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -44,7 +44,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Testing" href="testing.html" />
-    <link rel="prev" title="Developer guidelines" href="index.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf4c8e5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ce2b0b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -247,12 +247,14 @@
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Developer Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintainer_documentation.html">Maintainer documentation</a></li>
 </ul>
 </details></li>
 </ul>
@@ -471,15 +473,14 @@ document.write(`
                   
   <section id="developer-guidelines">
 <span id="guidelines"></span><h1>Developer Guidelines<a class="headerlink" href="#developer-guidelines" title="Link to this heading">#</a></h1>
-<p>This section provides guidelines for developers of simtools.</p>
-<p>If you want to contribute, contact the simtools team using one of the contact points listed at the
-entry page of this documentation.</p>
+<p>This section provides guidelines for developers of simtools. Great that you want to contribute!
+Please contact first the simtools team using one of the contact points listed at the
+entry page of this documentation before working on simtools.</p>
 <p>Simtools follows generally the development guidelines of CTAO and
-ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html">ctapipe development</a>).</p>
+ctapipe (see <a class="reference external" href="http://cta-computing.gitlab-pages.cta-observatory.org/documentation/developer-documentation/">CTAO development documentation</a> and <a class="reference external" href="https://ctapipe.readthedocs.io/en/latest/developer-guide/index.html">ctapipe development</a>).</p>
 <section id="project-setup">
 <h2>Project setup<a class="headerlink" href="#project-setup" title="Link to this heading">#</a></h2>
-<p>The main code repository for simtools is on GitHub:</p>
-<p><a class="github reference external" href="https://github.com/gammasim/simtools">gammasim/simtools</a></p>
+<p>The main code repository for simtools is on GitHub: <a class="github reference external" href="https://github.com/gammasim/simtools">gammasim/simtools</a></p>
 <p>The main directories of simtools are:</p>
 <ul class="simple">
 <li><p>root directory: <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools">simtools</a></p></li>
@@ -491,7 +492,7 @@ ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/
 </section>
 <section id="python-version">
 <h2>Python version<a class="headerlink" href="#python-version" title="Link to this heading">#</a></h2>
-<p>The simtools package is currently developed for Python {{ python_min_requires }}.</p>
+<p>The simtools package is currently developed for Python &gt;=3.11.</p>
 </section>
 <section id="contributing-code">
 <h2>Contributing code<a class="headerlink" href="#contributing-code" title="Link to this heading">#</a></h2>
@@ -499,7 +500,7 @@ ctapipe (see <a class="reference external" href="https://ctapipe.readthedocs.io/
 (e.g., by opening an issue on GitHub).</p>
 <p>The following steps outline how to contribute code to simtools:</p>
 <ol class="arabic simple">
-<li><p>Set up your coding environment as outlined in the <a class="reference internal" href="#getting_started.md#getting-started"><span class="xref myst">getting started</span></a> section.</p></li>
+<li><p>Set up your coding environment as outlined in the <a class="reference internal" href="getting_started.html#dvgetting-started"><span class="std std-ref">getting started</span></a> section.</p></li>
 <li><p>Start a new feature branch from the main branch (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">new-branch-name</span></code>).</p></li>
 <li><p>Implement your code changes.</p></li>
 <li><p>Add unit tests for new modules and functions (see <a class="reference internal" href="testing.html#unit-tests"><span class="std std-ref">unit test section</span></a>).</p></li>
@@ -584,22 +585,26 @@ Note that this is under review and might go away in near future.</p>
 </section>
 <section id="input-validation">
 <h2>Input validation<a class="headerlink" href="#input-validation" title="Link to this heading">#</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This section is deprecated and will be removed in the future.</p>
+</div>
 <p>Any configurable inputs (e.g. physical parameters) to modules
 must have them validated. The validation assures that the units, type and
 format are correct and also allow for default values.</p>
-<p>The configurable input must be passed to classes through a dictionary or a yaml
+<p>The configurable input must be passed to classes through a dictionary or a YAML
 file. In the case of a dictionary the parameter is generally called config_data, in the
-case of a yaml file, config_file.</p>
+case of a YAML file, config_file.</p>
 <p>The function <a class="reference internal" href="../api-reference/utils.html#utilsgeneral"><span class="std std-ref">gen.collect_data_from_yaml_or_dict</span></a>
 must be used to read these arguments. It identifies which case was given and
 reads it accordingly, returning a dictionary. It also raises an exception in case none are
 given and not allow_empty.</p>
 <p>The validation of the input is done by the function gen.validate_config_data, which
 receives the dictionary with the collected input and a parameter dictionary. The parameter
-dictionary is read from a parameter yaml file in the data/parameters directory.
+dictionary is read from a parameter YAML file in the data/parameters directory.
 The file is read through the function io.get_data_file(“parameters”, filename)
 (see data files section).</p>
-<p>Parameter yaml files contain the list of parameters to be validated and its
+<p>Parameter YAML files contain the list of parameters to be validated and its
 properties. See an example below:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">zenith_angle</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
@@ -631,12 +636,12 @@ properties. See an example below:</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="index.html"
+       href="getting_started.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Developer guidelines</p>
+        <p class="prev-next-title">Getting Started</p>
       </div>
     </a>
     <a class="right-next"

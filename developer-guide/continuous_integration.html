@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Continuous Integration &#8212; simtools v0.1.dev1+gf4c8e5f Manual</title>
+    <title>Continuous Integration &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
   
   
   
@@ -36,13 +36,14 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=68f23756"></script>
+    <script src="../_static/documentation_options.js?v=5020f11e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'developer-guide/continuous_integration';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Maintainer documentation" href="maintainer_documentation.html" />
     <link rel="prev" title="Coding Guidelines" href="coding_guidelines.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -134,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf4c8e5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ce2b0b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -246,12 +247,14 @@
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Developer Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer_guidelines.html">Developer Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="documentation.html">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding Guidelines</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintainer_documentation.html">Maintainer documentation</a></li>
 </ul>
 </details></li>
 </ul>
@@ -449,11 +452,14 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-units-and-integration-tests">CI Units and Integration tests</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-linting">CI Linting</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-schema-files">CI Schema files</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-documentation">CI Documentation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-binary-builds">CI Binary builds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#units-tests">Units tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-tests">Integration tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linting">Linting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-file-validation">Schema file validation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-builds">Binary builds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-backup">Database backup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment">Deployment</a></li>
 </ul>
             </nav>
         </div>
@@ -467,25 +473,27 @@ document.write(`
                   
   <section id="continuous-integration">
 <h1>Continuous Integration<a class="headerlink" href="#continuous-integration" title="Link to this heading">#</a></h1>
-<p>The simtools continuous integration tests, lints, and builds code, documentation and binaries. The CI is based on GitHub Actions and defined in the <code class="docutils literal notranslate"><span class="pre">.github/workflows</span></code> directory.</p>
-<section id="ci-units-and-integration-tests">
-<h2>CI Units and Integration tests<a class="headerlink" href="#ci-units-and-integration-tests" title="Link to this heading">#</a></h2>
-<p>Tests are implemented in the CI as:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="testing.html#unit-tests"><span class="std std-ref">unit tests</span></a> in the <a class="reference internal" href="#.github/workflows/CI-unittests.yml"><span class="xref myst">CI-unittests.yml</span></a> workflow.</p></li>
-<li><p><a class="reference internal" href="testing.html#integration-tests"><span class="std std-ref">integration tests</span></a> in the <a class="reference internal" href="#.github/workflows/CI-integrationtests.yml"><span class="xref myst">CI-integrationtests.yml</span></a> workflow.</p></li>
-</ul>
-<p>Unit tests are running for different python versions  and installation types (mamba, pip).
+<p>The simtools continuous integration tests, lints, and builds code, documentation and binaries. The CI is based on GitHub Actions and defined in the <code class="docutils literal notranslate"><span class="pre">.github/workflows</span></code> directory. This page documents the simtools CI workflows.</p>
+<section id="units-tests">
+<h2>Units tests<a class="headerlink" href="#units-tests" title="Link to this heading">#</a></h2>
+<p>Unit tests are testing the code on a module and function level, see the <a class="reference internal" href="testing.html#unit-tests"><span class="std std-ref">unit tests</span></a> documentation for more details.</p>
+<p>Unit tests are implemented in the CI in the <a class="reference internal" href="#.github/workflows/CI-unittests.yml"><span class="xref myst">CI-unittests.yml</span></a> workflow.
+Unit tests are running for different python versions and installation types (mamba, pip).
 There is a scheduled run of unit tests over the main branch each night, which includes also a random-order execution of the tests (to find inter-dependencies between modules).</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Simtools uses the CTAO sonar quality gates for code quality. Passing those gates is a requirement for merging code into the main branch.
 See the <a class="reference external" href="https://sonar-cta-dpps.zeuthen.desy.de/dashboard?id=gammasim_simtools_AY_ssha9WiFxsX-2oy_w">simtools sonar project page</a> for the current status.</p>
 </div>
-<p>Integration tests are running for two different model versions.</p>
 </section>
-<section id="ci-linting">
-<h2>CI Linting<a class="headerlink" href="#ci-linting" title="Link to this heading">#</a></h2>
+<section id="integration-tests">
+<h2>Integration tests<a class="headerlink" href="#integration-tests" title="Link to this heading">#</a></h2>
+<p>Integrations tests are testing the main functionality of simtools applications. Every application should have
+integration tests covering the most common and important use cases. See the <a class="reference internal" href="testing.html#integration-tests"><span class="std std-ref">integration tests</span></a> documentation for more details.</p>
+<p>The CI Integration tests is defined in the <a class="reference internal" href="#.github/workflows/CI-integrationtests.yml"><span class="xref myst">CI-integrationtests.yml</span></a> workflow.  Integration tests are running for two different model versions.</p>
+</section>
+<section id="linting">
+<h2>Linting<a class="headerlink" href="#linting" title="Link to this heading">#</a></h2>
 <p>Consistent code style is enforced by running the following linters:</p>
 <ul class="simple">
 <li><p>linters defined as pre-commit workflow, see <a class="reference internal" href="#../.pre-commit-config.yaml"><span class="xref myst">.pre-commit-config.yaml</span></a></p></li>
@@ -498,24 +506,32 @@ See the <a class="reference external" href="https://sonar-cta-dpps.zeuthen.desy.
 <li><p>check for natural language</p></li>
 </ul>
 </section>
-<section id="ci-schema-files">
-<h2>CI Schema files<a class="headerlink" href="#ci-schema-files" title="Link to this heading">#</a></h2>
+<section id="schema-file-validation">
+<h2>Schema file validation<a class="headerlink" href="#schema-file-validation" title="Link to this heading">#</a></h2>
 <p>All schema files are validated using the <code class="docutils literal notranslate"><span class="pre">validate_file_using_schema.py</span></code> tool of simtools.
 Schema CI is define in <a class="reference internal" href="#.github/workflows/CI-schema-validation.yml"><span class="xref myst">CI-schema-validation.yml</span></a>.</p>
 </section>
-<section id="ci-documentation">
-<h2>CI Documentation<a class="headerlink" href="#ci-documentation" title="Link to this heading">#</a></h2>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h2>
 <p>Documentation is built using sphinx after every merge to main.
 The documentation is built into the <a class="reference internal" href="#.github/workflows/CI-docs.yml"><span class="xref myst">CI-docs.yml</span></a> workflow.</p>
 </section>
-<section id="ci-binary-builds">
-<h2>CI Binary builds<a class="headerlink" href="#ci-binary-builds" title="Link to this heading">#</a></h2>
+<section id="binary-builds">
+<h2>Binary builds<a class="headerlink" href="#binary-builds" title="Link to this heading">#</a></h2>
 <p>Binary builds are done in two ways:</p>
 <ul class="simple">
 <li><p>containers for CORSIKA and sim_telarray, see <a class="reference internal" href="#.github/workflows/build-docker-corsika-simtelarray-image.yml"><span class="xref myst">build-docker-corsika-simtelarray-image.yml</span></a></p></li>
-<li><p>containers for simtools, see [build-docker-images.yml](.github/workflows/build-docker-images.yml</p></li>
+<li><p>containers for simtools, see <a class="reference internal" href="#.github/workflows/build-docker-images.yml"><span class="xref myst">build-docker-images.yml</span></a></p></li>
 </ul>
 <p>Builds are done for the platforms: linux/amd64,linux/arm64/v8.</p>
+</section>
+<section id="database-backup">
+<h2>Database backup<a class="headerlink" href="#database-backup" title="Link to this heading">#</a></h2>
+<p>This CI creates a backup of the simulation model database followed a defined schedule (every night). The CI is defined in the <a class="reference internal" href="#.github/workflows/DB-Backup.yml"><span class="xref myst">DB-Backup.yml</span></a> workflow.</p>
+</section>
+<section id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Link to this heading">#</a></h2>
+<p>The Pypi deployment for each release is done using the <a class="reference internal" href="#.github/workflows/pypi.yml"><span class="xref myst">pypi.yml</span></a> workflow.</p>
 </section>
 </section>
 
@@ -539,6 +555,15 @@ The documentation is built into the <a class="reference internal" href="#.github
         <p class="prev-next-title">Coding Guidelines</p>
       </div>
     </a>
+    <a class="right-next"
+       href="maintainer_documentation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Maintainer documentation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -555,11 +580,14 @@ The documentation is built into the <a class="reference internal" href="#.github
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-units-and-integration-tests">CI Units and Integration tests</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-linting">CI Linting</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-schema-files">CI Schema files</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-documentation">CI Documentation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-binary-builds">CI Binary builds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#units-tests">Units tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-tests">Integration tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linting">Linting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-file-validation">Schema file validation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-builds">Binary builds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-backup">Database backup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment">Deployment</a></li>
 </ul>
   </nav></div>
 

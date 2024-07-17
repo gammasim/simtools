@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools Applications &#8212; simtools v0.1.dev1+gf4c8e5f Manual</title>
+    <title>simtools Applications &#8212; simtools v0.1.dev1+g5ce2b0b Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=68f23756"></script>
+    <script src="../_static/documentation_options.js?v=5020f11e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf4c8e5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ce2b0b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -247,12 +247,14 @@
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../developer-guide/index.html">Developer Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/developer_guidelines.html">Developer Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/testing.html">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/documentation.html">Generating Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/pull_requests.html">Pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/coding_guidelines.html">Coding Guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../developer-guide/continuous_integration.html">Continuous Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/maintainer_documentation.html">Maintainer documentation</a></li>
 </ul>
 </details></li>
 </ul>
@@ -469,8 +471,8 @@ Application scripts can be found in <code class="docutils literal notranslate"><
 They are the the building blocks of <a class="reference external" href="https://github.com/gammasim/workflows">Simulation System Workflows</a>.</p>
 <p>Important: depending on the installation type, applications are named differently:</p>
 <ul class="simple">
-<li><p>developers (see <a class="reference internal" href="getting_started.html#installationfordevelopers"><span class="std std-ref">Installation for Developers</span></a>) call applications as described throughout this documentation: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">applications/&lt;application</span> <span class="pre">name&gt;</span> <span class="pre">....</span></code></p></li>
-<li><p>users (see <a class="reference internal" href="getting_started.html#installationforusers"><span class="std std-ref">Installation for Users</span></a>) call applications directly as command-line tool. Applications names <code class="docutils literal notranslate"><span class="pre">simtools-&lt;application</span> <span class="pre">name</span></code> (with all <code class="docutils literal notranslate"><span class="pre">_</span></code> replaced by <code class="docutils literal notranslate"><span class="pre">-</span></code>)</p></li>
+<li><p>developers (see <a class="reference internal" href="../developer-guide/getting_started.html#devinstallationfordevelopers"><span class="std std-ref">installation for developers</span></a>) call applications as described throughout this documentation: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">applications/&lt;application</span> <span class="pre">name&gt;</span> <span class="pre">....</span></code></p></li>
+<li><p>users (see <a class="reference internal" href="getting_started.html#installationforusers"><span class="std std-ref">Installation</span></a>) call applications directly as command-line tool. Applications names <code class="docutils literal notranslate"><span class="pre">simtools-&lt;application</span> <span class="pre">name</span></code> (with all <code class="docutils literal notranslate"><span class="pre">_</span></code> replaced by <code class="docutils literal notranslate"><span class="pre">-</span></code>)</p></li>
 </ul>
 <p>Each application is configured as described in <a class="reference internal" href="configuration.html#configuration"><span class="std std-ref">Configuration</span></a>.
 The available arguments can be access by calling the <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">applications/&lt;application</span> <span class="pre">name&gt;</span> <span class="pre">--help</span></code>.</p>
