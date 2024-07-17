@@ -122,7 +122,7 @@ The script `purge_local_db.sh` stops and removes the container and deletes all n
 Attention: this script removes all local docker containers, images, and networks without awaiting confirmation.
 :::
 
-### Using the local database instance
+### Use the local database instance (with and without docker)
 
 This requires the following changes to the settings of the environmental variables in `.evn`:
 
@@ -141,4 +141,8 @@ SIMTOOLS_DB_SIMULATION_MODEL='STAGING-CTA-Simulation-Model-LATEST'
 For using simtools inside a container:
 
 * set the `SIMTOOLS_DB_SERVER` in the `.env` file to SIMTOOLS_DB_SERVER='simtools-mongodb'.
-* connect to the local network adding `--network simtools-mongo-network` to the `docker/podman run` command, e.g, `podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash`
+* connect to the local network adding `--network simtools-mongo-network` to the `docker/podman run` command, e.g,:
+
+```bash
+podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash
+```

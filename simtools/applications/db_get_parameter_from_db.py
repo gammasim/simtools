@@ -90,6 +90,8 @@ def main():  # noqa: D103
         pars = db.get_sim_telarray_configuration_parameters(
             args_dict["site"], args_dict["telescope"], args_dict["model_version"]
         )
+    elif args_dict["db_collection"] == "configuration_corsika":
+        pars = db.get_corsika_configuration_parameters(args_dict["model_version"])
     elif args_dict["telescope"] is not None:
         pars = db.get_model_parameters(
             args_dict["site"],
