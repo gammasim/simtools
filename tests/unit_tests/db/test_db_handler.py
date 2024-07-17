@@ -121,6 +121,7 @@ def test_reading_db_sst(db, model_version):
         assert pars["camera_pixels"] == 2048
 
 
+@pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_get_derived_values(db, model_version):
     logger.info("----Testing reading derived values-----")
     try:
@@ -588,6 +589,7 @@ def test_parameter_cache_key(db):
 
     assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-2020-06-28"
     assert db._parameter_cache_key("North", None, "Prod5") == "North-2020-06-28"
+    assert db._parameter_cache_key(None, None, "Prod5") == "2020-06-28"
 
 
 def test_model_version(db, caplog):

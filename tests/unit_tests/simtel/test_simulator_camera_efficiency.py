@@ -64,6 +64,7 @@ def test_check_run_result(simulator_camera_efficiency):
         simulator_camera_efficiency._check_run_result()
 
 
+@pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_get_one_dim_distribution(io_handler, db_config, simtel_path):
 
     logger.warning(
