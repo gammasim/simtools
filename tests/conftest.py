@@ -326,7 +326,7 @@ def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histogram
 
 
 @pytest.fixture()
-def corsika_config_data():
+def corsika_config_data(model_version):
     """Corsika configuration data (as given by CorsikaConfig)."""
     return {
         "nshow": 100,
@@ -342,16 +342,18 @@ def corsika_config_data():
         "primary": "proton",
         "primary_id_type": "common_name",
         "data_directory": "simtools-output",
+        "model_version": model_version,
     }
 
 
 @pytest.fixture()
-def corsika_config(io_handler, corsika_config_data, array_model_south):
+def corsika_config(io_handler, db_config, corsika_config_data, array_model_south):
     """Corsika configuration object (using array model South)."""
     corsika_config = CorsikaConfig(
         array_model=array_model_south,
         label="test-corsika-config",
         args_dict=corsika_config_data,
+        db_config=db_config,
     )
     corsika_config.run_number = 1
     return corsika_config

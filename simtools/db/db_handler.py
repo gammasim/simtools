@@ -53,6 +53,7 @@ class DatabaseHandler:
     model_parameters_cached = {}
     model_versions_cached = {}
     sim_telarray_configuration_parameters_cached = {}
+    corsika_configuration_parameters_cached = {}
 
     def __init__(self, mongo_db_config=None):
         """
@@ -480,6 +481,73 @@ class DatabaseHandler:
             collection_name="derived_values",
             write_files=False,
         )
+
+    def get_simulation_configuration_parameters(
+        self, simulation_software, site, telescope_model_name, model_version
+    ):
+        """
+        Get simulation configuration parameters from the DB.
+
+        Parameters
+        ----------
+        simulation_software: str
+            Name of the simulation software.
+        site: str
+            Site name.
+        telescope_model_name: str
+            Name of the telescope model (e.g. MSTN, SSTS).
+        model_version: str
+            Version of the model.
+
+        Returns
+        -------
+        dict containing the parameters
+
+        Raises
+        ------
+        ValueError
+            if simulation_software is not valid.
+        """
+        if simulation_software == "corsika":
+            return self.get_corsika_configuration_parameters(model_version)
+        if simulation_software == "simtel":
+            if site and telescope_model_name:
+                return self.get_sim_telarray_configuration_parameters(
+                    site, telescope_model_name, model_version
+                )
+            return {}
+        raise ValueError(f"Unknown simulation software: {simulation_software}")
+
+    def get_corsika_configuration_parameters(self, model_version):
+        """
+        Get CORSIKA configuration parameters from the DB.
+
+        Parameters
+        ----------
+        model_version : str
+            Version of the model.
+
+        Returns
+        -------
+        dict
+            Configuration parameters for CORSIKA
+        """
+        _corsika_cache_key = self._parameter_cache_key(None, None, model_version)
+        try:
+            return DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key]
+        except KeyError:
+            pass
+        DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key] = (
+            self.read_mongo_db(
+                db_name=self._get_db_name(),
+                telescope_model_name=None,
+                model_version=model_version,
+                run_location=None,
+                collection_name="configuration_corsika",
+                write_files=False,
+            )
+        )
+        return DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key]
 
     def get_sim_telarray_configuration_parameters(self, site, telescope_model_name, model_version):
         """
@@ -911,17 +979,17 @@ class DatabaseHandler:
         collection = DatabaseHandler.db_client[db_name][collection_name]
 
         db_entry = {}
-        if "telescopes" in collection_name or "configuration_sim_telarray" in collection_name:
+        if any(
+            key in collection_name
+            for key in ["telescopes", "calibration_devices", "configuration_sim_telarray"]
+        ):
             db_entry["instrument"] = names.validate_telescope_name(telescope)
         elif "sites" in collection_name:
             db_entry["instrument"] = names.validate_site_name(site)
-        elif "calibration_devices" in collection_name:
-            db_entry["instrument"] = names.validate_telescope_name(telescope)
+        elif "configuration_corsika" in collection_name:
+            db_entry["instrument"] = None
         else:
-            raise ValueError(
-                "Can only add new parameters to the sites, \
-                telescopes or calibration_devices collections"
-            )
+            raise ValueError(f"Cannot add parameter to collection {collection_name}")
 
         db_entry["version"] = version
         db_entry["parameter"] = parameter
@@ -1310,11 +1378,13 @@ class DatabaseHandler:
         str
             Cache key.
         """
-        _model_version = self.model_version(model_version, db_name=db_name)
-
-        if telescope is None:
-            return f"{site}-{_model_version}"
-        return f"{site}-{telescope}-{_model_version}"
+        parts = []
+        if site:
+            parts.append(site)
+        if telescope:
+            parts.append(telescope)
+        parts.append(self.model_version(model_version, db_name=db_name))
+        return "-".join(parts)
 
     def _reset_parameter_cache(self, site, telescope, model_version, db_name=None):
         """
