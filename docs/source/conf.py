@@ -59,6 +59,10 @@ rst_epilog = f"""
 .. |python_min_requires| replace:: {python_min_requires}
 """
 
+myst_substitutions = {
+    "python_min_requires": python_min_requires,
+}
+
 # The short X.Y version
 version = str(simtools.version.__version__)
 # The full version, including alpha/beta/rc tags
@@ -173,6 +177,7 @@ intersphinx_mapping = {
 myst_heading_anchors = 3
 myst_enable_extensions = {
     "colon_fence",
+    "substitution",
 }
 
 suppress_warnings = ["myst.*", "myst.duplicate_def"]
