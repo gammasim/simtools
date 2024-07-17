@@ -20,7 +20,7 @@ def test_kernel_plot_2d_photons(corsika_histograms_instance_set_histograms, capl
             corsika_histograms_instance_set_histograms, property_name
         )
         assert np.size(all_figs) == 1
-        assert isinstance(all_figs[0], type(plt.figure()))
+        assert isinstance(all_figs[0], plt.Figure)
 
     corsika_histograms_instance_set_histograms.set_histograms(
         individual_telescopes=True, telescope_indices=[0, 1, 2]
