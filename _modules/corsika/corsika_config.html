@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g68435be Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+gb4af9ac Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=858a34bd"></script>
+    <script src="../../_static/documentation_options.js?v=7ee562a8"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g68435be Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb4af9ac Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -526,8 +526,8 @@ document.write(`
             <span class="s2">&quot;PRMPAR&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span><span class="o">.</span><span class="n">corsika7_id</span><span class="p">],</span>
             <span class="s2">&quot;ESLOPE&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;eslope&quot;</span><span class="p">]],</span>
             <span class="s2">&quot;ERANGE&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;erange&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;GeV&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;erange&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;GeV&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;energy_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;GeV&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;energy_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;GeV&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="p">],</span>
             <span class="s2">&quot;THETAP&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="nb">float</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
@@ -538,8 +538,8 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">_rotate_azimuth_by_180deg</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
             <span class="p">],</span>
             <span class="s2">&quot;VIEWCONE&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;view_cone&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;view_cone&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="p">],</span>
             <span class="s2">&quot;CSCAT&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;core_scatter&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>

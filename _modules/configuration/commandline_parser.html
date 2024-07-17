@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g68435be Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+gb4af9ac Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=858a34bd"></script>
+    <script src="../../_static/documentation_options.js?v=7ee562a8"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g68435be Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb4af9ac Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -432,8 +432,8 @@ document.write(`
 <span class="sd">        simulation_model: list</span>
 <span class="sd">            List of simulation model configuration parameters to add to list of args</span>
 <span class="sd">            (use: &#39;version&#39;, &#39;telescope&#39;, &#39;site&#39;)</span>
-<span class="sd">        simulation_configuration: list</span>
-<span class="sd">            List of simulation software configuration parameters to add to list of args.</span>
+<span class="sd">        simulation_configuration: Dict</span>
+<span class="sd">            Dict of simulation software configuration parameters to add to list of args.</span>
 <span class="sd">        db_config: bool</span>
 <span class="sd">            Add database configuration parameters to list of args.</span>
 <span class="sd">        job_submission: bool</span>
@@ -675,8 +675,8 @@ document.write(`
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        simulation_configuration: list</span>
-<span class="sd">            List of simulation software configuration parameters.</span>
+<span class="sd">        simulation_configuration: Dict</span>
+<span class="sd">            Dict of simulation software configuration parameters.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">simulation_configuration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
@@ -684,8 +684,16 @@ document.write(`
         <span class="k">if</span> <span class="s2">&quot;software&quot;</span> <span class="ow">in</span> <span class="n">simulation_configuration</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_software</span><span class="p">()</span>
         <span class="k">if</span> <span class="s2">&quot;corsika_configuration&quot;</span> <span class="ow">in</span> <span class="n">simulation_configuration</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_configuration</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_shower_configuration</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_configuration</span><span class="p">(</span>
+                <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;simulation configuration&quot;</span><span class="p">,</span>
+                <span class="n">selected_parameters</span><span class="o">=</span><span class="n">simulation_configuration</span><span class="p">[</span><span class="s2">&quot;corsika_configuration&quot;</span><span class="p">],</span>
+                <span class="n">available_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_dictionary_with_corsika_configuration</span><span class="p">(),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_configuration</span><span class="p">(</span>
+                <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;shower parameters&quot;</span><span class="p">,</span>
+                <span class="n">selected_parameters</span><span class="o">=</span><span class="n">simulation_configuration</span><span class="p">[</span><span class="s2">&quot;corsika_configuration&quot;</span><span class="p">],</span>
+                <span class="n">available_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_dictionary_with_shower_configuration</span><span class="p">(),</span>
+            <span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_initialize_simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -700,102 +708,126 @@ document.write(`
             <span class="n">default</span><span class="o">=</span><span class="s2">&quot;corsika_simtel&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_simulation_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize simulation configuration arguments.&quot;&quot;&quot;</span>
-        <span class="n">_configuration_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation configuration&quot;</span><span class="p">)</span>
-        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--primary&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;Primary particle to simulate. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(choices for common names: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PrimaryParticle</span><span class="o">.</span><span class="n">particle_names</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">; &quot;</span>
-                <span class="s2">&quot;use &#39;--primary_ID_type&#39; to use other particle ID types).&quot;</span>
-            <span class="p">),</span>
-            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--primary_id_type&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Primary particle ID type&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;common_name&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika7_id&quot;</span><span class="p">,</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">],</span>
-            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;common_name&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--azimuth_angle&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;Telescope pointing direction in azimuth. &quot;</span>
-                <span class="s2">&quot;It can be in degrees between 0 and 360 or one of north, south, east or west &quot;</span>
-                <span class="s2">&quot;North is 0 degrees and the azimuth grows clockwise (East is 90 degrees).&quot;</span>
-            <span class="p">),</span>
-            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--zenith_angle&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Zenith angle in degrees (between 0 and 180).&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--nshow&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of showers per run to simulate.&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--run_number_start&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run number for the first run.&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--number_of_runs&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of runs to be simulated.&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--event_number_first_shower&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Event number of first shower&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_dictionary_with_corsika_configuration</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with CORSIKA configuration parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Primary particle to simulate. &quot;</span>
+                    <span class="s2">&quot;(choices for common names: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PrimaryParticle</span><span class="o">.</span><span class="n">particle_names</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">; &quot;</span>
+                    <span class="s2">&quot;use &#39;--primary_ID_type&#39; to use other particle ID types).&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;primary_id_type&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Primary particle ID type&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;choices&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_name&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika7_id&quot;</span><span class="p">,</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;common_name&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Telescope pointing direction in azimuth. &quot;</span>
+                    <span class="s2">&quot;It can be in degrees between 0 and 360 or one of north, south, east or west. &quot;</span>
+                    <span class="s2">&quot;North is 0 degrees and the azimuth grows clockwise (East is 90 degrees).&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Zenith angle in degrees (between 0 and 180).&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;nshow&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of showers per run to simulate.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;run_number_start&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Run number for the first run.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;number_of_runs&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of runs to be simulated.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;event_number_first_shower&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Event number of first shower&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_shower_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize shower configuration arguments.&quot;&quot;&quot;</span>
-        <span class="n">shower_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;shower parameters&quot;</span><span class="p">)</span>
-        <span class="n">shower_config</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--eslope&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Slope of the energy spectrum.&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">shower_config</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--erange&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Energy range of the primary particle (min/max value, e&#39;g&#39;, &#39;10 GeV 5 TeV&#39;).&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;3 GeV 330 TeV&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="n">shower_config</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--viewcone&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Viewcone for primary arrival directions (min/max value, e.g. &#39;0 deg 5 deg&#39;).&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;0 deg 0 deg&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="n">shower_config</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--core_scatter&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Scatter radius for shower cores (number of use; scatter radius).&quot;</span><span class="p">,</span>
-            <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_integer_and_quantity</span><span class="p">,</span>
-            <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;10 1400 m&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_dictionary_with_shower_configuration</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with shower configuration parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;eslope&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Slope of the energy spectrum.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;energy_range&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Energy range of the primary particle (min/max value, e&#39;g&#39;, &#39;10 GeV 5 TeV&#39;).&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;3 GeV 330 TeV&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;view_cone&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;View cone radius for primary arrival directions &quot;</span>
+                    <span class="s2">&quot;(min/max value, e.g. &#39;0 deg 5 deg&#39;).&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;0 deg 0 deg&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;core_scatter&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Scatter radius for shower cores (number of use; scatter radius).&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_integer_and_quantity</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;10 1400 m&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_simulation_configuration</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">group_name</span><span class="p">,</span> <span class="n">selected_parameters</span><span class="p">,</span> <span class="n">available_parameters</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize simulation configuration arguments.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group_name : str</span>
+<span class="sd">            Name of the group of arguments.</span>
+<span class="sd">        selected_parameters : list</span>
+<span class="sd">            List of selected parameters to be added to the group.</span>
+<span class="sd">        available_parameters : dict</span>
+<span class="sd">            Dictionary with available parameters and their configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">configuration_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">group_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">selected_parameters</span><span class="p">:</span>
+            <span class="n">selected_parameters</span> <span class="o">=</span> <span class="n">available_parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">selected_parameters</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">configuration_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">available_parameters</span><span class="p">[</span><span class="n">param</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_add_model_option_layout</span><span class="p">(</span><span class="n">job_group</span><span class="p">,</span> <span class="n">add_layout_file</span><span class="p">):</span>
@@ -1034,21 +1066,19 @@ document.write(`
                 <span class="s2">&quot;The azimuth angle provided is not a valid astropy.Quantity. &quot;</span>
                 <span class="s2">&quot;Will check if it is (north, south, east, west) instead&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">azimuth_map</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;north&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;south&quot;</span><span class="p">:</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;east&quot;</span><span class="p">:</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;west&quot;</span><span class="p">:</span> <span class="mi">270</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-            <span class="p">}</span>
-            <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">in</span> <span class="n">azimuth_map</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">azimuth_map</span><span class="p">[</span><span class="n">azimuth_angle</span><span class="p">]</span>
-            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
-                <span class="s2">&quot;The azimuth angle given as string can only be one of &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(north, south, east, west), not </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">. Otherwise use numerical values.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span></div>
+        <span class="n">azimuth_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;north&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;south&quot;</span><span class="p">:</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;east&quot;</span><span class="p">:</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+            <span class="s2">&quot;west&quot;</span><span class="p">:</span> <span class="mi">270</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">in</span> <span class="n">azimuth_map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">azimuth_map</span><span class="p">[</span><span class="n">azimuth_angle</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
+            <span class="s2">&quot;The azimuth angle given as string can only be one of &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(north, south, east, west), not </span><span class="si">{</span><span class="n">angle</span><span class="si">}</span><span class="s2">. Otherwise use numerical values.&quot;</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CommandLineParser.parse_quantity_pair">
