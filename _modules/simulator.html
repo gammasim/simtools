@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+gd5a2dc8 Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+g9b7efc1 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=dabb0ffd"></script>
+    <script src="../_static/documentation_options.js?v=4c3c9d3d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gd5a2dc8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b7efc1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -452,7 +452,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_extra_commands</span> <span class="o">=</span> <span class="n">extra_commands</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_array_model</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_runner</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_runner</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -577,9 +577,14 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run_list: </span><span class="si">{</span><span class="n">validated_runs_unique</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">validated_runs_unique</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_simulation_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_initialize_simulation_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize corsika configuration and simulation runners.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        db_config: dict</span>
+<span class="sd">            Database configuration.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -590,6 +595,7 @@ document.write(`
             <span class="n">array_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
             <span class="n">args_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">,</span>
+            <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">runner_class</span> <span class="o">=</span> <span class="p">{</span>

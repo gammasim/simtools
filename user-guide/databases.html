@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+gd5a2dc8 Manual</title>
+    <title>Databases &#8212; simtools v0.1.dev1+g9b7efc1 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=dabb0ffd"></script>
+    <script src="../_static/documentation_options.js?v=4c3c9d3d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gd5a2dc8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b7efc1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -467,7 +467,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance-and-all-networks-images-containers">Purge the local database instance and all networks, images, containers</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-local-database-instance">Using the local database instance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-the-local-database-instance-with-and-without-docker">Use the local database instance (with and without docker)</a></li>
 </ul>
 </li>
 </ul>
@@ -597,8 +597,8 @@ uploads its contents to the local database instance.</p>
 <p>Attention: this script removes all local docker containers, images, and networks without awaiting confirmation.</p>
 </div>
 </section>
-<section id="using-the-local-database-instance">
-<h3>Using the local database instance<a class="headerlink" href="#using-the-local-database-instance" title="Link to this heading">#</a></h3>
+<section id="use-the-local-database-instance-with-and-without-docker">
+<h3>Use the local database instance (with and without docker)<a class="headerlink" href="#use-the-local-database-instance-with-and-without-docker" title="Link to this heading">#</a></h3>
 <p>This requires the following changes to the settings of the environmental variables in <code class="docutils literal notranslate"><span class="pre">.evn</span></code>:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Environmental<span class="w"> </span>variables
 <span class="go">SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server</span>
@@ -613,8 +613,11 @@ uploads its contents to the local database instance.</p>
 <p>For using simtools inside a container:</p>
 <ul class="simple">
 <li><p>set the <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SERVER</span></code> in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to SIMTOOLS_DB_SERVER=’simtools-mongodb’.</p></li>
-<li><p>connect to the local network adding <code class="docutils literal notranslate"><span class="pre">--network</span> <span class="pre">simtools-mongo-network</span></code> to the <code class="docutils literal notranslate"><span class="pre">docker/podman</span> <span class="pre">run</span></code> command, e.g, <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span> <span class="pre">--rm</span> <span class="pre">-it</span> <span class="pre">-v</span> <span class="pre">&quot;$(pwd)/:/workdir/external&quot;</span> <span class="pre">--network</span> <span class="pre">simtools-mongo-network</span> <span class="pre">ghcr.io/gammasim/simtools-dev:latest</span> <span class="pre">bash</span></code></p></li>
+<li><p>connect to the local network adding <code class="docutils literal notranslate"><span class="pre">--network</span> <span class="pre">simtools-mongo-network</span></code> to the <code class="docutils literal notranslate"><span class="pre">docker/podman</span> <span class="pre">run</span></code> command, e.g,:</p></li>
 </ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/:/workdir/external&quot;</span><span class="w"> </span>--network<span class="w"> </span>simtools-mongo-network<span class="w"> </span>ghcr.io/gammasim/simtools-dev:latest<span class="w"> </span>bash
+</pre></div>
+</div>
 </section>
 </section>
 </section>
@@ -681,7 +684,7 @@ uploads its contents to the local database instance.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#purge-the-local-database-instance-and-all-networks-images-containers">Purge the local database instance and all networks, images, containers</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-local-database-instance">Using the local database instance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-the-local-database-instance-with-and-without-docker">Use the local database instance (with and without docker)</a></li>
 </ul>
 </li>
 </ul>

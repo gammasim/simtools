@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+gd5a2dc8 Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+g9b7efc1 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=dabb0ffd"></script>
+    <script src="../../_static/documentation_options.js?v=4c3c9d3d"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gd5a2dc8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9b7efc1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -429,6 +429,7 @@ document.write(`
     <span class="n">model_parameters_cached</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">model_versions_cached</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">sim_telarray_configuration_parameters_cached</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">corsika_configuration_parameters_cached</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -873,6 +874,79 @@ document.write(`
             <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;derived_values&quot;</span><span class="p">,</span>
             <span class="n">write_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatabaseHandler.get_simulation_configuration_parameters">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_simulation_configuration_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_simulation_configuration_parameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">simulation_software</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get simulation configuration parameters from the DB.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation_software: str</span>
+<span class="sd">            Name of the simulation software.</span>
+<span class="sd">        site: str</span>
+<span class="sd">            Site name.</span>
+<span class="sd">        telescope_model_name: str</span>
+<span class="sd">            Name of the telescope model (e.g. MSTN, SSTS).</span>
+<span class="sd">        model_version: str</span>
+<span class="sd">            Version of the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict containing the parameters</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            if simulation_software is not valid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;corsika&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corsika_configuration_parameters</span><span class="p">(</span><span class="n">model_version</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">site</span> <span class="ow">and</span> <span class="n">telescope_model_name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sim_telarray_configuration_parameters</span><span class="p">(</span>
+                    <span class="n">site</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">,</span> <span class="n">model_version</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown simulation software: </span><span class="si">{</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatabaseHandler.get_corsika_configuration_parameters">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_corsika_configuration_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_corsika_configuration_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get CORSIKA configuration parameters from the DB.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model_version : str</span>
+<span class="sd">            Version of the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Configuration parameters for CORSIKA</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_corsika_cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_cache_key</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">corsika_configuration_parameters_cached</span><span class="p">[</span><span class="n">_corsika_cache_key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">corsika_configuration_parameters_cached</span><span class="p">[</span><span class="n">_corsika_cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read_mongo_db</span><span class="p">(</span>
+                <span class="n">db_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span>
+                <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
+                <span class="n">run_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span>
+                <span class="n">write_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">corsika_configuration_parameters_cached</span><span class="p">[</span><span class="n">_corsika_cache_key</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="DatabaseHandler.get_sim_telarray_configuration_parameters">
@@ -1322,17 +1396,17 @@ document.write(`
         <span class="n">collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection_name</span><span class="p">]</span>
 
         <span class="n">db_entry</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="s2">&quot;telescopes&quot;</span> <span class="ow">in</span> <span class="n">collection_name</span> <span class="ow">or</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span> <span class="ow">in</span> <span class="n">collection_name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">key</span> <span class="ow">in</span> <span class="n">collection_name</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
             <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="n">telescope</span><span class="p">)</span>
         <span class="k">elif</span> <span class="s2">&quot;sites&quot;</span> <span class="ow">in</span> <span class="n">collection_name</span><span class="p">:</span>
             <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="s2">&quot;calibration_devices&quot;</span> <span class="ow">in</span> <span class="n">collection_name</span><span class="p">:</span>
-            <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_telescope_name</span><span class="p">(</span><span class="n">telescope</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s2">&quot;configuration_corsika&quot;</span> <span class="ow">in</span> <span class="n">collection_name</span><span class="p">:</span>
+            <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Can only add new parameters to the sites, </span><span class="se">\</span>
-<span class="s2">                telescopes or calibration_devices collections&quot;</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot add parameter to collection </span><span class="si">{</span><span class="n">collection_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
         <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
@@ -1746,11 +1820,13 @@ document.write(`
 <span class="sd">        str</span>
 <span class="sd">            Cache key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_model_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">telescope</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">site</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">telescope</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">telescope</span><span class="p">)</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_reset_parameter_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
