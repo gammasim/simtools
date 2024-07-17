@@ -54,10 +54,6 @@ Binary builds are done in two ways:
 
 Builds are done for the platforms: linux/amd64,linux/arm64/v8.
 
-## Database backup
-
-This CI creates a backup of the simulation model database followed a defined schedule (every night). The CI is defined in the [DB-Backup.yml](.github/workflows/DB-Backup.yml) workflow.
-
 ## Deployment
 
 The Pypi deployment for each release is done using the [pypi.yml](.github/workflows/pypi.yml) workflow.
