@@ -8,7 +8,7 @@ This is done automatically with each merge into the main branch, see the
 
 Docstrings are written in RST format following the [numpydoc](https://numpydoc.readthedocs.io/en/latest/index.html) standard.
 Documentation pages are written in Markdown ([MyST flavor](https://myst-parser.readthedocs.io/en/latest/index.html), although RST
-is also possible (but not preferred).
+is also possible (but not preferred)).
 
 :::{Caution}
 Each application requires a small RST file (e.g., [get_file_from_db.rst](https://github.com/gammasim/simtools/tree/main/docs/source/get_file_from_db.rst]))
@@ -31,4 +31,4 @@ file `./build/html/index.html`.
 
 ## Hints for Markdown
 
-- links to other files relative to current file: ``[mongoDB databases](databases.md#databases)`` results in [mongoDB databases](databases.md#databases).
+- links to other files relative to current file: ``[mongoDB databases](../user-guide/databases.md#databases)`` results in [mongoDB databases](../user-guide/databases.md#databases).
