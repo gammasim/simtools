@@ -73,7 +73,7 @@ class Simulator:
         self._extra_commands = extra_commands
 
         self.array_model = self._initialize_array_model(mongo_db_config)
-        self._simulation_runner = self._initialize_simulation_runner()
+        self._simulation_runner = self._initialize_simulation_runner(mongo_db_config)
 
     @property
     def simulation_software(self):
@@ -198,9 +198,14 @@ class Simulator:
         self._logger.info(f"run_list: {validated_runs_unique}")
         return list(validated_runs_unique)
 
-    def _initialize_simulation_runner(self):
+    def _initialize_simulation_runner(self, db_config):
         """
         Initialize corsika configuration and simulation runners.
+
+        Parameters
+        ----------
+        db_config: dict
+            Database configuration.
 
         Returns
         -------
@@ -211,6 +216,7 @@ class Simulator:
             array_model=self.array_model,
             label=self.label,
             args_dict=self.args_dict,
+            db_config=db_config,
         )
 
         runner_class = {

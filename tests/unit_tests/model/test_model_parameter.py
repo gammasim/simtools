@@ -185,6 +185,7 @@ def test_updating_export_model_files(db_config, io_handler):
     assert False is tel._is_exported_model_files_up_to_date
 
 
+@pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_export_derived_files(io_handler, db_config):
     tel_model = TelescopeModel(
         site="North",

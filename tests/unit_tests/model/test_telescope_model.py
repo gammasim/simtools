@@ -37,11 +37,10 @@ def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
     assert two_dim_dist["z"][4][4] == pytest.approx(0.985199988)
 
 
-# depends on prod5; prod6 is incomplete in the DB
-def test_read_incidence_angle_distribution(telescope_model_sst_prod5):
-    tel_model = telescope_model_sst_prod5
+def test_read_incidence_angle_distribution(telescope_model_sst):
+    tel_model = telescope_model_sst
+    tel_model.export_model_files()
 
-    _ = tel_model.derived
     incidence_angle_file = tel_model.get_parameter_value("camera_filter_incidence_angle")
     assert tel_model.config_file_directory.joinpath(incidence_angle_file).exists()
     incidence_angle_dist = tel_model.read_incidence_angle_distribution(incidence_angle_file)
@@ -52,7 +51,8 @@ def test_read_incidence_angle_distribution(telescope_model_sst_prod5):
     ].value == pytest.approx(0.027980644661989726)
 
 
-# depends on prod5; prod6 is incomplete in the DB
+# depends on prod5 (no 2D camera file file in prod6)
+@pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_calc_average_curve(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
@@ -68,7 +68,8 @@ def test_calc_average_curve(telescope_model_sst_prod5):
     ] == pytest.approx(0.9398265298920796)
 
 
-# depends on prod5; prod6 is incomplete in the DB
+# depends on prod5 (no 2D camera file file in prod6)
+@pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_export_table_to_model_directory(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
