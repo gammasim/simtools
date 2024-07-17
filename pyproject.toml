@@ -8,7 +8,7 @@ requires = [
 [project]
 name = "gammasimtools"
 description = "Tools for the Simulation System of the CTA Observatory"
-readme = "README.rst"
+readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
   { name = "simtools developers", email = "simtools-developer@desy.de" },
