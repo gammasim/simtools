@@ -122,7 +122,7 @@ def _parse(description=None):
         db_config=True,
         job_submission=True,
         simulation_model=["site", "layout", "telescope"],
-        simulation_configuration=["software", "corsika_configuration"],
+        simulation_configuration={"software": None, "corsika_configuration": ["all"]},
     )
 
 
