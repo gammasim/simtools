@@ -24,10 +24,20 @@ def runner_service(corsika_runner):
 
 
 @pytest.fixture()
-def runner_service_config_only(corsika_config):
+def runner_service_mock_array_model(corsika_runner_mock_array_model):
+    """Runner services object for corsika."""
+    _runner_service = runner_services.RunnerServices(
+        corsika_config=corsika_runner_mock_array_model.corsika_config, label="test-corsika-runner"
+    )
+    _runner_service.load_data_directories("corsika")
+    return _runner_service
+
+
+@pytest.fixture()
+def runner_service_config_only(corsika_config_mock_array_model):
     """Runner services object with simplified config."""
     return runner_services.RunnerServices(
-        corsika_config=corsika_config,
+        corsika_config=corsika_config_mock_array_model,
         label="test-corsika-runner",
     )
 
@@ -185,12 +195,14 @@ def test_get_run_number_string(runner_service_config_only):
         runner_service_config_only._get_run_number_string(1234567)
 
 
-def test_get_resources(runner_service, caplog):
-    sub_log_file = runner_service.get_file_name(file_type="sub_log", run_number=None, mode="out")
+def test_get_resources(runner_service_mock_array_model, caplog):
+    sub_log_file = runner_service_mock_array_model.get_file_name(
+        file_type="sub_log", run_number=None, mode="out"
+    )
     with open(sub_log_file, "w", encoding="utf-8") as file:
         lines_to_write = ["RUNTIME 500\n"]
         file.writelines(lines_to_write)
-    resources = runner_service.get_resources()
+    resources = runner_service_mock_array_model.get_resources()
     assert isinstance(resources, dict)
     assert "runtime" in resources
     assert resources["runtime"] == 500
@@ -200,6 +212,6 @@ def test_get_resources(runner_service, caplog):
         file.writelines(lines_to_write)
 
     with caplog.at_level(logging.DEBUG):
-        resources = runner_service.get_resources()
+        resources = runner_service_mock_array_model.get_resources()
     assert resources["runtime"] is None
     assert "RUNTIME was not found in run log file" in caplog.text
