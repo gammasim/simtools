@@ -261,6 +261,15 @@ class CommandLineParser(argparse.ArgumentParser):
                 help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
                 type=self.telescope,
             )
+            _job_group.add_argument(
+                "--telescope_model_file",
+                help=(
+                    "File with changes to telescope model "
+                    " (yaml format; experimental with insufficient validation steps)."
+                ),
+                type=Path,
+                required=False,
+            )
 
         if "layout" in model_options or "layout_file" in model_options:
             _job_group = self._add_model_option_layout(_job_group, "layout_file" in model_options)
