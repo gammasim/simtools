@@ -8,8 +8,8 @@ import astropy.io.ascii
 import numpy as np
 from astropy.table import Table
 
-import simtools.utils.general as gen
 from simtools.io_operations import io_handler
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 from simtools.utils import names
@@ -24,120 +24,115 @@ class CameraEfficiency:
 
     Parameters
     ----------
-    telescope_model: TelescopeModel
-        Instance of the TelescopeModel class.
-    site_model: SiteModel
-        Instance of the SiteModel class.
     simtel_path: str (or Path)
         Location of sim_telarray installation.
+    db_config: dict
+        Configuration for the database.
     label: str
         Instance label, optional.
     config_data: dict.
         Dict containing the configurable parameters.
-    config_file: str or Path
-        Path of the yaml file containing the configurable parameters.
     test: bool
         Is it a test instance (at the moment only affects the location of files).
     """
 
     def __init__(
         self,
-        telescope_model,
-        site_model,
         simtel_path,
-        label=None,
-        config_data=None,
-        config_file=None,
+        config_data,
+        label,
+        db_config,
         test=False,
     ):
         """Initialize the CameraEfficiency class."""
         self._logger = logging.getLogger(__name__)
 
         self._simtel_path = simtel_path
-        self._telescope_model = self._validate_telescope_model(telescope_model)
-        self._site_model = site_model
-        self.label = label if label is not None else self._telescope_model.label
+        self.label = label
         self.test = test
 
         self.io_handler = io_handler.IOHandler()
-        self._base_directory = self.io_handler.get_output_directory(
-            label=self.label,
-            sub_dir="camera-efficiency",
-            dir_type="test" if self.test else "simtools",
+        self.telescope_model, self._site_model = self._initialize_simulation_models(
+            config_data, db_config
         )
+        self.output_dir = self.io_handler.get_output_directory(self.label, sub_dir="plots")
+
         self._results = None
         self._has_results = False
 
-        _config_data_in = gen.collect_data_from_file_or_dict(
-            config_file, config_data, allow_empty=True
-        )
-        _parameter_file = self.io_handler.get_input_data_file(
-            "parameters", "camera-efficiency_parameters.yml"
-        )
-        _parameters = gen.collect_data_from_file_or_dict(_parameter_file, None)
-        self.config = gen.validate_config_data(_config_data_in, _parameters)
-
-        self._file = {}
-        self._load_files()
-
-    @classmethod
-    def from_kwargs(cls, **kwargs):
-        """
-        Build a CameraEfficiency object from kwargs only.
-
-        The configurable parameters can be given as kwargs, instead of using the
-        config_data or config_file arguments.
-
-        Parameters
-        ----------
-        kwargs
-            Containing the arguments and the configurable parameters.
-
-        Returns
-        -------
-        Instance of this class.
-        """
-        args, config_data = gen.separate_args_and_config_data(
-            expected_args=[
-                "telescope_model",
-                "site_model",
-                "label",
-                "simtel_path",
-                "test",
-            ],
-            **kwargs,
-        )
-        return cls(**args, config_data=config_data)
+        self.config = self._configuration_from_args_dict(config_data)
+        self._file = self._load_files()
 
     def __repr__(self):
         """Return string representation of the CameraEfficiency instance."""
         return f"CameraEfficiency(label={self.label})\n"
 
-    def _validate_telescope_model(self, tel):
+    def _initialize_simulation_models(self, config_data, db_config):
         """
-        Validate TelescopeModel.
+        Initialize site and telescope models.
 
         Parameters
         ----------
-        tel: TelescopeModel
-            An assumed instance of the TelescopeModel class.
+        config_data: dict
+            Dict containing the configurable parameters.
 
-        Raises
-        ------
-        ValueError
-            if tel not of type TelescopeModel
-
+        Returns
+        -------
+        tuple
+            Tuple containing the site and telescope models.
         """
-        if isinstance(tel, TelescopeModel):
-            self._logger.debug("TelescopeModel OK")
-            return tel
+        tel_model = TelescopeModel(
+            site=config_data["site"],
+            telescope_name=config_data["telescope"],
+            mongo_db_config=db_config,
+            model_version=config_data["model_version"],
+            label=self.label,
+        )
+        site_model = SiteModel(
+            site=config_data["site"],
+            model_version=config_data["model_version"],
+            mongo_db_config=db_config,
+        )
+        return tel_model, site_model
 
-        msg = "Invalid TelescopeModel"
-        self._logger.error(msg)
-        raise ValueError(msg)
+    def _configuration_from_args_dict(self, config_data):
+        """
+        Extract the configuration data from the args_dict.
+
+        Zenith and azimuth angles are set to default values if not provided.
+
+        Parameters
+        ----------
+        config_data: dict
+            Dict containing the configurable parameters.
+
+        Returns
+        -------
+        dict
+            Configuration data.
+        """
+        zenith_angle = config_data.get("zenith_angle")
+        if zenith_angle is not None:
+            zenith_angle = zenith_angle.to("deg").value
+        else:
+            zenith_angle = 20.0
+            self._logger.info(f"Setting zenith angle to default value {zenith_angle} deg")
+        azimuth_angle = config_data.get("azimuth_angle")
+        if azimuth_angle is not None:
+            azimuth_angle = azimuth_angle.to("deg").value
+        else:
+            azimuth_angle = 0.0
+            self._logger.info(f"Setting azimuth angle to default value {azimuth_angle} deg")
+
+        return {
+            "zenith_angle": zenith_angle,
+            "azimuth_angle": azimuth_angle,
+            "nsb_spectrum": config_data.get("nsb_spectrum", None),
+        }
 
     def _load_files(self):
         """Define the variables for the file names, including the results, simtel and log file."""
+        _file = {}
         for label, suffix in zip(
             ["results", "simtel", "log"],
             [".ecsv", ".dat", ".log"],
@@ -147,28 +142,41 @@ class CameraEfficiency:
                     "camera-efficiency-table" if label == "results" else "camera-efficiency"
                 ),
                 suffix=suffix,
-                site=self._telescope_model.site,
-                telescope_model_name=self._telescope_model.name,
-                zenith_angle=self.config.zenith_angle,
-                azimuth_angle=self.config.azimuth_angle,
+                site=self.telescope_model.site,
+                telescope_model_name=self.telescope_model.name,
+                zenith_angle=self.config["zenith_angle"],
+                azimuth_angle=self.config["azimuth_angle"],
                 label=self.label,
             )
-            self._file[label] = self._base_directory.joinpath(file_name)
+
+            _file[label] = self.io_handler.get_output_directory(
+                label=self.label,
+                sub_dir="camera-efficiency",
+                dir_type="test" if self.test else "simtools",
+            ).joinpath(file_name)
+        return _file
 
     def simulate(self):
         """Simulate camera efficiency using testeff."""
         self._logger.info("Simulating CameraEfficiency")
 
+        self.export_model_files()
+
         simtel = SimulatorCameraEfficiency(
             simtel_path=self._simtel_path,
-            telescope_model=self._telescope_model,
-            zenith_angle=self.config.zenith_angle,
+            telescope_model=self.telescope_model,
+            zenith_angle=self.config["zenith_angle"],
             file_simtel=self._file["simtel"],
             file_log=self._file["log"],
             label=self.label,
-            nsb_spectrum=self.config.nsb_spectrum,
+            nsb_spectrum=self.config["nsb_spectrum"],
         )
         simtel.run(test=self.test)
+
+    def export_model_files(self):
+        """Export model and config files to the output directory."""
+        self.telescope_model.export_config_file()
+        self.telescope_model.export_model_files()
 
     def analyze(self, export=True, force=False):
         """
@@ -261,8 +269,6 @@ class CameraEfficiency:
         if export:
             self.export_results()
 
-    # END of analyze
-
     def results_summary(self):
         """
         Print a summary of the results.
@@ -272,14 +278,14 @@ class CameraEfficiency:
         """
         nsb_pixel_pe_per_ns, nsb_rate_ref_conditions = self.calc_nsb_rate()
         nsb_spectrum_text = (
-            f"NSB spectrum file: {self.config.nsb_spectrum}"
-            if self.config.nsb_spectrum
+            f"NSB spectrum file: {self.config['nsb_spectrum']}"
+            if self.config["nsb_spectrum"]
             else "default sim_telarray spectrum."
         )
         return (
-            f"Results summary for {self._telescope_model.name} at "
-            f"zenith={self.config.zenith_angle:.1f} deg, "
-            f"azimuth={self.config.azimuth_angle:.1f} deg\n"
+            f"Results summary for {self.telescope_model.name} at "
+            f"zenith={self.config['zenith_angle']:.1f} deg, "
+            f"azimuth={self.config['azimuth_angle']:.1f} deg\n"
             f"Using the {nsb_spectrum_text}\n"
             f"\nSpectrum weighted reflectivity: {self.calc_reflectivity():.4f}\n"
             "Camera nominal efficiency with gaps (B-TEL-1170): "
@@ -332,7 +338,7 @@ class CameraEfficiency:
         # Sum(C4) from 200 - 999 nm:
         c4_sum = np.sum(self._results["C4"])
         masts_factor = self._results["masts"][0]
-        fill_factor = self._telescope_model.camera.get_camera_fill_factor()
+        fill_factor = self.telescope_model.camera.get_camera_fill_factor()
 
         return fill_factor * (c4_sum / (masts_factor * c1_sum))
 
@@ -353,7 +359,7 @@ class CameraEfficiency:
             [299 < wl_now < 551 for wl_now in self._results["wl"]]
         ]
         c4x_sum = np.sum(c4x_reduced_wl)
-        fill_factor = self._telescope_model.camera.get_camera_fill_factor()
+        fill_factor = self.telescope_model.camera.get_camera_fill_factor()
 
         cam_efficiency_no_gaps = c4x_sum / c1_sum
         return cam_efficiency_no_gaps * fill_factor
@@ -378,7 +384,7 @@ class CameraEfficiency:
         # Sum(N4) from 200 - 999 nm:
         n4_sum = np.sum(self._results["N4"])
         masts_factor = self._results["masts"][0]
-        fill_factor = self._telescope_model.camera.get_camera_fill_factor()
+        fill_factor = self.telescope_model.camera.get_camera_fill_factor()
 
         tel_efficiency_nsb = fill_factor * (n4_sum / (masts_factor * n1_sum))
 
@@ -415,9 +421,9 @@ class CameraEfficiency:
         """
         nsb_rate_provided_spectrum = (
             np.sum(self._results["N4"])
-            * self._telescope_model.camera.get_pixel_active_solid_angle()
-            * self._telescope_model.get_on_axis_eff_optical_area().to("m2").value
-            / self._telescope_model.get_parameter_value("telescope_transmission")[0]
+            * self.telescope_model.camera.get_pixel_active_solid_angle()
+            * self.telescope_model.get_on_axis_eff_optical_area().to("m2").value
+            / self.telescope_model.get_parameter_value("telescope_transmission")[0]
         )
 
         # (integral is in ph./(m^2 ns sr) ) from 300 - 650 nm:
@@ -435,55 +441,35 @@ class CameraEfficiency:
         )
         return nsb_rate_provided_spectrum, nsb_rate_ref_conditions
 
-    def plot_cherenkov_efficiency(self):
+    def plot_efficiency(self, efficiency_type, save_fig=False):
         """
-        Plot Cherenkov efficiency vs wavelength.
+        Plot efficiency vs wavelength.
+
+        Parameters
+        ----------
+        efficiency_type: str
+            The type of efficiency to plot (Cherenkov 'C' or NSB 'N')
+        save_fig: bool
+            If True, the figure will be saved to a file.
 
         Returns
         -------
         fig
             The figure instance of pyplot
         """
-        self._logger.info("Plotting Cherenkov efficiency vs wavelength")
+        self._logger.info(f"Plotting {efficiency_type} efficiency vs wavelength")
+
+        _col_type = "C" if efficiency_type == "Cherenkov" else "N"
 
         column_titles = {
             "wl": "Wavelength [nm]",
-            "C1": r"C1: Cherenkov light on ground",
-            "C2": r"C2: C1 $\times$ ref. $\times$ masts",
-            "C3": r"C3: C2 $\times$ filter $\times$ lightguide",
-            "C4": r"C4: C3 $\times$ q.e.",
-            "C4x": r"C4x: C1 $\times$ filter $\times$ lightguide $\times$ q.e.",
-        }
-
-        table_to_plot = Table([self._results[col_now] for col_now in column_titles])
-
-        for column_now, column_title in column_titles.items():
-            table_to_plot.rename_column(column_now, column_title)
-
-        return visualize.plot_table(
-            table_to_plot,
-            y_title="Cherenkov light efficiency",
-            title=f"{self._telescope_model.name} response to Cherenkov light",
-            no_markers=True,
-        )
-
-    def plot_nsb_efficiency(self):
-        """
-        Plot NSB efficiency vs wavelength.
-
-        Returns
-        -------
-        fig
-            The figure instance of pyplot
-        """
-        self._logger.info("Plotting NSB efficiency vs wavelength")
-        column_titles = {
-            "wl": "Wavelength [nm]",
-            "N1": r"N1: NSB light on ground (B\&E)",
-            "N2": r"N2: N1 $\times$ ref. $\times$ masts",
-            "N3": r"N3: N2 $\times$ filter $\times$ lightguide",
-            "N4": r"N4: N3 $\times$ q.e.",
-            "N4x": r"N4x: N1 $\times$ filter $\times$ lightguide $\times$ q.e.",
+            f"{_col_type}1": rf"{_col_type}1: Cherenkov light on ground",
+            f"{_col_type}2": rf"{_col_type}2: {_col_type}1 $\times$ ref. $\times$ masts",
+            f"{_col_type}3": rf"{_col_type}3: {_col_type}2 $\times$ filter $\times$ lightguide",
+            f"{_col_type}4": rf"{_col_type}4: {_col_type}3 $\times$ q.e.",
+            f"{_col_type}4x": (
+                rf"{_col_type}4x: {_col_type}1 $\times$ filter $\times$ lightguide $\times$ q.e."
+            ),
         }
 
         table_to_plot = Table([self._results[col_now] for col_now in column_titles])
@@ -493,13 +479,33 @@ class CameraEfficiency:
 
         plot = visualize.plot_table(
             table_to_plot,
-            y_title="Nightsky background light efficiency",
-            title=f"{self._telescope_model.name} response to nightsky background light",
+            y_title=f"{efficiency_type} light efficiency",
+            title=f"{self.telescope_model.name} response to {efficiency_type} light",
             no_markers=True,
         )
-
-        plot.gca().set_yscale("log")
-        ylim = plot.gca().get_ylim()
-        plot.gca().set_ylim(1e-3, ylim[1])
-
+        if efficiency_type == "NSB":
+            plot.gca().set_yscale("log")
+            ylim = plot.gca().get_ylim()
+            plot.gca().set_ylim(1e-3, ylim[1])
+        if save_fig:
+            self._save_plot(plot, efficiency_type.lower())
         return plot
+
+    def _save_plot(self, fig, plot_title):
+        """
+        Save plot to pdf and png file.
+
+        Parameters
+        ----------
+        fig
+            The figure instance of pyplot
+        plot_title: str
+            The title of the plot
+        """
+        plot_file = self.output_dir.joinpath(
+            self.label + "_" + self.telescope_model.name + "_" + plot_title
+        )
+        for f in ["pdf", "png"]:
+            fig.savefig(str(plot_file) + "." + f, format=f, bbox_inches="tight")
+        self._logger.info(f"Plotted {plot_title} efficiency in {plot_file}")
+        fig.clf()

@@ -39,8 +39,6 @@
         Yaml file with the new model parameters to replace the default ones.
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
-    verbosity (str, optional)
-        Log level to print.
 
     Example
     -------
