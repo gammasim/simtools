@@ -145,7 +145,8 @@ def main():  # noqa: D103
         model_version=args_dict["model_version"],
         label=label,
     )
-    tel_model.change_multiple_parameters_from_file(args_dict["telescope_model_file"])
+    if args_dict.get("telescope_model_file"):
+        tel_model.change_multiple_parameters_from_file(args_dict["telescope_model_file"])
 
     ray = RayTracing.from_kwargs(
         telescope_model=tel_model,
