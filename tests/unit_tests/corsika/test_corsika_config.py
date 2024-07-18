@@ -304,17 +304,18 @@ def test_write_seeds(corsika_config_no_db):
         assert _call.endswith(" 0 0\n")
 
 
-def test_get_corsika_telescope_list(corsika_config_mock_array_model):
-    cc = corsika_config_mock_array_model
+@pytest.mark.uses_model_database()
+def test_get_corsika_telescope_list(corsika_config):
+    cc = corsika_config
     telescope_list_str = cc.get_corsika_telescope_list()
     assert telescope_list_str.count("TELESCOPE") > 0
     assert telescope_list_str.count("LSTS") > 0
 
 
-def test_run_number(corsika_config_mock_array_model):
-    assert corsika_config_mock_array_model.run_number is None
-    corsika_config_mock_array_model.run_number = 25
-    assert corsika_config_mock_array_model.run_number == 25
+def test_run_number(corsika_config_no_db):
+    assert corsika_config_no_db.run_number is None
+    corsika_config_no_db.run_number = 25
+    assert corsika_config_no_db.run_number == 25
 
 
 def test_validate_run_number(corsika_config_no_db):
