@@ -49,8 +49,6 @@ r"""
         Keep the first entry of mirror_reflection_random_angle fixed.
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
-    verbosity (str, optional)
-        Log level to print.
 
     Example
     -------

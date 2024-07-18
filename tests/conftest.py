@@ -11,6 +11,7 @@ from astropy import units as u
 from dotenv import dotenv_values, load_dotenv
 
 import simtools.io_operations.io_handler
+from simtools.camera_efficiency import CameraEfficiency
 from simtools.configuration.configurator import Configurator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
@@ -397,3 +398,20 @@ def file_has_text():
             return False
 
     return wrapper
+
+
+@pytest.fixture()
+def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
+    return CameraEfficiency(
+        config_data={
+            "telescope": "SSTS-05",
+            "site": "South",
+            "model_version": model_version,
+            "zenith_angle": 20 * u.deg,
+            "azimuth_angle": 0 * u.deg,
+        },
+        db_config=db_config,
+        simtel_path=simtel_path,
+        label="validate_camera_efficiency",
+        test=True,
+    )

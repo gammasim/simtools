@@ -41,7 +41,7 @@ class CommandLineParser(argparse.ArgumentParser):
         job_submission=False,
     ):
         """
-        Initialize default arguments used by all applications (e.g., verbosity or test flag).
+        Initialize default arguments used by all applications (e.g., log level or test flag).
 
         Parameters
         ----------
@@ -52,7 +52,7 @@ class CommandLineParser(argparse.ArgumentParser):
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
             (use: 'version', 'telescope', 'site')
-        simulation_configuration: Dict
+        simulation_configuration: dict
             Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
@@ -271,7 +271,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        simulation_configuration: Dict
+        simulation_configuration: dict
             Dict of simulation software configuration parameters.
         """
         if simulation_configuration is None:
