@@ -44,8 +44,6 @@ r"""
         Produce a multiple pages pdf file with the image plots.
     test (activation mode, optional)
         If activated, application will be faster by simulating fewer photons.
-    verbosity (str, optional)
-        Log level to print.
 
     Example
     -------
