@@ -112,9 +112,17 @@ class CameraEfficiency:
             Configuration data.
         """
         zenith_angle = config_data.get("zenith_angle")
-        zenith_angle = zenith_angle.to("deg").value if zenith_angle is not None else 20.0
+        if zenith_angle is not None:
+            zenith_angle = zenith_angle.to("deg").value
+        else:
+            zenith_angle = 20.0
+            self._logger.info(f"Setting zenith angle to default value {zenith_angle} deg")
         azimuth_angle = config_data.get("azimuth_angle")
-        azimuth_angle = azimuth_angle.to("deg").value if azimuth_angle is not None else 0.0
+        if azimuth_angle is not None:
+            azimuth_angle = azimuth_angle.to("deg").value
+        else:
+            azimuth_angle = 0.0
+            self._logger.info(f"Setting azimuth angle to default value {azimuth_angle} deg")
 
         return {
             "zenith_angle": zenith_angle,
