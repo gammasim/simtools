@@ -53,7 +53,7 @@ def prepare_results_file(io_handler):
     return output_directory.joinpath(test_file_name)
 
 
-def test_reprt(camera_efficiency_lst):
+def test_report(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
 
 
