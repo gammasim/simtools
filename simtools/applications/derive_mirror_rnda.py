@@ -92,8 +92,6 @@ r"""
         Turn off the tuning - A single case will be simulated and plotted.
     test (activation mode, optional)
         If activated, application will be faster by simulating only few mirrors.
-    verbosity (str, optional)
-        Log level to print.
 
     Example
     -------

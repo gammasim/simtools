@@ -15,8 +15,6 @@
     output_path (str)
         Name of the local output directory where to save the files.
         Default it $CWD.
-    verbosity (str, optional)
-        Log level to print.
 
     Example
     -------
