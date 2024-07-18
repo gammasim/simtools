@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Camera Efficiency &#8212; simtools v0.1.dev1+gd2f6801 Manual</title>
+    <title>Camera Efficiency &#8212; simtools v0.1.dev1+gb93c247 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=a93698b2"></script>
+    <script src="../_static/documentation_options.js?v=ab406466"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gd2f6801 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb93c247 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -460,10 +460,9 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.calc_reflectivity"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.calc_reflectivity()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.calc_tel_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.calc_tel_efficiency()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.calc_tot_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.calc_tot_efficiency()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.export_model_files"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.export_model_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.export_results"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.export_results()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.from_kwargs"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.from_kwargs()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.plot_cherenkov_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.plot_cherenkov_efficiency()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.plot_nsb_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.plot_nsb_efficiency()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.plot_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.plot_efficiency()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.results_summary"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.results_summary()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.simulate"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.simulate()</span></code></a></li>
 </ul>
@@ -490,22 +489,18 @@ A <a class="reference internal" href="mc_model.html#id4"><span class="std std-re
 <p>Camera efficiency simulations and analysis.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">camera_efficiency.</span></span><span class="sig-name descname"><span class="pre">CameraEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera_efficiency.html#CameraEfficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">camera_efficiency.</span></span><span class="sig-name descname"><span class="pre">CameraEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera_efficiency.html#CameraEfficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency" title="Link to this definition">#</a></dt>
 <dd><p>Camera efficiency simulations and analysis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>telescope_model: TelescopeModel</strong></dt><dd><p>Instance of the TelescopeModel class.</p>
-</dd>
-<dt><strong>site_model: SiteModel</strong></dt><dd><p>Instance of the SiteModel class.</p>
-</dd>
 <dt><strong>simtel_path: str (or Path)</strong></dt><dd><p>Location of sim_telarray installation.</p>
+</dd>
+<dt><strong>db_config: dict</strong></dt><dd><p>Configuration for the database.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label, optional.</p>
 </dd>
 <dt><strong>config_data: dict.</strong></dt><dd><p>Dict containing the configurable parameters.</p>
-</dd>
-<dt><strong>config_file: str or Path</strong></dt><dd><p>Path of the yaml file containing the configurable parameters.</p>
 </dd>
 <dt><strong>test: bool</strong></dt><dd><p>Is it a test instance (at the moment only affects the location of files).</p>
 </dd>
@@ -609,53 +604,32 @@ function can be used.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency.export_model_files">
+<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera_efficiency.html#CameraEfficiency.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency.export_model_files" title="Link to this definition">#</a></dt>
+<dd><p>Export model and config files to the output directory.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency.export_results">
 <span class="sig-name descname"><span class="pre">export_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera_efficiency.html#CameraEfficiency.export_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency.export_results" title="Link to this definition">#</a></dt>
 <dd><p>Export results to a ecsv file.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency.from_kwargs">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera_efficiency.html#CameraEfficiency.from_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency.from_kwargs" title="Link to this definition">#</a></dt>
-<dd><p>Build a CameraEfficiency object from kwargs only.</p>
-<p>The configurable parameters can be given as kwargs, instead of using the
-config_data or config_file arguments.</p>
+<dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency.plot_efficiency">
+<span class="sig-name descname"><span class="pre">plot_efficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">efficiency_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera_efficiency.html#CameraEfficiency.plot_efficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency.plot_efficiency" title="Link to this definition">#</a></dt>
+<dd><p>Plot efficiency vs wavelength.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>kwargs</strong></dt><dd><p>Containing the arguments and the configurable parameters.</p>
+<dt><strong>efficiency_type: str</strong></dt><dd><p>The type of efficiency to plot (Cherenkov ‘C’ or NSB ‘N’)</p>
+</dd>
+<dt><strong>save_fig: bool</strong></dt><dd><p>If True, the figure will be saved to a file.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>Instance of this class.</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency.plot_cherenkov_efficiency">
-<span class="sig-name descname"><span class="pre">plot_cherenkov_efficiency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera_efficiency.html#CameraEfficiency.plot_cherenkov_efficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency.plot_cherenkov_efficiency" title="Link to this definition">#</a></dt>
-<dd><p>Plot Cherenkov efficiency vs wavelength.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>fig</dt><dd><p>The figure instance of pyplot</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="camera_efficiency.CameraEfficiency.plot_nsb_efficiency">
-<span class="sig-name descname"><span class="pre">plot_nsb_efficiency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera_efficiency.html#CameraEfficiency.plot_nsb_efficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera_efficiency.CameraEfficiency.plot_nsb_efficiency" title="Link to this definition">#</a></dt>
-<dd><p>Plot NSB efficiency vs wavelength.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
 <dt>fig</dt><dd><p>The figure instance of pyplot</p>
 </dd>
 </dl>
@@ -735,10 +709,9 @@ The summary includes the various CTAO requirements and the final expected NSB pi
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.calc_reflectivity"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.calc_reflectivity()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.calc_tel_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.calc_tel_efficiency()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.calc_tot_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.calc_tot_efficiency()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.export_model_files"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.export_model_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.export_results"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.export_results()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.from_kwargs"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.from_kwargs()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.plot_cherenkov_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.plot_cherenkov_efficiency()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.plot_nsb_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.plot_nsb_efficiency()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.plot_efficiency"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.plot_efficiency()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.results_summary"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.results_summary()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera_efficiency.CameraEfficiency.simulate"><code class="docutils literal notranslate"><span class="pre">CameraEfficiency.simulate()</span></code></a></li>
 </ul>

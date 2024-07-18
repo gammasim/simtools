@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.telescope_model &#8212; simtools v0.1.dev1+gd2f6801 Manual</title>
+    <title>model.telescope_model &#8212; simtools v0.1.dev1+gb93c247 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=a93698b2"></script>
+    <script src="../../_static/documentation_options.js?v=ab406466"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gd2f6801 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb93c247 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -563,11 +563,17 @@ document.write(`
         <span class="n">camera_config_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;camera_config_file&quot;</span><span class="p">)</span>
         <span class="n">focal_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_telescope_effective_focal_length</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">camera_config_file_path</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="p">)</span>
+            <span class="n">camera_config_file_path</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Camera config file </span><span class="si">{</span><span class="n">camera_config_file</span><span class="si">}</span><span class="s2"> or &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;config file directory (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">) is None&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span> <span class="kn">from</span> <span class="nn">exc</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;The camera_config_file was not found in the config directory - &quot;</span>
-                <span class="s2">&quot;Using the one found in the model_path&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Camera config file </span><span class="si">{</span><span class="n">camera_config_file</span><span class="si">}</span><span class="s2"> not found in the config directory &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">. Using the one found in the model_path&quot;</span>
             <span class="p">)</span>
             <span class="n">camera_config_file_path</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">model_path</span><span class="p">)</span>
 
@@ -738,7 +744,7 @@ document.write(`
 <span class="sd">        Path:</span>
 <span class="sd">            Path to the file exported.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">file_to_write_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="n">file_to_write_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
         <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_to_write_to</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.commented_header&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">file_to_write_to</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
 
