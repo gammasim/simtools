@@ -283,7 +283,7 @@ def test_get_file_age(tmp_test_directory) -> None:
     with open(tmp_test_directory / "test_file.txt", "w", encoding="utf-8") as file:
         file.write(test_data)
 
-    time.sleep(1)
+    time.sleep(0.2)
 
     try:
         age_in_minutes = gen.get_file_age(tmp_test_directory / "test_file.txt")
