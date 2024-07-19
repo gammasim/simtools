@@ -35,10 +35,10 @@ def simulation_file():
 
 
 @pytest.fixture()
-def corsika_simtel_runner(io_handler, corsika_config, simtel_path):
+def corsika_simtel_runner(io_handler, corsika_config_mock_array_model, simtel_path):
     """CorsikaSimtelRunner object."""
     return CorsikaSimtelRunner(
-        corsika_config=corsika_config,
+        corsika_config=corsika_config_mock_array_model,
         simtel_path=simtel_path,
         label="test-corsika-simtel-runner",
         use_multipipe=True,

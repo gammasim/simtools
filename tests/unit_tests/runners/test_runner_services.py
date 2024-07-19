@@ -14,20 +14,30 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def runner_service(corsika_runner):
+def runner_service(corsika_runner_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
-        corsika_config=corsika_runner.corsika_config, label="test-corsika-runner"
+        corsika_config=corsika_runner_mock_array_model.corsika_config, label="test-corsika-runner"
     )
     _runner_service.load_data_directories("corsika")
     return _runner_service
 
 
 @pytest.fixture()
-def runner_service_config_only(corsika_config):
+def runner_service_mock_array_model(corsika_runner_mock_array_model):
+    """Runner services object for corsika."""
+    _runner_service = runner_services.RunnerServices(
+        corsika_config=corsika_runner_mock_array_model.corsika_config, label="test-corsika-runner"
+    )
+    _runner_service.load_data_directories("corsika")
+    return _runner_service
+
+
+@pytest.fixture()
+def runner_service_config_only(corsika_config_mock_array_model):
     """Runner services object with simplified config."""
     return runner_services.RunnerServices(
-        corsika_config=corsika_config,
+        corsika_config=corsika_config_mock_array_model,
         label="test-corsika-runner",
     )
 
@@ -104,23 +114,23 @@ def test_get_file_basename(runner_service, file_base_name):
     )
 
 
-def test_get_log_file_path(runner_service, corsika_runner, file_base_name):
+def test_get_log_file_path(runner_service, corsika_runner_mock_array_model, file_base_name):
     # log.gz
-    assert runner_service._get_log_file_path("log", file_base_name) == corsika_runner._directory[
-        "logs"
-    ].joinpath(f"{file_base_name}.log.gz")
+    assert runner_service._get_log_file_path(
+        "log", file_base_name
+    ) == corsika_runner_mock_array_model._directory["logs"].joinpath(f"{file_base_name}.log.gz")
 
     # hdata.zst
     assert runner_service._get_log_file_path(
         "histogram", file_base_name
-    ) == corsika_runner._directory["logs"].joinpath(f"{file_base_name}.hdata.zst")
+    ) == corsika_runner_mock_array_model._directory["logs"].joinpath(f"{file_base_name}.hdata.zst")
 
 
-def test_get_data_file_path(runner_service, corsika_runner, file_base_name):
+def test_get_data_file_path(runner_service, corsika_runner_mock_array_model, file_base_name):
     # corsika log
     assert runner_service._get_data_file_path(
         file_type="corsika_log", file_name=file_base_name, run_number=1
-    ) == corsika_runner._directory["data"].joinpath(
+    ) == corsika_runner_mock_array_model._directory["data"].joinpath(
         runner_service._get_run_number_string(1)
     ).joinpath(
         f"{file_base_name}.log"
@@ -129,7 +139,7 @@ def test_get_data_file_path(runner_service, corsika_runner, file_base_name):
     # corsika output
     assert runner_service._get_data_file_path(
         file_type="corsika_output", file_name=file_base_name, run_number=1
-    ) == corsika_runner._directory["data"].joinpath(
+    ) == corsika_runner_mock_array_model._directory["data"].joinpath(
         runner_service._get_run_number_string(1)
     ).joinpath(
         f"{file_base_name}.zst"
@@ -138,7 +148,7 @@ def test_get_data_file_path(runner_service, corsika_runner, file_base_name):
     # simtel output
     assert runner_service._get_data_file_path(
         file_type="simtel_output", file_name=file_base_name, run_number=1
-    ) == corsika_runner._directory["data"].joinpath(
+    ) == corsika_runner_mock_array_model._directory["data"].joinpath(
         runner_service._get_run_number_string(1)
     ).joinpath(
         f"{file_base_name}.simtel.zst"
@@ -185,12 +195,14 @@ def test_get_run_number_string(runner_service_config_only):
         runner_service_config_only._get_run_number_string(1234567)
 
 
-def test_get_resources(runner_service, caplog):
-    sub_log_file = runner_service.get_file_name(file_type="sub_log", run_number=None, mode="out")
+def test_get_resources(runner_service_mock_array_model, caplog):
+    sub_log_file = runner_service_mock_array_model.get_file_name(
+        file_type="sub_log", run_number=None, mode="out"
+    )
     with open(sub_log_file, "w", encoding="utf-8") as file:
         lines_to_write = ["RUNTIME 500\n"]
         file.writelines(lines_to_write)
-    resources = runner_service.get_resources()
+    resources = runner_service_mock_array_model.get_resources()
     assert isinstance(resources, dict)
     assert "runtime" in resources
     assert resources["runtime"] == 500
@@ -200,6 +212,6 @@ def test_get_resources(runner_service, caplog):
         file.writelines(lines_to_write)
 
     with caplog.at_level(logging.DEBUG):
-        resources = runner_service.get_resources()
+        resources = runner_service_mock_array_model.get_resources()
     assert resources["runtime"] is None
     assert "RUNTIME was not found in run log file" in caplog.text

@@ -40,28 +40,28 @@ def corsika_configuration_parameters(gcm2):
     }
 
 
-def test_repr(corsika_config):
-    assert "site" in repr(corsika_config)
+def test_repr(corsika_config_mock_array_model):
+    assert "site" in repr(corsika_config_mock_array_model)
 
 
-def test_fill_corsika_configuration(io_handler, corsika_config_no_db, corsika_config):
+def test_fill_corsika_configuration(io_handler, corsika_config_mock_array_model):
 
     empty_config = CorsikaConfig(
         array_model=None, label="test-corsika-config", args_dict=None, db_config=None
     )
     assert empty_config.config == {}
 
-    assert corsika_config_no_db.get_config_parameter("NSHOW") == 100
-    assert corsika_config_no_db.get_config_parameter("THETAP") == [20, 20]
-    assert corsika_config_no_db.get_config_parameter("ERANGE") == [10.0, 10000.0]
+    assert corsika_config_mock_array_model.get_config_parameter("NSHOW") == 100
+    assert corsika_config_mock_array_model.get_config_parameter("THETAP") == [20, 20]
+    assert corsika_config_mock_array_model.get_config_parameter("ERANGE") == [10.0, 10000.0]
     # Testing conversion between AZM (sim_telarray) and PHIP (corsika)
-    assert corsika_config_no_db.get_config_parameter("PHIP") == [180.0, 180.0]
-    assert corsika_config_no_db.get_config_parameter("CSCAT") == [10, 140000.0, 0]
+    assert corsika_config_mock_array_model.get_config_parameter("PHIP") == [180.0, 180.0]
+    assert corsika_config_mock_array_model.get_config_parameter("CSCAT") == [10, 140000.0, 0]
 
     # db_config is not None
-    assert pytest.approx(corsika_config.get_config_parameter("CERSIZ")) == 5.0
-    assert corsika_config.get_config_parameter("MAX_BUNCHES") == 1000000
-    assert corsika_config.get_config_parameter("ECUTS") == "0.3 0.1 0.02 0.02"
+    assert pytest.approx(corsika_config_mock_array_model.get_config_parameter("CERSIZ")) == 5.0
+    assert corsika_config_mock_array_model.get_config_parameter("MAX_BUNCHES") == 1000000
+    assert corsika_config_mock_array_model.get_config_parameter("ECUTS") == "0.3 0.1 0.02 0.02"
 
     for key in [
         "USER_INPUT",
@@ -70,7 +70,7 @@ def test_fill_corsika_configuration(io_handler, corsika_config_no_db, corsika_co
         "DEBUGGING_OUTPUT_PARAMETERS",
         "IACT_PARAMETERS",
     ]:
-        assert key in corsika_config.config
+        assert key in corsika_config_mock_array_model.config
 
 
 def test_corsika_configuration_from_user_input(corsika_config_no_db, corsika_config_data):
@@ -230,57 +230,58 @@ def test_get_text_single_line(corsika_config_no_db):
     )
 
 
-def test_generate_corsika_input_file(corsika_config):
+def test_generate_corsika_input_file(corsika_config_mock_array_model):
     logger.info("test_generate_corsika_input_file")
-    input_file = corsika_config.generate_corsika_input_file()
+    input_file = corsika_config_mock_array_model.generate_corsika_input_file()
     assert input_file.exists()
     with open(input_file) as f:
         assert "TELFIL |" not in f.read()
 
-    assert corsika_config._is_file_updated
-    assert input_file == corsika_config.generate_corsika_input_file()
+    assert corsika_config_mock_array_model._is_file_updated
+    assert input_file == corsika_config_mock_array_model.generate_corsika_input_file()
 
 
-def test_generate_corsika_input_file_multipipe(corsika_config):
+def test_generate_corsika_input_file_multipipe(corsika_config_mock_array_model):
     logger.info("test_generate_corsika_input_file")
-    input_file = corsika_config.generate_corsika_input_file(use_multipipe=True)
+    input_file = corsika_config_mock_array_model.generate_corsika_input_file(use_multipipe=True)
     assert input_file.exists()
     with open(input_file) as f:
         assert "TELFIL |" in f.read()
 
 
-def test_get_corsika_config_file_name(corsika_config, io_handler):
+def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handler):
     file_name = "proton_South_test_layout_za020-azm000deg_cone0-5_test-corsika-config"
 
     assert (
-        corsika_config.get_corsika_config_file_name("config_tmp", run_number=1)
+        corsika_config_mock_array_model.get_corsika_config_file_name("config_tmp", run_number=1)
         == f"corsika_config_run000001_{file_name}.txt"
     )
     with pytest.raises(ValueError):
         assert (
-            corsika_config.get_corsika_config_file_name("config_tmp")
+            corsika_config_mock_array_model.get_corsika_config_file_name("config_tmp")
             == f"corsika_config_run000001_{file_name}.txt"
         )
 
     assert (
-        corsika_config.get_corsika_config_file_name("config") == f"corsika_config_{file_name}.input"
+        corsika_config_mock_array_model.get_corsika_config_file_name("config")
+        == f"corsika_config_{file_name}.input"
     )
     # The test below includes the placeholder XXXXXX for the run number because
     # that is the way we get the run number later in the CORSIKA input file with zero padding.
-    assert corsika_config.get_corsika_config_file_name("output_generic") == (
+    assert corsika_config_mock_array_model.get_corsika_config_file_name("output_generic") == (
         "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-5_test"
         "-corsika-config_South_test_layout_test-corsika-config.zst"
     )
     assert (
-        corsika_config.get_corsika_config_file_name("multipipe")
+        corsika_config_mock_array_model.get_corsika_config_file_name("multipipe")
         == "multi_cta-South-test_layout.cfg"
     )
     with pytest.raises(ValueError):
-        corsika_config.get_corsika_config_file_name("foobar")
+        corsika_config_mock_array_model.get_corsika_config_file_name("foobar")
 
 
-def test_set_output_file_and_directory(corsika_config):
-    cc = corsika_config
+def test_set_output_file_and_directory(corsika_config_mock_array_model):
+    cc = corsika_config_mock_array_model
     output_file = cc.set_output_file_and_directory()
     assert str(output_file) == (
         "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-5_test"
@@ -303,6 +304,7 @@ def test_write_seeds(corsika_config_no_db):
         assert _call.endswith(" 0 0\n")
 
 
+@pytest.mark.uses_model_database()
 def test_get_corsika_telescope_list(corsika_config):
     cc = corsika_config
     telescope_list_str = cc.get_corsika_telescope_list()

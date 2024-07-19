@@ -367,9 +367,37 @@ def corsika_config(io_handler, db_config, corsika_config_data, array_model_south
 
 
 @pytest.fixture()
+def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data):
+    """Corsika configuration object (using array model South)."""
+    array_model = mock.MagicMock()
+    array_model.layout_name = "test_layout"
+    array_model.corsika_config.primary = "proton"
+    corsika_config = CorsikaConfig(
+        array_model=array_model,
+        label="test-corsika-config",
+        args_dict=corsika_config_data,
+        db_config=db_config,
+    )
+    corsika_config.run_number = 1
+    corsika_config._set_primary_particle({"primary": "gamma"})
+    corsika_config.array_model.site = "South"
+    return corsika_config
+
+
+@pytest.fixture()
 def corsika_runner(corsika_config, io_handler, simtel_path):
     return CorsikaRunner(
         corsika_config=corsika_config,
+        simtel_path=simtel_path,
+        label="test-corsika-runner",
+        use_multipipe=False,
+    )
+
+
+@pytest.fixture()
+def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler, simtel_path):
+    return CorsikaRunner(
+        corsika_config=corsika_config_mock_array_model,
         simtel_path=simtel_path,
         label="test-corsika-runner",
         use_multipipe=False,
