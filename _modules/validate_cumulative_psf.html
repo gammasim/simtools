@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>validate_cumulative_psf &#8212; simtools v0.1.dev1+gb93c247 Manual</title>
+    <title>validate_cumulative_psf &#8212; simtools v0.1.dev1+g66e847e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=ab406466"></script>
+    <script src="../_static/documentation_options.js?v=c53b929c"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb93c247 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g66e847e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -452,7 +452,6 @@ document.write(`
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
 
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
@@ -485,11 +484,6 @@ document.write(`
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--data&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Data file name with the measured PSF vs radius [cm]&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--mc_parameter_file&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Yaml file with the model parameters to be replaced&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_model</span><span class="o">=</span><span class="s2">&quot;telescope&quot;</span><span class="p">)</span>
@@ -528,12 +522,8 @@ document.write(`
         <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
         <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
     <span class="p">)</span>
-
-    <span class="c1"># New parameters</span>
-    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pars&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;pars&quot;</span><span class="p">],</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">new_pars</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-        <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">new_pars</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope_model_file&quot;</span><span class="p">):</span>
+        <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope_model_file&quot;</span><span class="p">])</span>
 
     <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="o">.</span><span class="n">from_kwargs</span><span class="p">(</span>
         <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>

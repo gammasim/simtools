@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+gb93c247 Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+g66e847e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=ab406466"></script>
+    <script src="../../_static/documentation_options.js?v=c53b929c"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb93c247 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g66e847e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -595,9 +595,9 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> does not have a type&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> does not have a type.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -620,8 +620,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">):</span>
-                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> does not have a file associated with it.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span></div>
@@ -853,6 +852,30 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="ModelParameter.change_multiple_parameters_from_file">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.change_multiple_parameters_from_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_multiple_parameters_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change values of multiple existing parameters in the model from a file.</span>
+
+<span class="sd">        This function does not modify the DB, it affects only the current instance.</span>
+<span class="sd">        Experimental feature: insufficient validation of parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_name: str</span>
+<span class="sd">            File containing the parameters to be changed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Changing multiple parameters from file is an experimental feature.&quot;</span>
+            <span class="s2">&quot;Insufficient validation of parameters.&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Changing parameters from file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">change_multiple_parameters</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ModelParameter.change_multiple_parameters">

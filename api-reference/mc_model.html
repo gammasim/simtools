@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+gb93c247 Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g66e847e Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=ab406466"></script>
+    <script src="../_static/documentation_options.js?v=c53b929c"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gb93c247 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g66e847e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -504,6 +504,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.InvalidModelParameterError"><code class="docutils literal notranslate"><span class="pre">InvalidModelParameterError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter"><code class="docutils literal notranslate"><span class="pre">ModelParameter</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.change_multiple_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.change_multiple_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.change_multiple_parameters_from_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.change_multiple_parameters_from_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.change_parameter"><code class="docutils literal notranslate"><span class="pre">ModelParameter.change_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.config_file_directory"><code class="docutils literal notranslate"><span class="pre">ModelParameter.config_file_directory</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.config_file_path"><code class="docutils literal notranslate"><span class="pre">ModelParameter.config_file_path</span></code></a></li>
@@ -1090,6 +1091,22 @@ as stored under collection in the DB.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>**kwargs</strong></dt><dd><p>Parameters should be passed as parameter_name=value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.change_multiple_parameters_from_file">
+<span class="sig-name descname"><span class="pre">change_multiple_parameters_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.change_multiple_parameters_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.change_multiple_parameters_from_file" title="Link to this definition">#</a></dt>
+<dd><p>Change values of multiple existing parameters in the model from a file.</p>
+<p>This function does not modify the DB, it affects only the current instance.
+Experimental feature: insufficient validation of parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name: str</strong></dt><dd><p>File containing the parameters to be changed.</p>
 </dd>
 </dl>
 </dd>
@@ -1830,6 +1847,7 @@ reflectivity, etc.)</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.InvalidModelParameterError"><code class="docutils literal notranslate"><span class="pre">InvalidModelParameterError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter"><code class="docutils literal notranslate"><span class="pre">ModelParameter</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.change_multiple_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.change_multiple_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.change_multiple_parameters_from_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.change_multiple_parameters_from_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.change_parameter"><code class="docutils literal notranslate"><span class="pre">ModelParameter.change_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.config_file_directory"><code class="docutils literal notranslate"><span class="pre">ModelParameter.config_file_directory</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.config_file_path"><code class="docutils literal notranslate"><span class="pre">ModelParameter.config_file_path</span></code></a></li>
