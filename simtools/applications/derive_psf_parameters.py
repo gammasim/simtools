@@ -52,7 +52,7 @@ r"""
 
     Example
     -------
-    LST-1 Prod5
+    LSTN-01 Prod5
 
     Runtime < 3 min.
 
