@@ -76,7 +76,6 @@ from pathlib import Path
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -109,11 +108,6 @@ def _parse(label):
     config.parser.add_argument(
         "--data",
         help="Data file name with the measured PSF vs radius [cm]",
-        type=str,
-    )
-    config.parser.add_argument(
-        "--mc_parameter_file",
-        help="Yaml file with the model parameters to be replaced",
         type=str,
     )
     return config.initialize(db_config=True, simulation_model="telescope")
@@ -149,12 +143,8 @@ def main():  # noqa: D103
         model_version=args_dict["model_version"],
         label=label,
     )
-
-    # New parameters
-    if args_dict.get("pars", None):
-        with open(args_dict["pars"], encoding="utf-8") as file:
-            new_pars = yaml.safe_load(file)
-        tel_model.change_multiple_parameters(**new_pars)
+    if args_dict.get("telescope_model_file"):
+        tel_model.change_multiple_parameters_from_file(args_dict["telescope_model_file"])
 
     ray = RayTracing.from_kwargs(
         telescope_model=tel_model,
