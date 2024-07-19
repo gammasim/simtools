@@ -12,7 +12,7 @@ CTA_SIMPIPE:
     NUMBER_OF_RUNS: 2
     AZIMUTH_ANGLE: North
     ZENITH_ANGLE: 20
-    NSHOW: 10
+    NSHOW: 5
     ESLOPE: -2.
     VIEW_CONE: "0 deg 0 deg"
     ENERGY_RANGE: "100 GeV 2 TeV"
