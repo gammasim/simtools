@@ -77,7 +77,7 @@ def array_layout_south_four_lst_instance(db_config, model_version):
 def test_initialize_site_parameters_from_db(caplog):
 
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa PT011
             ArrayLayout(site="North", mongo_db_config=None, model_version="test_model_version")
     assert "No database configuration provided" in caplog.text
 

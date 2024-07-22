@@ -440,13 +440,13 @@ def test_log_level_from_user() -> None:
     assert gen.get_log_level_from_user("error") == logging.ERROR
     assert gen.get_log_level_from_user("critical") == logging.CRITICAL
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^'invalid' is not a logging level"):
         gen.get_log_level_from_user("invalid")
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match=r"^'1' is not a logging level"):
         gen.get_log_level_from_user(1)
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match=r"^'None' is not a logging level"):
         gen.get_log_level_from_user(None)
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match=r"^'True' is not a logging level"):
         gen.get_log_level_from_user(True)
 
 
@@ -824,7 +824,7 @@ def test_validate_data_type():
             is expected_result
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^Either value or dtype must be given"):
         gen.validate_data_type("int", None, None, False)
 
 

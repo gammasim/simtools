@@ -144,7 +144,6 @@ lint.ignore = [
   "D215",   # section-underline-not-over-indented
   "G004",   # Logging statement uses f-string
   "ISC001", # incompatible with ruff format
-  "PT011",  # TODO - fix
   "RUF012", #  Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [

@@ -556,5 +556,5 @@ def sanitize_name(name):
     if not sanitized.isidentifier():
         msg = f"The string {name} could not be sanitized."
         _logger.error(msg)
-        raise ValueError
+        raise ValueError(msg)
     return sanitized

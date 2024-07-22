@@ -340,6 +340,6 @@ def test_validate_parameter_dict(config_reader_num_gains, caplog):
     _config._validate_parameter_dict(_temp_dict)
     _temp_dict["value"] = 25
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             _config._validate_parameter_dict(_temp_dict)
         assert "out of range" in caplog.text

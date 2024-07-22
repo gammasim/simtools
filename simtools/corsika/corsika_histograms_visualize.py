@@ -45,7 +45,7 @@ def _kernel_plot_2d_photons(histograms_instance, property_name, log_z=False):
             f"{histograms_instance.dict_2d_distributions}"
         )
         _logger.error(msg)
-        raise ValueError
+        raise ValueError(msg)
     _function = getattr(
         histograms_instance,
         histograms_instance.dict_2d_distributions[property_name]["function"],
@@ -245,7 +245,7 @@ def _kernel_plot_1d_photons(histograms_instance, property_name, log_y=True):
             f"{histograms_instance.dict_1d_distributions}"
         )
         _logger.error(msg)
-        raise ValueError
+        raise ValueError(msg)
 
     _function = getattr(
         histograms_instance,
