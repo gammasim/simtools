@@ -109,7 +109,7 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
     with pytest.raises(gen.InvalidConfigDataError):
         with caplog.at_level(logging.ERROR):
             test_array_simulator.simulation_software = "this_simulator_is_not_there"
-        assert "Invalid simulation software" in caplog.text
+    assert "Invalid simulation software" in caplog.text
 
 
 def test_initialize_array_model(shower_simulator, db_config):
@@ -126,10 +126,10 @@ def test_initialize_run_list(shower_simulator, caplog):
     with pytest.raises(KeyError):
         with caplog.at_level(logging.ERROR):
             test_shower_simulator._initialize_run_list()
-        assert (
-            "Error in initializing run list (missing 'run_number_start' or 'number_of_runs')"
-            in caplog.text
-        )
+    assert (
+        "Error in initializing run list (missing 'run_number_start' or 'number_of_runs')"
+        in caplog.text
+    )
 
 
 def test_validate_run_list_and_range(shower_simulator, shower_array_simulator):
@@ -309,8 +309,8 @@ def test_make_resources_report(shower_simulator):
     _resources_1 = test_shower_simulator._make_resources_report(input_file_list=log_file_name)
     assert _resources_1["Wall time/run [sec]"] == 6
 
+    test_shower_simulator.runs = [4]
     with pytest.raises(FileNotFoundError):
-        test_shower_simulator.runs = [4]
         test_shower_simulator._make_resources_report(input_file_list)
 
 

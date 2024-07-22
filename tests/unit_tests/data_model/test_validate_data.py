@@ -371,14 +371,15 @@ def test_check_and_convert_units_with_errors(reference_columns):
     table_2["wrong_column"] = Column([0.1, 0.5], dtype="float32")
 
     with pytest.raises(IndexError):
-        for col_name in table_2.colnames:
-            data_validator._check_and_convert_units(table_2[col_name], unit=None, col_name=col_name)
+        data_validator._check_and_convert_units(
+            table_2["wrong_column"], unit=None, col_name="wrong_column"
+        )
 
     table_3 = Table()
     table_3["wavelength"] = Column([300.0, 350.0], unit="kg", dtype="float32")
 
-    with pytest.raises(u.core.UnitConversionError):
-        for col_name in table_3.colnames:
+    for col_name in table_3.colnames:
+        with pytest.raises(u.core.UnitConversionError):
             data_validator._check_and_convert_units(table_3[col_name], unit=None, col_name=col_name)
 
 

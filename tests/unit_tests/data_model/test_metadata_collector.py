@@ -147,7 +147,7 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     metadata_1.args_dict["input_meta"] = tmp_test_directory / "test_read_input_metadata_file.json"
     with pytest.raises(gen.InvalidConfigDataError):
         metadata_1._read_input_metadata_from_file()
-        assert "More than one metadata entry" in caplog.text
+    assert "More than one metadata entry" in caplog.text
 
     metadata_1.args_dict["input_meta"] = "tests/resources/telescope_positions-North-utm.ecsv"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
