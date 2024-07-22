@@ -45,11 +45,11 @@ def simtel_hist_hdata_io_instance(simtel_io_file_hdata):
 
 def test_init_errors(simtel_io_file_hdata, caplog):
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"view_cone needs to be passed as argument"):
             _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata)
     assert "view_cone needs to be passed as argument" in caplog.text
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"energy_range needs to be passed as argument"):
             _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata, view_cone=[0, 10])
     assert "energy_range needs to be passed as argument" in caplog.text
 
@@ -160,7 +160,7 @@ def test_get_particle_distribution_function(
     )
     assert simulation_function.index == -2.0
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"spectral_index not found in the configuration"):
             simtel_hist_hdata_io_instance._get_simulation_spectral_distribution_function()
     assert (
         "spectral_index not found in the configuration of the file. Consider using a .simtel file instead."
@@ -169,7 +169,7 @@ def test_get_particle_distribution_function(
 
     # Test invalid label
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"Please use either"):
             simtel_hist_io_instance.get_particle_distribution_function(label="invalid_label")
     assert "Please use either 'reference' or 'simulation'" in caplog.text
 

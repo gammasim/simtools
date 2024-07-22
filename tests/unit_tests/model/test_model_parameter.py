@@ -175,11 +175,11 @@ def test_change_parameter(telescope_model_lst):
     assert tel_model.get_parameter_value("camera_pixels") == 9999
 
     logger.info("Testing changing camera_pixels to a float (now allowed)")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa: PT011
         tel_model.change_parameter("camera_pixels", 9999.9)
 
     logger.info("Testing changing camera_pixels to a nonsense string")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa: PT011
         tel_model.change_parameter("camera_pixels", "bla_bla")
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('mirror_focal_length')}")
@@ -192,7 +192,7 @@ def test_change_parameter(telescope_model_lst):
     assert pytest.approx(9999.9) == tel_model.get_parameter_value("mirror_focal_length")[0]
 
     logger.info("Testing changing mirror_focal_length to a nonsense string")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa: PT011
         tel_model.change_parameter("mirror_focal_length", "bla_bla")
 
     with pytest.raises(InvalidModelParameterError, match="Parameter bla_bla not in the model"):

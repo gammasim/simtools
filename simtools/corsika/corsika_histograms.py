@@ -468,7 +468,7 @@ class CorsikaHistograms:
         if label not in self._allowed_histograms:
             msg = f"allowed labels must be one of the following: {self._allowed_histograms}"
             self._logger.error(msg)
-            raise ValueError
+            raise ValueError(msg)
 
         all_axes = [X_AXIS_STRING, Y_AXIS_STRING]
         if label == "hist_position":
@@ -731,7 +731,7 @@ class CorsikaHistograms:
         if label not in self._allowed_2d_labels:
             msg = f"label is not valid. Valid entries are {self._allowed_2d_labels}"
             self._logger.error(msg)
-            raise ValueError
+            raise ValueError(msg)
         self._raise_if_no_histogram()
 
         num_telescopes_to_fill = (
@@ -871,7 +871,7 @@ class CorsikaHistograms:
         if label not in self._allowed_1d_labels:
             msg = f"{label} is not valid. Valid entries are {self._allowed_1d_labels}"
             self._logger.error(msg)
-            raise ValueError
+            raise ValueError(msg)
         self._raise_if_no_histogram()
 
         x_bin_edges_list, hist_1d_list = [], []

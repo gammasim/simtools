@@ -131,7 +131,7 @@ def test_create_regular_axes_valid_label(corsika_histograms_instance):
 
 def test_create_regular_axes_invalid_label(corsika_histograms_instance):
     label = "invalid_label"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"allowed labels must be one of the following"):
         corsika_histograms_instance._create_regular_axes(label)
 
 
@@ -192,7 +192,7 @@ def test_fill_histograms_no_rotation(corsika_output_file_name, io_handler):
 
 
 def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, caplog):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="label_not_valid is not valid."):
         corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
     assert "label_not_valid is not valid." in caplog.text
 
@@ -296,7 +296,7 @@ def test_get_hist_2d_projection(corsika_histograms_instance, caplog):
     corsika_histograms_instance.set_histograms()
 
     label = "hist_non_existent"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^label is not valid. Valid entries are"):
         corsika_histograms_instance._get_hist_2d_projection(label)
     assert "label is not valid." in caplog.text
 

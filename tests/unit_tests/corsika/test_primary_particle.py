@@ -38,7 +38,7 @@ def test_corsika7_id(caplog):
     assert si.pdg_id == 1000140280
 
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             PrimaryParticle(corsika7_id=9999)
         assert "Invalid CORSIKA7 ID: 9999" in caplog.text
 
@@ -56,12 +56,12 @@ def test_common_name(caplog):
     assert pi0.pdg_id == 111
 
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             PrimaryParticle(name="pi")
         assert "Found more than one particle with name pi" in caplog.text
 
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             PrimaryParticle(name="the_particle_which_explains_nothing")
         assert "Invalid particle name: the_particle_which_explains_nothing" in caplog.text
 
@@ -83,7 +83,7 @@ def test_pdg_id(caplog):
     assert pi0.name == "pi0"
 
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             PrimaryParticle(pdg_id=9999)
         assert "Invalid DPG ID: 9999" in caplog.text
 

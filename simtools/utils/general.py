@@ -703,7 +703,10 @@ def get_log_level_from_user(log_level):
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
     }
-    log_level_lower = log_level.lower()
+    try:
+        log_level_lower = log_level.lower()
+    except AttributeError:
+        log_level_lower = log_level
     if log_level_lower not in possible_levels:
         raise ValueError(
             f"'{log_level}' is not a logging level, "

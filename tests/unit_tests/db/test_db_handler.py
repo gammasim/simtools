@@ -57,7 +57,7 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker, caplog):
     db_copy = copy.deepcopy(db)
     db_copy.mongo_db_config["db_simulation_model"] = "DB_NAME-LATEST"
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa PT011
             db_copy._update_db_simulation_model()
         assert "Found LATEST in the DB name but no matching versions found in DB." in caplog.text
 
@@ -134,7 +134,7 @@ def test_get_derived_values(db, model_version):
         logger.error("Derived DB not updated for new telescope names. Expect failure")
         raise AssertionError
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^abc"):
         pars = db.get_derived_values("North", None, "Prod5")
 
 
@@ -184,7 +184,7 @@ def test_copy_telescope_db(db, random_id, io_handler, model_version):
 
     # After deleting the copied telescope
     # we always expect to get a ValueError (query returning zero results)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"The following query returned zero results"):
         db.read_mongo_db(
             db_name=f"sandbox_{random_id}",
             telescope_model_name="LSTN-test",
@@ -346,7 +346,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     assert pars["led_pulse_offset"]["unit"] == "ns"
 
     # wrong collection
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^Cannot add parameter to collection "):
         db.add_new_parameter(
             db_name=f"sandbox_{random_id}",
             site="North",
@@ -399,7 +399,9 @@ def test_update_parameter_field_db(db, random_id, io_handler):
     )
     assert pars["camera_pixels"]["applicable"] is False
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match=r"You need to specify if to update a telescope or a site."
+    ):
         db.update_parameter_field(
             db_name=f"sandbox_{random_id}",
             telescope=None,
@@ -554,7 +556,7 @@ def test_get_all_available_array_elements(db, model_version, caplog):
     assert all(_t in available_telescopes for _t in expected_telescope_names)
 
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa PT011
             db.get_all_available_array_elements(
                 model_version=model_version, collection="wrong_collection"
             )
@@ -578,10 +580,10 @@ def test_get_telescope_db_name(db):
     assert db.get_telescope_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
     assert db.get_telescope_db_name("SSTS-91", model_version="Prod5") == "SSTS-design"
     assert db.get_telescope_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Invalid name SSTN"):
         db.get_telescope_db_name("SSTN-05", model_version="Prod5", collection="telescopes")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Invalid database name."):
         db.get_telescope_db_name("ILLN-01", model_version="Prod5", collection="telescopes")
 
 
@@ -601,7 +603,7 @@ def test_model_version(db, caplog):
     assert db.model_version(version="prod6") == "2024-02-01"
 
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa PT011
             db.model_version(version="test")
         assert "Invalid model version test" in caplog.text
 
