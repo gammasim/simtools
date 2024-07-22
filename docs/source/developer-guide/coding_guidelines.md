@@ -119,8 +119,7 @@ For the Site field, any different capitalization (e.g "south") or site names lik
 "lapalma" will be accepted
 and converted to the standard ones. The same applies to the Class field.
 For the Type field, any string will be accepted and a selected list of variations will be converted
-to the standard ones
-(e.g "flashcam" will be converted to "FlashCam").
+to the standard ones.
 
 ### Validating names
 
