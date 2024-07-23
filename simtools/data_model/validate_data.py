@@ -553,21 +553,17 @@ class DataValidator:
         if range_type not in _entry:
             return
 
-        try:
-            if not self._interval_check(
-                (col_min, col_max),
-                (_entry[range_type].get("min", -np.inf), _entry[range_type].get("max", np.inf)),
-                range_type,
-            ):
-                raise ValueError
-        except ValueError:
-            self._logger.error(
+        if not self._interval_check(
+            (col_min, col_max),
+            (_entry[range_type].get("min", -np.inf), _entry[range_type].get("max", np.inf)),
+            range_type,
+        ):
+            raise ValueError(
                 f"Value for column '{col_name}' out of range. "
                 f"([{col_min}, {col_max}], {range_type}: "
                 f"[{_entry[range_type].get('min', -np.inf)}, "
                 f"{_entry[range_type].get('max', np.inf)}])"
             )
-            raise
 
     @staticmethod
     def _interval_check(data, axis_range, range_type):
