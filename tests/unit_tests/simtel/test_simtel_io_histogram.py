@@ -162,10 +162,11 @@ def test_get_particle_distribution_function(
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError, match=r"spectral_index not found in the configuration"):
             simtel_hist_hdata_io_instance._get_simulation_spectral_distribution_function()
-    assert (
-        "spectral_index not found in the configuration of the file. Consider using a .simtel file instead."
-        in caplog.text
+    assert_string = (
+        "spectral_index not found in the configuration of the file. "
+        "Consider using a .simtel file instead."
     )
+    assert assert_string in caplog.text
 
     # Test invalid label
     with caplog.at_level(logging.ERROR):
