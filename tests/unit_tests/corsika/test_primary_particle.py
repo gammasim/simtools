@@ -25,7 +25,7 @@ def test_str():
     assert str(fe) == "iron (5626, 1000260560, Fe56)"
 
 
-def test_corsika7_id(caplog):
+def test_corsika7_id():
     p = PrimaryParticle(corsika7_id=14)
 
     assert p.corsika7_id == 14
@@ -37,13 +37,11 @@ def test_corsika7_id(caplog):
     assert si.name == "silicon"
     assert si.pdg_id == 1000140280
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):  # noqa: PT011
-            PrimaryParticle(corsika7_id=9999)
-        assert "Invalid CORSIKA7 ID: 9999" in caplog.text
+    with pytest.raises(ValueError, match="Invalid CORSIKA7 ID: 9999"):
+        PrimaryParticle(corsika7_id=9999)
 
 
-def test_common_name(caplog):
+def test_common_name():
     p = PrimaryParticle(name="proton")
 
     assert p.corsika7_id == 14
@@ -55,15 +53,13 @@ def test_common_name(caplog):
     assert pi0.name == "pi0"
     assert pi0.pdg_id == 111
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):  # noqa: PT011
-            PrimaryParticle(name="pi")
-        assert "Found more than one particle with name pi" in caplog.text
+    with pytest.raises(ValueError, match=r"Found more than one particle with name pi"):
+        PrimaryParticle(name="pi")
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):  # noqa: PT011
-            PrimaryParticle(name="the_particle_which_explains_nothing")
-        assert "Invalid particle name: the_particle_which_explains_nothing" in caplog.text
+    with pytest.raises(
+        ValueError, match="Invalid particle name: the_particle_which_explains_nothing"
+    ):
+        PrimaryParticle(name="the_particle_which_explains_nothing")
 
 
 def test_pdg_id(caplog):
@@ -82,10 +78,8 @@ def test_pdg_id(caplog):
     assert pi0.corsika7_id == 7
     assert pi0.name == "pi0"
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):  # noqa: PT011
-            PrimaryParticle(pdg_id=9999)
-        assert "Invalid DPG ID: 9999" in caplog.text
+    with pytest.raises(ValueError, match="Invalid DPG ID: 9999"):
+        PrimaryParticle(pdg_id=9999)
 
 
 def test_particle_names():

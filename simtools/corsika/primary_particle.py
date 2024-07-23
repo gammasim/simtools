@@ -56,8 +56,7 @@ class PrimaryParticle:
                 self._pdg_id = ids["pdg_id"]
                 self._pdg_name = ids["pdg_name"]
                 return
-        self._logger.error("Invalid CORSIKA7 ID: %s", value)
-        raise ValueError
+        raise ValueError(f"Invalid CORSIKA7 ID: {value}")
 
     @property
     def name(self):
@@ -83,11 +82,9 @@ class PrimaryParticle:
             self._name = Corsika7ID.from_pdgid(self._pdg_id).name()
             return
         if len(pdg_list) > 1:
-            self._logger.error(f"Found more than one particle with name {value}: {pdg_list}")
-            raise ValueError
+            raise ValueError(f"Found more than one particle with name {value}: {pdg_list}")
 
-        self._logger.error("Invalid particle name: %s", value)
-        raise ValueError
+        raise ValueError(f"Invalid particle name: {value}")
 
     @property
     def pdg_id(self):
@@ -110,8 +107,7 @@ class PrimaryParticle:
             self._pdg_id = Particle.findall(pdgid=value)[0].pdgid.numerator
             self._pdg_name = Particle.findall(pdgid=value)[0].name
         except IndexError as exc:
-            self._logger.error("Invalid DPG ID: %s", value)
-            raise ValueError from exc
+            raise ValueError(f"Invalid DPG ID: {value}") from exc
         self._corsika7_id = Corsika7ID.from_pdgid(self._pdg_id).numerator
         self._name = Corsika7ID.from_pdgid(self._pdg_id).name()
 
