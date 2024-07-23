@@ -192,7 +192,7 @@ def test_process_rx(
         assert Path(empty_file).is_file()
     with pytest.raises(IndexError):
         ray._process_rx(empty_file)
-        assert "Invalid output from rx" in caplog.text
+    assert "Invalid output from rx" in caplog.text
     with pytest.raises(FileNotFoundError):
         ray._process_rx(file=tmp_test_directory / "non_existing_file.gz")
-        assert "Photon list file not found" in caplog.text
+    assert "Photon list file not found" in caplog.text
