@@ -40,7 +40,7 @@ def test_get_corsika_site_parameters(db_config, model_version):
     assert "ARRANG" in _north.get_corsika_site_parameters(config_file_style=True)
 
 
-def test_get_array_elements_for_layout(db_config, model_version, caplog):
+def test_get_array_elements_for_layout(db_config, model_version):
     _north = SiteModel(
         site="North",
         mongo_db_config=db_config,
@@ -52,10 +52,10 @@ def test_get_array_elements_for_layout(db_config, model_version, caplog):
     assert len(_north.get_array_elements_for_layout("test_layout")) == 13
     assert "LSTN-01" in _north.get_array_elements_for_layout("test_layout")
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):  # noqa: PT011
-            _north.get_array_elements_for_layout("not_a_layout")
-        assert "Array layout 'not_a_layout' not found in 'North' site model." in caplog.text
+    with pytest.raises(
+        ValueError, match="Array layout 'not_a_layout' not found in 'North' site model."
+    ):
+        _north.get_array_elements_for_layout("not_a_layout")
 
 
 def test_get_list_of_array_layouts(db_config, model_version):

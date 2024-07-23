@@ -49,7 +49,7 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     assert file_has_text(file, "num_gains = 1")
 
 
-def test_get_simtel_metadata(simtel_config_writer, caplog):
+def test_get_simtel_metadata(simtel_config_writer):
 
     _tel = simtel_config_writer._get_simtel_metadata("telescope")
     assert len(_tel) == 8
@@ -61,9 +61,8 @@ def test_get_simtel_metadata(simtel_config_writer, caplog):
     assert _site["site_config_name"] == simtel_config_writer._site
     assert _site["array_config_name"] == simtel_config_writer._layout_name
 
-    with pytest.raises(ValueError):  # noqa: PT011
+    with pytest.raises(ValueError, match=r"^Unknown metadata type"):
         simtel_config_writer._get_simtel_metadata("unknown")
-    assert "Unknown metadata type" in caplog.text
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):
