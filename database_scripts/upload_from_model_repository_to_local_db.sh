@@ -35,7 +35,7 @@ db.createUser({
 
 echo "Cloning model parameters from $SIMTOOLS_DB_SIMULATION_MODEL_URL"
 rm -rf ./tmp_model_parameters
-git clone -b $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH $SIMTOOLS_DB_SIMULATION_MODEL_URL ./tmp_model_parameters
+git clone --depth=1 -b $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH $SIMTOOLS_DB_SIMULATION_MODEL_URL ./tmp_model_parameters
 
 CURRENTDIR=$(pwd)
 cd ./tmp_model_parameters/ || exit
