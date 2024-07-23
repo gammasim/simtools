@@ -428,11 +428,10 @@ class ModelParameter:
             dtype=None,
             allow_subtypes=True,
         ):
-            self._logger.error(
+            raise ValueError(
                 f"Could not cast {value} of type {type(value)} "
                 f"to {self.get_parameter_type(par_name)}."
             )
-            raise ValueError
 
         self._logger.debug(
             f"Changing parameter {par_name} "
