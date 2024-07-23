@@ -56,7 +56,7 @@ def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) ->
 
     with pytest.raises(InvalidConfigDataError):
         gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
-        assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
+    assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
     _lines = gen.collect_data_from_file_or_dict("tests/resources/test_file.list", None)
     assert len(_lines) == 2
@@ -124,7 +124,7 @@ def test_validate_config_data(args_dict, io_handler, caplog) -> None:
     }
     with pytest.raises(MissingRequiredConfigEntryError):
         gen.validate_config_data(config_data=config_data, parameters=parameters)
-        assert "Required entry in config_data" in caplog.text
+    assert "Required entry in config_data" in caplog.text
 
     # Test that a default value is set for a missing parameter.
     config_data["offaxis"] = [0 * u.deg, 0.2 * u.rad, 3 * u.deg]
@@ -219,7 +219,7 @@ def test_validate_and_convert_value_with_units(caplog) -> None:
     }
     with pytest.raises(InvalidConfigEntryError):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
-        assert "Config entry given with wrong unit" in caplog.text
+    assert "Config entry with undefined length should have a single unit:" in caplog.text
     _parinfo = {
         "len": 5,
         "unit": [None, u.Unit("kg"), u.Unit("m"), u.Unit("m"), None],
@@ -227,7 +227,7 @@ def test_validate_and_convert_value_with_units(caplog) -> None:
     }
     with pytest.raises(InvalidConfigEntryError):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
-        assert "Config entry given with wrong unit" in caplog.text
+    assert "Config entry given with wrong unit" in caplog.text
     _parinfo = {
         "len": 5,
         "unit": [None, u.Unit("m"), u.Unit("m"), u.Unit("m"), None],
@@ -236,7 +236,7 @@ def test_validate_and_convert_value_with_units(caplog) -> None:
     _value = [0, 10 * u.m, 3 * u.km, 4, None]
     with pytest.raises(InvalidConfigEntryError):
         gen._validate_and_convert_value_with_units(_value, None, _parname, _parinfo)
-        assert "Config entry given without unit" in caplog.text
+    assert "Config entry given without unit" in caplog.text
 
 
 def test_validate_and_convert_value_without_units() -> None:
@@ -612,7 +612,7 @@ def test_change_dict_keys_case(caplog) -> None:
 
     with pytest.raises(AttributeError):
         gen.change_dict_keys_case([2], False)
-        assert "Input is not a proper dictionary" in caplog.text
+    assert "Input is not a proper dictionary" in caplog.text
 
 
 def test_sort_arrays() -> None:

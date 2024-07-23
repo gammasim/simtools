@@ -940,9 +940,9 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
     try:
         return _process_dict_keys(data_dict, case_func)
-    except AttributeError:
+    except AttributeError as exc:
         _logger.error(f"Input is not a proper dictionary: {data_dict}")
-        raise
+        raise AttributeError from exc
 
 
 def remove_substring_recursively_from_dict(data_dict, substring="\n"):
