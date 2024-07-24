@@ -77,9 +77,10 @@ def test_prepare_run_script(corsika_simtel_runner):
 
 
 def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
-    for run_number in [-2, "test"]:
-        with pytest.raises(ValueError):
-            _ = corsika_simtel_runner.prepare_run_script(run_number=run_number)
+    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
+        _ = corsika_simtel_runner.prepare_run_script(run_number=-2)
+    with pytest.raises(ValueError, match=r"^could not convert string to float"):
+        _ = corsika_simtel_runner.prepare_run_script(run_number="test")
 
 
 def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all):

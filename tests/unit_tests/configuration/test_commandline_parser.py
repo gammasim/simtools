@@ -71,7 +71,7 @@ def test_zenith_angle(caplog):
 
     with pytest.raises(TypeError):
         parser.CommandLineParser.zenith_angle("North")
-        assert "The zenith angle provided is not a valid numeric value" in caplog.text
+    assert "The zenith angle provided is not a valid numeric" in caplog.text
 
 
 def test_parse_quantity_pair(caplog):
@@ -131,12 +131,15 @@ def test_azimuth_angle(caplog):
         match=r"The provided azimuth angle, 370.0, is outside of the allowed \[0, 360\] interval",
     ):
         parser.CommandLineParser.azimuth_angle(370)
-    with pytest.raises(argparse.ArgumentTypeError):
+    caplog.clear()
+    with pytest.raises(
+        argparse.ArgumentTypeError, match=r"^The azimuth angle given as string can only be one of"
+    ):
         parser.CommandLineParser.azimuth_angle("TEST")
-        assert "The azimuth angle can only be a number or one of" in caplog.text
+
     with pytest.raises(TypeError):
         parser.CommandLineParser.azimuth_angle([0, 10])
-        assert "The azimuth angle provided is not a valid numerical or string value." in caplog.text
+    assert "The azimuth angle provided is not a valid numerical or string value." in caplog.text
 
 
 def test_initialize_default_arguments():
