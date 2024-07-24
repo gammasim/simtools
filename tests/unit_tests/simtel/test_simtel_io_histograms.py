@@ -219,11 +219,11 @@ def test_combine_histogram_files(simtel_io_file, caplog):
 
     # Test inconsistency
     instance_all.combined_hists[0]["lower_x"] = instance_all.combined_hists[0]["lower_x"] + 1
+    instance_all._combined_hists = None
+    assert instance_all._combined_hists is None
     with pytest.raises(InconsistentHistogramFormatError):
-        instance_all._combined_hists = None
-        assert instance_all._combined_hists is None
         _ = instance_all.combined_hists
-        assert "Trying to add histograms with inconsistent dimensions" in caplog.text
+    assert "Trying to add histograms with inconsistent dimensions" in caplog.text
 
 
 def test_plot_one_histogram(simtel_array_histograms_instance):

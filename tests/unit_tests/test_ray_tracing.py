@@ -122,20 +122,19 @@ def test_ray_tracing_single_mirror_mode_mirror_numbers(
     assert ray._mirror_numbers == [1, 2, 3]
 
 
-def test_ray_tracing_invalid_telescope_model(simtel_path, io_handler, caplog):
+def test_ray_tracing_invalid_telescope_model(simtel_path, io_handler):
     config_data = {
         "source_distance": 10 * u.km,
         "zenith_angle": 30 * u.deg,
         "off_axis_angle": [0, 2] * u.deg,
     }
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid TelescopeModel"):
         RayTracing(
             telescope_model=None,
             simtel_path=simtel_path,
             config_data=config_data,
         )
-        assert "Invalid TelescopeModel" in caplog.text
 
 
 def test_ray_tracing_read_results(ray_tracing_lst):
@@ -176,7 +175,7 @@ def test_ray_tracing_plot(ray_tracing_lst, caplog):
     # First test a wrong key
     with pytest.raises(KeyError):
         ray_tracing_lst.plot(key="invalid_key")
-        assert "Invalid key" in caplog.text
+    assert "Invalid key" in caplog.text
 
     # Now test a valid key
     with caplog.at_level(logging.INFO):
@@ -204,15 +203,15 @@ def test_ray_tracing_invalid_key(ray_tracing_lst, caplog):
     invalid_key = "Invalid key"
     with pytest.raises(KeyError):
         ray_tracing_lst.plot_histogram(key="invalid_key")
-        assert invalid_key in caplog.text
+    assert invalid_key in caplog.text
 
     with pytest.raises(KeyError):
         ray_tracing_lst.get_mean(key="invalid_key")
-        assert invalid_key in caplog.text
+    assert invalid_key in caplog.text
 
     with pytest.raises(KeyError):
         ray_tracing_lst.get_std_dev(key="invalid_key")
-        assert invalid_key in caplog.text
+    assert invalid_key in caplog.text
 
 
 def test_ray_tracing_get_std_dev(ray_tracing_lst):

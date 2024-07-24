@@ -12,6 +12,11 @@ logging.getLogger().setLevel(logging.DEBUG)
 ecsv_suffix = ".ecsv"
 
 
+@pytest.fixture()
+def invalid_name():
+    return "Invalid name"
+
+
 def test_get_list_of_telescope_types():
     assert names.get_list_of_telescope_types(array_element_class="telescopes", site=None) == [
         "LSTN",
@@ -79,20 +84,20 @@ def test_validate_telescope_id_name(caplog):
 
     for _id in ["no_id", "D2345"]:
         with caplog.at_level(logging.ERROR):
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError, match=r"^Invalid telescope ID name"):
                 names.validate_telescope_id_name(_id)
             assert f"Invalid telescope ID name {_id}" in caplog.text
 
 
-def test_validate_site_name():
+def test_validate_site_name(invalid_name):
     for key, value in names.site_names().items():
         for test_name in value:
             assert key == names.validate_site_name(test_name)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.validate_site_name("Not a site")
 
 
-def test_validate_telescope_name():
+def test_validate_telescope_name(invalid_name):
     telescopes = {
         "LSTN-Design": "LSTN-design",
         "LSTN-TEST": "LSTN-test",
@@ -106,9 +111,9 @@ def test_validate_telescope_name():
         logging.getLogger().info(f"New name {new_name}")
         assert value == new_name
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.validate_telescope_name("South-MST-FlashCam-D")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.validate_telescope_name("LSTN")
 
 
@@ -118,33 +123,33 @@ def test_get_telescope_name_from_type_site_id():
     assert "LSTS-01" == names.get_telescope_name_from_type_site_id("LST", "South", "01")
 
 
-def test_get_site_from_telescope_name():
+def test_get_site_from_telescope_name(invalid_name):
     assert "North" == names.get_site_from_telescope_name("MSTN")
     assert "North" == names.get_site_from_telescope_name("MSTN-05")
     assert "South" == names.get_site_from_telescope_name("MSTS-05")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.get_site_from_telescope_name("LSTW")
 
 
-def test_get_class_from_telescope_name():
+def test_get_class_from_telescope_name(invalid_name):
     assert "telescopes" == names.get_collection_name_from_array_element_name("LSTN-01")
     assert "calibration_devices" == names.get_collection_name_from_array_element_name("ILLS-01")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.get_site_from_telescope_name("SATW")
 
 
-def test_sanitize_name():
+def test_sanitize_name(caplog):
     assert names.sanitize_name("y_edges unit") == "y_edges_unit"
     assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
     assert names.sanitize_name("123name") == "_123name"
     assert names.sanitize_name("na!@#$%^&*()me") == "na__________me"
     assert names.sanitize_name("!validName") == "_validname"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^The string  could not be sanitized."):
         names.sanitize_name("")
 
 
-def test_get_telescope_type_from_telescope_name():
+def test_get_telescope_type_from_telescope_name(invalid_name):
     assert names.get_telescope_type_from_telescope_name("LSTN-01") == "LSTN"
     assert names.get_telescope_type_from_telescope_name("MSTN-02") == "MSTN"
     assert names.get_telescope_type_from_telescope_name("SSTS-27") == "SSTS"
@@ -152,7 +157,7 @@ def test_get_telescope_type_from_telescope_name():
     assert names.get_telescope_type_from_telescope_name("MAGIC-2") == "MAGIC"
     assert names.get_telescope_type_from_telescope_name("VERITAS-4") == "VERITAS"
     for _name in ["", "01", "Not_a_telescope", "LST", "MST"]:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=rf"^{invalid_name}"):
             names.get_telescope_type_from_telescope_name(_name)
 
 
