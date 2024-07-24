@@ -45,7 +45,7 @@ def _db_cleanup_file_sandbox(db_no_config_file, random_id):
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
 
 
-def test_update_db_simulation_model(db, db_no_config_file, mocker, caplog):
+def test_update_db_simulation_model(db, db_no_config_file, mocker):
 
     db_no_config_file._update_db_simulation_model()
     assert db_no_config_file.mongo_db_config is None
@@ -56,10 +56,10 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker, caplog):
 
     db_copy = copy.deepcopy(db)
     db_copy.mongo_db_config["db_simulation_model"] = "DB_NAME-LATEST"
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):  # noqa PT011
-            db_copy._update_db_simulation_model()
-        assert "Found LATEST in the DB name but no matching versions found in DB." in caplog.text
+    with pytest.raises(
+        ValueError, match=r"Found LATEST in the DB name but no matching versions found in DB."
+    ):
+        db_copy._update_db_simulation_model()
 
     db_names = [
         "CTAO-Simulation-Model-v0-3-0",
@@ -555,12 +555,12 @@ def test_get_all_available_array_elements(db, model_version, caplog):
     ]
     assert all(_t in available_telescopes for _t in expected_telescope_names)
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):  # noqa PT011
-            db.get_all_available_array_elements(
-                model_version=model_version, collection="wrong_collection"
-            )
-        assert "Query for collection name wrong_collection not implemented." in caplog.text
+    with pytest.raises(
+        ValueError, match=r"^Query for collection name wrong_collection not implemented."
+    ):
+        db.get_all_available_array_elements(
+            model_version=model_version, collection="wrong_collection"
+        )
 
 
 def test_get_available_array_elements_of_type(db, model_version, caplog):
@@ -594,7 +594,7 @@ def test_parameter_cache_key(db):
     assert db._parameter_cache_key(None, None, "Prod5") == "2020-06-28"
 
 
-def test_model_version(db, caplog):
+def test_model_version(db):
 
     assert db.model_version(version="Released") == "2020-06-28"
     assert db.model_version(version="Latest") == "2020-06-28"
@@ -602,10 +602,8 @@ def test_model_version(db, caplog):
     assert db.model_version(version="Prod6") == "2024-02-01"
     assert db.model_version(version="prod6") == "2024-02-01"
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):  # noqa PT011
-            db.model_version(version="test")
-        assert "Invalid model version test" in caplog.text
+    with pytest.raises(ValueError, match=r"Invalid model version test"):
+        db.model_version(version="test")
 
 
 def test_get_collections(db, db_config):
