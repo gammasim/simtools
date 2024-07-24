@@ -20,7 +20,7 @@ __all__ = [
     "simtel_config_file_name",
     "validate_site_name",
     "validate_telescope_id_name",
-    "validate_telescope_name",
+    "validate_array_element_name",
 ]
 
 
@@ -167,14 +167,14 @@ def _validate_name(name, all_names):
     raise ValueError(msg)
 
 
-def validate_telescope_name(name):
+def validate_array_element_name(name):
     """
-    Validate telescope name (e.g., MSTN-design, MSTN-01).
+    Validate array element name (e.g., MSTN-design, MSTN-01).
 
     Parameters
     ----------
     name: str
-        Telescope name.
+        array element name.
 
     Returns
     -------
@@ -182,11 +182,15 @@ def validate_telescope_name(name):
         Validated name.
     """
     try:
-        _tel_type, _tel_id = name.split("-")
+        _array_element_type, _array_element_id = name.split("-")
     except ValueError as exc:
         msg = f"Invalid name {name}"
         raise ValueError(msg) from exc
-    return _validate_name(_tel_type, array_elements()) + "-" + validate_telescope_id_name(_tel_id)
+    return (
+        _validate_name(_array_element_type, array_elements())
+        + "-"
+        + validate_telescope_id_name(_array_element_id)
+    )
 
 
 def get_telescope_name_from_type_site_id(telescope_type, site, telescope_id):
