@@ -61,7 +61,7 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
     assert len(_pars_south) > 0
 
     with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Unknown parameter collection"):
             db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=dict.fromkeys(_pars_telescope_model, None),
                 site="North",
@@ -71,7 +71,6 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
                 db_simulation_model_url=simulation_model_url,
                 db_simulation_model="verified_model",
             )
-        assert "Unknown parameter collection" in caplog.text
 
     # Test with a parameter that is not in the repository (no error should be raised)
     _pars_site_model.append("not_a_parameter")
