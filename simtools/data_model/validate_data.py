@@ -106,11 +106,10 @@ class DataValidator:
     def validate_parameter_and_file_name(self):
         """Validate that file name and key 'parameter_name' in data dict are the same."""
         if self.data_dict.get("parameter") != Path(self.data_file_name).stem:
-            self._logger.error(
+            raise ValueError(
                 f"Parameter name in data dict {self.data_dict.get('parameter')} and "
                 f"file name {Path(self.data_file_name).stem} do not match."
             )
-            raise ValueError
 
     def _validate_data_dict(self):
         """
@@ -277,11 +276,10 @@ class DataValidator:
             ):
                 self.data_table = unique(self.data_table)
             else:
-                self._logger.error(
+                raise ValueError(
                     "Failed removal of duplication for column "
                     f"{_column_with_unique_requirement}, values are not unique"
                 )
-                raise ValueError
 
     def _get_unique_column_requirement(self):
         """
@@ -397,8 +395,7 @@ class DataValidator:
             return np.isnan(data).any() or np.isinf(data).any()
 
         if np.isnan(data).any() or np.isinf(data).any():
-            self._logger.error("NaN or Inf values found in data")
-            raise ValueError
+            raise ValueError("NaN or Inf values found in data")
 
         return False
 
@@ -542,32 +539,24 @@ class DataValidator:
         """
         self._logger.debug(f"Checking data in column '{col_name}' for '{range_type}' ")
 
-        try:
-            if range_type not in ("allowed_range", "required_range"):
-                raise KeyError
-        except KeyError:
-            self._logger.error("Allowed range types are 'allowed_range', 'required_range'")
-            raise
+        if range_type not in ("allowed_range", "required_range"):
+            raise KeyError("Allowed range types are 'allowed_range', 'required_range'")
 
         _entry = self._get_data_description(col_name)
         if range_type not in _entry:
             return
 
-        try:
-            if not self._interval_check(
-                (col_min, col_max),
-                (_entry[range_type].get("min", -np.inf), _entry[range_type].get("max", np.inf)),
-                range_type,
-            ):
-                raise ValueError
-        except ValueError:
-            self._logger.error(
+        if not self._interval_check(
+            (col_min, col_max),
+            (_entry[range_type].get("min", -np.inf), _entry[range_type].get("max", np.inf)),
+            range_type,
+        ):
+            raise ValueError(
                 f"Value for column '{col_name}' out of range. "
                 f"([{col_min}, {col_max}], {range_type}: "
                 f"[{_entry[range_type].get('min', -np.inf)}, "
                 f"{_entry[range_type].get('max', np.inf)}])"
             )
-            raise
 
     @staticmethod
     def _interval_check(data, axis_range, range_type):

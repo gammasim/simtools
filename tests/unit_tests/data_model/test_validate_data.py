@@ -141,7 +141,10 @@ def test_validate_parameter_and_file_name():
     data_validator.validate_and_transform()
 
     data_validator.data_dict["parameter"] = "incorrect_name"
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Parameter name in data dict incorrect_name and file name num_gains do not match.",
+    ):
         data_validator.validate_parameter_and_file_name()
 
 
@@ -271,7 +274,7 @@ def test_check_data_for_duplicates(reference_columns):
     table_3["qe"] = Column([0.1, 0.5, 0.8], dtype="float32")
 
     data_validator.data_table = table_3
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^Failed removal of duplication for column"):
         data_validator._check_data_for_duplicates()
 
 
@@ -314,19 +317,14 @@ def test_check_range(reference_columns, caplog):
         data_validator._check_range(col_w.name, col_w.min(), col_w.max(), "failed_range")
 
     col_3 = Column(name="qe", data=[0.1, 5.00], dtype="float32")
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
-            data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
-    assert "Value for column 'qe' out of range" in caplog.text
+    with pytest.raises(ValueError, match=r"Value for column 'qe' out of range"):
+        data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
     col_3 = Column(name="qe", data=[-0.1, 0.5], dtype="float32")
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
-            data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
-    assert "Value for column 'qe' out of range" in caplog.text
+    with pytest.raises(ValueError, match=r"^Value for column 'qe' out of range"):
+        data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "allowed_range")
 
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(KeyError):
-            data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "invalid_range")
+    with pytest.raises(KeyError, match=r"Allowed range types are"):
+        data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "invalid_range")
 
 
 def test_is_dimensionless():
@@ -371,14 +369,15 @@ def test_check_and_convert_units_with_errors(reference_columns):
     table_2["wrong_column"] = Column([0.1, 0.5], dtype="float32")
 
     with pytest.raises(IndexError):
-        for col_name in table_2.colnames:
-            data_validator._check_and_convert_units(table_2[col_name], unit=None, col_name=col_name)
+        data_validator._check_and_convert_units(
+            table_2["wrong_column"], unit=None, col_name="wrong_column"
+        )
 
     table_3 = Table()
     table_3["wavelength"] = Column([300.0, 350.0], unit="kg", dtype="float32")
 
-    with pytest.raises(u.core.UnitConversionError):
-        for col_name in table_3.colnames:
+    for col_name in table_3.colnames:
+        with pytest.raises(u.core.UnitConversionError):
             data_validator._check_and_convert_units(table_3[col_name], unit=None, col_name=col_name)
 
 
@@ -554,12 +553,13 @@ def test_check_for_not_a_number(reference_columns):
 
     assert data_validator._check_for_not_a_number("string", "wavelength")
 
+    error_message = "NaN or Inf values found in data"
     # wavelength does not allow for nan
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number([np.nan, 350.0, 315.0], "wavelength")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number([np.nan, 350.0, np.inf], "wavelength")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number([300.0, 350.0, np.inf], "wavelength")
 
     # position_x allows for nan
@@ -568,9 +568,9 @@ def test_check_for_not_a_number(reference_columns):
     assert data_validator._check_for_not_a_number([333.0, np.inf, 315.0], "position_x")
 
     assert not data_validator._check_for_not_a_number(333.0, "wavelength")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number(np.inf, "wavelength")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number(np.nan, "wavelength")
 
 
