@@ -31,10 +31,10 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "sh -c 'exec mongo --eval \"db.adminCommand(\\\"ping\\\")\"'"
+          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 4
+          --health-retries 5
 
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
@@ -56,6 +56,13 @@ jobs:
       - name: Set PATH
         run: |
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+
+      - name: Wait for MongoDB to be healthy
+        run: |
+          until mongo --host localhost --eval "printjson(db.runCommand({ ping: 1 }))"; do
+            echo "Waiting for MongoDB to start..."
+            sleep 5
+          done
 
       - name: Check if MongoDB is running
         run: |
