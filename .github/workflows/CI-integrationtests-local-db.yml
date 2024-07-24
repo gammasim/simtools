@@ -54,7 +54,7 @@ jobs:
 
       - name: Check if MongoDB is running
         run: |
-          icrodnf install -y mongodb-org
+          microdnf install -y mongodb-org
           mongo --host localhost --port 27017 --username admin --password password --eval "db.adminCommand('ping')"
 
       - name: Run integration tests
