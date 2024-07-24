@@ -19,17 +19,8 @@ on:
 
 jobs:
 
-  integrationtests:
+  integrationtests-db:
     runs-on: ubuntu-latest
-
-    services:
-      mongodb:
-        image: mongo:latest
-        env:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: password
-        ports:
-          - 27017:27017
 
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
@@ -52,10 +43,17 @@ jobs:
         run: |
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
 
-      - name: Check if MongoDB is running
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.11.0
+        with:
+          mongodb-username: api
+          mongodb-password: password
+          mongodb-db: CTAO-Simulation-Model-v0-3-0
+          mongodb-container-name: simtools-mongodb
+
+      - name: Clone and upload model parameter repository
         run: |
-          microdnf install -y mongodb-org
-          mongo --host localhost --port 27017 --username admin --password password --eval "db.adminCommand('ping')"
+          cd database_scripts
 
       - name: Run integration tests
         shell: bash -l {0}
