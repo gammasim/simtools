@@ -34,7 +34,7 @@ jobs:
           --health-cmd "sh -c 'exec mongo --eval \"db.adminCommand(\\\"ping\\\")\"'"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 4
 
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
