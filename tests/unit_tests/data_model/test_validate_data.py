@@ -553,12 +553,13 @@ def test_check_for_not_a_number(reference_columns):
 
     assert data_validator._check_for_not_a_number("string", "wavelength")
 
+    error_message = "NaN or Inf values found in data"
     # wavelength does not allow for nan
-    with pytest.raises(ValueError, match=r"NaN or Inf values found in data"):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number([np.nan, 350.0, 315.0], "wavelength")
-    with pytest.raises(ValueError, match=r"NaN or Inf values found in data"):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number([np.nan, 350.0, np.inf], "wavelength")
-    with pytest.raises(ValueError, match=r"NaN or Inf values found in data"):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number([300.0, 350.0, np.inf], "wavelength")
 
     # position_x allows for nan
@@ -567,9 +568,9 @@ def test_check_for_not_a_number(reference_columns):
     assert data_validator._check_for_not_a_number([333.0, np.inf, 315.0], "position_x")
 
     assert not data_validator._check_for_not_a_number(333.0, "wavelength")
-    with pytest.raises(ValueError, match=r"NaN or Inf values found in data"):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number(np.inf, "wavelength")
-    with pytest.raises(ValueError, match=r"NaN or Inf values found in data"):
+    with pytest.raises(ValueError, match=rf"{error_message}"):
         data_validator._check_for_not_a_number(np.nan, "wavelength")
 
 
