@@ -98,8 +98,7 @@ class ArrayLayout:
         """Initialize site parameters required for transformations using the database."""
         self._logger.debug("Initialize parameters from DB")
         if self.mongo_db_config is None:
-            self._logger.error("No database configuration provided")
-            raise ValueError
+            raise ValueError("No database configuration provided")
 
         self.site_model = SiteModel(
             site=self.site,

@@ -56,15 +56,7 @@ class DatabaseHandler:
     corsika_configuration_parameters_cached = {}
 
     def __init__(self, mongo_db_config=None):
-        """
-        Initialize the DatabaseHandler class.
-
-        Raises
-        ------
-        KeyError
-            if there is non-valid key in the db_config.
-
-        """
+        """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
 
         self.mongo_db_config = mongo_db_config
@@ -89,13 +81,18 @@ class DatabaseHandler:
         Returns
         -------
         A PyMongo DB client
+
+        Raises
+        ------
+        KeyError
+            If the DB configuration is invalid
         """
         try:
             direct_connection = self.mongo_db_config["db_server"] in (
                 "localhost",
                 "simtools-mongodb",
             )
-            _db_client = MongoClient(
+            return MongoClient(
                 self.mongo_db_config["db_server"],
                 port=self.mongo_db_config["db_api_port"],
                 username=self.mongo_db_config["db_api_user"],
@@ -110,14 +107,17 @@ class DatabaseHandler:
             self._logger.error("Invalid setting of DB configuration")
             raise
 
-        return _db_client
-
     def _update_db_simulation_model(self):
         """
         Find the latest version (if requested) of the simulation model and update the DB config.
 
         This is indicated by adding "LATEST" to the name of the simulation model database
         (field "db_simulation_model" in the database configuration dictionary).
+
+        Raises
+        ------
+        ValueError
+            If the "LATEST" version is requested but no versions are found in the DB.
 
         """
         try:
@@ -146,8 +146,7 @@ class DatabaseHandler:
                 f"Updated the DB simulation model to the latest version {latest_string}"
             )
         else:
-            self._logger.error("Found LATEST in the DB name but no matching versions found in DB.")
-            raise ValueError
+            raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
 
     def get_model_parameters(
         self,
@@ -1107,11 +1106,10 @@ class DatabaseHandler:
             if version.lower() == key.lower():
                 return tags["Tags"][key]["Value"]
 
-        self._logger.error(
+        raise ValueError(
             f"Invalid model version {version} in DB {self._get_db_name(db_name)} "
             f"(allowed are {_all_versions})"
         )
-        raise ValueError
 
     def insert_file_to_db(self, file_name, db_name=None, **kwargs):
         """
@@ -1245,8 +1243,7 @@ class DatabaseHandler:
         query = {"version": self.model_version(model_version)}
         _all_available_array_elements = db_collection.find(query).distinct("instrument")
         if len(_all_available_array_elements) == 0:
-            self._logger.error(f"Query for collection name {collection} not implemented.")
-            raise ValueError
+            raise ValueError(f"Query for collection name {collection} not implemented.")
 
         return _all_available_array_elements
 
