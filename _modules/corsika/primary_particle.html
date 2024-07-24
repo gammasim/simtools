@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.primary_particle &#8212; simtools v0.1.dev1+gc397be5 Manual</title>
+    <title>corsika.primary_particle &#8212; simtools v0.1.dev1+gdbaacd3 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=04232f4a"></script>
+    <script src="../../_static/documentation_options.js?v=b312c243"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc397be5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gdbaacd3 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -434,8 +434,7 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="s2">&quot;pdg_id&quot;</span><span class="p">]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_name</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="s2">&quot;pdg_name&quot;</span><span class="p">]</span>
                 <span class="k">return</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid CORSIKA7 ID: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid CORSIKA7 ID: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -461,11 +460,9 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">Corsika7ID</span><span class="o">.</span><span class="n">from_pdgid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pdg_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found more than one particle with name </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">pdg_list</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found more than one particle with name </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">pdg_list</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid particle name: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid particle name: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pdg_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -488,8 +485,7 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span> <span class="o">=</span> <span class="n">Particle</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pdgid</span><span class="o">=</span><span class="n">value</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pdgid</span><span class="o">.</span><span class="n">numerator</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_name</span> <span class="o">=</span> <span class="n">Particle</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pdgid</span><span class="o">=</span><span class="n">value</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
         <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid DPG ID: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid DPG ID: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika7_id</span> <span class="o">=</span> <span class="n">Corsika7ID</span><span class="o">.</span><span class="n">from_pdgid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span><span class="p">)</span><span class="o">.</span><span class="n">numerator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">Corsika7ID</span><span class="o">.</span><span class="n">from_pdgid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
 
