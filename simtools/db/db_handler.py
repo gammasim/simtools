@@ -404,7 +404,7 @@ class DatabaseHandler:
 
     def _get_site_parameters_mongo_db(self, db_name, site, model_version, only_applicable=False):
         """
-        Get parameters from MongoDB for a specific telescope.
+        Get parameters from MongoDB for a specific site.
 
         Parameters
         ----------
