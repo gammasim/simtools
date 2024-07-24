@@ -1,0 +1,71 @@
+---
+name: CI-local-db-integrationtests
+# Integration tests for applications (using a local database
+
+env:
+  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
+  SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
+  SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
+  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
+  SIMTOOLS_DB_SIMULATION_MODEL: "CTAO-Simulation-Model-LATEST"
+  SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+
+  integrationtests:
+    runs-on: ubuntu-latest
+
+    # run a mongodb container as a service
+    services:
+      mongodb:
+        image: mongo:latest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd mongo
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    container:
+      image: ghcr.io/gammasim/simtools-dev:latest
+      options: --user 0
+    strategy:
+      fail-fast: false
+      matrix:
+        type: ['2024-02-01', 'prod5']
+
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Set PATH
+        run: |
+          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+
+      - name: Check if MongoDB is running
+        run: |
+          mongo --host localhost --port 27017 --username admin --password password --eval "db.adminCommand('ping')"
+
+      - name: Run integration tests
+        shell: bash -l {0}
+        run: |
+          source /workdir/env/bin/activate
+          pip install '.[tests,dev,doc]'
+          export PYTHONPATH=$PYTHONPATH:.
+          pytest --model_version=${{ matrix.type }} --color=yes --durations=20 -n auto --dist loadscope --no-cov tests/integration_tests/
