@@ -92,7 +92,7 @@ def test_validate_site_name():
         names.validate_site_name("Not a site")
 
 
-def test_validate_telescope_name():
+def test_validate_array_element_name():
     telescopes = {
         "LSTN-Design": "LSTN-design",
         "LSTN-TEST": "LSTN-test",
@@ -102,14 +102,14 @@ def test_validate_telescope_name():
 
     for key, value in telescopes.items():
         logging.getLogger().info(f"Validating {key}")
-        new_name = names.validate_telescope_name(key)
+        new_name = names.validate_array_element_name(key)
         logging.getLogger().info(f"New name {new_name}")
         assert value == new_name
 
     with pytest.raises(ValueError):
-        names.validate_telescope_name("South-MST-FlashCam-D")
+        names.validate_array_element_name("South-MST-FlashCam-D")
     with pytest.raises(ValueError):
-        names.validate_telescope_name("LSTN")
+        names.validate_array_element_name("LSTN")
 
 
 def test_get_telescope_name_from_type_site_id():
