@@ -52,15 +52,9 @@ jobs:
         run: |
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
 
-      - name: Wait for MongoDB to be healthy
-        run: |
-          until mongo --host localhost --eval "printjson(db.runCommand({ ping: 1 }))"; do
-            echo "Waiting for MongoDB to start..."
-            sleep 5
-          done
-
       - name: Check if MongoDB is running
         run: |
+          icrodnf install -y mongodb-org
           mongo --host localhost --port 27017 --username admin --password password --eval "db.adminCommand('ping')"
 
       - name: Run integration tests
