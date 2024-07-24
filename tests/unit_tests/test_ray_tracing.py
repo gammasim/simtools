@@ -122,20 +122,19 @@ def test_ray_tracing_single_mirror_mode_mirror_numbers(
     assert ray._mirror_numbers == [1, 2, 3]
 
 
-def test_ray_tracing_invalid_telescope_model(simtel_path, io_handler, caplog):
+def test_ray_tracing_invalid_telescope_model(simtel_path, io_handler):
     config_data = {
         "source_distance": 10 * u.km,
         "zenith_angle": 30 * u.deg,
         "off_axis_angle": [0, 2] * u.deg,
     }
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid TelescopeModel"):
         RayTracing(
             telescope_model=None,
             simtel_path=simtel_path,
             config_data=config_data,
         )
-    assert "Invalid TelescopeModel" in caplog.text
 
 
 def test_ray_tracing_read_results(ray_tracing_lst):

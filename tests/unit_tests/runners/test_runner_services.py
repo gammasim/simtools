@@ -182,7 +182,7 @@ def test_get_file_name(runner_service):
     assert isinstance(runner_service.get_file_name("output", run_number=1), pathlib.Path)
     assert isinstance(runner_service.get_file_name("sub_log", run_number=1), pathlib.Path)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^The requested file type"):
         runner_service.get_file_name("foobar", run_number=1, mode="out")
 
 

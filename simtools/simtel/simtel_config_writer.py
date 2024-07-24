@@ -137,8 +137,7 @@ class SimtelConfigWriter:
             parameters["array_config_variant"] = ""
             parameters["array_config_version"] = self._model_version
         else:
-            self._logger.error(f"Unknown metadata type {config_type}")
-            raise ValueError
+            raise ValueError(f"Unknown metadata type {config_type}")
         return parameters
 
     def write_array_config_file(self, config_file_path, telescope_model, site_model):
