@@ -617,7 +617,11 @@ class DatabaseHandler:
         """
         return (
             names.validate_site_name(site),
-            names.validate_telescope_name(telescope_model_name) if telescope_model_name else None,
+            (
+                names.validate_array_element_name(telescope_model_name)
+                if telescope_model_name
+                else None
+            ),
             self.model_version(model_version),
         )
 
@@ -983,7 +987,7 @@ class DatabaseHandler:
             key in collection_name
             for key in ["telescopes", "calibration_devices", "configuration_sim_telarray"]
         ):
-            db_entry["instrument"] = names.validate_telescope_name(telescope)
+            db_entry["instrument"] = names.validate_array_element_name(telescope)
         elif "sites" in collection_name:
             db_entry["instrument"] = names.validate_site_name(site)
         elif "configuration_corsika" in collection_name:
@@ -1198,7 +1202,7 @@ class DatabaseHandler:
             query["parameter"] = parameter
             _cache_key = f"{_cache_key}-{parameter}"
         if collection == "telescopes" and telescope_model_name is not None:
-            query["instrument"] = names.validate_telescope_name(telescope_model_name)
+            query["instrument"] = names.validate_array_element_name(telescope_model_name)
             _cache_key = f"{_cache_key}-{query['instrument']}"
         elif collection == "sites" and site is not None:
             query["site"] = names.validate_site_name(site)
@@ -1305,18 +1309,18 @@ class DatabaseHandler:
             return [telescope_model_name]
         try:
             return [
-                self.get_telescope_db_name(
+                self.get_array_element_db_name(
                     names.get_telescope_type_from_telescope_name(telescope_model_name) + "-design",
                     model_version,
                 ),
-                self.get_telescope_db_name(telescope_model_name, model_version),
+                self.get_array_element_db_name(telescope_model_name, model_version),
             ]
         except ValueError:  # e.g., no design model defined for this telescope type
             return [
-                self.get_telescope_db_name(telescope_model_name, model_version),
+                self.get_array_element_db_name(telescope_model_name, model_version),
             ]
 
-    def get_telescope_db_name(self, telescope_name, model_version, collection="telescopes"):
+    def get_array_element_db_name(self, array_element_name, model_version, collection="telescopes"):
         """
         Translate telescope name to the name used in the DB.
 
@@ -1325,33 +1329,33 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        telescope_name: str
-            Name of the telescope model (e.g. MSTN-01)
+        array_element_name: str
+            Name of the array_element model (e.g. MSTN-01)
         model_version: str
-            Which version to get the telescopes
+            Which version to get the array element
         collection: str
             collection of array element (e.g. telescopes, calibration_devices)
 
         Returns
         -------
         str
-            Telescope model name as used in the DB.
+            Array element model name as used in the DB.
 
         Raises
         ------
         ValueError
-            If the telescope name is not found in the database.
+            If the array element name is not found in the database.
 
         """
         if self._available_array_elements is None:
             self._available_array_elements = self.get_all_available_array_elements(
                 model_version, collection
             )
-        _telescope_name_validated = names.validate_telescope_name(telescope_name)
-        if _telescope_name_validated in self._available_array_elements:
-            return _telescope_name_validated
+        _array_element_name_validated = names.validate_array_element_name(array_element_name)
+        if _array_element_name_validated in self._available_array_elements:
+            return _array_element_name_validated
         _design_name = (
-            f"{names.get_telescope_type_from_telescope_name(_telescope_name_validated)}-design"
+            f"{names.get_telescope_type_from_telescope_name(_array_element_name_validated)}-design"
         )
         if _design_name in self._available_array_elements:
             return _design_name

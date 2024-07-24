@@ -208,7 +208,7 @@ class MetadataCollector:
             if self.args_dict and self.args_dict.get("site", None):
                 _association["site"] = names.validate_site_name(self.args_dict["site"])
             if "telescope" in self.args_dict:
-                _telescope_name = names.validate_telescope_name(self.args_dict["telescope"])
+                _telescope_name = names.validate_array_element_name(self.args_dict["telescope"])
                 _association["class"] = "telescope"
                 _association["type"] = names.get_telescope_type_from_telescope_name(_telescope_name)
                 _association["subtype"] = ""
