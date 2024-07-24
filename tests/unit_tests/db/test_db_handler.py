@@ -573,18 +573,25 @@ def test_get_available_array_elements_of_type(db, model_version, caplog):
     assert all("design" not in tel_type for tel_type in available_types)
 
 
-def test_get_telescope_db_name(db):
-    assert db.get_telescope_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
-    assert db.get_telescope_db_name("LSTS-20", model_version="Prod5") == "LSTS-design"
-    assert db.get_telescope_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
-    assert db.get_telescope_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
-    assert db.get_telescope_db_name("SSTS-91", model_version="Prod5") == "SSTS-design"
-    assert db.get_telescope_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
+def test_get_array_element_db_name(db):
+    assert db.get_array_element_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
+    assert db.get_array_element_db_name("LSTS-20", model_version="Prod5") == "LSTS-design"
+    assert db.get_array_element_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
+    assert db.get_array_element_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
+    assert db.get_array_element_db_name("SSTS-91", model_version="Prod5") == "SSTS-design"
+    assert db.get_array_element_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
+    assert (
+        db.get_array_element_db_name(
+            "ILLN-01", model_version="Prod6", collection="calibration_devices"
+        )
+        == "ILLN-01"
+    )
+
     with pytest.raises(ValueError, match=r"Invalid name SSTN"):
-        db.get_telescope_db_name("SSTN-05", model_version="Prod5", collection="telescopes")
+        db.get_array_element_db_name("SSTN-05", model_version="Prod5", collection="telescopes")
 
     with pytest.raises(ValueError, match=r"Invalid database name."):
-        db.get_telescope_db_name("ILLN-01", model_version="Prod5", collection="telescopes")
+        db.get_array_element_db_name("ILLN-01", model_version="Prod5", collection="telescopes")
 
 
 def test_parameter_cache_key(db):
