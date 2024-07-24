@@ -113,7 +113,7 @@ For example:
 - "North-LST-1" is the first LST commissioned at the La Palma site, while "North-LST-D234" is the current design of the further 3 LSTs.
 - "North-MST-FlashCam-D" and "North-MST-NectarCam-D" are the two MST designs containing different cameras.
 
-Any input telescope names can (and should) be validated by the function validate_telescope_name
+Any input telescope names can (and should) be validated by the function validate_array_element_name
 (see module {ref}`utils.names <utilsnames>`).
 For the Site field, any different capitalization (e.g "south") or site names like "paranal" and
 "lapalma" will be accepted
