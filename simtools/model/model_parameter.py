@@ -206,9 +206,9 @@ class ModelParameter:
         """
         parameter_dict = self._get_parameter_dict(par_name)
         try:
-            return parameter_dict.get("type")
+            return parameter_dict["type"]
         except KeyError:
-            self._logger.debug(f"Parameter {par_name} does not have a type")
+            self._logger.debug(f"Parameter {par_name} does not have a type.")
         return None
 
     def get_parameter_file_flag(self, par_name):
@@ -228,8 +228,7 @@ class ModelParameter:
         """
         parameter_dict = self._get_parameter_dict(par_name)
         try:
-            if parameter_dict.get("file"):
-                return True
+            return parameter_dict["file"]
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
         return False
@@ -429,11 +428,10 @@ class ModelParameter:
             dtype=None,
             allow_subtypes=True,
         ):
-            self._logger.error(
+            raise ValueError(
                 f"Could not cast {value} of type {type(value)} "
                 f"to {self.get_parameter_type(par_name)}."
             )
-            raise ValueError
 
         self._logger.debug(
             f"Changing parameter {par_name} "
@@ -446,6 +444,27 @@ class ModelParameter:
             self._is_exported_model_files_up_to_date = False
 
         self._is_config_file_up_to_date = False
+
+    def change_multiple_parameters_from_file(self, file_name):
+        """
+        Change values of multiple existing parameters in the model from a file.
+
+        This function does not modify the DB, it affects only the current instance.
+        Experimental feature: insufficient validation of parameters.
+
+        Parameters
+        ----------
+        file_name: str
+            File containing the parameters to be changed.
+        """
+        self._logger.warning(
+            "Changing multiple parameters from file is an experimental feature."
+            "Insufficient validation of parameters."
+        )
+        self._logger.debug(f"Changing parameters from file {file_name}")
+        self.change_multiple_parameters(
+            **gen.collect_data_from_file_or_dict(file_name=file_name, in_dict=None)
+        )
 
     def change_multiple_parameters(self, **kwargs):
         """

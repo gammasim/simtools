@@ -132,3 +132,11 @@ Example:
 ```bash
 pytest --no-cov --profile tests/unit_tests/utils/test_general.py
 ```
+
+To generate flame graphs for the profiling results:
+
+```bash
+pytest --no-cov --profile-svg tests/unit_tests/utils/test_general.py
+```
+
+(the installation of [graphviz](https://graphviz.org/) is required to generate the graphs)

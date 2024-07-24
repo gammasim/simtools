@@ -50,8 +50,8 @@ def test_validate_schema(tmp_test_directory):
 
     metadata_model.validate_schema(data, schema_file)
 
+    invalid_data = {"name": "Alice", "age": "Thirty"}
     with pytest.raises(jsonschema.exceptions.ValidationError):
-        invalid_data = {"name": "Alice", "age": "Thirty"}
         metadata_model.validate_schema(invalid_data, schema_file)
 
 

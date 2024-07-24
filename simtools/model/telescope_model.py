@@ -176,11 +176,17 @@ class TelescopeModel(ModelParameter):
         camera_config_file = self.get_parameter_value("camera_config_file")
         focal_length = self.get_telescope_effective_focal_length("cm", True)
         try:
-            camera_config_file_path = gen.find_file(camera_config_file, self._config_file_directory)
+            camera_config_file_path = gen.find_file(camera_config_file, self.config_file_directory)
+        except TypeError as exc:
+            self._logger.error(
+                f"Camera config file {camera_config_file} or "
+                f"config file directory ({self.config_file_directory}) is None"
+            )
+            raise TypeError from exc
         except FileNotFoundError:
             self._logger.warning(
-                "The camera_config_file was not found in the config directory - "
-                "Using the one found in the model_path"
+                f"Camera config file {camera_config_file} not found in the config directory "
+                f"{self.config_file_directory}. Using the one found in the model_path"
             )
             camera_config_file_path = gen.find_file(camera_config_file, self.io_handler.model_path)
 
@@ -334,7 +340,7 @@ class TelescopeModel(ModelParameter):
         Path:
             Path to the file exported.
         """
-        file_to_write_to = self._config_file_directory.joinpath(file_name)
+        file_to_write_to = self.config_file_directory.joinpath(file_name)
         table.write(file_to_write_to, format="ascii.commented_header", overwrite=True)
         return file_to_write_to.absolute()
 

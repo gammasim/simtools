@@ -144,8 +144,6 @@ lint.ignore = [
   "D215",   # section-underline-not-over-indented
   "G004",   # Logging statement uses f-string
   "ISC001", # incompatible with ruff format
-  "PT011",  # TODO - fix
-  "PT012",  # TODO - fix
   "RUF012", #  Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [
@@ -247,6 +245,9 @@ max-public-methods = 50
 ignore-words = ".codespell-ignores"
 
 [tool.pytest.ini_options]
+markers = [
+  "uses_model_database: test uses model parameter database.",
+]
 minversion = "6.0"
 norecursedirs = [
   "build",
