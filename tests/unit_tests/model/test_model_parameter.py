@@ -2,16 +2,38 @@
 
 import copy
 import logging
+from pathlib import Path
 
 import pytest
 from astropy import units as u
 
 import simtools.utils.general as gen
+from simtools.db.db_handler import DatabaseHandler
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
+
+def test_get_parameter_type(telescope_model_lst, caplog):
+
+    assert telescope_model_lst.get_parameter_type("num_gains") == "int64"
+    telescope_model_copy = copy.deepcopy(telescope_model_lst)
+    telescope_model_copy._parameters["num_gains"].pop("type")
+    with caplog.at_level(logging.DEBUG):
+        assert telescope_model_copy.get_parameter_type("num_gains") is None
+    assert "Parameter num_gains does not have a type." in caplog.text
+
+
+def test_get_parameter_file_flag(telescope_model_lst, caplog):
+
+    assert telescope_model_lst.get_parameter_file_flag("num_gains") is False
+    telescope_model_copy = copy.deepcopy(telescope_model_lst)
+    telescope_model_copy._parameters["num_gains"].pop("file")
+    with caplog.at_level(logging.DEBUG):
+        assert telescope_model_copy.get_parameter_file_flag("num_gains") is False
+    assert "Parameter num_gains does not have a file associated with it." in caplog.text
 
 
 def test_get_parameter_dict(telescope_model_lst):
@@ -94,6 +116,57 @@ def test_handling_parameters(telescope_model_lst):
         tel_model._get_parameter_dict("bla_bla")
 
 
+def test_print_parameters(telescope_model_lst, capsys):
+    tel_model = telescope_model_lst
+    tel_model.print_parameters()
+    assert "quantum_efficiency" in capsys.readouterr().out
+
+
+def test_set_config_file_directory_and_name(telescope_model_lst, caplog):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy.name = None
+    with caplog.at_level(logging.DEBUG):
+        telescope_copy._set_config_file_directory_and_name()
+    assert "Config file path" not in caplog.text
+
+
+def test_get_simulation_software_parameters(telescope_model_lst):
+    assert isinstance(telescope_model_lst.get_simulation_software_parameters("corsika"), dict)
+
+
+def test_load_simulation_software_parameter(telescope_model_lst, caplog):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy._simulation_config_parameters = {"not_corsika": {}, "not_simtel": {}}
+    with caplog.at_level(logging.WARNING):
+        telescope_copy._load_simulation_software_parameter()
+    assert "No not_corsika parameters found for North" in caplog.text
+
+
+def test_load_parameters_from_db(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
+    telescope_copy._load_parameters_from_db()
+    mock_db.assert_called_once()
+
+    telescope_copy.db = None
+    telescope_copy._load_parameters_from_db()
+    not mock_db.assert_called_once()
+
+
+def test_extra_labels(telescope_model_lst):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    assert telescope_copy._extra_label is None
+    assert telescope_copy.extra_label == ""
+
+    telescope_copy.set_extra_label("test")
+    assert telescope_copy._extra_label == "test"
+    assert telescope_copy.extra_label == "test"
+
+
+def test_get_simtel_parameters(telescope_model_lst):
+    assert isinstance(telescope_model_lst.get_simtel_parameters(), dict)
+
+
 def test_change_parameter(telescope_model_lst):
     tel_model = telescope_model_lst
 
@@ -101,12 +174,12 @@ def test_change_parameter(telescope_model_lst):
     tel_model.change_parameter("camera_pixels", 9999)
     assert tel_model.get_parameter_value("camera_pixels") == 9999
 
-    with pytest.raises(ValueError):
-        logger.info("Testing changing camera_pixels to a float (now allowed)")
+    logger.info("Testing changing camera_pixels to a float (now allowed)")
+    with pytest.raises(ValueError, match=r"^Could not cast 9999.9 of type"):
         tel_model.change_parameter("camera_pixels", 9999.9)
 
-    with pytest.raises(ValueError):
-        logger.info("Testing changing camera_pixels to a nonsense string")
+    logger.info("Testing changing camera_pixels to a nonsense string")
+    with pytest.raises(ValueError, match=r"^Could not cast bla_bla of type"):
         tel_model.change_parameter("camera_pixels", "bla_bla")
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('mirror_focal_length')}")
@@ -118,9 +191,30 @@ def test_change_parameter(telescope_model_lst):
     tel_model.change_parameter("mirror_focal_length", "9999.9 0.")
     assert pytest.approx(9999.9) == tel_model.get_parameter_value("mirror_focal_length")[0]
 
-    with pytest.raises(ValueError):
-        logger.info("Testing changing mirror_focal_length to a nonsense string")
+    logger.info("Testing changing mirror_focal_length to a nonsense string")
+    with pytest.raises(ValueError, match=r"^Could not cast bla_bla of type"):
         tel_model.change_parameter("mirror_focal_length", "bla_bla")
+
+    with pytest.raises(InvalidModelParameterError, match="Parameter bla_bla not in the model"):
+        tel_model.change_parameter("bla_bla", 9999.9)
+
+
+def test_change_multiple_parameters_from_file(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    mocker_gen = mocker.patch(
+        "simtools.utils.general.collect_data_from_file_or_dict", return_value={}
+    )
+    telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
+    mocker_gen.assert_called_once()
+
+
+def test_change_multiple_parameters(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    mock_change = mocker.patch.object(TelescopeModel, "change_parameter")
+    telescope_copy.change_multiple_parameters(**{"camera_pixels": 9999, "mirror_focal_length": 55})
+    mock_change.assert_any_call("camera_pixels", 9999)
+    mock_change.assert_any_call("mirror_focal_length", 55)
+    assert not telescope_copy._is_config_file_up_to_date
 
 
 def test_flen_type(telescope_model_lst):
@@ -199,3 +293,50 @@ def test_export_derived_files(io_handler, db_config):
     assert tel_model.config_file_directory.joinpath(
         "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
     ).exists()
+
+
+def test_export_parameter_file(telescope_model_lst, mocker):
+    parameter = "array_coordinates_UTM"
+    file_path = "tests/resources/telescope_positions-North-ground.ecsv"
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    mock_copy = mocker.patch("shutil.copy")
+    telescope_copy.export_parameter_file(par_name=parameter, file_path=file_path)
+    mock_copy.assert_called_once_with(file_path, telescope_copy.config_file_directory)
+
+
+def test_export_model_files(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    mock_db = mocker.patch.object(DatabaseHandler, "export_model_files")
+    telescope_copy.export_model_files()
+    assert telescope_copy._is_exported_model_files_up_to_date
+    mock_db.assert_called_once()
+
+    telescope_copy._added_parameter_files = ["test_file"]
+    with pytest.raises(KeyError):
+        telescope_copy.export_model_files()
+
+
+def test_config_file_path(telescope_model_lst, mocker):
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy._config_file_path = None
+    mock_config = mocker.patch.object(TelescopeModel, "_set_config_file_directory_and_name")
+    telescope_copy.config_file_path
+    mock_config.assert_called_once()
+
+    telescope_copy._config_file_path = Path("test_path")
+    assert telescope_copy.config_file_path == Path("test_path")
+    not mock_config.assert_called_once()
+
+
+def test_get_config_file(telescope_model_lst, mocker):
+    assert isinstance(telescope_model_lst.get_config_file(), Path)
+
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    telescope_copy._is_config_file_up_to_date = False
+    mock_export = mocker.patch.object(TelescopeModel, "export_config_file")
+    telescope_copy.get_config_file()
+    mock_export.assert_called_once()
+
+    telescope_copy._is_config_file_up_to_date = False
+    telescope_copy.get_config_file(no_export=True)
+    not mock_export.assert_called_once()

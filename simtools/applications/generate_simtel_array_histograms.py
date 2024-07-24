@@ -29,8 +29,6 @@ r"""
         If the output output_file_name.hdf5 file already exists and hdf5 is set, the tables
         associated to hdf5 will be overwritten. The remaining tables, if any, will stay
         untouched.
-    verbosity (str, optional)
-        Log level to print.
 
     Raises
     ------

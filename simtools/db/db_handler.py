@@ -1360,7 +1360,7 @@ class DatabaseHandler:
         if _design_name in self._available_array_elements:
             return _design_name
 
-        raise ValueError
+        raise ValueError("Invalid database name.")
 
     def _parameter_cache_key(self, site, telescope, model_version, db_name=None):
         """

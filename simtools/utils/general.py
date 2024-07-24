@@ -703,7 +703,10 @@ def get_log_level_from_user(log_level):
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
     }
-    log_level_lower = log_level.lower()
+    try:
+        log_level_lower = log_level.lower()
+    except AttributeError:
+        log_level_lower = log_level
     if log_level_lower not in possible_levels:
         raise ValueError(
             f"'{log_level}' is not a logging level, "
@@ -940,9 +943,9 @@ def change_dict_keys_case(data_dict, lower_case=True):
 
     try:
         return _process_dict_keys(data_dict, case_func)
-    except AttributeError:
+    except AttributeError as exc:
         _logger.error(f"Input is not a proper dictionary: {data_dict}")
-        raise
+        raise AttributeError from exc
 
 
 def remove_substring_recursively_from_dict(data_dict, substring="\n"):

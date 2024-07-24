@@ -41,7 +41,7 @@ class CommandLineParser(argparse.ArgumentParser):
         job_submission=False,
     ):
         """
-        Initialize default arguments used by all applications (e.g., verbosity or test flag).
+        Initialize default arguments used by all applications (e.g., log level or test flag).
 
         Parameters
         ----------
@@ -52,7 +52,7 @@ class CommandLineParser(argparse.ArgumentParser):
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
             (use: 'version', 'telescope', 'site')
-        simulation_configuration: Dict
+        simulation_configuration: dict
             Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
@@ -261,6 +261,15 @@ class CommandLineParser(argparse.ArgumentParser):
                 help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
                 type=self.telescope,
             )
+            _job_group.add_argument(
+                "--telescope_model_file",
+                help=(
+                    "File with changes to telescope model "
+                    " (yaml format; experimental with insufficient validation steps)."
+                ),
+                type=Path,
+                required=False,
+            )
 
         if "layout" in model_options or "layout_file" in model_options:
             _job_group = self._add_model_option_layout(_job_group, "layout_file" in model_options)
@@ -271,7 +280,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        simulation_configuration: Dict
+        simulation_configuration: dict
             Dict of simulation software configuration parameters.
         """
         if simulation_configuration is None:
