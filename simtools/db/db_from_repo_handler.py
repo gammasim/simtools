@@ -80,8 +80,7 @@ def update_model_parameters_from_repo(
         )
         _design_model = None
     else:
-        logger.error(f"Unknown parameter collection {parameter_collection}")
-        raise ValueError
+        raise ValueError(f"Unknown parameter collection {parameter_collection}")
 
     for key in parameters:
         _tmp_par = {}

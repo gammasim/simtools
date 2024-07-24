@@ -131,7 +131,7 @@ def test_create_regular_axes_valid_label(corsika_histograms_instance):
 
 def test_create_regular_axes_invalid_label(corsika_histograms_instance):
     label = "invalid_label"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"allowed labels must be one of the following"):
         corsika_histograms_instance._create_regular_axes(label)
 
 
@@ -192,9 +192,9 @@ def test_fill_histograms_no_rotation(corsika_output_file_name, io_handler):
 
 
 def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, caplog):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="label_not_valid is not valid."):
         corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
-        assert "label_not_valid is not valid." in caplog.text
+    assert "label_not_valid is not valid." in caplog.text
 
     labels = ["wavelength", "time", "altitude"]
     expected_shape_of_bin_edges = [(1, 81), (1, 101), (1, 101)]
@@ -289,16 +289,16 @@ def test_raise_if_no_histogram(corsika_output_file_name, caplog, io_handler):
     corsika_histograms_instance_not_hist = CorsikaHistograms(corsika_output_file_name)
     with pytest.raises(HistogramNotCreatedError):
         corsika_histograms_instance_not_hist._raise_if_no_histogram()
-        assert "The histograms were not created." in caplog
+    assert "The histograms were not created." in caplog.text
 
 
 def test_get_hist_2d_projection(corsika_histograms_instance, caplog):
     corsika_histograms_instance.set_histograms()
 
     label = "hist_non_existent"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^label is not valid. Valid entries are"):
         corsika_histograms_instance._get_hist_2d_projection(label)
-        assert "label is not valid." in caplog.text
+    assert "label is not valid." in caplog.text
 
     labels = ["counts", "density", "direction", "time_altitude"]
     hist_sums = [11633, 29.1, 11634, 11634]  # sum of photons are approximately the same
@@ -709,10 +709,10 @@ def test_get_event_parameter_info(corsika_histograms_instance_set_histograms, ca
         corsika_histograms_instance_set_histograms.get_event_parameter_info(
             "non_existent_parameter"
         )
-        assert (
-            f"`key` is not valid. Valid entries are "
-            f"{corsika_histograms_instance_set_histograms.all_event_keys}" in caplog.text
-        )
+    assert (
+        f"key is not valid. Valid entries are "
+        f"{corsika_histograms_instance_set_histograms.all_event_keys}" in caplog.text
+    )
 
 
 def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
@@ -724,10 +724,10 @@ def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
 
     with pytest.raises(KeyError):
         corsika_histograms_instance_set_histograms.get_run_info("non_existent_parameter")
-        assert (
-            f"`key` is not valid. Valid entries are "
-            f"{corsika_histograms_instance_set_histograms.all_run_keys}" in caplog.text
-        )
+    assert (
+        f"key is not valid. Valid entries are "
+        f"{corsika_histograms_instance_set_histograms.all_run_keys}" in caplog.text
+    )
 
 
 def test_event_1d_histogram(corsika_histograms_instance_set_histograms):

@@ -61,7 +61,7 @@ def test_get_simtel_metadata(simtel_config_writer):
     assert _site["site_config_name"] == simtel_config_writer._site
     assert _site["array_config_name"] == simtel_config_writer._layout_name
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^Unknown metadata type"):
         simtel_config_writer._get_simtel_metadata("unknown")
 
 

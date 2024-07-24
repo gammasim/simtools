@@ -546,7 +546,7 @@ class SimtelIOHistogram:
         else:
             msg = f"label {label} is not valid. Please use either 'reference' or 'simulation'."
             self._logger.error(msg)
-            raise ValueError
+            raise ValueError(msg)
         return particle_distribution_function
 
     def _get_simulation_spectral_distribution_function(self):
@@ -572,7 +572,7 @@ class SimtelIOHistogram:
                 "Consider using a .simtel file instead."
             )
             self._logger.error(msg)
-            raise ValueError from exc
+            raise ValueError(msg) from exc
         return spectral_distribution
 
     def estimate_observation_time(self, stacked_num_simulated_events=None):

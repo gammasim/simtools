@@ -322,7 +322,7 @@ def test_get_unit_from_schema(schema_num_gains, simtel_config_file):
     assert _config._get_unit_from_schema() is None
 
 
-def test_validate_parameter_dict(config_reader_num_gains, caplog):
+def test_validate_parameter_dict(config_reader_num_gains):
 
     _config = config_reader_num_gains
 
@@ -339,7 +339,5 @@ def test_validate_parameter_dict(config_reader_num_gains, caplog):
     }
     _config._validate_parameter_dict(_temp_dict)
     _temp_dict["value"] = 25
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError):
-            _config._validate_parameter_dict(_temp_dict)
-        assert "out of range" in caplog.text
+    with pytest.raises(ValueError, match=r"out of range"):
+        _config._validate_parameter_dict(_temp_dict)

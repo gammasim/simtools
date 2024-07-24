@@ -256,7 +256,9 @@ def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handle
         corsika_config_mock_array_model.get_corsika_config_file_name("config_tmp", run_number=1)
         == f"corsika_config_run000001_{file_name}.txt"
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Must provide a run number for a temporary CORSIKA config file"
+    ):
         assert (
             corsika_config_mock_array_model.get_corsika_config_file_name("config_tmp")
             == f"corsika_config_run000001_{file_name}.txt"
@@ -276,7 +278,7 @@ def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handle
         corsika_config_mock_array_model.get_corsika_config_file_name("multipipe")
         == "multi_cta-South-test_layout.cfg"
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^The requested file type"):
         corsika_config_mock_array_model.get_corsika_config_file_name("foobar")
 
 
