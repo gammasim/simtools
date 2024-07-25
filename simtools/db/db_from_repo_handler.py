@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def update_model_parameters_from_repo(
     parameters,
     site,
-    telescope_name,
+    array_element_name,
     parameter_collection,
     model_version,
     db_simulation_model_url,
@@ -33,8 +33,8 @@ def update_model_parameters_from_repo(
         Existing dictionary with parameters to be updated.
     site: str
         Observatory site (e.g., South or North)
-    telescope_name: str
-        Telescope name (e.g., MSTN-01, MSTN-DESIGN)
+    array_element_name: str
+        Array element name (e.g., MSTN-01, MSTN-design)
     parameter_collection: str
         Collection of parameters to be queried (e.g., telescope or site)
     model_version: str
@@ -49,9 +49,9 @@ def update_model_parameters_from_repo(
 
     """
     logger.info(
-        "Updating model parameters from repository for site: %s, telescope: %s",
+        "Updating model parameters from repository for site: %s, array element: %s",
         site,
-        telescope_name,
+        array_element_name,
     )
 
     if db_simulation_model_url is None:
@@ -64,11 +64,11 @@ def update_model_parameters_from_repo(
             "model_versions",
             model_version,
             db_simulation_model,
-            telescope_name,
+            array_element_name,
         )
-        # use design telescope model in case there is no model defined for this telescope ID
-        _design_model = names.get_telescope_type_from_telescope_name(telescope_name) + "-design"
-        if _design_model == telescope_name:
+        # use design array element model in case there is no model defined for this array element ID
+        _design_model = names.get_array_element_type_from_name(array_element_name) + "-design"
+        if _design_model == array_element_name:
             _design_model = None
     elif parameter_collection == "site":
         _file_path = gen.join_url_or_path(
@@ -88,8 +88,8 @@ def update_model_parameters_from_repo(
         try:
             _tmp_par = gen.collect_data_from_file_or_dict(file_name=_parameter_file, in_dict=None)
         except (FileNotFoundError, gen.InvalidConfigDataError):
-            # use design telescope model in case there is no model defined for this telescope ID
-            # accept errors, as not all parameters are defined in the repository
+            # use design array element model in case there is no model defined for this
+            #  array element ID. Accept errors, as not all parameters are defined in the repository
             try:
                 _file_path = gen.join_url_or_path(
                     db_simulation_model_url,

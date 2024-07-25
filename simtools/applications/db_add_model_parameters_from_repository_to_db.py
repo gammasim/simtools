@@ -116,7 +116,7 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_prefix, logge
     )
     db.add_new_parameter(
         db_name=db_name,
-        telescope=par_dict["instrument"],
+        array_element_name=par_dict["instrument"],
         parameter=par_dict["parameter"],
         version=par_dict["version"],
         value=par_dict["value"],

@@ -536,7 +536,7 @@ class CommandLineParser(argparse.ArgumentParser):
         argparse.ArgumentTypeError
             for invalid telescope
         """
-        names.validate_telescope_name(str(value))
+        names.validate_array_element_name(str(value))
         return str(value)
 
     @staticmethod
