@@ -174,7 +174,7 @@ def validate_array_element_name(name):
     Parameters
     ----------
     name: str
-        array element name.
+        Array element name.
 
     Returns
     -------
