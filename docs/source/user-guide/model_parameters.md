@@ -40,7 +40,7 @@ These files describe the simulation model parameters including (among others fie
 They include information about setting and validation activities, data sources, and simulation software.
 The schema files and especially the model parameter descriptions are derived from (and planned to be synchronized with) the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/).
 
-The schema files are in human readable yaml format and follow a fixed meta metaschema (see [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml); found in simtools schema directory).
+The schema files are in human readable YAML format and follow a fixed meta metaschema (see [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml); found in simtools schema directory).
 
 ### Example
 
