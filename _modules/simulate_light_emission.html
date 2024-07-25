@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulate_light_emission &#8212; simtools v0.1.dev1+g1def165 Manual</title>
+    <title>simulate_light_emission &#8212; simtools v0.1.dev1+g1d7d68c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=720aa95a"></script>
+    <script src="../_static/documentation_options.js?v=4b01ddeb"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1def165 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1d7d68c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -402,8 +402,7 @@ document.write(`
 
 <span class="sd">            simtools-simulate-light-emission --telescope MSTN-04 --site North \</span>
 <span class="sd">            --illuminator ILLN-01 --light_source_setup layout \</span>
-<span class="sd">            --model_version prod6 --telescope_file \</span>
-<span class="sd">            /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv \</span>
+<span class="sd">            --model_version prod6 \</span>
 <span class="sd">            --light_source_type led</span>
 
 <span class="sd">    Command Line Arguments</span>
@@ -431,9 +430,6 @@ document.write(`
 <span class="sd">        This changes the pre-compiled (simtel_array) application that is used to run the</span>
 <span class="sd">        light emission package with. Currently we use xyzls (laser), and ls-beam can be</span>
 <span class="sd">        accessed by using the laser option.</span>
-
-<span class="sd">    --telescope_file (str, optional)</span>
-<span class="sd">        Telescope position file. Required when using the --light_source_setup layout option.</span>
 
 <span class="sd">    --off_axis_angle (float, optional)</span>
 <span class="sd">        Off axis angle for light source direction.</span>
@@ -507,7 +503,6 @@ document.write(`
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span> <span class="nn">simtools.corsika.corsika_histograms_visualize</span> <span class="kn">import</span> <span class="n">save_figs_to_pdf</span>
-<span class="kn">from</span> <span class="nn">simtools.model.array_model</span> <span class="kn">import</span> <span class="n">ArrayModel</span>
 <span class="kn">from</span> <span class="nn">simtools.model.calibration_model</span> <span class="kn">import</span> <span class="n">CalibrationModel</span>
 <span class="kn">from</span> <span class="nn">simtools.model.site_model</span> <span class="kn">import</span> <span class="n">SiteModel</span>
 <span class="kn">from</span> <span class="nn">simtools.model.telescope_model</span> <span class="kn">import</span> <span class="n">TelescopeModel</span>
@@ -646,7 +641,7 @@ document.write(`
 
 <div class="viewcode-block" id="default_le_configs">
 <a class="viewcode-back" href="../user-guide/applications/simulate_light_emission.html#simulate_light_emission.default_le_configs">[docs]</a>
-<span class="k">def</span> <span class="nf">default_le_configs</span><span class="p">(</span><span class="n">le_application</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">default_le_configs</span><span class="p">(</span><span class="n">le_application</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define default light emission configurations.</span>
 
@@ -662,14 +657,16 @@ document.write(`
 <span class="sd">    le_application: str</span>
 <span class="sd">        Light emission application.</span>
 
+<span class="sd">    args_dict: dict</span>
+<span class="sd">        Dictionary with command line arguments.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    default_config: dict</span>
 <span class="sd">        Default light emission configuration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">default_config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="n">le_application</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;xyzls&quot;</span><span class="p">,</span> <span class="s2">&quot;ls-beam&quot;</span><span class="p">):</span>
-        <span class="n">default_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">le_application</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;xyzls&quot;</span><span class="p">,</span> <span class="s2">&quot;ls-beam&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;light_source_setup&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;x_pos&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
                 <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">),</span>
@@ -688,24 +685,6 @@ document.write(`
                 <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="mi">1200</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">4000</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
                 <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;z_position&quot;</span><span class="p">],</span>
             <span class="p">},</span>
-            <span class="s2">&quot;x_pos_ILLN-01&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">58718</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;x_position&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;y_pos_ILLN-01&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">275</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;y_position&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;z_pos_ILLN-01&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">13700</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;z_position&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
             <span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
                 <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span><span class="p">,</span>
@@ -713,7 +692,8 @@ document.write(`
                 <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;direction&quot;</span><span class="p">,</span> <span class="s2">&quot;cx,cy,cz&quot;</span><span class="p">],</span>
             <span class="p">},</span>
         <span class="p">}</span>
-    <span class="k">return</span> <span class="n">default_config</span></div>
+
+    <span class="k">return</span> <span class="p">{}</span></div>
 
 
 
@@ -750,7 +730,7 @@ document.write(`
     <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
     <span class="n">le_application</span> <span class="o">=</span> <span class="n">select_application</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
-    <span class="n">default_le_config</span> <span class="o">=</span> <span class="n">default_le_configs</span><span class="p">(</span><span class="n">le_application</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">default_le_config</span> <span class="o">=</span> <span class="n">default_le_configs</span><span class="p">(</span><span class="n">le_application</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args_dict</span><span class="p">)</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
 
@@ -826,24 +806,6 @@ document.write(`
 
     <span class="k">elif</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;light_source_setup&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;layout&quot;</span><span class="p">:</span>
 
-        <span class="n">array_model</span> <span class="o">=</span> <span class="n">ArrayModel</span><span class="p">(</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-            <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-            <span class="n">array_elements</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope_file&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">xyz</span> <span class="o">=</span> <span class="n">array_model</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">[</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">position</span><span class="p">(</span>
-                <span class="n">coordinate_system</span><span class="o">=</span><span class="s2">&quot;ground&quot;</span>
-            <span class="p">)</span>
-            <span class="n">default_le_config</span><span class="p">[</span><span class="s2">&quot;x_pos&quot;</span><span class="p">][</span><span class="s2">&quot;real&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xyz</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">default_le_config</span><span class="p">[</span><span class="s2">&quot;y_pos&quot;</span><span class="p">][</span><span class="s2">&quot;real&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xyz</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">default_le_config</span><span class="p">[</span><span class="s2">&quot;z_pos&quot;</span><span class="p">][</span><span class="s2">&quot;real&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xyz</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Telescope </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;telescope&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not found in array model&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">exc</span>
-
         <span class="n">light_source</span> <span class="o">=</span> <span class="n">SimulatorLightEmission</span><span class="o">.</span><span class="n">from_kwargs</span><span class="p">(</span>
             <span class="n">telescope_model</span><span class="o">=</span><span class="n">telescope_model</span><span class="p">,</span>
             <span class="n">calibration_model</span><span class="o">=</span><span class="n">calibration_model</span><span class="p">,</span>
@@ -867,7 +829,7 @@ document.write(`
                     <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;picture_thresh&quot;</span><span class="p">],</span>
                     <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;min_neighbors&quot;</span><span class="p">],</span>
                 <span class="p">],</span>
-                <span class="n">distance</span><span class="o">=</span><span class="n">light_source</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s2">&quot;z_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">],</span>
+                <span class="n">distance</span><span class="o">=</span><span class="n">light_source</span><span class="o">.</span><span class="n">distance</span><span class="p">,</span>
                 <span class="n">return_cleaned</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;return_cleaned&quot;</span><span class="p">],</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>

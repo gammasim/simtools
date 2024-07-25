@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simulate_light_emission &#8212; simtools v0.1.dev1+g1def165 Manual</title>
+    <title>simulate_light_emission &#8212; simtools v0.1.dev1+g1d7d68c Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=720aa95a"></script>
+    <script src="../../_static/documentation_options.js?v=4b01ddeb"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1def165 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1d7d68c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -491,7 +491,7 @@ There are two ways this application can be executed:</p>
 </li>
 <li><p>Simulate light emission with telescopes at fixed positions according to the layout:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup layout             --model_version prod6 --telescope_file             /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv             --light_source_type led</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup layout             --model_version prod6             --light_source_type led</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -517,8 +517,6 @@ There are two ways this application can be executed:</p>
 This changes the pre-compiled (simtel_array) application that is used to run the
 light emission package with. Currently we use xyzls (laser), and ls-beam can be
 accessed by using the laser option.</p>
-</dd>
-<dt>–telescope_file (str, optional)</dt><dd><p>Telescope position file. Required when using the –light_source_setup layout option.</p>
 </dd>
 <dt>–off_axis_angle (float, optional)</dt><dd><p>Off axis angle for light source direction.</p>
 </dd>
@@ -574,7 +572,7 @@ accessed by using the laser option.</p>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="simulate_light_emission.default_le_configs">
-<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">default_le_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">le_application</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_light_emission.html#default_le_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.default_le_configs" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">default_le_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">le_application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_light_emission.html#default_le_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.default_le_configs" title="Link to this definition">#</a></dt>
 <dd><p>Define default light emission configurations.</p>
 <p>Predefined angular distribution names not requiring to read any table are
 “Isotropic”, “Gauss:&lt;rms&gt;”, “Rayleigh”, “Cone:&lt;angle&gt;”, and “FilledCone:&lt;angle&gt;”, “Parallel”,
@@ -586,6 +584,8 @@ in the given direction.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>le_application: str</strong></dt><dd><p>Light emission application.</p>
+</dd>
+<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with command line arguments.</p>
 </dd>
 </dl>
 </dd>
