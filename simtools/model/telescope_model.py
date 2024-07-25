@@ -49,7 +49,7 @@ class TelescopeModel(ModelParameter):
         ModelParameter.__init__(
             self,
             site=site,
-            telescope_name=telescope_name,
+            array_element_name=telescope_name,
             mongo_db_config=mongo_db_config,
             model_version=model_version,
             db=None,
