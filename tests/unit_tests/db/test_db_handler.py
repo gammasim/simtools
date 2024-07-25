@@ -148,13 +148,13 @@ def test_get_sim_telarray_configuration_parameters(db, model_version):
 
 
 @pytest.mark.usefixtures("_db_cleanup")
-def test_copy_telescope_db(db, random_id, io_handler, model_version):
+def test_copy_array_element_db(db, random_id, io_handler, model_version):
     logger.info("----Testing copying a whole telescope-----")
-    db.copy_telescope(
+    db.copy_array_element(
         db_name=None,
-        tel_to_copy="LSTN-01",
+        element_to_copy="LSTN-01",
         version_to_copy=model_version,
-        new_tel_name="LSTN-test",
+        new_array_element_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
@@ -168,7 +168,7 @@ def test_copy_telescope_db(db, random_id, io_handler, model_version):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name="LSTN-test",
+        array_element_name="LSTN-test",
         model_version=model_version,
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
@@ -187,7 +187,7 @@ def test_copy_telescope_db(db, random_id, io_handler, model_version):
     with pytest.raises(ValueError, match=r"The following query returned zero results"):
         db.read_mongo_db(
             db_name=f"sandbox_{random_id}",
-            telescope_model_name="LSTN-test",
+            array_element_name="LSTN-test",
             model_version=model_version,
             run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
             collection_name="telescopes_" + random_id,
@@ -217,11 +217,11 @@ def test_add_tagged_version(db, random_id, io_handler, model_version):
 @pytest.mark.usefixtures("_db_cleanup")
 def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     logger.info("----Testing adding a new parameter-----")
-    db.copy_telescope(
+    db.copy_array_element(
         db_name=None,
-        tel_to_copy="LSTN-01",
+        element_to_copy="LSTN-01",
         version_to_copy=model_version,
-        new_tel_name="LSTN-test",
+        new_array_element_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
@@ -232,7 +232,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
+        array_element_name="LSTN-test",
         version="test",
         parameter="new_test_parameter_str",
         value="hello",
@@ -240,7 +240,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
+        array_element_name="LSTN-test",
         version="test",
         parameter="new_test_parameter_int",
         value=999,
@@ -248,7 +248,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
+        array_element_name="LSTN-test",
         version="test",
         parameter="new_test_parameter_float",
         value=999.9,
@@ -256,7 +256,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
+        array_element_name="LSTN-test",
         version="test",
         parameter="new_test_parameter_quantity",
         value=999.9 * u.m,
@@ -264,7 +264,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
+        array_element_name="LSTN-test",
         version="test",
         parameter="new_test_parameter_quantity_str",
         value="999.9 cm",
@@ -272,7 +272,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
+        array_element_name="LSTN-test",
         version="test",
         parameter="new_test_parameter_simtel_list",
         value="0.969 0.0 0.0 0.0 0.0 0.0",
@@ -281,7 +281,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name="LSTN-test",
+        array_element_name="LSTN-test",
         model_version="test",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
@@ -316,7 +316,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name="North",
+        array_element_name="North",
         model_version="test",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="sites_" + random_id,
@@ -328,7 +328,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     # calibration_devices parameters
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        telescope="ILLN-design",
+        array_element_name="ILLN-design",
         version="test",
         parameter="led_pulse_offset",
         value="0 ns",
@@ -336,7 +336,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name="ILLN-design",
+        array_element_name="ILLN-design",
         model_version="test",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="calibration_devices_" + random_id,
@@ -360,11 +360,11 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
 @pytest.mark.usefixtures("_db_cleanup")
 def test_update_parameter_field_db(db, random_id, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
-    db.copy_telescope(
+    db.copy_array_element(
         db_name=None,
-        tel_to_copy="LSTN-01",
+        element_to_copy="LSTN-01",
         version_to_copy="Released",
-        new_tel_name="LSTN-test",
+        new_array_element_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
         collection_to_copy_to="telescopes_" + random_id,
@@ -382,7 +382,7 @@ def test_update_parameter_field_db(db, random_id, io_handler):
     )
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
-        telescope="LSTN-test",
+        array_element_name="LSTN-test",
         model_version="Released",
         parameter="camera_pixels",
         field="applicable",
@@ -391,7 +391,7 @@ def test_update_parameter_field_db(db, random_id, io_handler):
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        telescope_model_name="LSTN-test",
+        array_element_name="LSTN-test",
         model_version="Released",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
@@ -399,12 +399,10 @@ def test_update_parameter_field_db(db, random_id, io_handler):
     )
     assert pars["camera_pixels"]["applicable"] is False
 
-    with pytest.raises(
-        ValueError, match=r"You need to specify if to update a telescope or a site."
-    ):
+    with pytest.raises(ValueError, match=r"You need to specify an array element or a site."):
         db.update_parameter_field(
             db_name=f"sandbox_{random_id}",
-            telescope=None,
+            array_element_name=None,
             site=None,
             model_version="2024-02-01",
             parameter="not_important",
@@ -504,7 +502,7 @@ def test_insert_files_db(db, io_handler, random_id, caplog):
 def test_get_all_versions(db, mocker, caplog):
     # not specifying a telescope model name and parameter
     all_versions = db.get_all_versions(
-        telescope_model_name=None,
+        array_element_name=None,
         site="North",
         parameter=None,
         collection="telescopes",
@@ -513,7 +511,7 @@ def test_get_all_versions(db, mocker, caplog):
 
     # using a specific parameter
     all_versions = db.get_all_versions(
-        telescope_model_name="LSTN-01",
+        array_element_name="LSTN-01",
         site="North",
         parameter="camera_config_file",
         collection="telescopes",
@@ -573,18 +571,18 @@ def test_get_available_array_elements_of_type(db, model_version, caplog):
     assert all("design" not in tel_type for tel_type in available_types)
 
 
-def test_get_telescope_db_name(db):
-    assert db.get_telescope_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
-    assert db.get_telescope_db_name("LSTS-20", model_version="Prod5") == "LSTS-design"
-    assert db.get_telescope_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
-    assert db.get_telescope_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
-    assert db.get_telescope_db_name("SSTS-91", model_version="Prod5") == "SSTS-design"
-    assert db.get_telescope_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
+def test_get_array_element_db_name(db):
+    assert db.get_array_element_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
+    assert db.get_array_element_db_name("LSTS-20", model_version="Prod5") == "LSTS-design"
+    assert db.get_array_element_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
+    assert db.get_array_element_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
+    assert db.get_array_element_db_name("SSTS-91", model_version="Prod5") == "SSTS-design"
+    assert db.get_array_element_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
     with pytest.raises(ValueError, match=r"Invalid name SSTN"):
-        db.get_telescope_db_name("SSTN-05", model_version="Prod5", collection="telescopes")
+        db.get_array_element_db_name("SSTN-05", model_version="Prod5", collection="telescopes")
 
     with pytest.raises(ValueError, match=r"Invalid database name."):
-        db.get_telescope_db_name("ILLN-01", model_version="Prod5", collection="telescopes")
+        db.get_array_element_db_name("ILLN-01", model_version="Prod5", collection="telescopes")
 
 
 def test_parameter_cache_key(db):
