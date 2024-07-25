@@ -16,7 +16,7 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
             db_from_repo_handler.update_model_parameters_from_repo(
                 parameters={},
                 site="North",
-                telescope_name="MSTN-01",
+                array_element_name="MSTN-01",
                 model_version="2024-02-01",
                 parameter_collection="telescopes",
                 db_simulation_model_url=None,
@@ -32,7 +32,7 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
         _pars_mstn = db_from_repo_handler.update_model_parameters_from_repo(
             parameters=dict.fromkeys(_pars_telescope_model, None),
             site="North",
-            telescope_name=_tel,
+            array_element_name=_tel,
             model_version="2024-02-01",
             parameter_collection="telescopes",
             db_simulation_model_url=simulation_model_url,
@@ -52,7 +52,7 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
     _pars_south = db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
-        telescope_name=None,
+        array_element_name=None,
         model_version="2024-02-01",
         parameter_collection="site",
         db_simulation_model_url=simulation_model_url,
@@ -65,7 +65,7 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
             db_from_repo_handler.update_model_parameters_from_repo(
                 parameters=dict.fromkeys(_pars_telescope_model, None),
                 site="North",
-                telescope_name="MSTN-01",
+                array_element_name="MSTN-01",
                 model_version="2024-02-01",
                 parameter_collection="not_a_collection",
                 db_simulation_model_url=simulation_model_url,
@@ -77,7 +77,7 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
     db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
-        telescope_name=None,
+        array_element_name=None,
         model_version="2024-02-01",
         parameter_collection="site",
         db_simulation_model_url=simulation_model_url,
@@ -90,7 +90,7 @@ def test_update_telescope_parameters_from_repo(db_config, simulation_model_url):
     _pars = db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_telescope_model, None),
         site="North",
-        telescope_name="MSTN-01",
+        array_element_name="MSTN-01",
         parameter_collection="telescopes",
         model_version="2024-02-01",
         db_simulation_model_url=simulation_model_url,
@@ -100,7 +100,7 @@ def test_update_telescope_parameters_from_repo(db_config, simulation_model_url):
     _pars_design = db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_telescope_model, None),
         site="North",
-        telescope_name="MSTN-design",
+        array_element_name="MSTN-design",
         parameter_collection="telescopes",
         model_version="2024-02-01",
         db_simulation_model_url=simulation_model_url,
@@ -117,7 +117,7 @@ def test_update_site_parameters_from_repo(db_config):
     _pars = db_from_repo_handler.update_model_parameters_from_repo(
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
-        telescope_name=None,
+        array_element_name=None,
         parameter_collection="site",
         model_version="2024-02-01",
         db_simulation_model_url=db_config["db_simulation_model_url"],

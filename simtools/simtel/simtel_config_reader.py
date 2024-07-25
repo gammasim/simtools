@@ -98,7 +98,7 @@ class SimtelConfigReader:
         _json_dict = {
             "parameter": self.parameter_name,
             "instrument": telescope_name,
-            "site": names.get_site_from_telescope_name(telescope_name),
+            "site": names.get_site_from_array_element_name(telescope_name),
             "version": model_version,
             "value": self.parameter_dict.get(self.simtel_telescope_name),
             "unit": self._get_unit_from_schema(),
@@ -442,7 +442,7 @@ class SimtelConfigReader:
             raise exc
 
         return (
-            names.get_telescope_type_from_telescope_name(telescope_name)
+            names.get_array_element_type_from_name(telescope_name)
             in self.schema_dict["instrument"]["type"]
         )
 

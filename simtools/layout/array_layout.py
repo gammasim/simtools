@@ -98,8 +98,7 @@ class ArrayLayout:
         """Initialize site parameters required for transformations using the database."""
         self._logger.debug("Initialize parameters from DB")
         if self.mongo_db_config is None:
-            self._logger.error("No database configuration provided")
-            raise ValueError
+            raise ValueError("No database configuration provided")
 
         self.site_model = SiteModel(
             site=self.site,
@@ -234,7 +233,7 @@ class ArrayLayout:
             tel.name = row["telescope_name"]
             if "asset_code" not in row:
                 try:
-                    tel.asset_code = names.get_telescope_type_from_telescope_name(tel.name)
+                    tel.asset_code = names.get_array_element_type_from_name(tel.name)
                 # asset code is not a valid telescope name; possibly a calibration device
                 except ValueError:
                     tel.asset_code = tel.name.split("-")[0]
@@ -672,7 +671,7 @@ class ArrayLayout:
                 _telescope_list_from_type = [
                     tel
                     for tel in self._telescope_list
-                    if names.get_telescope_type_from_telescope_name(tel.asset_code) in asset_list
+                    if names.get_array_element_type_from_name(tel.asset_code) in asset_list
                 ]
                 self._telescope_list = list(
                     set(_telescope_list_from_name + _telescope_list_from_type)
