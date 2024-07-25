@@ -182,12 +182,14 @@ def validate_array_element_name(name):
         Validated name.
     """
     try:
-        _tel_type, _tel_id = name.split("-")
+        _array_element_type, _array_element_id = name.split("-")
     except ValueError as exc:
         msg = f"Invalid name {name}"
         raise ValueError(msg) from exc
     return (
-        _validate_name(_tel_type, array_elements()) + "-" + validate_array_element_id_name(_tel_id)
+        _validate_name(_array_element_type, array_elements())
+        + "-"
+        + validate_array_element_id_name(_array_element_id)
     )
 
 

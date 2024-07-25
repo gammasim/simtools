@@ -187,14 +187,14 @@ class SimulatorLightEmission(SimtelRunner):
             The pointing vector from the calibration device to the telescope.
         """
         # use DB coordinates later
-        x_cal = self.default_le_config["x_pos_ILLN-01"]["default"].to(u.m).value
-        y_cal = self.default_le_config["y_pos_ILLN-01"]["default"].to(u.m).value
-        z_cal = self.default_le_config["z_pos_ILLN-01"]["default"].to(u.m).value
-
+        x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value(
+            "array_element_position_ground"
+        )
         cal_vect = np.array([x_cal, y_cal, z_cal])
-        x_tel = self.default_le_config["x_pos"]["real"].to(u.m).value
-        y_tel = self.default_le_config["y_pos"]["real"].to(u.m).value
-        z_tel = self.default_le_config["z_pos"]["real"].to(u.m).value
+        x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
+            "array_element_position_ground"
+        )
+
         tel_vect = np.array([x_tel, y_tel, z_tel])
 
         direction_vector = tel_vect - cal_vect
@@ -229,14 +229,13 @@ class SimulatorLightEmission(SimtelRunner):
         astropy Quantity
             The distance between the telescope and the calibration device.
         """
-        if "real" in self.default_le_config["x_pos"]:
-            x_cal = self.default_le_config["x_pos_ILLN-01"]["default"].to(u.m).value
-            y_cal = self.default_le_config["y_pos_ILLN-01"]["default"].to(u.m).value
-            z_cal = self.default_le_config["z_pos_ILLN-01"]["default"].to(u.m).value
-
-            x_tel = self.default_le_config["x_pos"]["real"].to(u.m).value
-            y_tel = self.default_le_config["y_pos"]["real"].to(u.m).value
-            z_tel = self.default_le_config["z_pos"]["real"].to(u.m).value
+        if not self.default_le_config:
+            x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value(
+                "array_element_position_ground"
+            )
+            x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
+                "array_element_position_ground"
+            )
 
         else:
             x_tel = self.default_le_config["x_pos"]["default"].to(u.m).value
@@ -263,6 +262,12 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The commands to run the Light Emission package
         """
+        x_cal, y_cal, z_cal = (
+            self._calibration_model.get_parameter_value("array_element_position_ground") * u.m
+        )
+        x_tel, y_tel, z_tel = (
+            self._telescope_model.get_parameter_value("array_element_position_ground") * u.m
+        )
         command = f" rm {self.output_directory}/"
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
@@ -279,18 +284,10 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
 
             elif self.le_application[1] == "layout":
-                x_origin = (
-                    self.default_le_config["x_pos_ILLN-01"]["default"]
-                    - self.default_le_config["x_pos"]["real"]
-                )
-                y_origin = (
-                    self.default_le_config["y_pos_ILLN-01"]["default"]
-                    - self.default_le_config["y_pos"]["real"]
-                )
-                z_origin = (
-                    self.default_le_config["z_pos_ILLN-01"]["default"]
-                    - self.default_le_config["z_pos"]["real"]
-                )
+
+                x_origin = x_cal - x_tel
+                y_origin = y_cal - y_tel
+                z_origin = z_cal - z_tel
                 # light_source coordinates relative to telescope
                 command += f" -x {x_origin.to(u.cm).value}"
                 command += f" -y {y_origin.to(u.cm).value}"
@@ -321,22 +318,14 @@ class SimulatorLightEmission(SimtelRunner):
             )
             command += " --lightpulse Gauss:"
             command += f"{self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
-            x_origin = (
-                self.default_le_config["x_pos_ILLN-01"]["default"]
-                - self.default_le_config["x_pos"]["real"]
-            )
-            y_origin = (
-                self.default_le_config["y_pos_ILLN-01"]["default"]
-                - self.default_le_config["y_pos"]["real"]
-            )
-            z_origin = (
-                self.default_le_config["z_pos_ILLN-01"]["default"]
-                - self.default_le_config["z_pos"]["real"]
-            )
+            x_origin = x_cal - x_tel
+            y_origin = y_cal - y_tel
+            z_origin = z_cal - z_tel
             _, angles = self.calibration_pointing_direction()
             angle_theta = angles[0]
             angle_phi = angles[1]
-            command += f" --laser-position '{x_origin.value},{y_origin.value},{z_origin.value}'"
+            positions = x_origin.to(u.cm).value, y_origin.to(u.cm).value, z_origin.to(u.cm).value
+            command += f" --laser-position '{positions[0]},{positions[1]},{positions[2]}'"
 
             command += f" --telescope-theta {angle_theta}"
             command += f" --telescope-phi {angle_phi}"
@@ -388,7 +377,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += super().get_config_option("TELTRIG_MIN_SIGSUM", "7.8")
         command += super().get_config_option("PULSE_ANALYSIS", "-30")
 
-        if "real" in self.default_le_config["x_pos"]:
+        if self.default_le_config:
             _, angles = self.calibration_pointing_direction()
             command += super().get_config_option("telescope_theta", f"{angles[0]}")
             command += super().get_config_option("telescope_phi", f"{angles[1]}")

@@ -26,8 +26,7 @@
 
             simtools-simulate-light-emission --telescope MSTN-04 --site North \
             --illuminator ILLN-01 --light_source_setup layout \
-            --model_version prod6 --telescope_file \
-            /workdir/external/simtools/tests/resources/telescope_positions-North-ground.ecsv \
+            --model_version prod6 \
             --light_source_type led
 
     Command Line Arguments
@@ -55,9 +54,6 @@
         This changes the pre-compiled (simtel_array) application that is used to run the
         light emission package with. Currently we use xyzls (laser), and ls-beam can be
         accessed by using the laser option.
-
-    --telescope_file (str, optional)
-        Telescope position file. Required when using the --light_source_setup layout option.
 
     --off_axis_angle (float, optional)
         Off axis angle for light source direction.
@@ -131,7 +127,6 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
-from simtools.model.array_model import ArrayModel
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -265,7 +260,7 @@ def distance_list(arg):
         raise ValueError("Distances must be numeric values") from exc
 
 
-def default_le_configs(le_application):
+def default_le_configs(le_application, args_dict):
     """
     Define default light emission configurations.
 
@@ -281,14 +276,16 @@ def default_le_configs(le_application):
     le_application: str
         Light emission application.
 
+    args_dict: dict
+        Dictionary with command line arguments.
+
     Returns
     -------
     default_config: dict
         Default light emission configuration.
     """
-    default_config = {}
-    if le_application in ("xyzls", "ls-beam"):
-        default_config = {
+    if le_application in ("xyzls", "ls-beam") and args_dict["light_source_setup"] == "variable":
+        return {
             "x_pos": {
                 "len": 1,
                 "unit": u.Unit("cm"),
@@ -307,24 +304,6 @@ def default_le_configs(le_application):
                 "default": [i * 100 for i in [200, 300, 400, 600, 800, 1200, 2000, 4000]] * u.cm,
                 "names": ["z_position"],
             },
-            "x_pos_ILLN-01": {
-                "len": 1,
-                "unit": u.Unit("m"),
-                "default": -58718 * u.cm,
-                "names": ["x_position"],
-            },
-            "y_pos_ILLN-01": {
-                "len": 1,
-                "unit": u.Unit("m"),
-                "default": 275 * u.cm,
-                "names": ["y_position"],
-            },
-            "z_pos_ILLN-01": {
-                "len": 1,
-                "unit": u.Unit("m"),
-                "default": 13700 * u.cm,
-                "names": ["z_position"],
-            },
             "direction": {
                 "len": 3,
                 "unit": u.dimensionless_unscaled,
@@ -332,7 +311,8 @@ def default_le_configs(le_application):
                 "names": ["direction", "cx,cy,cz"],
             },
         }
-    return default_config
+
+    return {}
 
 
 def select_application(args_dict):
@@ -363,7 +343,7 @@ def main():
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
     le_application = select_application(args_dict)
-    default_le_config = default_le_configs(le_application[0])
+    default_le_config = default_le_configs(le_application[0], args_dict)
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
@@ -439,24 +419,6 @@ def main():
 
     elif args_dict["light_source_setup"] == "layout":
 
-        array_model = ArrayModel(
-            mongo_db_config=db_config,
-            model_version=args_dict["model_version"],
-            site=args_dict["site"],
-            array_elements=args_dict["telescope_file"],
-        )
-        try:
-            xyz = array_model.telescope_model[args_dict["telescope"]].position(
-                coordinate_system="ground"
-            )
-            default_le_config["x_pos"]["real"] = xyz[0]
-            default_le_config["y_pos"]["real"] = xyz[1]
-            default_le_config["z_pos"]["real"] = xyz[2]
-
-        except KeyError as exc:
-            logger.error(f"Telescope {args_dict['telescope']} not found in array model")
-            raise exc
-
         light_source = SimulatorLightEmission.from_kwargs(
             telescope_model=telescope_model,
             calibration_model=calibration_model,
@@ -480,7 +442,7 @@ def main():
                     args_dict["picture_thresh"],
                     args_dict["min_neighbors"],
                 ],
-                distance=light_source.default_le_config["z_pos"]["default"],
+                distance=light_source.distance,
                 return_cleaned=args_dict["return_cleaned"],
             )
         except AttributeError:
