@@ -35,7 +35,7 @@ class ModelParameter:
     site: str
         Site name (e.g., South or North).
     array_element_name: str
-        Name of array element (e.g., LSTN-01, LSTN-design).
+        Array element name (e.g., LSTN-01, LSTN-design, ILLN-01).
     collection: str
         instrument class (e.g. telescopes, calibration_devices)
         as stored under collection in the DB.

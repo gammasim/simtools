@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from simtools.model.array_model import ArrayModel
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
@@ -36,24 +35,6 @@ def default_config_fixture():
             "len": 1,
             "unit": u.Unit("cm"),
             "default": 100000 * u.cm,
-            "names": ["z_position"],
-        },
-        "x_pos_ILLN-01": {
-            "len": 1,
-            "unit": u.Unit("m"),
-            "default": -58718 * u.cm,
-            "names": ["x_position"],
-        },
-        "y_pos_ILLN-01": {
-            "len": 1,
-            "unit": u.Unit("m"),
-            "default": 275 * u.cm,
-            "names": ["y_position"],
-        },
-        "z_pos_ILLN-01": {
-            "len": 1,
-            "unit": u.Unit("m"),
-            "default": 15500 * u.cm,
             "names": ["z_position"],
         },
         "direction": {
@@ -246,20 +227,9 @@ def test_from_kwargs_with_minimal_args(
     assert simulator.light_source_type == "led"
 
 
-@pytest.fixture()
-def array_layout_model(db_config, model_version, telescope_north_test_file):
-    return ArrayModel(
-        mongo_db_config=db_config,
-        model_version=model_version,
-        site="North",
-        array_elements=telescope_north_test_file,
-    )
-
-
 def test_make_light_emission_script(
     mock_simulator,
     telescope_model_lst,
-    array_layout_model,
     simtel_path,
     mock_output_path,
     io_handler,
@@ -270,8 +240,8 @@ def test_make_light_emission_script(
         f"sim_telarray/LightEmission/xyzls"
         " -x -51627.0"
         " -y 5510.0"
-        " -z 11000.0"
-        " -d 0.972761,-0.10382,-0.207263"
+        " -z 9200.0"
+        " -d 0.979101,-0.104497,-0.174477"
         " -n 10000000000.0"
         " -s 300"
         " -p Gauss:0.0"
@@ -280,12 +250,6 @@ def test_make_light_emission_script(
         f"{telescope_model_lst.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
-
-    xyz = array_layout_model.telescope_model["LSTN-01"].position(coordinate_system="ground")
-
-    mock_simulator.default_le_config["x_pos"]["real"] = xyz[0]
-    mock_simulator.default_le_config["y_pos"]["real"] = xyz[1]
-    mock_simulator.default_le_config["z_pos"]["real"] = xyz[2]
 
     command = mock_simulator._make_light_emission_script()
 
@@ -323,15 +287,10 @@ def test_make_light_emission_script_variable(
 def test_make_light_emission_script_laser(
     mock_simulator_laser,
     telescope_model_lst,
-    array_layout_model,
     simtel_path,
     mock_output_path,
     io_handler,
 ):
-    xyz = array_layout_model.telescope_model["LSTN-01"].position(coordinate_system="ground")
-    mock_simulator_laser.default_le_config["x_pos"]["real"] = xyz[0]
-    mock_simulator_laser.default_le_config["y_pos"]["real"] = xyz[1]
-    mock_simulator_laser.default_le_config["z_pos"]["real"] = xyz[2]
 
     # Call the method under test
     command = mock_simulator_laser._make_light_emission_script()
@@ -348,10 +307,10 @@ def test_make_light_emission_script_laser(
         f"{mock_simulator_laser._calibration_model.get_parameter_value('laser_wavelength')}"
         " --lightpulse Gauss:"
         f"{mock_simulator_laser._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
-        " --laser-position '-51627.0,5510.0,11000.0'"
-        " --telescope-theta 78.037993"
+        " --laser-position '-51627.0,5510.0,9200.0'"
+        " --telescope-theta 79.951773"
         " --telescope-phi 186.091952"
-        " --laser-theta 11.962007"
+        " --laser-theta 10.048226999999997"
         " --laser-phi 173.908048"
         f" --atmosphere {mock_output_path}/model/"
         f"{mock_simulator_laser._calibration_model.get_parameter_value('atmospheric_profile')}"
@@ -364,22 +323,12 @@ def test_make_light_emission_script_laser(
 
 def test_calibration_pointing_direction(mock_simulator):
 
-    # Mocking default_le_config
-    mock_simulator.default_le_config = {
-        "x_pos_ILLN-01": {"default": 0 * u.m},
-        "y_pos_ILLN-01": {"default": 0 * u.m},
-        "z_pos_ILLN-01": {"default": 0 * u.m},
-        "x_pos": {"real": 100 * u.m},
-        "y_pos": {"real": 200 * u.m},
-        "z_pos": {"real": 400 * u.m},
-    }
-
     # Calling calibration_pointing_direction method
     pointing_vector, angles = mock_simulator.calibration_pointing_direction()
 
     # Expected pointing vector and angles
-    expected_pointing_vector = [0.218218, 0.436436, 0.872872]
-    expected_angles = [150.794, 116.565, 150.794, -116.565]
+    expected_pointing_vector = [0.979, -0.104, -0.174]
+    expected_angles = [79.952, 186.092, 79.952, 173.908]
 
     # Asserting expected pointing vector and angles
     np.testing.assert_array_almost_equal(pointing_vector, expected_pointing_vector, decimal=3)
@@ -416,12 +365,10 @@ def test_plot_simtel_ctapipe(mock_simulator, mock_output_path):
 
 
 def test_make_simtel_script(mock_simulator):
-    # Create a mock file content
     mock_file_content = "Sample content of config file"
 
     # Patch the built-in open function to return a mock file
     with patch("builtins.open", mock_open(read_data=mock_file_content)) as mock_file:
-        # Reset the mock's call count to zero
         mock_file.reset_mock()
 
         # Mock the necessary attributes and methods used within _make_simtel_script
@@ -434,9 +381,16 @@ def test_make_simtel_script(mock_simulator):
         )
         path_to_config = "/path/to/config.cfg"
         mock_simulator._telescope_model.get_config_file.return_value = path_to_config
-        mock_simulator._telescope_model.get_parameter_value.side_effect = lambda param: (
-            "atm_test" if param == "atmospheric_transmission" else MagicMock()
-        )
+
+        def get_telescope_model_param(param):
+            if param == "atmospheric_transmission":
+                return "atm_test"
+            if param == "array_element_position_ground":
+                return (1, 1, 1)
+            return MagicMock()
+
+        mock_simulator._telescope_model.get_parameter_value.side_effect = get_telescope_model_param
+
         mock_simulator._site_model.get_parameter_value.side_effect = lambda param: (
             "999" if param == "corsika_observation_level" else MagicMock()
         )
@@ -449,12 +403,11 @@ def test_make_simtel_script(mock_simulator):
             "-C altitude=999 -C atmospheric_transmission=atm_test "
             "-C TRIGGER_CURRENT_LIMIT=20 -C TRIGGER_TELESCOPES=1 "
             "-C TELTRIG_MIN_SIGSUM=7.8 -C PULSE_ANALYSIS=-30 "
-            "-C telescope_theta=0 -C telescope_phi=0 "
+            "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
             "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
             "-C output_file=/directory/xyzls_layout.simtel.gz\n"
         )
 
-        # Call the method under test
         command = mock_simulator._make_simtel_script()
 
         mock_file.assert_has_calls(
