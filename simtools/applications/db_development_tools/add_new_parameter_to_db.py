@@ -53,7 +53,7 @@ def main():  # noqa: D103
             for version_now in all_versions:
                 db.add_new_parameter(
                     db_name=db_config["db_simulation_model"],
-                    telescope=telescope_now,
+                    array_element_name=telescope_now,
                     parameter=par_now,
                     version=version_now,
                     value=par_value,
