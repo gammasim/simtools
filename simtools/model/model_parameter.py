@@ -310,7 +310,7 @@ class ModelParameter:
                 self._simulation_config_parameters[simulation_software] = (
                     self.db.get_simulation_configuration_parameters(
                         site=self.site,
-                        telescope_model_name=self.name,
+                        array_element_name=self.name,
                         model_version=self.model_version,
                         simulation_software=simulation_software,
                     )
