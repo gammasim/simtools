@@ -262,6 +262,12 @@ class SimulatorLightEmission(SimtelRunner):
         str
             The commands to run the Light Emission package
         """
+        x_cal, y_cal, z_cal = (
+            self._calibration_model.get_parameter_value("array_element_position_ground") * u.m
+        )
+        x_tel, y_tel, z_tel = (
+            self._telescope_model.get_parameter_value("array_element_position_ground") * u.m
+        )
         command = f" rm {self.output_directory}/"
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
@@ -278,16 +284,10 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
 
             elif self.le_application[1] == "layout":
-                x_cal, y_cal, z_cal = self._calibration_model.get_parameter_value(
-                    "array_element_position_ground"
-                )
-                x_tel, y_tel, z_tel = self._telescope_model.get_parameter_value(
-                    "array_element_position_ground"
-                )
 
-                x_origin = (x_cal - x_tel) * u.m
-                y_origin = (y_cal - y_tel) * u.m
-                z_origin = (z_cal - z_tel) * u.m
+                x_origin = x_cal - x_tel
+                y_origin = y_cal - y_tel
+                z_origin = z_cal - z_tel
                 # light_source coordinates relative to telescope
                 command += f" -x {x_origin.to(u.cm).value}"
                 command += f" -y {y_origin.to(u.cm).value}"
@@ -318,13 +318,14 @@ class SimulatorLightEmission(SimtelRunner):
             )
             command += " --lightpulse Gauss:"
             command += f"{self._calibration_model.get_parameter_value('laser_pulse_sigtime')}"
-            x_origin = (x_cal - x_tel) * u.m
-            y_origin = (y_cal - y_tel) * u.m
-            z_origin = (z_cal - z_tel) * u.m
+            x_origin = x_cal - x_tel
+            y_origin = y_cal - y_tel
+            z_origin = z_cal - z_tel
             _, angles = self.calibration_pointing_direction()
             angle_theta = angles[0]
             angle_phi = angles[1]
-            command += f" --laser-position '{x_origin.value},{y_origin.value},{z_origin.value}'"
+            positions = x_origin.to(u.cm).value, y_origin.to(u.cm).value, z_origin.to(u.cm).value
+            command += f" --laser-position '{positions[0]},{positions[1]},{positions[2]}'"
 
             command += f" --telescope-theta {angle_theta}"
             command += f" --telescope-phi {angle_phi}"
