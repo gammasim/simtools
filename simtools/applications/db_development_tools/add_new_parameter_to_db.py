@@ -45,7 +45,7 @@ def main():  # noqa: D103
     for telescope_now in telescopes:
         for par_now, par_value in parameter.items():
             all_versions = db.get_all_versions(
-                telescope_model_name="-".join(telescope_now.split("-")[1:]),
+                array_element_name="-".join(telescope_now.split("-")[1:]),
                 site=names.get_site_from_array_element_name(telescope_now),
                 parameter="camera_config_file",  # Just a random parameter to get the versions
                 collection="telescopes",
@@ -64,7 +64,7 @@ def main():  # noqa: D103
                 )
                 pars = db.read_mongo_db(
                     db_name=db_config["db_simulation_model"],
-                    telescope_model_name=telescope_now,
+                    array_element_name=telescope_now,
                     model_version=version_now,
                     run_location="./",
                     collection_name="telescopes",
