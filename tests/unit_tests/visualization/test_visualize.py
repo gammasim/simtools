@@ -93,7 +93,7 @@ def test_add_unit():
 def test_get_telescope_patch(io_handler):
     def test_one_site(x, y):
         _test_radius = 15.0
-        for tel_type in names.get_list_of_telescope_types():
+        for tel_type in names.get_list_of_array_element_types():
             patch = visualize.get_telescope_patch(tel_type, x, y, _test_radius * u.m)
             if mpatches.Circle == type(patch):
                 assert patch.radius == _test_radius

@@ -40,7 +40,7 @@ These files describe the simulation model parameters including (among others fie
 They include information about setting and validation activities, data sources, and simulation software.
 The schema files and especially the model parameter descriptions are derived from (and planned to be synchronized with) the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/).
 
-The schema files are in human readable yaml format and follow a fixed meta metaschema (see [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml); found in simtools schema directory).
+The schema files are in human readable YAML format and follow a fixed meta metaschema (see [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml); found in simtools schema directory).
 
 ### Example
 
@@ -230,7 +230,7 @@ simtools-add_model-parameters-from-repository-to-db \
 This application loops over all subdirectories in `input_path` and uploads all json files to the database `new_db_name` (or updates an existing database with the same name):
 
 - subdirectories starting with `OBS` are uploaded to the `sites` collection
-- json files from the subdirectory `configuration_sim_telarray` are uploaded to the `configuration_sim_telarray` collection
+- json files from the subdirectory `configuration_sim_telarray/configuration_corsika` are uploaded to the `configuration_sim_telarray/configuration_corsika` collection
 - `Files` are added to the `files` collection
 - all other json files are uploaded to collection defined in the array element description in [simtools/schemas/array_elements.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/array_elements.yml). Allowed values are e.g., `telescopes`, `calibration_devices`.
 

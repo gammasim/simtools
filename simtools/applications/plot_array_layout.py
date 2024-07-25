@@ -299,7 +299,7 @@ def _layouts_from_list(args_dict, db_config, rotate_angle):
         List of array layouts.
     """
     site = (
-        names.get_site_from_telescope_name(args_dict["array_element_list"][0])
+        names.get_site_from_array_element_name(args_dict["array_element_list"][0])
         if args_dict["site"] is None
         else args_dict["site"]
     )
