@@ -49,7 +49,7 @@ def update_model_parameters_from_repo(
 
     """
     logger.info(
-        "Updating model parameters from repository for site: %s, telescope: %s",
+        "Updating model parameters from repository for site: %s, array element: %s",
         site,
         array_element_name,
     )
@@ -66,7 +66,7 @@ def update_model_parameters_from_repo(
             db_simulation_model,
             array_element_name,
         )
-        # use design array element model in case there is no model defined for this telescope ID
+        # use design array element model in case there is no model defined for this array element ID
         _design_model = names.get_array_element_type_from_name(array_element_name) + "-design"
         if _design_model == array_element_name:
             _design_model = None
@@ -88,8 +88,8 @@ def update_model_parameters_from_repo(
         try:
             _tmp_par = gen.collect_data_from_file_or_dict(file_name=_parameter_file, in_dict=None)
         except (FileNotFoundError, gen.InvalidConfigDataError):
-            # use design telescope model in case there is no model defined for this telescope ID
-            # accept errors, as not all parameters are defined in the repository
+            # use design array element model in case there is no model defined for this
+            #  array element ID. Accept errors, as not all parameters are defined in the repository
             try:
                 _file_path = gen.join_url_or_path(
                     db_simulation_model_url,
