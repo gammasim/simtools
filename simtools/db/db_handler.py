@@ -182,11 +182,11 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-        _site, array_element_name, _model_version = self._validate_model_input(
+        _site, _array_element_name, _model_version = self._validate_model_input(
             site, array_element_name, model_version
         )
         array_element_list = self.get_array_element_list_for_db_query(
-            array_element_name, model_version
+            _array_element_name, model_version
         )
         pars = {}
         for array_element in array_element_list:
