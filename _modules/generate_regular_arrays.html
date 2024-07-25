@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>generate_regular_arrays &#8212; simtools v0.1.dev1+gdbaacd3 Manual</title>
+    <title>generate_regular_arrays &#8212; simtools v0.1.dev1+g1def165 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b312c243"></script>
+    <script src="../_static/documentation_options.js?v=720aa95a"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdbaacd3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1def165 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -454,7 +454,7 @@ document.write(`
         <span class="c1"># Single telescope at the center</span>
         <span class="k">if</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
             <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_name_from_type_site_id</span><span class="p">(</span><span class="n">tel_size</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="s2">&quot;01&quot;</span><span class="p">)</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_name_from_type_site_id</span><span class="p">(</span><span class="n">tel_size</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="s2">&quot;01&quot;</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
             <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
@@ -463,7 +463,9 @@ document.write(`
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
                 <span class="n">tel_name</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_name_from_type_site_id</span><span class="p">(</span><span class="n">tel_size</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;0</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_name_from_type_site_id</span><span class="p">(</span>
+                        <span class="n">tel_size</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;0</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="n">pos_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">telescope_distance</span><span class="p">[</span><span class="n">tel_size</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
                 <span class="n">pos_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">telescope_distance</span><span class="p">[</span><span class="n">tel_size</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>

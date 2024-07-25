@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Simulation Model &#8212; simtools v0.1.dev1+gdbaacd3 Manual</title>
+    <title>Simulation Model &#8212; simtools v0.1.dev1+g1def165 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b312c243"></script>
+    <script src="../_static/documentation_options.js?v=720aa95a"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdbaacd3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1def165 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -526,7 +526,7 @@ The <a class="reference internal" href="../api-reference/db_handler.html#dbhandl
 <p>These files describe the simulation model parameters including (among others fields) name, type, format, units, applicable telescopes, and parameter description.
 They include information about setting and validation activities, data sources, and simulation software.
 The schema files and especially the model parameter descriptions are derived from (and planned to be synchronized with) the <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray manual</a>.</p>
-<p>The schema files are in human readable yaml format and follow a fixed meta metaschema (see <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml">model_parameter_and_data_schema.metaschema.yml</a>; found in simtools schema directory).</p>
+<p>The schema files are in human readable YAML format and follow a fixed meta metaschema (see <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml">model_parameter_and_data_schema.metaschema.yml</a>; found in simtools schema directory).</p>
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
 <p>The following example is for a single parameter description.</p>
@@ -711,7 +711,7 @@ See the <a class="reference internal" href="databases.html#databases"><span clas
 <p>This application loops over all subdirectories in <code class="docutils literal notranslate"><span class="pre">input_path</span></code> and uploads all json files to the database <code class="docutils literal notranslate"><span class="pre">new_db_name</span></code> (or updates an existing database with the same name):</p>
 <ul class="simple">
 <li><p>subdirectories starting with <code class="docutils literal notranslate"><span class="pre">OBS</span></code> are uploaded to the <code class="docutils literal notranslate"><span class="pre">sites</span></code> collection</p></li>
-<li><p>json files from the subdirectory <code class="docutils literal notranslate"><span class="pre">configuration_sim_telarray</span></code> are uploaded to the <code class="docutils literal notranslate"><span class="pre">configuration_sim_telarray</span></code> collection</p></li>
+<li><p>json files from the subdirectory <code class="docutils literal notranslate"><span class="pre">configuration_sim_telarray/configuration_corsika</span></code> are uploaded to the <code class="docutils literal notranslate"><span class="pre">configuration_sim_telarray/configuration_corsika</span></code> collection</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Files</span></code> are added to the <code class="docutils literal notranslate"><span class="pre">files</span></code> collection</p></li>
 <li><p>all other json files are uploaded to collection defined in the array element description in <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/schemas/array_elements.yml">simtools/schemas/array_elements.yml</a>. Allowed values are e.g., <code class="docutils literal notranslate"><span class="pre">telescopes</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration_devices</span></code>.</p></li>
 </ul>

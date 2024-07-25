@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+gdbaacd3 Manual</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+g1def165 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b312c243"></script>
+    <script src="../../_static/documentation_options.js?v=720aa95a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdbaacd3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1def165 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -387,16 +387,16 @@ document.write(`
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;get_site_from_telescope_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;get_telescope_type_from_telescope_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_site_from_array_element_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_array_element_type_from_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;generate_file_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;layout_telescope_list_file_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;sanitize_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;simtel_single_mirror_list_file_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;simtel_config_file_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;validate_site_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_telescope_id_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_telescope_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_array_element_id_name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;validate_array_element_name&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -456,26 +456,26 @@ document.write(`
     <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Structure&quot;</span><span class="p">,</span> <span class="s2">&quot;Camera&quot;</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="validate_telescope_id_name">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_telescope_id_name">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_telescope_id_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="validate_array_element_id_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_array_element_id_name">[docs]</a>
+<span class="k">def</span> <span class="nf">validate_array_element_id_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate telescope ID.</span>
+<span class="sd">    Validate array element ID.</span>
 
 <span class="sd">    Allowed IDs are</span>
-<span class="sd">    - design (for design telescopes or testing)</span>
-<span class="sd">    - telescope ID (e.g., 1, 5, 15)</span>
+<span class="sd">    - design (for design array elements or testing)</span>
+<span class="sd">    - array element ID (e.g., 1, 5, 15)</span>
 <span class="sd">    - test (for testing)</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    name: str or int</span>
-<span class="sd">        Telescope ID name.</span>
+<span class="sd">        Array element ID name.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
-<span class="sd">        Validated telescope ID (added leading zeros, e.g., 1 is converted to 01).</span>
+<span class="sd">        Validated array element ID (added leading zeros, e.g., 1 is converted to 01).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -487,7 +487,7 @@ document.write(`
     <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;design&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid telescope ID name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid array element ID name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
@@ -549,16 +549,16 @@ document.write(`
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="validate_telescope_name">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_telescope_name">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="validate_array_element_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_array_element_name">[docs]</a>
+<span class="k">def</span> <span class="nf">validate_array_element_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate telescope name (e.g., MSTN-design, MSTN-01).</span>
+<span class="sd">    Validate array element name (e.g., MSTN-design, MSTN-01).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
-<span class="sd">        Telescope name.</span>
+<span class="sd">        Array element name.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -570,56 +570,60 @@ document.write(`
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">_tel_type</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">validate_telescope_id_name</span><span class="p">(</span><span class="n">_tel_id</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">_validate_name</span><span class="p">(</span><span class="n">_tel_type</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">validate_array_element_id_name</span><span class="p">(</span><span class="n">_tel_id</span><span class="p">)</span>
+    <span class="p">)</span></div>
 
 
 
-<span class="k">def</span> <span class="nf">get_telescope_name_from_type_site_id</span><span class="p">(</span><span class="n">telescope_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">telescope_id</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_array_element_name_from_type_site_id</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_element_id</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get telescope name from type, site and ID.</span>
+<span class="sd">    Get array element name from type, site and ID.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    telescope_type: str</span>
-<span class="sd">        Telescope type.</span>
+<span class="sd">    array_element_type: str</span>
+<span class="sd">        Array element type.</span>
 <span class="sd">    site: str</span>
 <span class="sd">        Site name.</span>
-<span class="sd">    telescope_id: str</span>
-<span class="sd">        Telescope ID.</span>
+<span class="sd">    array_element_id: str</span>
+<span class="sd">        Array element ID.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
-<span class="sd">        Telescope name.</span>
+<span class="sd">        Array element name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_short_site</span> <span class="o">=</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">_val_id</span> <span class="o">=</span> <span class="n">validate_telescope_id_name</span><span class="p">(</span><span class="n">telescope_id</span><span class="p">)</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope_type</span><span class="si">}{</span><span class="n">_short_site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_val_id</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">_val_id</span> <span class="o">=</span> <span class="n">validate_array_element_id_name</span><span class="p">(</span><span class="n">array_element_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">array_element_type</span><span class="si">}{</span><span class="n">_short_site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_val_id</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
-<div class="viewcode-block" id="get_telescope_type_from_telescope_name">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_telescope_type_from_telescope_name">[docs]</a>
-<span class="k">def</span> <span class="nf">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="get_array_element_type_from_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_array_element_type_from_name">[docs]</a>
+<span class="k">def</span> <span class="nf">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get telescope type from name, e.g. &quot;LSTN&quot;, &quot;MSTN&quot;.</span>
+<span class="sd">    Get array element type from name, e.g. &quot;LSTN&quot;, &quot;MSTN&quot;.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    telescope_name: str</span>
-<span class="sd">        Telescope name</span>
+<span class="sd">    name: str</span>
+<span class="sd">        Array element name</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
-<span class="sd">        Telescope type.</span>
+<span class="sd">        Array element type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array_elements</span><span class="p">())</span></div>
 
 
 
-<span class="k">def</span> <span class="nf">get_list_of_telescope_types</span><span class="p">(</span><span class="n">array_element_class</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observatory</span><span class="o">=</span><span class="s2">&quot;CTAO&quot;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_list_of_array_element_types</span><span class="p">(</span>
+    <span class="n">array_element_class</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observatory</span><span class="o">=</span><span class="s2">&quot;CTAO&quot;</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get list of telescope types.</span>
+<span class="sd">    Get list of array element types.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -631,7 +635,7 @@ document.write(`
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list</span>
-<span class="sd">        List of telescope types.</span>
+<span class="sd">        List of array element types.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">key</span>
@@ -642,23 +646,23 @@ document.write(`
     <span class="p">]</span>
 
 
-<div class="viewcode-block" id="get_site_from_telescope_name">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_site_from_telescope_name">[docs]</a>
-<span class="k">def</span> <span class="nf">get_site_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="get_site_from_array_element_name">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_site_from_array_element_name">[docs]</a>
+<span class="k">def</span> <span class="nf">get_site_from_array_element_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get site name from telescope name.</span>
+<span class="sd">    Get site name from array element name.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
-<span class="sd">        Telescope name.</span>
+<span class="sd">        Array element name.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
 <span class="sd">        Site name (South or North).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;site&quot;</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;site&quot;</span><span class="p">]</span></div>
 
 
 
@@ -676,7 +680,7 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Collection name .</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>

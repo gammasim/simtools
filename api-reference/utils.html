@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+gdbaacd3 Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+g1def165 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b312c243"></script>
+    <script src="../_static/documentation_options.js?v=720aa95a"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdbaacd3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1def165 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -477,15 +477,15 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-utils.names">names</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.generate_file_name"><code class="docutils literal notranslate"><span class="pre">generate_file_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.get_site_from_telescope_name"><code class="docutils literal notranslate"><span class="pre">get_site_from_telescope_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.get_telescope_type_from_telescope_name"><code class="docutils literal notranslate"><span class="pre">get_telescope_type_from_telescope_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.get_array_element_type_from_name"><code class="docutils literal notranslate"><span class="pre">get_array_element_type_from_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.get_site_from_array_element_name"><code class="docutils literal notranslate"><span class="pre">get_site_from_array_element_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.layout_telescope_list_file_name"><code class="docutils literal notranslate"><span class="pre">layout_telescope_list_file_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.sanitize_name"><code class="docutils literal notranslate"><span class="pre">sanitize_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.simtel_config_file_name"><code class="docutils literal notranslate"><span class="pre">simtel_config_file_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.simtel_single_mirror_list_file_name"><code class="docutils literal notranslate"><span class="pre">simtel_single_mirror_list_file_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_array_element_id_name"><code class="docutils literal notranslate"><span class="pre">validate_array_element_id_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_array_element_name"><code class="docutils literal notranslate"><span class="pre">validate_array_element_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_site_name"><code class="docutils literal notranslate"><span class="pre">validate_site_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_telescope_id_name"><code class="docutils literal notranslate"><span class="pre">validate_telescope_id_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_telescope_name"><code class="docutils literal notranslate"><span class="pre">validate_telescope_name()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -920,19 +920,19 @@ the rotation of the coordinate system is clockwise.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.get_site_from_telescope_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">get_site_from_telescope_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#get_site_from_telescope_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.get_site_from_telescope_name" title="Link to this definition">#</a></dt>
-<dd><p>Get site name from telescope name.</p>
+<dt class="sig sig-object py" id="utils.names.get_array_element_type_from_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">get_array_element_type_from_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#get_array_element_type_from_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.get_array_element_type_from_name" title="Link to this definition">#</a></dt>
+<dd><p>Get array element type from name, e.g. “LSTN”, “MSTN”.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Telescope name.</p>
+<dt><strong>name: str</strong></dt><dd><p>Array element name</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Site name (South or North).</p>
+<dt>str</dt><dd><p>Array element type.</p>
 </dd>
 </dl>
 </dd>
@@ -940,19 +940,19 @@ the rotation of the coordinate system is clockwise.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.get_telescope_type_from_telescope_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">get_telescope_type_from_telescope_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#get_telescope_type_from_telescope_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.get_telescope_type_from_telescope_name" title="Link to this definition">#</a></dt>
-<dd><p>Get telescope type from name, e.g. “LSTN”, “MSTN”.</p>
+<dt class="sig sig-object py" id="utils.names.get_site_from_array_element_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">get_site_from_array_element_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#get_site_from_array_element_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.get_site_from_array_element_name" title="Link to this definition">#</a></dt>
+<dd><p>Get site name from array element name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>telescope_name: str</strong></dt><dd><p>Telescope name</p>
+<dt><strong>name: str</strong></dt><dd><p>Array element name.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Telescope type.</p>
+<dt>str</dt><dd><p>Site name (South or North).</p>
 </dd>
 </dl>
 </dd>
@@ -1070,43 +1070,23 @@ the rotation of the coordinate system is clockwise.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.validate_site_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_site_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_site_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_site_name" title="Link to this definition">#</a></dt>
-<dd><p>Validate site name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Site name.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Validated name.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="utils.names.validate_telescope_id_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_telescope_id_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_telescope_id_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_telescope_id_name" title="Link to this definition">#</a></dt>
-<dd><p>Validate telescope ID.</p>
+<dt class="sig sig-object py" id="utils.names.validate_array_element_id_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_array_element_id_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_array_element_id_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_array_element_id_name" title="Link to this definition">#</a></dt>
+<dd><p>Validate array element ID.</p>
 <p>Allowed IDs are
-- design (for design telescopes or testing)
-- telescope ID (e.g., 1, 5, 15)
+- design (for design array elements or testing)
+- array element ID (e.g., 1, 5, 15)
 - test (for testing)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>name: str or int</strong></dt><dd><p>Telescope ID name.</p>
+<dt><strong>name: str or int</strong></dt><dd><p>Array element ID name.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Validated telescope ID (added leading zeros, e.g., 1 is converted to 01).</p>
+<dt>str</dt><dd><p>Validated array element ID (added leading zeros, e.g., 1 is converted to 01).</p>
 </dd>
 </dl>
 </dd>
@@ -1120,13 +1100,33 @@ the rotation of the coordinate system is clockwise.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.names.validate_telescope_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_telescope_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_telescope_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_telescope_name" title="Link to this definition">#</a></dt>
-<dd><p>Validate telescope name (e.g., MSTN-design, MSTN-01).</p>
+<dt class="sig sig-object py" id="utils.names.validate_array_element_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_array_element_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_array_element_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_array_element_name" title="Link to this definition">#</a></dt>
+<dd><p>Validate array element name (e.g., MSTN-design, MSTN-01).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>name: str</strong></dt><dd><p>Telescope name.</p>
+<dt><strong>name: str</strong></dt><dd><p>Array element name.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Validated name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.names.validate_site_name">
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_site_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_site_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_site_name" title="Link to this definition">#</a></dt>
+<dd><p>Validate site name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name: str</strong></dt><dd><p>Site name.</p>
 </dd>
 </dl>
 </dd>
@@ -1212,15 +1212,15 @@ the rotation of the coordinate system is clockwise.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-utils.names">names</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.generate_file_name"><code class="docutils literal notranslate"><span class="pre">generate_file_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.get_site_from_telescope_name"><code class="docutils literal notranslate"><span class="pre">get_site_from_telescope_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.get_telescope_type_from_telescope_name"><code class="docutils literal notranslate"><span class="pre">get_telescope_type_from_telescope_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.get_array_element_type_from_name"><code class="docutils literal notranslate"><span class="pre">get_array_element_type_from_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.get_site_from_array_element_name"><code class="docutils literal notranslate"><span class="pre">get_site_from_array_element_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.layout_telescope_list_file_name"><code class="docutils literal notranslate"><span class="pre">layout_telescope_list_file_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.sanitize_name"><code class="docutils literal notranslate"><span class="pre">sanitize_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.simtel_config_file_name"><code class="docutils literal notranslate"><span class="pre">simtel_config_file_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.simtel_single_mirror_list_file_name"><code class="docutils literal notranslate"><span class="pre">simtel_single_mirror_list_file_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_array_element_id_name"><code class="docutils literal notranslate"><span class="pre">validate_array_element_id_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_array_element_name"><code class="docutils literal notranslate"><span class="pre">validate_array_element_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_site_name"><code class="docutils literal notranslate"><span class="pre">validate_site_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_telescope_id_name"><code class="docutils literal notranslate"><span class="pre">validate_telescope_id_name()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_telescope_name"><code class="docutils literal notranslate"><span class="pre">validate_telescope_name()</span></code></a></li>
 </ul>
 </li>
 </ul>

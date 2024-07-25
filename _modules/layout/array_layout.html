@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.array_layout &#8212; simtools v0.1.dev1+gdbaacd3 Manual</title>
+    <title>layout.array_layout &#8212; simtools v0.1.dev1+g1def165 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b312c243"></script>
+    <script src="../../_static/documentation_options.js?v=720aa95a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdbaacd3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1def165 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -479,8 +479,7 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize site parameters required for transformations using the database.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initialize parameters from DB&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No database configuration provided&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No database configuration provided&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span>
             <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
@@ -615,7 +614,7 @@ document.write(`
             <span class="n">tel</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;telescope_name&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="s2">&quot;asset_code&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="c1"># asset code is not a valid telescope name; possibly a calibration device</span>
                 <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                     <span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span> <span class="o">=</span> <span class="n">tel</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
@@ -1073,7 +1072,7 @@ document.write(`
                 <span class="n">_telescope_list_from_type</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="n">tel</span>
                     <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span>
-                    <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span><span class="p">)</span> <span class="ow">in</span> <span class="n">asset_list</span>
+                    <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">tel</span><span class="o">.</span><span class="n">asset_code</span><span class="p">)</span> <span class="ow">in</span> <span class="n">asset_list</span>
                 <span class="p">]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
                     <span class="nb">set</span><span class="p">(</span><span class="n">_telescope_list_from_name</span> <span class="o">+</span> <span class="n">_telescope_list_from_type</span><span class="p">)</span>

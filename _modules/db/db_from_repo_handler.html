@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_from_repo_handler &#8212; simtools v0.1.dev1+gdbaacd3 Manual</title>
+    <title>db.db_from_repo_handler &#8212; simtools v0.1.dev1+g1def165 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b312c243"></script>
+    <script src="../../_static/documentation_options.js?v=720aa95a"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gdbaacd3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1def165 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -394,7 +394,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">update_model_parameters_from_repo</span><span class="p">(</span>
     <span class="n">parameters</span><span class="p">,</span>
     <span class="n">site</span><span class="p">,</span>
-    <span class="n">telescope_name</span><span class="p">,</span>
+    <span class="n">array_element_name</span><span class="p">,</span>
     <span class="n">parameter_collection</span><span class="p">,</span>
     <span class="n">model_version</span><span class="p">,</span>
     <span class="n">db_simulation_model_url</span><span class="p">,</span>
@@ -411,8 +411,8 @@ document.write(`
 <span class="sd">        Existing dictionary with parameters to be updated.</span>
 <span class="sd">    site: str</span>
 <span class="sd">        Observatory site (e.g., South or North)</span>
-<span class="sd">    telescope_name: str</span>
-<span class="sd">        Telescope name (e.g., MSTN-01, MSTN-DESIGN)</span>
+<span class="sd">    array_element_name: str</span>
+<span class="sd">        Array element name (e.g., MSTN-01, MSTN-design)</span>
 <span class="sd">    parameter_collection: str</span>
 <span class="sd">        Collection of parameters to be queried (e.g., telescope or site)</span>
 <span class="sd">    model_version: str</span>
@@ -427,9 +427,9 @@ document.write(`
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="s2">&quot;Updating model parameters from repository for site: </span><span class="si">%s</span><span class="s2">, telescope: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Updating model parameters from repository for site: </span><span class="si">%s</span><span class="s2">, array element: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
-        <span class="n">telescope_name</span><span class="p">,</span>
+        <span class="n">array_element_name</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">db_simulation_model_url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -442,11 +442,11 @@ document.write(`
             <span class="s2">&quot;model_versions&quot;</span><span class="p">,</span>
             <span class="n">model_version</span><span class="p">,</span>
             <span class="n">db_simulation_model</span><span class="p">,</span>
-            <span class="n">telescope_name</span><span class="p">,</span>
+            <span class="n">array_element_name</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="c1"># use design telescope model in case there is no model defined for this telescope ID</span>
-        <span class="n">_design_model</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_telescope_type_from_telescope_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-design&quot;</span>
-        <span class="k">if</span> <span class="n">_design_model</span> <span class="o">==</span> <span class="n">telescope_name</span><span class="p">:</span>
+        <span class="c1"># use design array element model in case there is no model defined for this array element ID</span>
+        <span class="n">_design_model</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-design&quot;</span>
+        <span class="k">if</span> <span class="n">_design_model</span> <span class="o">==</span> <span class="n">array_element_name</span><span class="p">:</span>
             <span class="n">_design_model</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">elif</span> <span class="n">parameter_collection</span> <span class="o">==</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span>
         <span class="n">_file_path</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span>
@@ -466,8 +466,8 @@ document.write(`
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_tmp_par</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">_parameter_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span><span class="p">):</span>
-            <span class="c1"># use design telescope model in case there is no model defined for this telescope ID</span>
-            <span class="c1"># accept errors, as not all parameters are defined in the repository</span>
+            <span class="c1"># use design array element model in case there is no model defined for this</span>
+            <span class="c1">#  array element ID. Accept errors, as not all parameters are defined in the repository</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">_file_path</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">join_url_or_path</span><span class="p">(</span>
                     <span class="n">db_simulation_model_url</span><span class="p">,</span>
