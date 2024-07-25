@@ -116,6 +116,7 @@ def test_validate_array_element_name(invalid_name):
     with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.validate_array_element_name("LSTN")
 
+
 def test_get_telescope_name_from_type_site_id():
     assert "LSTN-01" == names.get_telescope_name_from_type_site_id("LST", "North", "01")
     assert "LSTN-01" == names.get_telescope_name_from_type_site_id("LST", "North", "1")
