@@ -187,7 +187,9 @@ def validate_array_element_name(name):
         msg = f"Invalid name {name}"
         raise ValueError(msg) from exc
     return (
-        _validate_name(_array_element_type, array_elements()) + "-" + validate_array_element_id_name(_array_element_id)
+        _validate_name(_array_element_type, array_elements())
+        + "-"
+        + validate_array_element_id_name(_array_element_id)
     )
 
 

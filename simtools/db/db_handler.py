@@ -1315,7 +1315,6 @@ class DatabaseHandler:
             ]
         except ValueError:  # e.g., no design model defined for this array element type
             return [
-
                 self.get_array_element_db_name(array_element_name, model_version),
             ]
 
