@@ -27,7 +27,7 @@ class SystematicErrorEvaluator:
         Dictionary of metrics to evaluate. Default is None.
     """
 
-    def __init__(self, file_path, file_type, metrics=None):
+    def __init__(self, file_path: str, file_type: str, metrics: dict[str, float] | None = None):
         """
         Initialize the evaluator with a specific FITS file, its type, and metrics to calculate.
 
