@@ -26,8 +26,7 @@ guess_resources_per_event() -> dict:
 
 Example Usage
 -------------
-```python
-if __name__ == "__main__":
+
     grid_point_config = {
         "azimuth": 60.0,
         "elevation": 45.0,
@@ -47,7 +46,6 @@ if __name__ == "__main__":
             "storage_gb": 500.0,
             "events": 1e9,
         },
-        # Add more historical data as needed
     ]
 
     estimator = ResourceEstimator(grid_point=grid_point_config,
