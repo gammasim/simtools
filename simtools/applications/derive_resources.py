@@ -56,14 +56,17 @@ Example Usage
 
 import numpy as np
 
+from simtools.utils import names
+
 # Lookup table for resource estimates (currently only La Palma estimates for Hyperarray),
 # update for sample prod
+
 lookup_table = {
     "La Palma": {
-        20: {"compute_hours_per_event": 5e-6, "storage_gb_per_event": 9.45e-6},
-        40: {"compute_hours_per_event": 4e-6, "storage_gb_per_event": 13.07e-6},
-        52: {"compute_hours_per_event": 3e-6, "storage_gb_per_event": 13.88e-6},
-        60: {"compute_hours_per_event": 2.5e-6, "storage_gb_per_event": 12.09e-6},
+        20: {"compute_hours_per_event": 1.307706456e-04, "storage_gb_per_event": 7.391484274e-7},
+        40: {"compute_hours_per_event": 1.867995019e-04, "storage_gb_per_event": 9.705271897e-7},
+        52: {"compute_hours_per_event": 1.794034091e-04, "storage_gb_per_event": 7.734375000e-7},
+        60: {"compute_hours_per_event": 1.333095523e-04, "storage_gb_per_event": 4.997834229e-7},
     },
     "Paranal": {
         20: {"compute_hours_per_event": 5e-6, "storage_gb_per_event": 5e-7},
@@ -130,6 +133,8 @@ class ResourceEstimator:
         self.existing_data = existing_data or []
         self.lookup_table = lookup_table
 
+        self.site = names.validate_site_name(self.simulation_params["site"])
+
     def estimate_resources(self) -> dict:
         """
         Estimate the compute and storage resources required for the simulation.
@@ -189,25 +194,28 @@ class ResourceEstimator:
         dict
             A dictionary with guessed estimates for compute and storage resources.
         """
-        site = self.simulation_params["site"]
         elevation = self.grid_point["elevation"]
-        elevations = sorted(self.lookup_table[site].keys())
+        elevations = sorted(self.lookup_table[self.site].keys())
 
         if elevation <= elevations[0]:
-            compute_hours_per_event = self.lookup_table[site][elevations[0]][
+            compute_hours_per_event = self.lookup_table[self.site][elevations[0]][
                 "compute_hours_per_event"
             ]
-            storage_gb_per_event = self.lookup_table[site][elevations[0]]["storage_gb_per_event"]
+            storage_gb_per_event = self.lookup_table[self.site][elevations[0]][
+                "storage_gb_per_event"
+            ]
         elif elevation >= elevations[-1]:
-            compute_hours_per_event = self.lookup_table[site][elevations[-1]][
+            compute_hours_per_event = self.lookup_table[self.site][elevations[-1]][
                 "compute_hours_per_event"
             ]
-            storage_gb_per_event = self.lookup_table[site][elevations[-1]]["storage_gb_per_event"]
+            storage_gb_per_event = self.lookup_table[self.site][elevations[-1]][
+                "storage_gb_per_event"
+            ]
         else:
             lower_bound = max(e for e in elevations if e <= elevation)
             upper_bound = min(e for e in elevations if e >= elevation)
-            lower_values = self.lookup_table[site][lower_bound]
-            upper_values = self.lookup_table[site][upper_bound]
+            lower_values = self.lookup_table[self.site][lower_bound]
+            upper_values = self.lookup_table[self.site][upper_bound]
 
             compute_hours_per_event = np.interp(
                 elevation,
