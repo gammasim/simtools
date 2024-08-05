@@ -54,6 +54,25 @@ Example Usage
     print("Estimated Resources:", resources)
 """
 
+import numpy as np
+
+# Lookup table for resource estimates (currently only La Palma estimates for Hyperarray),
+# update for sample prod
+lookup_table = {
+    "La Palma": {
+        20: {"compute_hours_per_event": 5e-6, "storage_gb_per_event": 9.45e-6},
+        40: {"compute_hours_per_event": 4e-6, "storage_gb_per_event": 13.07e-6},
+        52: {"compute_hours_per_event": 3e-6, "storage_gb_per_event": 13.88e-6},
+        60: {"compute_hours_per_event": 2.5e-6, "storage_gb_per_event": 12.09e-6},
+    },
+    "Paranal": {
+        20: {"compute_hours_per_event": 5e-6, "storage_gb_per_event": 5e-7},
+        40: {"compute_hours_per_event": 4e-6, "storage_gb_per_event": 4e-7},
+        52: {"compute_hours_per_event": 2.5e-6, "storage_gb_per_event": 2.5e-7},
+        60: {"compute_hours_per_event": 2e-6, "storage_gb_per_event": 2e-7},
+    },
+}
+
 
 class ResourceEstimator:
     """
@@ -67,7 +86,7 @@ class ResourceEstimator:
     grid_point : dict
         Dictionary containing parameters such as azimuth, elevation, and night sky background.
     simulation_params : dict
-        Dictionary containing simulation parameters, including the number of events.
+        Dictionary containing simulation parameters, including the number of events and site.
     existing_data : list of dict, optional
         List of dictionaries with historical data of compute and storage
           resources for existing simulations.
@@ -101,7 +120,7 @@ class ResourceEstimator:
             Dictionary containing grid point parameters such as azimuth,
               elevation, and night sky background.
         simulation_params : dict
-            Dictionary containing simulation parameters, including the number of events.
+            Dictionary containing simulation parameters, including the number of events and site.
         existing_data : list of dict, optional
             List of dictionaries with historical data of compute and storage
               resources for existing simulations.
@@ -109,6 +128,7 @@ class ResourceEstimator:
         self.grid_point = grid_point
         self.simulation_params = simulation_params
         self.existing_data = existing_data or []
+        self.lookup_table = lookup_table
 
     def estimate_resources(self) -> dict:
         """
@@ -169,8 +189,36 @@ class ResourceEstimator:
         dict
             A dictionary with guessed estimates for compute and storage resources.
         """
-        compute_hours_per_event = 0.01
-        storage_gb_per_event = 0.001
+        site = self.simulation_params["site"]
+        elevation = self.grid_point["elevation"]
+        elevations = sorted(self.lookup_table[site].keys())
+
+        if elevation <= elevations[0]:
+            compute_hours_per_event = self.lookup_table[site][elevations[0]][
+                "compute_hours_per_event"
+            ]
+            storage_gb_per_event = self.lookup_table[site][elevations[0]]["storage_gb_per_event"]
+        elif elevation >= elevations[-1]:
+            compute_hours_per_event = self.lookup_table[site][elevations[-1]][
+                "compute_hours_per_event"
+            ]
+            storage_gb_per_event = self.lookup_table[site][elevations[-1]]["storage_gb_per_event"]
+        else:
+            lower_bound = max(e for e in elevations if e <= elevation)
+            upper_bound = min(e for e in elevations if e >= elevation)
+            lower_values = self.lookup_table[site][lower_bound]
+            upper_values = self.lookup_table[site][upper_bound]
+
+            compute_hours_per_event = np.interp(
+                elevation,
+                [lower_bound, upper_bound],
+                [lower_values["compute_hours_per_event"], upper_values["compute_hours_per_event"]],
+            )
+            storage_gb_per_event = np.interp(
+                elevation,
+                [lower_bound, upper_bound],
+                [lower_values["storage_gb_per_event"], upper_values["storage_gb_per_event"]],
+            )
 
         compute_hours = number_of_events * compute_hours_per_event
         storage_gb = number_of_events * storage_gb_per_event
