@@ -62,13 +62,13 @@ from simtools.utils import names
 # update for sample prod
 
 lookup_table = {
-    "La Palma": {
+    "North": {
         20: {"compute_hours_per_event": 1.307706456e-04, "storage_gb_per_event": 7.391484274e-7},
         40: {"compute_hours_per_event": 1.867995019e-04, "storage_gb_per_event": 9.705271897e-7},
         52: {"compute_hours_per_event": 1.794034091e-04, "storage_gb_per_event": 7.734375000e-7},
         60: {"compute_hours_per_event": 1.333095523e-04, "storage_gb_per_event": 4.997834229e-7},
     },
-    "Paranal": {
+    "South": {
         20: {"compute_hours_per_event": 5e-6, "storage_gb_per_event": 5e-7},
         40: {"compute_hours_per_event": 4e-6, "storage_gb_per_event": 4e-7},
         52: {"compute_hours_per_event": 2.5e-6, "storage_gb_per_event": 2.5e-7},
