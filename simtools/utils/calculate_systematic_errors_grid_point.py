@@ -107,7 +107,7 @@ class StatisticalErrorEvaluator:
                             0,
                             0,
                         )  # Init gridpoint with az and zenith here
-                        # grid point (energy, azimuth, zenith, NSB, offset)
+                        # grid point(energy, azimuth, zenith, NSB, offset)
 
         except (FileNotFoundError, KeyError) as e:
             logging.error(f"Error loading file {self.file_path}: {e}")
@@ -365,25 +365,25 @@ class StatisticalErrorEvaluator:
         float
             Scaled number of events for the specified grid point.
         """
-        if grid_point is None:
-            grid_point = self.grid_point
-
-        if grid_point is None:
+        if not self.grid_point:
             raise ValueError("Grid point data is not available for this evaluator.")
 
-        energy = grid_point[0]
         bin_edges = self.create_bin_edges()
         simulated_event_histogram = self.data["simulated_event_histogram"]
+        if not simulated_event_histogram.size:
+            raise ValueError("Simulated event histogram is empty.")
 
+        # TODO: Add here the implementation that uses a combination of the required metrics
+        # Interpolate the histogram to match the grid point
+        energy = grid_point[0]
         bin_idx = np.digitize(energy, bin_edges) - 1
         if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
             raise ValueError("Grid point is outside the range of the current file's data.")
-
-        # Compute scaled events based on metrics
-        scaling_factor = self.metrics.get(
-            "error_eff_area", 1
-        )  # Default scaling factor if not provided
-        self.scaled_events = simulated_event_histogram * scaling_factor
+        self.scaled_events = (
+            self.data["simulated_event_histogram"]
+            * self.error_eff_area["relative_errors"]
+            / self.metrics["error_eff_area"]
+        )
         self.scaled_events_gridpoint = self.scaled_events[bin_idx]
         return self.scaled_events_gridpoint
 
