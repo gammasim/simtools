@@ -25,9 +25,17 @@ class StatisticalErrorEvaluator:
         Type of the file, either 'On-source' or 'Offset'.
     metrics : dict, optional
         Dictionary of metrics to evaluate. Default is None.
+    grid_point : tuple, optional
+        Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
     """
 
-    def __init__(self, file_path: str, file_type: str, metrics: dict[str, float] | None = None):
+    def __init__(
+        self,
+        file_path: str,
+        file_type: str,
+        metrics: dict[str, float] | None = None,
+        grid_point: tuple[float, float, float, float, float] | None = None,
+    ):
         """
         Initialize the evaluator with a specific FITS file, its type, and metrics to calculate.
 
@@ -39,11 +47,16 @@ class StatisticalErrorEvaluator:
             The type of the file ('On-source' or 'Offset').
         metrics : dict, optional
             Dictionary specifying which metrics to compute and their reference values.
+        grid_point : tuple, optional
+            Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
         """
         self.file_path = file_path
         self.file_type = file_type
         self.metrics = metrics or {}
+        self.grid_point = grid_point
+
         self.data = self.load_data_from_file()
+
         self.error_eff_area = None
         self.error_sig_eff_gh = None
         self.error_energy_estimate_bdt_reg_tree = None
@@ -52,6 +65,8 @@ class StatisticalErrorEvaluator:
         self.error_gamma_ray_psf = None
         self.error_image_template_methods = None
         self.metric_results = None
+        self.scaled_events = None
+        self.scaled_events_gridpoint = None
 
     def load_data_from_file(self):
         """
@@ -81,6 +96,19 @@ class StatisticalErrorEvaluator:
                     "bin_edges_high": bin_edges_high,
                     "simulated_event_histogram": simulated_event_histogram,
                 }
+                if self.grid_point is None:
+                    unique_azimuths = np.unique(events_data["PNT_AZ"])
+                    unique_zeniths = np.unique(events_data["PNT_ALT"])
+                    if len(unique_azimuths) == 1 and len(unique_zeniths) == 1:
+                        self.grid_point = (
+                            0,
+                            unique_azimuths[0],
+                            unique_zeniths[0],
+                            0,
+                            0,
+                        )  # Init gridpoint with az and zenith here
+                        # grid point (energy, azimuth, zenith, NSB, offset)
+
         except (FileNotFoundError, KeyError) as e:
             logging.error(f"Error loading file {self.file_path}: {e}")
         return data
@@ -88,13 +116,6 @@ class StatisticalErrorEvaluator:
     def create_bin_edges(self):
         """
         Create unique energy bin edges.
-
-        Parameters
-        ----------
-        bin_edges_low : array
-            Array of lower bin edges.
-        bin_edges_high : array
-            Array of upper bin edges.
 
         Returns
         -------
@@ -201,7 +222,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for signal efficiency.
         """
-        return 0.02  # placeholder
+        return 0.02  # Placeholder value
 
     def calculate_error_energy_estimate_bdt_reg_tree(self):
         """
@@ -252,7 +273,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for gamma-ray PSF.
         """
-        return 0.01  # Placeholder for the actual calculation
+        return 0.01  # Placeholder value
 
     def calculate_error_image_template_methods(self):
         """
@@ -263,7 +284,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for image template methods.
         """
-        return 0.05  # Placeholder for the actual calculation
+        return 0.05  # Placeholder value
 
     def calculate_metrics(self):
         """Calculate all defined metrics as specified in self.metrics and store results."""
@@ -287,7 +308,7 @@ class StatisticalErrorEvaluator:
             )
             ref_value = self.metrics.get("error_energy_estimate_bdt_reg_tree")
             print(
-                f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f},"
+                f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
                 f"Reference: {ref_value:.3f}"
             )
 
@@ -302,10 +323,11 @@ class StatisticalErrorEvaluator:
             self.error_image_template_methods = self.calculate_error_image_template_methods()
             ref_value = self.metrics.get("error_image_template_methods")
             print(
-                f"Image Template Methods Error: {self.error_image_template_methods:.3f},"
+                f"Image Template Methods Error: {self.error_image_template_methods:.3f}, "
                 f"Reference: {ref_value:.3f}"
             )
 
+        # Collect all results in a dictionary
         self.metric_results = {
             "error_eff_area": self.error_eff_area,
             "error_sig_eff_gh": self.error_sig_eff_gh,
@@ -326,6 +348,44 @@ class StatisticalErrorEvaluator:
         if self.error_eff_area:
             return np.max(self.error_eff_area["relative_errors"])
         return None
+
+    def calculate_scaled_events(
+        self, grid_point: tuple[float, float, float, float, float] | None = None
+    ) -> float:
+        """
+        Calculate the scaled number of events for a specific grid point.
+
+        Parameters
+        ----------
+        grid_point : tuple, optional
+            Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
+
+        Returns
+        -------
+        float
+            Scaled number of events for the specified grid point.
+        """
+        if grid_point is None:
+            grid_point = self.grid_point
+
+        if grid_point is None:
+            raise ValueError("Grid point data is not available for this evaluator.")
+
+        energy = grid_point[0]
+        bin_edges = self.create_bin_edges()
+        simulated_event_histogram = self.data["simulated_event_histogram"]
+
+        bin_idx = np.digitize(energy, bin_edges) - 1
+        if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
+            raise ValueError("Grid point is outside the range of the current file's data.")
+
+        # Compute scaled events based on metrics
+        scaling_factor = self.metrics.get(
+            "error_eff_area", 1
+        )  # Default scaling factor if not provided
+        self.scaled_events = simulated_event_histogram * scaling_factor
+        self.scaled_events_gridpoint = self.scaled_events[bin_idx]
+        return self.scaled_events_gridpoint
 
     def calculate_overall_metric(self, metric="average"):
         """
@@ -360,9 +420,7 @@ class StatisticalErrorEvaluator:
             else:
                 raise ValueError(f"Unsupported result type for {metric_name}: {type(result)}")
 
-        # Compute the overall maximum error
         all_max_errors = list(overall_max_errors.values())
-
         if metric == "average":
             overall_metric = np.mean(all_max_errors)
         elif metric == "maximum":
