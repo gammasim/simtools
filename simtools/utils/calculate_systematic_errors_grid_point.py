@@ -1,9 +1,9 @@
 """
-Provides functionality to evaluate systematic errors from FITS files.
+Provides functionality to evaluate statistical errors from FITS files.
 
 Classes
 -------
-SystematicErrorEvaluator: Handles error calculation for given FITS files and metrics.
+StatisticalErrorEvaluator: Handles error calculation for given FITS files and metrics.
 """
 
 import logging
@@ -13,9 +13,9 @@ import numpy as np
 from astropy.io import fits
 
 
-class SystematicErrorEvaluator:
+class StatisticalErrorEvaluator:
     """
-    Evaluates systematic errors from a FITS file.
+    Evaluates statistical errors from a FITS file.
 
     Parameters
     ----------
@@ -167,8 +167,8 @@ class SystematicErrorEvaluator:
 
         # Compute relative errors
         relative_errors = np.divide(
-            uncertainties[valid],
-            simulated_event_counts[valid],
+            uncertainties,
+            simulated_event_counts,
             out=np.zeros_like(uncertainties, dtype=float),
             where=uncertainties > 0,
         )
@@ -271,7 +271,7 @@ class SystematicErrorEvaluator:
             self.error_eff_area = self.calculate_error_eff_area()
             ref_value = self.metrics.get("error_eff_area")
             if self.error_eff_area:
-                avg_error = np.mean(self.error_eff_area["uncertainties"])
+                avg_error = np.mean(self.error_eff_area["relative_errors"])
                 print(f"Effective Area Error (avg): {avg_error:.3f}, Reference: {ref_value:.3f}")
 
         if "error_sig_eff_gh" in self.metrics:
@@ -290,14 +290,12 @@ class SystematicErrorEvaluator:
                 f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f},"
                 f"Reference: {ref_value:.3f}"
             )
-            print(f"Energy Bin Sigma: {self.sigma_energy}")
-            print(f"Energy Bin Delta: {self.delta_energy}")
 
         if "error_gamma_ray_psf" in self.metrics:
             self.error_gamma_ray_psf = self.calculate_error_gamma_ray_psf()
             ref_value = self.metrics.get("error_gamma_ray_psf")
             print(
-                f"Gamma Ray PSF Error: {self.error_gamma_ray_psf:.3f}, Reference: {ref_value:.3f}"
+                f"Gamma-Ray PSF Error: {self.error_gamma_ray_psf:.3f}, Reference: {ref_value:.3f}"
             )
 
         if "error_image_template_methods" in self.metrics:
@@ -305,7 +303,7 @@ class SystematicErrorEvaluator:
             ref_value = self.metrics.get("error_image_template_methods")
             print(
                 f"Image Template Methods Error: {self.error_image_template_methods:.3f},"
-                f" Reference: {ref_value:.3f}"
+                f"Reference: {ref_value:.3f}"
             )
 
         self.metric_results = {
@@ -316,24 +314,18 @@ class SystematicErrorEvaluator:
             "error_image_template_methods": self.error_image_template_methods,
         }
 
-    def calculate_max_error_for_effective_area(self, error_eff_area):
+    def calculate_max_error_for_effective_area(self):
         """
-        Calculate the maximum error for the effective area for each file.
-
-        Parameters
-        ----------
-        error_eff_area : dict
-            Dictionary with uncertainties for each file.
+        Calculate the maximum relative error for effective area.
 
         Returns
         -------
-        dict
-            Dictionary with maximum error for each file.
+        max_error : float
+            Maximum relative error.
         """
-        max_errors = {}
-        uncertainties = error_eff_area["uncertainties"]
-        max_errors[self.file_path] = np.max(uncertainties) if len(uncertainties) > 0 else 0
-        return max_errors
+        if self.error_eff_area:
+            return np.max(self.error_eff_area["relative_errors"])
+        return None
 
     def calculate_overall_metric(self, metric="average"):
         """
@@ -356,7 +348,7 @@ class SystematicErrorEvaluator:
 
         for metric_name, result in self.metric_results.items():
             if metric_name == "error_eff_area":
-                max_errors = self.calculate_max_error_for_effective_area(result)
+                max_errors = self.calculate_max_error_for_effective_area()
                 overall_max_errors[metric_name] = max(max_errors.values()) if max_errors else 0
             elif metric_name in [
                 "error_sig_eff_gh",
@@ -391,7 +383,7 @@ def main():
     on_source_file = os.path.join(
         base_path, "gamma_onSource.N.BL-4LSTs15MSTs-MSTN_ID0.eff-0-CUT0.fits"
     )
-    on_source_evaluator = SystematicErrorEvaluator(
+    on_source_evaluator = StatisticalErrorEvaluator(
         on_source_file,
         "On-source",
         metrics={
@@ -415,13 +407,13 @@ def main():
     overall_metric_on_source = on_source_evaluator.calculate_overall_metric(metric="maximum")
     print("Overall Metric for On-source (Maximum):", overall_metric_on_source)
 
-    # Instantiate SystematicErrorEvaluator class for Offset files
+    # Instantiate StatisticalErrorEvaluator class for Offset files
     offset_files = [
         os.path.join(base_path, f"gamma_cone.N.BL-4LSTs15MSTs-MSTN_ID0.eff-{i}-CUT0.fits")
         for i in range(6)
     ]
     offset_evaluators = [
-        SystematicErrorEvaluator(
+        StatisticalErrorEvaluator(
             file,
             "Offset",
             metrics={
