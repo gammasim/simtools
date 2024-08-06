@@ -160,18 +160,17 @@ class SystematicErrorEvaluator:
             uncertainties[valid] = np.sqrt(
                 np.maximum(
                     triggered_event_counts[valid]
-                    * (simulated_event_counts[valid] - triggered_event_counts[valid]),
+                    * (1 - triggered_event_counts[valid] / simulated_event_counts[valid]),
                     0,
                 )
-                / (simulated_event_counts[valid] ** 2)
             )
 
         # Compute relative errors
         relative_errors = np.divide(
-            uncertainties,
-            efficiencies,
-            out=np.zeros_like(efficiencies, dtype=float),
-            where=efficiencies > 0,
+            uncertainties[valid],
+            simulated_event_counts[valid],
+            out=np.zeros_like(uncertainties, dtype=float),
+            where=uncertainties > 0,
         )
 
         return efficiencies, uncertainties, relative_errors
@@ -188,10 +187,10 @@ class SystematicErrorEvaluator:
         bin_edges = self.create_bin_edges()
         triggered_event_histogram = self.compute_histogram(self.data["event_energies"], bin_edges)
         simulated_event_histogram = self.data["simulated_event_histogram"]
-        _, uncertainties, _ = self.compute_efficiency_and_errors(
+        _, _, relative_errors = self.compute_efficiency_and_errors(
             triggered_event_histogram, simulated_event_histogram
         )
-        return {"uncertainties": uncertainties}
+        return {"relative_errors": relative_errors}
 
     def calculate_error_sig_eff_gh(self):
         """
