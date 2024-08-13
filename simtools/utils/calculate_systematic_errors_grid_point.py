@@ -11,6 +11,7 @@ import os
 
 import numpy as np
 from astropy.io import fits
+from scipy.interpolate import RegularGridInterpolator
 
 
 class StatisticalErrorEvaluator:
@@ -431,6 +432,164 @@ class StatisticalErrorEvaluator:
         overall_max_errors["overall_max"] = overall_metric
 
         return overall_max_errors
+
+
+class InterpolationHandler:
+    """
+    Handle interpolation between multiple StatisticalErrorEvaluator instances.
+
+    Parameters
+    ----------
+    evaluators : list
+        List of StatisticalErrorEvaluator instances.
+    """
+
+    def __init__(self, evaluators: list[StatisticalErrorEvaluator]):
+        self.evaluators = evaluators
+
+        # Gather all grid points and bin edges from the evaluators, filtering out None values
+        self.azimuths = np.unique(
+            [e.grid_point[1] for e in self.evaluators if e.grid_point[1] is not None]
+        )
+        self.zeniths = np.unique(
+            [e.grid_point[2] for e in self.evaluators if e.grid_point[2] is not None]
+        )
+        self.nsbs = np.unique(
+            [e.grid_point[3] for e in self.evaluators if e.grid_point[3] is not None]
+        )
+        self.offsets = np.unique(
+            [e.grid_point[4] for e in self.evaluators if e.grid_point[4] is not None]
+        )
+
+        # Check and handle energy bin edges
+        self.energies, self.data = self._handle_energy_bin_edges()
+
+        # Initialize the multidimensional grid
+        self.grid = (self.energies, self.azimuths, self.zeniths, self.nsbs, self.offsets)
+
+        # Create the interpolator function
+        self.interpolator = RegularGridInterpolator(
+            self.grid, self.data, bounds_error=False, fill_value=None
+        )
+
+    def _handle_energy_bin_edges(self):
+        """
+        Handle energy bin edges.
+
+        Returns
+        -------
+        energies : np.array
+            The final energy grid.
+        data : np.array
+            The filled data array.
+        """
+        # Collect bin edges from each evaluator
+        bin_edges_high = [e.data["bin_edges_high"] for e in self.evaluators]
+        bin_edges_low = [e.data["bin_edges_low"] for e in self.evaluators]
+
+        # Calculate midpoints for each evaluator
+        midpoints = [0.5 * (high + low) for high, low in zip(bin_edges_high, bin_edges_low)]
+
+        # Check if midpoints are the same across all evaluators
+        if all(np.array_equal(midpoints[0], m) for m in midpoints):
+            # If midpoints are the same, use the first evaluator's energy grid
+            energies = np.unique(np.concatenate(midpoints))
+            data = self._fill_data_array(midpoints[0], energies)
+        else:
+            # If midpoints differ, perform complex interpolation
+            energies, data = self.complex_interpolation(midpoints, bin_edges_high)
+
+        return energies, data
+
+    def _fill_data_array(self, midpoints, energies):
+        """
+        Fill the data array based on the provided midpoints and energies.
+
+        Returns
+        -------
+        np.array
+            The filled data array.
+        """
+        data = np.zeros(
+            (
+                len(energies),
+                len(self.azimuths),
+                len(self.zeniths),
+                len(self.nsbs),
+                len(self.offsets),
+            )
+        )
+
+        for e in self.evaluators:
+            energy_indices = np.digitize(midpoints, energies) - 1
+            azimuth_index = np.searchsorted(self.azimuths, e.grid_point[1])
+            zenith_index = np.searchsorted(self.zeniths, e.grid_point[2])
+            nsb_index = np.searchsorted(self.nsbs, e.grid_point[3])
+            offset_index = np.searchsorted(self.offsets, e.grid_point[4])
+
+            for i, energy_index in enumerate(energy_indices[:-1]):
+                data[energy_index, azimuth_index, zenith_index, nsb_index, offset_index] = (
+                    e.scaled_events[i]
+                )
+
+        return data
+
+    def complex_interpolation(self, midpoints, bin_edges_high):
+        """
+        Perform complex interpolation between different energy grids.
+
+        Returns
+        -------
+        np.array
+            The combined energy grid.
+        np.array
+            The filled data array with interpolated values.
+        """
+        # Combine all bin edges and sort them to create a unified energy grid
+        combined_edges = np.unique(np.concatenate(bin_edges_high))
+        energies = np.unique(combined_edges)
+
+        data = np.zeros(
+            (
+                len(energies),
+                len(self.azimuths),
+                len(self.zeniths),
+                len(self.nsbs),
+                len(self.offsets),
+            )
+        )
+
+        for e, midpoint, _ in zip(self.evaluators, midpoints, bin_edges_high):
+            energy_indices = np.digitize(midpoint, energies) - 1
+            azimuth_index = np.searchsorted(self.azimuths, e.grid_point[1])
+            zenith_index = np.searchsorted(self.zeniths, e.grid_point[2])
+            nsb_index = np.searchsorted(self.nsbs, e.grid_point[3])
+            offset_index = np.searchsorted(self.offsets, e.grid_point[4])
+
+            for i, energy_index in enumerate(energy_indices[:-1]):
+                data[energy_index, azimuth_index, zenith_index, nsb_index, offset_index] = (
+                    e.scaled_events[i]
+                )
+
+        return energies, data
+
+    def interpolate_simulated_events(
+        self, grid_point: tuple[float, float, float, float, float]
+    ) -> float:
+        """
+        Interpolate the number of simulated events.
+
+        Parameters
+        ----------
+        grid_point : tuple
+            Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
+
+        Returns
+        -------
+        float
+            Scaled number of events for the specified grid point.
+        """
+        return self.interpolator(grid_point)
 
 
 def main():
