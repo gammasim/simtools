@@ -62,11 +62,12 @@ from simtools.utils import names
 # update for sample prod
 
 lookup_table = {
-    # "North": { # Hyperarray values
-    #    20: {"compute_hours_per_event": 0.00013077, "storage_gb_per_event": 7.39148427e-07},
-    #    40: {"compute_hours_per_event": 0.00020756, "storage_gb_per_event": 1.07836354e-06},
-    #    52: {"compute_hours_per_event": 0.00025629, "storage_gb_per_event": 1.10491071e-06},
-    #    60: {"compute_hours_per_event": 0.00026662, "storage_gb_per_event": 9.99566846e-07},
+    # "North": { # Hyperarray values downscaled from ratio of alpha test prod dark vs dark+moon
+    # #scaling factors: 1.55764075, 1.62695035, 1.63798531, 1.43891403
+    #    20: {"compute_hours_per_event": 8.39543043e-05, "storage_gb_per_event": 7.39148427e-07},
+    #    40: {"compute_hours_per_event": 1.27573040e-04, "storage_gb_per_event": 1.07836354e-06},
+    #    52: {"compute_hours_per_event": 1.56466962e-04, "storage_gb_per_event": 1.10491071e-06},
+    #    60: {"compute_hours_per_event": 1.85291893e-04, "storage_gb_per_event": 9.99566846e-07},
     # },
     "North": {  # alpha values
         20: {"compute_hours_per_event": 4.97333333e-05, "storage_gb_per_event": 2.61397111e-07},
