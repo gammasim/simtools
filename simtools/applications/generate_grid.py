@@ -79,7 +79,7 @@ class GridGeneration:
         data_level : str
             The data level (e.g., 'A', 'B', 'C') for the grid generation.
         science_case : str
-            The science case for the grid generation (e.g., 'high_precision').
+            The science case for the grid generation.
         """
         self.axes = axes
         self.data_level = data_level
@@ -144,14 +144,14 @@ class GridGeneration:
                 adapted_axis["range"] = (
                     axis["range"][0],
                     axis["range"][1] * 0.5,
-                )  # Example adjustment
+                )  # TODO: Decide later
             elif self.data_level == "B":
                 adapted_axis["range"] = (axis["range"][0], axis["range"][1])
             elif self.data_level == "C":
                 adapted_axis["range"] = (
                     axis["range"][0],
                     axis["range"][1] * 1.5,
-                )  # Example adjustment
+                )  # TODO: Decide later
 
             adapted_axes.append(adapted_axis)
 
