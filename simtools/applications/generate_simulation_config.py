@@ -2,7 +2,7 @@
 Module defines the `SimulationConfig` class.
 
 Used to configure and
-generate simulation parameters for a specific grid point in a systematic error
+generate simulation parameters for a specific grid point in a statistical error
 evaluation setup. The class considers various parameters, such as azimuth,
 elevation, and night sky background, to compute core scatter areas, viewcones,
 and the required number of simulated events.
@@ -13,8 +13,8 @@ Key Components:
   - Attributes:
     - `grid_point` (dict): Contains azimuth, elevation, and night sky background.
     - `data_level` (str): The data level for the simulation (e.g., 'A', 'B', 'C').
-    - `science_case` (str): The science case for the simulation (e.g., 'high_precision').
-    - `file_path` (str): Path to the FITS file used for systematic error evaluation.
+    - `science_case` (str): The science case for the simulation.
+    - `file_path` (str): Path to the FITS file used for statistical error evaluation.
     - `file_type` (str): Type of the FITS file ('On-source' or 'Offset').
     - `metrics` (dict, optional): Dictionary of metrics to evaluate.
 
@@ -24,7 +24,7 @@ import os
 
 import numpy as np
 
-from simtools.utils.calculate_systematic_errors_grid_point import SystematicErrorEvaluator
+from simtools.utils.calculate_statistical_errors_grid_point import StatisticalErrorEvaluator
 
 
 class SimulationConfig:
@@ -40,7 +40,7 @@ class SimulationConfig:
     science_case : str
         The science case for the simulation configuration.
     file_path : str
-        Path to the FITS file for systematic error evaluation.
+        Path to the FITS file for statistical error evaluation.
     file_type : str
         Type of the FITS file ('On-source' or 'Offset').
     metrics : dict, optional
@@ -69,7 +69,7 @@ class SimulationConfig:
         science_case : str
             The science case for the simulation configuration.
         file_path : str
-            Path to the FITS file for systematic error evaluation.
+            Path to the FITS file for statistical error evaluation.
         file_type : str
             Type of the FITS file ('On-source' or 'Offset').
         metrics : dict, optional
@@ -81,7 +81,7 @@ class SimulationConfig:
         self.file_path = file_path
         self.file_type = file_type
         self.metrics = metrics or {}
-        self.evaluator = SystematicErrorEvaluator(file_path, file_type, metrics)
+        self.evaluator = StatisticalErrorEvaluator(file_path, file_type, metrics)
         self.simulation_params = {}
 
     def configure_simulation(self) -> dict[str, float]:
@@ -196,14 +196,14 @@ class SimulationConfig:
 
     def calculate_required_events(self) -> int:
         """
-        Calculate the required number of simulated events based on systematic error metrics.
+        Calculate the required number of simulated events based on statistical error metrics.
 
         Returns
         -------
         int
             The number of simulated events required.
         """
-        # Obtain the systematic error evaluation metrics
+        # Obtain the statistical error evaluation metrics
         self.evaluator.calculate_metrics()
         metric_results = self.evaluator.metric_results
 
@@ -216,7 +216,7 @@ class SimulationConfig:
 
         # Calculate required events
         uncertainty_factor = 1 / (1 - avg_uncertainty)
-        if self.science_case == "high_precision":
+        if self.science_case == "science case 1":
             uncertainty_factor *= 1.5
         return int(base_events * uncertainty_factor)
 
@@ -241,7 +241,7 @@ if __name__ == "__main__":
 
     BASE_PATH = "/Users/znb68/PD/CTA/"
 
-    # Instantiate the SystematicErrorEvaluator class a On-source file
+    # Instantiate the StatisticalErrorEvaluator class a On-source file
     on_source_file = os.path.join(
         BASE_PATH, "gamma_onSource.N.BL-4LSTs15MSTs-MSTN_ID0.eff-0-CUT0.fits"
     )
