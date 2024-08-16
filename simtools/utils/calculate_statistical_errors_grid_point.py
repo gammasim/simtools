@@ -620,7 +620,6 @@ class InterpolationHandler:
         """
         midpoints = 0.5 * (evaluator.data["bin_edges_high"] + evaluator.data["bin_edges_low"])
         midpoints = midpoints[:-1]
-        print(len(midpoints))
         # interpolate for all bin centers
         grid_point = evaluator.grid_point
         scaled_events = self.interpolate_simulated_events(
@@ -642,7 +641,7 @@ class InterpolationHandler:
         plt.legend()
         plt.yscale("log")
         plt.xscale("log")
-        plt.xlabel("Energy (Midpoint of Bin Edges)")
+        plt.xlabel("Energy (TeV)")
         plt.ylabel("Event Count")
         plt.title("Comparison of Simulated, Scaled, and Triggered Events")
         plt.show()
