@@ -574,10 +574,10 @@ class InterpolationHandler:
         return energies, data
 
     def interpolate_simulated_events(
-        self, grid_point: tuple[float, float, float, float, float]
-    ) -> float:
+        self, grid_point: tuple[float | list[float], float, float, float, float]
+    ) -> list[float]:
         """
-        Interpolate the number of simulated events.
+        Interpolate the number of simulated events. Handles lists for grid point elements.
 
         Parameters
         ----------
@@ -586,10 +586,21 @@ class InterpolationHandler:
 
         Returns
         -------
-        float
-            Scaled number of events for the specified grid point.
+        list[float]
+            Scaled number of events for each energy in the specified grid point.
         """
-        return self.interpolator(grid_point)
+        # Expand grid points to handle lists
+        energies, azimuth, zenith, nsb, offset = grid_point
+
+        if isinstance(energies, list):
+            results = []
+            for energy in energies:
+                single_point = (energy, azimuth, zenith, nsb, offset)
+                result = self.interpolator(single_point)
+                results.append(result)
+            return results
+
+        return [self.interpolator(grid_point)]
 
 
 def main():
