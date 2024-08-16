@@ -148,8 +148,8 @@ class SimulationConfig:
         elevation = self.grid_point.get("elevation", 0)
         night_sky_background = self.grid_point.get("night_sky_background", 0)
 
-        # Example logic; replace with actual implementation
-        return 1.0 + 0.01 * (azimuth + elevation + night_sky_background)
+        # TODO: implement
+        return azimuth + elevation + night_sky_background
 
     def _get_viewcone_factor_from_grid_point(self) -> float:
         """
@@ -167,7 +167,7 @@ class SimulationConfig:
         elevation = self.grid_point.get("elevation", 0)
         night_sky_background = self.grid_point.get("night_sky_background", 0)
 
-        # TODO: Implement
+        # TODO: implement
         return azimuth + elevation + night_sky_background
 
     def _fetch_simulated_core_scatter_area(self) -> float:
@@ -191,8 +191,8 @@ class SimulationConfig:
         float
             The fetched viewcone.
         """
-        # Implement the method
-        return 10.0  # Placeholder value
+        # TODO: implement
+        return 1
 
     def calculate_required_events(self) -> int:
         """
