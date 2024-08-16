@@ -390,7 +390,7 @@ class StatisticalErrorEvaluator:
 
     def calculate_overall_metric(self, metric="average"):
         """
-        Calculate an overall metric for the systematic errors.
+        Calculate an overall metric for the statistical errors.
 
         Parameters
         ----------
@@ -607,7 +607,7 @@ def main():
     """Calculate specific uncertainties for fits files."""
     base_path = "/Users/znb68/PD/CTA/"
 
-    # Instantiate the SystematicErrorEvaluator class for the On-source file
+    # Instantiate the StatisticalErrorEvaluator class for the On-source file
     on_source_file = os.path.join(
         base_path, "gamma_onSource.N.BL-4LSTs15MSTs-MSTN_ID0.eff-0-CUT0.fits"
     )
