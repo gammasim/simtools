@@ -9,6 +9,7 @@ StatisticalErrorEvaluator: Handles error calculation for given FITS files and me
 import logging
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from scipy.interpolate import RegularGridInterpolator
@@ -605,6 +606,46 @@ class InterpolationHandler:
             return results
 
         return [self.interpolator(grid_point)]
+
+    def plot_comparison(self, evaluator: StatisticalErrorEvaluator):
+        """
+        Plot a comparison.
+
+        Plot the simulated events, scaled events, and triggered events.
+
+        Parameters
+        ----------
+        evaluator : StatisticalErrorEvaluator
+            The evaluator for which to plot the comparison.
+        """
+        midpoints = 0.5 * (evaluator.data["bin_edges_high"] + evaluator.data["bin_edges_low"])
+        midpoints = midpoints[:-1]
+        print(len(midpoints))
+        # interpolate for all bin centers
+        grid_point = evaluator.grid_point
+        scaled_events = self.interpolate_simulated_events(
+            (midpoints, grid_point[1], grid_point[2], grid_point[3], grid_point[4])
+        )
+
+        # Plot the simulated events
+        plt.plot(midpoints, evaluator.data["simulated_event_histogram"][:-1], label="Simulated")
+
+        # Plot the scaled events
+        plt.plot(midpoints, scaled_events, label="Scaled")
+
+        # Plot the triggered events
+        triggered_event_histogram, _ = np.histogram(
+            evaluator.data["event_energies"], bins=evaluator.data["bin_edges_low"]
+        )
+        plt.plot(midpoints, triggered_event_histogram, label="Triggered")
+
+        plt.legend()
+        plt.yscale("log")
+        plt.xscale("log")
+        plt.xlabel("Energy (Midpoint of Bin Edges)")
+        plt.ylabel("Event Count")
+        plt.title("Comparison of Simulated, Scaled, and Triggered Events")
+        plt.show()
 
 
 def main():
