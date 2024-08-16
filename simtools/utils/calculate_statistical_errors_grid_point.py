@@ -223,6 +223,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for signal efficiency.
         """
+        # TODO: implement
         return 0.02  # Placeholder value
 
     def calculate_error_energy_estimate_bdt_reg_tree(self):
@@ -274,6 +275,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for gamma-ray PSF.
         """
+        # TODO: implement
         return 0.01  # Placeholder value
 
     def calculate_error_image_template_methods(self):
@@ -285,6 +287,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for image template methods.
         """
+        # TODO: implement
         return 0.05  # Placeholder value
 
     def calculate_metrics(self):
@@ -375,7 +378,7 @@ class StatisticalErrorEvaluator:
             raise ValueError("Simulated event histogram is empty.")
 
         # TODO: Add here the implementation that uses a combination of the required metrics
-        # Interpolate the histogram to match the grid point
+        # Currently we only use the rel error on the eff area for scaling
         energy = grid_point[0]
         bin_idx = np.digitize(energy, bin_edges) - 1
         if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
@@ -402,6 +405,7 @@ class StatisticalErrorEvaluator:
         dict
             Dictionary with overall maximum errors for each metric.
         """
+        # TODO: Decide how to combine the metrics
         if self.metric_results is None:
             raise ValueError("Metrics have not been computed yet.")
 
@@ -461,10 +465,9 @@ class InterpolationHandler:
             [e.grid_point[4] for e in self.evaluators if e.grid_point[4] is not None]
         )
 
-        # Check and handle energy bin edges
         self.energies, self.data = self._handle_energy_bin_edges()
 
-        # Initialize the multidimensional grid
+        # Init the grid
         self.grid = (self.energies, self.azimuths, self.zeniths, self.nsbs, self.offsets)
 
         # Create the interpolator function
@@ -546,6 +549,7 @@ class InterpolationHandler:
             The filled data array with interpolated values.
         """
         # Combine all bin edges and sort them to create a unified energy grid
+        # Probably not the best solution.
         combined_edges = np.unique(np.concatenate(bin_edges_high))
         energies = np.unique(combined_edges)
 
@@ -605,66 +609,43 @@ class InterpolationHandler:
 
 def main():
     """Calculate specific uncertainties for fits files."""
+    # Instantiate StatisticalErrorEvaluator for each file
     base_path = "/Users/znb68/PD/CTA/"
-
-    # Instantiate the StatisticalErrorEvaluator class for the On-source file
-    on_source_file = os.path.join(
-        base_path, "gamma_onSource.N.BL-4LSTs15MSTs-MSTN_ID0.eff-0-CUT0.fits"
-    )
-    on_source_evaluator = StatisticalErrorEvaluator(
-        on_source_file,
-        "On-source",
-        metrics={
-            "error_eff_area": 0.1,
-            "error_sig_eff_gh": 0.02,
-            "error_energy_estimate_bdt_reg_tree": 0.05,
-            "error_gamma_ray_psf": 0.01,
-            "error_image_template_methods": 0.03,
-        },
-    )
-
-    # Calculate metrics for On-source file
-    on_source_evaluator.calculate_metrics()
-
-    # Output the metrics for On-source file
-    print("Metrics for On-source file:")
-    for metric_name, value in on_source_evaluator.metric_results.items():
-        print(f"{metric_name}: {value}")
-
-    # Calculate and print overall metric for On-source file
-    overall_metric_on_source = on_source_evaluator.calculate_overall_metric(metric="maximum")
-    print("Overall Metric for On-source (Maximum):", overall_metric_on_source)
-
-    # Instantiate StatisticalErrorEvaluator class for Offset files
-    offset_files = [
-        os.path.join(base_path, f"gamma_cone.N.BL-4LSTs15MSTs-MSTN_ID0.eff-{i}-CUT0.fits")
-        for i in range(6)
+    files = [
+        os.path.join(
+            base_path,
+            f"prod5b-LaPalma-{zenith}deg-lin51-LL/"
+            f"gamma_cone.N.BL-4LSTs15MSTs-MSTN_ID0.eff-0-CUT0.fits",
+        )
+        for zenith in [20, 40, 60]
     ]
-    offset_evaluators = [
+    evaluator_instances = [
         StatisticalErrorEvaluator(
-            file,
-            "Offset",
+            file_path,
+            file_type="On-source",
             metrics={
-                "error_eff_area": 0.1,
+                "error_eff_area": 0.01,
                 "error_sig_eff_gh": 0.02,
                 "error_energy_estimate_bdt_reg_tree": 0.05,
                 "error_gamma_ray_psf": 0.01,
                 "error_image_template_methods": 0.03,
             },
+            grid_point=(1, 180, zenith, 1, 0),  # Example grid point
         )
-        for file in offset_files
+        for file_path, zenith in zip(files, [20, 40, 60])
     ]
 
-    # Calculate and print metrics for each Offset file
-    for i, evaluator in enumerate(offset_evaluators):
+    # Calculate metrics for each evaluator
+    for evaluator in evaluator_instances:
         evaluator.calculate_metrics()
-        print(f"\nMetrics for Offset file {i}:")
-        for metric_name, value in evaluator.metric_results.items():
-            print(f"{metric_name}: {value}")
+        evaluator.calculate_scaled_events()
 
-        # Calculate and print overall metric for each Offset file
-        overall_metric_offset = evaluator.calculate_overall_metric(metric="maximum")
-        print(f"Overall Metric for Offset file {i} (Maximum):", overall_metric_offset)
+    # Create InterpolationHandler and interpolate
+    interpolation_handler = InterpolationHandler(evaluator_instances)
+    grid_point = ([1, 2, 10], 180, 34, 0, 0.0)  # Example grid point
+    # (energy, azimuth, zenith, NSB, offset)
+    scaled_events = interpolation_handler.interpolate_simulated_events(grid_point)
+    print(f"Scaled events for grid point {grid_point}: {scaled_events}")
 
 
 if __name__ == "__main__":
