@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Layout &#8212; simtools v0.1.dev1+gc92360d Manual</title>
+    <title>Layout &#8212; simtools v0.1.dev1+g8650ccf Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=fd315ce8"></script>
+    <script src="../_static/documentation_options.js?v=8a9fcc50"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc92360d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g8650ccf Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -856,23 +856,23 @@ the height above a reference altitude (e.g., CORSIKA observation level).</p>
 <span class="sig-name descname"><span class="pre">has_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/telescope_position.html#TelescopePosition.has_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.has_coordinates" title="Link to this definition">#</a></dt>
 <dd><p>Check if coordinates are set for a given coordinate system.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>bool</dt><dd><p>True if coordinate system is defined.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>InvalidCoordSystemErrorError</dt><dd><p>If coordinate system is not known.</p>
-</dd>
-</dl>
-</dd>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>crs_name: str</strong></dt><dd><p>Name of coordinate system.</p>
 </dd>
 <dt><strong>crs_check: bool</strong></dt><dd><p>Check that projection system is defined.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if coordinate system is defined.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>InvalidCoordSystemErrorError</dt><dd><p>If coordinate system is not known.</p>
 </dd>
 </dl>
 </dd>
@@ -965,14 +965,8 @@ is set for all systems here.</p>
 <span class="sig-name descname"><span class="pre">set_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/telescope_position.html#TelescopePosition.set_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.telescope_position.TelescopePosition.set_coordinates" title="Link to this definition">#</a></dt>
 <dd><p>Set coordinates of an array element.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>InvalidCoordSystemErrorError</dt><dd><p>If coordinate system is not known.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Attributes<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
 <dt><strong>crs_name: str</strong></dt><dd><p>Name of coordinate system.</p>
 </dd>
 <dt><strong>xx: float</strong></dt><dd><p>x-coordinate.</p>
@@ -980,6 +974,12 @@ is set for all systems here.</p>
 <dt><strong>yy: float</strong></dt><dd><p>y-coordinate.</p>
 </dd>
 <dt><strong>zz: float</strong></dt><dd><p>z-coordinate (altitude).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InvalidCoordSystemErrorError</dt><dd><p>If coordinate system is not known.</p>
 </dd>
 </dl>
 </dd>
