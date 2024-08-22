@@ -176,7 +176,11 @@ class StatisticalErrorEvaluator:
         )
 
         # Calculate uncertainties with binomial distribution
-        valid = (simulated_event_counts > 0) & (triggered_event_counts <= simulated_event_counts)
+        valid = (
+            (simulated_event_counts > 0)
+            & (triggered_event_counts <= simulated_event_counts)
+            & (triggered_event_counts > 5)
+        )
         uncertainties = np.zeros_like(triggered_event_counts, dtype=float)
 
         if np.any(valid):
