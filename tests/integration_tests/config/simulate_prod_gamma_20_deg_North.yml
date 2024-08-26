@@ -19,12 +19,10 @@ CTA_SIMPIPE:
     CORE_SCATTER: "10 500 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
-    SAVE_FILE_LISTS: True
+    PACK_FOR_GRID_REGISTER: true
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        simtel/data/run000010/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.zst
+        directory_for_grid_upload/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.log_hist.tar.gz
     - OUTPUT_FILE: |
-        simtel/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.log.gz
-    - OUTPUT_FILE: |
-        simtel/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.hdata.zst
+        directory_for_grid_upload/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.zst
