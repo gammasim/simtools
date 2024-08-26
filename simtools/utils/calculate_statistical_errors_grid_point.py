@@ -69,6 +69,7 @@ class StatisticalErrorEvaluator:
         self.metric_results = None
         self.scaled_events = None
         self.scaled_events_gridpoint = None
+        self.energy_threshold = None
 
     def load_data_from_file(self):
         """
@@ -175,7 +176,8 @@ class StatisticalErrorEvaluator:
             where=simulated_event_counts > 0,
         )
 
-        # Calculate uncertainties with binomial distribution
+        # Calculate uncertainties with binomial distribution,
+        # apply threshold of 5 for triggered event counts data
         valid = (
             (simulated_event_counts > 0)
             & (triggered_event_counts <= simulated_event_counts)
@@ -201,6 +203,36 @@ class StatisticalErrorEvaluator:
         )
 
         return efficiencies, uncertainties, relative_errors
+
+    def calculate_energy_threshold(self):
+        """
+        Calculate the energy threshold where the effective area exceeds 50% of its maximum value.
+
+        Returns
+        -------
+        float
+            Energy threshold value.
+        """
+        bin_edges = self.create_bin_edges()
+        triggered_event_histogram = self.compute_histogram(self.data["event_energies"], bin_edges)
+        simulated_event_histogram = self.data["simulated_event_histogram"]
+
+        # Calculate efficiencies (effective area as a function of energy)
+        efficiencies, _, _ = self.compute_efficiency_and_errors(
+            triggered_event_histogram, simulated_event_histogram
+        )
+
+        # Determine the effective area threshold (50% of max effective area)
+        max_efficiency = np.max(efficiencies)
+        threshold_efficiency = 0.1 * max_efficiency
+
+        # Find the first bin where efficiency exceeds the threshold
+        threshold_index = np.argmax(efficiencies >= threshold_efficiency)
+        if threshold_index == 0 and efficiencies[0] < threshold_efficiency:
+            return  # No valid threshold found
+
+        # Calculate the corresponding energy threshold
+        self.energy_threshold = bin_edges[threshold_index]
 
     def calculate_error_eff_area(self):
         """
@@ -358,9 +390,7 @@ class StatisticalErrorEvaluator:
             return np.max(self.error_eff_area["relative_errors"])
         return None
 
-    def calculate_scaled_events(
-        self, grid_point: tuple[float, float, float, float, float] | None = None
-    ) -> float:
+    def calculate_scaled_events(self):
         """
         Calculate the scaled number of events for a specific grid point.
 
@@ -375,7 +405,7 @@ class StatisticalErrorEvaluator:
             Scaled number of events for the specified grid point.
         """
         if not self.grid_point:
-            raise ValueError("Grid point data is not available for this evaluator.")
+            raise Warning("Grid point data is not available for this evaluator.")
 
         bin_edges = self.create_bin_edges()
         simulated_event_histogram = self.data["simulated_event_histogram"]
@@ -384,7 +414,7 @@ class StatisticalErrorEvaluator:
 
         # TODO: Add here the implementation that uses a combination of the required metrics
         # Currently we only use the rel error on the eff area for scaling
-        energy = grid_point[0]
+        energy = self.grid_point[0]
         bin_idx = np.digitize(energy, bin_edges) - 1
         if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
             raise ValueError("Grid point is outside the range of the current file's data.")
