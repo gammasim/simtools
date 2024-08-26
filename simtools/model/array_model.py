@@ -339,7 +339,7 @@ class ArrayModel:
         array_elements_dict = {}
         for name in array_elements_list:
             try:
-                array_elements_dict[names.validate_telescope_name(name)] = None
+                array_elements_dict[names.validate_array_element_name(name)] = None
             except ValueError:
                 array_elements_dict.update(self._get_all_array_elements_of_type(name))
         return array_elements_dict

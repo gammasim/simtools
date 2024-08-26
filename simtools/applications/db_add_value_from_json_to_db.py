@@ -83,7 +83,7 @@ def main():  # noqa: D103
             logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
             db.add_new_parameter(
                 db_name=db_config["db_simulation_model"],
-                telescope=par_dict["instrument"],
+                array_element_name=par_dict["instrument"],
                 parameter=par_dict["parameter"],
                 version=par_dict["version"],
                 value=par_dict["value"],

@@ -34,8 +34,8 @@ class ModelParameter:
         Version of the model (ex. prod5).
     site: str
         Site name (e.g., South or North).
-    telescope_name: str
-        Telescope name (e.g., LSTN-01, LSTN-design).
+    array_element_name: str
+        Array element name (e.g., LSTN-01, LSTN-design, ILLN-01).
     collection: str
         instrument class (e.g. telescopes, calibration_devices)
         as stored under collection in the DB.
@@ -51,7 +51,7 @@ class ModelParameter:
         mongo_db_config,
         model_version,
         site=None,
-        telescope_name=None,
+        array_element_name=None,
         collection="telescopes",
         db=None,
         label=None,
@@ -71,14 +71,14 @@ class ModelParameter:
         self.model_version = self.db.model_version(model_version)
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
-            names.validate_telescope_name(
-                self.db.get_telescope_db_name(
-                    telescope_name=telescope_name,
+            names.validate_array_element_name(
+                self.db.get_array_element_db_name(
+                    array_element_name=array_element_name,
                     model_version=self.model_version,
                     collection=self.collection,
                 )
             )
-            if telescope_name is not None
+            if array_element_name is not None
             else None
         )
         self._config_file_directory = None
@@ -310,7 +310,7 @@ class ModelParameter:
                 self._simulation_config_parameters[simulation_software] = (
                     self.db.get_simulation_configuration_parameters(
                         site=self.site,
-                        telescope_model_name=self.name,
+                        array_element_name=self.name,
                         model_version=self.model_version,
                         simulation_software=simulation_software,
                     )
