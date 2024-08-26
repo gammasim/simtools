@@ -594,7 +594,7 @@ def get_telescope_patch(name, x, y, radius):
         Instance of mpatches.Circle.
     """
     tel_obj = leg_h.TelescopeHandler()
-    valid_name = names.get_telescope_type_from_telescope_name(name)
+    valid_name = names.get_array_element_type_from_name(name)
     fill_flag = False
 
     x = x.to(u.m)
@@ -677,7 +677,7 @@ def plot_array(
 
 
 def initialize_tel_counters():
-    return {one_telescope: 0 for one_telescope in names.get_list_of_telescope_types()}
+    return {one_telescope: 0 for one_telescope in names.get_list_of_array_element_types()}
 
 
 def get_rotated_positions(telescopes, rotate_angle):
@@ -709,7 +709,7 @@ def create_patches(telescopes, scale, marker_scaling, show_tel_label, ax, fontsi
         telescope_name = get_telescope_name(tel_now)
         update_tel_counters(tel_counters, telescope_name)
         sphere_radius = get_sphere_radius(tel_now)
-        i_tel_name = names.get_telescope_type_from_telescope_name(telescope_name)
+        i_tel_name = names.get_array_element_type_from_name(telescope_name)
         patches.append(
             get_telescope_patch(
                 i_tel_name,
@@ -752,7 +752,7 @@ def get_sphere_radius(tel_now):
 
 def update_legend(ax, tel_counters, legend_objects, legend_labels):
     """Update the legend with the telescope counts."""
-    for one_telescope in names.get_list_of_telescope_types():
+    for one_telescope in names.get_list_of_array_element_types():
         if tel_counters[one_telescope] > 0:
             legend_objects.append(leg_h.all_telescope_objects[one_telescope]())
             legend_labels.append(f"{one_telescope} ({tel_counters[one_telescope]})")

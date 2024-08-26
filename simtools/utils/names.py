@@ -11,16 +11,16 @@ import yaml
 _logger = logging.getLogger(__name__)
 
 __all__ = [
-    "get_site_from_telescope_name",
-    "get_telescope_type_from_telescope_name",
+    "get_site_from_array_element_name",
+    "get_array_element_type_from_name",
     "generate_file_name",
     "layout_telescope_list_file_name",
     "sanitize_name",
     "simtel_single_mirror_list_file_name",
     "simtel_config_file_name",
     "validate_site_name",
-    "validate_telescope_id_name",
-    "validate_telescope_name",
+    "validate_array_element_id_name",
+    "validate_array_element_name",
 ]
 
 
@@ -80,24 +80,24 @@ def telescope_parameters():
     return load_model_parameters(class_key_list=("Structure", "Camera"))
 
 
-def validate_telescope_id_name(name):
+def validate_array_element_id_name(name):
     """
-    Validate telescope ID.
+    Validate array element ID.
 
     Allowed IDs are
-    - design (for design telescopes or testing)
-    - telescope ID (e.g., 1, 5, 15)
+    - design (for design array elements or testing)
+    - array element ID (e.g., 1, 5, 15)
     - test (for testing)
 
     Parameters
     ----------
     name: str or int
-        Telescope ID name.
+        Array element ID name.
 
     Returns
     -------
     str
-        Validated telescope ID (added leading zeros, e.g., 1 is converted to 01).
+        Validated array element ID (added leading zeros, e.g., 1 is converted to 01).
 
     Raises
     ------
@@ -109,7 +109,7 @@ def validate_telescope_id_name(name):
     if name.lower() in ("design", "test"):
         return str(name).lower()
 
-    msg = f"Invalid telescope ID name {name}"
+    msg = f"Invalid array element ID name {name}"
     _logger.error(msg)
     raise ValueError(msg)
 
@@ -167,14 +167,14 @@ def _validate_name(name, all_names):
     raise ValueError(msg)
 
 
-def validate_telescope_name(name):
+def validate_array_element_name(name):
     """
-    Validate telescope name (e.g., MSTN-design, MSTN-01).
+    Validate array element name (e.g., MSTN-design, MSTN-01).
 
     Parameters
     ----------
     name: str
-        Telescope name.
+        Array element name.
 
     Returns
     -------
@@ -182,56 +182,62 @@ def validate_telescope_name(name):
         Validated name.
     """
     try:
-        _tel_type, _tel_id = name.split("-")
+        _array_element_type, _array_element_id = name.split("-")
     except ValueError as exc:
         msg = f"Invalid name {name}"
         raise ValueError(msg) from exc
-    return _validate_name(_tel_type, array_elements()) + "-" + validate_telescope_id_name(_tel_id)
+    return (
+        _validate_name(_array_element_type, array_elements())
+        + "-"
+        + validate_array_element_id_name(_array_element_id)
+    )
 
 
-def get_telescope_name_from_type_site_id(telescope_type, site, telescope_id):
+def get_array_element_name_from_type_site_id(array_element_type, site, array_element_id):
     """
-    Get telescope name from type, site and ID.
+    Get array element name from type, site and ID.
 
     Parameters
     ----------
-    telescope_type: str
-        Telescope type.
+    array_element_type: str
+        Array element type.
     site: str
         Site name.
-    telescope_id: str
-        Telescope ID.
+    array_element_id: str
+        Array element ID.
 
     Returns
     -------
     str
-        Telescope name.
+        Array element name.
     """
     _short_site = validate_site_name(site)[0]
-    _val_id = validate_telescope_id_name(telescope_id)
-    return f"{telescope_type}{_short_site}-{_val_id}"
+    _val_id = validate_array_element_id_name(array_element_id)
+    return f"{array_element_type}{_short_site}-{_val_id}"
 
 
-def get_telescope_type_from_telescope_name(name):
+def get_array_element_type_from_name(name):
     """
-    Get telescope type from name, e.g. "LSTN", "MSTN".
+    Get array element type from name, e.g. "LSTN", "MSTN".
 
     Parameters
     ----------
-    telescope_name: str
-        Telescope name
+    name: str
+        Array element name
 
     Returns
     -------
     str
-        Telescope type.
+        Array element type.
     """
     return _validate_name(name.split("-")[0], array_elements())
 
 
-def get_list_of_telescope_types(array_element_class="telescopes", site=None, observatory="CTAO"):
+def get_list_of_array_element_types(
+    array_element_class="telescopes", site=None, observatory="CTAO"
+):
     """
-    Get list of telescope types.
+    Get list of array element types.
 
     Parameters
     ----------
@@ -243,7 +249,7 @@ def get_list_of_telescope_types(array_element_class="telescopes", site=None, obs
     Returns
     -------
     list
-        List of telescope types.
+        List of array element types.
     """
     return [
         key
@@ -254,21 +260,21 @@ def get_list_of_telescope_types(array_element_class="telescopes", site=None, obs
     ]
 
 
-def get_site_from_telescope_name(name):
+def get_site_from_array_element_name(name):
     """
-    Get site name from telescope name.
+    Get site name from array element name.
 
     Parameters
     ----------
     name: str
-        Telescope name.
+        Array element name.
 
     Returns
     -------
     str
         Site name (South or North).
     """
-    return array_elements()[get_telescope_type_from_telescope_name(name)]["site"]
+    return array_elements()[get_array_element_type_from_name(name)]["site"]
 
 
 def get_collection_name_from_array_element_name(name):
@@ -285,7 +291,7 @@ def get_collection_name_from_array_element_name(name):
     str
         Collection name .
     """
-    return array_elements()[get_telescope_type_from_telescope_name(name)]["collection"]
+    return array_elements()[get_array_element_type_from_name(name)]["collection"]
 
 
 def get_simulation_software_name_from_parameter_name(

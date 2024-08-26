@@ -48,8 +48,7 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
         if camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
             font_size = (
                 4
-                if "SCT"
-                in names.get_telescope_type_from_telescope_name(camera.telescope_model_name)
+                if "SCT" in names.get_array_element_type_from_name(camera.telescope_model_name)
                 else 2
             )
             plt.text(
