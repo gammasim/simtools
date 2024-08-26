@@ -491,6 +491,7 @@ class InterpolationHandler:
             for e in self.evaluators
         ]
         self.scaled_events = [e.scaled_events for e in self.evaluators]
+        self.energy_thresholds = np.array([e.energy_threshold for e in self.evaluators])
 
         # Prepare data for interpolation
         self.data, self.grid_points = self._build_data_array()
@@ -518,13 +519,16 @@ class InterpolationHandler:
             nsb = np.full(len(energy_grid), e.grid_point[3])
             offset = np.full(len(energy_grid), e.grid_point[4])
 
+            # Combine grid points and data
             grid_points = np.column_stack([energy_grid, az, zen, nsb, offset])
             flat_grid_points.append(grid_points)
             flat_data_list.append(scaled_events)
 
+        # Flatten the list and convert to numpy arrays
         flat_grid_points = np.vstack(flat_grid_points)
         flat_data = np.hstack(flat_data_list)
 
+        # Sort the grid points and corresponding data by energy
         sorted_indices = np.argsort(flat_grid_points[:, 0])
         sorted_grid_points = flat_grid_points[sorted_indices]
         sorted_data = flat_data[sorted_indices]
@@ -567,6 +571,50 @@ class InterpolationHandler:
             rescale=True,
         )
 
+    def interpolate_energy_threshold(self, query_point: np.ndarray) -> float:
+        """
+        Interpolate the energy threshold for a given grid point.
+
+        Parameters
+        ----------
+        query_point : np.ndarray
+            Array specifying the grid point (energy, azimuth, zenith, NSB, offset).
+
+        Returns
+        -------
+        float
+            Interpolated energy threshold.
+        """
+        flat_grid_points = []
+        flat_energy_thresholds = []
+
+        for e in self.evaluators:
+            az = e.grid_point[1]
+            zen = e.grid_point[2]
+            nsb = e.grid_point[3]
+            offset = e.grid_point[4]
+            grid_point = np.array([az, zen, nsb, offset])
+            flat_grid_points.append(grid_point)
+            flat_energy_thresholds.append(e.energy_threshold)
+
+        flat_grid_points = np.array(flat_grid_points)
+        flat_energy_thresholds = np.array(flat_energy_thresholds)
+
+        reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(flat_grid_points)
+        full_non_flat_mask = np.concatenate(([False], non_flat_mask))
+        reduced_query_point = query_point[0][full_non_flat_mask]
+
+        interpolated_threshold = griddata(
+            reduced_grid_points,
+            flat_energy_thresholds,
+            reduced_query_point,
+            method="linear",
+            fill_value=np.nan,
+            rescale=False,
+        )
+
+        return interpolated_threshold.item()
+
     def plot_comparison(self, evaluator: "StatisticalErrorEvaluator"):
         """
         Plot a comparison between the simulated, scaled, and triggered events.
@@ -588,7 +636,8 @@ class InterpolationHandler:
             ]
         )
 
-        plt.plot(midpoints, evaluator.data["simulated_event_histogram"], label="Simulated")
+        self.interpolate(self.grid_points)
+
         plt.plot(midpoints, evaluator.scaled_events, label="Scaled")
 
         triggered_event_histogram, _ = np.histogram(
@@ -597,7 +646,6 @@ class InterpolationHandler:
         plt.plot(midpoints[:-1], triggered_event_histogram, label="Triggered")
 
         plt.legend()
-        plt.yscale("log")
         plt.xscale("log")
         plt.xlabel("Energy (Midpoint of Bin Edges)")
         plt.ylabel("Event Count")
