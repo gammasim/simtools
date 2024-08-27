@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+import re
 import shutil
 import sys
 from importlib.resources import files
@@ -695,3 +696,41 @@ def test_prepare_model_parameter():
     data_validator.data_dict["type"] = "int64"
     data_validator._prepare_model_parameter()
     assert isinstance(data_validator.data_dict["value"][0], int)
+
+
+def test_check_version_string(caplog):
+    data_validator = validate_data.DataValidator()
+
+    valid_versions = [
+        "1.0.0",
+        "0.1.0",
+        "2.3.4",
+        "1.0.0-alpha",
+        "1.0.0-alpha.1",
+        "1.0.0-0.3.7",
+        "1.0.0-x.7.z.92",
+        "1.0.0-alpha+001",
+        "1.0.0+20130313144700",
+        "1.0.0-beta+exp.sha.5114f85",
+    ]
+
+    for version in valid_versions:
+        with caplog.at_level("DEBUG"):
+            data_validator._check_version_string(version)
+        assert f"Valid version string '{version}'" in caplog.text
+        caplog.clear()
+
+    invalid_versions = [
+        "1.0",
+        "1.0.0.0",
+        "1.0.a",
+        "1.0.0-",
+        "1.0.0+",
+        "a.b.c",
+    ]
+
+    for version in invalid_versions:
+        with pytest.raises(ValueError, match=f"Invalid version string '{re.escape(version)}'"):
+            data_validator._check_version_string(version)
+
+    assert data_validator._check_version_string(None) is None
