@@ -63,7 +63,7 @@ for dir in "${model_directory}"*/; do
   else
     simtools-db-add-model-parameters-from-repository-to-db \
     --model_version "${model-version}" \
-    --input_path "${dir}"/verified_model \
+    --input_path "${dir}" \
     --db_name $SIMTOOLS_DB_SIMULATION_MODEL \
     --type "model_parameters"
   fi
