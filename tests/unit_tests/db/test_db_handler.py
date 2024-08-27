@@ -199,18 +199,18 @@ def test_copy_array_element_db(db, random_id, io_handler, model_version):
 def test_add_tagged_version(db, random_id, io_handler, model_version):
 
     tags = {
-        "Released": {"Value": "2020-06-28"},
-        "Latest": {"Value": "2024-02-01"},
-        "Prod25": {"Value": "2020-06-28"},
-        "Prod26": {"Value": "2024-02-01"},
+        "Released": {"Value": "5.0.0"},
+        "Latest": {"Value": "6.0.0"},
+        "Prod25": {"Value": "5.0.0"},
+        "Prod26": {"Value": "6.0.0"},
     }
     db.add_tagged_version(
         db_name=f"sandbox_{random_id}",
         tags=tags,
     )
 
-    assert db.model_version(db_name=f"sandbox_{random_id}", version="Released") == "2020-06-28"
-    assert db.model_version(db_name=f"sandbox_{random_id}", version="Latest") == "2024-02-01"
+    assert db.model_version(db_name=f"sandbox_{random_id}", version="Released") == "5.0.0"
+    assert db.model_version(db_name=f"sandbox_{random_id}", version="Latest") == "6.0.0"
     db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
 
 
@@ -378,7 +378,7 @@ def test_update_parameter_field_db(db, random_id, io_handler):
     )
     db.add_tagged_version(
         db_name=f"sandbox_{random_id}",
-        tags={"test": {"Value": "test"}, "Released": {"Value": "2020-06-28"}},
+        tags={"test": {"Value": "test"}, "Released": {"Value": "5.0.0"}},
     )
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
@@ -404,7 +404,7 @@ def test_update_parameter_field_db(db, random_id, io_handler):
             db_name=f"sandbox_{random_id}",
             array_element_name=None,
             site=None,
-            model_version="2024-02-01",
+            model_version="6.0.0",
             parameter="not_important",
             field="applicable",
             new_value=False,
@@ -507,7 +507,7 @@ def test_get_all_versions(db, mocker, caplog):
         parameter=None,
         collection="telescopes",
     )
-    assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
+    assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
 
     # using a specific parameter
     all_versions = db.get_all_versions(
@@ -518,7 +518,7 @@ def test_get_all_versions(db, mocker, caplog):
     )
 
     # Check only a subset of the versions so that this test doesn't fail when we add more versions.
-    assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
+    assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
 
     all_versions = db.get_all_versions(
         site="North",
@@ -527,7 +527,7 @@ def test_get_all_versions(db, mocker, caplog):
     )
 
     # Check only a subset of the versions so that this test doesn't fail when we add more versions.
-    assert all(_v in all_versions for _v in ["2020-06-28", "2024-02-01"])
+    assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
 
     # no db_name defined
     mocker.patch.object(db, "_get_db_name", return_value=None)
@@ -587,18 +587,18 @@ def test_get_array_element_db_name(db):
 
 def test_parameter_cache_key(db):
 
-    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-2020-06-28"
-    assert db._parameter_cache_key("North", None, "Prod5") == "North-2020-06-28"
-    assert db._parameter_cache_key(None, None, "Prod5") == "2020-06-28"
+    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-5.0.0"
+    assert db._parameter_cache_key("North", None, "Prod5") == "North-5.0.0"
+    assert db._parameter_cache_key(None, None, "Prod5") == "5.0.0"
 
 
 def test_model_version(db):
 
-    assert db.model_version(version="Released") == "2020-06-28"
-    assert db.model_version(version="Latest") == "2020-06-28"
-    assert db.model_version(version="2024-02-01") == "2024-02-01"
-    assert db.model_version(version="Prod6") == "2024-02-01"
-    assert db.model_version(version="prod6") == "2024-02-01"
+    assert db.model_version(version="Released") == "5.0.0"
+    assert db.model_version(version="Latest") == "5.0.0"
+    assert db.model_version(version="6.0.0") == "6.0.0"
+    assert db.model_version(version="Prod6") == "6.0.0"
+    assert db.model_version(version="prod6") == "6.0.0"
 
     with pytest.raises(ValueError, match=r"Invalid model version test"):
         db.model_version(version="test")
