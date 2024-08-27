@@ -115,7 +115,7 @@ def test_get_telescope_position_parameter(array_model, io_handler):
         "parameter": "array_element_position_ground",
         "instrument": "LSTN-01",
         "site": "North",
-        "version": "2024-02-01",
+        "version": "6.0.0",
         "value": "10.0 2.0 30.0",
         "unit": "m",
         "type": "float64",
