@@ -20,7 +20,6 @@ def update_model_parameters_from_repo(
     parameter_collection,
     model_version,
     db_simulation_model_url,
-    db_simulation_model="verified_model",
 ):
     """
     Update model parameters with values from a repository.
@@ -63,7 +62,6 @@ def update_model_parameters_from_repo(
             db_simulation_model_url,
             "model_versions",
             model_version,
-            db_simulation_model,
             array_element_name,
         )
         # use design array element model in case there is no model defined for this array element ID
@@ -75,7 +73,6 @@ def update_model_parameters_from_repo(
             db_simulation_model_url,
             "model_versions",
             model_version,
-            db_simulation_model,
             "OBS-" + site,
         )
         _design_model = None
@@ -95,7 +92,6 @@ def update_model_parameters_from_repo(
                     db_simulation_model_url,
                     "model_versions",
                     model_version,
-                    db_simulation_model,
                     _design_model,
                 )
                 _tmp_par = gen.collect_data_from_file_or_dict(

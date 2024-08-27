@@ -20,7 +20,6 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
                 model_version="6.0.0",
                 parameter_collection="telescopes",
                 db_simulation_model_url=None,
-                db_simulation_model="verified_model",
             )
             == {}
         )
@@ -36,7 +35,6 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
             model_version="6.0.0",
             parameter_collection="telescopes",
             db_simulation_model_url=simulation_model_url,
-            db_simulation_model="verified_model",
         )
         assert len(_pars_mstn) > 0
         assert "telescope_axis_height" in _pars_mstn
@@ -56,7 +54,6 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
         model_version="6.0.0",
         parameter_collection="site",
         db_simulation_model_url=simulation_model_url,
-        db_simulation_model="verified_model",
     )
     assert len(_pars_south) > 0
 
@@ -69,7 +66,6 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
                 model_version="6.0.0",
                 parameter_collection="not_a_collection",
                 db_simulation_model_url=simulation_model_url,
-                db_simulation_model="verified_model",
             )
 
     # Test with a parameter that is not in the repository (no error should be raised)
@@ -81,7 +77,6 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
         model_version="6.0.0",
         parameter_collection="site",
         db_simulation_model_url=simulation_model_url,
-        db_simulation_model="verified_model",
     )
 
 
