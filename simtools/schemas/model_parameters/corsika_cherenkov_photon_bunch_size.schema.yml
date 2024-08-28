@@ -11,7 +11,7 @@ name: corsika_cherenkov_photon_bunch_size
 description: |-
   Cherenkov bunch size definition.
 data:
-  - type: float64
+  - type: int
     unit: dimensionless
     default: 1.
     allowed_range:
