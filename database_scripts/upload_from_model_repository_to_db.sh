@@ -29,13 +29,13 @@ for dir in "${model_directory}"*/; do
   if [ "$model_version" = "metadata" ]; then
     simtools-db-add-model-parameters-from-repository-to-db \
     --input_path "${dir}"/ \
-    --db_name $SIMTOOLS_DB_SIMULATION_MODEL \
+    --db_name "$SIMTOOLS_DB_SIMULATION_MODEL" \
     --type "metadata"
   else
     simtools-db-add-model-parameters-from-repository-to-db \
     --model_version "${model-version}" \
     --input_path "${dir}" \
-    --db_name $SIMTOOLS_DB_SIMULATION_MODEL \
+    --db_name "$SIMTOOLS_DB_SIMULATION_MODEL" \
     --type "model_parameters"
   fi
 done
