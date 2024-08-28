@@ -357,7 +357,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
         )
 
 
-@pytest.mark.usefixtures("_db_cleanup")
+# @pytest.mark.usefixtures("_db_cleanup")
 def test_update_parameter_field_db(db, random_id, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_array_element(
@@ -383,7 +383,7 @@ def test_update_parameter_field_db(db, random_id, io_handler):
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        model_version="Released",
+        model_version="5.0.0",
         parameter="camera_pixels",
         field="applicable",
         new_value=False,
@@ -392,7 +392,7 @@ def test_update_parameter_field_db(db, random_id, io_handler):
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        model_version="Released",
+        model_version="5.0.0",
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
         collection_name="telescopes_" + random_id,
         write_files=False,
@@ -595,7 +595,7 @@ def test_parameter_cache_key(db):
 def test_model_version(db):
 
     assert db.model_version(version="Released") == "5.0.0"
-    assert db.model_version(version="Latest") == "5.0.0"
+    assert db.model_version(version="Latest") == "6.0.0"
     assert db.model_version(version="6.0.0") == "6.0.0"
     assert db.model_version(version="Prod6") == "6.0.0"
     assert db.model_version(version="prod6") == "6.0.0"
