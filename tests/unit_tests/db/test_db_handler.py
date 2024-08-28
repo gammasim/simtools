@@ -357,7 +357,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
         )
 
 
-# @pytest.mark.usefixtures("_db_cleanup")
+@pytest.mark.usefixtures("_db_cleanup")
 def test_update_parameter_field_db(db, random_id, io_handler):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_array_element(
