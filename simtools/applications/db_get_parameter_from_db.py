@@ -43,7 +43,7 @@ r"""
          'File': True,
          'Type': 'str',
          'Value': 'mirror_CTA-N-LST1_v2019-03-31.dat',
-         'Version': '2020-06-28',
+         'Version': '5.0.0',
          '_id': ObjectId('608834f257df2db2531b8e78'),
          'entry_date': datetime.datetime(2021, 4, 27, 15, 59, 46, tzinfo=<bson.tz_util.FixedOffset \
           object at 0x7f601dd51d80>)}
