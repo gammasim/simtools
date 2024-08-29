@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera_efficiency &#8212; simtools v0.1.dev1+ga2f7f2f Manual</title>
+    <title>camera_efficiency &#8212; simtools v0.1.dev1+g7cd6333 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b258e10d"></script>
+    <script src="../_static/documentation_options.js?v=5d6bf7ff"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ga2f7f2f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7cd6333 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -887,9 +887,12 @@ document.write(`
         <span class="k">for</span> <span class="n">column_now</span><span class="p">,</span> <span class="n">column_title</span> <span class="ow">in</span> <span class="n">column_titles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">table_to_plot</span><span class="o">.</span><span class="n">rename_column</span><span class="p">(</span><span class="n">column_now</span><span class="p">,</span> <span class="n">column_title</span><span class="p">)</span>
 
+        <span class="n">y_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">efficiency_type</span><span class="si">}</span><span class="s2"> light efficiency&quot;</span>
+        <span class="k">if</span> <span class="n">efficiency_type</span> <span class="o">==</span> <span class="s2">&quot;NSB&quot;</span><span class="p">:</span>
+            <span class="n">y_title</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;Diff. ph. rate [$10^</span><span class="si">{9}</span><span class="s2"> \times $ph/(nm s m$^2$ sr)]&quot;</span>
         <span class="n">plot</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">plot_table</span><span class="p">(</span>
             <span class="n">table_to_plot</span><span class="p">,</span>
-            <span class="n">y_title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">efficiency_type</span><span class="si">}</span><span class="s2"> light efficiency&quot;</span><span class="p">,</span>
+            <span class="n">y_title</span><span class="o">=</span><span class="n">y_title</span><span class="p">,</span>
             <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> response to </span><span class="si">{</span><span class="n">efficiency_type</span><span class="si">}</span><span class="s2"> light&quot;</span><span class="p">,</span>
             <span class="n">no_markers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
