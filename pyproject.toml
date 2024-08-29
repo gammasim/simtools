@@ -220,6 +220,7 @@ generated-members = [
   "gist_heat_r",
 ]
 # see https://stackoverflow.com/questions/49846940/incorrect-pylint-errors-on-astropy-in-vscode
+# (required to suppress warnings from astropy.units when using pylint; not only vscode)
 ignored-classes = [
   "astropy.units",
 ]
