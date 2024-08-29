@@ -12,8 +12,6 @@ import logging
 from importlib.resources import files
 from pathlib import Path
 
-from astropy.table import Table
-
 import simtools.constants
 import simtools.utils.general as gen
 import simtools.version
@@ -307,6 +305,8 @@ class MetadataCollector:
                 raise
         # metadata from table meta in ecsv file
         elif Path(metadata_file_name).suffix == ".ecsv":
+            from astropy.table import Table  # pylint: disable=C0415
+
             try:
                 _input_metadata = {
                     self.observatory.upper(): Table.read(metadata_file_name).meta[
