@@ -71,7 +71,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        type: ['2024-02-01', 'prod5']
+        type: ['6.0.0', '5.0.0']
 
     defaults:
       run:
