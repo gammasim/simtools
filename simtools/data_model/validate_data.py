@@ -155,6 +155,8 @@ class DataValidator:
         if len(value_as_list) == 1:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
 
+        self._check_version_string(self.data_dict.get("version"))
+
     def _validate_data_table(self):
         """Validate tabulated data."""
         try:
@@ -708,3 +710,25 @@ class DataValidator:
                 if self.data_dict["unit"] is None
                 else gen.convert_string_to_list(self.data_dict["unit"])
             )
+
+    def _check_version_string(self, version):
+        """
+        Check that version string follows semantic versioning.
+
+        Parameters
+        ----------
+        version: str
+            version string
+
+        Raises
+        ------
+        ValueError
+            if version string does not follow semantic versioning
+
+        """
+        if version is None:
+            return
+        semver_regex = r"^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$"
+        if not re.match(semver_regex, version):
+            raise ValueError(f"Invalid version string '{version}'")
+        self._logger.debug(f"Valid version string '{version}'")

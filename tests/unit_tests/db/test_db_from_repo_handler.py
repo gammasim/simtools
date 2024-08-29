@@ -17,10 +17,9 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
                 parameters={},
                 site="North",
                 array_element_name="MSTN-01",
-                model_version="2024-02-01",
+                model_version="6.0.0",
                 parameter_collection="telescopes",
                 db_simulation_model_url=None,
-                db_simulation_model="verified_model",
             )
             == {}
         )
@@ -33,10 +32,9 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
             parameters=dict.fromkeys(_pars_telescope_model, None),
             site="North",
             array_element_name=_tel,
-            model_version="2024-02-01",
+            model_version="6.0.0",
             parameter_collection="telescopes",
             db_simulation_model_url=simulation_model_url,
-            db_simulation_model="verified_model",
         )
         assert len(_pars_mstn) > 0
         assert "telescope_axis_height" in _pars_mstn
@@ -53,10 +51,9 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
         array_element_name=None,
-        model_version="2024-02-01",
+        model_version="6.0.0",
         parameter_collection="site",
         db_simulation_model_url=simulation_model_url,
-        db_simulation_model="verified_model",
     )
     assert len(_pars_south) > 0
 
@@ -66,10 +63,9 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
                 parameters=dict.fromkeys(_pars_telescope_model, None),
                 site="North",
                 array_element_name="MSTN-01",
-                model_version="2024-02-01",
+                model_version="6.0.0",
                 parameter_collection="not_a_collection",
                 db_simulation_model_url=simulation_model_url,
-                db_simulation_model="verified_model",
             )
 
     # Test with a parameter that is not in the repository (no error should be raised)
@@ -78,10 +74,9 @@ def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):
         parameters=dict.fromkeys(_pars_site_model, None),
         site="South",
         array_element_name=None,
-        model_version="2024-02-01",
+        model_version="6.0.0",
         parameter_collection="site",
         db_simulation_model_url=simulation_model_url,
-        db_simulation_model="verified_model",
     )
 
 
@@ -92,7 +87,7 @@ def test_update_telescope_parameters_from_repo(db_config, simulation_model_url):
         site="North",
         array_element_name="MSTN-01",
         parameter_collection="telescopes",
-        model_version="2024-02-01",
+        model_version="6.0.0",
         db_simulation_model_url=simulation_model_url,
     )
     assert len(_pars) > 0
@@ -102,7 +97,7 @@ def test_update_telescope_parameters_from_repo(db_config, simulation_model_url):
         site="North",
         array_element_name="MSTN-design",
         parameter_collection="telescopes",
-        model_version="2024-02-01",
+        model_version="6.0.0",
         db_simulation_model_url=simulation_model_url,
     )
     assert len(_pars_design) > 0
@@ -119,7 +114,7 @@ def test_update_site_parameters_from_repo(db_config):
         site="South",
         array_element_name=None,
         parameter_collection="site",
-        model_version="2024-02-01",
+        model_version="6.0.0",
         db_simulation_model_url=db_config["db_simulation_model_url"],
     )
     assert len(_pars) > 0
