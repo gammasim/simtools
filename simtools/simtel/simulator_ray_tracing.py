@@ -7,7 +7,7 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 __all__ = ["SimulatorRayTracing"]
 
@@ -82,7 +82,7 @@ class SimulatorRayTracing(SimtelRunner):
         self._base_directory = self.io_handler.get_output_directory(self.label, "ray-tracing")
 
         # Loading config_data
-        self.config = gen.validate_config_data(
+        self.config = value_conversion.validate_config_data(
             gen.collect_data_from_file_or_dict(config_file, config_data),
             self.ray_tracing_default_configuration(True),
         )

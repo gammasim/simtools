@@ -9,6 +9,7 @@ import numpy as np
 import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
+from simtools.utils import value_conversion
 
 __all__ = ["SimulatorLightEmission"]
 
@@ -79,12 +80,12 @@ class SimulatorLightEmission(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
         try:
-            self.config = gen.validate_config_data(
+            self.config = value_conversion.validate_config_data(
                 gen.collect_data_from_file_or_dict(config_file, config_data),
                 self.light_emission_default_configuration(),
             )
         except TypeError:
-            self.config = gen.validate_config_data(
+            self.config = value_conversion.validate_config_data(
                 {},
                 self.light_emission_default_configuration(),
             )
