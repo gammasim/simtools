@@ -1,6 +1,7 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-validate-camera-efficiency
   TEST_NAME: SSTS
+  MODEL_VERSION_USE_CURRENT: true
   CONFIGURATION:
     SITE: South
     TELESCOPE: SSTS-design

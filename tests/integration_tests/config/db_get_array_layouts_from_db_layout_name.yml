@@ -3,5 +3,5 @@ CTA_SIMPIPE:
   TEST_NAME: layout_name
   CONFIGURATION:
     SITE: North
-    MODEL_VERSION: "2024-02-01"
+    MODEL_VERSION: "6.0.0"
     ARRAY_LAYOUT_NAME: test_layout
