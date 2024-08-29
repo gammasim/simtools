@@ -5,7 +5,7 @@ CTA_SIMPIPE:
     INPUT: tests/resources/array_element_position_utm.json
     SITE: South
     EXPORT: ground
-    MODEL_VERSION: "2024-02-01"
+    MODEL_VERSION: "6.0.0"
     OUTPUT_PATH: simtools-tests
     OUTPUT_FILE: test.json
     LOG_LEVEL: DEBUG

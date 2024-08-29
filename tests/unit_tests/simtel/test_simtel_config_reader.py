@@ -87,11 +87,13 @@ def test_simtel_config_reader_telescope_transmission(
 def test_get_validated_parameter_dict(config_reader_num_gains):
 
     _config = config_reader_num_gains
-    assert _config.get_validated_parameter_dict(telescope_name="MSTN-01", model_version="Test") == {
+    assert _config.get_validated_parameter_dict(
+        telescope_name="MSTN-01", model_version="0.0.1"
+    ) == {
         "parameter": "num_gains",
         "instrument": "MSTN-01",
         "site": "North",
-        "version": "Test",
+        "version": "0.0.1",
         "value": 2,
         "unit": u.Unit(""),
         "type": "int64",
@@ -106,7 +108,7 @@ def test_export_parameter_dict_to_json(tmp_test_directory, config_reader_num_gai
     _json_file = tmp_test_directory / "num_gains.json"
     _config.export_parameter_dict_to_json(
         _json_file,
-        _config.get_validated_parameter_dict(telescope_name="MSTN-01", model_version="Test"),
+        _config.get_validated_parameter_dict(telescope_name="MSTN-01", model_version="0.0.1"),
     )
 
     assert _json_file.exists()
@@ -330,7 +332,7 @@ def test_validate_parameter_dict(config_reader_num_gains):
         "parameter": "num_gains",
         "instrument": "MSTN-01",
         "site": "North",
-        "version": "Test",
+        "version": "0.0.1",
         "value": 2,
         "unit": None,
         "type": "int",
