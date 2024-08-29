@@ -187,7 +187,7 @@ def pytest_addoption(parser):
 @pytest.fixture()
 def model_version():
     """Simulation model version used in tests."""
-    return "2024-02-01"
+    return "6.0.0"
 
 
 @pytest.fixture()

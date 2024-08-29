@@ -115,7 +115,7 @@ def test_get_telescope_position_parameter(array_model, io_handler):
         "parameter": "array_element_position_ground",
         "instrument": "LSTN-01",
         "site": "North",
-        "version": "2024-02-01",
+        "version": "6.0.0",
         "value": "10.0 2.0 30.0",
         "unit": "m",
         "type": "float64",
@@ -124,9 +124,9 @@ def test_get_telescope_position_parameter(array_model, io_handler):
     }
 
 
-def test_get_config_file(array_model, io_handler):
+def test_get_config_file(model_version, array_model, io_handler):
     am = array_model
-    assert am.get_config_file().name == "CTA-test_layout-North-2024-02-01_test.cfg"
+    assert am.get_config_file().name == "CTA-test_layout-North-" + model_version + "_test.cfg"
 
 
 def test_get_config_directory(array_model, io_handler):
