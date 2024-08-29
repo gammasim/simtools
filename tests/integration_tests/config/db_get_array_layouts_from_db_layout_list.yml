@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: layout_list
   CONFIGURATION:
     SITE: North
-    MODEL_VERSION: "2024-02-01"
+    MODEL_VERSION: "6.0.0"
     ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
     COORDINATE_SYSTEM: ground
     OUTPUT_PATH: simtools-tests
