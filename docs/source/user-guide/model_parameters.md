@@ -192,7 +192,7 @@ A typical model parameter file looks like:
     "parameter": "num_gains",
     "instrument": "LSTN-01",
     "site": "North",
-    "version": "2024-02-01",
+    "version": "6.0.0",
     "value": 2,
     "unit": null,
     "type": "int64",
