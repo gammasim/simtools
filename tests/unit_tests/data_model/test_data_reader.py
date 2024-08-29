@@ -10,7 +10,6 @@ import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
 
-import simtools.utils.general as gen
 from simtools.data_model import data_reader
 
 logger = logging.getLogger()
@@ -62,7 +61,7 @@ def test_read_value_from_file(tmp_test_directory, reference_point_altitude_file)
     with pytest.raises(FileNotFoundError):
         data_reader.read_value_from_file("this_file_does_not_exist.json", validate=True)
 
-    with pytest.raises(gen.InvalidConfigDataError):
+    with pytest.raises(AttributeError):
         data_reader.read_value_from_file(None, validate=False)
 
     test_dict_1 = {"value": 5.0}

@@ -134,7 +134,7 @@ class MetadataCollector:
         """
         try:
             return gen.collect_data_from_file_or_dict(file_name=self.schema_file, in_dict=None)
-        except gen.InvalidConfigDataError:
+        except AttributeError:
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
 

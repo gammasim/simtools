@@ -12,10 +12,9 @@ from packaging.version import Version
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
-import simtools.utils.general as gen
 from simtools.db import db_from_repo_handler
 from simtools.io_operations import io_handler
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 __all__ = ["DatabaseHandler"]
 
@@ -1003,7 +1002,7 @@ class DatabaseHandler:
         if site is not None:
             db_entry["site"] = names.validate_site_name(site)
 
-        _base_value, _base_unit, _base_type = gen.get_value_unit_type(
+        _base_value, _base_unit, _base_type = value_conversion.get_value_unit_type(
             value=value, unit_str=kwargs.get("unit", None)
         )
         db_entry["value"] = _base_value
