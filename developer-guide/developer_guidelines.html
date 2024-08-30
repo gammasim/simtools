@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gf7ffc3c Manual</title>
+    <title>Developer Guidelines &#8212; simtools v0.1.dev1+gf05ea03 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=f12de10a"></script>
+    <script src="../_static/documentation_options.js?v=2a8de567"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf7ffc3c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf05ea03 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -599,7 +599,7 @@ case of a YAML file, config_file.</p>
 must be used to read these arguments. It identifies which case was given and
 reads it accordingly, returning a dictionary. It also raises an exception in case none are
 given and not allow_empty.</p>
-<p>The validation of the input is done by the function gen.validate_config_data, which
+<p>The validation of the input is done by the function value_conversion.validate_config_data, which
 receives the dictionary with the collected input and a parameter dictionary. The parameter
 dictionary is read from a parameter YAML file in the data/parameters directory.
 The file is read through the function io.get_data_file(“parameters”, filename)

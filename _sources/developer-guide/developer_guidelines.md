@@ -141,7 +141,7 @@ must be used to read these arguments. It identifies which case was given and
 reads it accordingly, returning a dictionary. It also raises an exception in case none are
 given and not allow_empty.
 
-The validation of the input is done by the function gen.validate_config_data, which
+The validation of the input is done by the function value_conversion.validate_config_data, which
 receives the dictionary with the collected input and a parameter dictionary. The parameter
 dictionary is read from a parameter YAML file in the data/parameters directory.
 The file is read through the function io.get_data_file("parameters", filename)

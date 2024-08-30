@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+gf7ffc3c Manual</title>
+    <title>data_model.metadata_collector &#8212; simtools v0.1.dev1+gf05ea03 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f12de10a"></script>
+    <script src="../../_static/documentation_options.js?v=2a8de567"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf7ffc3c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf05ea03 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -388,8 +388,6 @@ document.write(`
 <span class="kn">from</span> <span class="nn">importlib.resources</span> <span class="kn">import</span> <span class="n">files</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>
-
 <span class="kn">import</span> <span class="nn">simtools.constants</span>
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">import</span> <span class="nn">simtools.version</span>
@@ -520,7 +518,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No valid schema file provided (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{}</span></div>
 
@@ -697,6 +695,8 @@ document.write(`
                 <span class="k">raise</span>
         <span class="c1"># metadata from table meta in ecsv file</span>
         <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="n">metadata_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.ecsv&quot;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>  <span class="c1"># pylint: disable=C0415</span>
+
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">_input_metadata</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">observatory</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">metadata_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span>
