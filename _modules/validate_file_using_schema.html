@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>validate_file_using_schema &#8212; simtools v0.1.dev1+gf05ea03 Manual</title>
+    <title>validate_file_using_schema &#8212; simtools v0.1.dev1+g7103196 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2a8de567"></script>
+    <script src="../_static/documentation_options.js?v=5b3e2286"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf05ea03 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7103196 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -376,7 +376,7 @@ document.write(`
   <h1>Source code for validate_file_using_schema</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate a file using a schema.</span>
+<span class="sd">    Validate a file or files in a directory using a schema.</span>
 
 <span class="sd">    Input files can be metadata, schema, or data files in yaml, json, or ecsv format.</span>
 
@@ -384,6 +384,8 @@ document.write(`
 <span class="sd">    ----------------------</span>
 <span class="sd">    file_name (str)</span>
 <span class="sd">      input file to be validated</span>
+<span class="sd">    model_parameters_directory (str)</span>
+<span class="sd">        directory with json files of model parameters to be validated</span>
 <span class="sd">    schema (str)</span>
 <span class="sd">      schema file (jsonschema format) used for validation</span>
 <span class="sd">    data_type (str)</span>
@@ -432,17 +434,28 @@ document.write(`
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--file_name&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;file to be validated&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--schema&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;json schema file&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--file_name&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;File to be validated&quot;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--model_parameters_directory&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Directory with json files with model parameters to be validated.&quot;</span>
+            <span class="s2">&quot;All *.json files in the directory will be validated.&quot;</span>
+            <span class="s2">&quot;Schema files will be taken from simtools/schemas/model_parameters/.&quot;</span>
+            <span class="s2">&quot;Note that in this case the data_type argument is ignored&quot;</span>
+            <span class="s2">&quot;and data_type=model_parameter is always used.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--schema&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Json schema file&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--data_type&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;type of input data&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Type of input data&quot;</span><span class="p">,</span>
         <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="s2">&quot;schema&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;model_parameter&quot;</span><span class="p">],</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--require_exact_data_type&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;require exact data type for validation&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Require exact data type for validation&quot;</span><span class="p">,</span>
         <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">paths</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -496,6 +509,30 @@ document.write(`
 
 
 
+<div class="viewcode-block" id="validate_data_files">
+<a class="viewcode-back" href="../user-guide/applications/validate_file_using_schema.html#validate_file_using_schema.validate_data_files">[docs]</a>
+<span class="k">def</span> <span class="nf">validate_data_files</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate data files.&quot;&quot;&quot;</span>
+    <span class="n">model_parameters_directory</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_parameters_directory&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model_parameters_directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tmp_args_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_parameters_directory</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">):</span>
+            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_name</span>
+            <span class="n">schema_file</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+                <span class="o">/</span> <span class="s2">&quot;../schemas&quot;</span>
+                <span class="o">/</span> <span class="s2">&quot;model_parameters&quot;</span>
+                <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_name</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">.schema.yml&quot;</span>
+            <span class="p">)</span>
+            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema_file</span>
+            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;model_parameter&quot;</span>
+            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;require_exact_data_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;require_exact_data_type&quot;</span><span class="p">]</span>
+            <span class="n">validate_data_file</span><span class="p">(</span><span class="n">tmp_args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">validate_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="validate_data_file">
 <a class="viewcode-back" href="../user-guide/applications/validate_file_using_schema.html#validate_file_using_schema.validate_data_file">[docs]</a>
 <span class="k">def</span> <span class="nf">validate_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -537,7 +574,7 @@ document.write(`
     <span class="k">elif</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span>
         <span class="n">validate_schema</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">validate_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">validate_data_files</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
