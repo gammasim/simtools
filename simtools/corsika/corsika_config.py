@@ -562,7 +562,7 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        random_seed = self.get_config_parameter("PRMPAR") + self._run_number
+        random_seed = self.get_config_parameter("PRMPAR") + self.run_number
         rng = np.random.default_rng(random_seed)
         corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
         for s in corsika_seeds:
