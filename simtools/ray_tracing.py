@@ -21,7 +21,7 @@ from simtools.model.model_utils import compute_telescope_transmission
 from simtools.model.telescope_model import TelescopeModel
 from simtools.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 from simtools.visualization import visualize
 
 __all__ = ["RayTracing"]
@@ -71,7 +71,7 @@ class RayTracing:
 
         self._telescope_model = self._validate_telescope_model(telescope_model)
 
-        self.config = gen.validate_config_data(
+        self.config = value_conversion.validate_config_data(
             gen.collect_data_from_file_or_dict(config_file, config_data),
             SimulatorRayTracing.ray_tracing_default_configuration(False),
         )
