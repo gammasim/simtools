@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+gf6d1831 Manual</title>
+    <title>Databases &#8212; simtools v0.1.dev1+gf7ffc3c Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=ddb7b47f"></script>
+    <script src="../_static/documentation_options.js?v=f12de10a"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf6d1831 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf7ffc3c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -553,8 +553,8 @@ Best to define a new database when adding new values or files.</p>
 </div>
 <p>The following applications are important:</p>
 <ul class="simple">
-<li><p>update or define a single model parameter from a json file (as defined in the model parameter repository): <a class="reference internal" href="#add_value_from_json_to_db"><span class="xref myst">add_value_from_json_to_db.py</span></a></p></li>
-<li><p>upload a model parameter file: <a class="reference internal" href="#add_file_to_db"><span class="xref myst">add_file_to_db.py</span></a></p></li>
+<li><p>update or define a single model parameter from a json file (as defined in the model parameter repository): <a class="reference internal" href="applications/db_add_value_from_json_to_db.html#db-add-value-from-json-to-db"><span class="std std-ref">db_add_value_from_json_to_db.py</span></a></p></li>
+<li><p>upload a model parameter file: <a class="reference internal" href="applications/db_add_file_to_db.html#db-add-file-to-db"><span class="std std-ref">db_add_file_to_db.py</span></a></p></li>
 <li><p>upload all model parameters and files from the model parameter repository: <a class="reference internal" href="applications/db_add_model_parameters_from_repository_to_db.html#module-db_add_model_parameters_from_repository_to_db" title="db_add_model_parameters_from_repository_to_db"><span class="xref myst py py-mod">db_add_model_parameters_from_repository_to_db.py</span></a></p></li>
 </ul>
 </section>
@@ -586,9 +586,9 @@ are located in the directory <code class="docutils literal notranslate"><span cl
 </section>
 <section id="option-2-fill-local-database-from-model-parameter-repository">
 <h4>Option 2: Fill local database from model parameter repository<a class="headerlink" href="#option-2-fill-local-database-from-model-parameter-repository" title="Link to this heading">#</a></h4>
-<p>The script <code class="docutils literal notranslate"><span class="pre">upload_from_model_repository_to_local_db.sh</span></code> uses the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">model parameter repository</a> from the CTAO gitlab and
+<p>The script <code class="docutils literal notranslate"><span class="pre">upload_from_model_repository_to_db.sh</span></code> uses the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">model parameter repository</a> from the CTAO gitlab and
 uploads its contents to the local database instance.</p>
-<p>Note that database names and repository branches are hardcoded in the scripts and need to be adjusted accordingly.</p>
+<p>Note that repository branches are hardcoded in the scripts and need to be adjusted accordingly.</p>
 </section>
 </section>
 <section id="purge-the-local-database-instance-and-all-networks-images-containers">
@@ -618,6 +618,17 @@ uploads its contents to the local database instance.</p>
 <li><p>connect to the local network adding <code class="docutils literal notranslate"><span class="pre">--network</span> <span class="pre">simtools-mongo-network</span></code> to the <code class="docutils literal notranslate"><span class="pre">docker/podman</span> <span class="pre">run</span></code> command, e.g,:</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/:/workdir/external&quot;</span><span class="w"> </span>--network<span class="w"> </span>simtools-mongo-network<span class="w"> </span>ghcr.io/gammasim/simtools-dev:latest<span class="w"> </span>bash
+</pre></div>
+</div>
+<p>For completeness, here the full <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to be used with a container:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>Environmental<span class="w"> </span>variables
+<span class="go">SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server</span>
+<span class="go">SIMTOOLS_DB_SERVER=&#39;simtools-mongodb&#39;</span>
+<span class="go">SIMTOOLS_DB_API_USER=&#39;api&#39; # username for MongoDB</span>
+<span class="go">SIMTOOLS_DB_API_PW=&#39;password&#39; # Password for MongoDB</span>
+<span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-Model-LATEST&#39;</span>
+<span class="go">SIMTOOLS_SIMTEL_PATH=&#39;/workdir/sim_telarray&#39;</span>
 </pre></div>
 </div>
 </section>
