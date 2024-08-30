@@ -73,8 +73,8 @@ Best to define a new database when adding new values or files.
 
 The following applications are important:
 
-* update or define a single model parameter from a json file (as defined in the model parameter repository): [add_value_from_json_to_db.py](add_value_from_json_to_db)
-* upload a model parameter file: [add_file_to_db.py](add_file_to_db)
+* update or define a single model parameter from a json file (as defined in the model parameter repository): [db_add_value_from_json_to_db.py](db_add_value_from_json_to_db)
+* upload a model parameter file: [db_add_file_to_db.py](db_add_file_to_db)
 * upload all model parameters and files from the model parameter repository: [db_add_model_parameters_from_repository_to_db.py](db_add_model_parameters_from_repository_to_db)
 
 ## Configure and use a local copy of the model parameter database
@@ -109,10 +109,10 @@ Note that database names are hardcoded in the scripts and need to be adjusted ac
 
 #### Option 2: Fill local database from model parameter repository
 
-The script `upload_from_model_repository_to_local_db.sh` uses the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) from the CTAO gitlab and
+The script `upload_from_model_repository_to_db.sh` uses the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) from the CTAO gitlab and
 uploads its contents to the local database instance.
 
-Note that database names and repository branches are hardcoded in the scripts and need to be adjusted accordingly.
+Note that repository branches are hardcoded in the scripts and need to be adjusted accordingly.
 
 ### Purge the local database instance and all networks, images, containers
 
@@ -145,4 +145,17 @@ For using simtools inside a container:
 
 ```bash
 podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash
+```
+
+For completeness, here the full `.env` file to be used with a container:
+
+```console
+# Environmental variables
+SIMTOOLS_DB_API_PORT=27017 #Port on the MongoDB server
+SIMTOOLS_DB_SERVER='simtools-mongodb'
+SIMTOOLS_DB_API_USER='api' # username for MongoDB
+SIMTOOLS_DB_API_PW='password' # Password for MongoDB
+SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-LATEST'
+SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
