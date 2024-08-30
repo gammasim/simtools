@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g7cd6333 Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g203f863 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=5d6bf7ff"></script>
+    <script src="../../_static/documentation_options.js?v=bba824c4"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7cd6333 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g203f863 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -384,7 +384,6 @@ document.write(`
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 
 <span class="kn">import</span> <span class="nn">simtools.version</span>
-<span class="kn">from</span> <span class="nn">simtools.corsika.primary_particle</span> <span class="kn">import</span> <span class="n">PrimaryParticle</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -720,6 +719,8 @@ document.write(`
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_dictionary_with_corsika_configuration</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with CORSIKA configuration parameters.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">simtools.corsika.primary_particle</span> <span class="kn">import</span> <span class="n">PrimaryParticle</span>  <span class="c1"># pylint: disable=C0415</span>
+
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
