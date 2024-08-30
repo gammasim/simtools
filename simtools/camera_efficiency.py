@@ -477,9 +477,12 @@ class CameraEfficiency:
         for column_now, column_title in column_titles.items():
             table_to_plot.rename_column(column_now, column_title)
 
+        y_title = f"{efficiency_type} light efficiency"
+        if efficiency_type == "NSB":
+            y_title = r"Diff. ph. rate [$10^{9} \times $ph/(nm s m$^2$ sr)]"
         plot = visualize.plot_table(
             table_to_plot,
-            y_title=f"{efficiency_type} light efficiency",
+            y_title=y_title,
             title=f"{self.telescope_model.name} response to {efficiency_type} light",
             no_markers=True,
         )
