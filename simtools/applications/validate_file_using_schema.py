@@ -134,19 +134,19 @@ def validate_data_files(args_dict, logger):
     """Validate data files."""
     model_parameters_directory = args_dict.get("model_parameters_directory")
     if model_parameters_directory is not None:
-        mock_args_dict = {}
+        tmp_args_dict = {}
         for file_name in Path(model_parameters_directory).rglob("*.json"):
-            mock_args_dict["file_name"] = file_name
+            tmp_args_dict["file_name"] = file_name
             schema_file = (
                 Path(__file__).parent
                 / "../schemas"
                 / "model_parameters"
                 / f"{file_name.stem}.schema.yml"
             )
-            mock_args_dict["schema"] = schema_file
-            mock_args_dict["data_type"] = "model_parameter"
-            mock_args_dict["require_exact_data_type"] = args_dict["require_exact_data_type"]
-            validate_data_file(mock_args_dict, logger)
+            tmp_args_dict["schema"] = schema_file
+            tmp_args_dict["data_type"] = "model_parameter"
+            tmp_args_dict["require_exact_data_type"] = args_dict["require_exact_data_type"]
+            validate_data_file(tmp_args_dict, logger)
     else:
         validate_data_file(args_dict, logger)
 
