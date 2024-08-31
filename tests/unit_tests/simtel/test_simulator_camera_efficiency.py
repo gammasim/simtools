@@ -65,7 +65,7 @@ def test_check_run_result(simulator_camera_efficiency):
 
 
 @pytest.mark.xfail(reason="Test requires Derived-Values Database")
-def test_get_one_dim_distribution(io_handler, db_config, simtel_path):
+def test_get_one_dim_distribution(io_handler, db_config, simtel_path, model_version_prod5):
 
     logger.warning(
         "Running test_get_one_dim_distribution using prod5 model "
@@ -75,7 +75,7 @@ def test_get_one_dim_distribution(io_handler, db_config, simtel_path):
         config_data={
             "telescope": "SSTS-design",
             "site": "South",
-            "model_version": "prod5",
+            "model_version": model_version_prod5,
             "zenith_angle": 20 * u.deg,
             "azimuth_angle": 0 * u.deg,
         },

@@ -52,7 +52,7 @@ r"""
 
     Example
     -------
-    LSTN-01 Prod5
+    LSTN-01 5.0.0
 
     Runtime < 3 min.
 
@@ -67,7 +67,7 @@ r"""
     .. code-block:: console
 
         simtools-derive-psf-parameters --site North --telescope LSTN-01 \\
-            --model_version prod6 --data PSFcurve_data_v2.txt --plot_all --test
+            --model_version 6.0.0 --data PSFcurve_data_v2.txt --plot_all --test
 
     The output is saved in simtools-output/derive_psf_parameters.
 

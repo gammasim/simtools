@@ -271,62 +271,62 @@ def test_generate_file_name_camera_efficiency():
     )
 
 
-def test_simtel_telescope_config_file_name():
+def test_simtel_telescope_config_file_name(model_version):
     assert (
         names.simtel_config_file_name(
-            "South", "prod5", telescope_model_name="LSTS-01", label=None, extra_label=None
+            "South", model_version, telescope_model_name="LSTS-01", label=None, extra_label=None
         )
-        == "CTA-South-LSTS-01-prod5.cfg"
+        == "CTA-South-LSTS-01-" + model_version + ".cfg"
     )
     assert (
         names.simtel_config_file_name(
-            "South", "prod5", telescope_model_name="LSTS-01", label="A", extra_label=None
+            "South", model_version, telescope_model_name="LSTS-01", label="A", extra_label=None
         )
-        == "CTA-South-LSTS-01-prod5_A.cfg"
+        == "CTA-South-LSTS-01-" + model_version + "_A.cfg"
     )
     assert (
         names.simtel_config_file_name(
-            "South", "prod5", telescope_model_name="LSTS-01", label="A", extra_label="B"
+            "South", model_version, telescope_model_name="LSTS-01", label="A", extra_label="B"
         )
-        == "CTA-South-LSTS-01-prod5_A_B.cfg"
-    )
-
-
-def test_simtel_array_config_file_name():
-    assert (
-        names.simtel_config_file_name(
-            array_name="4LSTs", site="South", model_version="prod5", label=None
-        )
-        == "CTA-4LSTs-South-prod5.cfg"
-    )
-    assert (
-        names.simtel_config_file_name(
-            array_name="4LSTs", site="South", model_version="prod5", label="A"
-        )
-        == "CTA-4LSTs-South-prod5_A.cfg"
+        == "CTA-South-LSTS-01-" + model_version + "_A_B.cfg"
     )
 
 
-def test_simtel_single_mirror_list_file_name():
+def test_simtel_array_config_file_name(model_version):
+    assert (
+        names.simtel_config_file_name(
+            array_name="4LSTs", site="South", model_version=model_version, label=None
+        )
+        == "CTA-4LSTs-South-" + model_version + ".cfg"
+    )
+    assert (
+        names.simtel_config_file_name(
+            array_name="4LSTs", site="South", model_version=model_version, label="A"
+        )
+        == "CTA-4LSTs-South-" + model_version + "_A.cfg"
+    )
+
+
+def test_simtel_single_mirror_list_file_name(model_version):
     assert (
         names.simtel_single_mirror_list_file_name(
             site="South",
             telescope_model_name="LST-1",
-            model_version="prod5",
+            model_version=model_version,
             mirror_number=5,
             label=None,
         )
-        == "CTA-single-mirror-list-South-LST-1-prod5-mirror5.dat"
+        == "CTA-single-mirror-list-South-LST-1-" + model_version + "-mirror5.dat"
     )
     assert (
         names.simtel_single_mirror_list_file_name(
             site="South",
             telescope_model_name="LST-1",
-            model_version="prod5",
+            model_version=model_version,
             mirror_number=5,
             label="A",
         )
-        == "CTA-single-mirror-list-South-LST-1-prod5-mirror5_A.dat"
+        == "CTA-single-mirror-list-South-LST-1-" + model_version + "-mirror5_A.dat"
     )
 
 

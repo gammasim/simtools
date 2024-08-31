@@ -280,11 +280,11 @@ def test_updating_export_model_files(db_config, io_handler, model_version):
 
 
 @pytest.mark.xfail(reason="Test requires Derived-Values Database")
-def test_export_derived_files(io_handler, db_config):
+def test_export_derived_files(io_handler, db_config, model_version_prod5):
     tel_model = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
-        model_version="Prod5",
+        model_version=model_version_prod5,
         mongo_db_config=db_config,
         label="test-telescope-model-lst",
     )

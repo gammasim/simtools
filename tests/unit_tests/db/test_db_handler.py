@@ -170,7 +170,6 @@ def test_copy_array_element_db(db, random_id, io_handler, model_version):
     logger.info("Testing deleting a query (a telescope)")
     query = {"instrument": "LSTN-test"}
     db.delete_query(f"sandbox_{random_id}", "telescopes", query)
-    query = {"Entry": "Simulation-Model-Tags", "version": model_version}
 
     # After deleting the copied telescope
     # we always expect to get a ValueError (query returning zero results)
