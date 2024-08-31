@@ -39,7 +39,7 @@ class ArrayLayout:
     site: str
         Site name or location (e.g., North/South or LaPalma/Paranal)
     model_version: str
-        Version of the model (e.g., prod6).
+        Version of the model (e.g., 6.0.0).
     label: str
         Instance label.
     name: str
