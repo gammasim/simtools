@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SITE: North
     TELESCOPE: MSTN-design
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
     - OUTPUT_FILE: plots/validate_camera_efficiency_MSTN-design_nsb.pdf

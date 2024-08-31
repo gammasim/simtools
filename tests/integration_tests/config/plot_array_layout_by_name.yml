@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: layout_by_name
   CONFIGURATION:
     SITE: North
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     ARRAY_LAYOUT_NAME: subsystem_lsts
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
