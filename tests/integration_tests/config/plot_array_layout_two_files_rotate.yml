@@ -5,7 +5,7 @@ CTA_SIMPIPE:
     ARRAY_LAYOUT_FILE:
       - tests/resources/telescope_positions-North-ground.ecsv
       - tests/resources/telescope_positions-South-ground.ecsv
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:

@@ -5,7 +5,7 @@ CTA_SIMPIPE:
   CONFIGURATION:
     ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
     COORDINATE_SYSTEM: utm
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     OUTPUT_PATH: simtools-tests
   INTEGRATION_TESTS:
     - OUTPUT_FILE: application-plots/array_layout_South_0deg_utm.png

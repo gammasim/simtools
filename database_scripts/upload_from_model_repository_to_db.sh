@@ -26,12 +26,7 @@ cp -f "$CURRENTDIR"/../.env .env
 model_directory="./model_versions/"
 for dir in "${model_directory}"*/; do
   model_version=$(basename "${dir}")
-  if [ "$model_version" = "metadata" ]; then
-    simtools-db-add-model-parameters-from-repository-to-db \
-    --input_path "${dir}"/ \
-    --db_name "$SIMTOOLS_DB_SIMULATION_MODEL" \
-    --type "metadata"
-  else
+  if [ "$model_version" != "metadata" ]; then
     simtools-db-add-model-parameters-from-repository-to-db \
     --model_version "${model-version}" \
     --input_path "${dir}" \
