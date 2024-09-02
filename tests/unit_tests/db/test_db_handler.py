@@ -500,6 +500,12 @@ def test_insert_files_db(db, io_handler, random_id, caplog):
 
 
 def test_get_all_versions(db, mocker, caplog):
+
+    # not specifying any database names, collections, or parameters
+    all_versions = db.get_all_versions()
+    assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(key.endswith("None") for key in db.model_versions_cached)
+
     # not specifying a telescope model name and parameter
     all_versions = db.get_all_versions(
         array_element_name=None,
@@ -508,6 +514,7 @@ def test_get_all_versions(db, mocker, caplog):
         collection="telescopes",
     )
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any("telescopes" in key for key in db.model_versions_cached)
 
     # using a specific parameter
     all_versions = db.get_all_versions(
@@ -516,18 +523,20 @@ def test_get_all_versions(db, mocker, caplog):
         parameter="camera_config_file",
         collection="telescopes",
     )
-
-    # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(
+        key.endswith("telescopes-camera_config_file-LSTN-01") for key in db.model_versions_cached
+    )
 
     all_versions = db.get_all_versions(
         site="North",
         parameter="corsika_observation_level",
         collection="sites",
     )
-
-    # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(
+        key.endswith("sites-corsika_observation_level-North") for key in db.model_versions_cached
+    )
 
     # no db_name defined
     mocker.patch.object(db, "_get_db_name", return_value=None)
@@ -613,6 +622,12 @@ def test_get_collections(db, db_config):
     collections_from_name = db.get_collections(db_config["db_simulation_model"])
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
+    assert "fs.files" in collections_from_name
+
+    collections_no_model = db.get_collections(db_config["db_simulation_model"], True)
+    assert isinstance(collections_no_model, list)
+    assert "telescopes" in collections_no_model
+    assert "fs.files" not in collections_no_model
 
 
 def test_model_version_empty(db, mocker):
