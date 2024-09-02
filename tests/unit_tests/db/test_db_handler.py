@@ -45,13 +45,13 @@ def _db_cleanup_file_sandbox(db_no_config_file, random_id):
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
 
 
-def test_update_db_simulation_model(db, db_no_config_file, mocker):
+def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
 
-    db_no_config_file._update_db_simulation_model()
+    db_no_config_file._find_latest_simulation_model_db()
     assert db_no_config_file.mongo_db_config is None
 
     db_name = db.mongo_db_config["db_simulation_model"]
-    db._update_db_simulation_model()
+    db._find_latest_simulation_model_db()
     assert db_name == db.mongo_db_config["db_simulation_model"]
 
     db_copy = copy.deepcopy(db)
@@ -59,7 +59,7 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker):
     with pytest.raises(
         ValueError, match=r"Found LATEST in the DB name but no matching versions found in DB."
     ):
-        db_copy._update_db_simulation_model()
+        db_copy._find_latest_simulation_model_db()
 
     db_names = [
         "CTAO-Simulation-Model-v0-3-0",
@@ -71,7 +71,7 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker):
     ]
     mocker.patch.object(db_copy.db_client, "list_database_names", return_value=db_names)
     db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-Model-LATEST"
-    db_copy._update_db_simulation_model()
+    db_copy._find_latest_simulation_model_db()
     assert db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-Model-v0-3-19"
 
 
