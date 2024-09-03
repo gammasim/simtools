@@ -64,7 +64,7 @@ class DatabaseHandler:
         self.list_of_collections = {}
 
         self._set_up_connection()
-        self._update_db_simulation_model()
+        self._find_latest_simulation_model_db()
 
     def _set_up_connection(self):
         """Open the connection to MongoDB."""
@@ -106,12 +106,13 @@ class DatabaseHandler:
             self._logger.error("Invalid setting of DB configuration")
             raise
 
-    def _update_db_simulation_model(self):
+    def _find_latest_simulation_model_db(self):
         """
-        Find the latest version (if requested) of the simulation model and update the DB config.
+        Find the latest released version of the simulation model and update the DB config.
 
         This is indicated by adding "LATEST" to the name of the simulation model database
         (field "db_simulation_model" in the database configuration dictionary).
+        Only release versions are considered, pre-releases are ignored.
 
         Raises
         ------
@@ -129,11 +130,14 @@ class DatabaseHandler:
         list_of_db_names = self.db_client.list_database_names()
         filtered_list_of_db_names = [s for s in list_of_db_names if s.startswith(prefix)]
         versioned_strings = []
-        version_pattern = re.compile(rf"{re.escape(prefix)}v(\d+)-(\d+)-(\d+)")
+        version_pattern = re.compile(
+            rf"{re.escape(prefix)}v(\d+)-(\d+)-(\d+)(?:-([a-zA-Z0-9_.]+))?"
+        )
 
         for s in filtered_list_of_db_names:
             match = version_pattern.search(s)
-            if match:
+            # A version is considered a pre-release if it contains a '-' character (re group 4)
+            if match and match.group(4) is None:
                 version_str = match.group(1) + "." + match.group(2) + "." + match.group(3)
                 version = Version(version_str)
                 versioned_strings.append((s, version))
@@ -1166,7 +1170,7 @@ class DatabaseHandler:
         parameter=None,
         array_element_name=None,
         site=None,
-        collection="telescopes",
+        collection=None,
     ):
         """
         Get all version entries in the DB of collection and/or a specific parameter.
@@ -1193,13 +1197,17 @@ class DatabaseHandler:
             If key to collection_name is not valid.
 
         """
-        _cache_key = f"model_versions_{self._get_db_name()}-{collection}"
+        db_name = self._get_db_name()
+        if not db_name:
+            self._logger.warning("No database name defined to determine list of model versions")
+            return []
+        _cache_key = f"model_versions_{db_name}-{collection}"
 
         query = {}
         if parameter is not None:
             query["parameter"] = parameter
             _cache_key = f"{_cache_key}-{parameter}"
-        if collection == "telescopes" and array_element_name is not None:
+        if collection in ["telescopes", "calibration_devices"] and array_element_name is not None:
             query["instrument"] = names.validate_array_element_name(array_element_name)
             _cache_key = f"{_cache_key}-{query['instrument']}"
         elif collection == "sites" and site is not None:
@@ -1207,13 +1215,15 @@ class DatabaseHandler:
             _cache_key = f"{_cache_key}-{query['site']}"
 
         if _cache_key not in DatabaseHandler.model_versions_cached:
-            if self._get_db_name():
-                db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
-                DatabaseHandler.model_versions_cached[_cache_key] = list(
-                    {post["version"] for post in db_collection.find(query)}
-                )
-            else:
-                DatabaseHandler.model_versions_cached[_cache_key] = []
+            all_versions = set()
+            collections_to_query = (
+                [collection] if collection else self.get_collections(db_name, True)
+            )
+            for collection_name in collections_to_query:
+                db_collection = DatabaseHandler.db_client[db_name][collection_name]
+                all_versions.update(post["version"] for post in db_collection.find(query))
+            DatabaseHandler.model_versions_cached[_cache_key] = list(all_versions)
+
         if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
             self._logger.warning(f"The query {query} did not return any results. No versions found")
 
@@ -1407,7 +1417,7 @@ class DatabaseHandler:
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
 
-    def get_collections(self, db_name=None):
+    def get_collections(self, db_name=None, model_collections_only=False):
         """
         List of collections in the DB.
 
@@ -1420,6 +1430,8 @@ class DatabaseHandler:
         -------
         list
             List of collection names
+        model_collections_only: bool
+            If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
 
         """
         db_name = self._get_db_name() if db_name is None else db_name
@@ -1427,4 +1439,10 @@ class DatabaseHandler:
             self.list_of_collections[db_name] = DatabaseHandler.db_client[
                 db_name
             ].list_collection_names()
+        if model_collections_only:
+            return [
+                collection
+                for collection in self.list_of_collections[db_name]
+                if not collection.startswith("fs.") and collection != "metadata"
+            ]
         return self.list_of_collections[db_name]
