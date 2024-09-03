@@ -328,7 +328,6 @@ class CorsikaConfig:
         """
         if not args_dict or args_dict.get("primary_id_type") is None:
             return PrimaryParticle()
-        print("FFFF", args_dict.get("primary_id_type"), args_dict["primary"])
         return PrimaryParticle(
             particle_id_type=args_dict.get("primary_id_type"), particle_id=args_dict.get("primary")
         )
