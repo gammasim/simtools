@@ -542,7 +542,7 @@ def test_get_all_versions(db, mocker, caplog):
     mocker.patch.object(db, "_get_db_name", return_value=None)
     with caplog.at_level(logging.WARNING):
         assert db.get_all_versions() == []
-    assert "did not return any results. No versions found" in caplog.text
+    assert "No database name defined to determine" in caplog.text
 
 
 def test_get_all_available_array_elements(db, model_version, caplog):
@@ -628,6 +628,7 @@ def test_get_collections(db, db_config):
     assert isinstance(collections_no_model, list)
     assert "telescopes" in collections_no_model
     assert "fs.files" not in collections_no_model
+    assert "metadata" not in collections_no_model
 
 
 def test_model_version_empty(db, mocker):
