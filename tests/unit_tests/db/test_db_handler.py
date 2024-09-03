@@ -45,13 +45,13 @@ def _db_cleanup_file_sandbox(db_no_config_file, random_id):
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
 
 
-def test_update_db_simulation_model(db, db_no_config_file, mocker):
+def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
 
-    db_no_config_file._update_db_simulation_model()
+    db_no_config_file._find_latest_simulation_model_db()
     assert db_no_config_file.mongo_db_config is None
 
     db_name = db.mongo_db_config["db_simulation_model"]
-    db._update_db_simulation_model()
+    db._find_latest_simulation_model_db()
     assert db_name == db.mongo_db_config["db_simulation_model"]
 
     db_copy = copy.deepcopy(db)
@@ -59,7 +59,7 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker):
     with pytest.raises(
         ValueError, match=r"Found LATEST in the DB name but no matching versions found in DB."
     ):
-        db_copy._update_db_simulation_model()
+        db_copy._find_latest_simulation_model_db()
 
     db_names = [
         "CTAO-Simulation-Model-v0-3-0",
@@ -71,7 +71,7 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker):
     ]
     mocker.patch.object(db_copy.db_client, "list_database_names", return_value=db_names)
     db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-Model-LATEST"
-    db_copy._update_db_simulation_model()
+    db_copy._find_latest_simulation_model_db()
     assert db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-Model-v0-3-19"
 
 
@@ -500,6 +500,12 @@ def test_insert_files_db(db, io_handler, random_id, caplog):
 
 
 def test_get_all_versions(db, mocker, caplog):
+
+    # not specifying any database names, collections, or parameters
+    all_versions = db.get_all_versions()
+    assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(key.endswith("None") for key in db.model_versions_cached)
+
     # not specifying a telescope model name and parameter
     all_versions = db.get_all_versions(
         array_element_name=None,
@@ -508,6 +514,7 @@ def test_get_all_versions(db, mocker, caplog):
         collection="telescopes",
     )
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any("telescopes" in key for key in db.model_versions_cached)
 
     # using a specific parameter
     all_versions = db.get_all_versions(
@@ -516,24 +523,26 @@ def test_get_all_versions(db, mocker, caplog):
         parameter="camera_config_file",
         collection="telescopes",
     )
-
-    # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(
+        key.endswith("telescopes-camera_config_file-LSTN-01") for key in db.model_versions_cached
+    )
 
     all_versions = db.get_all_versions(
         site="North",
         parameter="corsika_observation_level",
         collection="sites",
     )
-
-    # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(
+        key.endswith("sites-corsika_observation_level-North") for key in db.model_versions_cached
+    )
 
     # no db_name defined
     mocker.patch.object(db, "_get_db_name", return_value=None)
     with caplog.at_level(logging.WARNING):
         assert db.get_all_versions() == []
-    assert "did not return any results. No versions found" in caplog.text
+    assert "No database name defined to determine" in caplog.text
 
 
 def test_get_all_available_array_elements(db, model_version, caplog):
@@ -613,6 +622,13 @@ def test_get_collections(db, db_config):
     collections_from_name = db.get_collections(db_config["db_simulation_model"])
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
+    assert "fs.files" in collections_from_name
+
+    collections_no_model = db.get_collections(db_config["db_simulation_model"], True)
+    assert isinstance(collections_no_model, list)
+    assert "telescopes" in collections_no_model
+    assert "fs.files" not in collections_no_model
+    assert "metadata" not in collections_no_model
 
 
 def test_model_version_empty(db, mocker):
