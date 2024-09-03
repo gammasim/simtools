@@ -395,7 +395,7 @@ class CorsikaConfig:
             text += line
         return text
 
-    def generate_corsika_input_file(self, use_multipipe=False):
+    def generate_corsika_input_file(self, use_multipipe=False, use_test_seeds=False):
         """
         Generate a CORSIKA input file.
 
@@ -429,7 +429,7 @@ class CorsikaConfig:
             file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
             file.write("\n* [ SEEDS ]\n")
-            self._write_seeds(file)
+            self._write_seeds(file, use_test_seeds)
 
             file.write("\n* [ TELESCOPES ]\n")
             telescope_list_text = self.get_corsika_telescope_list()
@@ -553,7 +553,7 @@ class CorsikaConfig:
 
         return self.get_corsika_config_file_name(file_type="output_generic")
 
-    def _write_seeds(self, file):
+    def _write_seeds(self, file, use_test_seeds=False):
         """
         Generate and write seeds in the CORSIKA input file.
 
@@ -564,7 +564,9 @@ class CorsikaConfig:
         """
         random_seed = self.get_config_parameter("PRMPAR") + self.run_number
         rng = np.random.default_rng(random_seed)
-        corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
+        corsika_seeds = [534, 220, 1104, 382]
+        if not use_test_seeds:
+            corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")
 
