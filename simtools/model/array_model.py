@@ -109,7 +109,10 @@ class ArrayModel:
                 site_model.get_array_elements_for_layout(self.layout_name)
             )
         if array_elements == {}:
-            raise ValueError("No array elements found.")
+            raise ValueError(
+                "No array elements found. "
+                "Did you provide a valid layout name or list of telescopes?"
+            )
         telescope_model = self._build_telescope_models(site_model, array_elements)
         return array_elements, site_model, telescope_model
 
