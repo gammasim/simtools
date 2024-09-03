@@ -90,7 +90,9 @@ class CorsikaRunner:
         script_file_path = self.get_file_name(
             file_type="sub_script", run_number=self.corsika_config.run_number
         )
-        corsika_input_file = self.corsika_config.generate_corsika_input_file(self._use_multipipe)
+        corsika_input_file = self.corsika_config.generate_corsika_input_file(
+            use_multipipe=self._use_multipipe, use_test_seeds=self._keep_seeds
+        )
 
         # CORSIKA input file for a specific run, created by the preprocessor pfp
         corsika_input_tmp_name = self.corsika_config.get_corsika_config_file_name(
