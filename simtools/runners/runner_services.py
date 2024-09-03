@@ -130,8 +130,7 @@ class RunnerServices:
             Base name for the simulation files.
         """
         info_for_file_name = self._get_info_for_file_name(run_number)
-        file_label = f"{info_for_file_name.get('label', '')}"
-        file_label = f"_{file_label}" if file_label else ""
+        file_label = f"_{info_for_file_name['label']}" if info_for_file_name.get("label") else ""
         zenith = self.corsika_config.get_config_parameter("THETAP")[0]
         azimuth = self.corsika_config.azimuth_angle
         run_dir = self._get_run_number_string(info_for_file_name["run_number"])
