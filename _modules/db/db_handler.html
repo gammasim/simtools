@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+g7103196 Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+g796254f Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=5b3e2286"></script>
+    <script src="../../_static/documentation_options.js?v=fa9748aa"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7103196 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g796254f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -442,7 +442,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_up_connection</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_update_db_simulation_model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_find_latest_simulation_model_db</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_set_up_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Open the connection to MongoDB.&quot;&quot;&quot;</span>
@@ -484,7 +484,7 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid setting of DB configuration&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
 
-    <span class="k">def</span> <span class="nf">_update_db_simulation_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_find_latest_simulation_model_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Find the latest version (if requested) of the simulation model and update the DB config.</span>
 
@@ -1597,7 +1597,7 @@ document.write(`
         <span class="n">parameter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">array_element_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
+        <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get all version entries in the DB of collection and/or a specific parameter.</span>
@@ -1624,13 +1624,17 @@ document.write(`
 <span class="sd">            If key to collection_name is not valid.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;model_versions_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">db_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No database name defined to determine list of model versions&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;model_versions_</span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">parameter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">query</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
             <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cache_key</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;telescopes&quot;</span> <span class="ow">and</span> <span class="n">array_element_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">array_element_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">query</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span>
             <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cache_key</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;instrument&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">elif</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;sites&quot;</span> <span class="ow">and</span> <span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1638,13 +1642,15 @@ document.write(`
             <span class="n">_cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cache_key</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="k">if</span> <span class="n">_cache_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">():</span>
-                <span class="n">db_collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()][</span><span class="n">collection</span><span class="p">]</span>
-                <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">[</span><span class="n">_cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-                    <span class="p">{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">db_collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">)}</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">[</span><span class="n">_cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">all_versions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">collections_to_query</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">[</span><span class="n">collection</span><span class="p">]</span> <span class="k">if</span> <span class="n">collection</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collections</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">collection_name</span> <span class="ow">in</span> <span class="n">collections_to_query</span><span class="p">:</span>
+                <span class="n">db_collection</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span><span class="n">db_name</span><span class="p">][</span><span class="n">collection_name</span><span class="p">]</span>
+                <span class="n">all_versions</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">db_collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
+            <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">[</span><span class="n">_cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_versions</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_versions_cached</span><span class="p">[</span><span class="n">_cache_key</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The query </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2"> did not return any results. No versions found&quot;</span><span class="p">)</span>
 
@@ -1853,7 +1859,7 @@ document.write(`
 
 <div class="viewcode-block" id="DatabaseHandler.get_collections">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_collections">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_collections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_collections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_collections_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List of collections in the DB.</span>
 
@@ -1866,6 +1872,8 @@ document.write(`
 <span class="sd">        -------</span>
 <span class="sd">        list</span>
 <span class="sd">            List of collection names</span>
+<span class="sd">        model_collections_only: bool</span>
+<span class="sd">            If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">()</span> <span class="k">if</span> <span class="n">db_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">db_name</span>
@@ -1873,6 +1881,12 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span><span class="p">[</span>
                 <span class="n">db_name</span>
             <span class="p">]</span><span class="o">.</span><span class="n">list_collection_names</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">model_collections_only</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">collection</span>
+                <span class="k">for</span> <span class="n">collection</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">collection</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;fs.&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">collection</span> <span class="o">!=</span> <span class="s2">&quot;metadata&quot;</span>
+            <span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span></div>
 </div>
 
