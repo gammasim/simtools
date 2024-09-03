@@ -2,6 +2,7 @@
 
 import logging
 import os
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -275,6 +276,7 @@ class SimulatorLightEmission(SimtelRunner):
         command += f"/{self.le_application[0]}"
 
         if self.light_source_type == "led":
+
             if self.le_application[1] == "variable":
                 command += f" -x {self.default_le_config['x_pos']['default'].to(u.cm).value}"
                 command += f" -y {self.default_le_config['y_pos']['default'].to(u.cm).value}"
@@ -309,6 +311,7 @@ class SimulatorLightEmission(SimtelRunner):
 
             command += f" -A {self.output_directory}/model/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
+
         elif self.light_source_type == "laser":
             command += " --events 1"
             command += " --bunches 2500000"
@@ -349,21 +352,16 @@ class SimulatorLightEmission(SimtelRunner):
             The command to run simtel_array
         """
         # LightEmission
+        _, angles = self.calibration_pointing_direction()
+
         command = f"{self._simtel_path.joinpath('sim_telarray/bin/sim_telarray/')}"
         command += f" -c {self._telescope_model.get_config_file()}"
 
-        def remove_line_from_config(file_path, line_prefix):
-            with open(file_path, encoding="utf-8") as file:
-                lines = file.readlines()
-
-            with open(file_path, "w", encoding="utf-8") as file:
-                for line in lines:
-                    if not line.startswith(line_prefix):
-                        file.write(line)
-
-        remove_line_from_config(self._telescope_model.get_config_file(), "array_triggers")
+        self._remove_line_from_config(self._telescope_model.get_config_file(), "array_triggers")
+        self._remove_line_from_config(self._telescope_model.get_config_file(), "axes_offsets")
 
         command += " -DNUM_TELESCOPES=1"
+
         command += " -I../cfg/CTA"
         command += "iobuf_maximum=1000000000"
         command += super().get_config_option(
@@ -373,19 +371,20 @@ class SimulatorLightEmission(SimtelRunner):
             "atmospheric_transmission",
             self._telescope_model.get_parameter_value("atmospheric_transmission"),
         )
-        command += super().get_config_option("TRIGGER_CURRENT_LIMIT", "20")
+        # command += super().get_config_option("TRIGGER_CURRENT_LIMIT", "20")
         command += super().get_config_option("TRIGGER_TELESCOPES", "1")
-        command += super().get_config_option("TELTRIG_MIN_SIGSUM", "7.8")
-        command += super().get_config_option("PULSE_ANALYSIS", "-30")
 
-        if self.default_le_config:
-            _, angles = self.calibration_pointing_direction()
-            command += super().get_config_option("telescope_theta", f"{angles[0]}")
-            command += super().get_config_option("telescope_phi", f"{angles[1]}")
-        else:
+        command += super().get_config_option("TELTRIG_MIN_SIGSUM", "2")
+        command += super().get_config_option("PULSE_ANALYSIS", "-30")
+        if self.le_application[1] == "variable":
             command += super().get_config_option("telescope_theta", 0)
             command += super().get_config_option("telescope_phi", 0)
+        else:
+            command += super().get_config_option("telescope_theta", f"{angles[0]}")
+            command += super().get_config_option("telescope_phi", f"{angles[1]}")
 
+        self._remove_line_from_config(self._telescope_model.get_config_file(), "axes_offsets")
+        self._remove_line_from_config(self._telescope_model.get_config_file(), "array_triggers")
         command += super().get_config_option("power_law", "2.68")
         command += super().get_config_option(
             "input_file", f"{self.output_directory}/{self.le_application[0]}.iact.gz"
@@ -397,6 +396,26 @@ class SimulatorLightEmission(SimtelRunner):
         )
 
         return command
+
+    def _remove_line_from_config(self, file_path, line_prefix):
+        """
+        Remove lines starting with a specific prefix from the config.
+
+        Parameters
+        ----------
+        file_path : Path
+            The path to the configuration file.
+        line_prefix : str
+            The prefix of lines to be removed.
+        """
+        file_path = Path(file_path)
+        with file_path.open("r", encoding="utf-8") as file:
+            lines = file.readlines()
+
+        with file_path.open("w", encoding="utf-8") as file:
+            for line in lines:
+                if not line.startswith(line_prefix):
+                    file.write(line)
 
     def _create_postscript(self, **kwargs):
         """
