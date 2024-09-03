@@ -28,10 +28,10 @@ class PrimaryParticle:
         self._pdg_id = None
         self._pdg_name = None
 
-        valid_id_types = {"corsika7_id", "common_name", "pdg_id"}
-
         if bool(particle_id_type) != bool(particle_id):
             raise ValueError("Both 'particle_id_type' and 'particle_id' must be provided together.")
+
+        valid_id_types = {"corsika7_id", "common_name", "pdg_id"}
         if particle_id_type and particle_id_type not in valid_id_types:
             raise ValueError(f"Particle ID type must be one of {valid_id_types}")
 
@@ -142,8 +142,8 @@ class PrimaryParticle:
             "gamma": {"corsika7_id": 1},
             "electron": {"corsika7_id": 3},
             "positron": {"corsika7_id": 2},
-            "muon-": {"corsika7_id": 5},
-            "muon+": {"corsika7_id": 6},
+            "muon+": {"corsika7_id": 5},
+            "muon-": {"corsika7_id": 6},
             "proton": {"corsika7_id": 14},
             "neutron": {"corsika7_id": 13},
             "helium": {"corsika7_id": 402},
