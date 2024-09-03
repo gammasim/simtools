@@ -20,8 +20,6 @@ class SimulatorArray(SimtelRunner):
         Location of source of the sim_telarray/CORSIKA package.
     label: str
         Instance label.
-    keep_seeds: bool
-        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
     """
@@ -31,7 +29,6 @@ class SimulatorArray(SimtelRunner):
         corsika_config,
         simtel_path,
         label=None,
-        keep_seeds=False,
         use_multipipe=False,
     ):
         """Initialize SimulatorArray."""
@@ -47,7 +44,6 @@ class SimulatorArray(SimtelRunner):
         self.corsika_config = corsika_config
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
-        self.keep_seeds = keep_seeds
 
     def _make_run_command(self, run_number=None, input_file=None):
         """

@@ -225,13 +225,17 @@ class Simulator:
             "corsika_simtel": CorsikaSimtelRunner,
         }.get(self.simulation_software)
 
-        return runner_class(
-            label=self.label,
-            corsika_config=corsika_config,
-            simtel_path=self.args_dict.get("simtel_path"),
-            keep_seeds=False,
-            use_multipipe=runner_class is CorsikaSimtelRunner,
-        )
+        runner_args = {
+            "label": self.label,
+            "corsika_config": corsika_config,
+            "simtel_path": self.args_dict.get("simtel_path"),
+            "use_multipipe": runner_class is CorsikaSimtelRunner,
+        }
+
+        if runner_class is not SimulatorArray:
+            runner_args["keep_seeds"] = False
+
+        return runner_class(**runner_args)
 
     def _fill_results_without_run(self, input_file_list):
         """
