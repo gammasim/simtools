@@ -269,9 +269,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 type=Path,
                 required=False,
             )
-
         if "layout" in model_options or "layout_file" in model_options:
-            _job_group = self._add_model_option_layout(_job_group, "layout_file" in model_options)
+            _job_group = self._add_model_option_layout(
+                job_group=_job_group,
+                add_layout_file="layout_file" in model_options,
+                # layout info is always required for layout related tasks with the exception
+                # of listing the available layouts in the DB
+                required="--list_available_layouts" not in self._option_string_actions,
+            )
 
     def initialize_simulation_configuration_arguments(self, simulation_configuration):
         """
@@ -435,7 +440,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 pass
 
     @staticmethod
-    def _add_model_option_layout(job_group, add_layout_file):
+    def _add_model_option_layout(job_group, add_layout_file, required=True):
         """
         Add layout option to the job group.
 
@@ -450,7 +455,7 @@ class CommandLineParser(argparse.ArgumentParser):
         -------
         argparse.ArgumentParser
         """
-        _layout_group = job_group.add_mutually_exclusive_group(required=True)
+        _layout_group = job_group.add_mutually_exclusive_group(required=required)
         _layout_group.add_argument(
             "--array_layout_name",
             help="array layout name (e.g., alpha, subsystem_msts)",
