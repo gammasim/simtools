@@ -108,10 +108,11 @@ class DatabaseHandler:
 
     def _find_latest_simulation_model_db(self):
         """
-        Find the latest version (if requested) of the simulation model and update the DB config.
+        Find the latest released version of the simulation model and update the DB config.
 
         This is indicated by adding "LATEST" to the name of the simulation model database
         (field "db_simulation_model" in the database configuration dictionary).
+        Only release versions are considered, pre-releases are ignored.
 
         Raises
         ------
@@ -129,11 +130,14 @@ class DatabaseHandler:
         list_of_db_names = self.db_client.list_database_names()
         filtered_list_of_db_names = [s for s in list_of_db_names if s.startswith(prefix)]
         versioned_strings = []
-        version_pattern = re.compile(rf"{re.escape(prefix)}v(\d+)-(\d+)-(\d+)")
+        version_pattern = re.compile(
+            rf"{re.escape(prefix)}v(\d+)-(\d+)-(\d+)(?:-([a-zA-Z0-9_.]+))?"
+        )
 
         for s in filtered_list_of_db_names:
             match = version_pattern.search(s)
-            if match:
+            # A version is considered a pre-release if it contains a '-' character (re group 4)
+            if match and match.group(4) is None:
                 version_str = match.group(1) + "." + match.group(2) + "." + match.group(3)
                 version = Version(version_str)
                 versioned_strings.append((s, version))
