@@ -1193,7 +1193,11 @@ class DatabaseHandler:
             If key to collection_name is not valid.
 
         """
-        _cache_key = f"model_versions_{self._get_db_name()}-{collection}"
+        db_name = self._get_db_name()
+        if not db_name:
+            self._logger.warning("No database name defined to determine list of model versions")
+            return []
+        _cache_key = f"model_versions_{db_name}-{collection}"
 
         query = {}
         if parameter is not None:
@@ -1207,22 +1211,15 @@ class DatabaseHandler:
             _cache_key = f"{_cache_key}-{query['site']}"
 
         if _cache_key not in DatabaseHandler.model_versions_cached:
-            if self._get_db_name():
-                if collection is None:
-                    all_versions = set()
-                    for collection_name in self.get_collections(self._get_db_name(), True):
-                        db_collection = DatabaseHandler.db_client[self._get_db_name()][
-                            collection_name
-                        ]
-                        all_versions.update(post["version"] for post in db_collection.find(query))
-                    DatabaseHandler.model_versions_cached[_cache_key] = list(all_versions)
-                else:
-                    db_collection = DatabaseHandler.db_client[self._get_db_name()][collection]
-                    DatabaseHandler.model_versions_cached[_cache_key] = list(
-                        {post["version"] for post in db_collection.find(query)}
-                    )
-            else:
-                DatabaseHandler.model_versions_cached[_cache_key] = []
+            all_versions = set()
+            collections_to_query = (
+                [collection] if collection else self.get_collections(db_name, True)
+            )
+            for collection_name in collections_to_query:
+                db_collection = DatabaseHandler.db_client[db_name][collection_name]
+                all_versions.update(post["version"] for post in db_collection.find(query))
+            DatabaseHandler.model_versions_cached[_cache_key] = list(all_versions)
+
         if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
             self._logger.warning(f"The query {query} did not return any results. No versions found")
 
@@ -1430,7 +1427,7 @@ class DatabaseHandler:
         list
             List of collection names
         model_collections_only: bool
-            If True, only return model collections (i.e. exclude fs.files, fs.chunks)
+            If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
 
         """
         db_name = self._get_db_name() if db_name is None else db_name
