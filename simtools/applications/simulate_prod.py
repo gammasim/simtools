@@ -118,6 +118,13 @@ def _parse(description=None):
         required=False,
         default=False,
     )
+    config.parser.add_argument(
+        "--predefined_seeds",
+        help="Use predefined random seeds for CORSIKA/sim_telarray for testing purposes.",
+        action="store_true",
+        required=False,
+        default=False,
+    )
     return config.initialize(
         db_config=True,
         job_submission=True,
