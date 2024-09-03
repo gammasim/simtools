@@ -233,7 +233,7 @@ class Simulator:
         }
 
         if runner_class is not SimulatorArray:
-            runner_args["keep_seeds"] = False
+            runner_args["keep_seeds"] = self.args_dict.get("predefined_seeds", False)
 
         return runner_class(**runner_args)
 
