@@ -2,7 +2,7 @@
 
 import logging
 
-from particle import Corsika7ID, Particle
+from particle import Corsika7ID, InvalidParticle, Particle
 
 
 class PrimaryParticle:
@@ -14,15 +14,13 @@ class PrimaryParticle:
 
     Parameters
     ----------
-    corsika7_id : int
-        CORSIKA7 ID of the primary particle.
-    name : str
-        Common name of the primary particle.
-    pdg_id : int
-        PDG ID of the primary particle.
+    particle_id_type : str
+        Type of the primary particle ID ('corsika7_id', 'common_name', or 'pdg_id').
+    particle_id : int or str
+        The actual ID of the primary particle.
     """
 
-    def __init__(self, corsika7_id=None, name=None, pdg_id=None):
+    def __init__(self, particle_id_type=None, particle_id=None):
         self._logger = logging.getLogger(__name__)
 
         self._corsika7_id = None
@@ -30,12 +28,18 @@ class PrimaryParticle:
         self._pdg_id = None
         self._pdg_name = None
 
-        if corsika7_id is not None:
-            self.corsika7_id = corsika7_id
-        if name is not None:
-            self.name = name
-        if pdg_id is not None:
-            self.pdg_id = pdg_id
+        valid_id_types = {"corsika7_id", "common_name", "pdg_id"}
+
+        if (particle_id_type is None) != (particle_id is None):
+            raise ValueError("Both 'particle_id_type' and 'particle_id' must be provided.")
+        if particle_id_type is not None and particle_id_type not in valid_id_types:
+            raise ValueError(f"Particle ID type must be one of {valid_id_types}")
+        if particle_id_type == "corsika7_id":
+            self.corsika7_id = particle_id
+        elif particle_id_type == "common_name":
+            self.name = particle_id
+        elif particle_id_type == "pdg_id":
+            self.pdg_id = particle_id
 
     def __str__(self):
         """Return a string representation of the primary particle."""
@@ -51,12 +55,19 @@ class PrimaryParticle:
         """Set CORSIKA7 ID of the primary particle."""
         for name, ids in self.particle_names().items():
             if value == ids["corsika7_id"]:
-                self._corsika7_id = value
+                self._corsika7_id = int(value)
                 self._name = name
                 self._pdg_id = ids["pdg_id"]
                 self._pdg_name = ids["pdg_name"]
                 return
-        raise ValueError(f"Invalid CORSIKA7 ID: {value}")
+        # no particle found - check PDG
+        try:
+            self._pdg_id = Corsika7ID(value).to_pdgid().numerator
+            self._pdg_name = Particle.findall(pdgid=self._pdg_id)[0].name
+            self._name = Corsika7ID(value).name()
+        except (IndexError, InvalidParticle) as exc:
+            raise ValueError(f"Invalid CORSIKA7 ID: {value}") from exc
+        self._corsika7_id = int(value)
 
     @property
     def name(self):
@@ -130,7 +141,8 @@ class PrimaryParticle:
             "gamma": {"corsika7_id": 1},
             "electron": {"corsika7_id": 3},
             "positron": {"corsika7_id": 2},
-            "muon": {"corsika7_id": 5},
+            "muon-": {"corsika7_id": 5},
+            "muon+": {"corsika7_id": 6},
             "proton": {"corsika7_id": 14},
             "neutron": {"corsika7_id": 13},
             "helium": {"corsika7_id": 402},
