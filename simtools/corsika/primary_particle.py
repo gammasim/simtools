@@ -30,10 +30,11 @@ class PrimaryParticle:
 
         valid_id_types = {"corsika7_id", "common_name", "pdg_id"}
 
-        if (particle_id_type is None) != (particle_id is None):
-            raise ValueError("Both 'particle_id_type' and 'particle_id' must be provided.")
-        if particle_id_type is not None and particle_id_type not in valid_id_types:
+        if bool(particle_id_type) != bool(particle_id):
+            raise ValueError("Both 'particle_id_type' and 'particle_id' must be provided together.")
+        if particle_id_type and particle_id_type not in valid_id_types:
             raise ValueError(f"Particle ID type must be one of {valid_id_types}")
+
         if particle_id_type == "corsika7_id":
             self.corsika7_id = particle_id
         elif particle_id_type == "common_name":
