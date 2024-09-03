@@ -249,6 +249,17 @@ def test_generate_corsika_input_file_multipipe(corsika_config_mock_array_model):
         assert "TELFIL |" in f.read()
 
 
+def test_generate_corsika_input_file_with_test_seeds(corsika_config_mock_array_model):
+    logger.info("test_generate_corsika_input_file_with_test_seeds")
+    input_file = corsika_config_mock_array_model.generate_corsika_input_file(use_test_seeds=True)
+    assert input_file.exists()
+    expected_seeds = [534, 220, 1104, 382]
+    with open(input_file) as f:
+        file_content = f.read()
+        for seed in expected_seeds:
+            assert f"SEED {seed} 0 0" in file_content
+
+
 def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handler):
     file_name = "proton_South_test_layout_za020-azm000deg_cone0-5_test-corsika-config"
 
@@ -304,6 +315,20 @@ def test_write_seeds(corsika_config_no_db):
     for _call in expected_calls:
         assert _call.startswith("SEED ")
         assert _call.endswith(" 0 0\n")
+
+
+def test_write_seeds_use_test_seeds(corsika_config_no_db):
+    mock_file = Mock()
+    corsika_config_no_db.run_number = 10
+    corsika_config_no_db.config = {"USER_INPUT": {"PRMPAR": [14]}}
+    with patch("io.open", return_value=mock_file):
+        corsika_config_no_db._write_seeds(mock_file, use_test_seeds=True)
+    assert mock_file.write.call_count == 4
+
+    expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
+    expected_seeds = [534, 220, 1104, 382]
+    for _call in expected_calls:
+        assert _call == (f"SEED {expected_seeds.pop(0)} 0 0\n")
 
 
 @pytest.mark.uses_model_database()
