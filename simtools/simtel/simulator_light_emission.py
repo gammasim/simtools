@@ -311,7 +311,7 @@ class SimulatorLightEmission(SimtelRunner):
         _, angles = self.calibration_pointing_direction()
 
         command = f"{self._simtel_path.joinpath('sim_telarray/bin/sim_telarray/')}"
-        command += f" -c {self._telescope_model.get_config_file()}"
+        command += f" -c {self._telescope_model.get_config_file(no_export=True)}"
         if not self.test:
             self._remove_line_from_config(
                 self._telescope_model.get_config_file(no_export=True), "array_triggers"
@@ -331,7 +331,6 @@ class SimulatorLightEmission(SimtelRunner):
             "atmospheric_transmission",
             self._telescope_model.get_parameter_value("atmospheric_transmission"),
         )
-        # command += super().get_config_option("TRIGGER_CURRENT_LIMIT", "20")
         command += super().get_config_option("TRIGGER_TELESCOPES", "1")
 
         command += super().get_config_option("TELTRIG_MIN_SIGSUM", "2")
