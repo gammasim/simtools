@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+g6484aa8 Manual</title>
+    <title>Database support &#8212; simtools v0.1.dev1+gf7b719f Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=0c10b701"></script>
+    <script src="../_static/documentation_options.js?v=367fecae"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6484aa8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf7b719f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -455,7 +455,6 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-handler">db_handler</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_tagged_version"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_tagged_version()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_array_element"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_array_element()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_documents"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_documents()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.delete_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.delete_query()</span></code></a></li>
@@ -560,24 +559,6 @@ with all fields taken from the input parameters.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_tagged_version">
-<span class="sig-name descname"><span class="pre">add_tagged_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_tagged_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_tagged_version" title="Link to this definition">#</a></dt>
-<dd><p>Set the tag of the “Released” or “Latest” version of the MC Model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>released_version: str</strong></dt><dd><p>The version name to set as “Released”</p>
-</dd>
-<dt><strong>tags: dict</strong></dt><dd><p>The version tags consisting of tag name and version name.</p>
-</dd>
-<dt><strong>db_name: str</strong></dt><dd><p>Database name</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.copy_array_element">
 <span class="sig-name descname"><span class="pre">copy_array_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_to_copy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_to_copy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.copy_array_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.copy_array_element" title="Link to this definition">#</a></dt>
 <dd><p>Copy a full array element configuration to a new array element name.</p>
@@ -624,11 +605,11 @@ with all fields taken from the input parameters.</p>
 <dt><strong>collection: str</strong></dt><dd><p>the name of the collection to copy from</p>
 </dd>
 <dt><strong>query: dict</strong></dt><dd><p>A dictionary with a query to search for documents to copy.
-For example, the query below would copy all entries of prod4 version
+For example, the query below would copy all entries of version 6.0.0
 from telescope LSTN-01 to “db_to_copy_to”.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="s2">&quot;LSTN-01&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;prod6&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;6.0.0&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -658,11 +639,11 @@ from telescope LSTN-01 to “db_to_copy_to”.</p>
 <dt><strong>collection: str</strong></dt><dd><p>the name of the collection to copy from</p>
 </dd>
 <dt><strong>query: dict</strong></dt><dd><p>A dictionary listing the fields/values to delete.
-For example, the query below would delete the entire prod6 version
+For example, the query below would delete the entire version 6.0.0
 from telescope LSTN-01.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="s2">&quot;LSTN-01&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;prod6&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;6.0.0&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -753,7 +734,7 @@ i.e. telescopes, calibration_devices</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_versions">
-<span class="sig-name descname"><span class="pre">get_all_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_all_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_versions" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_all_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_all_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_versions" title="Link to this definition">#</a></dt>
 <dd><p>Get all version entries in the DB of collection and/or a specific parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -763,6 +744,8 @@ i.e. telescopes, calibration_devices</p>
 <dt><strong>array_element_name: str</strong></dt><dd><p>Which array element to get the versions of (in case “collection_name” is not “sites”)</p>
 </dd>
 <dt><strong>site: str</strong></dt><dd><p>Site name.</p>
+</dd>
+<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
 </dd>
 <dt><strong>collection_name: str</strong></dt><dd><p>The name of the collection in which to update the parameter.</p>
 </dd>
@@ -1068,9 +1051,10 @@ mostly these are unnecessary though.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.model_version">
-<span class="sig-name descname"><span class="pre">model_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Released'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.model_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.model_version" title="Link to this definition">#</a></dt>
-<dd><p>Return the model version for the requested tag.</p>
-<p>Resolve the “Released” or “Latest” tag to the actual version name.</p>
+<span class="sig-name descname"><span class="pre">model_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.model_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.model_version" title="Link to this definition">#</a></dt>
+<dd><p>Return model version and check that it is valid.</p>
+<p>Queries the database for all available model versions and check if the
+requested version is valid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1088,7 +1072,7 @@ mostly these are unnecessary though.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>if version not valid. Valid versions are: ‘Released’ and ‘Latest’.</p>
+<dt>ValueError</dt><dd><p>if version not valid.</p>
 </dd>
 </dl>
 </dd>
@@ -1262,7 +1246,6 @@ If the field does not exist, it will be added.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-handler">db_handler</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_tagged_version"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_tagged_version()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_array_element"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_array_element()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_documents"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_documents()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.delete_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.delete_query()</span></code></a></li>

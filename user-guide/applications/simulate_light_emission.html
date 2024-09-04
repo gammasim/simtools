@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simulate_light_emission &#8212; simtools v0.1.dev1+g6484aa8 Manual</title>
+    <title>simulate_light_emission &#8212; simtools v0.1.dev1+gf7b719f Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=0c10b701"></script>
+    <script src="../../_static/documentation_options.js?v=367fecae"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6484aa8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf7b719f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -484,14 +484,14 @@ There are two ways this application can be executed:</p>
 <ol class="arabic">
 <li><p>Simulate light emission with varying distances:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup variable             --model_version prod6 --light_source_type led</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup variable             --model_version 6.0.0 --light_source_type led</span>
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p>Simulate light emission with telescopes at fixed positions according to the layout:</p>
 <blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup layout             --model_version prod6             --light_source_type led</span>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North             --illuminator ILLN-01 --light_source_setup layout             --model_version 6.0.0             --light_source_type led</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -527,7 +527,7 @@ accessed by using the laser option.</p>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Simulate isotropic light source at different distances for the MSTN-04:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North         --illuminator ILLN-01 --light_source_setup variable         --model_version prod6 --light_source_type led    ```</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-simulate-light-emission --telescope MSTN-04 --site North         --illuminator ILLN-01 --light_source_setup variable         --model_version 6.0.0 --light_source_type led    ```</span>
 </pre></div>
 </div>
 <p>Expected Output:</p>
