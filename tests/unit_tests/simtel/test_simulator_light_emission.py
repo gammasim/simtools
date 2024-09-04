@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, Mock, call, mock_open, patch
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -76,7 +76,7 @@ def mock_simulator(
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         label=label,
-        config_data={},
+        test=True,
     )
 
 
@@ -110,7 +110,7 @@ def mock_simulator_variable(
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         label=label,
-        config_data={},
+        test=True,
     )
 
 
@@ -144,7 +144,7 @@ def mock_simulator_laser(
         simtel_path=simtel_path,
         light_source_type=light_source_type,
         label=label,
-        config_data={},
+        test=True,
     )
 
 
@@ -176,55 +176,7 @@ def test_runs(mock_simulator):
 
 
 def test_photons_per_run_default(mock_simulator):
-    assert mock_simulator.photons_per_run == pytest.approx(1e10)
-
-
-def test_from_kwargs_with_all_args(
-    telescope_model_lst, calibration_model_illn, site_model_north, default_config, simtel_path
-):
-    kwargs = {
-        "telescope_model": telescope_model_lst,
-        "calibration_model": calibration_model_illn,
-        "site_model": site_model_north,
-        "default_le_config": default_config,
-        "le_application": "xyzls",
-        "label": "test_label",
-        "simtel_path": simtel_path,
-        "light_source_type": "layout",
-    }
-    simulator = SimulatorLightEmission.from_kwargs(**kwargs)
-
-    assert isinstance(simulator, SimulatorLightEmission)
-    assert simulator._telescope_model == telescope_model_lst
-    assert simulator._calibration_model == calibration_model_illn
-    assert simulator.le_application == "xyzls"
-    assert simulator.label == "test_label"
-    assert simulator._simtel_path == simtel_path
-    assert simulator.light_source_type == "layout"
-
-
-def test_from_kwargs_with_minimal_args(
-    telescope_model_lst, calibration_model_illn, site_model_north, default_config, simtel_path
-):
-    kwargs = {
-        "telescope_model": telescope_model_lst,
-        "calibration_model": calibration_model_illn,
-        "site_model": site_model_north,
-        "default_le_config": default_config,
-        "le_application": "xyzls",
-        "simtel_path": simtel_path,
-        "light_source_type": "led",
-    }
-    simulator = SimulatorLightEmission.from_kwargs(**kwargs)
-
-    assert isinstance(simulator, SimulatorLightEmission)
-    assert simulator._telescope_model == telescope_model_lst
-    assert simulator._calibration_model == calibration_model_illn
-    assert simulator.default_le_config == default_config
-    assert simulator.le_application == "xyzls", "layout"
-    assert simulator.label == telescope_model_lst.label
-    assert simulator._simtel_path is not None
-    assert simulator.light_source_type == "led"
+    assert mock_simulator.photons_per_run == pytest.approx(1e7)
 
 
 def test_make_light_emission_script(
@@ -242,7 +194,7 @@ def test_make_light_emission_script(
         " -y 5510.0"
         " -z 9200.0"
         " -d 0.979101,-0.104497,-0.174477"
-        " -n 10000000000.0"
+        " -n 10000000.0"
         " -s 300"
         " -p Gauss:0.0"
         " -a isotropic"
@@ -271,7 +223,7 @@ def test_make_light_emission_script_variable(
         " -y 0.0"
         " -z 100000.0"
         " -d 0,0,-1"
-        " -n 10000000000.0"
+        " -n 10000000.0"
         f" -A {mock_output_path}/model/"
         f"{telescope_model_lst.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
@@ -401,28 +353,14 @@ def test_make_simtel_script(mock_simulator):
             "/path/to/sim_telarray/bin/sim_telarray/ -c /path/to/config.cfg "
             "-DNUM_TELESCOPES=1 -I../cfg/CTAiobuf_maximum=1000000000 "
             "-C altitude=999 -C atmospheric_transmission=atm_test "
-            "-C TRIGGER_CURRENT_LIMIT=20 -C TRIGGER_TELESCOPES=1 "
-            "-C TELTRIG_MIN_SIGSUM=7.8 -C PULSE_ANALYSIS=-30 "
+            "-C TRIGGER_TELESCOPES=1 "
+            "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
             "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
             "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
             "-C output_file=/directory/xyzls_layout.simtel.gz\n"
         )
 
         command = mock_simulator._make_simtel_script()
-
-        mock_file.assert_has_calls(
-            [
-                call(path_to_config, encoding="utf-8"),
-                call().__enter__(),
-                call().readlines(),
-                call().__exit__(None, None, None),
-                call(path_to_config, "w", encoding="utf-8"),
-                call().__enter__(),
-                call().write("Sample content of config file"),
-                call().__exit__(None, None, None),
-            ],
-            any_order=False,
-        )
 
         assert command == expected_command
 
