@@ -23,7 +23,7 @@ class SimtelConfigWriter:
     site: str
         South or North.
     model_version: str
-        Version of the model (ex. prod5).
+        Model version.
     telescope_model_name: str
         Telescope model name.
     layout_name: str

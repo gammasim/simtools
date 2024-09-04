@@ -47,7 +47,7 @@ r"""
 
     Example
     -------
-    LST-1 Prod5
+    LST-1 5.0.0
 
     .. code-block:: console
 

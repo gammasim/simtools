@@ -12,10 +12,10 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def simtel_config_writer():
+def simtel_config_writer(model_version):
     return SimtelConfigWriter(
         site="North",
-        model_version="Released",
+        model_version=model_version,
         label="test-simtel-config-writer",
         telescope_model_name="test_telecope",
     )
