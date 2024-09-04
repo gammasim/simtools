@@ -233,7 +233,9 @@ class Simulator:
         }
 
         if runner_class is not SimulatorArray:
-            runner_args["keep_seeds"] = self.args_dict.get("predefined_seeds", False)
+            runner_args["keep_seeds"] = self.args_dict.get("corsika_test_seeds", False)
+        if runner_class is not CorsikaRunner:
+            runner_args["sim_telarray_seeds"] = self.args_dict.get("sim_telarray_seeds")
 
         return runner_class(**runner_args)
 
