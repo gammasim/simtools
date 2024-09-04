@@ -7,10 +7,8 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
-from simtools.utils import value_conversion
 
 __all__ = ["SimulatorLightEmission"]
 
@@ -61,8 +59,6 @@ class SimulatorLightEmission(SimtelRunner):
         simtel_path,
         light_source_type,
         label=None,
-        config_data=None,
-        config_file=None,
         test=False,
     ):
         """Initialize SimtelRunner."""
@@ -80,60 +76,20 @@ class SimulatorLightEmission(SimtelRunner):
         self._site_model = site_model
         self.io_handler = io_handler.IOHandler()
         self.output_directory = self.io_handler.get_output_directory(self.label)
-        try:
-            self.config = value_conversion.validate_config_data(
-                gen.collect_data_from_file_or_dict(config_file, config_data),
-                self.light_emission_default_configuration(),
-            )
-        except TypeError:
-            self.config = value_conversion.validate_config_data(
-                {},
-                self.light_emission_default_configuration(),
-            )
 
         # LightEmission - default parameters
         self._rep_number = 0
         self.runs = 1
-        self.photons_per_run = 1e10 if not test else 1e7
+        self.photons_per_run = (
+            self._calibration_model.get_parameter_value("photons_per_run") if not test else 1e7
+        )
 
         self.le_application = le_application
         self.default_le_config = default_le_config
         self.distance = self.telescope_calibration_device_distance()
         self.light_source_type = light_source_type
         self._telescope_model.export_config_file()
-
-    @classmethod
-    def from_kwargs(cls, **kwargs):
-        """
-        Build a LightEmission object from kwargs only.
-
-        The configurable parameters can be given as kwargs, instead of using the
-        config_data or config_file arguments.
-
-        Parameters
-        ----------
-        kwargs
-            Containing the arguments and the configurable parameters.
-
-        Returns
-        -------
-        Instance of this class.
-        """
-        args, config_data = gen.separate_args_and_config_data(
-            expected_args=[
-                "telescope_model",
-                "calibration_model",
-                "site_model",
-                "default_le_config",
-                "le_application",
-                "simtel_path",
-                "label",
-                "light_source_type",
-            ],
-            **kwargs,
-        )
-
-        return cls(**args, config_data=config_data)
+        self.test = test
 
     @staticmethod
     def light_emission_default_configuration():
@@ -284,7 +240,7 @@ class SimulatorLightEmission(SimtelRunner):
                 command += (
                     f" -d {','.join(map(str, self.default_le_config['direction']['default']))}"
                 )
-                command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
+                command += f" -n {self.photons_per_run}"
 
             elif self.le_application[1] == "layout":
 
@@ -298,7 +254,7 @@ class SimulatorLightEmission(SimtelRunner):
                 pointing_vector = self.calibration_pointing_direction()[0]
                 command += f" -d {','.join(map(str, pointing_vector))}"
 
-                command += f" -n {self._calibration_model.get_parameter_value('photons_per_run')}"
+                command += f" -n {self.photons_per_run}"
 
                 # same wavelength as for laser
                 command += f" -s {self._calibration_model.get_parameter_value('laser_wavelength')}"
@@ -356,9 +312,13 @@ class SimulatorLightEmission(SimtelRunner):
 
         command = f"{self._simtel_path.joinpath('sim_telarray/bin/sim_telarray/')}"
         command += f" -c {self._telescope_model.get_config_file()}"
-
-        self._remove_line_from_config(self._telescope_model.get_config_file(), "array_triggers")
-        self._remove_line_from_config(self._telescope_model.get_config_file(), "axes_offsets")
+        if not self.test:
+            self._remove_line_from_config(
+                self._telescope_model.get_config_file(no_export=True), "array_triggers"
+            )
+            self._remove_line_from_config(
+                self._telescope_model.get_config_file(no_export=True), "axes_offsets"
+            )
 
         command += " -DNUM_TELESCOPES=1"
 
@@ -383,8 +343,6 @@ class SimulatorLightEmission(SimtelRunner):
             command += super().get_config_option("telescope_theta", f"{angles[0]}")
             command += super().get_config_option("telescope_phi", f"{angles[1]}")
 
-        self._remove_line_from_config(self._telescope_model.get_config_file(), "axes_offsets")
-        self._remove_line_from_config(self._telescope_model.get_config_file(), "array_triggers")
         command += super().get_config_option("power_law", "2.68")
         command += super().get_config_option(
             "input_file", f"{self.output_directory}/{self.le_application[0]}.iact.gz"
