@@ -3,7 +3,14 @@
 #
 
 SIMTOOLS_DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git"
-SIMTOOLS_DB_SIMULATION_MODEL_BRANCH="main"
+SIMTOOLS_DB_SIMULATION_MODEL_BRANCH="add_sample_output"
+
+# Check that this script is not sourced but executed
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    echo "This script must be executed, not sourced."
+    echo "Usage: ./upload_from_model_repository_to_db.sh <DB simulation model name>"
+    return 1
+fi
 
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <DB simulation model name>"
