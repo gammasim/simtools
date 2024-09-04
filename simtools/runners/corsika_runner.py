@@ -192,6 +192,8 @@ class CorsikaRunner:
         corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
 
         log_file = self.get_file_name(file_type="log", run_number=run_number)
+        if self._use_multipipe:
+            log_file = log_file.with_name(f"multipipe_{log_file.name}")
 
         cmd = self._simtel_path.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + f" --run {corsika_bin_path}"
