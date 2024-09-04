@@ -51,6 +51,11 @@ def test_corsika7_id():
     with pytest.raises(ValueError, match="Invalid CORSIKA7 ID: 9999"):
         PrimaryParticle(particle_id_type="corsika7_id", particle_id=9999)
 
+    eta = PrimaryParticle(particle_id_type="corsika7_id", particle_id=17)
+    assert eta.corsika7_id == 17
+    assert eta.name == "eta"
+    assert eta.pdg_id == 221
+
 
 def test_common_name():
     p = PrimaryParticle(particle_id_type="common_name", particle_id="proton")
