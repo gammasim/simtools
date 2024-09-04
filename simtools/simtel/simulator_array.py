@@ -30,6 +30,7 @@ class SimulatorArray(SimtelRunner):
         simtel_path,
         label=None,
         use_multipipe=False,
+        sim_telarray_seeds=None,
     ):
         """Initialize SimulatorArray."""
         self._logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class SimulatorArray(SimtelRunner):
             use_multipipe=use_multipipe,
         )
 
+        self.sim_telarray_seeds = sim_telarray_seeds
         self.corsika_config = corsika_config
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
@@ -71,10 +73,14 @@ class SimulatorArray(SimtelRunner):
         command += f" -I{self.corsika_config.array_model.get_config_directory()}"
         command += super().get_config_option("telescope_theta", self.corsika_config.zenith_angle)
         command += super().get_config_option("telescope_phi", self.corsika_config.azimuth_angle)
-        command += super().get_config_option("power_law", "2.5")
+        command += super().get_config_option(
+            "power_law", abs(self.corsika_config.get_config_parameter("ESLOPE"))
+        )
         command += super().get_config_option("histogram_file", histogram_file)
         command += super().get_config_option("output_file", output_file)
         command += super().get_config_option("random_state", "none")
+        if self.sim_telarray_seeds:
+            command += super().get_config_option("random_seed", self.sim_telarray_seeds)
         command += super().get_config_option("show", "all")
         command += f" {input_file}"
         command += f" > {self._log_file} 2>&1 || exit"
