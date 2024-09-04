@@ -29,12 +29,12 @@ r"""
 
     Example
     -------
-    LST - Prod5
+    LST - 5.0.0
 
     .. code-block:: console
 
         simtools-validate-camera-fov --site North \\
-            --telescope LST-1 --model_version prod5
+            --telescope LST-1 --model_version 5.0.0
 
     The output is saved in simtools-output/validate_camera_fov.
 

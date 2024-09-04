@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   CONFIGURATION:
     OUTPUT_PATH: simtools-tests
     SITE: South
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     OUTPUT_FILE: generate_regular_arrays.ecsv
   INTEGRATION_TESTS:
     - OUTPUT_FILE: generate_regular_arrays-South-1LST.ecsv
