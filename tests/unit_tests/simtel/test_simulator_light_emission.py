@@ -351,10 +351,11 @@ def test_make_simtel_script(mock_simulator):
 
         expected_command = (
             "/path/to/sim_telarray/bin/sim_telarray/ -c /path/to/config.cfg "
-            "-DNUM_TELESCOPES=1 -I../cfg/CTAiobuf_maximum=1000000000 "
+            "-DNUM_TELESCOPES=1 "
             "-C altitude=999 -C atmospheric_transmission=atm_test "
             "-C TRIGGER_TELESCOPES=1 "
             "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
+            "-C MAXIMUM_TELESCOPES 1 "
             "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
             "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
             "-C output_file=/directory/xyzls_layout.simtel.gz\n"
