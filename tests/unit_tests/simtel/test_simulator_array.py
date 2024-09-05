@@ -44,3 +44,16 @@ def test_check_run_result(simtel_runner):
     expected_pattern = r"sim_telarray output file .+ does not exist\."
     with pytest.raises(InvalidOutputFileError, match=expected_pattern):
         assert simtel_runner._check_run_result(run_number=3)
+
+
+def test_get_power_law_for_sim_telarray():
+    from simtools.corsika.primary_particle import PrimaryParticle
+
+    gamma = PrimaryParticle(name="gamma")
+    electron = PrimaryParticle(name="electron")
+    proton = PrimaryParticle(name="proton")
+    helium = PrimaryParticle(name="helium")
+    assert SimulatorArray.get_power_law_for_sim_telarray(gamma) == pytest.approx(2.5)
+    assert SimulatorArray.get_power_law_for_sim_telarray(electron) == pytest.approx(3.3)
+    assert SimulatorArray.get_power_law_for_sim_telarray(proton) == pytest.approx(2.68)
+    assert SimulatorArray.get_power_law_for_sim_telarray(helium) == pytest.approx(2.68)

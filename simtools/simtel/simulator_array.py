@@ -74,7 +74,8 @@ class SimulatorArray(SimtelRunner):
         command += super().get_config_option("telescope_theta", self.corsika_config.zenith_angle)
         command += super().get_config_option("telescope_phi", self.corsika_config.azimuth_angle)
         command += super().get_config_option(
-            "power_law", abs(self.corsika_config.get_config_parameter("ESLOPE"))
+            "power_law",
+            SimulatorArray.get_power_law_for_sim_telarray(self.corsika_config.primary_particle),
         )
         command += super().get_config_option("histogram_file", histogram_file)
         command += super().get_config_option("output_file", output_file)
@@ -113,3 +114,30 @@ class SimulatorArray(SimtelRunner):
             raise InvalidOutputFileError(msg)
         self._logger.debug(f"simtel_array output file {output_file} exists.")
         return True
+
+    @staticmethod
+    def get_power_law_for_sim_telarray(primary):
+        """
+        Get the power law index for sim_telarray.
+
+        Events will be histogrammed in sim_telarray with a weight according to
+        the difference between this exponent and the one used for the shower simulations.
+
+        Parameters
+        ----------
+        primary: str
+            Primary particle.
+
+        Returns
+        -------
+        float
+            Power law index.
+        """
+        power_laws = {
+            "gamma": 2.5,
+            "electron": 3.3,
+        }
+        if primary.name in power_laws:
+            return power_laws[primary.name]
+
+        return 2.68
