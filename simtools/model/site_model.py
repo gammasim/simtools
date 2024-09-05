@@ -68,7 +68,7 @@ class SiteModel(ModelParameter):
         Parameters
         ----------
         config_file_style bool
-            Return using style of corsika_parameters.yml file
+            Return using CORSIKA config file syntax
 
         Returns
         -------
@@ -76,12 +76,12 @@ class SiteModel(ModelParameter):
             Site-related CORSIKA parameters as dict
 
         """
-        # backwards compatibility to `corsika_parameters.yml` (temporary TODO)
         if config_file_style:
-            _atmosphere_id = 26 if self.site == "North" else 36
             return {
                 "OBSLEV": [self.get_parameter_value("corsika_observation_level")],
-                "ATMOSPHERE": [_atmosphere_id, "Y"],
+                # We always use a custom profile by filename, so this has to be set to 99
+                "ATMOSPHERE": [99, "Y"],
+                "IACT ATMOFILE": [self.get_parameter_value("atmospheric_profile")],
                 "MAGNET": [
                     self.get_parameter_value("geomag_horizontal"),
                     self.get_parameter_value("geomag_vertical"),
