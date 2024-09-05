@@ -322,8 +322,6 @@ class SimulatorLightEmission(SimtelRunner):
 
         command += " -DNUM_TELESCOPES=1"
 
-        command += " -I../cfg/CTA"
-        command += "iobuf_maximum=1000000000"
         command += super().get_config_option(
             "altitude", self._site_model.get_parameter_value("corsika_observation_level")
         )
@@ -335,6 +333,8 @@ class SimulatorLightEmission(SimtelRunner):
 
         command += super().get_config_option("TELTRIG_MIN_SIGSUM", "2")
         command += super().get_config_option("PULSE_ANALYSIS", "-30")
+        command += super().get_config_option("MAXIMUM_TELESCOPES", 1)
+
         if self.le_application[1] == "variable":
             command += super().get_config_option("telescope_theta", 0)
             command += super().get_config_option("telescope_phi", 0)
