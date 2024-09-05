@@ -78,7 +78,9 @@ class SiteModel(ModelParameter):
         """
         if config_file_style:
             return {
-                "OBSLEV": [self.get_parameter_value("corsika_observation_level")],
+                "OBSLEV": [
+                    self.get_parameter_value_with_unit("corsika_observation_level").to_value("cm")
+                ],
                 # We always use a custom profile by filename, so this has to be set to 99
                 "ATMOSPHERE": [99, "Y"],
                 "IACT ATMOFILE": [self.get_parameter_value("atmospheric_profile")],
