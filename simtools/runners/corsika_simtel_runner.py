@@ -168,7 +168,8 @@ class CorsikaSimtelRunner:
             "telescope_phi", self.corsika_config.azimuth_angle, weak_option=weak_pointing
         )
         command += self.simulator_array.get_config_option(
-            "power_law", abs(self.corsika_config.get_config_parameter("ESLOPE"))
+            "power_law",
+            SimulatorArray.get_power_law_for_sim_telarray(self.corsika_config.primary_particle),
         )
         command += self.simulator_array.get_config_option(
             "histogram_file",
