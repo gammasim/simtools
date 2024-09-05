@@ -376,6 +376,12 @@ class CommandLineParser(argparse.ArgumentParser):
                 "required": False,
                 "default": 1,
             },
+            "correct_for_b_field_alignment": {
+                "help": "Correct for B-field alignment",
+                "action": "store_true",
+                "required": False,
+                "default": True,
+            },
         }
 
     @staticmethod
