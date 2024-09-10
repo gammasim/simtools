@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika
     LABEL: test-production-North-corsika-corsika7-particle-id
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     SITE: North
     ARRAY_LAYOUT_NAME: test_layout
     PRIMARY: 1

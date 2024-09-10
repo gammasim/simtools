@@ -28,12 +28,10 @@ def db_no_config_file():
 def _db_cleanup(db, random_id):
     yield
     # Cleanup
-    logger.info(f"dropping the telescopes_{random_id} and metadata_{random_id} collections")
-    db.db_client[f"sandbox_{random_id}"]["telescopes_" + random_id].drop()
-    db.db_client[f"sandbox_{random_id}"]["calibration_devices_" + random_id].drop()
-    db.db_client[f"sandbox_{random_id}"]["metadata_" + random_id].drop()
-    db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
-    db.db_client[f"sandbox_{random_id}"]["sites_" + random_id].drop()
+    logger.info(f"dropping sandbox_{random_id} collections")
+    db.db_client[f"sandbox_{random_id}"]["telescopes"].drop()
+    db.db_client[f"sandbox_{random_id}"]["calibration_devices"].drop()
+    db.db_client[f"sandbox_{random_id}"]["sites"].drop()
 
 
 @pytest.fixture()
@@ -45,13 +43,13 @@ def _db_cleanup_file_sandbox(db_no_config_file, random_id):
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
 
 
-def test_update_db_simulation_model(db, db_no_config_file, mocker):
+def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
 
-    db_no_config_file._update_db_simulation_model()
+    db_no_config_file._find_latest_simulation_model_db()
     assert db_no_config_file.mongo_db_config is None
 
     db_name = db.mongo_db_config["db_simulation_model"]
-    db._update_db_simulation_model()
+    db._find_latest_simulation_model_db()
     assert db_name == db.mongo_db_config["db_simulation_model"]
 
     db_copy = copy.deepcopy(db)
@@ -59,7 +57,7 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker):
     with pytest.raises(
         ValueError, match=r"Found LATEST in the DB name but no matching versions found in DB."
     ):
-        db_copy._update_db_simulation_model()
+        db_copy._find_latest_simulation_model_db()
 
     db_names = [
         "CTAO-Simulation-Model-v0-3-0",
@@ -68,10 +66,13 @@ def test_update_db_simulation_model(db, db_no_config_file, mocker):
         "CTAO-Simulation-Model-v0-3-9",
         "CTAO-Simulation-Model-v0-3-19",
         "CTAO-Simulation-Model-v0-3-0",
+        "CTAO-Simulation-Model-v0-3-0-alpha-2",
+        "CTAO-Simulation-Model-v0-4-19-alpha-1",
+        "CTAO-Simulation-Model-v0-4-19-dev1",
     ]
     mocker.patch.object(db_copy.db_client, "list_database_names", return_value=db_names)
     db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-Model-LATEST"
-    db_copy._update_db_simulation_model()
+    db_copy._find_latest_simulation_model_db()
     assert db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-Model-v0-3-19"
 
 
@@ -122,10 +123,10 @@ def test_reading_db_sst(db, model_version):
 
 
 @pytest.mark.xfail(reason="Test requires Derived-Values Database")
-def test_get_derived_values(db, model_version):
+def test_get_derived_values(db, model_version_prod5):
     logger.info("----Testing reading derived values-----")
     try:
-        pars = db.get_derived_values("North", "LSTN-01", "Prod5")
+        pars = db.get_derived_values("North", "LSTN-01", model_version_prod5)
         assert (
             pars["ray_tracing"]["value"]
             == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
@@ -135,7 +136,7 @@ def test_get_derived_values(db, model_version):
         raise AssertionError
 
     with pytest.raises(ValueError, match=r"^abc"):
-        pars = db.get_derived_values("North", None, "Prod5")
+        pars = db.get_derived_values("North", None, model_version_prod5)
 
 
 def test_get_sim_telarray_configuration_parameters(db, model_version):
@@ -157,30 +158,21 @@ def test_copy_array_element_db(db, random_id, io_handler, model_version):
         new_array_element_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="telescopes_" + random_id,
-    )
-    db.copy_documents(
-        db_name=None,
-        collection="metadata",
-        query={"Entry": "Simulation-Model-Tags"},
-        db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="metadata_" + random_id,
+        collection_to_copy_to="telescopes",
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
         model_version=model_version,
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
         write_files=False,
     )
     assert pars["camera_pixels"]["value"] == 1855
 
-    logger.info("Testing deleting a query (a whole telescope in this case and metadata)")
+    logger.info("Testing deleting a query (a telescope)")
     query = {"instrument": "LSTN-test"}
-    db.delete_query(f"sandbox_{random_id}", "telescopes_" + random_id, query)
-    query = {"Entry": "Simulation-Model-Tags", "version": model_version}
-    db.delete_query(f"sandbox_{random_id}", "metadata_" + random_id, query)
+    db.delete_query(f"sandbox_{random_id}", "telescopes", query)
 
     # After deleting the copied telescope
     # we always expect to get a ValueError (query returning zero results)
@@ -190,33 +182,15 @@ def test_copy_array_element_db(db, random_id, io_handler, model_version):
             array_element_name="LSTN-test",
             model_version=model_version,
             run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-            collection_name="telescopes_" + random_id,
+            collection_name="telescopes",
             write_files=False,
         )
 
 
 @pytest.mark.usefixtures("_db_cleanup")
-def test_add_tagged_version(db, random_id, io_handler, model_version):
-
-    tags = {
-        "Released": {"Value": "5.0.0"},
-        "Latest": {"Value": "6.0.0"},
-        "Prod25": {"Value": "5.0.0"},
-        "Prod26": {"Value": "6.0.0"},
-    }
-    db.add_tagged_version(
-        db_name=f"sandbox_{random_id}",
-        tags=tags,
-    )
-
-    assert db.model_version(db_name=f"sandbox_{random_id}", version="Released") == "5.0.0"
-    assert db.model_version(db_name=f"sandbox_{random_id}", version="Latest") == "6.0.0"
-    db.db_client[f"sandbox_{random_id}"]["metadata"].drop()
-
-
-@pytest.mark.usefixtures("_db_cleanup")
 def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     logger.info("----Testing adding a new parameter-----")
+    test_model_version = "0.0.9876"
     db.copy_array_element(
         db_name=None,
         element_to_copy="LSTN-01",
@@ -224,67 +198,63 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
         new_array_element_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="telescopes_" + random_id,
-    )
-    db.add_tagged_version(
-        db_name=f"sandbox_{random_id}",
-        tags={"test": {"Value": "test"}},
+        collection_to_copy_to="telescopes",
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        version="test",
+        version=test_model_version,
         parameter="new_test_parameter_str",
         value="hello",
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        version="test",
+        version=test_model_version,
         parameter="new_test_parameter_int",
         value=999,
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        version="test",
+        version=test_model_version,
         parameter="new_test_parameter_float",
         value=999.9,
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        version="test",
+        version=test_model_version,
         parameter="new_test_parameter_quantity",
         value=999.9 * u.m,
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        version="test",
+        version=test_model_version,
         parameter="new_test_parameter_quantity_str",
         value="999.9 cm",
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
     )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        version="test",
+        version=test_model_version,
         parameter="new_test_parameter_simtel_list",
         value="0.969 0.0 0.0 0.0 0.0 0.0",
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
         unit=None,
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        model_version="test",
+        model_version=test_model_version,
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
         write_files=False,
     )
     assert pars["new_test_parameter_str"]["value"] == "hello"
@@ -302,24 +272,25 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
 
     # make sure that cache has been emptied after updating
     assert (
-        db._parameter_cache_key("North", "LSTN-test", "Released") not in db.model_parameters_cached
+        db._parameter_cache_key("North", "LSTN-test", test_model_version)
+        not in db.model_parameters_cached
     )
 
     # site parameters
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
         site="North",
-        version="test",
+        version=test_model_version,
         parameter="corsika_observation_level",
         value="1800. m",
-        collection_name="sites_" + random_id,
+        collection_name="sites",
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         array_element_name="North",
-        model_version="test",
+        model_version=test_model_version,
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        collection_name="sites_" + random_id,
+        collection_name="sites",
         write_files=False,
     )
     assert pars["corsika_observation_level"]["value"] == pytest.approx(1800.0)
@@ -328,18 +299,18 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     # calibration_devices parameters
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        array_element_name="ILLN-design",
-        version="test",
+        array_element_name="ILLN-test",
+        version=test_model_version,
         parameter="led_pulse_offset",
         value="0 ns",
-        collection_name="calibration_devices_" + random_id,
+        collection_name="calibration_devices",
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
-        array_element_name="ILLN-design",
-        model_version="test",
+        array_element_name="ILLN-test",
+        model_version=test_model_version,
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        collection_name="calibration_devices_" + random_id,
+        collection_name="calibration_devices",
         write_files=False,
     )
     assert pars["led_pulse_offset"]["value"] == 0
@@ -350,51 +321,40 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
         db.add_new_parameter(
             db_name=f"sandbox_{random_id}",
             site="North",
-            version="test",
+            version=test_model_version,
             parameter="corsika_observation_level",
             value="1800. m",
-            collection_name="wrong_collection" + random_id,
+            collection_name="wrong_collection",
         )
 
 
 @pytest.mark.usefixtures("_db_cleanup")
-def test_update_parameter_field_db(db, random_id, io_handler):
+def test_update_parameter_field_db(db, random_id, io_handler, model_version):
     logger.info("----Testing modifying a field of a parameter-----")
     db.copy_array_element(
         db_name=None,
         element_to_copy="LSTN-01",
-        version_to_copy="Released",
+        version_to_copy=model_version,
         new_array_element_name="LSTN-test",
         collection_name="telescopes",
         db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="telescopes_" + random_id,
-    )
-    db.copy_documents(
-        db_name=None,
-        collection="metadata",
-        query={"Entry": "Simulation-Model-Tags"},
-        db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="metadata_" + random_id,
-    )
-    db.add_tagged_version(
-        db_name=f"sandbox_{random_id}",
-        tags={"test": {"Value": "test"}, "Released": {"Value": "5.0.0"}},
+        collection_to_copy_to="telescopes",
     )
     db.update_parameter_field(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        model_version="5.0.0",
+        model_version=model_version,
         parameter="camera_pixels",
         field="applicable",
         new_value=False,
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
     )
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
-        model_version="5.0.0",
+        model_version=model_version,
         run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
-        collection_name="telescopes_" + random_id,
+        collection_name="telescopes",
         write_files=False,
     )
     assert pars["camera_pixels"]["applicable"] is False
@@ -404,16 +364,17 @@ def test_update_parameter_field_db(db, random_id, io_handler):
             db_name=f"sandbox_{random_id}",
             array_element_name=None,
             site=None,
-            model_version="6.0.0",
+            model_version=model_version,
             parameter="not_important",
             field="applicable",
             new_value=False,
-            collection_name="site" + random_id,
+            collection_name="site",
         )
 
     # make sure that cache has been emptied after updating
     assert (
-        db._parameter_cache_key("North", "LSTN-test", "Released") not in db.model_parameters_cached
+        db._parameter_cache_key("North", "LSTN-test", model_version)
+        not in db.model_parameters_cached
     )
 
 
@@ -500,6 +461,12 @@ def test_insert_files_db(db, io_handler, random_id, caplog):
 
 
 def test_get_all_versions(db, mocker, caplog):
+
+    # not specifying any database names, collections, or parameters
+    all_versions = db.get_all_versions()
+    assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(key.endswith("None") for key in db.model_versions_cached)
+
     # not specifying a telescope model name and parameter
     all_versions = db.get_all_versions(
         array_element_name=None,
@@ -508,6 +475,7 @@ def test_get_all_versions(db, mocker, caplog):
         collection="telescopes",
     )
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any("telescopes" in key for key in db.model_versions_cached)
 
     # using a specific parameter
     all_versions = db.get_all_versions(
@@ -516,27 +484,29 @@ def test_get_all_versions(db, mocker, caplog):
         parameter="camera_config_file",
         collection="telescopes",
     )
-
-    # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(
+        key.endswith("telescopes-camera_config_file-LSTN-01") for key in db.model_versions_cached
+    )
 
     all_versions = db.get_all_versions(
         site="North",
         parameter="corsika_observation_level",
         collection="sites",
     )
-
-    # Check only a subset of the versions so that this test doesn't fail when we add more versions.
     assert all(_v in all_versions for _v in ["5.0.0", "6.0.0"])
+    assert any(
+        key.endswith("sites-corsika_observation_level-North") for key in db.model_versions_cached
+    )
 
     # no db_name defined
     mocker.patch.object(db, "_get_db_name", return_value=None)
     with caplog.at_level(logging.WARNING):
         assert db.get_all_versions() == []
-    assert "did not return any results. No versions found" in caplog.text
+    assert "No database name defined to determine" in caplog.text
 
 
-def test_get_all_available_array_elements(db, model_version, caplog):
+def test_get_all_available_array_elements(db, model_version):
     available_telescopes = db.get_all_available_array_elements(
         model_version=model_version, collection="telescopes"
     )
@@ -561,7 +531,7 @@ def test_get_all_available_array_elements(db, model_version, caplog):
         )
 
 
-def test_get_available_array_elements_of_type(db, model_version, caplog):
+def test_get_available_array_elements_of_type(db, model_version):
 
     available_types = db.get_available_array_elements_of_type(
         array_element_type="LSTN", model_version=model_version, collection="telescopes"
@@ -571,37 +541,52 @@ def test_get_available_array_elements_of_type(db, model_version, caplog):
     assert all("design" not in tel_type for tel_type in available_types)
 
 
-def test_get_array_element_db_name(db):
-    assert db.get_array_element_db_name("LSTN-01", model_version="Prod5") == "LSTN-01"
-    assert db.get_array_element_db_name("LSTS-20", model_version="Prod5") == "LSTS-design"
-    assert db.get_array_element_db_name("LSTN-design", model_version="Prod5") == "LSTN-design"
-    assert db.get_array_element_db_name("LSTS-design", model_version="Prod5") == "LSTS-design"
-    assert db.get_array_element_db_name("SSTS-91", model_version="Prod5") == "SSTS-design"
-    assert db.get_array_element_db_name("SSTS-design", model_version="Prod5") == "SSTS-design"
+def test_get_array_element_db_name(db, model_version_prod5):
+    assert db.get_array_element_db_name("LSTN-01", model_version=model_version_prod5) == "LSTN-01"
+    assert (
+        db.get_array_element_db_name("LSTS-20", model_version=model_version_prod5) == "LSTS-design"
+    )
+    assert (
+        db.get_array_element_db_name("LSTN-design", model_version=model_version_prod5)
+        == "LSTN-design"
+    )
+    assert (
+        db.get_array_element_db_name("LSTS-design", model_version=model_version_prod5)
+        == "LSTS-design"
+    )
+    assert (
+        db.get_array_element_db_name("SSTS-91", model_version=model_version_prod5) == "SSTS-design"
+    )
+    assert (
+        db.get_array_element_db_name("SSTS-design", model_version=model_version_prod5)
+        == "SSTS-design"
+    )
     with pytest.raises(ValueError, match=r"Invalid name SSTN"):
-        db.get_array_element_db_name("SSTN-05", model_version="Prod5", collection="telescopes")
+        db.get_array_element_db_name(
+            "SSTN-05", model_version=model_version_prod5, collection="telescopes"
+        )
 
     with pytest.raises(ValueError, match=r"Invalid database name."):
-        db.get_array_element_db_name("ILLN-01", model_version="Prod5", collection="telescopes")
+        db.get_array_element_db_name(
+            "ILLN-01", model_version=model_version_prod5, collection="telescopes"
+        )
 
 
-def test_parameter_cache_key(db):
+def test_parameter_cache_key(db, model_version_prod5):
 
-    assert db._parameter_cache_key("North", "LSTN-01", "Prod5") == "North-LSTN-01-5.0.0"
-    assert db._parameter_cache_key("North", None, "Prod5") == "North-5.0.0"
-    assert db._parameter_cache_key(None, None, "Prod5") == "5.0.0"
+    assert db._parameter_cache_key("North", "LSTN-01", model_version_prod5) == "North-LSTN-01-5.0.0"
+    assert db._parameter_cache_key("North", None, model_version_prod5) == "North-5.0.0"
+    assert db._parameter_cache_key(None, None, model_version_prod5) == "5.0.0"
 
 
 def test_model_version(db):
 
-    assert db.model_version(version="Released") == "5.0.0"
-    assert db.model_version(version="Latest") == "6.0.0"
     assert db.model_version(version="6.0.0") == "6.0.0"
-    assert db.model_version(version="Prod6") == "6.0.0"
-    assert db.model_version(version="prod6") == "6.0.0"
 
     with pytest.raises(ValueError, match=r"Invalid model version test"):
         db.model_version(version="test")
+    with pytest.raises(ValueError, match=r"Invalid model version 0.0.9876"):
+        db.model_version(version="0.0.9876")
 
 
 def test_get_collections(db, db_config):
@@ -613,9 +598,16 @@ def test_get_collections(db, db_config):
     collections_from_name = db.get_collections(db_config["db_simulation_model"])
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
+    assert "fs.files" in collections_from_name
+
+    collections_no_model = db.get_collections(db_config["db_simulation_model"], True)
+    assert isinstance(collections_no_model, list)
+    assert "telescopes" in collections_no_model
+    assert "fs.files" not in collections_no_model
+    assert "metadata" not in collections_no_model
 
 
 def test_model_version_empty(db, mocker):
 
     mocker.patch.object(db, "get_all_versions", return_value=[])
-    assert db.model_version() is None
+    assert db.model_version("6.0.0") is None

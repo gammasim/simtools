@@ -191,6 +191,12 @@ def model_version():
 
 
 @pytest.fixture()
+def model_version_prod5():
+    """Simulation model version used in tests."""
+    return "5.0.0"
+
+
+@pytest.fixture()
 def array_model_north(io_handler, db_config, model_version):
     """Array model for North site."""
     return ArrayModel(
@@ -272,14 +278,14 @@ def telescope_model_sst(db_config, io_handler, model_version):
     )
 
 
-# keep prod5 until a complete prod6 model is in the DB
+# keep 5.0.0 model until a complete prod6 model is in the DB
 @pytest.fixture()
-def telescope_model_sst_prod5(db_config, io_handler):
-    """Telescope model SST South (prod5)."""
+def telescope_model_sst_prod5(db_config, io_handler, model_version_prod5):
+    """Telescope model SST South (prod5/5.0.0)."""
     return TelescopeModel(
         site="South",
         telescope_name="SSTS-design",
-        model_version="Prod5",
+        model_version=model_version_prod5,
         mongo_db_config=db_config,
         label="test-telescope-model-sst",
     )

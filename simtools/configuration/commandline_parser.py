@@ -8,7 +8,6 @@ from pathlib import Path
 import astropy.units as u
 
 import simtools.version
-from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.utils import names
 
 __all__ = [
@@ -248,7 +247,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "--model_version",
             help="model version",
             type=str,
-            default="Released",
+            default=None,
         )
         if any(
             option in model_options for option in ["site", "telescope", "layout", "layout_file"]
@@ -315,6 +314,8 @@ class CommandLineParser(argparse.ArgumentParser):
     @staticmethod
     def _get_dictionary_with_corsika_configuration():
         """Return dictionary with CORSIKA configuration parameters."""
+        from simtools.corsika.primary_particle import PrimaryParticle  # pylint: disable=C0415
+
         return {
             "primary": {
                 "help": (

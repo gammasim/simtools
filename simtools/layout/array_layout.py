@@ -15,7 +15,7 @@ from simtools.layout.geo_coordinates import GeoCoordinates
 from simtools.layout.telescope_position import TelescopePosition
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 __all__ = ["InvalidTelescopeListFileError", "ArrayLayout"]
 
@@ -39,7 +39,7 @@ class ArrayLayout:
     site: str
         Site name or location (e.g., North/South or LaPalma/Paranal)
     model_version: str
-        Version of the model (e.g., prod6).
+        Version of the model (e.g., 6.0.0).
     label: str
         Instance label.
     name: str
@@ -279,8 +279,8 @@ class ArrayLayout:
         try:
             tel.set_coordinates(
                 crs_name,
-                gen.get_value_as_quantity(row[key1], table[key1].unit),
-                gen.get_value_as_quantity(row[key2], table[key2].unit),
+                value_conversion.get_value_as_quantity(row[key1], table[key1].unit),
+                value_conversion.get_value_as_quantity(row[key2], table[key2].unit),
             )
         except KeyError:
             pass
@@ -303,14 +303,18 @@ class ArrayLayout:
         try:
             tel.set_altitude(
                 self._altitude_from_corsika_z(
-                    pos_z=gen.get_value_as_quantity(row["position_z"], table["position_z"].unit),
+                    pos_z=value_conversion.get_value_as_quantity(
+                        row["position_z"], table["position_z"].unit
+                    ),
                     telescope_axis_height=tel.get_axis_height(),
                 )
             )
         except KeyError:
             pass
         try:
-            tel.set_altitude(gen.get_value_as_quantity(row["altitude"], table["altitude"].unit))
+            tel.set_altitude(
+                value_conversion.get_value_as_quantity(row["altitude"], table["altitude"].unit)
+            )
         except KeyError:
             pass
 

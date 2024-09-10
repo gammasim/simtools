@@ -326,15 +326,11 @@ class CorsikaConfig:
             Primary particle.
 
         """
-        if not args_dict:
+        if not args_dict or args_dict.get("primary_id_type") is None:
             return PrimaryParticle()
-        if args_dict.get("primary_id_type") == "common_name":
-            return PrimaryParticle(name=args_dict.get("primary"))
-        if args_dict.get("primary_id_type") == "corsika7_id":
-            return PrimaryParticle(corsika7_id=int(args_dict.get("primary")))
-        if args_dict.get("primary_id_type") == "pdg_id":
-            return PrimaryParticle(pdg_id=int(args_dict.get("primary")))
-        return PrimaryParticle()
+        return PrimaryParticle(
+            particle_id_type=args_dict.get("primary_id_type"), particle_id=args_dict.get("primary")
+        )
 
     def get_config_parameter(self, par_name):
         """
@@ -562,7 +558,7 @@ class CorsikaConfig:
         file: stream
             File where the telescope positions will be written.
         """
-        random_seed = self.get_config_parameter("PRMPAR") + self._run_number
+        random_seed = self.get_config_parameter("PRMPAR") + self.run_number
         rng = np.random.default_rng(random_seed)
         corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
         for s in corsika_seeds:

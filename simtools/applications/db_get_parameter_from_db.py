@@ -4,8 +4,7 @@ r"""
     Get a parameter entry from DB for a specific telescope or a site.
 
     The application receives a parameter name, a site, a telescope (if applicable) and \
-    optionally a version. It then prints out the parameter entry.
-    If no version is provided, the value of the released model is printed..
+    a version. It then prints out the parameter entry.
 
     Command line arguments
     ----------------------
@@ -33,7 +32,7 @@ r"""
 
         simtools-db-get-parameter-from-db --parameter mirror_list \\
                 --site North --telescope LSTN-01 \\
-                --model_version prod5
+                --model_version 5.0.0
 
     Expected final print-out message:
 
@@ -63,8 +62,7 @@ def _parse():
         description=(
             "Get a parameter entry from DB for a specific telescope or a site. "
             "The application receives a parameter name, a site, a telescope (if applicable), "
-            "and optionally a version. It then prints out the parameter entry. "
-            "If no version is provided, the value of the released model is printed."
+            "and a version. It then prints out the parameter entry. "
         )
     )
 

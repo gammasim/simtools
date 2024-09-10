@@ -72,22 +72,24 @@ def _parse(label=None, description=None):
     )
     config.parser.add_argument(
         "--db_name",
-        help="Name of the new DB to be created.",
+        help="Name of the new model parameter database to be created.",
         type=str,
         required=True,
     )
     config.parser.add_argument(
         "--type",
-        help="Type of data to be uploaded to the DB.",
+        help="Type of data to be uploaded to the database.",
         type=str,
         required=False,
         default="model_parameters",
         choices=["model_parameters", "metadata"],
     )
 
-    return config.initialize(
+    args_dict, db_config = config.initialize(
         output=True, require_command_line=True, db_config=True, simulation_model="version"
     )
+    db_config["db_simulation_model"] = args_dict["db_name"]  # overwrite explicitly DB configuration
+    return args_dict, db_config
 
 
 def add_values_from_json_to_db(file, collection, db, db_name, file_prefix, logger):

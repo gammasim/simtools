@@ -110,7 +110,7 @@ def test_validate_and_transform(caplog):
         assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = "tests/resources/num_gains.json"
+    data_validator.data_file_name = "tests/resources/model_parameters/num_gains.json"
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
     with caplog.at_level(logging.INFO):
         _dict = data_validator.validate_and_transform()
@@ -137,7 +137,7 @@ def test_validate_data_file(caplog):
 def test_validate_parameter_and_file_name():
 
     data_validator = validate_data.DataValidator()
-    data_validator.data_file_name = "tests/resources/num_gains.json"
+    data_validator.data_file_name = "tests/resources/model_parameters/num_gains.json"
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
     data_validator.validate_and_transform()
 

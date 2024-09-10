@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 r"""
-    Validate a file using a schema.
+    Validate a file or files in a directory using a schema.
 
     Input files can be metadata, schema, or data files in yaml, json, or ecsv format.
 
@@ -8,6 +8,8 @@ r"""
     ----------------------
     file_name (str)
       input file to be validated
+    model_parameters_directory (str)
+        directory with json files of model parameters to be validated
     schema (str)
       schema file (jsonschema format) used for validation
     data_type (str)
@@ -56,17 +58,28 @@ def _parse(label, description):
 
     """
     config = configurator.Configurator(label=label, description=description)
-    config.parser.add_argument("--file_name", help="file to be validated", required=True)
-    config.parser.add_argument("--schema", help="json schema file", required=False)
+    group = config.parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--file_name", help="File to be validated")
+    group.add_argument(
+        "--model_parameters_directory",
+        help=(
+            "Directory with json files with model parameters to be validated."
+            "All *.json files in the directory will be validated."
+            "Schema files will be taken from simtools/schemas/model_parameters/."
+            "Note that in this case the data_type argument is ignored"
+            "and data_type=model_parameter is always used."
+        ),
+    )
+    config.parser.add_argument("--schema", help="Json schema file", required=False)
     config.parser.add_argument(
         "--data_type",
-        help="type of input data",
+        help="Type of input data",
         choices=["metadata", "schema", "data", "model_parameter"],
         default="data",
     )
     config.parser.add_argument(
         "--require_exact_data_type",
-        help="require exact data type for validation",
+        help="Require exact data type for validation",
         action="store_true",
     )
     return config.initialize(paths=False)
@@ -117,6 +130,27 @@ def validate_schema(args_dict, logger):
     logger.info(f"Successful validation of schema file {args_dict['file_name']}")
 
 
+def validate_data_files(args_dict, logger):
+    """Validate data files."""
+    model_parameters_directory = args_dict.get("model_parameters_directory")
+    if model_parameters_directory is not None:
+        tmp_args_dict = {}
+        for file_name in Path(model_parameters_directory).rglob("*.json"):
+            tmp_args_dict["file_name"] = file_name
+            schema_file = (
+                Path(__file__).parent
+                / "../schemas"
+                / "model_parameters"
+                / f"{file_name.stem}.schema.yml"
+            )
+            tmp_args_dict["schema"] = schema_file
+            tmp_args_dict["data_type"] = "model_parameter"
+            tmp_args_dict["require_exact_data_type"] = args_dict["require_exact_data_type"]
+            validate_data_file(tmp_args_dict, logger)
+    else:
+        validate_data_file(args_dict, logger)
+
+
 def validate_data_file(args_dict, logger):
     """Validate a data file (e.g., in ecsv, json, yaml format)."""
     data_validator = validate_data.DataValidator(
@@ -152,7 +186,7 @@ def main():  # noqa: D103
     elif args_dict["data_type"].lower() == "schema":
         validate_schema(args_dict, logger)
     else:
-        validate_data_file(args_dict, logger)
+        validate_data_files(args_dict, logger)
 
 
 if __name__ == "__main__":
