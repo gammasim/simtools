@@ -55,3 +55,16 @@ if ! $CMD exec $CONTAINER_NAME mongosh admin -u root -p example --eval "db.runCo
   $CMD logs $CONTAINER_NAME
   exit 1
 fi
+
+echo "Create admin user"
+$CMD exec -it $CONTAINER_NAME mongosh admin -u root -p example --eval "
+db.createUser({
+  user: 'api',
+  pwd: 'password',
+  roles: [
+    { role: 'readWriteAnyDatabase', db: 'admin' },
+    { role: 'dbAdminAnyDatabase', db: 'admin' },
+    { role: 'userAdminAnyDatabase', db: 'admin' },
+  ]
+});
+"

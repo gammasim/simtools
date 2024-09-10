@@ -19,7 +19,7 @@ class SiteModel(ModelParameter):
     mongo_db_config: dict
         MongoDB configuration.
     model_version: str
-        Version of the model (ex. prod5).
+        Model version.
     label: str
         Instance label. Important for output file naming.
     """

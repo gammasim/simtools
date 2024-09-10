@@ -18,7 +18,7 @@
 
             simtools-simulate-light-emission --telescope MSTN-04 --site North \
             --illuminator ILLN-01 --light_source_setup variable \
-            --model_version prod6 --light_source_type led
+            --model_version 6.0.0 --light_source_type led
 
     2. Simulate light emission with telescopes at fixed positions according to the layout:
 
@@ -26,7 +26,7 @@
 
             simtools-simulate-light-emission --telescope MSTN-04 --site North \
             --illuminator ILLN-01 --light_source_setup layout \
-            --model_version prod6 \
+            --model_version 6.0.0 \
             --light_source_type led
 
     Command Line Arguments
@@ -71,7 +71,7 @@
 
         simtools-simulate-light-emission --telescope MSTN-04 --site North \
         --illuminator ILLN-01 --light_source_setup variable \
-        --model_version prod6 --light_source_type led    ```
+        --model_version 6.0.0 --light_source_type led    ```
 
     Expected Output:
 
@@ -236,7 +236,7 @@ def _parse(label):
     return config.initialize(
         db_config=True,
         simulation_model="telescope",
-        require_command_line=False,
+        require_command_line=True,
     )
 
 
@@ -445,15 +445,15 @@ def main():
                 distance=light_source.distance,
                 return_cleaned=args_dict["return_cleaned"],
             )
+            save_figs_to_pdf(
+                [fig],
+                f"{light_source.output_directory}/{args_dict['telescope']}_"
+                f"{light_source.le_application[0]}_"
+                f"{light_source.le_application[1]}.pdf",
+            )
         except AttributeError:
             msg = f"telescope not triggered at distance of {light_source.distance.to(u.meter)}"
             logger.warning(msg)
-        save_figs_to_pdf(
-            [fig],
-            f"{light_source.output_directory}/{args_dict['telescope']}_"
-            f"{light_source.le_application[0]}_"
-            f"{light_source.le_application[1]}.pdf",
-        )
 
 
 if __name__ == "__main__":

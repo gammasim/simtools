@@ -29,7 +29,7 @@ r"""
 
     Example
     -------
-    MSTN-01 Prod5
+    MSTN-01 5.0.0
 
     Runtime < 1 min.
 
@@ -38,7 +38,7 @@ r"""
         simtools-validate-camera-efficiency --site North \\
             --azimuth_angle 0 --zenith_angle 20 \\
             --nsb_spectrum average_nsb_spectrum_CTAO-N_ze20_az0.txt \\
-            --telescope MSTN-01 --model_version prod5
+            --telescope MSTN-01 --model_version 5.0.0
 
     The output is saved in simtools-output/validate_camera_efficiency.
 """

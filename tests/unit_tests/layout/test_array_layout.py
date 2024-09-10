@@ -451,7 +451,7 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
         mongo_db_config=db_config,
         site="North",
         model_version=model_version,
-        telescope_list_file="tests/resources/array_element_position_ground.json",
+        telescope_list_file="tests/resources/model_parameters/array_element_position_ground.json",
     )
 
     ground_dict = layout.export_one_telescope_as_json(crs_name="ground")
@@ -477,7 +477,7 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
 
 def test_read_table_from_json_file(db_config, model_version):
 
-    ground_table_file = "tests/resources/array_element_position_ground.json"
+    ground_table_file = "tests/resources/model_parameters/array_element_position_ground.json"
     layout = ArrayLayout(
         mongo_db_config=db_config,
         site="North",
@@ -488,6 +488,8 @@ def test_read_table_from_json_file(db_config, model_version):
     assert isinstance(ground_table, QTable)
     assert "position_x" in ground_table.colnames
 
-    utm_table = layout._read_table_from_json_file("tests/resources/array_element_position_utm.json")
+    utm_table = layout._read_table_from_json_file(
+        "tests/resources/model_parameters/array_element_position_utm.json"
+    )
     assert isinstance(utm_table, QTable)
     assert "utm_north" in utm_table.colnames

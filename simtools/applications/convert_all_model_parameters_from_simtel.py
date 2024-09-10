@@ -32,7 +32,7 @@ r"""
           --telescope LSTN-01\\
           --model_version "2024-03-06"
 
-    The export of the model parameters from sim_telarray for prod6 can be done e.g., as follows:
+    The export of the model parameters from sim_telarray for 6.0.0 can be done e.g., as follows:
 
     .. code-block:: console
 
