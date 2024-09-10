@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+gf7b719f Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+ge6f0c35 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=367fecae"></script>
+    <script src="../../_static/documentation_options.js?v=ecb23008"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf7b719f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge6f0c35 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -710,15 +710,11 @@ document.write(`
 <span class="sd">            Primary particle.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span> <span class="ow">or</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id_type&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;common_name&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary&quot;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">(</span><span class="n">corsika7_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary&quot;</span><span class="p">)))</span>
-        <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">(</span><span class="n">pdg_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary&quot;</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">PrimaryParticle</span><span class="p">(</span>
+            <span class="n">particle_id_type</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_id_type&quot;</span><span class="p">),</span> <span class="n">particle_id</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="CorsikaConfig.get_config_parameter">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.get_config_parameter">[docs]</a>

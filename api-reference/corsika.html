@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CORSIKA &#8212; simtools v0.1.dev1+gf7b719f Manual</title>
+    <title>CORSIKA &#8212; simtools v0.1.dev1+ge6f0c35 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=367fecae"></script>
+    <script src="../_static/documentation_options.js?v=ecb23008"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf7b719f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge6f0c35 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -781,18 +781,16 @@ the output directly to sim_telarray. Defines directory names.</p>
 <p>Primary particle definition.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="corsika.primary_particle.PrimaryParticle">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.primary_particle.</span></span><span class="sig-name descname"><span class="pre">PrimaryParticle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika7_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdg_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/primary_particle.html#PrimaryParticle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">corsika.primary_particle.</span></span><span class="sig-name descname"><span class="pre">PrimaryParticle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_id_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particle_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/primary_particle.html#PrimaryParticle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.primary_particle.PrimaryParticle" title="Link to this definition">#</a></dt>
 <dd><p>Primary particle definition using CORSIKA7 or PDG ID.</p>
 <p>Uses a dictionary to map particle common names to CORSIKA7 IDs.
 Particles not found in the dictionary are searched in the PDG particle database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>corsika7_id</strong><span class="classifier">int</span></dt><dd><p>CORSIKA7 ID of the primary particle.</p>
+<dt><strong>particle_id_type</strong><span class="classifier">str</span></dt><dd><p>Type of the primary particle ID (‘corsika7_id’, ‘common_name’, or ‘pdg_id’).</p>
 </dd>
-<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>Common name of the primary particle.</p>
-</dd>
-<dt><strong>pdg_id</strong><span class="classifier">int</span></dt><dd><p>PDG ID of the primary particle.</p>
+<dt><strong>particle_id</strong><span class="classifier">int or str</span></dt><dd><p>The actual ID of the primary particle.</p>
 </dd>
 </dl>
 </dd>

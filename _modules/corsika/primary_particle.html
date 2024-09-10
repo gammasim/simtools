@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.primary_particle &#8212; simtools v0.1.dev1+gf7b719f Manual</title>
+    <title>corsika.primary_particle &#8212; simtools v0.1.dev1+ge6f0c35 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=367fecae"></script>
+    <script src="../../_static/documentation_options.js?v=ecb23008"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf7b719f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge6f0c35 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -378,7 +378,7 @@ document.write(`
 
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">particle</span> <span class="kn">import</span> <span class="n">Corsika7ID</span><span class="p">,</span> <span class="n">Particle</span>
+<span class="kn">from</span> <span class="nn">particle</span> <span class="kn">import</span> <span class="n">Corsika7ID</span><span class="p">,</span> <span class="n">InvalidParticle</span><span class="p">,</span> <span class="n">Particle</span>
 
 
 <div class="viewcode-block" id="PrimaryParticle">
@@ -392,15 +392,13 @@ document.write(`
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    corsika7_id : int</span>
-<span class="sd">        CORSIKA7 ID of the primary particle.</span>
-<span class="sd">    name : str</span>
-<span class="sd">        Common name of the primary particle.</span>
-<span class="sd">    pdg_id : int</span>
-<span class="sd">        PDG ID of the primary particle.</span>
+<span class="sd">    particle_id_type : str</span>
+<span class="sd">        Type of the primary particle ID (&#39;corsika7_id&#39;, &#39;common_name&#39;, or &#39;pdg_id&#39;).</span>
+<span class="sd">    particle_id : int or str</span>
+<span class="sd">        The actual ID of the primary particle.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika7_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pdg_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_id_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">particle_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika7_id</span> <span class="o">=</span> <span class="kc">None</span>
@@ -408,12 +406,19 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_name</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="k">if</span> <span class="n">corsika7_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">corsika7_id</span> <span class="o">=</span> <span class="n">corsika7_id</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-        <span class="k">if</span> <span class="n">pdg_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pdg_id</span> <span class="o">=</span> <span class="n">pdg_id</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">particle_id_type</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">particle_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Both &#39;particle_id_type&#39; and &#39;particle_id&#39; must be provided together.&quot;</span><span class="p">)</span>
+
+        <span class="n">valid_id_types</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">,</span> <span class="s2">&quot;common_name&quot;</span><span class="p">,</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">particle_id_type</span> <span class="ow">and</span> <span class="n">particle_id_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_id_types</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Particle ID type must be one of </span><span class="si">{</span><span class="n">valid_id_types</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">particle_id_type</span> <span class="o">==</span> <span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corsika7_id</span> <span class="o">=</span> <span class="n">particle_id</span>
+        <span class="k">elif</span> <span class="n">particle_id_type</span> <span class="o">==</span> <span class="s2">&quot;common_name&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">particle_id</span>
+        <span class="k">elif</span> <span class="n">particle_id_type</span> <span class="o">==</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pdg_id</span> <span class="o">=</span> <span class="n">particle_id</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a string representation of the primary particle.&quot;&quot;&quot;</span>
@@ -429,12 +434,19 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set CORSIKA7 ID of the primary particle.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particle_names</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="n">ids</span><span class="p">[</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika7_id</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_corsika7_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="s2">&quot;pdg_id&quot;</span><span class="p">]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_name</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="s2">&quot;pdg_name&quot;</span><span class="p">]</span>
                 <span class="k">return</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid CORSIKA7 ID: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># no particle found - check PDG</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span> <span class="o">=</span> <span class="n">Corsika7ID</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">to_pdgid</span><span class="p">()</span><span class="o">.</span><span class="n">numerator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pdg_name</span> <span class="o">=</span> <span class="n">Particle</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pdgid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdg_id</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">Corsika7ID</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="n">InvalidParticle</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid CORSIKA7 ID: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_corsika7_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -510,7 +522,8 @@ document.write(`
             <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
             <span class="s2">&quot;electron&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
             <span class="s2">&quot;positron&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
-            <span class="s2">&quot;muon&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+            <span class="s2">&quot;muon+&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+            <span class="s2">&quot;muon-&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">},</span>
             <span class="s2">&quot;proton&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">},</span>
             <span class="s2">&quot;neutron&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">13</span><span class="p">},</span>
             <span class="s2">&quot;helium&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;corsika7_id&quot;</span><span class="p">:</span> <span class="mi">402</span><span class="p">},</span>
