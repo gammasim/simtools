@@ -131,7 +131,7 @@ def _parse(description=None):
             "Use the provided random seed for sim_telarray instrument setup."
             "Used only for testing purposes for now."
         ),
-        type=int,
+        type=str,
         required=False,
     )
     return config.initialize(
