@@ -55,33 +55,9 @@ Example Usage
 """
 
 import numpy as np
+import yaml
 
 from simtools.utils import names
-
-# Lookup table for resource estimates (currently only La Palma estimates for Hyperarray),
-# update for sample prod
-
-lookup_table = {
-    # "North": { # Hyperarray values downscaled from ratio of alpha test prod dark vs dark+moon
-    # #scaling factors: 1.55764075, 1.62695035, 1.63798531, 1.43891403
-    #    20: {"compute_hours_per_event": 8.39543043e-05, "storage_gb_per_event": 7.39148427e-07},
-    #    40: {"compute_hours_per_event": 1.27573040e-04, "storage_gb_per_event": 1.07836354e-06},
-    #    52: {"compute_hours_per_event": 1.56466962e-04, "storage_gb_per_event": 1.10491071e-06},
-    #    60: {"compute_hours_per_event": 1.85291893e-04, "storage_gb_per_event": 9.99566846e-07},
-    # },
-    "North": {  # alpha values
-        20: {"compute_hours_per_event": 4.97333333e-05, "storage_gb_per_event": 2.61397111e-07},
-        40: {"compute_hours_per_event": 8.54545455e-05, "storage_gb_per_event": 3.57902020e-07},
-        52: {"compute_hours_per_event": 1.36142857e-04, "storage_gb_per_event": 3.77812381e-07},
-        60: {"compute_hours_per_event": 1.67494737e-04, "storage_gb_per_event": 3.59372632e-07},
-    },
-    "South": {
-        20: {"compute_hours_per_event": 5e-6, "storage_gb_per_event": 5e-7},
-        40: {"compute_hours_per_event": 4e-6, "storage_gb_per_event": 4e-7},
-        52: {"compute_hours_per_event": 2.5e-6, "storage_gb_per_event": 2.5e-7},
-        60: {"compute_hours_per_event": 2e-6, "storage_gb_per_event": 2e-7},
-    },
-}
 
 
 class ResourceEstimator:
@@ -117,6 +93,7 @@ class ResourceEstimator:
         grid_point: dict[str, float],
         simulation_params: dict[str, float],
         existing_data: list[dict] | None = None,
+        lookup_file: str = "resource_estimates.yaml",
     ):
         """
         Initialize the resource estimator.
@@ -138,9 +115,27 @@ class ResourceEstimator:
         self.grid_point = grid_point
         self.simulation_params = simulation_params
         self.existing_data = existing_data or []
-        self.lookup_table = lookup_table
+        self.lookup_table = self.load_lookup_table(lookup_file)
 
         self.site = names.validate_site_name(self.simulation_params["site"])
+
+    @staticmethod
+    def load_lookup_table(lookup_file: str) -> dict:
+        """
+        Load the lookup table from a YAML file.
+
+        Parameters
+        ----------
+        lookup_file : str
+            Path to the YAML file containing the lookup table.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the lookup table.
+        """
+        with open(lookup_file, encoding="utf-8") as file:
+            return yaml.safe_load(file)
 
     def estimate_resources(self) -> dict:
         """
