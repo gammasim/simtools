@@ -1,3 +1,5 @@
+import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import astropy.units as u
@@ -406,3 +408,27 @@ def test_prepare_script(
     ]
     for call_args, expected_content in zip(mock_file.write.call_args_list, expected_calls):
         assert call_args[0][0] == expected_content
+
+
+def test_remove_line_from_config(mock_simulator):
+    # Create a temporary config file with some lines
+    config_content = """array_triggers: value1
+    axes_offsets: value2
+    some_other_config: value3
+    """
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        config_path = Path(tmp_file.name)
+        tmp_file.write(config_content.encode("utf-8"))
+
+    mock_simulator._remove_line_from_config(config_path, "array_triggers")
+
+    with open(config_path, encoding="utf-8") as f:
+        updated_content = f.read()
+
+    expected_content = """
+    axes_offsets: value2
+    some_other_config: value3
+    """
+    assert updated_content.strip() == expected_content.strip()
+
+    config_path.unlink()
