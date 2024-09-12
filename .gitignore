@@ -32,10 +32,3 @@ simtools/_version.py
 # Coverage files
 coverage*
 .coverage*
-
-# Files from light emission package
-*.cbunch
-ctsim.hdata
-
-#pyproject swap
-.pyproject.toml.swp
