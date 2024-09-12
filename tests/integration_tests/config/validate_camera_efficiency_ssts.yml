@@ -5,7 +5,7 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SITE: South
     TELESCOPE: SSTS-design
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     OUTPUT_PATH: simtools-tests
     LOG_LEVEL: debug
   INTEGRATION_TESTS:

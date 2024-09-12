@@ -2,7 +2,7 @@ CTA_SIMPIPE:
   APPLICATION: simtools-plot-array-layout
   TEST_NAME: one_file_rotate
   CONFIGURATION:
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     ARRAY_LAYOUT_FILE: tests/resources/telescope_positions-North-ground.ecsv
     ROTATE_ANGLE: 20
     OUTPUT_PATH: simtools-tests

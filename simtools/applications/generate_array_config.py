@@ -20,11 +20,11 @@
 
     Example
     -------
-    North - Prod5:
+    North - 5.0.0:
 
     .. code-block:: console
 
-        simtools-generate-array-config --site North --array_layout_name alpha --model_version prod5
+        simtools-generate-array-config --site North --array_layout_name alpha --model_version 5.0.0
 
     The output is saved in simtools-output/test/model.
 """
