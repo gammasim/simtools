@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.corsika.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -182,6 +181,8 @@ def test_rotate_azimuth_by_180deg(corsika_config_no_db):
 
 
 def test_set_primary_particle(corsika_config_no_db):
+    from simtools.corsika.primary_particle import PrimaryParticle
+
     cc = corsika_config_no_db
     assert isinstance(cc._set_primary_particle(args_dict=None), PrimaryParticle)
     assert isinstance(
