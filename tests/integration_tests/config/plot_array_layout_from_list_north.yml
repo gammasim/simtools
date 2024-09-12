@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: from_list_north
   CONFIGURATION:
     ARRAY_ELEMENT_LIST: ["LSTN-01", "MSTN"]
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     OUTPUT_PATH: simtools-tests
     AXES_RANGE: 500.
     SHOW_LABELS: True

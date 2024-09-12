@@ -7,7 +7,7 @@ CTA_SIMPIPE:
     TELESCOPE: MSTN-04
     ILLUMINATOR: ILLN-01
     LIGHT_SOURCE_SETUP: layout
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     LIGHT_SOURCE_TYPE: led
     OUTPUT_PATH: simtools-tests
     TELESCOPE_FILE: tests/resources/telescope_positions-North-ground.ecsv

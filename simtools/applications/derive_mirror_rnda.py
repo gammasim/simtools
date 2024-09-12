@@ -96,7 +96,7 @@ r"""
     Example
     -------
     Derive mirror random reflection angle for a mid-sized telescope (MST),
-    simulation production Prod5.
+    simulation production 5.0.0
 
     .. code-block:: console
 

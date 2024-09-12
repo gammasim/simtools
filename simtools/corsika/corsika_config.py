@@ -326,15 +326,11 @@ class CorsikaConfig:
             Primary particle.
 
         """
-        if not args_dict:
+        if not args_dict or args_dict.get("primary_id_type") is None:
             return PrimaryParticle()
-        if args_dict.get("primary_id_type") == "common_name":
-            return PrimaryParticle(name=args_dict.get("primary"))
-        if args_dict.get("primary_id_type") == "corsika7_id":
-            return PrimaryParticle(corsika7_id=int(args_dict.get("primary")))
-        if args_dict.get("primary_id_type") == "pdg_id":
-            return PrimaryParticle(pdg_id=int(args_dict.get("primary")))
-        return PrimaryParticle()
+        return PrimaryParticle(
+            particle_id_type=args_dict.get("primary_id_type"), particle_id=args_dict.get("primary")
+        )
 
     def get_config_parameter(self, par_name):
         """
