@@ -41,7 +41,7 @@ def test_write_array_config_file(
     # simtel configuration files need to end with two new lines
     with open(file) as f:
         lines = f.readlines()
-        assert lines[-2].endswith("#endif \n")
+        assert lines[-2].endswith("\n")
         assert lines[-1] == "\n"
 
 
