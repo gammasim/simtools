@@ -92,21 +92,16 @@ class IOHandler(metaclass=IOHandlerSingleton):
         TypeError
             raised for errors while creating directory name
         """
-        if self.use_plain_output_path:
-            path = Path(self.output_path)
-        else:
-            if str(self.output_path).endswith("-output"):
-                output_directory_prefix = Path(self.output_path)
-            else:
+        path = Path(self.output_path)
+        if not self.use_plain_output_path:
+            if not str(self.output_path).endswith("-output"):
                 try:
-                    output_directory_prefix = Path(self.output_path).joinpath(
-                        re.sub(r"\-result$", "", dir_type) + "-output"
-                    )
-                except TypeError:
+                    path = path.joinpath(re.sub(r"\-result$", "", dir_type) + "-output")
+                except TypeError as exc:
                     self._logger.error(f"Error creating output directory name from {dir_type}")
-                    raise
+                    raise exc
             label_dir = label if label is not None else "d-" + str(datetime.date.today())
-            path = output_directory_prefix.joinpath(label_dir)
+            path = path.joinpath(label_dir)
 
         if sub_dir is not None and (
             not self.use_plain_output_path or dir_type != "simtools-result"
