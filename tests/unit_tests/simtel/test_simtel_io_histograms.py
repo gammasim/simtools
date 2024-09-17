@@ -186,9 +186,7 @@ def test_meta_dict(simtel_array_histograms_instance):
 
 
 def test_export_histograms(simtel_array_histograms_instance, io_handler):
-    file_with_path = io_handler.get_output_directory(dir_type="test").joinpath(
-        "test_hist_simtel.hdf5"
-    )
+    file_with_path = io_handler.get_output_directory().joinpath("test_hist_simtel.hdf5")
     # Default values
     simtel_array_histograms_instance.export_histograms(file_with_path)
 

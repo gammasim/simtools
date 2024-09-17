@@ -327,7 +327,7 @@ def corsika_histograms_instance(io_handler, corsika_output_file_name):
     from simtools.corsika.corsika_histograms import CorsikaHistograms
 
     return CorsikaHistograms(
-        corsika_output_file_name, output_path=io_handler.get_output_directory(dir_type="test")
+        corsika_output_file_name, output_path=io_handler.get_output_directory()
     )
 
 
