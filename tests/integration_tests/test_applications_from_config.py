@@ -2,18 +2,16 @@
 # Integration tests for applications from config file
 #
 
-import json
 import logging
 import os
 from io import StringIO
 from pathlib import Path
 
-import numpy as np
 import pytest
 import yaml
-from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.testing import assertions, compare_output
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -103,123 +101,6 @@ def get_list_of_test_configurations(get_test_names=False):
     return configs
 
 
-def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
-    """
-    Compare two ecsv files:
-    - same column table names
-    - numerical values in columns are close
-
-    Parameters
-    ----------
-    file1: str
-        First file to compare
-    file2: str
-        Second file to compare
-    tolerance: float
-        Tolerance for comparing numerical values.
-
-    """
-
-    logger.info(f"Comparing files: {file1} and {file2}")
-    table1 = Table.read(file1, format="ascii.ecsv")
-    table2 = Table.read(file2, format="ascii.ecsv")
-
-    assert len(table1) == len(table2)
-
-    for col_name in table1.colnames:
-        if np.issubdtype(table1[col_name].dtype, np.floating):
-            assert np.allclose(table1[col_name], table2[col_name], rtol=tolerance)
-
-
-def compare_json_files(file1, file2):
-    """
-    Compare two json files.
-
-    Take into account float comparison for sim_telarray string-embedded floats.
-
-    Parameters
-    ----------
-    file1: str
-        First file to compare
-    file2: str
-        Second file to compare
-
-    """
-
-    data1 = gen.collect_data_from_file_or_dict(file1, in_dict=None)
-    data2 = gen.collect_data_from_file_or_dict(file2, in_dict=None)
-
-    try:
-        assert data1 == data2
-    except AssertionError:
-        if "value" in data1 and isinstance(data1["value"], str):
-            value_list_1 = gen.convert_string_to_list(data1.pop("value"))
-            value_list_2 = gen.convert_string_to_list(data2.pop("value"))
-            np.allclose(value_list_1, value_list_2, rtol=1e-2)
-        assert data1 == data2
-
-
-def compare_files(file1, file2, tolerance=1.0e-5):
-    """
-    Compare two files.
-
-    Parameters
-    ----------
-    file1: str
-        First file to compare
-    file2: str
-        Second file to compare
-    tolerance: float
-        Tolerance for comparing numerical values.
-
-    """
-
-    if str(file1).endswith(".ecsv") and str(file2).endswith(".ecsv"):
-        compare_ecsv_files(file1, file2, tolerance)
-        return
-    if str(file1).endswith(".json") and str(file2).endswith(".json"):
-        compare_json_files(file1, file2)
-        return
-
-    pytest.fail(f"Failed comparing files: {file1} and {file2} (unknown file type?)")
-
-
-def assert_file_type(file_type, file_name):
-    """
-    Assert that the file is of the given type.
-
-    Parameters
-    ----------
-    file_type: str
-        File type (json, yaml).
-    file_name: str
-        File name.
-
-    """
-
-    if file_type == "json":
-        try:
-            with open(file_name, encoding="utf-8") as file:
-                json.load(file)
-            return True
-        except (json.JSONDecodeError, FileNotFoundError):
-            return False
-    if file_type == "yaml" or file_type == "yml":
-        try:
-            with open(file_name, encoding="utf-8") as file:
-                yaml.safe_load(file)
-            return True
-        except (yaml.YAMLError, FileNotFoundError):
-            return False
-
-    # no dedicated tests for other file types, checking suffix only
-    logger.info(f"File type test is checking suffix only for {file_name} (suffix: {file_type}))")
-    if file_name.suffix[1:] == file_type:
-        return True
-
-    return False
-
-
 def validate_application_output(config):
     """
     Validate application output against expected output.
@@ -238,7 +119,7 @@ def validate_application_output(config):
     for integration_test in config["INTEGRATION_TESTS"]:
         logger.info(f"Testing application output: {integration_test}")
         if "REFERENCE_OUTPUT_FILE" in integration_test:
-            compare_files(
+            assert compare_output.compare_files(
                 integration_test["REFERENCE_OUTPUT_FILE"],
                 Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
                     config["CONFIGURATION"]["OUTPUT_FILE"]
@@ -265,7 +146,7 @@ def validate_application_output(config):
                     .exists()
                 )
         if "FILE_TYPE" in integration_test:
-            assert assert_file_type(
+            assert assertions.assert_file_type(
                 integration_test["FILE_TYPE"],
                 Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
                     config["CONFIGURATION"]["OUTPUT_FILE"]
