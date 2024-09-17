@@ -378,7 +378,7 @@ def main():
         for distance in default_le_config["z_pos"]["default"]:
             le_config = default_le_config.copy()
             le_config["z_pos"]["default"] = distance
-            light_source = SimulatorLightEmission.from_kwargs(
+            light_source = SimulatorLightEmission(
                 telescope_model=telescope_model,
                 calibration_model=calibration_model,
                 site_model=site_model,
@@ -419,7 +419,7 @@ def main():
 
     elif args_dict["light_source_setup"] == "layout":
 
-        light_source = SimulatorLightEmission.from_kwargs(
+        light_source = SimulatorLightEmission(
             telescope_model=telescope_model,
             calibration_model=calibration_model,
             site_model=site_model,
