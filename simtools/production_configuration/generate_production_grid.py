@@ -205,10 +205,9 @@ class GridGeneration:
         """
         # Create a linearly spaced array of values between 0 and 1
         lin_space = np.linspace(0, 1, binning)
+        lin_space = np.clip(lin_space, 1e-10, 1 - 1e-10)  # Avoid division by zero
         # Apply the inverse CDF transformation for power-law
-        return axis_range[0] + (axis_range[1] - axis_range[0]) * (1 - lin_space) ** (
-            -1 / (power_law_index - 1)
-        )
+        return axis_range[0] + (axis_range[1] - axis_range[0]) * (lin_space) ** (power_law_index)
 
     def adjust_axis_range(self, axis_range, axis_name) -> tuple:
         """
