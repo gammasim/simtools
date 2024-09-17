@@ -152,7 +152,6 @@ class CameraEfficiency:
             _file[label] = self.io_handler.get_output_directory(
                 label=self.label,
                 sub_dir="camera-efficiency",
-                dir_type="test" if self.test else "simtools",
             ).joinpath(file_name)
         return _file
 

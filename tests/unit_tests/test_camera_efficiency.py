@@ -47,7 +47,6 @@ def prepare_results_file(io_handler):
     output_directory = io_handler.get_output_directory(
         label="validate_camera_efficiency",
         sub_dir="camera-efficiency",
-        dir_type="test",
     )
     shutil.copy(test_file_name, output_directory)
     return output_directory.joinpath(test_file_name)
