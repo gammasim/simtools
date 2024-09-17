@@ -42,9 +42,13 @@ class RunnerServices:
         dict
             Dictionary with the keys or building the file names for simulation output files.
         """
+        _vc_high = self.corsika_config.get_config_parameter("VIEWCONE")[1]
+        primary_name = self.corsika_config.primary
+        if primary_name == "gamma" and _vc_high > 0:
+            primary_name = "gamma_diffuse"
         return {
             "run_number": self.corsika_config.validate_run_number(run_number),
-            "primary": self.corsika_config.primary,
+            "primary": primary_name,
             "array_name": self.corsika_config.array_model.layout_name,
             "site": self.corsika_config.array_model.site,
             "label": self.label,
