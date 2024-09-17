@@ -9,8 +9,8 @@ CTA_SIMPIPE:
     HDF5_FILE_NAME: test_file_individual_telescopes_and_indices.hdf5
     TELESCOPE_INDICES: ['0', '1', '2']
     INDIVIDUAL_TELESCOPES: true
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     TEST: true
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/test_file_individual_telescopes_and_indices.hdf5
-    - OUTPUT_FILE: application-plots/test_file_individual_telescopes_and_indices.pdf
+    - OUTPUT_FILE: test_file_individual_telescopes_and_indices.hdf5
+    - OUTPUT_FILE: test_file_individual_telescopes_and_indices.pdf
