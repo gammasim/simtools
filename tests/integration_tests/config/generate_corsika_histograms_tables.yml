@@ -6,7 +6,7 @@ CTA_SIMPIPE:
       ./tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio
     HDF5: true
     HDF5_FILE_NAME: test_file_tables.hdf5
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     TEST: true
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/test_file_tables.hdf5
+    - OUTPUT_FILE: test_file_tables.hdf5
