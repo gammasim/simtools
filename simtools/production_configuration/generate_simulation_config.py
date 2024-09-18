@@ -24,7 +24,9 @@ import os
 
 import numpy as np
 
-from simtools.utils.calculate_statistical_errors_grid_point import StatisticalErrorEvaluator
+from simtools.production_configuration.calculate_statistical_errors_grid_point import (
+    StatisticalErrorEvaluator,
+)
 
 
 class SimulationConfig:
