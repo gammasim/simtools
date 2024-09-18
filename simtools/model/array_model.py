@@ -26,7 +26,7 @@ class ArrayModel:
     mongo_db_config: dict
         MongoDB configuration.
     model_version: str
-        Version of the model (e.g., prod5).
+        Model version.
     label: str
         Instance label. Used for output file naming.
     site: str

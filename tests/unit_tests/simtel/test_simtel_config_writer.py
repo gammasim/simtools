@@ -12,10 +12,10 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def simtel_config_writer():
+def simtel_config_writer(model_version):
     return SimtelConfigWriter(
         site="North",
-        model_version="Released",
+        model_version=model_version,
         label="test-simtel-config-writer",
         telescope_model_name="test_telecope",
     )
@@ -37,6 +37,12 @@ def test_write_array_config_file(
         site_model=site_model_north,
     )
     assert file_has_text(file, "TELESCOPE == 1")
+
+    # simtel configuration files need to end with two new lines
+    with open(file) as f:
+        lines = f.readlines()
+        assert lines[-2].endswith("\n")
+        assert lines[-1] == "\n"
 
 
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):

@@ -42,7 +42,7 @@
 
     Example
     -------
-    LST-1 Prod5
+    LST-1 5.0.0
 
     Runtime < 1 min.
 
@@ -57,7 +57,7 @@
     .. code-block:: console
 
         simtools-compare-cumulative-psf --site North --telescope LST-1 \
-            --model_version prod5 --data PSFcurve_data_v2.txt
+            --model_version 5.0.0 --data PSFcurve_data_v2.txt
 
     The output is saved in simtools-output/validate_cumulative_psf
 

@@ -15,7 +15,7 @@ r"""
     Command line arguments
     ----------------------
     model_version (str, required)
-        The telescope model version to use (e.g., Prod5).
+        The telescope model version to use (e.g., 5.0.0).
     site (str, required)
         North or South (case insensitive).
     primary (str, required)
@@ -56,7 +56,7 @@ r"""
     .. code-block:: console
 
         simtools-simulate-prod \\
-        --model_version Prod5 --site north --primary gamma --azimuth_angle north \\
+        --model_version 5.0.0 --site north --primary gamma --azimuth_angle north \\
         --zenith_angle 20 --start_run 0 --run 1
 
     By default the configuration is saved in simtools-output/test-production

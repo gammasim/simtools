@@ -4,5 +4,5 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SITE: North
     ARRAY_LAYOUT_NAME: test_layout
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     OUTPUT_PATH: simtools-output

@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika_simtel
     LABEL: test-production-South-for-trigger-rates
-    MODEL_VERSION: prod6
+    MODEL_VERSION: 6.0.0
     SITE: South
     ARRAY_LAYOUT_NAME: 4mst
     PRIMARY: proton
