@@ -8,7 +8,7 @@ StatisticalErrorEvaluator
 
 Example Usage
 -------------
-1. **Instantiate Evaluators**:
+1. Instantiate Evaluators:
     Create instances of `StatisticalErrorEvaluator` for each combination of
      zenith angles and offsets.
 
@@ -50,7 +50,7 @@ Example Usage
                )
            )
 
-2. **Calculate Metrics**:
+2. Calculate Metrics:
     For each evaluator instance, calculate metrics and scaled events.
 
     ```python
@@ -59,7 +59,7 @@ Example Usage
         evaluator.calculate_scaled_events()
 
 
-3. **Interpolate Results**:
+3. Interpolate Results:
     Create an InterpolationHandler and interpolate results for a specified grid point.
 
     ```python
