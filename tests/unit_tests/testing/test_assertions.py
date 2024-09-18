@@ -42,13 +42,11 @@ def test_assert_file_type_yaml(test_json_file, test_yaml_file, caplog):
 
 def test_assert_file_type_others(caplog):
 
-    # with caplog.at_level(logging.INFO):
-    #     assert assertions.assert_file_type(
-    #         "ecsv", "tests/resources/telescope_positions-South-ground.ecsv"
-    #     )
-    # assert (
-    #     "File type test is checking suffix only for tests/resources/"
-    #     "telescope_positions-South-ground.ecsv (suffix: ecsv)" in caplog.text
-    # )
-
-    assert assertions.assert_file_type("ecsv", "telescope_positions-South-groundecsv")
+    with caplog.at_level(logging.INFO):
+        assert assertions.assert_file_type(
+            "ecsv", "tests/resources/telescope_positions-South-ground.ecsv"
+        )
+    assert (
+        "File type test is checking suffix only for tests/resources/"
+        "telescope_positions-South-ground.ecsv (suffix: ecsv)" in caplog.text
+    )
