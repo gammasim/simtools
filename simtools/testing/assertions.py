@@ -2,6 +2,7 @@
 
 import json
 import logging
+from pathlib import Path
 
 import yaml
 
@@ -31,13 +32,11 @@ def assert_file_type(file_type, file_name):
         try:
             with open(file_name, encoding="utf-8") as file:
                 yaml.safe_load(file)
+            print("FFFF safe load", file_name)
             return True
         except (yaml.YAMLError, FileNotFoundError):
             return False
 
     # no dedicated tests for other file types, checking suffix only
     _logger.info(f"File type test is checking suffix only for {file_name} (suffix: {file_type}))")
-    if file_name.suffix[1:] == file_type:
-        return True
-
-    return False
+    return Path(file_name).suffix[1:] == file_type
