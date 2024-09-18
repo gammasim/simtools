@@ -9,7 +9,6 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
 
 
-# Mock fixture for StatisticalErrorEvaluator
 @pytest.fixture
 def mock_statistical_error_evaluator():
     metric_results = {
@@ -61,10 +60,10 @@ def test_configure_simulation(mock_statistical_error_evaluator):
     params = config.configure_simulation()
 
     assert isinstance(params, dict)
-    assert params.get("number_of_events") == 1e5
+    # given uncertainty 1/(1-0.01) * sum of event hist
+    assert params.get("number_of_events") == 606
 
 
-# Unit Test for calculating core scatter area
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 45.0, "elevation": 60.0}
     config = SimulationConfig(
@@ -80,7 +79,6 @@ def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
     assert core_area > 0
 
 
-# Unit Test for calculating viewcone
 def test_calculate_viewcone(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 15.0, "elevation": 25.0}
     config = SimulationConfig(
@@ -97,7 +95,6 @@ def test_calculate_viewcone(mock_statistical_error_evaluator):
     assert viewcone_params.get("view_angle") == 45.0
 
 
-# Unit Test for edge cases
 def test_edge_cases(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 0.0, "elevation": 0.0}
     config = SimulationConfig(grid_point, "A", "high_precision", "path/to/file.fits", "On-source")
@@ -105,4 +102,4 @@ def test_edge_cases(mock_statistical_error_evaluator):
 
     params = config.configure_simulation()
 
-    assert params.get("number_of_events") == 1e5
+    assert params.get("number_of_events") == 606
