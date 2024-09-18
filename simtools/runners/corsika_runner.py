@@ -200,6 +200,10 @@ class CorsikaRunner:
         cmd += f" -R {run_number}"
         cmd += ' -p "$CORSIKA_DATA"'
         if self._keep_seeds:
+            logging.warning(
+                "Using --keep-seeds option in corsika_autoinputs is not recommended. "
+                "It should only be used for testing purposes."
+            )
             cmd += " --keep-seeds"
         cmd += f" {input_tmp_file} | gzip > {log_file} 2>&1"
         cmd += " || exit 1\n"
