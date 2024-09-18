@@ -29,6 +29,8 @@ def assert_file_type(file_type, file_name):
         except (json.JSONDecodeError, FileNotFoundError):
             return False
     if file_type in ("yaml", "yml"):
+        if Path(file_name).suffix[1:] not in ("yaml", "yml"):
+            return False
         try:
             with open(file_name, encoding="utf-8") as file:
                 yaml.safe_load(file)
