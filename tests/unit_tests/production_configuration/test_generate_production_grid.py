@@ -79,5 +79,5 @@ def test_convert_coordinates():
     converted_points = grid_gen.convert_coordinates(grid_points)
     assert "ra" in converted_points[0]
     assert "dec" in converted_points[0]
-    assert isinstance(converted_points[0]["ra"] | (float, np.float64))
-    assert isinstance(converted_points[0]["dec"] | (float, np.float64))
+    assert isinstance(converted_points[0]["ra"], float | np.float64)
+    assert isinstance(converted_points[0]["dec"], float | np.float64)
