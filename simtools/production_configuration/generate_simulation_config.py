@@ -209,7 +209,7 @@ class SimulationConfig:
         self.evaluator.calculate_metrics()
         metric_results = self.evaluator.metric_results
 
-        # Calculate average uncertainty from metrics
+        # Calculate average uncertainty from metrics, use 0.1 as default if not found
         error_eff_area = metric_results.get("error_eff_area", {"uncertainties": [0.1]})
         avg_uncertainty = np.mean(error_eff_area["uncertainties"])
 
