@@ -6,7 +6,7 @@ import yaml
 from simtools.production_configuration.derive_computing_resources import ResourceEstimator
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_data():
     """Fixture to provide sample data for testing."""
     grid_point_config = {
