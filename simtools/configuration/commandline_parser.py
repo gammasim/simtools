@@ -405,7 +405,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "view_cone": {
                 "help": (
                     "View cone radius for primary arrival directions "
-                    "(min/max value, e.g. '0 deg 5 deg')."
+                    "(min/max value, e.g. '0 deg 10 deg')."
                 ),
                 "type": CommandLineParser.parse_quantity_pair,
                 "required": False,
