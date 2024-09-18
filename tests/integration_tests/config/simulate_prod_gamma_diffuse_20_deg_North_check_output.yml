@@ -1,11 +1,11 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
-  TEST_NAME: gamma_20_deg_south_check_output
+  TEST_NAME: gamma_diffuse_20_deg_north_check_output
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika_simtel
     LABEL: check_output
     MODEL_VERSION: 6.0.0
-    SITE: South
+    SITE: North
     ARRAY_LAYOUT_NAME: alpha
     PRIMARY: gamma
     RUN_NUMBER_START: 1
@@ -13,8 +13,9 @@ CTA_SIMPIPE:
     AZIMUTH_ANGLE: South
     ZENITH_ANGLE: 20
     NSHOW: 5
+    VIEW_CONE: "0 deg 10 deg"
     ENERGY_RANGE: "100 GeV 500 GeV"
-    CORE_SCATTER: "10 700 m"
+    CORE_SCATTER: "20 500 m"
     DATA_DIRECTORY: simtools-output
     OUTPUT_PATH: simtools-output
     SIM_TELARRAY_SEEDS: "1745,290"
@@ -23,9 +24,9 @@ CTA_SIMPIPE:
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-          directory_for_grid_upload/run000001_gamma_za20deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
+        directory_for_grid_upload/run000001_gamma_diffuse_za20deg_azm180deg_North_alpha_check_output.log_hist.tar.gz
     - OUTPUT_FILE: |
-        directory_for_grid_upload/run000001_gamma_za20deg_azm180deg_South_alpha_check_output.zst
+        directory_for_grid_upload/run000001_gamma_diffuse_za20deg_azm180deg_North_alpha_check_output.zst
     - EXPECTED_OUTPUT:
         # The mean trigger time for all telescopes should be
         # between 0 and 50 ns (very loose requirement)
