@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import QTable
 
-import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.model.telescope_model import TelescopeModel
@@ -60,7 +59,6 @@ class RayTracing:
         simtel_path,
         label=None,
         config_data=None,
-        config_file=None,
     ):
         """Initialize RayTracing class."""
         self._logger = logging.getLogger(__name__)
@@ -72,7 +70,7 @@ class RayTracing:
         self._telescope_model = self._validate_telescope_model(telescope_model)
 
         self.config = value_conversion.validate_config_data(
-            gen.collect_data_from_file_or_dict(config_file, config_data),
+            config_data,
             SimulatorRayTracing.ray_tracing_default_configuration(False),
         )
 
