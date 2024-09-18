@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 def compare_files(file1, file2, tolerance=1.0e-5):
     """
-    Compare two files of file type ecsv or json.
+    Compare two files of file type ecsv, json or yaml.
 
     Parameters
     ----------
