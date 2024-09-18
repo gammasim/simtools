@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
@@ -82,7 +81,3 @@ def test_convert_coordinates():
     assert "dec" in converted_points[0]
     assert isinstance(converted_points[0]["ra"] | (float, np.float64))
     assert isinstance(converted_points[0]["dec"] | (float, np.float64))
-
-
-if __name__ == "__main__":
-    pytest.main()
