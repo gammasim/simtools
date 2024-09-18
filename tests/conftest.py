@@ -342,7 +342,7 @@ def corsika_config_data(model_version):
         "event_number_first_shower": 1,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0.0 * u.deg,
-        "view_cone": (0.0 * u.deg, 5.0 * u.deg),
+        "view_cone": (0.0 * u.deg, 10.0 * u.deg),
         "energy_range": (10.0 * u.GeV, 10.0 * u.TeV),
         "eslope": -2,
         "core_scatter": (10, 1400.0 * u.m),

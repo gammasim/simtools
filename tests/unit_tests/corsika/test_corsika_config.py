@@ -354,7 +354,7 @@ def test_generate_corsika_input_file_with_test_seeds(corsika_config_mock_array_m
 
 
 def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handler):
-    file_name = "proton_South_test_layout_za020-azm000deg_cone0-5_test-corsika-config"
+    file_name = "proton_South_test_layout_za020-azm000deg_cone0-10_test-corsika-config"
 
     assert (
         corsika_config_mock_array_model.get_corsika_config_file_name("config_tmp", run_number=1)
@@ -375,7 +375,7 @@ def test_get_corsika_config_file_name(corsika_config_mock_array_model, io_handle
     # The test below includes the placeholder XXXXXX for the run number because
     # that is the way we get the run number later in the CORSIKA input file with zero padding.
     assert corsika_config_mock_array_model.get_corsika_config_file_name("output_generic") == (
-        "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-5_test"
+        "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-10_test"
         "-corsika-config_South_test_layout_test-corsika-config.zst"
     )
     assert (
@@ -390,7 +390,7 @@ def test_set_output_file_and_directory(corsika_config_mock_array_model):
     cc = corsika_config_mock_array_model
     output_file = cc.set_output_file_and_directory()
     assert str(output_file) == (
-        "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-5_test"
+        "runXXXXXX_proton_South_test_layout_za020-azm000deg_cone0-10_test"
         "-corsika-config_South_test_layout_test-corsika-config.zst"
     )
     assert isinstance(cc.config_file_path, pathlib.Path)
