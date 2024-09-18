@@ -106,7 +106,7 @@ def check_expected_output(file, expected_output):
             assert len(item_to_check[key]) > 0, f"No data found for {key}"
             assert (
                 value[0] < np.mean(item_to_check[key]) < value[1]
-            ), f"Mean of {key} is not in the expected range"
+            ), f"Mean of {key} is not in the expected range, got {np.mean(item_to_check[key])}"
 
     check_n_showers_and_energy_range(file=file)
     check_telescope_info(file=file, expected_output=expected_output)
