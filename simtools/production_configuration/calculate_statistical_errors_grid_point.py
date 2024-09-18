@@ -58,7 +58,6 @@ Example Usage
         evaluator.calculate_metrics()
         evaluator.calculate_scaled_events()
 
-
 3. Interpolate Results:
     Create an InterpolationHandler and interpolate results for a specified grid point.
 
@@ -69,7 +68,6 @@ Example Usage
     query_points = np.array([grid_point])
     scaled_events = interpolation_handler.interpolate(query_points)
     print(f"Scaled events for grid point {grid_point}: {scaled_events}")
-
 """
 
 import logging
