@@ -50,3 +50,7 @@ def test_assert_file_type_others(caplog):
         "File type test is checking suffix only for tests/resources/"
         "telescope_positions-South-ground.ecsv (suffix: ecsv)" in caplog.text
     )
+
+
+def test_assert_no_suffix():
+    assert not assertions.assert_file_type("yml", "tests/resources/does_not_exit_yml")
