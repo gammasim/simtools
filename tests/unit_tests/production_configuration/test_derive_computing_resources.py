@@ -5,6 +5,10 @@ import yaml
 
 from simtools.production_configuration.derive_computing_resources import ResourceEstimator
 
+BUILTINS_OPEN = "builtins.open"
+VALIDATE_SITE_NAME = "simtools.utils.names.validate_site_name"
+DUMMY_YAML_FILE = "dummy.yaml"
+
 
 @pytest.fixture
 def sample_data():
@@ -62,14 +66,14 @@ def test_estimate_resources_interpolation(sample_data, file_data, monkeypatch):
     """Test resource estimation with interpolation."""
     grid_point_config, simulation_params, existing_data, _ = sample_data
 
-    monkeypatch.setattr("builtins.open", mock_open(read_data=file_data))
-    monkeypatch.setattr("simtools.utils.names.validate_site_name", lambda x: "example_site")
+    monkeypatch.setattr(BUILTINS_OPEN, mock_open(read_data=file_data))
+    monkeypatch.setattr(VALIDATE_SITE_NAME, lambda x: "example_site")
 
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
         existing_data=existing_data,
-        lookup_file="dummy.yaml",
+        lookup_file=DUMMY_YAML_FILE,
     )
 
     expected_resources = {"compute_hours": 5000.0, "storage_gb": 500.0}
@@ -96,14 +100,14 @@ def test_guess_resources_per_event(sample_data, file_data, monkeypatch):
     """Test resource estimation based on guessed resources per event."""
     grid_point_config, simulation_params, _, lookup_table = sample_data
 
-    monkeypatch.setattr("builtins.open", mock_open(read_data=file_data))
-    monkeypatch.setattr("simtools.utils.names.validate_site_name", lambda x: "example_site")
+    monkeypatch.setattr(BUILTINS_OPEN, mock_open(read_data=file_data))
+    monkeypatch.setattr(VALIDATE_SITE_NAME, lambda x: "example_site")
 
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
         existing_data=None,
-        lookup_file="dummy.yaml",
+        lookup_file=DUMMY_YAML_FILE,
     )
 
     expected_resources = {"compute_hours": 2e3, "storage_gb": 2e2}
@@ -130,11 +134,13 @@ def test_load_lookup_table(sample_data, file_data, monkeypatch):
     """Test loading of the lookup table from a YAML file."""
     grid_point_config, simulation_params, _, lookup_table = sample_data
 
-    monkeypatch.setattr("builtins.open", mock_open(read_data=file_data))
-    monkeypatch.setattr("simtools.utils.names.validate_site_name", lambda x: "example_site")
+    monkeypatch.setattr(BUILTINS_OPEN, mock_open(read_data=file_data))
+    monkeypatch.setattr(VALIDATE_SITE_NAME, lambda x: "example_site")
 
     estimator = ResourceEstimator(
-        grid_point=grid_point_config, simulation_params=simulation_params, lookup_file="dummy.yaml"
+        grid_point=grid_point_config,
+        simulation_params=simulation_params,
+        lookup_file=DUMMY_YAML_FILE,
     )
 
     assert estimator.lookup_table == lookup_table
@@ -158,14 +164,14 @@ def test_interpolate_resources(sample_data, file_data, monkeypatch):
     """Test direct interpolation of resources from existing data."""
     grid_point_config, simulation_params, existing_data, _ = sample_data
 
-    monkeypatch.setattr("builtins.open", mock_open(read_data=file_data))
-    monkeypatch.setattr("simtools.utils.names.validate_site_name", lambda x: "example_site")
+    monkeypatch.setattr(BUILTINS_OPEN, mock_open(read_data=file_data))
+    monkeypatch.setattr(VALIDATE_SITE_NAME, lambda x: "example_site")
 
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
         existing_data=existing_data,
-        lookup_file="dummy.yaml",
+        lookup_file=DUMMY_YAML_FILE,
     )
 
     number_of_events = 1e9
