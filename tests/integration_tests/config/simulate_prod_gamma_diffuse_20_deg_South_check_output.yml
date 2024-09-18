@@ -30,12 +30,10 @@ CTA_SIMPIPE:
     - EXPECTED_OUTPUT:
         # The mean trigger time for all telescopes should be
         # between 0 and 50 ns (very loose requirement)
-        max_trigger_time: 50
+        trigger_time: [0, 50]
         # The mean number of photoelectrons for telescopes with a signal
         # should be between 20 and 1000 (very loose requirement)
-        min_pe: 20
-        max_pe: 1000
+        pe_sum: [20, 1000]
         # The mean number of photons per telescope after atmospheric absorption and QE
         # should be between 100 and 1000 (very loose requirement)
-        min_photons: 100
-        max_photons: 1000
+        photons: [100, 1000]
