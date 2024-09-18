@@ -49,10 +49,10 @@ def test_check_run_result(simtel_runner):
 def test_get_power_law_for_sim_telarray():
     from simtools.corsika.primary_particle import PrimaryParticle
 
-    gamma = PrimaryParticle(name="gamma")
-    electron = PrimaryParticle(name="electron")
-    proton = PrimaryParticle(name="proton")
-    helium = PrimaryParticle(name="helium")
+    gamma = PrimaryParticle(particle_id="gamma", particle_id_type="common_name")
+    electron = PrimaryParticle(particle_id="electron", particle_id_type="common_name")
+    proton = PrimaryParticle(particle_id="proton", particle_id_type="common_name")
+    helium = PrimaryParticle(particle_id="helium", particle_id_type="common_name")
     assert SimulatorArray.get_power_law_for_sim_telarray(gamma) == pytest.approx(2.5)
     assert SimulatorArray.get_power_law_for_sim_telarray(electron) == pytest.approx(3.3)
     assert SimulatorArray.get_power_law_for_sim_telarray(proton) == pytest.approx(2.68)
