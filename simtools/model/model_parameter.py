@@ -31,7 +31,7 @@ class ModelParameter:
     db: DatabaseHandler
         Database handler.
     model_version: str
-        Version of the model (ex. prod5).
+        Version of the model (ex. 5.0.0).
     site: str
         Site name (e.g., South or North).
     array_element_name: str
@@ -68,7 +68,7 @@ class ModelParameter:
         self._derived = None
         self.collection = collection
         self.label = label
-        self.model_version = self.db.model_version(model_version)
+        self.model_version = model_version
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
             names.validate_array_element_name(

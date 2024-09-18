@@ -247,7 +247,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "--model_version",
             help="model version",
             type=str,
-            default="Released",
+            default=None,
         )
         if any(
             option in model_options for option in ["site", "telescope", "layout", "layout_file"]

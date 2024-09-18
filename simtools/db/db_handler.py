@@ -6,7 +6,6 @@ from pathlib import Path
 from threading import Lock
 
 import gridfs
-import pymongo
 from bson.objectid import ObjectId
 from packaging.version import Version
 from pymongo import MongoClient
@@ -112,7 +111,7 @@ class DatabaseHandler:
 
         This is indicated by adding "LATEST" to the name of the simulation model database
         (field "db_simulation_model" in the database configuration dictionary).
-        Only release versions are considered, pre-releases are ignored.
+        Only released versions are considered, pre-releases are ignored.
 
         Raises
         ------
@@ -131,7 +130,7 @@ class DatabaseHandler:
         filtered_list_of_db_names = [s for s in list_of_db_names if s.startswith(prefix)]
         versioned_strings = []
         version_pattern = re.compile(
-            rf"{re.escape(prefix)}v(\d+)-(\d+)-(\d+)(?:-([a-zA-Z0-9_.]+))?"
+            rf"{re.escape(prefix)}v?(\d+)-(\d+)-(\d+)(?:-([a-zA-Z0-9_.]+))?"
         )
 
         for s in filtered_list_of_db_names:
@@ -762,14 +761,14 @@ class DatabaseHandler:
             the name of the collection to copy from
         query: dict
             A dictionary with a query to search for documents to copy.
-            For example, the query below would copy all entries of prod4 version
+            For example, the query below would copy all entries of version 6.0.0
             from telescope LSTN-01 to "db_to_copy_to".
 
             .. code-block:: python
 
                 query = {
                     "instrument": "LSTN-01",
-                    "version": "prod6",
+                    "version": "6.0.0",
                 }
         db_to_copy_to: str
             The name of the DB to copy to.
@@ -813,14 +812,14 @@ class DatabaseHandler:
             the name of the collection to copy from
         query: dict
             A dictionary listing the fields/values to delete.
-            For example, the query below would delete the entire prod6 version
+            For example, the query below would delete the entire version 6.0.0
             from telescope LSTN-01.
 
             .. code-block:: python
 
                 query = {
                     "instrument": "LSTN-01",
-                    "version": "prod6",
+                    "version": "6.0.0",
                 }
 
         """
@@ -1038,29 +1037,7 @@ class DatabaseHandler:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
 
-        self._reset_parameter_cache(site, array_element_name, version, db_name)
-
-    def add_tagged_version(
-        self,
-        tags,
-        db_name=None,
-    ):
-        """
-        Set the tag of the "Released" or "Latest" version of the MC Model.
-
-        Parameters
-        ----------
-        released_version: str
-            The version name to set as "Released"
-        tags: dict
-            The version tags consisting of tag name and version name.
-        db_name: str
-            Database name
-
-        """
-        collection = DatabaseHandler.db_client[self._get_db_name(db_name)]["metadata"]
-        self._logger.debug(f"Adding tags {tags} to DB {self._get_db_name(db_name)}")
-        collection.insert_one({"Entry": "Simulation-Model-Tags", "Tags": tags})
+        self._reset_parameter_cache(site, array_element_name, version)
 
     def _get_db_name(self, db_name=None):
         """
@@ -1078,11 +1055,12 @@ class DatabaseHandler:
         """
         return self.mongo_db_config["db_simulation_model"] if db_name is None else db_name
 
-    def model_version(self, version="Released", db_name=None):
+    def model_version(self, version, db_name=None):
         """
-        Return the model version for the requested tag.
+        Return model version and check that it is valid.
 
-        Resolve the "Released" or "Latest" tag to the actual version name.
+        Queries the database for all available model versions and check if the
+        requested version is valid.
 
         Parameters
         ----------
@@ -1099,23 +1077,14 @@ class DatabaseHandler:
         Raises
         ------
         ValueError
-            if version not valid. Valid versions are: 'Released' and 'Latest'.
+            if version not valid.
 
         """
-        _all_versions = self.get_all_versions()
+        _all_versions = self.get_all_versions(db_name=db_name)
         if version in _all_versions:
             return version
         if len(_all_versions) == 0:
             return None
-
-        collection = DatabaseHandler.db_client[self._get_db_name(db_name)].metadata
-        query = {"Entry": "Simulation-Model-Tags"}
-
-        tags = collection.find(query).sort("_id", pymongo.DESCENDING)[0]
-        # case insensitive search
-        for key in tags["Tags"]:
-            if version.lower() == key.lower():
-                return tags["Tags"][key]["Value"]
 
         raise ValueError(
             f"Invalid model version {version} in DB {self._get_db_name(db_name)} "
@@ -1170,6 +1139,7 @@ class DatabaseHandler:
         parameter=None,
         array_element_name=None,
         site=None,
+        db_name=None,
         collection=None,
     ):
         """
@@ -1183,6 +1153,8 @@ class DatabaseHandler:
             Which array element to get the versions of (in case "collection_name" is not "sites")
         site: str
             Site name.
+        db_name: str
+            Database name.
         collection_name: str
             The name of the collection in which to update the parameter.
 
@@ -1197,7 +1169,7 @@ class DatabaseHandler:
             If key to collection_name is not valid.
 
         """
-        db_name = self._get_db_name()
+        db_name = self._get_db_name() if db_name is None else db_name
         if not db_name:
             self._logger.warning("No database name defined to determine list of model versions")
             return []
@@ -1369,7 +1341,7 @@ class DatabaseHandler:
 
         raise ValueError("Invalid database name.")
 
-    def _parameter_cache_key(self, site, array_element_name, model_version, db_name=None):
+    def _parameter_cache_key(self, site, array_element_name, model_version):
         """
         Create a cache key for the parameter cache dictionaries.
 
@@ -1381,8 +1353,6 @@ class DatabaseHandler:
             Array element name.
         model_version: str
             Model version.
-        db_name: str
-            Database name.
 
         Returns
         -------
@@ -1394,10 +1364,10 @@ class DatabaseHandler:
             parts.append(site)
         if array_element_name:
             parts.append(array_element_name)
-        parts.append(self.model_version(model_version, db_name=db_name))
+        parts.append(model_version)
         return "-".join(parts)
 
-    def _reset_parameter_cache(self, site, array_element_name, model_version, db_name=None):
+    def _reset_parameter_cache(self, site, array_element_name, model_version):
         """
         Reset the cache for the parameters.
 
@@ -1409,11 +1379,9 @@ class DatabaseHandler:
             Array element name.
         model_version: str
             Model version.
-        db_name: str
-            Database name.
         """
         self._logger.debug(f"Resetting cache for {site} {array_element_name} {model_version}")
-        _cache_key = self._parameter_cache_key(site, array_element_name, model_version, db_name)
+        _cache_key = self._parameter_cache_key(site, array_element_name, model_version)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
 

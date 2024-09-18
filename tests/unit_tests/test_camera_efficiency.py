@@ -17,18 +17,18 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture()
-def config_data_lst():
+def config_data_lst(model_version_prod5):
     return {
         "telescope": "LSTN-01",
         "site": "North",
-        "model_version": "Prod5",
+        "model_version": model_version_prod5,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0 * u.deg,
     }
 
 
 @pytest.fixture()
-def camera_efficiency_lst(io_handler, db_config, model_version, simtel_path, config_data_lst):
+def camera_efficiency_lst(io_handler, db_config, simtel_path, config_data_lst):
     return CameraEfficiency(
         config_data=config_data_lst,
         db_config=db_config,

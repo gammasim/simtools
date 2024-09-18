@@ -23,7 +23,7 @@ class SimtelConfigWriter:
     site: str
         South or North.
     model_version: str
-        Version of the model (ex. prod5).
+        Model version.
     telescope_model_name: str
         Telescope model name.
     layout_name: str
@@ -186,7 +186,7 @@ class SimtelConfigWriter:
                 file.write(f"%{tel_name}\n")
                 file.write(f"#elif TELESCOPE == {count + 1}\n\n")
                 file.write(f"# include <{tel_config_file}>\n\n")
-            file.write("#endif \n\n")
+            file.write("#endif \n\n")  # configuration files need to end with \n\n
 
     def write_single_mirror_list_file(
         self, mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False
