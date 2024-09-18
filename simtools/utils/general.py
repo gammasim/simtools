@@ -22,7 +22,6 @@ __all__ = [
     "InvalidConfigDataError",
     "get_log_level_from_user",
     "remove_substring_recursively_from_dict",
-    "separate_args_and_config_data",
     "set_default_kwargs",
     "get_log_excerpt",
     "sort_arrays",
@@ -368,35 +367,6 @@ def copy_as_list(value):
         return list(value)
     except TypeError:
         return [value]
-
-
-def separate_args_and_config_data(expected_args, **kwargs):
-    """
-    Separate kwargs into arguments expected for class instancing class and the config_data dict.
-
-    This function is specific for methods from_kwargs in classes which use the validate_config_data
-    system.
-
-    Parameters
-    ----------
-    expected_args: list of str
-        List of arguments expected for the class.
-    **kwargs
-
-    Returns
-    -------
-    dict, dict
-        A dict with the args collected and another one with config_data.
-    """
-    args = {}
-    config_data = {}
-    for key, value in kwargs.items():
-        if key in expected_args:
-            args[key] = value
-        else:
-            config_data[key] = value
-
-    return args, config_data
 
 
 def program_is_executable(program):

@@ -123,33 +123,6 @@ class RayTracing:
         self._output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
         self._file_results = self._output_directory.joinpath("results").joinpath(file_name_results)
 
-    @classmethod
-    def from_kwargs(cls, **kwargs):
-        """
-        Build a RayTracing object from kwargs only.
-
-        The configurable parameters can be given as kwargs, instead of using the
-        config_data or config_file arguments.
-
-        Parameters
-        ----------
-        kwargs
-            Containing the arguments and the configurable parameters.
-
-        Returns
-        -------
-        Instance of this class.
-        """
-        args, config_data = gen.separate_args_and_config_data(
-            expected_args=[
-                "telescope_model",
-                "label",
-                "simtel_path",
-            ],
-            **kwargs,
-        )
-        return cls(**args, config_data=config_data)
-
     def __repr__(self):
         """Return string representation of RayTracing class."""
         return f"RayTracing(label={self.label})\n"

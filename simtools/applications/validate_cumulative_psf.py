@@ -146,12 +146,14 @@ def main():  # noqa: D103
     if args_dict.get("telescope_model_file"):
         tel_model.change_multiple_parameters_from_file(args_dict["telescope_model_file"])
 
-    ray = RayTracing.from_kwargs(
+    ray = RayTracing(
         telescope_model=tel_model,
         simtel_path=args_dict["simtel_path"],
-        source_distance=args_dict["src_distance"] * u.km,
-        zenith_angle=args_dict["zenith"] * u.deg,
-        off_axis_angle=[0.0 * u.deg],
+        config_data={
+            "source_distance": args_dict["src_distance"] * u.km,
+            "zenith_angle": args_dict["zenith"] * u.deg,
+            "off_axis_angle": [0.0 * u.deg],
+        },
     )
 
     ray.simulate(test=args_dict["test"], force=False)
