@@ -32,7 +32,6 @@ def assert_file_type(file_type, file_name):
         try:
             with open(file_name, encoding="utf-8") as file:
                 yaml.safe_load(file)
-            print("FFFF safe load", file_name)
             return True
         except (yaml.YAMLError, FileNotFoundError):
             return False
