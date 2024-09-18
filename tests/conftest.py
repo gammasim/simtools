@@ -348,6 +348,7 @@ def corsika_config_data(model_version):
         "core_scatter": (10, 1400.0 * u.m),
         "primary": "proton",
         "primary_id_type": "common_name",
+        "correct_for_b_field_alignment": True,
         "data_directory": "simtools-output",
         "model_version": model_version,
     }
@@ -372,6 +373,16 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data):
     array_model = mock.MagicMock()
     array_model.layout_name = "test_layout"
     array_model.corsika_config.primary = "proton"
+    array_model.site_model = mock.MagicMock()
+    array_model.site_model._parameters = {"geomag_rotation": -4.533}
+
+    # Define get_parameter_value() to behave as expected
+    def mock_get_parameter_value(par_name):
+        return array_model.site_model._parameters[par_name]
+
+    # Set the mock behavior
+    array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
+
     corsika_config = CorsikaConfig(
         array_model=array_model,
         label="test-corsika-config",
@@ -379,7 +390,7 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data):
         db_config=db_config,
     )
     corsika_config.run_number = 1
-    corsika_config._set_primary_particle({"primary": "gamma"})
+    # corsika_config._set_primary_particle({"primary": "gamma"})
     corsika_config.array_model.site = "South"
     return corsika_config
 
