@@ -47,6 +47,6 @@ def test_assert_file_type_others(caplog):
             "ecsv", "tests/resources/telescope_positions-South-ground.ecsv"
         )
     assert (
-        "File type test is checking suffix only for tests/resources/telescope_positions-South-ground.ecsv (suffix: ecsv)"
-        in caplog.text
+        "File type test is checking suffix only for tests/resources/"
+        "telescope_positions-South-ground.ecsv (suffix: ecsv)" in caplog.text
     )
