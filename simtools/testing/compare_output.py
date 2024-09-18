@@ -1,6 +1,7 @@
 """Compare application output to reference output."""
 
 import logging
+from pathlib import Path
 
 import numpy as np
 from astropy.table import Table
@@ -29,18 +30,22 @@ def compare_files(file1, file2, tolerance=1.0e-5):
         True if the files are equal, False otherwise.
 
     """
-    if str(file1).endswith(".ecsv") and str(file2).endswith(".ecsv"):
+    _file1_suffix = Path(file1).suffix
+    _file2_suffix = Path(file2).suffix
+    if _file1_suffix != _file2_suffix:
+        raise ValueError(f"File suffixes do not match: {file1} and {file2}")
+    if _file1_suffix == ".ecsv":
         return compare_ecsv_files(file1, file2, tolerance)
-    if str(file1).endswith(".json") and str(file2).endswith(".json"):
-        return compare_json_files(file1, file2)
+    if _file1_suffix in (".json", ".yaml", ".yml"):
+        return compare_json_or_yaml_files(file1, file2)
 
     _logger.warning(f"Unknown file type for files: {file1} and {file2}")
     return False
 
 
-def compare_json_files(file1, file2, tolerance=1.0e-2):
+def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     """
-    Compare two json files.
+    Compare two json or yaml files.
 
     Take into account float comparison for sim_telarray string-embedded floats.
 
@@ -62,7 +67,7 @@ def compare_json_files(file1, file2, tolerance=1.0e-2):
     data1 = gen.collect_data_from_file_or_dict(file1, in_dict=None)
     data2 = gen.collect_data_from_file_or_dict(file2, in_dict=None)
 
-    _logger.debug(f"Comparing json files: {file1} and {file2}")
+    _logger.debug(f"Comparing json/yaml files: {file1} and {file2}")
 
     if data1 == data2:
         return True
