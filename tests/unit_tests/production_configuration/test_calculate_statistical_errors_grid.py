@@ -98,3 +98,70 @@ def test_interpolation_handler(test_fits_file):
     query_point = np.array([[1e-3, 180, 40, 0, 0.5]])
     interpolated_threshold = handler.interpolate_energy_threshold(query_point)
     assert isinstance(interpolated_threshold, float)
+
+
+def test_calculate_scaled_events(test_fits_file):
+    """Test the calculation of scaled events for a specific grid point."""
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, file_type="On-source")
+
+    evaluator.grid_point = (1.5, 180, 45, 0, 0.5)
+
+    evaluator.data = {
+        "simulated_event_histogram": np.array([100, 200, 300]),
+    }
+    evaluator.error_eff_area = {
+        "relative_errors": np.array([0.1, 0.2, 0.3]),
+    }
+    evaluator.metrics = {
+        "error_eff_area": np.array([0.05, 0.1, 0.15]),
+    }
+
+    evaluator.create_bin_edges = lambda: np.array([1.0, 2.0, 3.0])
+
+    scaled_events = evaluator.calculate_scaled_events()
+
+    assert isinstance(scaled_events, float)
+    assert scaled_events == pytest.approx(200.0, rel=1e-2)
+
+
+def test_calculate_metrics(test_fits_file):
+    """Test the calculation of metrics."""
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, file_type="On-source")
+
+    # Set metrics and mock errors
+    evaluator.metrics = {
+        "error_eff_area": 0.1,
+        "error_sig_eff_gh": 0.2,
+        "error_energy_estimate_bdt_reg_tree": 0.3,
+        "error_gamma_ray_psf": 0.4,
+        "error_image_template_methods": 0.5,
+    }
+
+    evaluator.calculate_error_eff_area = lambda: {"relative_errors": np.array([0.1, 0.2, 0.15])}
+    evaluator.calculate_error_sig_eff_gh = lambda: 0.22
+    evaluator.calculate_error_energy_estimate_bdt_reg_tree = lambda: (
+        0.33,
+        [0.1, 0.2],
+        [0.01, 0.02],
+    )
+    evaluator.calculate_error_gamma_ray_psf = lambda: 0.43
+    evaluator.calculate_error_image_template_methods = lambda: 0.53
+
+    evaluator.calculate_metrics()
+
+    assert evaluator.error_eff_area["relative_errors"] == pytest.approx(
+        np.array([0.1, 0.2, 0.15]), rel=1e-2
+    )
+    assert evaluator.error_sig_eff_gh == pytest.approx(0.22, rel=1e-2)
+    assert evaluator.error_energy_estimate_bdt_reg_tree == pytest.approx(0.33, rel=1e-2)
+    assert evaluator.error_gamma_ray_psf == pytest.approx(0.43, rel=1e-2)
+    assert evaluator.error_image_template_methods == pytest.approx(0.53, rel=1e-2)
+
+    expected_results = {
+        "error_eff_area": evaluator.error_eff_area,
+        "error_sig_eff_gh": evaluator.error_sig_eff_gh,
+        "error_energy_estimate_bdt_reg_tree": evaluator.error_energy_estimate_bdt_reg_tree,
+        "error_gamma_ray_psf": evaluator.error_gamma_ray_psf,
+        "error_image_template_methods": evaluator.error_image_template_methods,
+    }
+    assert evaluator.metric_results == expected_results
