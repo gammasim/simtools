@@ -70,7 +70,7 @@ def test_adjust_axis_range():
 def test_convert_altaz_to_radec():
     alt, az = 45.0, 30.0
     radec = grid_gen.convert_altaz_to_radec(alt, az)
-    assert isinstance(radec | SkyCoord)
+    assert isinstance(radec, SkyCoord)
     assert np.isclose(radec.ra.deg, 24.322823, atol=1e-5)
     assert np.isclose(radec.dec.deg, 61.203, atol=1e-5)
 
