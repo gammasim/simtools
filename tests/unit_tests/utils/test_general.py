@@ -121,15 +121,6 @@ def test_get_file_age(tmp_test_directory) -> None:
         gen.get_file_age(tmp_test_directory / "nonexistent_file.txt")
 
 
-def test_separate_args_and_config_data() -> None:
-    # Test the function "separate_args_and_config_data"
-    expected_args = ["arg1", "arg2"]
-    kwargs = {"arg1": 1, "arg2": 2, "arg3": 3}
-    args, config_data = gen.separate_args_and_config_data(expected_args, **kwargs)
-    assert args == {"arg1": 1, "arg2": 2}
-    assert config_data == {"arg3": 3}
-
-
 def test_get_log_excerpt(tmp_test_directory) -> None:
     log_file = tmp_test_directory / "log.txt"
     with open(log_file, "w", encoding="utf-8") as f:
