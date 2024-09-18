@@ -49,6 +49,7 @@ Example Usage
                    grid_point=(1, 180, zenith, 0, offset_value),
                )
            )
+    ```
 
 2. Calculate Metrics:
     For each evaluator instance, calculate metrics and scaled events.
@@ -57,6 +58,7 @@ Example Usage
     for evaluator in evaluator_instances:
         evaluator.calculate_metrics()
         evaluator.calculate_scaled_events()
+    ```
 
 3. Interpolate Results:
     Create an InterpolationHandler and interpolate results for a specified grid point.
@@ -68,6 +70,7 @@ Example Usage
     query_points = np.array([grid_point])
     scaled_events = interpolation_handler.interpolate(query_points)
     print(f"Scaled events for grid point {grid_point}: {scaled_events}")
+    ```
 """
 
 import logging
