@@ -390,7 +390,6 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data):
         db_config=db_config,
     )
     corsika_config.run_number = 1
-    # corsika_config._set_primary_particle({"primary": "gamma"})
     corsika_config.array_model.site = "South"
     return corsika_config
 
