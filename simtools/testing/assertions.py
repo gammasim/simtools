@@ -45,9 +45,88 @@ def assert_file_type(file_type, file_name):
     return Path(file_name).suffix[1:] == file_type
 
 
-def check_expected_output(file, expected_output):
+def assert_n_showers_and_energy_range(file):
     """
-    Check if the expected output is present in the sim_telarray file.
+    Assert #showers and energy range.
+
+    The number of showers should be consistent with the required one (up to 1% tolerance)
+    and the energies simulated are required to be within the configured ones.
+
+    Parameters
+    ----------
+    file: Path
+        Path to the sim_telarray file.
+
+    """
+    from eventio.simtel.simtelfile import SimTelFile  # pylint: disable=import-outside-toplevel
+
+    simulated_energies = []
+    simulation_config = {}
+    with SimTelFile(file) as f:
+        simulation_config = f.mc_run_headers[0]
+        for event in f.iter_mc_events():
+            simulated_energies.append(event["mc_shower"]["energy"])
+
+    # The relative tolerance is set to 1% because ~0.5% shower simulations do not
+    # succeed, without resulting in an error. This tolerance therefore is not an issue.
+    consistent_n_showers = np.isclose(
+        len(np.unique(simulated_energies)), simulation_config["n_showers"], rtol=1e-2
+    )
+    consistent_energy_range = all(
+        simulation_config["E_range"][0] <= energy <= simulation_config["E_range"][1]
+        for energy in simulated_energies
+    )
+
+    return consistent_n_showers and consistent_energy_range
+
+
+def assert_expected_output(file, expected_output):
+    """
+    Assert that the expected output is present in the sim_telarray file.
+
+    Parameters
+    ----------
+    file: Path
+        Path to the sim_telarray file.
+    expected_output: dict
+        Expected output values.
+
+    """
+    from eventio.simtel.simtelfile import SimTelFile  # pylint: disable=import-outside-toplevel
+
+    item_to_check = defaultdict(list)
+    with SimTelFile(file) as f:
+        for event in f:
+            if "pe_sum" in expected_output:
+                item_to_check["pe_sum"].extend(
+                    event["photoelectron_sums"]["n_pe"][event["photoelectron_sums"]["n_pe"] > 0]
+                )
+            if "trigger_time" in expected_output:
+                item_to_check["trigger_time"].extend(event["trigger_information"]["trigger_times"])
+            if "photons" in expected_output:
+                item_to_check["photons"].extend(
+                    event["photoelectron_sums"]["photons_atm_qe"][
+                        event["photoelectron_sums"]["photons"] > 0
+                    ]
+                )
+
+    for key, value in expected_output.items():
+        if len(item_to_check[key]) == 0:
+            _logger.error(f"No data found for {key}")
+            return False
+
+        if not value[0] < np.mean(item_to_check[key]) < value[1]:
+            _logger.error(
+                f"Mean of {key} is not in the expected range, got {np.mean(item_to_check[key])}"
+            )
+            return False
+
+    return True
+
+
+def check_output_from_sim_telarray(file, expected_output):
+    """
+    Check that the sim_telarray simulation result is reasonable and matches the expected output.
 
     Parameters
     ----------
@@ -67,46 +146,6 @@ def check_expected_output(file, expected_output):
             f"(i.e., a sim_telarray file)."
         )
 
-    from eventio.simtel.simtelfile import SimTelFile  # pylint: disable=import-outside-toplevel
-
-    def check_n_showers_and_energy_range(file):
-        simulated_energies = []
-        simulation_config = {}
-        with SimTelFile(file) as f:
-            simulation_config = f.mc_run_headers[0]
-            for event in f.iter_mc_events():
-                simulated_energies.append(event["mc_shower"]["energy"])
-
-        # The relative tolerance is set to 1% because ~0.5% shower simulations do not
-        # succeed, without resulting in an error. This tolerance therefore is not an issue.
-        assert np.isclose(
-            len(np.unique(simulated_energies)), simulation_config["n_showers"], rtol=1e-2
-        )
-        assert all(
-            simulation_config["E_range"][0] <= energy <= simulation_config["E_range"][1]
-            for energy in simulated_energies
-        )
-
-    def check_telescope_info(file, expected_output):
-        item_to_check = defaultdict(list)
-        with SimTelFile(file) as f:
-            for event in f:
-                if "pe_sum" in expected_output:
-                    item_to_check["pe_sum"].extend(
-                        event["photoelectron_sums"]["n_pe"][event["photoelectron_sums"]["n_pe"] > 0]
-                    )
-                if "trigger_time" in expected_output:
-                    item_to_check["trigger_time"].extend(
-                        event["trigger_information"]["trigger_times"]
-                    )
-                if "photons" in expected_output:
-                    item_to_check["photons"].extend(event["photoelectron_sums"]["photons_atm_qe"])
-
-        for key, value in expected_output.items():
-            assert len(item_to_check[key]) > 0, f"No data found for {key}"
-            assert (
-                value[0] < np.mean(item_to_check[key]) < value[1]
-            ), f"Mean of {key} is not in the expected range, got {np.mean(item_to_check[key])}"
-
-    check_n_showers_and_energy_range(file=file)
-    check_telescope_info(file=file, expected_output=expected_output)
+    return assert_n_showers_and_energy_range(file=file) and assert_expected_output(
+        file=file, expected_output=expected_output
+    )
