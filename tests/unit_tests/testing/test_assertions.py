@@ -29,14 +29,15 @@ def test_assert_file_type_json(test_json_file, test_yaml_file):
     assert assertions.assert_file_type("json", Path(test_json_file))
 
 
-def test_assert_file_type_yaml(test_json_file, test_yaml_file):
+def test_assert_file_type_yaml(test_json_file, test_yaml_file, caplog):
 
     assert assertions.assert_file_type("yaml", test_yaml_file)
     assert assertions.assert_file_type("yml", test_yaml_file)
     assert not assertions.assert_file_type("yml", "tests/resources/does_not_exit.schema.yml")
-    assert not assertions.assert_file_type("yml", "tests/resources/simtel_config_test_la_palma.cfg")
 
-    assert assertions.assert_file_type("yml", test_json_file)
+    assert not assertions.assert_file_type(
+        "yaml", "tests/resources/telescope_positions-South-ground.ecsv"
+    )
 
 
 def test_assert_file_type_others(caplog):
