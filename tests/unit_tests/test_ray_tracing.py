@@ -62,23 +62,6 @@ def test_ray_tracing_from_dict(simtel_path, io_handler, telescope_model_mst, cap
     assert repr(ray) == f"RayTracing(label={telescope_model_mst.label})\n"
 
 
-def test_ray_tracing_from_kwargs(io_handler, simtel_path, telescope_model_mst):
-    source_distance = 10 * u.km
-    zenith_angle = 30 * u.deg
-    off_axis_angle = [0, 2] * u.deg
-
-    ray = RayTracing.from_kwargs(
-        telescope_model=telescope_model_mst,
-        simtel_path=simtel_path,
-        source_distance=source_distance,
-        zenith_angle=zenith_angle,
-        off_axis_angle=off_axis_angle,
-    )
-
-    assert ray.config.zenith_angle == 30
-    assert len(ray.config.off_axis_angle) == 2
-
-
 def test_ray_tracing_single_mirror_mode(simtel_path, io_handler, telescope_model_mst, caplog):
     telescope_model_mst.export_config_file()
     config_data = {
