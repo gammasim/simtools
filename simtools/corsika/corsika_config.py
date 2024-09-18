@@ -52,7 +52,8 @@ class CorsikaConfig:
         self.azimuth_angle = None
         self._run_number = None
         self.config_file_path = None
-        self.primary_particle = self._set_primary_particle(args_dict)
+        # The following uses the setter defined below, that is why the args_dict is passed
+        self.primary_particle = args_dict
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
@@ -66,6 +67,26 @@ class CorsikaConfig:
             f"(site={self.array_model.site}, "
             f"layout={self.array_model.layout_name}, label={self.label})"
         )
+
+    @property
+    def primary_particle(self):
+        """Primary particle."""
+        return self._primary_particle
+
+    @primary_particle.setter
+    def primary_particle(self, args_dict):
+        """
+        Set primary particle from input dictionary.
+
+        This is to make sure that when setting the primary particle,
+        we get the full PrimaryParticle object expected.
+
+        Parameters
+        ----------
+        args_dict: dict
+            Configuration dictionary
+        """
+        self._primary_particle = self._set_primary_particle(args_dict)
 
     def fill_corsika_configuration(self, args_dict, db_config=None):
         """
