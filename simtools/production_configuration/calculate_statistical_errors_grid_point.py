@@ -19,7 +19,7 @@ Example Usage
        StatisticalErrorEvaluator, InterpolationHandler
    )
 
-   base_path = "/Users/znb68/PD/CTA/"
+   base_path = "/path/"
    zeniths = [20, 40, 60]
    offsets = [0, 1, 2, 3, 4, 5]  # Offsets in degrees
 
