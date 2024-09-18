@@ -2,7 +2,9 @@
 
 import logging
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 
 from simtools.testing import assertions
@@ -18,6 +20,16 @@ def test_json_file():
 @pytest.fixture()
 def test_yaml_file():
     return Path("tests/resources/num_gains.schema.yml")
+
+
+@pytest.fixture()
+def mock_simtel_file():
+    mock_file = MagicMock()
+    mock_file.mc_run_headers = [{"n_showers": 100, "E_range": [0.1, 100]}]
+    mock_file.iter_mc_events.return_value = [
+        {"mc_shower": {"energy": energy}} for energy in np.linspace(0.1, 100, 100)
+    ]
+    return mock_file
 
 
 def test_assert_file_type_json(test_json_file, test_yaml_file):
@@ -54,3 +66,121 @@ def test_assert_file_type_others(caplog):
 
 def test_assert_no_suffix():
     assert not assertions.assert_file_type("yml", "tests/resources/does_not_exit_yml")
+
+
+@patch("eventio.simtel.simtelfile.SimTelFile")
+def test_assert_n_showers_and_energy_range(mock_simtelfile_class, mock_simtel_file):
+    mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
+
+    assert assertions.assert_n_showers_and_energy_range(Path("dummy_path"))
+
+
+@patch("eventio.simtel.simtelfile.SimTelFile")
+def test_assert_n_showers_and_energy_range_inconsistent_showers(
+    mock_simtelfile_class, mock_simtel_file
+):
+    mock_simtel_file.mc_run_headers[0]["n_showers"] = 200  # Set an inconsistent number of showers
+    mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
+
+    assert not assertions.assert_n_showers_and_energy_range(Path("dummy_path"))
+
+
+@patch("eventio.simtel.simtelfile.SimTelFile")
+def test_assert_n_showers_and_energy_range_out_of_range_energy(
+    mock_simtelfile_class, mock_simtel_file
+):
+    mock_simtel_file.iter_mc_events.return_value = [
+        {"mc_shower": {"energy": energy}} for energy in np.linspace(0.05, 100.05, 100)
+    ]  # Set energies slightly out of range
+    mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
+
+    assert not assertions.assert_n_showers_and_energy_range(Path("dummy_path"))
+
+
+@patch("eventio.simtel.simtelfile.SimTelFile")
+def test_assert_expected_output(mock_simtelfile_class, mock_simtel_file):
+    mock_simtel_file.__iter__.return_value = [
+        {
+            "photoelectron_sums": {
+                "n_pe": np.array([10, 20, 30, 0, 0]),
+                "photons_atm_qe": np.array([100, 200, 300, 0, 0]),
+                "photons": np.array([200, 300, 400, 0, 0]),
+            },
+            "trigger_information": {"trigger_times": [1.0, 2.0, 3.0]},
+        }
+    ]
+    mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
+
+    expected_output = {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
+
+    assert assertions.assert_expected_output(Path("dummy_path"), expected_output)
+
+
+@patch("eventio.simtel.simtelfile.SimTelFile")
+def test_assert_expected_output_no_data(mock_simtelfile_class, mock_simtel_file):
+    mock_simtel_file.__iter__.return_value = [
+        {
+            "photoelectron_sums": {
+                "n_pe": np.array([0, 0, 0, 0, 0]),
+                "photons_atm_qe": np.array([0, 0, 0, 0, 0]),
+                "photons": np.array([0, 0, 0, 0, 0]),
+            },
+            "trigger_information": {"trigger_times": []},
+        }
+    ]
+    mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
+
+    expected_output = {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
+
+    assert not assertions.assert_expected_output(Path("dummy_path"), expected_output)
+
+
+@patch("eventio.simtel.simtelfile.SimTelFile")
+def test_assert_expected_output_out_of_range(mock_simtelfile_class, mock_simtel_file):
+    mock_simtel_file.__iter__.return_value = [
+        {
+            "photoelectron_sums": {
+                "n_pe": np.array([1, 2, 3, 4, 5]),
+                "photons_atm_qe": np.array([10, 20, 30, 40, 50]),
+                "photons": np.array([10, 20, 30, 40, 50]),
+            },
+            "trigger_information": {"trigger_times": [0.1, 0.2, 0.3]},
+        }
+    ]
+    mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
+
+    expected_output = {"pe_sum": [10, 20], "trigger_time": [1.0, 2.0], "photons": [100, 200]}
+
+    assert not assertions.assert_expected_output(Path("dummy_path"), expected_output)
+
+
+@patch("eventio.simtel.simtelfile.SimTelFile")
+def test_check_output_from_sim_telarray(mock_simtelfile_class, mock_simtel_file):
+    mock_simtel_file.__iter__.return_value = [
+        {
+            "photoelectron_sums": {
+                "n_pe": np.array([10, 20, 30, 0, 0]),
+                "photons_atm_qe": np.array([100, 200, 300, 0, 0]),
+                "photons": np.array([200, 300, 400, 0, 0]),
+            },
+            "trigger_information": {"trigger_times": [1.0, 2.0, 3.0]},
+        }
+    ]
+    mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
+
+    expected_output = {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
+
+    file = Path("dummy_path.zst")
+
+    assert assertions.check_output_from_sim_telarray(file, expected_output)
+
+
+@patch("eventio.simtel.simtelfile.SimTelFile")
+def test_check_output_from_sim_telarray_invalid_file_extension(mock_simtelfile_class):
+    file = Path("dummy_path.txt")
+    expected_output = {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
+
+    with pytest.raises(
+        ValueError, match="Expected output file dummy_path.txt is not a zstd compressed file"
+    ):
+        assertions.check_output_from_sim_telarray(file, expected_output)

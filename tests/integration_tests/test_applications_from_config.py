@@ -157,7 +157,7 @@ def validate_application_output(config):
                     "complies with the expected output: "
                     f"{expected_output}"
                 )
-                assertions.check_expected_output(
+                assert assertions.check_output_from_sim_telarray(
                     Path(config["CONFIGURATION"]["DATA_DIRECTORY"]).joinpath(
                         integration_test["OUTPUT_FILE"]
                     ),
