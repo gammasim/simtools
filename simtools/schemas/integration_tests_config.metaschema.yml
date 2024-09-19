@@ -68,6 +68,10 @@ definitions:
         description: |
           "Reference file used for comparison."
         type: string
+      EXPECTED_OUTPUT:
+        description: |
+          "Expected output of integration test."
+        type: object
       TOLERANCE:
         description: "Allowed tolerance for floating point comparison."
         type: number
