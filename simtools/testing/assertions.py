@@ -140,7 +140,7 @@ def check_output_from_sim_telarray(file, expected_output):
     ValueError
         If the file is not a zstd compressed file.
     """
-    if not file.suffix == ".zst":
+    if file.suffix != ".zst":
         raise ValueError(
             f"Expected output file {file} is not a zstd compressed file "
             f"(i.e., a sim_telarray file)."
