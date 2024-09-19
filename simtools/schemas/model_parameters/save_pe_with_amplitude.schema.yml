@@ -12,12 +12,8 @@ description: |-
   but non-zero values of this parameter will also activate save_photons bit 1.
   Storing p.e. in internal calibration events is controlled separately by save_calibration_pe.
 data:
-  - type: int
-    unit: byte
-    default: 1
-    allowed_range:
-      min: 0
-      max: 1
+  - type: boolean
+    default: false
 instrument:
   class: Camera
   type:
