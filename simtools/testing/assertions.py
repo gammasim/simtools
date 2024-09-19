@@ -47,7 +47,7 @@ def assert_file_type(file_type, file_name):
 
 def assert_n_showers_and_energy_range(file):
     """
-    Assert #showers and energy range.
+    Assert the number of showers and the energy range.
 
     The number of showers should be consistent with the required one (up to 1% tolerance)
     and the energies simulated are required to be within the configured ones.
