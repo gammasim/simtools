@@ -16,7 +16,7 @@ description: |-
   and produce any photo-electrons if there are too few photons in the first place.
 data:
   - type: int
-    unit: byte
+    unit: dimensionless
     default: -1
     allowed_range:
       min: 0
