@@ -32,6 +32,18 @@ def mock_simtel_file():
     return mock_file
 
 
+@pytest.fixture()
+def valid_sim_telarray_file_content():
+    return {
+        "photoelectron_sums": {
+            "n_pe": np.array([10, 20, 30, 0, 0]),
+            "photons_atm_qe": np.array([100, 200, 300, 0, 0]),
+            "photons": np.array([200, 300, 400, 0, 0]),
+        },
+        "trigger_information": {"trigger_times": [1.0, 2.0, 3.0]},
+    }
+
+
 def test_assert_file_type_json(test_json_file, test_yaml_file):
 
     assert assertions.assert_file_type("json", test_json_file)
@@ -98,17 +110,10 @@ def test_assert_n_showers_and_energy_range_out_of_range_energy(
 
 
 @patch("eventio.simtel.simtelfile.SimTelFile")
-def test_assert_expected_output(mock_simtelfile_class, mock_simtel_file):
-    mock_simtel_file.__iter__.return_value = [
-        {
-            "photoelectron_sums": {
-                "n_pe": np.array([10, 20, 30, 0, 0]),
-                "photons_atm_qe": np.array([100, 200, 300, 0, 0]),
-                "photons": np.array([200, 300, 400, 0, 0]),
-            },
-            "trigger_information": {"trigger_times": [1.0, 2.0, 3.0]},
-        }
-    ]
+def test_assert_expected_output(
+    mock_simtelfile_class, mock_simtel_file, valid_sim_telarray_file_content
+):
+    mock_simtel_file.__iter__.return_value = [valid_sim_telarray_file_content]
     mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
 
     expected_output = {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
@@ -155,17 +160,10 @@ def test_assert_expected_output_out_of_range(mock_simtelfile_class, mock_simtel_
 
 
 @patch("eventio.simtel.simtelfile.SimTelFile")
-def test_check_output_from_sim_telarray(mock_simtelfile_class, mock_simtel_file):
-    mock_simtel_file.__iter__.return_value = [
-        {
-            "photoelectron_sums": {
-                "n_pe": np.array([10, 20, 30, 0, 0]),
-                "photons_atm_qe": np.array([100, 200, 300, 0, 0]),
-                "photons": np.array([200, 300, 400, 0, 0]),
-            },
-            "trigger_information": {"trigger_times": [1.0, 2.0, 3.0]},
-        }
-    ]
+def test_check_output_from_sim_telarray(
+    mock_simtelfile_class, mock_simtel_file, valid_sim_telarray_file_content
+):
+    mock_simtel_file.__iter__.return_value = [valid_sim_telarray_file_content]
     mock_simtelfile_class.return_value.__enter__.return_value = mock_simtel_file
 
     expected_output = {"pe_sum": [5, 35], "trigger_time": [0.5, 3.5], "photons": [50, 350]}
