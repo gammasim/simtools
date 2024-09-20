@@ -42,7 +42,7 @@ import logging
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.configuration import configurator
+from simtools.configuration import commandline_parser, configurator
 from simtools.db import db_handler
 from simtools.utils import names
 
@@ -73,7 +73,7 @@ def _parse(label=None, description=None):
     config.parser.add_argument(
         "--db_name",
         help="Name of the new model parameter database to be created.",
-        type=str,
+        type=commandline_parser.CommandLineParser.strip_string,
         required=True,
     )
     config.parser.add_argument(

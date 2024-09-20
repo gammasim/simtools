@@ -194,7 +194,7 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group.add_argument(
             "--db_simulation_model",
             help="name of simulation model database",
-            type=str,
+            type=self.strip_string,
             required=False,
             default=None,
         )
@@ -731,3 +731,8 @@ class CommandLineParser(argparse.ArgumentParser):
             raise ValueError("Input string does not contain an integer and a astropy quantity.")
 
         return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
+
+    @staticmethod
+    def strip_string(value):
+        """Remove leading and trailing whitespaces from a string."""
+        return value.strip()
