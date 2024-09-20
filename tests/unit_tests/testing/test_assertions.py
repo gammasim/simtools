@@ -10,12 +10,12 @@ from simtools.testing import assertions
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_json_file():
     return Path("tests/resources/reference_point_altitude.json")
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_yaml_file():
     return Path("tests/resources/num_gains.schema.yml")
 
