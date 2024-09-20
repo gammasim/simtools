@@ -10,13 +10,13 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def bin_bash():
     """Path to bash."""
     return "/usr/bin/env bash"
 
 
-@pytest.fixture()
+@pytest.fixture
 def pfp_command():
     """Basic pfp command."""
     return "sim_telarray/bin/pfp"
