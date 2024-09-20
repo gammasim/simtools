@@ -20,8 +20,6 @@ class SimulatorArray(SimtelRunner):
         Location of source of the sim_telarray/CORSIKA package.
     label: str
         Instance label.
-    keep_seeds: bool
-        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
     """
@@ -31,8 +29,8 @@ class SimulatorArray(SimtelRunner):
         corsika_config,
         simtel_path,
         label=None,
-        keep_seeds=False,
         use_multipipe=False,
+        sim_telarray_seeds=None,
     ):
         """Initialize SimulatorArray."""
         self._logger = logging.getLogger(__name__)
@@ -44,10 +42,10 @@ class SimulatorArray(SimtelRunner):
             use_multipipe=use_multipipe,
         )
 
+        self.sim_telarray_seeds = sim_telarray_seeds
         self.corsika_config = corsika_config
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
-        self.keep_seeds = keep_seeds
 
     def _make_run_command(self, run_number=None, input_file=None):
         """
@@ -75,10 +73,17 @@ class SimulatorArray(SimtelRunner):
         command += f" -I{self.corsika_config.array_model.get_config_directory()}"
         command += super().get_config_option("telescope_theta", self.corsika_config.zenith_angle)
         command += super().get_config_option("telescope_phi", self.corsika_config.azimuth_angle)
-        command += super().get_config_option("power_law", "2.5")
+        command += super().get_config_option(
+            "power_law",
+            SimulatorArray.get_power_law_for_sim_telarray_histograms(
+                self.corsika_config.primary_particle
+            ),
+        )
         command += super().get_config_option("histogram_file", histogram_file)
         command += super().get_config_option("output_file", output_file)
         command += super().get_config_option("random_state", "none")
+        if self.sim_telarray_seeds:
+            command += super().get_config_option("random_seed", self.sim_telarray_seeds)
         command += super().get_config_option("show", "all")
         command += f" {input_file}"
         command += f" > {self._log_file} 2>&1 || exit"
@@ -111,3 +116,30 @@ class SimulatorArray(SimtelRunner):
             raise InvalidOutputFileError(msg)
         self._logger.debug(f"simtel_array output file {output_file} exists.")
         return True
+
+    @staticmethod
+    def get_power_law_for_sim_telarray_histograms(primary):
+        """
+        Get the power law index for sim_telarray.
+
+        Events will be histogrammed in sim_telarray with a weight according to
+        the difference between this exponent and the one used for the shower simulations.
+
+        Parameters
+        ----------
+        primary: str
+            Primary particle.
+
+        Returns
+        -------
+        float
+            Power law index.
+        """
+        power_laws = {
+            "gamma": 2.5,
+            "electron": 3.3,
+        }
+        if primary.name in power_laws:
+            return power_laws[primary.name]
+
+        return 2.68

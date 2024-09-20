@@ -569,7 +569,19 @@ def test_convert_list_to_string():
     assert gen.convert_list_to_string(5) == 5
     assert gen.convert_list_to_string([1, 2, 3]) == "1 2 3"
     assert gen.convert_list_to_string(np.array([1, 2, 3])) == "1 2 3"
-    assert gen.convert_list_to_string(np.array([1, 2, 3]), True) == "1, 2, 3"
+    assert gen.convert_list_to_string(np.array([1, 2, 3]), comma_separated=True) == "1, 2, 3"
+    assert (
+        gen.convert_list_to_string(
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], comma_separated=False, shorten_list=True
+        )
+        == "all: 1"
+    )
+    assert (
+        gen.convert_list_to_string(
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], comma_separated=False, shorten_list=False
+        )
+        == "1 1 1 1 1 1 1 1 1 1 1"
+    )
 
 
 def test_convert_string_to_list():
