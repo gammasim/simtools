@@ -13,18 +13,18 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def random_id():
     return uuid.uuid4().hex
 
 
-@pytest.fixture()
+@pytest.fixture
 def db_no_config_file():
     """Database object (without configuration)."""
     return db_handler.DatabaseHandler(mongo_db_config=None)
 
 
-@pytest.fixture()
+@pytest.fixture
 def _db_cleanup(db, random_id):
     yield
     # Cleanup
@@ -34,7 +34,7 @@ def _db_cleanup(db, random_id):
     db.db_client[f"sandbox_{random_id}"]["sites"].drop()
 
 
-@pytest.fixture()
+@pytest.fixture
 def _db_cleanup_file_sandbox(db_no_config_file, random_id):
     yield
     # Cleanup

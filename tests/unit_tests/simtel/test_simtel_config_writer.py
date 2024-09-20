@@ -11,7 +11,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_config_writer(model_version):
     return SimtelConfigWriter(
         site="North",

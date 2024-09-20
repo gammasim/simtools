@@ -16,7 +16,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_data_lst(model_version_prod5):
     return {
         "telescope": "LSTN-01",
@@ -27,7 +27,7 @@ def config_data_lst(model_version_prod5):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def camera_efficiency_lst(io_handler, db_config, simtel_path, config_data_lst):
     return CameraEfficiency(
         config_data=config_data_lst,
@@ -38,7 +38,7 @@ def camera_efficiency_lst(io_handler, db_config, simtel_path, config_data_lst):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def prepare_results_file(io_handler):
     test_file_name = (
         "tests/resources/"
