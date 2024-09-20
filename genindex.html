@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g41ffd0c Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g06a11aa Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=c5a6e94e"></script>
+    <script src="_static/documentation_options.js?v=5952072d"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g41ffd0c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g06a11aa Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -241,6 +241,7 @@
 <li class="toctree-l2"><a class="reference internal" href="api-reference/runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/sim_telarray.html">sim_telarray</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/testing.html">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/utils.html">Utilities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/visualization.html">Visualization</a></li>
 </ul>
@@ -412,17 +413,23 @@ document.write(`
 </li>
       <li><a href="user-guide/applications/db_add_model_parameters_from_repository_to_db.html#db_add_model_parameters_from_repository_to_db.add_values_from_json_to_db">add_values_from_json_to_db() (in module db_add_model_parameters_from_repository_to_db)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/camera_efficiency.html#camera_efficiency.CameraEfficiency.analyze">analyze() (camera_efficiency.CameraEfficiency method)</a>
 
       <ul>
         <li><a href="api-reference/ray_tracing.html#ray_tracing.RayTracing.analyze">(ray_tracing.RayTracing method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/array_layout.html#layout.array_layout.ArrayLayout">ArrayLayout (class in layout.array_layout)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.array_model.ArrayModel">ArrayModel (class in model.array_model)</a>
+</li>
+      <li><a href="api-reference/testing.html#testing.assertions.assert_expected_output">assert_expected_output() (in module testing.assertions)</a>
+</li>
+      <li><a href="api-reference/testing.html#testing.assertions.assert_file_type">assert_file_type() (in module testing.assertions)</a>
+</li>
+      <li><a href="api-reference/testing.html#testing.assertions.assert_n_showers_and_energy_range">assert_n_showers_and_energy_range() (in module testing.assertions)</a>
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.azimuth_angle">azimuth_angle() (configuration.commandline_parser.CommandLineParser static method)</a>
 </li>
@@ -492,6 +499,8 @@ document.write(`
 </li>
       <li><a href="api-reference/data_model.html#data_model.metadata_model.check_astropy_unit">check_astropy_unit() (in module data_model.metadata_model)</a>
 </li>
+      <li><a href="api-reference/testing.html#testing.assertions.check_output_from_sim_telarray">check_output_from_sim_telarray() (in module testing.assertions)</a>
+</li>
       <li><a href="api-reference/job_execution.html#job_execution.job_manager.JobManager.check_submission_system">check_submission_system() (job_execution.job_manager.JobManager method)</a>
 </li>
       <li><a href="api-reference/utils.html#utils.general.collect_data_from_file_or_dict">collect_data_from_file_or_dict() (in module utils.general)</a>
@@ -508,6 +517,12 @@ document.write(`
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser">CommandLineParser (class in configuration.commandline_parser)</a>
 </li>
+      <li><a href="api-reference/testing.html#testing.compare_output.compare_ecsv_files">compare_ecsv_files() (in module testing.compare_output)</a>
+</li>
+      <li><a href="api-reference/testing.html#testing.compare_output.compare_files">compare_files() (in module testing.compare_output)</a>
+</li>
+      <li><a href="api-reference/testing.html#testing.compare_output.compare_json_or_yaml_files">compare_json_or_yaml_files() (in module testing.compare_output)</a>
+</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">compare_simtel_config_with_schema() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate">compute_system_trigger_rate() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
@@ -518,6 +533,8 @@ document.write(`
 </li>
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.config_file_directory">config_file_directory (model.model_parameter.ModelParameter property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.config_file_path">config_file_path (model.model_parameter.ModelParameter property)</a>
 </li>
       <li>
@@ -527,8 +544,6 @@ document.write(`
         <li><a href="api-reference/configuration_module.html#module-configuration.commandline_parser">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     configuration.configurator
 
@@ -1536,6 +1551,10 @@ document.write(`
 </li>
         <li><a href="user-guide/applications/submit_data_from_external.html#module-submit_data_from_external">submit_data_from_external</a>
 </li>
+        <li><a href="api-reference/testing.html#module-testing.assertions">testing.assertions</a>
+</li>
+        <li><a href="api-reference/testing.html#module-testing.compare_output">testing.compare_output</a>
+</li>
         <li><a href="api-reference/utils.html#module-utils.general">utils.general</a>
 </li>
         <li><a href="api-reference/utils.html#module-utils.geometry">utils.geometry</a>
@@ -2022,10 +2041,24 @@ document.write(`
 </li>
       <li><a href="api-reference/mc_model.html#model.telescope_model.TelescopeModel">TelescopeModel (class in model.telescope_model)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition">TelescopePosition (class in layout.telescope_position)</a>
 </li>
+      <li>
+    testing.assertions
+
+      <ul>
+        <li><a href="api-reference/testing.html#module-testing.assertions">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    testing.compare_output
+
+      <ul>
+        <li><a href="api-reference/testing.html#module-testing.compare_output">module</a>
+</li>
+      </ul></li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.total_area">total_area (simtel.simtel_io_histogram.SimtelIOHistogram property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.total_num_photons">total_num_photons (corsika.corsika_histograms.CorsikaHistograms property)</a>
