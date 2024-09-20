@@ -29,7 +29,7 @@ def _set_matplotlib_backend():
     plt.switch_backend("Agg")
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_test_directory(tmpdir_factory):
     """Sets temporary test directories. Some tests depend on this structure."""
 
@@ -42,12 +42,12 @@ def tmp_test_directory(tmpdir_factory):
     return tmp_test_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def data_path():
     return "./data/"
 
 
-@pytest.fixture()
+@pytest.fixture
 def io_handler(tmp_test_directory, data_path):
     """Define io_handler fixture including output and model directories."""
     tmp_io_handler = simtools.io_operations.io_handler.IOHandler()
@@ -59,7 +59,7 @@ def io_handler(tmp_test_directory, data_path):
     return tmp_io_handler
 
 
-@pytest.fixture()
+@pytest.fixture
 def _mock_settings_env_vars(tmp_test_directory):
     """Removes all environment variable from the test system and explicitly sets those needed."""
     _url = (
@@ -83,13 +83,13 @@ def _mock_settings_env_vars(tmp_test_directory):
         yield
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_path():
     """Empty string used as placeholder for simtel_path."""
     return Path("")
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_path_no_mock():
     """Simtel path as set by the .env file."""
     load_dotenv(".env")
@@ -99,7 +99,7 @@ def simtel_path_no_mock():
     return ""
 
 
-@pytest.fixture()
+@pytest.fixture
 def args_dict(tmp_test_directory, simtel_path, data_path):
     """Minimal configuration from command line."""
     return Configurator().default_config(
@@ -114,7 +114,7 @@ def args_dict(tmp_test_directory, simtel_path, data_path):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def args_dict_site(tmp_test_directory, simtel_path, data_path):
     "Configuration include site and telescopes."
     return Configurator().default_config(
@@ -135,7 +135,7 @@ def args_dict_site(tmp_test_directory, simtel_path, data_path):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def db_config():
     """DB configuration from .env file."""
 
@@ -159,7 +159,7 @@ def db_config():
     return mongo_db_config
 
 
-@pytest.fixture()
+@pytest.fixture
 def simulation_model_url(db_config):
     """Simulation model URL from .env file or default."""
     if (
@@ -173,7 +173,7 @@ def simulation_model_url(db_config):
     return db_config["db_simulation_model_url"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def db(db_config):
     """Database object with configuration from .env file."""
     return db_handler.DatabaseHandler(mongo_db_config=db_config)
@@ -184,19 +184,19 @@ def pytest_addoption(parser):
     parser.addoption("--model_version", action="store", default=None)
 
 
-@pytest.fixture()
+@pytest.fixture
 def model_version():
     """Simulation model version used in tests."""
     return "6.0.0"
 
 
-@pytest.fixture()
+@pytest.fixture
 def model_version_prod5():
     """Simulation model version used in tests."""
     return "5.0.0"
 
 
-@pytest.fixture()
+@pytest.fixture
 def array_model_north(io_handler, db_config, model_version):
     """Array model for North site."""
     return ArrayModel(
@@ -208,7 +208,7 @@ def array_model_north(io_handler, db_config, model_version):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def array_model_south(io_handler, db_config, model_version):
     """Array model for South site."""
     return ArrayModel(
@@ -220,7 +220,7 @@ def array_model_south(io_handler, db_config, model_version):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def site_model_south(db_config, model_version):
     """Site model for South site."""
     return SiteModel(
@@ -231,7 +231,7 @@ def site_model_south(db_config, model_version):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def site_model_north(db_config, model_version):
     """Site model for North site."""
     return SiteModel(
@@ -242,7 +242,7 @@ def site_model_north(db_config, model_version):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def telescope_model_lst(db_config, io_handler, model_version):
     """Telescope model LST North."""
     return TelescopeModel(
@@ -254,7 +254,7 @@ def telescope_model_lst(db_config, io_handler, model_version):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def telescope_model_mst(db_config, io_handler, model_version):
     """Telescope model MST South."""
     return TelescopeModel(
@@ -266,7 +266,7 @@ def telescope_model_mst(db_config, io_handler, model_version):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def telescope_model_sst(db_config, io_handler, model_version):
     """Telescope model SST South."""
     return TelescopeModel(
@@ -279,7 +279,7 @@ def telescope_model_sst(db_config, io_handler, model_version):
 
 
 # keep 5.0.0 model until a complete prod6 model is in the DB
-@pytest.fixture()
+@pytest.fixture
 def telescope_model_sst_prod5(db_config, io_handler, model_version_prod5):
     """Telescope model SST South (prod5/5.0.0)."""
     return TelescopeModel(
@@ -291,37 +291,37 @@ def telescope_model_sst_prod5(db_config, io_handler, model_version_prod5):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def telescope_north_with_calibration_devices_test_file():
     """Telescope positions North with calibration devices."""
     return "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv"
 
 
-@pytest.fixture()
+@pytest.fixture
 def telescope_north_test_file():
     """Telescope positions North."""
     return "tests/resources/telescope_positions-North-ground.ecsv"
 
 
-@pytest.fixture()
+@pytest.fixture
 def telescope_north_utm_test_file():
     """Telescope positions North (UTM coordinates)."""
     return "tests/resources/telescope_positions-North-utm.ecsv"
 
 
-@pytest.fixture()
+@pytest.fixture
 def telescope_south_test_file():
     """Telescope positions South."""
     return "tests/resources/telescope_positions-South-ground.ecsv"
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_output_file_name():
     """CORSIKA output file name for testing."""
     return "tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio"
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_histograms_instance(io_handler, corsika_output_file_name):
     """Corsika histogram instance."""
     from simtools.corsika.corsika_histograms import CorsikaHistograms
@@ -331,14 +331,14 @@ def corsika_histograms_instance(io_handler, corsika_output_file_name):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_histograms_instance_set_histograms(db, io_handler, corsika_histograms_instance):
     """Corsika histogram instance (fully configured)."""
     corsika_histograms_instance.set_histograms()
     return corsika_histograms_instance
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_config_data(model_version):
     """Corsika configuration data (as given by CorsikaConfig)."""
     return {
@@ -348,18 +348,19 @@ def corsika_config_data(model_version):
         "event_number_first_shower": 1,
         "zenith_angle": 20 * u.deg,
         "azimuth_angle": 0.0 * u.deg,
-        "view_cone": (0.0 * u.deg, 5.0 * u.deg),
+        "view_cone": (0.0 * u.deg, 10.0 * u.deg),
         "energy_range": (10.0 * u.GeV, 10.0 * u.TeV),
         "eslope": -2,
         "core_scatter": (10, 1400.0 * u.m),
         "primary": "proton",
         "primary_id_type": "common_name",
+        "correct_for_b_field_alignment": True,
         "data_directory": "simtools-output",
         "model_version": model_version,
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_config(io_handler, db_config, corsika_config_data, array_model_south):
     """Corsika configuration object (using array model South)."""
     corsika_config = CorsikaConfig(
@@ -372,12 +373,22 @@ def corsika_config(io_handler, db_config, corsika_config_data, array_model_south
     return corsika_config
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data):
     """Corsika configuration object (using array model South)."""
     array_model = mock.MagicMock()
     array_model.layout_name = "test_layout"
     array_model.corsika_config.primary = "proton"
+    array_model.site_model = mock.MagicMock()
+    array_model.site_model._parameters = {"geomag_rotation": -4.533}
+
+    # Define get_parameter_value() to behave as expected
+    def mock_get_parameter_value(par_name):
+        return array_model.site_model._parameters[par_name]
+
+    # Set the mock behavior
+    array_model.site_model.get_parameter_value.side_effect = mock_get_parameter_value
+
     corsika_config = CorsikaConfig(
         array_model=array_model,
         label="test-corsika-config",
@@ -385,12 +396,11 @@ def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data):
         db_config=db_config,
     )
     corsika_config.run_number = 1
-    corsika_config._set_primary_particle({"primary": "gamma"})
     corsika_config.array_model.site = "South"
     return corsika_config
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_runner(corsika_config, io_handler, simtel_path):
     return CorsikaRunner(
         corsika_config=corsika_config,
@@ -400,7 +410,7 @@ def corsika_runner(corsika_config, io_handler, simtel_path):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler, simtel_path):
     return CorsikaRunner(
         corsika_config=corsika_config_mock_array_model,
@@ -410,7 +420,7 @@ def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler,
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def file_has_text():
     """Check if a file contains a specific text."""
 
@@ -434,7 +444,7 @@ def file_has_text():
     return wrapper
 
 
-@pytest.fixture()
+@pytest.fixture
 def camera_efficiency_sst(io_handler, db_config, model_version, simtel_path):
     return CameraEfficiency(
         config_data={

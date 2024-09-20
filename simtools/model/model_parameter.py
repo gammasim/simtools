@@ -271,7 +271,7 @@ class ModelParameter:
             return
 
         self._config_file_directory = self.io_handler.get_output_directory(
-            label=(self.label or self.name), sub_dir="model"
+            label=self.label, sub_dir="model"
         )
 
         # Setting file name and the location

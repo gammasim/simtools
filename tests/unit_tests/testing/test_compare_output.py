@@ -12,7 +12,7 @@ from simtools.testing import compare_output
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_json_file(tmp_test_directory):
     def _create_json_file(file_name, content):
         file = tmp_test_directory / file_name
@@ -22,7 +22,7 @@ def create_json_file(tmp_test_directory):
     return _create_json_file
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_yaml_file(tmp_path):
     def _create_yaml_file(file_name, content):
         file = tmp_path / file_name
@@ -33,7 +33,7 @@ def create_yaml_file(tmp_path):
     return _create_yaml_file
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_ecsv_file(tmp_path):
     def _create_ecsv_file(file_name, content):
         table = Table(content)
@@ -44,7 +44,7 @@ def create_ecsv_file(tmp_path):
     return _create_ecsv_file
 
 
-@pytest.fixture()
+@pytest.fixture
 def file_name():
     def _file_name(counter, suffix):
         return f"file{counter}.{suffix}"
