@@ -52,7 +52,8 @@ class CorsikaConfig:
         self.azimuth_angle = None
         self._run_number = None
         self.config_file_path = None
-        self.primary_particle = self._set_primary_particle(args_dict)
+        # The following uses the setter defined below, that is why the args_dict is passed
+        self.primary_particle = args_dict
 
         self.io_handler = io_handler.IOHandler()
         self.array_model = array_model
@@ -66,6 +67,26 @@ class CorsikaConfig:
             f"(site={self.array_model.site}, "
             f"layout={self.array_model.layout_name}, label={self.label})"
         )
+
+    @property
+    def primary_particle(self):
+        """Primary particle."""
+        return self._primary_particle
+
+    @primary_particle.setter
+    def primary_particle(self, args_dict):
+        """
+        Set primary particle from input dictionary.
+
+        This is to make sure that when setting the primary particle,
+        we get the full PrimaryParticle object expected.
+
+        Parameters
+        ----------
+        args_dict: dict
+            Configuration dictionary
+        """
+        self._primary_particle = self._set_primary_particle(args_dict)
 
     def fill_corsika_configuration(self, args_dict, db_config=None):
         """
@@ -150,8 +171,18 @@ class CorsikaConfig:
                 float(args_dict["zenith_angle"].to("deg").value),
             ],
             "PHIP": [
-                self._rotate_azimuth_by_180deg(args_dict["azimuth_angle"].to("deg").value),
-                self._rotate_azimuth_by_180deg(args_dict["azimuth_angle"].to("deg").value),
+                self._rotate_azimuth_by_180deg(
+                    args_dict["azimuth_angle"].to("deg").value,
+                    correct_for_geomagnetic_field_alignment=args_dict[
+                        "correct_for_b_field_alignment"
+                    ],
+                ),
+                self._rotate_azimuth_by_180deg(
+                    args_dict["azimuth_angle"].to("deg").value,
+                    correct_for_geomagnetic_field_alignment=args_dict[
+                        "correct_for_b_field_alignment"
+                    ],
+                ),
             ],
             "VIEWCONE": [
                 args_dict["view_cone"][0].to("deg").value,
@@ -290,7 +321,7 @@ class CorsikaConfig:
         """Return IO_BUFFER parameter CORSIKA format."""
         return f"{entry['value']}{entry['unit']}"
 
-    def _rotate_azimuth_by_180deg(self, az):
+    def _rotate_azimuth_by_180deg(self, az, correct_for_geomagnetic_field_alignment=True):
         """
         Convert azimuth angle to the CORSIKA coordinate system.
 
@@ -298,13 +329,18 @@ class CorsikaConfig:
         ----------
         az: float
             Azimuth angle in degrees.
+        correct_for_geomagnetic_field_alignment: bool
+            Whether to correct for the geomagnetic field alignment.
 
         Returns
         -------
         float
             Azimuth angle in degrees in the CORSIKA coordinate system.
         """
-        return (az + 180) % 360
+        b_field_declination = 0
+        if correct_for_geomagnetic_field_alignment:
+            b_field_declination = self.array_model.site_model.get_parameter_value("geomag_rotation")
+        return (az + 180 + b_field_declination) % 360
 
     @property
     def primary(self):
@@ -391,7 +427,7 @@ class CorsikaConfig:
             text += line
         return text
 
-    def generate_corsika_input_file(self, use_multipipe=False):
+    def generate_corsika_input_file(self, use_multipipe=False, use_test_seeds=False):
         """
         Generate a CORSIKA input file.
 
@@ -425,7 +461,7 @@ class CorsikaConfig:
             file.write(f"IACT setenv AZM {self.azimuth_angle}\n")
 
             file.write("\n* [ SEEDS ]\n")
-            self._write_seeds(file)
+            self._write_seeds(file, use_test_seeds)
 
             file.write("\n* [ TELESCOPES ]\n")
             telescope_list_text = self.get_corsika_telescope_list()
@@ -549,7 +585,7 @@ class CorsikaConfig:
 
         return self.get_corsika_config_file_name(file_type="output_generic")
 
-    def _write_seeds(self, file):
+    def _write_seeds(self, file, use_test_seeds=False):
         """
         Generate and write seeds in the CORSIKA input file.
 
@@ -560,7 +596,9 @@ class CorsikaConfig:
         """
         random_seed = self.get_config_parameter("PRMPAR") + self.run_number
         rng = np.random.default_rng(random_seed)
-        corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
+        corsika_seeds = [534, 220, 1104, 382]
+        if not use_test_seeds:
+            corsika_seeds = [int(rng.uniform(0, 1e7)) for _ in range(4)]
         for s in corsika_seeds:
             file.write(f"SEED {s} 0 0\n")
 
