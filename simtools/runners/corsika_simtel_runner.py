@@ -169,7 +169,9 @@ class CorsikaSimtelRunner:
         )
         command += self.simulator_array.get_config_option(
             "power_law",
-            SimulatorArray.get_power_law_for_sim_telarray(self.corsika_config.primary_particle),
+            SimulatorArray.get_power_law_for_sim_telarray_histograms(
+                self.corsika_config.primary_particle
+            ),
         )
         command += self.simulator_array.get_config_option(
             "histogram_file",

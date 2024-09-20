@@ -46,14 +46,14 @@ def test_check_run_result(simtel_runner):
         assert simtel_runner._check_run_result(run_number=3)
 
 
-def test_get_power_law_for_sim_telarray():
+def test_get_power_law_for_sim_telarray_histograms():
     from simtools.corsika.primary_particle import PrimaryParticle
 
     gamma = PrimaryParticle(particle_id="gamma", particle_id_type="common_name")
     electron = PrimaryParticle(particle_id="electron", particle_id_type="common_name")
     proton = PrimaryParticle(particle_id="proton", particle_id_type="common_name")
     helium = PrimaryParticle(particle_id="helium", particle_id_type="common_name")
-    assert SimulatorArray.get_power_law_for_sim_telarray(gamma) == pytest.approx(2.5)
-    assert SimulatorArray.get_power_law_for_sim_telarray(electron) == pytest.approx(3.3)
-    assert SimulatorArray.get_power_law_for_sim_telarray(proton) == pytest.approx(2.68)
-    assert SimulatorArray.get_power_law_for_sim_telarray(helium) == pytest.approx(2.68)
+    assert SimulatorArray.get_power_law_for_sim_telarray_histograms(gamma) == pytest.approx(2.5)
+    assert SimulatorArray.get_power_law_for_sim_telarray_histograms(electron) == pytest.approx(3.3)
+    assert SimulatorArray.get_power_law_for_sim_telarray_histograms(proton) == pytest.approx(2.68)
+    assert SimulatorArray.get_power_law_for_sim_telarray_histograms(helium) == pytest.approx(2.68)
