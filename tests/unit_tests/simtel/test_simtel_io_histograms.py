@@ -22,7 +22,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_io_file(io_handler):
     return io_handler.get_input_data_file(
         file_name="run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst",
@@ -30,7 +30,7 @@ def simtel_io_file(io_handler):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_io_file_hdata(io_handler):
     return io_handler.get_input_data_file(
         file_name="run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
@@ -38,7 +38,7 @@ def simtel_io_file_hdata(io_handler):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_io_file_list(io_handler):
     return io_handler.get_input_data_file(
         file_name="simtel_output_files.txt",
@@ -46,19 +46,19 @@ def simtel_io_file_list(io_handler):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_hists_hdata_io_instance(simtel_io_file_hdata):
     return SimtelIOHistograms(
         histogram_files=simtel_io_file_hdata, view_cone=[0, 10], energy_range=[0.001, 300]
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_array_histograms_instance(simtel_io_file):
     return SimtelIOHistograms(histogram_files=[simtel_io_file, simtel_io_file], test=True)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_array_histograms_instance_file_list(simtel_io_file_list):
     return SimtelIOHistograms(histogram_files=simtel_io_file_list, test=True)
 

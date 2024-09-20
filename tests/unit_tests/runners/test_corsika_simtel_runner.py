@@ -16,25 +16,25 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_command():
     """Basic simtel command."""
     return "bin/sim_telarray"
 
 
-@pytest.fixture()
+@pytest.fixture
 def show_all():
     """Simtel show all options."""
     return "-C show=all"
 
 
-@pytest.fixture()
+@pytest.fixture
 def simulation_file():
     """Base name for simulation test file."""
     return "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-simtel-runner"
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_simtel_runner(io_handler, corsika_config_mock_array_model, simtel_path):
     """CorsikaSimtelRunner object."""
     return CorsikaSimtelRunner(

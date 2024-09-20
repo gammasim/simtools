@@ -12,17 +12,17 @@ from simtools.testing import assertions
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_json_file():
     return Path("tests/resources/reference_point_altitude.json")
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_yaml_file():
     return Path("tests/resources/num_gains.schema.yml")
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_simtel_file():
     mock_file = MagicMock()
     mock_file.mc_run_headers = [{"n_showers": 100, "E_range": [0.1, 100]}]
@@ -32,7 +32,7 @@ def mock_simtel_file():
     return mock_file
 
 
-@pytest.fixture()
+@pytest.fixture
 def valid_sim_telarray_file_content():
     return {
         "photoelectron_sums": {
