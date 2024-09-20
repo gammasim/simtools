@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.site_model &#8212; simtools v0.1.dev1+g599ecb6 Manual</title>
+    <title>model.site_model &#8212; simtools v0.1.dev1+g41ffd0c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f38cb220"></script>
+    <script src="../../_static/documentation_options.js?v=c5a6e94e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g599ecb6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g41ffd0c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -451,7 +451,7 @@ document.write(`
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        config_file_style bool</span>
-<span class="sd">            Return using style of corsika_parameters.yml file</span>
+<span class="sd">            Return using CORSIKA config file syntax</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -459,12 +459,14 @@ document.write(`
 <span class="sd">            Site-related CORSIKA parameters as dict</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># backwards compatibility to `corsika_parameters.yml` (temporary TODO)</span>
         <span class="k">if</span> <span class="n">config_file_style</span><span class="p">:</span>
-            <span class="n">_atmosphere_id</span> <span class="o">=</span> <span class="mi">26</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">==</span> <span class="s2">&quot;North&quot;</span> <span class="k">else</span> <span class="mi">36</span>
             <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;OBSLEV&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">)],</span>
-                <span class="s2">&quot;ATMOSPHERE&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">_atmosphere_id</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;OBSLEV&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">)</span>
+                <span class="p">],</span>
+                <span class="c1"># We always use a custom profile by filename, so this has to be set to 99</span>
+                <span class="s2">&quot;ATMOSPHERE&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">99</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;IACT ATMOFILE&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;atmospheric_profile&quot;</span><span class="p">)],</span>
                 <span class="s2">&quot;MAGNET&quot;</span><span class="p">:</span> <span class="p">[</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;geomag_horizontal&quot;</span><span class="p">),</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;geomag_vertical&quot;</span><span class="p">),</span>

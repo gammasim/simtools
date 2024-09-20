@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runners.corsika_simtel_runner &#8212; simtools v0.1.dev1+g599ecb6 Manual</title>
+    <title>runners.corsika_simtel_runner &#8212; simtools v0.1.dev1+g41ffd0c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f38cb220"></script>
+    <script src="../../_static/documentation_options.js?v=c5a6e94e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g599ecb6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g41ffd0c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -416,10 +416,12 @@ document.write(`
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">keep_seeds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span> <span class="o">=</span> <span class="n">corsika_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span> <span class="o">=</span> <span class="n">simtel_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="o">=</span> <span class="n">sim_telarray_seeds</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">set_output_file_and_directory</span><span class="p">(</span><span class="n">use_multipipe</span><span class="p">)</span>
@@ -435,6 +437,7 @@ document.write(`
             <span class="n">simtel_path</span><span class="o">=</span><span class="n">simtel_path</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
             <span class="n">use_multipipe</span><span class="o">=</span><span class="n">use_multipipe</span><span class="p">,</span>
+            <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="n">sim_telarray_seeds</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="CorsikaSimtelRunner.prepare_run_script">
@@ -546,7 +549,10 @@ document.write(`
             <span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span> <span class="n">weak_option</span><span class="o">=</span><span class="n">weak_pointing</span>
         <span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;power_law&quot;</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">get_config_parameter</span><span class="p">(</span><span class="s2">&quot;ESLOPE&quot;</span><span class="p">))</span>
+            <span class="s2">&quot;power_law&quot;</span><span class="p">,</span>
+            <span class="n">SimulatorArray</span><span class="o">.</span><span class="n">get_power_law_for_sim_telarray_histograms</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary_particle</span>
+            <span class="p">),</span>
         <span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
             <span class="s2">&quot;histogram_file&quot;</span><span class="p">,</span>
@@ -554,14 +560,18 @@ document.write(`
                 <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>
             <span class="p">),</span>
         <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_state&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+                <span class="s2">&quot;random_seed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span>
+            <span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
             <span class="s2">&quot;output_file&quot;</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
                 <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>
             <span class="p">),</span>
         <span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_state&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">_log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator_array</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
             <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runners.corsika_runner &#8212; simtools v0.1.dev1+g599ecb6 Manual</title>
+    <title>runners.corsika_runner &#8212; simtools v0.1.dev1+g41ffd0c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f38cb220"></script>
+    <script src="../../_static/documentation_options.js?v=c5a6e94e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g599ecb6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g41ffd0c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -473,7 +473,9 @@ document.write(`
         <span class="n">script_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
             <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;sub_script&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">run_number</span>
         <span class="p">)</span>
-        <span class="n">corsika_input_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">generate_corsika_input_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_use_multipipe</span><span class="p">)</span>
+        <span class="n">corsika_input_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">generate_corsika_input_file</span><span class="p">(</span>
+            <span class="n">use_multipipe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_use_multipipe</span><span class="p">,</span> <span class="n">use_test_seeds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_keep_seeds</span>
+        <span class="p">)</span>
 
         <span class="c1"># CORSIKA input file for a specific run, created by the preprocessor pfp</span>
         <span class="n">corsika_input_tmp_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">get_corsika_config_file_name</span><span class="p">(</span>
@@ -577,12 +579,18 @@ document.write(`
         <span class="n">corsika_bin_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;corsika-run/corsika&quot;</span><span class="p">)</span>
 
         <span class="n">log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_multipipe</span><span class="p">:</span>
+            <span class="n">log_file</span> <span class="o">=</span> <span class="n">log_file</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;multipipe_</span><span class="si">{</span><span class="n">log_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/corsika_autoinputs&quot;</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; --run </span><span class="si">{</span><span class="n">corsika_bin_path</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">cmd</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -R </span><span class="si">{</span><span class="n">run_number</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">cmd</span> <span class="o">+=</span> <span class="s1">&#39; -p &quot;$CORSIKA_DATA&quot;&#39;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keep_seeds</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Using --keep-seeds option in corsika_autoinputs is not recommended. &quot;</span>
+                <span class="s2">&quot;It should only be used for testing purposes.&quot;</span>
+            <span class="p">)</span>
             <span class="n">cmd</span> <span class="o">+=</span> <span class="s2">&quot; --keep-seeds&quot;</span>
         <span class="n">cmd</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">input_tmp_file</span><span class="si">}</span><span class="s2"> | gzip &gt; </span><span class="si">{</span><span class="n">log_file</span><span class="si">}</span><span class="s2"> 2&gt;&amp;1&quot;</span>
         <span class="n">cmd</span> <span class="o">+=</span> <span class="s2">&quot; || exit 1</span><span class="se">\n</span><span class="s2">&quot;</span>

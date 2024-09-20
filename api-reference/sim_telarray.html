@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g599ecb6 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g41ffd0c Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=f38cb220"></script>
+    <script src="../_static/documentation_options.js?v=c5a6e94e"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g599ecb6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g41ffd0c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -520,7 +520,10 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-array">simulator_array</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray"><code class="docutils literal notranslate"><span class="pre">SimulatorArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray"><code class="docutils literal notranslate"><span class="pre">SimulatorArray</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.get_power_law_for_sim_telarray_histograms()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-camera-efficiency">simulator_camera_efficiency</a><ul class="nav section-nav flex-column">
@@ -1326,7 +1329,7 @@ Only filled if stack_files is False.</p>
 <p id="module-simtel.simulator_array"><span id="simulate-array-1"></span>Simulation runner for array simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simulator_array.SimulatorArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_array.</span></span><span class="sig-name descname"><span class="pre">SimulatorArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_array.</span></span><span class="sig-name descname"><span class="pre">SimulatorArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_telarray_seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray" title="Link to this definition">#</a></dt>
 <dd><p>SimulatorArray is the interface with sim_telarray to perform array simulations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1337,13 +1340,33 @@ Only filled if stack_files is False.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>
-<dt><strong>keep_seeds: bool</strong></dt><dd><p>Use seeds based on run number and primary particle. If False, use sim_telarray seeds.</p>
-</dd>
 <dt><strong>use_multipipe: bool</strong></dt><dd><p>Use multipipe to run CORSIKA and sim_telarray.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_power_law_for_sim_telarray_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">primary</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray.get_power_law_for_sim_telarray_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms" title="Link to this definition">#</a></dt>
+<dd><p>Get the power law index for sim_telarray.</p>
+<p>Events will be histogrammed in sim_telarray with a weight according to
+the difference between this exponent and the one used for the shower simulations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>primary: str</strong></dt><dd><p>Primary particle.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Power law index.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -1564,7 +1587,10 @@ default: 1</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-array">simulator_array</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray"><code class="docutils literal notranslate"><span class="pre">SimulatorArray</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray"><code class="docutils literal notranslate"><span class="pre">SimulatorArray</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.get_power_law_for_sim_telarray_histograms()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-camera-efficiency">simulator_camera_efficiency</a><ul class="nav section-nav flex-column">

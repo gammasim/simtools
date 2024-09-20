@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g599ecb6 Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g41ffd0c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f38cb220"></script>
+    <script src="../../_static/documentation_options.js?v=c5a6e94e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g599ecb6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g41ffd0c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -433,7 +433,8 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">azimuth_angle</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_run_number</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_primary_particle</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+        <span class="c1"># The following uses the setter defined below, that is why the args_dict is passed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_particle</span> <span class="o">=</span> <span class="n">args_dict</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span> <span class="o">=</span> <span class="n">array_model</span>
@@ -447,6 +448,26 @@ document.write(`
             <span class="sa">f</span><span class="s2">&quot;(site=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;layout=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="si">}</span><span class="s2">, label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">primary_particle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Primary particle.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primary_particle</span>
+
+    <span class="nd">@primary_particle</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">primary_particle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set primary particle from input dictionary.</span>
+
+<span class="sd">        This is to make sure that when setting the primary particle,</span>
+<span class="sd">        we get the full PrimaryParticle object expected.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args_dict: dict</span>
+<span class="sd">            Configuration dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_primary_particle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_primary_particle</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CorsikaConfig.fill_corsika_configuration">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration">[docs]</a>
@@ -534,8 +555,18 @@ document.write(`
                 <span class="nb">float</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
             <span class="p">],</span>
             <span class="s2">&quot;PHIP&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_rotate_azimuth_by_180deg</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_rotate_azimuth_by_180deg</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_rotate_azimuth_by_180deg</span><span class="p">(</span>
+                    <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="n">correct_for_geomagnetic_field_alignment</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span>
+                        <span class="s2">&quot;correct_for_b_field_alignment&quot;</span>
+                    <span class="p">],</span>
+                <span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_rotate_azimuth_by_180deg</span><span class="p">(</span>
+                    <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                    <span class="n">correct_for_geomagnetic_field_alignment</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span>
+                        <span class="s2">&quot;correct_for_b_field_alignment&quot;</span>
+                    <span class="p">],</span>
+                <span class="p">),</span>
             <span class="p">],</span>
             <span class="s2">&quot;VIEWCONE&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;view_cone&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
@@ -674,7 +705,7 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return IO_BUFFER parameter CORSIKA format.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}{</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;unit&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_rotate_azimuth_by_180deg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">az</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_rotate_azimuth_by_180deg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">az</span><span class="p">,</span> <span class="n">correct_for_geomagnetic_field_alignment</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert azimuth angle to the CORSIKA coordinate system.</span>
 
@@ -682,13 +713,18 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        az: float</span>
 <span class="sd">            Azimuth angle in degrees.</span>
+<span class="sd">        correct_for_geomagnetic_field_alignment: bool</span>
+<span class="sd">            Whether to correct for the geomagnetic field alignment.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        float</span>
 <span class="sd">            Azimuth angle in degrees in the CORSIKA coordinate system.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">az</span> <span class="o">+</span> <span class="mi">180</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span>
+        <span class="n">b_field_declination</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">correct_for_geomagnetic_field_alignment</span><span class="p">:</span>
+            <span class="n">b_field_declination</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;geomag_rotation&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">az</span> <span class="o">+</span> <span class="mi">180</span> <span class="o">+</span> <span class="n">b_field_declination</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -783,7 +819,7 @@ document.write(`
 
 <div class="viewcode-block" id="CorsikaConfig.generate_corsika_input_file">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.generate_corsika_input_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">generate_corsika_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">generate_corsika_input_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_test_seeds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a CORSIKA input file.</span>
 
@@ -817,7 +853,7 @@ document.write(`
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IACT setenv AZM </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ SEEDS ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_write_seeds</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_seeds</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">use_test_seeds</span><span class="p">)</span>
 
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">* [ TELESCOPES ]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">telescope_list_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corsika_telescope_list</span><span class="p">()</span>
@@ -948,7 +984,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_corsika_config_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output_generic&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_write_seeds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_write_seeds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">use_test_seeds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate and write seeds in the CORSIKA input file.</span>
 
@@ -959,7 +995,9 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">random_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_config_parameter</span><span class="p">(</span><span class="s2">&quot;PRMPAR&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_number</span>
         <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
-        <span class="n">corsika_seeds</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1e7</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+        <span class="n">corsika_seeds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">534</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">1104</span><span class="p">,</span> <span class="mi">382</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">use_test_seeds</span><span class="p">:</span>
+            <span class="n">corsika_seeds</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1e7</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">corsika_seeds</span><span class="p">:</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SEED </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2"> 0 0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_array &#8212; simtools v0.1.dev1+g599ecb6 Manual</title>
+    <title>simtel.simulator_array &#8212; simtools v0.1.dev1+g41ffd0c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f38cb220"></script>
+    <script src="../../_static/documentation_options.js?v=c5a6e94e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g599ecb6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g41ffd0c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -398,8 +398,6 @@ document.write(`
 <span class="sd">        Location of source of the sim_telarray/CORSIKA package.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label.</span>
-<span class="sd">    keep_seeds: bool</span>
-<span class="sd">        Use seeds based on run number and primary particle. If False, use sim_telarray seeds.</span>
 <span class="sd">    use_multipipe: bool</span>
 <span class="sd">        Use multipipe to run CORSIKA and sim_telarray.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -409,8 +407,8 @@ document.write(`
         <span class="n">corsika_config</span><span class="p">,</span>
         <span class="n">simtel_path</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">keep_seeds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimulatorArray.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -422,10 +420,10 @@ document.write(`
             <span class="n">use_multipipe</span><span class="o">=</span><span class="n">use_multipipe</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="o">=</span> <span class="n">sim_telarray_seeds</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span> <span class="o">=</span> <span class="n">corsika_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keep_seeds</span> <span class="o">=</span> <span class="n">keep_seeds</span>
 
     <span class="k">def</span> <span class="nf">_make_run_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -453,10 +451,17 @@ document.write(`
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">get_config_directory</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;power_law&quot;</span><span class="p">,</span> <span class="s2">&quot;2.5&quot;</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+            <span class="s2">&quot;power_law&quot;</span><span class="p">,</span>
+            <span class="n">SimulatorArray</span><span class="o">.</span><span class="n">get_power_law_for_sim_telarray_histograms</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary_particle</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;histogram_file&quot;</span><span class="p">,</span> <span class="n">histogram_file</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_state&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span><span class="si">}</span><span class="s2"> 2&gt;&amp;1 || exit&quot;</span>
@@ -488,7 +493,37 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">InvalidOutputFileError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;simtel_array output file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> exists.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="SimulatorArray.get_power_law_for_sim_telarray_histograms">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_power_law_for_sim_telarray_histograms</span><span class="p">(</span><span class="n">primary</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the power law index for sim_telarray.</span>
+
+<span class="sd">        Events will be histogrammed in sim_telarray with a weight according to</span>
+<span class="sd">        the difference between this exponent and the one used for the shower simulations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        primary: str</span>
+<span class="sd">            Primary particle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Power law index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">power_laws</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span>
+            <span class="s2">&quot;electron&quot;</span><span class="p">:</span> <span class="mf">3.3</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">primary</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">power_laws</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">power_laws</span><span class="p">[</span><span class="n">primary</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="mf">2.68</span></div>
+</div>
 
 </pre></div>
 

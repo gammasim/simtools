@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runners.runner_services &#8212; simtools v0.1.dev1+g599ecb6 Manual</title>
+    <title>runners.runner_services &#8212; simtools v0.1.dev1+g41ffd0c Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f38cb220"></script>
+    <script src="../../_static/documentation_options.js?v=c5a6e94e"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g599ecb6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g41ffd0c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -420,9 +420,13 @@ document.write(`
 <span class="sd">        dict</span>
 <span class="sd">            Dictionary with the keys or building the file names for simulation output files.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_vc_high</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">get_config_parameter</span><span class="p">(</span><span class="s2">&quot;VIEWCONE&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">primary_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary</span>
+        <span class="k">if</span> <span class="n">primary_name</span> <span class="o">==</span> <span class="s2">&quot;gamma&quot;</span> <span class="ow">and</span> <span class="n">_vc_high</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">primary_name</span> <span class="o">=</span> <span class="s2">&quot;gamma_diffuse&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;run_number&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">validate_run_number</span><span class="p">(</span><span class="n">run_number</span><span class="p">),</span>
-            <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary</span><span class="p">,</span>
+            <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="n">primary_name</span><span class="p">,</span>
             <span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">layout_name</span><span class="p">,</span>
             <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
             <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
@@ -514,8 +518,7 @@ document.write(`
 <span class="sd">            Base name for the simulation files.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">info_for_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_info_for_file_name</span><span class="p">(</span><span class="n">run_number</span><span class="p">)</span>
-        <span class="n">file_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">file_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">file_label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">file_label</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">file_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">info_for_file_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
         <span class="n">zenith</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">get_config_parameter</span><span class="p">(</span><span class="s2">&quot;THETAP&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">azimuth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">azimuth_angle</span>
         <span class="n">run_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_run_number_string</span><span class="p">(</span><span class="n">info_for_file_name</span><span class="p">[</span><span class="s2">&quot;run_number&quot;</span><span class="p">])</span>
