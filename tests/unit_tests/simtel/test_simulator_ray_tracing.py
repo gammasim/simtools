@@ -12,7 +12,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def ray_tracing_sst(telescope_model_sst, simtel_path):
     # telescope_model_sst.export_model_files()
 
@@ -31,7 +31,7 @@ def ray_tracing_sst(telescope_model_sst, simtel_path):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def simulator_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path):
     return SimulatorRayTracing(
         simtel_path=simtel_path,

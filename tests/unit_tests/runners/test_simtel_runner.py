@@ -12,7 +12,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simtel_runner(simtel_path, corsika_config_mock_array_model):
     return SimtelRunner(
         simtel_path=simtel_path, label="test", corsika_config=corsika_config_mock_array_model
