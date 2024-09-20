@@ -1,0 +1,41 @@
+%YAML 1.2
+---
+title: Schema for store_photoelectrons model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: store_photoelectrons
+description: |-
+  While the save_photons=2 configuration option will save photo-electron data for all events,
+  this parameter allows to set a lower limit on the number of photo-electrons
+  which must get registered before deciding to store them.
+  Setting it to a value of zero or bigger (default: -1) will automatically enable the corresponding save_photons bit.
+  It should be cross-checked that the min_photons parameter is unlikely to result
+  in fewer than the given number of photo-electrons, as no attempt is made to trace photons through the telescope
+  and produce any photo-electrons if there are too few photons in the first place.
+data:
+  - type: int
+    unit: dimensionless
+    default: -1
+    allowed_range:
+      min: 0
+      max: 10000
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Configuration
+simulation_software:
+  - name: sim_telarray

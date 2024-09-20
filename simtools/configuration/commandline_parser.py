@@ -269,9 +269,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 type=Path,
                 required=False,
             )
-
         if "layout" in model_options or "layout_file" in model_options:
-            _job_group = self._add_model_option_layout(_job_group, "layout_file" in model_options)
+            _job_group = self._add_model_option_layout(
+                job_group=_job_group,
+                add_layout_file="layout_file" in model_options,
+                # layout info is always required for layout related tasks with the exception
+                # of listing the available layouts in the DB
+                required="--list_available_layouts" not in self._option_string_actions,
+            )
 
     def initialize_simulation_configuration_arguments(self, simulation_configuration):
         """
@@ -371,6 +376,12 @@ class CommandLineParser(argparse.ArgumentParser):
                 "required": False,
                 "default": 1,
             },
+            "correct_for_b_field_alignment": {
+                "help": "Correct for B-field alignment",
+                "action": "store_true",
+                "required": False,
+                "default": True,
+            },
         }
 
     @staticmethod
@@ -394,7 +405,7 @@ class CommandLineParser(argparse.ArgumentParser):
             "view_cone": {
                 "help": (
                     "View cone radius for primary arrival directions "
-                    "(min/max value, e.g. '0 deg 5 deg')."
+                    "(min/max value, e.g. '0 deg 10 deg')."
                 ),
                 "type": CommandLineParser.parse_quantity_pair,
                 "required": False,
@@ -435,7 +446,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 pass
 
     @staticmethod
-    def _add_model_option_layout(job_group, add_layout_file):
+    def _add_model_option_layout(job_group, add_layout_file, required=True):
         """
         Add layout option to the job group.
 
@@ -450,7 +461,7 @@ class CommandLineParser(argparse.ArgumentParser):
         -------
         argparse.ArgumentParser
         """
-        _layout_group = job_group.add_mutually_exclusive_group(required=False)
+        _layout_group = job_group.add_mutually_exclusive_group(required=required)
         _layout_group.add_argument(
             "--array_layout_name",
             help="array layout name (e.g., alpha, subsystem_msts)",
