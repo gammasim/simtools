@@ -19,7 +19,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def configurator(tmp_test_directory, _mock_settings_env_vars, simtel_path):
     config = Configurator()
     config.default_config(

@@ -23,7 +23,7 @@ mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
 mirror_2f_schema_file = "tests/resources/MST_mirror_2f_measurements.schema.yml"
 
 
-@pytest.fixture()
+@pytest.fixture
 def reference_columns():
     """Return a test reference data column definition."""
     return [
@@ -79,7 +79,7 @@ def reference_columns():
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def reference_columns_name():
     """Test reference data column definition with columns named col0, col1, col3."""
     return [
