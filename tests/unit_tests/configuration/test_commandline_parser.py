@@ -255,3 +255,9 @@ def test_simulation_configuration():
     _parser_10.initialize_default_arguments(
         simulation_configuration={"software": None, "corsika_configuration": ["wrong_parameter"]}
     )
+
+
+def test_strip_string():
+    _parser_10 = parser.CommandLineParser()
+    for test_string in ["test", " test", "test ", " test "]:
+        assert _parser_10.strip_string(test_string) == "test"
