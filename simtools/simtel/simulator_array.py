@@ -75,7 +75,9 @@ class SimulatorArray(SimtelRunner):
         command += super().get_config_option("telescope_phi", self.corsika_config.azimuth_angle)
         command += super().get_config_option(
             "power_law",
-            SimulatorArray.get_power_law_for_sim_telarray(self.corsika_config.primary_particle),
+            SimulatorArray.get_power_law_for_sim_telarray_histograms(
+                self.corsika_config.primary_particle
+            ),
         )
         command += super().get_config_option("histogram_file", histogram_file)
         command += super().get_config_option("output_file", output_file)
@@ -116,7 +118,7 @@ class SimulatorArray(SimtelRunner):
         return True
 
     @staticmethod
-    def get_power_law_for_sim_telarray(primary):
+    def get_power_law_for_sim_telarray_histograms(primary):
         """
         Get the power law index for sim_telarray.
 
