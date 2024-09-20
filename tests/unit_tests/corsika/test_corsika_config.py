@@ -13,19 +13,19 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_config_no_db(corsika_config_data):
     return CorsikaConfig(
         array_model=None, label="test-corsika-config", args_dict=corsika_config_data, db_config=None
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def gcm2():
     return "g/cm2"
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_configuration_parameters(gcm2):
     return {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
@@ -306,7 +306,7 @@ def test_write_seeds(corsika_config_no_db):
         assert _call.endswith(" 0 0\n")
 
 
-@pytest.mark.uses_model_database()
+@pytest.mark.uses_model_database
 def test_get_corsika_telescope_list(corsika_config):
     cc = corsika_config
     telescope_list_str = cc.get_corsika_telescope_list()

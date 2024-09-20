@@ -13,7 +13,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def runner_service(corsika_runner_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
@@ -23,7 +23,7 @@ def runner_service(corsika_runner_mock_array_model):
     return _runner_service
 
 
-@pytest.fixture()
+@pytest.fixture
 def runner_service_mock_array_model(corsika_runner_mock_array_model):
     """Runner services object for corsika."""
     _runner_service = runner_services.RunnerServices(
@@ -33,7 +33,7 @@ def runner_service_mock_array_model(corsika_runner_mock_array_model):
     return _runner_service
 
 
-@pytest.fixture()
+@pytest.fixture
 def runner_service_config_only(corsika_config_mock_array_model):
     """Runner services object with simplified config."""
     return runner_services.RunnerServices(
@@ -42,7 +42,7 @@ def runner_service_config_only(corsika_config_mock_array_model):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def file_base_name():
     """Base name for simulation test file."""
     return "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-runner"
