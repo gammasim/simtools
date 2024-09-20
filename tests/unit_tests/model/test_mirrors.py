@@ -10,7 +10,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mirror_template_ecsv(io_handler):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv",
@@ -20,7 +20,7 @@ def mirror_template_ecsv(io_handler):
     return Mirrors(mirror_list_file)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mirror_template_simtel(io_handler):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated_simtel.dat",
@@ -30,7 +30,7 @@ def mirror_template_simtel(io_handler):
     return Mirrors(mirror_list_file)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mirror_table_template(io_handler):
     mirror_list_file = io_handler.get_input_data_file(
         file_name="mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv",

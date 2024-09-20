@@ -15,7 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def job_submitter():
     submitter = jm.JobManager()
     submitter._logger = MagicMock()
@@ -24,25 +24,25 @@ def job_submitter():
     return submitter
 
 
-@pytest.fixture()
+@pytest.fixture
 def output_log():
     """Fixture for the output log file."""
     return Path("output.log")
 
 
-@pytest.fixture()
+@pytest.fixture
 def logfile_log():
     """Fixture for the general log file."""
     return Path("logfile.log")
 
 
-@pytest.fixture()
+@pytest.fixture
 def script_file():
     """Fixture for the script file."""
     return Path("script.sh")
 
 
-@pytest.fixture()
+@pytest.fixture
 def job_messages(script_file):
     """Fixture for the script message."""
     return {
@@ -178,7 +178,7 @@ def test_execute(mock_os_system, job_submitter, job_submitter_real):
     mock_os_system.assert_called_once_with(shell_command)
 
 
-@pytest.fixture()
+@pytest.fixture
 def job_submitter_real():
     submitter = jm.JobManager()
     submitter._logger = MagicMock()
