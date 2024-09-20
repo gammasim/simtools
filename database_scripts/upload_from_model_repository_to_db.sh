@@ -1,6 +1,8 @@
 #!/bin/bash
 # Upload model parameter from repository to a local or remote mongoDB.
 #
+# Cover 'source .env': the script ensure that this file exists:
+# shellcheck disable=SC1091
 
 DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git"
 DB_SIMULATION_MODEL_BRANCH="main"
