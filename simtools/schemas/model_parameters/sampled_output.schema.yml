@@ -9,12 +9,8 @@ name: sampled_output
 description: |-
   Select a specific output format (if several available). A value of 0 means to write ADC sums, a value of 1 to write ADC samples.
 data:
-  - type: int
-    unit: byte
-    default: 1
-    allowed_range:
-      min: 0
-      max: 1
+  - type: boolean
+    default: true
 instrument:
   class: Camera
   type:
