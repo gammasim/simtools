@@ -1,4 +1,4 @@
-ARG BUILD_OPT="prod6-sc"
+ARG BUILD_OPT="prod6-baseline"
 ARG HADRONIC_MODEL="qgs2"
 ARG VERSION="240318"
 FROM ghcr.io/gammasim/simtools-corsika-sim-telarray-${HADRONIC_MODEL}-${BUILD_OPT}-${VERSION}
