@@ -10,7 +10,6 @@ RUN microdnf update -y && microdnf install -y \
     findutils \
     gcc-c++ \
     git \
-    procps \
     python3.11-pip \
     python3.11-devel && \
     microdnf clean all
