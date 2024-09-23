@@ -101,3 +101,31 @@ def test_is_photon_list_file_ok(simulator_ray_tracing):
         file.writelines(150 * [f"{1}\n"])
 
     assert simulator_ray_tracing._is_photon_list_file_ok()
+
+
+def test_write_out_single_pixel_camera_file(simulator_ray_tracing):
+    simulator_ray_tracing._write_out_single_pixel_camera_file()
+
+    single_pixel_camera_file = simulator_ray_tracing.telescope_model.config_file_directory.joinpath(
+        "single_pixel_camera.dat"
+    )
+    funnel_perfect_file = simulator_ray_tracing.telescope_model.config_file_directory.joinpath(
+        "funnel_perfect.dat"
+    )
+
+    assert single_pixel_camera_file.exists()
+    assert funnel_perfect_file.exists()
+
+    with single_pixel_camera_file.open("r") as file:
+        lines = file.readlines()
+        assert lines[0].strip() == "# Single pixel camera"
+        assert lines[1].strip() == 'PixType 1   0  0 300   1 300 0.00   "funnel_perfect.dat"'
+        assert lines[2].strip() == "Pixel 0 1 0. 0.  0  0  0 0x00 1"
+        assert lines[3].strip() == "Trigger 1 of 0"
+
+    with funnel_perfect_file.open("r") as file:
+        lines = file.readlines()
+        assert lines[1].strip() == "0    1.0"
+        assert lines[2].strip() == "30   1.0"
+        assert lines[3].strip() == "60   1.0"
+        assert lines[4].strip() == "90   1.0"
