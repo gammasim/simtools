@@ -430,7 +430,11 @@ class PSFImage:
             "names": ("Radius [cm]", "Cumulative PSF"),
             "formats": ("f8", "f8"),
         }
-        return np.core.records.fromarrays(np.c_[radius_all, intensity].T, dtype=d_type)
+        result = np.recarray((len(radius_all),), dtype=d_type)
+        result.Radius = radius_all
+        result.Intensity = intensity
+
+        return result
 
     def plot_cumulative(self, **kwargs):
         """Plot cumulative data (intensity vs radius).
