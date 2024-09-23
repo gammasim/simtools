@@ -362,7 +362,10 @@ class PSFImage:
             x_pos_data = np.array(self.photon_pos_x)
             y_pos_data = np.array(self.photon_pos_y)
         d_type = {"names": ("X", "Y"), "formats": ("f8", "f8")}
-        return np.core.records.fromarrays(np.c_[x_pos_data, y_pos_data].T, dtype=d_type)
+        result = np.recarray((len(x_pos_data),), dtype=d_type)
+        result.X = x_pos_data
+        result.Y = y_pos_data
+        return result
 
     def plot_image(self, centralized=True, **kwargs):
         """
