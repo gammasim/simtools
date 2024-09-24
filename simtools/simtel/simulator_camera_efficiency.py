@@ -65,7 +65,10 @@ class SimulatorCameraEfficiency(SimtelRunner):
         if nsb_spectrum is not None:
             self._nsb_spectrum = self._validate_or_fix_nsb_spectrum_file_format(nsb_spectrum)
         else:
-            self._nsb_spectrum = None
+            self._nsb_spectrum = (
+                self._telescope_model.config_file_directory
+                / Path(self._telescope_model.get_parameter_value("nsb_reference_spectrum")).name
+            )
 
     def _make_run_command(
         self, run_number=None, input_file=None
