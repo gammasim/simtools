@@ -23,6 +23,8 @@ class SiteModel(ModelParameter):
         Model version.
     label: str
         Instance label. Important for output file naming.
+    array_model : ArrayModel
+        Array model.
     """
 
     def __init__(
