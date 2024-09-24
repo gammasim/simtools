@@ -5,6 +5,7 @@ from pathlib import Path
 
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.runners.simtel_runner import SimtelRunner
+from simtools.utils import general
 
 __all__ = ["SimulatorCameraEfficiency"]
 
@@ -115,7 +116,10 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 "mirror_reflectivity", "secondary_mirror_incidence_angle"
             )
 
-        command = str(self._simtel_path.joinpath("sim_telarray/bin/testeff"))
+        command = str(self._simtel_path.joinpath("sim_telarray/testeff"))
+        command += " -nc"  # Do not apply B&E correction
+        command += " -I"  # Clear the fall-back configuration directories
+        command += f" -I{self._telescope_model.config_file_directory}"
         if self.nsb_spectrum is not None:
             command += f" -fnsb {self.nsb_spectrum}"
         command += " -nm -nsb-extra"
@@ -123,7 +127,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
         command += f" -flen {focal_length}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
-        if mirror_class == 1:
+        if mirror_class == 0:
             command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
         command += f" -fref {mirror_reflectivity}"
         if mirror_class == 2:
@@ -141,7 +145,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
         )
         command += f" -fqe {self._telescope_model.get_parameter_value('quantum_efficiency')}"
         command += " 200 1000"  # lmin and lmax
-        command += " 300 26"  # Xmax, ioatm (Konrad always uses 26)
+        command += " 300"  # Xmax
+        command += f" {self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" {self.zenith_angle}"
         command += f" 2>{self._file_log}"
         command += f" >{self._file_simtel}"
@@ -234,8 +239,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
         validated_nsb_spectrum_file = (
             self._telescope_model.config_file_directory / Path(nsb_spectrum_file).name
         )
-        with open(nsb_spectrum_file, encoding="utf-8") as file:
-            lines = file.readlines()
+
+        lines = general.read_file_encoded_in_utf_or_latin(nsb_spectrum_file)
+
         with open(validated_nsb_spectrum_file, "w", encoding="utf-8") as file:
             for line in lines:
                 if line.startswith("#"):
