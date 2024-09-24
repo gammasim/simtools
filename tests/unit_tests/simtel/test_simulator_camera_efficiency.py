@@ -27,7 +27,9 @@ def test_make_run_command(simulator_camera_efficiency):
     command = simulator_camera_efficiency._make_run_command()
 
     assert "testeff" in command
-    assert "-fnsb" not in command
+    assert "-fnsb" in command
+    # Benn_LaPalma_sky_converted.lis is the default nsb spectrum
+    assert "Benn_LaPalma_sky_converted.lis" in command
     assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
     assert "-flen 2.15191 -spix 0.6" in command
     assert "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2" in command
