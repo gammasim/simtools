@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g59310b2 Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g65ba8ca Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=323d2e7f"></script>
+    <script src="../_static/documentation_options.js?v=275f09b7"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g59310b2 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g65ba8ca Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -534,6 +534,7 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#site-model">site_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel"><code class="docutils literal notranslate"><span class="pre">SiteModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.export_atmospheric_transmission_file"><code class="docutils literal notranslate"><span class="pre">SiteModel.export_atmospheric_transmission_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_array_elements_for_layout"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_array_elements_for_layout()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_corsika_site_parameters"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_corsika_site_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_list_of_array_layouts"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_list_of_array_layouts()</span></code></a></li>
@@ -1421,7 +1422,7 @@ of the database structure is needed when accessing the model parameters.</p>
 <p id="module-model.site_model"><span id="id3"></span>Definition of site model.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="model.site_model.SiteModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.site_model.</span></span><span class="sig-name descname"><span class="pre">SiteModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.site_model.</span></span><span class="sig-name descname"><span class="pre">SiteModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel" title="Link to this definition">#</a></dt>
 <dd><p>SiteModel represents the MC model of an observatory site.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1434,9 +1435,28 @@ of the database structure is needed when accessing the model parameters.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
 </dd>
+<dt><strong>array_model</strong><span class="classifier">ArrayModel</span></dt><dd><p>Array model.</p>
+</dd>
 </dl>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model.site_model.SiteModel.export_atmospheric_transmission_file">
+<span class="sig-name descname"><span class="pre">export_atmospheric_transmission_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.export_atmospheric_transmission_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.export_atmospheric_transmission_file" title="Link to this definition">#</a></dt>
+<dd><p>Export atmospheric transmission file.</p>
+<p>This method is needed because when CORSIKA is not piped to sim_telarray,
+the atmospheric transmission file is not written out to the model directory.
+This method allows to export it explicitly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_directory: Path</strong></dt><dd><p>Model directory to export the file to.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="model.site_model.SiteModel.get_array_elements_for_layout">
 <span class="sig-name descname"><span class="pre">get_array_elements_for_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_array_elements_for_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_array_elements_for_layout" title="Link to this definition">#</a></dt>
@@ -1877,6 +1897,7 @@ reflectivity, etc.)</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#site-model">site_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel"><code class="docutils literal notranslate"><span class="pre">SiteModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.export_atmospheric_transmission_file"><code class="docutils literal notranslate"><span class="pre">SiteModel.export_atmospheric_transmission_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_array_elements_for_layout"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_array_elements_for_layout()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_corsika_site_parameters"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_corsika_site_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.site_model.SiteModel.get_list_of_array_layouts"><code class="docutils literal notranslate"><span class="pre">SiteModel.get_list_of_array_layouts()</span></code></a></li>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g59310b2 Manual</title>
+    <title>corsika.corsika_config &#8212; simtools v0.1.dev1+g65ba8ca Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=323d2e7f"></script>
+    <script src="../../_static/documentation_options.js?v=275f09b7"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g59310b2 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g65ba8ca Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -888,6 +888,13 @@ document.write(`
             <span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text_iact</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">EXIT&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Write out the atmospheric transmission file to the model directory.</span>
+        <span class="c1"># This is done explicitly because it is not done &quot;automatically&quot; when CORSIKA is not piped</span>
+        <span class="c1"># to sim_telarray.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">export_atmospheric_transmission_file</span><span class="p">(</span>
+            <span class="n">model_directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">get_config_directory</span><span class="p">()</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_file_updated</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span></div>

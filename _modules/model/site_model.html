@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.site_model &#8212; simtools v0.1.dev1+g59310b2 Manual</title>
+    <title>model.site_model &#8212; simtools v0.1.dev1+g65ba8ca Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=323d2e7f"></script>
+    <script src="../../_static/documentation_options.js?v=275f09b7"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g59310b2 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g65ba8ca Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -379,6 +379,7 @@ document.write(`
 <span class="sd">&quot;&quot;&quot;Definition of site model.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span> <span class="nn">simtools.model.model_parameter</span> <span class="kn">import</span> <span class="n">ModelParameter</span>
 
@@ -401,6 +402,8 @@ document.write(`
 <span class="sd">        Model version.</span>
 <span class="sd">    label: str</span>
 <span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">    array_model : ArrayModel</span>
+<span class="sd">        Array model.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -409,6 +412,7 @@ document.write(`
         <span class="n">mongo_db_config</span><span class="p">,</span>
         <span class="n">model_version</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">array_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SiteModel.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -421,6 +425,7 @@ document.write(`
             <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span> <span class="o">=</span> <span class="n">array_model</span>
 
 <div class="viewcode-block" id="SiteModel.get_reference_point">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel.get_reference_point">[docs]</a>
@@ -461,13 +466,18 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">config_file_style</span><span class="p">:</span>
+            <span class="n">model_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="p">:</span>
+                <span class="n">model_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">get_config_directory</span><span class="p">()</span>
             <span class="k">return</span> <span class="p">{</span>
                 <span class="s2">&quot;OBSLEV&quot;</span><span class="p">:</span> <span class="p">[</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="s2">&quot;cm&quot;</span><span class="p">)</span>
                 <span class="p">],</span>
                 <span class="c1"># We always use a custom profile by filename, so this has to be set to 99</span>
                 <span class="s2">&quot;ATMOSPHERE&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">99</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;IACT ATMOFILE&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;atmospheric_profile&quot;</span><span class="p">)],</span>
+                <span class="s2">&quot;IACT ATMOFILE&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="n">model_directory</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;atmospheric_profile&quot;</span><span class="p">)</span>
+                <span class="p">],</span>
                 <span class="s2">&quot;MAGNET&quot;</span><span class="p">:</span> <span class="p">[</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;geomag_horizontal&quot;</span><span class="p">),</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;geomag_vertical&quot;</span><span class="p">),</span>
@@ -520,6 +530,32 @@ document.write(`
 <span class="sd">            List of available array layouts</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">layout</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;array_layouts&quot;</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="SiteModel.export_atmospheric_transmission_file">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.site_model.SiteModel.export_atmospheric_transmission_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_atmospheric_transmission_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_directory</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export atmospheric transmission file.</span>
+
+<span class="sd">        This method is needed because when CORSIKA is not piped to sim_telarray,</span>
+<span class="sd">        the atmospheric transmission file is not written out to the model directory.</span>
+<span class="sd">        This method allows to export it explicitly.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model_directory: Path</span>
+<span class="sd">            Model directory to export the file to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;atmospheric_transmission_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;atmospheric_profile&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="n">model_directory</span><span class="p">,</span>
+        <span class="p">)</span></div>
 </div>
 
 </pre></div>
