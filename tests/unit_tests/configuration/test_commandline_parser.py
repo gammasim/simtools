@@ -255,3 +255,11 @@ def test_simulation_configuration():
     _parser_10.initialize_default_arguments(
         simulation_configuration={"software": None, "corsika_configuration": ["wrong_parameter"]}
     )
+
+
+def test_initialize_db_config_arguments_strip_string():
+    parser_10 = parser.CommandLineParser()
+    parser_10.initialize_db_config_arguments()
+    for test_string in ["test", " test", "test ", " test "]:
+        args = parser_10.parse_args(["--db_simulation_model", test_string])
+        assert args.db_simulation_model == "test"
