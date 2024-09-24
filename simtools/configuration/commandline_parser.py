@@ -194,7 +194,7 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group.add_argument(
             "--db_simulation_model",
             help="name of simulation model database",
-            type=str,
+            type=str.strip,
             required=False,
             default=None,
         )
