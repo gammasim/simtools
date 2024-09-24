@@ -235,10 +235,12 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     """
 
     if "camera-efficiency" in config["APPLICATION"]:
-        pytest.skip(
-            "Any applications calling testeff are skipped for now "
-            "due to a limitation of testeff not allowing to specify the include directory."
-        )
+        if not new_testeff_version():
+            pytest.skip(
+                "Any applications calling the old version of testeff are skipped "
+                "due to a limitation of the old testeff not allowing to specify "
+                "the include directory. Please update your sim_telarray tarball."
+            )
 
     # The db_add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
@@ -293,3 +295,16 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
         _from_config_file = config_file_model_version
         if _from_command_line == _from_config_file:
             validate_application_output(config)
+
+
+def new_testeff_version():
+    """
+    Testeff has been updated to allow to specify the include directory.
+    This test checks if the new version is used.
+    """
+
+    with open("/workdir/sim_telarray/sim_telarray/testeff.c") as file:
+        file_content = file.read()
+        if "/* Combine the include paths such that those from '-I...' options */" in file_content:
+            return True
+        return False
