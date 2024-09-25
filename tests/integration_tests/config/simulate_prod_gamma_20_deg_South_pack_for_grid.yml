@@ -1,6 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-simulate-prod
-  TEST_NAME: gamma_20_deg_pack_for_south_grid
+  TEST_NAME: gamma_20_deg_south_pack_for_grid
   CONFIGURATION:
     SIMULATION_SOFTWARE: corsika_simtel
     LABEL: test-production-South-pack-for-grid

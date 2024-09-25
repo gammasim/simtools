@@ -10,13 +10,13 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def bin_bash():
     """Path to bash."""
     return "/usr/bin/env bash"
 
 
-@pytest.fixture()
+@pytest.fixture
 def pfp_command():
     """Basic pfp command."""
     return "sim_telarray/bin/pfp"
@@ -101,7 +101,7 @@ def test_get_pfp_command(corsika_runner_mock_array_model, pfp_command):
     assert "> input_tmp_file" in command
 
 
-def test_get_autoinputs_command(corsika_runner_mock_array_model):
+def test_get_autoinputs_command(corsika_runner_mock_array_model, caplog):
     autoinputs_command = corsika_runner_mock_array_model._get_autoinputs_command(
         run_number=3, input_tmp_file="tmp_file"
     )
@@ -109,9 +109,14 @@ def test_get_autoinputs_command(corsika_runner_mock_array_model):
     assert "-R 3" in autoinputs_command
     assert "--keep-seeds" not in autoinputs_command
     corsika_runner_mock_array_model._keep_seeds = True
-    autoinputs_command_with_seeds = corsika_runner_mock_array_model._get_autoinputs_command(
-        run_number=3, input_tmp_file="tmp_file"
-    )
+    with caplog.at_level("WARNING"):
+        autoinputs_command_with_seeds = corsika_runner_mock_array_model._get_autoinputs_command(
+            run_number=3, input_tmp_file="tmp_file"
+        )
+        assert any(
+            "Using --keep-seeds option in corsika_autoinputs is not recommended" in message
+            for message in caplog.messages
+        )
     assert "--keep-seeds" in autoinputs_command_with_seeds
 
 

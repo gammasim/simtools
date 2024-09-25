@@ -73,7 +73,7 @@ def _parse(label=None, description=None):
     config.parser.add_argument(
         "--db_name",
         help="Name of the new model parameter database to be created.",
-        type=str,
+        type=str.strip,
         required=True,
     )
     config.parser.add_argument(

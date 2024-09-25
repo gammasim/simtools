@@ -12,7 +12,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simulator_camera_efficiency(camera_efficiency_sst, simtel_path):
     camera_efficiency_sst.export_model_files()
     return SimulatorCameraEfficiency(
