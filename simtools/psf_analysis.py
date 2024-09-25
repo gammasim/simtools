@@ -419,7 +419,7 @@ class PSFImage:
         (radius, intensity)
         """
         if radius is not None:
-            radius_all = [radius.to(u.cm).value]
+            radius_all = radius.to(u.cm).value if isinstance(radius, u.Quantity) else radius
         else:
             radius_all = list(np.linspace(0, 1.6 * self.get_psf(0.8), 30))
 
@@ -431,8 +431,8 @@ class PSFImage:
             "formats": ("f8", "f8"),
         }
         result = np.recarray((len(radius_all),), dtype=d_type)
-        result.Radius = radius_all
-        result.Intensity = intensity
+        result["Radius [cm]"] = radius_all
+        result["Cumulative PSF"] = intensity
 
         return result
 
