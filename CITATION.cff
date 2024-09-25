@@ -23,6 +23,10 @@ authors:
     family-names: Kleiner
     orcid: 'https://orcid.org/0000-0002-4260-9186'
     affiliation: DESY
+  - given-names: Eshita
+    family-names: Joshi
+    orcid: 'https://orcid.org/0000-0001-8557-1141'
+    affiliation: DESY
   - given-names: Victor
     family-names: Barbosa Martins
     orcid: 'https://orcid.org/0000-0002-5085-8828'
