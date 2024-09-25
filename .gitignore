@@ -32,3 +32,6 @@ simtools/_version.py
 # Coverage files
 coverage*
 .coverage*
+
+# Ignore temporary output of database scripts
+database_scripts/mongo-data

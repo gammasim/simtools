@@ -234,6 +234,12 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
 
     """
 
+    if "camera-efficiency" in config["APPLICATION"]:
+        pytest.skip(
+            "Any applications calling testeff are skipped for now "
+            "due to a limitation of testeff not allowing to specify the include directory."
+        )
+
     # The db_add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
     # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
