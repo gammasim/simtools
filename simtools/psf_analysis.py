@@ -259,7 +259,7 @@ class PSFImage:
         scale = 0.5 * sqrt(current_radius * current_radius / start_number)
         delta_number = start_number - target_number
         n_iter = 0
-        max_iter = 100
+        max_iter = 1000
         tolerance = self._number_of_detected_photons / 1000.0
         found_radius = False
         while not found_radius and n_iter < max_iter:
@@ -318,7 +318,7 @@ class PSFImage:
             found_radius = False
             while not found_radius:
                 s0, s1 = self._sum_photons_in_radius(r0), self._sum_photons_in_radius(r1)
-                if s0 < target_number < s1:
+                if s0 < target_number <= s1:
                     found_radius = True
                     break
                 if r1 > rad_max:
@@ -419,7 +419,7 @@ class PSFImage:
         (radius, intensity)
         """
         if radius is not None:
-            radius_all = radius.to(u.cm).value
+            radius_all = [radius.to(u.cm).value]
         else:
             radius_all = list(np.linspace(0, 1.6 * self.get_psf(0.8), 30))
 
@@ -446,6 +446,3 @@ class PSFImage:
         """
         data = self.get_cumulative_data()
         plt.plot(data["Radius [cm]"], data["Cumulative PSF"], **kwargs)
-
-
-# end of PSFImage
