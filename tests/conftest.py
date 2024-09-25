@@ -421,6 +421,17 @@ def corsika_runner_mock_array_model(corsika_config_mock_array_model, io_handler,
 
 
 @pytest.fixture
+def array_model(db_config, io_handler, model_version):
+    return ArrayModel(
+        label="test",
+        site="North",
+        layout_name="test_layout",
+        mongo_db_config=db_config,
+        model_version=model_version,
+    )
+
+
+@pytest.fixture
 def file_has_text():
     """Check if a file contains a specific text."""
 

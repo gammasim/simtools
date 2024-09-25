@@ -496,6 +496,13 @@ class CorsikaConfig:
             file.write(text_iact)
             file.write("\nEXIT")
 
+        # Write out the atmospheric transmission file to the model directory.
+        # This is done explicitly because it is not done "automatically" when CORSIKA is not piped
+        # to sim_telarray.
+        self.array_model.site_model.export_atmospheric_transmission_file(
+            model_directory=self.array_model.get_config_directory()
+        )
+
         self._is_file_updated = True
         return self.config_file_path
 
