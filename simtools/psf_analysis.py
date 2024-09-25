@@ -34,6 +34,9 @@ class PSFImage:
         Scatter area of all photons in cm^2. If not given, effective area cannot be computed.
     """
 
+    __PSF_RADIUS = "Radius [cm]"
+    __PSF_CUMULATIVE = "Cumulative PSF"
+
     def __init__(self, focal_length=None, total_scattered_area=None):
         """Initialize PSFImage class."""
         self._logger = logging.getLogger(__name__)
@@ -427,12 +430,12 @@ class PSFImage:
         for rad in radius_all:
             intensity.append(self._sum_photons_in_radius(rad) / self._number_of_detected_photons)
         d_type = {
-            "names": ("Radius [cm]", "Cumulative PSF"),
+            "names": (self.__PSF_RADIUS, self.__PSF_CUMULATIVE),
             "formats": ("f8", "f8"),
         }
         result = np.recarray((len(radius_all),), dtype=d_type)
-        result["Radius [cm]"] = radius_all
-        result["Cumulative PSF"] = intensity
+        result[self.__PSF_RADIUS] = radius_all
+        result[self.__PSF_CUMULATIVE] = intensity
 
         return result
 
@@ -445,4 +448,4 @@ class PSFImage:
             image_* for the histogram plot and psf_* for the psf circle.
         """
         data = self.get_cumulative_data()
-        plt.plot(data["Radius [cm]"], data["Cumulative PSF"], **kwargs)
+        plt.plot(data[self.__PSF_RADIUS], data[self.__PSF_CUMULATIVE], **kwargs)
