@@ -22,6 +22,7 @@ ray_tracing
 runners
 sim_telarray
 simulators
+testing
 utils
 visualization
 ```

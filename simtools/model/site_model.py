@@ -2,6 +2,7 @@
 """Definition of site model."""
 
 import logging
+from pathlib import Path
 
 from simtools.model.model_parameter import ModelParameter
 
@@ -22,6 +23,8 @@ class SiteModel(ModelParameter):
         Model version.
     label: str
         Instance label. Important for output file naming.
+    array_model : ArrayModel
+        Array model.
     """
 
     def __init__(
@@ -30,6 +33,7 @@ class SiteModel(ModelParameter):
         mongo_db_config,
         model_version,
         label=None,
+        array_model=None,
     ):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
@@ -42,6 +46,7 @@ class SiteModel(ModelParameter):
             db=None,
             label=label,
         )
+        self.array_model = array_model
 
     def get_reference_point(self):
         """
@@ -77,13 +82,18 @@ class SiteModel(ModelParameter):
 
         """
         if config_file_style:
+            model_directory = Path("")
+            if self.array_model:
+                model_directory = self.array_model.get_config_directory()
             return {
                 "OBSLEV": [
                     self.get_parameter_value_with_unit("corsika_observation_level").to_value("cm")
                 ],
                 # We always use a custom profile by filename, so this has to be set to 99
                 "ATMOSPHERE": [99, "Y"],
-                "IACT ATMOFILE": [self.get_parameter_value("atmospheric_profile")],
+                "IACT ATMOFILE": [
+                    model_directory / self.get_parameter_value("atmospheric_profile")
+                ],
                 "MAGNET": [
                     self.get_parameter_value("geomag_horizontal"),
                     self.get_parameter_value("geomag_vertical"),
@@ -130,3 +140,26 @@ class SiteModel(ModelParameter):
             List of available array layouts
         """
         return [layout["name"] for layout in self.get_parameter_value("array_layouts")]
+
+    def export_atmospheric_transmission_file(self, model_directory):
+        """
+        Export atmospheric transmission file.
+
+        This method is needed because when CORSIKA is not piped to sim_telarray,
+        the atmospheric transmission file is not written out to the model directory.
+        This method allows to export it explicitly.
+
+        Parameters
+        ----------
+        model_directory: Path
+            Model directory to export the file to.
+        """
+        self.db.export_model_files(
+            {
+                "atmospheric_transmission_file": {
+                    "value": self.get_parameter_value("atmospheric_profile"),
+                    "file": True,
+                }
+            },
+            model_directory,
+        )

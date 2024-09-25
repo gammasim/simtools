@@ -156,6 +156,10 @@ class SimulatorRayTracing(SimtelRunner):
                     f"0. {90.0 - self.config.zenith_angle} 1.0 {self.config.source_distance}\n"
                 )
 
+        if self.config.single_mirror_mode:
+            self._logger.debug("For single mirror mode, need to prepare the single pixel camera.")
+            self._write_out_single_pixel_camera_file()
+
     def _make_run_command(
         self, run_number=None, input_file=None
     ):  # pylint: disable=unused-argument
@@ -168,7 +172,6 @@ class SimulatorRayTracing(SimtelRunner):
         # RayTracing
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.telescope_model.get_config_file()}"
-        command += " -I../cfg/CTA"
         command += f" -I{self.telescope_model.config_file_directory}"
         command += super().get_config_option("random_state", "none")
         command += super().get_config_option("IMAGING_LIST", str(self._photons_file))
@@ -241,6 +244,28 @@ class SimulatorRayTracing(SimtelRunner):
                     break
 
         return n_lines > 100
+
+    def _write_out_single_pixel_camera_file(self):
+        """Write out the single pixel camera file."""
+        with self.telescope_model.config_file_directory.joinpath("single_pixel_camera.dat").open(
+            "w"
+        ) as file:
+            file.write("# Single pixel camera\n")
+            file.write('PixType 1   0  0 300   1 300 0.00   "funnel_perfect.dat"\n')
+            file.write("Pixel 0 1 0. 0.  0  0  0 0x00 1\n")
+            file.write("Trigger 1 of 0\n")
+
+        # need to also write out the funnel_perfect.dat file
+        with self.telescope_model.config_file_directory.joinpath("funnel_perfect.dat").open(
+            "w"
+        ) as file:
+            file.write(
+                "# Perfect light collection where the angular efficiency of funnels is needed\n"
+            )
+            file.write("0    1.0\n")
+            file.write("30   1.0\n")
+            file.write("60   1.0\n")
+            file.write("90   1.0\n")
 
     @staticmethod
     def ray_tracing_default_configuration(config_runner=False):

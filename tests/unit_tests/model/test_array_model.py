@@ -14,17 +14,6 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def array_model(db_config, io_handler, model_version):
-    return ArrayModel(
-        label="test",
-        site="North",
-        layout_name="test_layout",
-        mongo_db_config=db_config,
-        model_version=model_version,
-    )
-
-
-@pytest.fixture
 def array_model_from_list(db_config, io_handler, model_version):
     return ArrayModel(
         label="test",
