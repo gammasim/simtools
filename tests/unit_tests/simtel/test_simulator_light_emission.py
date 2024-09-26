@@ -333,8 +333,10 @@ def test_make_simtel_script(mock_simulator):
         mock_simulator._simtel_path.joinpath.return_value = (
             "/path/to/sim_telarray/bin/sim_telarray/"
         )
-        path_to_config = "/path/to/config.cfg"
-        mock_simulator._telescope_model.get_config_file.return_value = path_to_config
+        path_to_config_directory = "/path/to/config/"
+        mock_simulator._telescope_model.config_file_directory = path_to_config_directory
+        path_to_config_file = "/path/to/config/config.cfg"
+        mock_simulator._telescope_model.get_config_file.return_value = path_to_config_file
 
         def get_telescope_model_param(param):
             if param == "atmospheric_transmission":
@@ -352,7 +354,9 @@ def test_make_simtel_script(mock_simulator):
         mock_simulator.output_directory = "/directory"
 
         expected_command = (
-            "/path/to/sim_telarray/bin/sim_telarray/ -c /path/to/config.cfg "
+            "/path/to/sim_telarray/bin/sim_telarray/ "
+            "-I -I/path/to/config/ "
+            "-c /path/to/config/config.cfg "
             "-DNUM_TELESCOPES=1 "
             "-C altitude=999 -C atmospheric_transmission=atm_test "
             "-C TRIGGER_TELESCOPES=1 "
