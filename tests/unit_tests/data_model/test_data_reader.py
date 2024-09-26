@@ -17,7 +17,7 @@ logger = logging.getLogger()
 JSON_TEST_FILE = "test_read_value_from_file_1.json"
 
 
-@pytest.fixture()
+@pytest.fixture
 def reference_point_altitude_file():
     return "tests/resources/reference_point_altitude.json"
 

@@ -19,22 +19,22 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture()
+@pytest.fixture
 def input_file_list():
     return ["run1", "abc_run22", "def_run02_and"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def corsika_file():
     return "run1_proton_za20deg_azm0deg_North_1LST_test.corsika.zst"
 
 
-@pytest.fixture()
+@pytest.fixture
 def submit_engine():
     return "local"
 
 
-@pytest.fixture()
+@pytest.fixture
 def simulations_args_dict(corsika_config_data, model_version, simtel_path, submit_engine):
     """Return a dictionary with the simulation command line arguments."""
     args_dict = copy.deepcopy(corsika_config_data)
@@ -52,7 +52,7 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
     return args_dict
 
 
-@pytest.fixture()
+@pytest.fixture
 def array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "simtel"
@@ -64,7 +64,7 @@ def array_simulator(io_handler, db_config, simulations_args_dict):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def shower_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika"
@@ -77,7 +77,7 @@ def shower_simulator(io_handler, db_config, simulations_args_dict):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def shower_array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_simtel"
