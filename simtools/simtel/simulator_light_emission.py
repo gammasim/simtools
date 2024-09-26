@@ -352,7 +352,12 @@ class SimulatorLightEmission(SimtelRunner):
         command += super().get_config_option(
             "output_file",
             f"{self.output_directory}/"
-            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n",
+            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz",
+        )
+        command += super().get_config_option(
+            "histogram_file",
+            f"{self.output_directory}/"
+            f"{self.le_application[0]}_{self.le_application[1]}.ctsim.hdata\n",
         )
 
         return command
