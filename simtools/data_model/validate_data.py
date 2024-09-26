@@ -139,6 +139,7 @@ class DataValidator:
             if isinstance(self.data_dict["unit"], list | np.ndarray)
             else [self.data_dict["unit"]]
         )
+        unit_as_list = [None if unit == 'null' else unit for unit in unit_as_list]
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
             if self._get_data_description(index).get("type", None) == "dict":
                 self._logger.debug(f"Skipping validation of dict type for entry {index}")
