@@ -12,7 +12,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 ecsv_suffix = ".ecsv"
 
 
-@pytest.fixture()
+@pytest.fixture
 def invalid_name():
     return "Invalid name"
 

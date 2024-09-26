@@ -90,7 +90,9 @@ class CorsikaRunner:
         script_file_path = self.get_file_name(
             file_type="sub_script", run_number=self.corsika_config.run_number
         )
-        corsika_input_file = self.corsika_config.generate_corsika_input_file(self._use_multipipe)
+        corsika_input_file = self.corsika_config.generate_corsika_input_file(
+            use_multipipe=self._use_multipipe, use_test_seeds=self._keep_seeds
+        )
 
         # CORSIKA input file for a specific run, created by the preprocessor pfp
         corsika_input_tmp_name = self.corsika_config.get_corsika_config_file_name(
@@ -190,12 +192,18 @@ class CorsikaRunner:
         corsika_bin_path = self._simtel_path.joinpath("corsika-run/corsika")
 
         log_file = self.get_file_name(file_type="log", run_number=run_number)
+        if self._use_multipipe:
+            log_file = log_file.with_name(f"multipipe_{log_file.name}")
 
         cmd = self._simtel_path.joinpath("sim_telarray/bin/corsika_autoinputs")
         cmd = str(cmd) + f" --run {corsika_bin_path}"
         cmd += f" -R {run_number}"
         cmd += ' -p "$CORSIKA_DATA"'
         if self._keep_seeds:
+            logging.warning(
+                "Using --keep-seeds option in corsika_autoinputs is not recommended. "
+                "It should only be used for testing purposes."
+            )
             cmd += " --keep-seeds"
         cmd += f" {input_tmp_file} | gzip > {log_file} 2>&1"
         cmd += " || exit 1\n"

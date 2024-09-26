@@ -145,6 +145,25 @@ def validate_application_output(config):
                     .joinpath(integration_test["OUTPUT_FILE"])
                     .exists()
                 )
+
+            expected_output = [
+                d["EXPECTED_OUTPUT"] for d in config["INTEGRATION_TESTS"] if "EXPECTED_OUTPUT" in d
+            ]
+            if expected_output and "log_hist" not in integration_test["OUTPUT_FILE"]:
+                # Get the expected output from the configuration file
+                expected_output = expected_output[0]
+                logger.info(
+                    f"Checking the output of {integration_test['OUTPUT_FILE']} "
+                    "complies with the expected output: "
+                    f"{expected_output}"
+                )
+                assert assertions.check_output_from_sim_telarray(
+                    Path(config["CONFIGURATION"]["DATA_DIRECTORY"]).joinpath(
+                        integration_test["OUTPUT_FILE"]
+                    ),
+                    expected_output,
+                )
+
         if "FILE_TYPE" in integration_test:
             assert assertions.assert_file_type(
                 integration_test["FILE_TYPE"],
@@ -215,6 +234,12 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
 
     """
 
+    if "camera-efficiency" in config["APPLICATION"]:
+        pytest.skip(
+            "Any applications calling testeff are skipped for now "
+            "due to a limitation of testeff not allowing to specify the include directory."
+        )
+
     # The db_add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
     # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
@@ -257,7 +282,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     logger.info(f"Application configuration: {config}")
 
     logger.info(f"Running application: {cmd}")
-    assert os.system(cmd) == 0
+    assert os.system(cmd) == 0, f"Application failed: {cmd}"
 
     # output validation for tests with default values
     # executed only for the model version as given in the config file

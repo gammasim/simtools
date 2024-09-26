@@ -38,10 +38,12 @@ class CorsikaSimtelRunner:
         label=None,
         keep_seeds=False,
         use_multipipe=False,
+        sim_telarray_seeds=None,
     ):
         self._logger = logging.getLogger(__name__)
         self.corsika_config = corsika_config
         self._simtel_path = simtel_path
+        self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
 
         self.corsika_config.set_output_file_and_directory(use_multipipe)
@@ -57,6 +59,7 @@ class CorsikaSimtelRunner:
             simtel_path=simtel_path,
             label=label,
             use_multipipe=use_multipipe,
+            sim_telarray_seeds=sim_telarray_seeds,
         )
 
     def prepare_run_script(
@@ -165,7 +168,10 @@ class CorsikaSimtelRunner:
             "telescope_phi", self.corsika_config.azimuth_angle, weak_option=weak_pointing
         )
         command += self.simulator_array.get_config_option(
-            "power_law", abs(self.corsika_config.get_config_parameter("ESLOPE"))
+            "power_law",
+            SimulatorArray.get_power_law_for_sim_telarray_histograms(
+                self.corsika_config.primary_particle
+            ),
         )
         command += self.simulator_array.get_config_option(
             "histogram_file",
@@ -173,14 +179,18 @@ class CorsikaSimtelRunner:
                 simulation_software="simtel", file_type="histogram", run_number=run_number
             ),
         )
+        command += self.simulator_array.get_config_option("random_state", "none")
+        if self.sim_telarray_seeds:
+            command += self.simulator_array.get_config_option(
+                "random_seed", self.sim_telarray_seeds
+            )
+        command += self.simulator_array.get_config_option("show", "all")
         command += self.simulator_array.get_config_option(
             "output_file",
             self.simulator_array.get_file_name(
                 simulation_software="simtel", file_type="output", run_number=run_number
             ),
         )
-        command += self.simulator_array.get_config_option("random_state", "none")
-        command += self.simulator_array.get_config_option("show", "all")
         command += f" {input_file}"
         _log_file = self.simulator_array.get_file_name(
             simulation_software="simtel", file_type="log", run_number=run_number
