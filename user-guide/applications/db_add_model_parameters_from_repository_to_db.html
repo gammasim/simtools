@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>db_add_model_parameters_from_repository_to_db &#8212; simtools v0.1.dev1+g7428ecd Manual</title>
+    <title>db_add_model_parameters_from_repository_to_db &#8212; simtools v0.1.dev1+ga45361a Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=bf0957b6"></script>
+    <script src="../../_static/documentation_options.js?v=332f51d1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7428ecd Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga45361a Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -480,17 +480,13 @@ file as input.</p>
 </dd>
 <dt>db_name (str, required)</dt><dd><p>Name of new DB to be created.</p>
 </dd>
-<dt>type (str, required)</dt><dd><p>Type of data to be uploaded to the DB. Options are: model_parameters, metadata</p>
+<dt>type (str, optional)</dt><dd><p>Type of data to be uploaded to the DB. Options are: model_parameters</p>
 </dd>
 </dl>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
 <p>Upload model data repository to the DB:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-add_model-parameters-from-repository-to-db             --input_path /path/to/repository             --db_name new_db_name             --type model_parameters</span>
-</pre></div>
-</div>
-<p>Upload metadata from repository to the DB:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-add_model-parameters-from-repository-to-db             --input_path /path/to/repository/metadata             --db_name new_db_name             --type metadata</span>
 </pre></div>
 </div>
 </section>

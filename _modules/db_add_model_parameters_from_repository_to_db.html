@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db_add_model_parameters_from_repository_to_db &#8212; simtools v0.1.dev1+g7428ecd Manual</title>
+    <title>db_add_model_parameters_from_repository_to_db &#8212; simtools v0.1.dev1+ga45361a Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=bf0957b6"></script>
+    <script src="../_static/documentation_options.js?v=332f51d1"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7428ecd Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga45361a Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -391,8 +391,8 @@ document.write(`
 <span class="sd">        Path of local copy of model parameter repository.</span>
 <span class="sd">    db_name (str, required)</span>
 <span class="sd">        Name of new DB to be created.</span>
-<span class="sd">    type (str, required)</span>
-<span class="sd">        Type of data to be uploaded to the DB. Options are: model_parameters, metadata</span>
+<span class="sd">    type (str, optional)</span>
+<span class="sd">        Type of data to be uploaded to the DB. Options are: model_parameters</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -404,15 +404,6 @@ document.write(`
 <span class="sd">            --input_path /path/to/repository \</span>
 <span class="sd">            --db_name new_db_name \</span>
 <span class="sd">            --type model_parameters</span>
-
-<span class="sd">    Upload metadata from repository to the DB:</span>
-
-<span class="sd">    .. code-block:: console</span>
-
-<span class="sd">        simtools-db-add_model-parameters-from-repository-to-db \</span>
-<span class="sd">            --input_path /path/to/repository/metadata \</span>
-<span class="sd">            --db_name new_db_name \</span>
-<span class="sd">            --type metadata</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -459,7 +450,7 @@ document.write(`
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">,</span>
-        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">],</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">],</span>
     <span class="p">)</span>
 
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
@@ -510,31 +501,6 @@ document.write(`
         <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">,</span>
     <span class="p">)</span></div>
 
-
-
-<span class="k">def</span> <span class="nf">_add_metadata_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Add metadata to the DB.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Command line arguments.</span>
-<span class="sd">    db_name : str</span>
-<span class="sd">        Name of the database to be created.</span>
-<span class="sd">    logger : logging.Logger</span>
-<span class="sd">        Logger object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Adding metadata to the DB&quot;</span><span class="p">)</span>
-    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">])</span>
-    <span class="n">simulation_model_tags</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span>
-        <span class="n">file_name</span><span class="o">=</span><span class="n">input_path</span> <span class="o">/</span> <span class="s2">&quot;simulation_model_tags.json&quot;</span><span class="p">,</span> <span class="n">in_dict</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding simulation model tags to the DB </span><span class="si">{</span><span class="n">simulation_model_tags</span><span class="p">[</span><span class="s1">&#39;Tags&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">db</span><span class="o">.</span><span class="n">add_tagged_version</span><span class="p">(</span>
-        <span class="n">tags</span><span class="o">=</span><span class="n">simulation_model_tags</span><span class="p">[</span><span class="s2">&quot;Tags&quot;</span><span class="p">],</span>
-        <span class="n">db_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">],</span>
-    <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_add_model_parameters_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -593,10 +559,7 @@ document.write(`
 
     <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;metadata&quot;</span><span class="p">:</span>
-        <span class="n">_add_metadata_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">_add_model_parameters_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+    <span class="n">_add_model_parameters_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
 
 
 
