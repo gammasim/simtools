@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 developer_note: To be replaced by a data table
 name: nsb_reference_spectrum
 description: |-
-  Nightsky spectrum from Benn & Ellison (astro-ph/9909153 actually),
+  Nightsky spectrum from Benn & Ellison (astro-ph/9909153),
   in original units and converted to photons per wavelength interval, time, area, and solid angle.
   More details can be found within the file.
   This reference spectrum is expected to be replaced in the future with measured or predicted spectra per observation.
