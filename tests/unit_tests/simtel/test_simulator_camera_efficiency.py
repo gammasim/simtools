@@ -28,6 +28,7 @@ def test_make_run_command(simulator_camera_efficiency):
 
     assert "testeff" in command
     assert "-fnsb" in command
+    assert "-nc" not in command
     # Benn_LaPalma_sky_converted.lis is the default nsb spectrum
     assert "Benn_LaPalma_sky_converted.lis" in command
     assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
@@ -47,6 +48,23 @@ def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency):
     assert "testeff" in command
     assert "-fnsb" in command
     assert "benn_ellison_spectrum_for_testing.txt" in command
+    assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
+    assert "-flen 2.15191 -spix 0.6" in command
+    assert "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2" in command
+    assert "-teltrans 0.921" in command
+    assert "transmission_sstcam_weighted_220512.dat" in command
+    assert "-fqe PDE_lvr3_6mm_75um_uncoated_5.9V.dat" in command
+
+
+def test_make_run_command_without_altitude_correction(simulator_camera_efficiency):
+    simulator_camera_efficiency.apply_correction_to_nsb_spectrum = False
+    command = simulator_camera_efficiency._make_run_command()
+
+    assert "testeff" in command
+    assert "-fnsb" in command
+    assert "-nc" in command
+    # Benn_LaPalma_sky_converted.lis is the default nsb spectrum
+    assert "Benn_LaPalma_sky_converted.lis" in command
     assert "alt 2147.0 -fatm atm_trans_2147_1_10_2_0_2147.dat" in command
     assert "-flen 2.15191 -spix 0.6" in command
     assert "weighted_average_1D_ref_astri-2d_2018-01-17.dat -m2" in command

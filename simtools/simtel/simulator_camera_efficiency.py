@@ -39,6 +39,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         file_log=None,
         zenith_angle=None,
         nsb_spectrum=None,
+        apply_correction_to_nsb_spectrum=True,
     ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         self._file_log = file_log
         self.zenith_angle = zenith_angle
         self.nsb_spectrum = nsb_spectrum
+        self.apply_correction_to_nsb_spectrum = apply_correction_to_nsb_spectrum
 
     @property
     def nsb_spectrum(self):
@@ -120,7 +122,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
             )
 
         command = str(self._simtel_path.joinpath("sim_telarray/testeff"))
-        command += " -nc"  # Do not apply B&E correction
+        if not self.apply_correction_to_nsb_spectrum:
+            command += " -nc"  # Do not apply correction to original altitude where B&E was derived
         command += " -I"  # Clear the fall-back configuration directories
         command += f" -I{self._telescope_model.config_file_directory}"
         if self.nsb_spectrum is not None:
