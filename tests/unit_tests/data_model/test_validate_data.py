@@ -654,6 +654,9 @@ def test_validate_data_dict():
     data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [None]}
     data_validator_2._validate_data_dict()
 
+    data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": ["null"]}
+    data_validator_2._validate_data_dict()
+
 
 def test_prepare_model_parameter():
     data_validator = validate_data.DataValidator()
