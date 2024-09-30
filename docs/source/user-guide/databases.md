@@ -114,7 +114,7 @@ uploads its contents to the local database instance.
 
 Note that repository branches are hardcoded in the scripts and need to be adjusted accordingly.
 
-**This should be run from within the simtools container**
+**If you get timeout errors, try to run it run from within the simtools container**
 
 ### Purge the local database instance and all networks, images, containers
 
