@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
-        version: ['240913']
+        version: ['240927']
         hadronic_model: ['qgs2']
 
     steps:
