@@ -170,6 +170,9 @@ class CameraEfficiency:
             file_log=self._file["log"],
             label=self.label,
             nsb_spectrum=self.config["nsb_spectrum"],
+            apply_correction_to_nsb_spectrum=self.config.get(
+                "apply_correction_to_nsb_spectrum", True
+            ),
         )
         simtel.run(test=self.test)
 
