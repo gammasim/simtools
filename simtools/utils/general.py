@@ -821,3 +821,36 @@ def _load_yaml_using_astropy(file):
 
     file.seek(0)
     return astropy_yaml.load(file)
+
+
+def read_file_encoded_in_utf_or_latin(file_name):
+    """
+    Read a file encoded in UTF-8 or Latin-1.
+
+    Parameters
+    ----------
+    file_name: str
+        Name of the file to be read.
+
+    Returns
+    -------
+    list
+        List of lines read from the file.
+
+    Raises
+    ------
+    UnicodeDecodeError
+        If the file cannot be decoded using UTF-8 or Latin-1.
+    """
+    try:
+        with open(file_name, encoding="utf-8") as file:
+            lines = file.readlines()
+    except UnicodeDecodeError:
+        logging.debug("Unable to decode file using UTF-8. Trying Latin-1.")
+        try:
+            with open(file_name, encoding="latin-1") as file:
+                lines = file.readlines()
+        except UnicodeDecodeError as exc:
+            raise UnicodeDecodeError("Unable to decode file using UTF-8 or Latin-1.") from exc
+
+    return lines
