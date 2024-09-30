@@ -70,7 +70,7 @@ def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency, expecte
 def test_make_run_command_without_altitude_correction(
     simulator_camera_efficiency, expected_command, benn_ellison_spectrum_file_name
 ):
-    simulator_camera_efficiency.apply_correction_to_nsb_spectrum = False
+    simulator_camera_efficiency.skip_correction_to_nsb_spectrum = True
     command = simulator_camera_efficiency._make_run_command()
 
     for item in expected_command:

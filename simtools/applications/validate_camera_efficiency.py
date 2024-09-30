@@ -74,16 +74,15 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--apply_correction_to_nsb_spectrum",
+        "--skip_correction_to_nsb_spectrum",
         help=(
             "Apply a correction to the NSB spectrum to account for the "
             "difference between the altitude used in the reference B&E spectrum and "
             "the observation level at the CTAO sites."
             "This correction is done internally in sim_telarray and is on by default."
         ),
-        type=bool,
-        default=True,
         required=False,
+        action="store_true",
     )
     _args_dict, _db_config = config.initialize(
         db_config=True,
