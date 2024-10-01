@@ -168,7 +168,7 @@ def test_get_simtel_parameters(telescope_model_lst):
 
 
 def test_change_parameter(telescope_model_lst):
-    tel_model = telescope_model_lst
+    tel_model = copy.deepcopy(telescope_model_lst)
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
     tel_model.change_parameter("camera_pixels", 9999)
