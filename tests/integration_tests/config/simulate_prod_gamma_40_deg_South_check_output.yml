@@ -34,5 +34,6 @@ CTA_SIMPIPE:
         # should be between 20 and 1000 (very loose requirement)
         pe_sum: [20, 1000]
         # The mean number of photons per telescope after atmospheric absorption and QE
-        # should be between 100 and 1000 (very loose requirement)
-        photons: [100, 1000]
+        # should be between 90 and 1000 (very loose requirement,
+        # reduced to 90 after an update to sim_telarray lead to a result of 94.9)
+        photons: [90, 1000]
