@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_camera_efficiency &#8212; simtools v0.1.dev1+gf067e42 Manual</title>
+    <title>simtel.simulator_camera_efficiency &#8212; simtools v0.1.dev1+g4ef1cbd Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=94ea7317"></script>
+    <script src="../../_static/documentation_options.js?v=776a226b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf067e42 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4ef1cbd Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -418,7 +418,7 @@ document.write(`
         <span class="n">file_log</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">zenith_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">nsb_spectrum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">apply_correction_to_nsb_spectrum</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">skip_correction_to_nsb_spectrum</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelRunner.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -433,7 +433,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_file_log</span> <span class="o">=</span> <span class="n">file_log</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">zenith_angle</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nsb_spectrum</span> <span class="o">=</span> <span class="n">nsb_spectrum</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">apply_correction_to_nsb_spectrum</span> <span class="o">=</span> <span class="n">apply_correction_to_nsb_spectrum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skip_correction_to_nsb_spectrum</span> <span class="o">=</span> <span class="n">skip_correction_to_nsb_spectrum</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">nsb_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -501,7 +501,7 @@ document.write(`
             <span class="p">)</span>
 
         <span class="n">command</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/testeff&quot;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_correction_to_nsb_spectrum</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_correction_to_nsb_spectrum</span><span class="p">:</span>
             <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -nc&quot;</span>  <span class="c1"># Do not apply correction to original altitude where B&amp;E was derived</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -I&quot;</span>  <span class="c1"># Clear the fall-back configuration directories</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">&quot;</span>

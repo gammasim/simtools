@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+gf067e42 Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+g4ef1cbd Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=94ea7317"></script>
+    <script src="../../_static/documentation_options.js?v=776a226b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf067e42 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4ef1cbd Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -996,7 +996,36 @@ document.write(`
                 <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                 <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
                 <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">export_nsb_spectrum_to_telescope_altitude_correction_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_directory</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export the NSB spectrum to the telescope altitude correction file.</span>
+
+<span class="sd">        This method is needed because testeff corrects the NSB spectrum from the original altitude</span>
+<span class="sd">        used in the Benn &amp; Ellison model to the telescope altitude.</span>
+<span class="sd">        This is done internally in testeff, but the NSB spectrum is not written out to the model</span>
+<span class="sd">        directory. This method allows to export it explicitly.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model_directory: Path</span>
+<span class="sd">            Model directory to export the file to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;nsb_spectrum_at_2200m&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">][</span>
+                        <span class="s2">&quot;correct_nsb_spectrum_to_telescope_altitude&quot;</span>
+                    <span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="n">model_directory</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
 
 </pre></div>
 

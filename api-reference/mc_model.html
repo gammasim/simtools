@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+gf067e42 Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g4ef1cbd Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=94ea7317"></script>
+    <script src="../_static/documentation_options.js?v=776a226b"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf067e42 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4ef1cbd Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -512,6 +512,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.derived"><code class="docutils literal notranslate"><span class="pre">ModelParameter.derived</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_model_files"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_model_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_parameter_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_parameter_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.extra_label"><code class="docutils literal notranslate"><span class="pre">ModelParameter.extra_label</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_config_file()</span></code></a></li>
@@ -1166,6 +1167,24 @@ Experimental feature: insufficient validation of parameters.</p>
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.export_model_files">
 <span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.export_model_files" title="Link to this definition">#</a></dt>
 <dd><p>Export the model files into the config file directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file">
+<span class="sig-name descname"><span class="pre">export_nsb_spectrum_to_telescope_altitude_correction_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file" title="Link to this definition">#</a></dt>
+<dd><p>Export the NSB spectrum to the telescope altitude correction file.</p>
+<p>This method is needed because testeff corrects the NSB spectrum from the original altitude
+used in the Benn &amp; Ellison model to the telescope altitude.
+This is done internally in testeff, but the NSB spectrum is not written out to the model
+directory. This method allows to export it explicitly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_directory: Path</strong></dt><dd><p>Model directory to export the file to.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1875,6 +1894,7 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.derived"><code class="docutils literal notranslate"><span class="pre">ModelParameter.derived</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_model_files"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_model_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_parameter_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_parameter_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.extra_label"><code class="docutils literal notranslate"><span class="pre">ModelParameter.extra_label</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_config_file()</span></code></a></li>
