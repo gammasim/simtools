@@ -82,6 +82,7 @@ def test_reading_db_lst_without_simulation_repo(db, model_version):
     db_copy.mongo_db_config["db_simulation_model_url"] = None
     pars = db.get_model_parameters("North", "LSTN-01", model_version, collection="telescopes")
     assert pars["parabolic_dish"]["value"] == 1
+    assert pars["camera_pixels"]["value"] == 1855
 
 
 def test_reading_db_lst(db, model_version):
