@@ -370,6 +370,12 @@ def skip_camera_efficiency(config):
                 "due to a limitation of the old testeff not allowing to specify "
                 "the include directory. Please update your sim_telarray tarball."
             )
+        full_test_name = f"{config['APPLICATION']}_{config['TEST_NAME']}"
+        if "simtools-validate-camera-efficiency_SSTS" == full_test_name:
+            pytest.skip(
+                "The test simtools-validate-camera-efficiency_SSTS is skipped "
+                "since the fake SST mirrors are not yet implemented (#1155)"
+            )
 
 
 def new_testeff_version():
