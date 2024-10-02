@@ -10,7 +10,7 @@ from simtools.db import db_array_elements
 def test_get_array_elements(db, model_version):
 
     time_1 = time.time()
-    available_telescopes = db_array_elements.get_array_elements(
+    db_array_elements.get_array_elements(
         db.get_collection(db_name=None, collection_name="telescopes"),
         db.model_version(model_version),
     )
