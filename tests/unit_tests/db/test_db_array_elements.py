@@ -65,6 +65,10 @@ def test_get_array_element_list_for_db_query(db, model_version):
             "MSTS-301", db=db, model_version=model_version, collection="calibration_devices"
         )
 
+    assert db_array_elements.get_array_element_list_for_db_query(
+        "LSTN-02", db=db, model_version=model_version, collection="configuration_sim_telarray"
+    ) == ["LSTN-design"]
+
 
 def test_get_array_elements_of_type(db, model_version):
     available_telescopes = db_array_elements.get_array_elements_of_type(

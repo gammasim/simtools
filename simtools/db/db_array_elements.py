@@ -4,6 +4,8 @@ from functools import cache
 
 from pymongo import ASCENDING
 
+from simtools.utils import names
+
 
 @cache
 def get_array_elements(db, model_version, collection):
@@ -62,6 +64,7 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
 
     Return a list of array element names to be used for querying the database for a given array
     element. This is in most cases the array element itself and its design model.
+    In cases of no design model available, the design model of the array element is returned.
 
     Parameters
     ----------
@@ -80,7 +83,10 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
         List of array element model names as used in the DB.
 
     """
-    _available_array_elements = get_array_elements(db, model_version, collection)
+    try:
+        _available_array_elements = get_array_elements(db, model_version, collection)
+    except ValueError:
+        return [names.get_array_element_type_from_name(array_element_name) + "-design"]
     try:
         return [array_element_name, _available_array_elements[array_element_name]]
     except KeyError:
