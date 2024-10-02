@@ -6,7 +6,7 @@ import astropy.units as u
 
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
-from simtools.utils import names, value_conversion
+from simtools.utils import names
 
 __all__ = ["SimulatorRayTracing"]
 
@@ -19,29 +19,6 @@ class SimulatorRayTracing(SimtelRunner):
     """
     SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.
 
-    Configurable parameters:
-        zenith_angle:
-            len: 1
-            unit: deg
-            default: 20 deg
-        off_axis_angle:
-            len: 1
-            unit: deg
-            default: 0 deg
-        source_distance:
-            len: 1
-            unit: km
-            default: 10 km
-        single_mirror_mode:
-            len: 1
-            default: False
-        use_random_focal_length:
-            len: 1
-            default: False
-        mirror_numbers:
-            len: 1
-            default: 1
-
     Parameters
     ----------
     telescope_model: str
@@ -50,8 +27,10 @@ class SimulatorRayTracing(SimtelRunner):
         Instance label. Important for output file naming.
     simtel_path: str or Path
         Location of sim_telarray installation.
-    config_data: dict
-        Dict containing the configurable parameters.
+    config_data: namedtuple
+        namedtuple containing the configurable parameters: zenith_angle,
+        off_axis_angle, source_distance, single_mirror_mode, use_random_focal_length,
+        mirror_numbers.
     config_file: str or Path
         Path of the yaml file containing the configurable parameters.
     force_simulate: bool
@@ -79,13 +58,7 @@ class SimulatorRayTracing(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self._base_directory = self.io_handler.get_output_directory(self.label, "ray-tracing")
 
-        # Loading config_data
-        self.config = value_conversion.validate_config_data(
-            config_data,
-            self.ray_tracing_default_configuration(True),
-        )
-
-        # RayTracing - default parameters
+        self.config = config_data
         self._rep_number = 0
         self.runs_per_set = 1 if self.config.single_mirror_mode else 20
         self.photons_per_run = 100000 if not test else 5000
@@ -116,9 +89,9 @@ class SimulatorRayTracing(SimtelRunner):
                 suffix=".log" if base_name == "log" else ".lis",
                 site=self.telescope_model.site,
                 telescope_model_name=self.telescope_model.name,
-                source_distance=self.config.source_distance,
-                zenith_angle=self.config.zenith_angle,
-                off_axis_angle=self.config.off_axis_angle,
+                source_distance=self.config.source_distance.to("km").value,
+                zenith_angle=self.config.zenith_angle.to("deg").value,
+                off_axis_angle=self.config.off_axis_angle.to("deg").value,
                 mirror_number=(
                     self.config.mirror_numbers if self.config.single_mirror_mode else None
                 ),
@@ -137,9 +110,13 @@ class SimulatorRayTracing(SimtelRunner):
                 file.write("# List of photons for RayTracing simulations\n")
                 file.write(f"#{50 * '='}\n")
                 file.write(f"# config_file = {self.telescope_model.get_config_file()}\n")
-                file.write(f"# zenith_angle [deg] = {self.config.zenith_angle}\n")
-                file.write(f"# off_axis_angle [deg] = {self.config.off_axis_angle}\n")
-                file.write(f"# source_distance [km] = {self.config.source_distance}\n")
+                file.write(f"# zenith_angle [deg] = {self.config.zenith_angle.to('deg').value}\n")
+                file.write(
+                    f"# off_axis_angle [deg] = {self.config.off_axis_angle.to('deg').value}\n"
+                )
+                file.write(
+                    f"# source_distance [km] = {self.config.source_distance.to('km').value}\n"
+                )
                 if self.config.single_mirror_mode:
                     file.write(f"# mirror_number = {self.config.mirror_numbers}\n\n")
 
@@ -151,7 +128,8 @@ class SimulatorRayTracing(SimtelRunner):
             # - distance of light source
             with self._stars_file.open("w", encoding="utf-8") as file:
                 file.write(
-                    f"0. {90.0 - self.config.zenith_angle} 1.0 {self.config.source_distance}\n"
+                    f"0. {90.0 - self.config.zenith_angle.to('deg').value} "
+                    f"1.0 {self.config.source_distance.to('km').value}\n"
                 )
 
         if self.config.single_mirror_mode:
@@ -163,6 +141,7 @@ class SimulatorRayTracing(SimtelRunner):
     ):  # pylint: disable=unused-argument
         """Return the command to run simtel_array."""
         if self.config.single_mirror_mode:
+            # TODO SSTs without mirror_focal_length
             _mirror_focal_length = float(
                 self.telescope_model.get_parameter_value("mirror_focal_length")
             )
@@ -178,7 +157,8 @@ class SimulatorRayTracing(SimtelRunner):
             "altitude", self.telescope_model.get_parameter_value("corsika_observation_level")
         )
         command += super().get_config_option(
-            "telescope_theta", self.config.zenith_angle + self.config.off_axis_angle
+            "telescope_theta",
+            self.config.zenith_angle.to("deg").value + self.config.off_axis_angle.to("deg").value,
         )
         command += super().get_config_option("star_photons", str(self.photons_per_run))
         command += super().get_config_option("telescope_phi", "0")
@@ -191,6 +171,7 @@ class SimulatorRayTracing(SimtelRunner):
         command += super().get_config_option("maximum_telescopes", "1")
         command += super().get_config_option("show", "all")
         command += super().get_config_option("camera_filter", "none")
+        # TODO this is a hack
         if self.config.single_mirror_mode:
             command += super().get_config_option("focus_offset", "all:0.")
             command += super().get_config_option("camera_config_file", "single_pixel_camera.dat")
@@ -204,7 +185,7 @@ class SimulatorRayTracing(SimtelRunner):
                 ),
             )
             command += super().get_config_option(
-                "focal_length", self.config.source_distance * u.km.to(u.cm)
+                "focal_length", self.config.source_distance.value * u.km.to(u.cm)
             )
             command += super().get_config_option("dish_shape_length", _mirror_focal_length)
             command += super().get_config_option("mirror_focal_length", _mirror_focal_length)
@@ -229,8 +210,6 @@ class SimulatorRayTracing(SimtelRunner):
             msg = "Photon list is empty."
             self._logger.error(msg)
             raise RuntimeError(msg)
-
-        self._logger.debug("Everything looks fine with output file.")
 
     def _is_photon_list_file_ok(self):
         """Check if the photon list is valid."""
@@ -264,41 +243,3 @@ class SimulatorRayTracing(SimtelRunner):
             file.write("30   1.0\n")
             file.write("60   1.0\n")
             file.write("90   1.0\n")
-
-    @staticmethod
-    def ray_tracing_default_configuration(config_runner=False):
-        """
-        Get default ray tracing configuration.
-
-        Returns
-        -------
-        dict
-            Default configuration for ray tracing.
-
-        """
-        return {
-            "zenith_angle": {
-                "len": 1,
-                "unit": u.Unit("deg"),
-                "default": 20.0 * u.deg,
-                "names": ["zenith", "theta"],
-            },
-            "off_axis_angle": {
-                "len": 1 if config_runner else None,
-                "unit": u.Unit("deg"),
-                "default": 0.0 * u.deg,
-                "names": ["offaxis", "offset"],
-            },
-            "source_distance": {
-                "len": 1,
-                "unit": u.Unit("km"),
-                "default": 10.0 * u.km,
-                "names": ["sourcedist", "srcdist"],
-            },
-            "single_mirror_mode": {"len": 1, "default": False},
-            "use_random_focal_length": {"len": 1, "default": False},
-            "mirror_numbers": {
-                "len": 1 if config_runner else None,
-                "default": 1 if config_runner else "all",
-            },
-        }

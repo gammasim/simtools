@@ -14,20 +14,27 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def ray_tracing_sst(telescope_model_sst, simtel_path):
-    # telescope_model_sst.export_model_files()
-
-    config_data = {
-        "source_distance": 10 * u.km,
-        "zenith_angle": 20 * u.deg,
-        "off_axis_angle": [0, 2] * u.deg,
-        "single_mirror_mode": False,
-    }
-
     return RayTracing(
         telescope_model=telescope_model_sst,
         simtel_path=simtel_path,
-        config_data=config_data,
         label="test-simtel-runner-ray-tracing",
+        source_distance=10 * u.km,
+        zenith_angle=20 * u.deg,
+        off_axis_angle=[0, 2] * u.deg,
+        single_mirror_mode=False,
+    )
+
+
+@pytest.fixture
+def ray_tracing_mst(telescope_model_mst, simtel_path):
+    return RayTracing(
+        telescope_model=telescope_model_mst,
+        simtel_path=simtel_path,
+        label="test-simtel-runner-ray-tracing",
+        source_distance=10 * u.km,
+        zenith_angle=20 * u.deg,
+        off_axis_angle=[0, 2] * u.deg,
+        single_mirror_mode=False,
     )
 
 
@@ -36,31 +43,19 @@ def simulator_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path):
     return SimulatorRayTracing(
         simtel_path=simtel_path,
         telescope_model=telescope_model_sst,
-        config_data={
-            "zenith_angle": ray_tracing_sst.config.zenith_angle * u.deg,
-            "source_distance": ray_tracing_sst._source_distance * u.km,
-            "off_axis_angle": 0 * u.deg,
-            "mirror_numbers": 0,
-            "use_random_focal_length": ray_tracing_sst.config.use_random_focal_length,
-            "single_mirror_mode": ray_tracing_sst.config.single_mirror_mode,
-        },
+        config_data=ray_tracing_sst.config._replace(off_axis_angle=0 * u.deg, mirror_numbers=0),
         label="test-simtel-runner-ray-tracing",
     )
 
 
 @pytest.fixture
-def simulator_ray_tracing_single_mirror(ray_tracing_sst, telescope_model_sst, simtel_path):
+def simulator_ray_tracing_single_mirror(ray_tracing_mst, telescope_model_mst, simtel_path):
     return SimulatorRayTracing(
         simtel_path=simtel_path,
-        telescope_model=telescope_model_sst,
-        config_data={
-            "zenith_angle": ray_tracing_sst.config.zenith_angle * u.deg,
-            "source_distance": ray_tracing_sst._source_distance * u.km,
-            "off_axis_angle": 0 * u.deg,
-            "mirror_numbers": 0,
-            "use_random_focal_length": ray_tracing_sst.config.use_random_focal_length,
-            "single_mirror_mode": True,
-        },
+        telescope_model=telescope_model_mst,
+        config_data=ray_tracing_mst.config._replace(
+            off_axis_angle=0 * u.deg, mirror_numbers=0, single_mirror_mode=True
+        ),
         label="test-simtel-runner-ray-tracing",
     )
 
@@ -161,6 +156,13 @@ def test_make_run_command(simulator_ray_tracing, model_version):
         "log-South-SSTS-design-d10.0km-za20.0deg-off0.000deg_test-simtel-runner-ray-tracing.log"
         in command
     )
+
+
+def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror, model_version):
+    command = simulator_ray_tracing_single_mirror._make_run_command()
+
+    assert "bin/sim_telarray" in command
+    assert "focus_offset" in command
 
 
 def test_check_run_result(simulator_ray_tracing):
