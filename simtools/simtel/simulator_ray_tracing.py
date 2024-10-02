@@ -4,7 +4,6 @@ import logging
 
 import astropy.units as u
 
-import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import names, value_conversion
@@ -65,7 +64,6 @@ class SimulatorRayTracing(SimtelRunner):
         label=None,
         simtel_path=None,
         config_data=None,
-        config_file=None,
         force_simulate=False,
         test=False,
     ):
@@ -83,7 +81,7 @@ class SimulatorRayTracing(SimtelRunner):
 
         # Loading config_data
         self.config = value_conversion.validate_config_data(
-            gen.collect_data_from_file_or_dict(config_file, config_data),
+            config_data,
             self.ray_tracing_default_configuration(True),
         )
 
