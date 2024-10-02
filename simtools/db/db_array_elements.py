@@ -3,6 +3,8 @@
 import logging
 from functools import cache
 
+from pymongo import ASCENDING
+
 _logger = logging.getLogger(__name__)
 
 
@@ -40,7 +42,9 @@ def get_array_elements(db, model_version, collection):
     db_collection = db.get_collection(db_name=None, collection_name=collection)
 
     query = {"version": db.model_version(model_version)}
-    results = db_collection.find(query, {"instrument": 1, "value": 1, "parameter": 1})
+    results = db_collection.find(query, {"instrument": 1, "value": 1, "parameter": 1}).sort(
+        "instrument", ASCENDING
+    )
 
     _all_available_array_elements = {}
     for doc in results:
