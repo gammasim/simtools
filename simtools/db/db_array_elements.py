@@ -57,8 +57,6 @@ def get_array_elements(db, model_version, collection):
     if len(_all_available_array_elements) == 0:
         raise ValueError(f"No array elements found in DB collection {collection}.")
 
-    _logger.debug(f"Array elements found in DB: {_all_available_array_elements}")
-
     return _all_available_array_elements
 
 
