@@ -401,7 +401,7 @@ class ArrayLayout:
             table["position_z"] = [position[2]] * u.Unit(data["unit"])
         return table
 
-    def _set_telescope_auxiliary_parameters(self, telescope):
+    def _set_telescope_auxiliary_parameters(self, telescope, telescope_name=None):
         """
         Set auxiliary CORSIKA parameters for a telescope.
 
@@ -411,14 +411,15 @@ class ArrayLayout:
             Instance of TelescopePosition.
 
         """
-        if names.get_collection_name_from_array_element_name(telescope.name) == "telescopes":
+        telescope_name = telescope_name if telescope_name is not None else telescope.name
+        if names.get_collection_name_from_array_element_name(telescope_name) == "telescopes":
             self._logger.debug(
-                f"Reading auxiliary telescope parameters for {telescope.name}"
+                f"Reading auxiliary telescope parameters for {telescope_name}"
                 f" (model version {self.model_version})"
             )
             tel_model = TelescopeModel(
                 site=self.site,
-                telescope_name=telescope.name,
+                telescope_name=telescope_name,
                 model_version=self.model_version,
                 mongo_db_config=self.mongo_db_config,
                 label=self.label,
@@ -428,7 +429,9 @@ class ArrayLayout:
                     para, tel_model.get_parameter_value_with_unit(para)
                 )
 
-    def add_telescope(self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None):
+    def add_telescope(
+        self, telescope_name, crs_name, xx, yy, altitude=None, tel_corsika_z=None, design_model=None
+    ):
         """
         Add an individual telescope to the telescope list.
 
@@ -447,9 +450,14 @@ class ArrayLayout:
         tel_corsika_z: astropy.units.quantity.Quantity
             CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\
             center).
+        design_model: str
+            Name of the design model (optional).
+            If none, telescope type + "-design" is used.
         """
         tel = TelescopePosition(name=telescope_name)
-        self._set_telescope_auxiliary_parameters(tel)
+        if design_model is None:
+            design_model = names.get_array_element_type_from_name(telescope_name) + "-design"
+        self._set_telescope_auxiliary_parameters(tel, design_model)
         tel.set_coordinates(crs_name, xx, yy)
         if altitude is not None:
             tel.set_altitude(altitude)
