@@ -8,7 +8,7 @@ from threading import Lock
 import gridfs
 from bson.objectid import ObjectId
 from packaging.version import Version
-from pymongo import MongoClient
+from pymongo import ASCENDING, MongoClient
 from pymongo.errors import BulkWriteError
 
 from simtools.db import db_array_elements, db_from_repo_handler
@@ -365,7 +365,7 @@ class DatabaseHandler:
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
-        for post in collection.find(query):
+        for post in collection.find(query).sort("parameter", ASCENDING):
             par_now = post["parameter"]
             _parameters[par_now] = post
             _parameters[par_now].pop("parameter", None)
@@ -467,7 +467,7 @@ class DatabaseHandler:
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
-        for post in collection.find(query):
+        for post in collection.find(query).sort("parameter", ASCENDING):
             par_now = post["parameter"]
             _parameters[par_now] = post
             _parameters[par_now].pop("parameter", None)
@@ -1213,7 +1213,8 @@ class DatabaseHandler:
             )
             for collection_name in collections_to_query:
                 db_collection = self.get_collection(db_name, collection_name)
-                all_versions.update(post["version"] for post in db_collection.find(query))
+                sorted_posts = db_collection.find(query).sort("version", ASCENDING)
+                all_versions.update(post["version"] for post in sorted_posts)
             DatabaseHandler.model_versions_cached[_cache_key] = list(all_versions)
 
         if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
@@ -1264,6 +1265,7 @@ class DatabaseHandler:
         _cache_key = self._parameter_cache_key(site, array_element_name, model_version)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
+        db_array_elements.get_array_elements.cache_clear()
 
     def get_collections(self, db_name=None, model_collections_only=False):
         """
