@@ -59,7 +59,6 @@ class DatabaseHandler:
 
         self.mongo_db_config = mongo_db_config
         self.io_handler = io_handler.IOHandler()
-        self._array_elements = {}
         self.list_of_collections = {}
 
         self._set_up_connection()
