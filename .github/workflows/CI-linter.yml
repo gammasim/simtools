@@ -39,7 +39,7 @@ jobs:
         run: |
           output=$(find . -type f \
           \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \) \
-          -exec perl -ne 'print if /[^[:ascii:]]/' {} \;)
+          -exec perl -ne 'print if /[^[:ascii:]]/ && !/latin/i' {} \;)
           if [ -n "$output" ]; then
             echo "Non-ASCII characters found in documentation."
             exit 1

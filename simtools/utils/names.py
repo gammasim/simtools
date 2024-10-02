@@ -77,7 +77,7 @@ def site_parameters():
 
 
 def telescope_parameters():
-    return load_model_parameters(class_key_list=("Structure", "Camera"))
+    return load_model_parameters(class_key_list=("Structure", "Camera", "Telescope"))
 
 
 def validate_array_element_id_name(name):
