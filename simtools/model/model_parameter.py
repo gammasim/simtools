@@ -570,3 +570,29 @@ class ModelParameter:
                 model_version=self.model_version,
                 label=self.label,
             )
+
+    def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
+        """
+        Export the NSB spectrum to the telescope altitude correction file.
+
+        This method is needed because testeff corrects the NSB spectrum from the original altitude
+        used in the Benn & Ellison model to the telescope altitude.
+        This is done internally in testeff, but the NSB spectrum is not written out to the model
+        directory. This method allows to export it explicitly.
+
+        Parameters
+        ----------
+        model_directory: Path
+            Model directory to export the file to.
+        """
+        self.db.export_model_files(
+            {
+                "nsb_spectrum_at_2200m": {
+                    "value": self._simulation_config_parameters["simtel"][
+                        "correct_nsb_spectrum_to_telescope_altitude"
+                    ]["value"],
+                    "file": True,
+                }
+            },
+            model_directory,
+        )

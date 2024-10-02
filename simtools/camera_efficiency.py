@@ -170,6 +170,9 @@ class CameraEfficiency:
             file_log=self._file["log"],
             label=self.label,
             nsb_spectrum=self.config["nsb_spectrum"],
+            skip_correction_to_nsb_spectrum=self.config.get(
+                "skip_correction_to_nsb_spectrum", False
+            ),
         )
         simtel.run(test=self.test)
 
@@ -177,6 +180,10 @@ class CameraEfficiency:
         """Export model and config files to the output directory."""
         self.telescope_model.export_config_file()
         self.telescope_model.export_model_files()
+        if not self.config.get("skip_correction_to_nsb_spectrum", False):
+            self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
+                model_directory=self.telescope_model.config_file_directory
+            )
 
     def analyze(self, export=True, force=False):
         """

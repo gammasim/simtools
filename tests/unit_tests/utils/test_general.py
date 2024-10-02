@@ -600,3 +600,36 @@ def test_convert_string_to_list():
     # import for list of dimensionless entries in database
     assert gen.convert_string_to_list(",") == ["", ""]
     assert gen.convert_string_to_list(" , , ") == ["", "", ""]
+
+
+def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
+    """
+    Test the read_file_encoded_in_utf_or_latin function.
+    """
+
+    # Test with a UTF-8 encoded file.
+    utf8_file = tmp_test_directory / "utf8_file.txt"
+    utf8_content = "This is a UTF-8 encoded file.\n"
+    with open(utf8_file, "w", encoding="utf-8") as file:
+        file.write(utf8_content)
+    lines = gen.read_file_encoded_in_utf_or_latin(utf8_file)
+    assert lines == [utf8_content]
+
+    # Test with a Latin-1 encoded file.
+    latin1_file = tmp_test_directory / "latin1_file.txt"
+    latin1_content = "This is a Latin-1 encoded file with latin character ñ.\n"
+    with open(latin1_file, "w", encoding="latin-1") as file:
+        file.write(latin1_content)
+    with caplog.at_level(logging.DEBUG):
+        lines = gen.read_file_encoded_in_utf_or_latin(latin1_file)
+        assert lines == [latin1_content]
+        assert "Unable to decode file using UTF-8. Trying Latin-1." in caplog.text
+
+    # I could not find a way to create a file that cannot be decoded with Latin-1
+    # and raises a UnicodeDecodeError. I left the raise statement in the function
+    # in case we ever encounter such a file, but I cannot test it here.
+
+    # Test with a non-existent file.
+    non_existent_file = tmp_test_directory / "non_existent_file.txt"
+    with pytest.raises(FileNotFoundError):
+        gen.read_file_encoded_in_utf_or_latin(non_existent_file)

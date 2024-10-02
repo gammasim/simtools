@@ -33,6 +33,15 @@ jobs:
         run: |
           pip install -e .
 
+      - name: Check for files without the suffix *.schema.yml
+        run: |
+          for file in simtools/schemas/model_parameters/*.yml; do
+            if [[ ! $file =~ .*schema.yml$ ]]; then
+              echo "File $file does not have the suffix *.schema.yml"
+              exit 1
+            fi
+          done
+
       - name: Model parameter schema validation
         run: |
           for file in simtools/schemas/model_parameters/*.yml; do

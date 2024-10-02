@@ -114,6 +114,8 @@ uploads its contents to the local database instance.
 
 Note that repository branches are hardcoded in the scripts and need to be adjusted accordingly.
 
+**If you get timeout errors, try to run it run from within the simtools container**
+
 ### Purge the local database instance and all networks, images, containers
 
 The script `purge_local_db.sh` stops and removes the container and deletes all networks, images, and containers.
