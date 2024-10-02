@@ -8,7 +8,7 @@ from pymongo import ASCENDING
 @cache
 def get_array_elements(db, model_version, collection):
     """
-    Get all array element names and their design model in the specified collection from DB.
+    Get all array element names and their design model for a given DB collection.
 
     Uses the 'design_model' parameter to determine the design model of the array element.
     Assumes that a design model is defined for every array element.
@@ -18,15 +18,14 @@ def get_array_elements(db, model_version, collection):
     db: DBHandler
         Instance of the database handler
     model_version: str
-       Which version to get the array elements of
+       Model version.
     collection: str
-        Which collection to get the array elements from:
-        i.e. telescopes, calibration_devices
+        Database collection (e.g., telescopes, calibration_devices)
 
     Returns
     -------
     dict
-        List of all array element names found in collection and their design model
+        Dict with array element names found and their design model
 
     Raises
     ------
@@ -61,7 +60,8 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
     """
     Get array element name and design model for querying the database.
 
-    Return a list of array element names to be used for querying the database.
+    Return a list of array element names to be used for querying the database for a given array
+    element. This is in most cases the array element itself and its design model.
 
     Parameters
     ----------
@@ -95,6 +95,8 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
 def get_array_elements_of_type(array_element_type, db, model_version, collection):
     """
     Get all array elements of a certain type in the specified collection in the DB.
+
+    Return e.g. for array_element_type='MSTS' all MSTS array elements found in the collection.
 
     Parameters
     ----------

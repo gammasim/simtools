@@ -501,7 +501,7 @@ def test_get_all_versions(db, mocker, caplog):
     )
 
     # no db_name defined
-    mocker.patch.object(db, "get_db_name", return_value=None)
+    mocker.patch.object(db, "_get_db_name", return_value=None)
     with caplog.at_level(logging.WARNING):
         assert db.get_all_versions() == []
     assert "No database name defined to determine" in caplog.text

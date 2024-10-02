@@ -239,7 +239,7 @@ class DatabaseHandler:
             The collection from the DB.
 
         """
-        db_name = self.get_db_name(db_name)
+        db_name = self._get_db_name(db_name)
         return DatabaseHandler.db_client[db_name][collection_name]
 
     def export_file_db(self, db_name, dest, file_name):
@@ -266,7 +266,7 @@ class DatabaseHandler:
             If the desired file is not found.
 
         """
-        db_name = self.get_db_name(db_name)
+        db_name = self._get_db_name(db_name)
 
         self._logger.debug(f"Getting {file_name} from {db_name} and writing it to {dest}")
         file_path_instance = self._get_file_mongo_db(db_name, file_name)
@@ -296,8 +296,8 @@ class DatabaseHandler:
                     continue
                 if Path(dest).joinpath(info["value"]).exists():
                     continue
-                file = self._get_file_mongo_db(self.get_db_name(), info["value"])
-                self._write_file_from_mongo_to_disk(self.get_db_name(), dest, file)
+                file = self._get_file_mongo_db(self._get_db_name(), info["value"])
+                self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file)
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
             self._logger.warning(
                 "Exporting model files from simulation model repository not yet implemented"
@@ -401,7 +401,7 @@ class DatabaseHandler:
 
         """
         _site, _, _model_version = self._validate_model_input(site, None, model_version)
-        _db_name = self.get_db_name()
+        _db_name = self._get_db_name()
         _site_cache_key = self._parameter_cache_key(site, None, model_version)
         try:
             return DatabaseHandler.site_parameters_cached[_site_cache_key]
@@ -564,7 +564,7 @@ class DatabaseHandler:
             pass
         DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key] = (
             self.read_mongo_db(
-                db_name=self.get_db_name(),
+                db_name=self._get_db_name(),
                 array_element_name=None,
                 model_version=model_version,
                 run_location=None,
@@ -607,7 +607,7 @@ class DatabaseHandler:
         pars = {}
         try:
             pars = self.read_mongo_db(
-                self.get_db_name(),
+                self._get_db_name(),
                 _array_element_name,
                 _model_version,
                 run_location=None,
@@ -616,7 +616,7 @@ class DatabaseHandler:
             )
         except ValueError:
             pars = self.read_mongo_db(
-                self.get_db_name(),
+                self._get_db_name(),
                 names.get_array_element_type_from_name(_array_element_name) + "-design",
                 _model_version,
                 run_location=None,
@@ -733,7 +733,7 @@ class DatabaseHandler:
         BulkWriteError
 
         """
-        db_name = self.get_db_name(db_name)
+        db_name = self._get_db_name(db_name)
         if db_to_copy_to is None:
             db_to_copy_to = db_name
 
@@ -798,7 +798,7 @@ class DatabaseHandler:
         BulkWriteError
 
         """
-        db_name = self.get_db_name(db_name)
+        db_name = self._get_db_name(db_name)
 
         _collection = self.get_collection(db_name, collection)
         if collection_to_copy_to is None:
@@ -898,7 +898,7 @@ class DatabaseHandler:
             if field not in allowed fields
 
         """
-        db_name = self.get_db_name(db_name)
+        db_name = self._get_db_name(db_name)
         allowed_fields = ["applicable", "unit", "type", "items", "minimum", "maximum"]
         if field not in allowed_fields:
             raise ValueError(f"The field {field} must be one of {', '.join(allowed_fields)}")
@@ -1004,7 +1004,7 @@ class DatabaseHandler:
             If key to collection_name is not valid.
 
         """
-        db_name = self.get_db_name(db_name)
+        db_name = self._get_db_name(db_name)
         collection = self.get_collection(db_name, collection_name)
 
         db_entry = {}
@@ -1059,7 +1059,7 @@ class DatabaseHandler:
 
         self._reset_parameter_cache(site, array_element_name, version)
 
-    def get_db_name(self, db_name=None):
+    def _get_db_name(self, db_name=None):
         """
         Return database name. If not provided, return the default database name.
 
@@ -1107,7 +1107,7 @@ class DatabaseHandler:
             return None
 
         raise ValueError(
-            f"Invalid model version {version} in DB {self.get_db_name(db_name)} "
+            f"Invalid model version {version} in DB {self._get_db_name(db_name)} "
             f"(allowed are {_all_versions})"
         )
 
@@ -1133,7 +1133,7 @@ class DatabaseHandler:
             "newly created DB GridOut._id.
 
         """
-        db_name = self.get_db_name(db_name)
+        db_name = self._get_db_name(db_name)
 
         db = DatabaseHandler.db_client[db_name]
         file_system = gridfs.GridFS(db)
@@ -1189,7 +1189,7 @@ class DatabaseHandler:
             If key to collection_name is not valid.
 
         """
-        db_name = self.get_db_name() if db_name is None else db_name
+        db_name = self._get_db_name() if db_name is None else db_name
         if not db_name:
             self._logger.warning("No database name defined to determine list of model versions")
             return []
@@ -1284,7 +1284,7 @@ class DatabaseHandler:
             If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
 
         """
-        db_name = self.get_db_name() if db_name is None else db_name
+        db_name = self._get_db_name() if db_name is None else db_name
         if db_name not in self.list_of_collections:
             self.list_of_collections[db_name] = DatabaseHandler.db_client[
                 db_name
