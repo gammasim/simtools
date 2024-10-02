@@ -1,11 +1,8 @@
 """Retrieval of array elements from the database."""
 
-import logging
 from functools import cache
 
 from pymongo import ASCENDING
-
-_logger = logging.getLogger(__name__)
 
 
 @cache
