@@ -5,6 +5,7 @@ import logging
 import shlex
 import shutil
 import subprocess
+from collections import namedtuple
 from copy import copy
 from math import pi, tan
 from pathlib import Path
@@ -17,10 +18,9 @@ from astropy.table import QTable
 
 from simtools.io_operations import io_handler
 from simtools.model.model_utils import compute_telescope_transmission
-from simtools.model.telescope_model import TelescopeModel
 from simtools.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
-from simtools.utils import names, value_conversion
+from simtools.utils import names
 from simtools.visualization import visualize
 
 __all__ = ["RayTracing"]
@@ -58,51 +58,35 @@ class RayTracing:
         telescope_model,
         simtel_path,
         label=None,
-        config_data=None,
+        zenith_angle=20.0 * u.deg,
+        off_axis_angle=[0.0] * u.deg,
+        source_distance=10.0 * u.km,
+        single_mirror_mode=False,
+        use_random_focal_length=False,
+        mirror_numbers="all",
     ):
         """Initialize RayTracing class."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Initializing RayTracing class")
 
-        self._simtel_path = Path(simtel_path)
+        self.simtel_path = Path(simtel_path)
         self._io_handler = io_handler.IOHandler()
 
-        self._telescope_model = self._validate_telescope_model(telescope_model)
+        self.telescope_model = telescope_model
+        self.label = label if label is not None else self.telescope_model.label
 
-        self.config = value_conversion.validate_config_data(
-            config_data,
-            SimulatorRayTracing.ray_tracing_default_configuration(False),
+        self.config = self._initialize_config(
+            zenith_angle,
+            off_axis_angle,
+            source_distance,
+            single_mirror_mode,
+            use_random_focal_length,
+            mirror_numbers,
         )
 
-        # Due to float representation, round the off-axis angles so the values in results table
-        # are the same as provided.
-        self.config = self.config._replace(off_axis_angle=np.around(self.config.off_axis_angle, 5))
-
-        self.label = label if label is not None else self._telescope_model.label
-
-        self._output_directory = self._io_handler.get_output_directory(
+        self.output_directory = self._io_handler.get_output_directory(
             label=self.label, sub_dir="ray-tracing"
         )
-
-        # Loading relevant attributes in case of single mirror mode.
-        if self.config.single_mirror_mode:
-            # Recalculating source distance.
-            self._logger.debug(
-                "Single mirror mode is activated - "
-                "source distance is being recalculated to 2 * flen"
-            )
-            mir_flen = self._telescope_model.get_parameter_value("mirror_focal_length")
-            self._source_distance = 2 * float(mir_flen) * u.cm.to(u.km)  # km
-
-            # Setting mirror numbers.
-            if self.config.mirror_numbers[0] == "all":
-                self._mirror_numbers = list(
-                    range(0, self._telescope_model.mirrors.number_of_mirrors)
-                )
-            else:
-                self._mirror_numbers = self.config.mirror_numbers
-        else:
-            self._source_distance = self.config.source_distance
 
         self._psf_images = None
         self._results = None
@@ -112,28 +96,79 @@ class RayTracing:
         file_name_results = names.generate_file_name(
             file_type="ray-tracing",
             suffix=".ecsv",
-            site=self._telescope_model.site,
-            telescope_model_name=self._telescope_model.name,
-            source_distance=self._source_distance,
-            zenith_angle=self.config.zenith_angle,
+            site=self.telescope_model.site,
+            telescope_model_name=self.telescope_model.name,
+            source_distance=self.config.source_distance.value,
+            zenith_angle=self.config.zenith_angle.value,
             label=self.label,
         )
-        self._output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
-        self._file_results = self._output_directory.joinpath("results").joinpath(file_name_results)
+        self.output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
+        self._file_results = self.output_directory.joinpath("results").joinpath(file_name_results)
 
     def __repr__(self):
         """Return string representation of RayTracing class."""
         return f"RayTracing(label={self.label})\n"
 
-    def _validate_telescope_model(self, tel):
-        """Validate TelescopeModel."""
-        if isinstance(tel, TelescopeModel):
-            self._logger.debug("RayTracing contains a valid TelescopeModel")
-            return tel
+    def _initialize_config(
+        self,
+        zenith_angle,
+        off_axis_angle,
+        source_distance,
+        single_mirror_mode,
+        use_random_focal_length,
+        mirror_numbers,
+    ):
+        """Initialize ray tracing configuration to namedtuple."""
+        config_data = namedtuple(
+            "Config",
+            [
+                "zenith_angle",
+                "off_axis_angle",
+                "source_distance",
+                "single_mirror_mode",
+                "use_random_focal_length",
+                "mirror_numbers",
+            ],
+        )
+        if single_mirror_mode:
+            source_distance, mirror_numbers = self._initialize_single_mirror_mode(mirror_numbers)
+        # round the off-axis angles so the values in results table are the same as provided.
+        off_axis_angle = np.around(off_axis_angle, 5)
 
-        msg = "Invalid TelescopeModel"
-        self._logger.error(msg)
-        raise ValueError(msg)
+        return config_data(
+            zenith_angle=zenith_angle,
+            off_axis_angle=off_axis_angle,
+            source_distance=source_distance,
+            single_mirror_mode=single_mirror_mode,
+            use_random_focal_length=use_random_focal_length,
+            mirror_numbers=mirror_numbers,
+        )
+
+    def _initialize_single_mirror_mode(self, mirror_numbers):
+        """
+        Initialize single mirror mode.
+
+        Parameters
+        ----------
+        mirror_numbers: list, str
+            List of mirror numbers (or 'all').
+
+        Returns
+        -------
+        tuple
+            Tuple containing source distance and mirror numbers.
+        """
+        self._logger.debug(
+            "Single mirror mode is activated - "
+            "source distance is being recalculated to 2 * focal length"
+        )
+        mir_focal_length = self.telescope_model.get_parameter_value("mirror_focal_length")
+        source_distance = 2 * float(mir_focal_length) * u.cm.to(u.km) * u.km
+
+        if mirror_numbers[0] == "all":
+            mirror_numbers = list(range(0, self.telescope_model.mirrors.number_of_mirrors))
+
+        return source_distance, mirror_numbers
 
     def simulate(self, test=False, force=False):
         """
@@ -146,24 +181,20 @@ class RayTracing:
         force: bool
             Force flag will remove existing files and simulate again.
         """
-        all_mirrors = self._mirror_numbers if self.config.single_mirror_mode else [0]
+        all_mirrors = self.config.mirror_numbers if self.config.single_mirror_mode else [0]
         for this_off_axis in self.config.off_axis_angle:
             for this_mirror in all_mirrors:
                 self._logger.info(
                     f"Simulating RayTracing for off_axis={this_off_axis}, mirror={this_mirror}"
                 )
                 simtel = SimulatorRayTracing(
-                    simtel_path=self._simtel_path,
-                    telescope_model=self._telescope_model,
+                    simtel_path=self.simtel_path,
+                    telescope_model=self.telescope_model,
                     test=test,
-                    config_data={
-                        "zenith_angle": self.config.zenith_angle * u.deg,
-                        "source_distance": self._source_distance * u.km,
-                        "off_axis_angle": this_off_axis * u.deg,
-                        "mirror_numbers": this_mirror,
-                        "use_random_focal_length": self.config.use_random_focal_length,
-                        "single_mirror_mode": self.config.single_mirror_mode,
-                    },
+                    config_data=self.config._replace(
+                        off_axis_angle=this_off_axis,
+                        mirror_numbers=this_mirror,
+                    ),
                     force_simulate=force,
                 )
                 simtel.run(test=test)
@@ -171,15 +202,15 @@ class RayTracing:
                 photons_file_name = names.generate_file_name(
                     file_type="photons",
                     suffix=".lis",
-                    site=self._telescope_model.site,
-                    telescope_model_name=self._telescope_model.name,
-                    source_distance=self._source_distance,
-                    zenith_angle=self.config.zenith_angle,
+                    site=self.telescope_model.site,
+                    telescope_model_name=self.telescope_model.name,
+                    source_distance=self.config.source_distance.value,
+                    zenith_angle=self.config.zenith_angle.value,
                     off_axis_angle=this_off_axis,
                     mirror_number=this_mirror if self.config.single_mirror_mode else None,
                     label=self.label,
                 )
-                photons_file = self._output_directory.joinpath(photons_file_name)
+                photons_file = self.output_directory.joinpath(photons_file_name)
 
                 self._logger.debug("Using gzip to compress the photons file.")
 
@@ -199,9 +230,9 @@ class RayTracing:
         containment_fraction=0.8,
     ):
         """
-        Raytracing analysis.
+        Ray tracing analysis.
 
-        Involves the following: read simtel files, compute psfs and eff areas and store the
+        Involves the following: read simtel files, compute PSFs and eff areas, store the
         results in _results.
 
         Parameters
@@ -224,7 +255,7 @@ class RayTracing:
         if not do_analyze:
             self._read_results()
 
-        focal_length = float(self._telescope_model.get_parameter_value("focal_length"))
+        focal_length = float(self.telescope_model.get_parameter_value("focal_length"))
         tel_transmission_pars = self._get_telescope_transmission_params(no_tel_transmission)
         cm_to_deg = 180.0 / pi / focal_length
 
@@ -330,7 +361,7 @@ class RayTracing:
             Telescope transmission parameters.
         """
         return (
-            self._telescope_model.get_parameter_value("telescope_transmission")
+            self.telescope_model.get_parameter_value("telescope_transmission")
             if not no_tel_transmission
             else [1, 0, 0, 0]
         )
@@ -344,7 +375,7 @@ class RayTracing:
         list
             List of number of mirrors.
         """
-        return self._mirror_numbers if self.config.single_mirror_mode else [0]
+        return self.config.mirror_numbers if self.config.single_mirror_mode else [0]
 
     def _get_photons_file(self, this_off_axis, this_mirror):
         """
@@ -365,15 +396,15 @@ class RayTracing:
         photons_file_name = names.generate_file_name(
             file_type="photons",
             suffix=".lis",
-            site=self._telescope_model.site,
-            telescope_model_name=self._telescope_model.name,
-            source_distance=self._source_distance,
-            zenith_angle=self.config.zenith_angle,
+            site=self.telescope_model.site,
+            telescope_model_name=self.telescope_model.name,
+            source_distance=self.config.source_distance.value,
+            zenith_angle=self.config.zenith_angle.value,
             off_axis_angle=this_off_axis,
             mirror_number=this_mirror if self.config.single_mirror_mode else None,
             label=self.label,
         )
-        return self._output_directory.joinpath(photons_file_name + ".gz")
+        return self.output_directory.joinpath(photons_file_name + ".gz")
 
     def _create_psf_image(self, photons_file, focal_length, this_off_axis):
         """
@@ -492,7 +523,7 @@ class RayTracing:
         try:
             rx_output = subprocess.Popen(  # pylint: disable=consider-using-with
                 shlex.split(
-                    f"{self._simtel_path}/sim_telarray/bin/rx -f {containment_fraction:.2f} -v"
+                    f"{self.simtel_path}/sim_telarray/bin/rx -f {containment_fraction:.2f} -v"
                 ),
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
@@ -561,14 +592,14 @@ class RayTracing:
                 file_type="ray-tracing",
                 suffix=".pdf",
                 extra_label=key,
-                site=self._telescope_model.site,
-                telescope_model_name=self._telescope_model.name,
-                source_distance=self._source_distance,
-                zenith_angle=self.config.zenith_angle,
+                site=self.telescope_model.site,
+                telescope_model_name=self.telescope_model.name,
+                source_distance=self.config.source_distance.value,
+                zenith_angle=self.config.zenith_angle.value,
                 label=self.label,
             )
-            self._output_directory.joinpath("figures").mkdir(exist_ok=True)
-            plot_file = self._output_directory.joinpath("figures").joinpath(plot_file_name)
+            self.output_directory.joinpath("figures").mkdir(exist_ok=True)
+            plot_file = self.output_directory.joinpath("figures").joinpath(plot_file_name)
             self._logger.info(f"Saving fig in {plot_file}")
             plot.savefig(plot_file)
 
