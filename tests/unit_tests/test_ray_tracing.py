@@ -3,8 +3,11 @@
 import copy
 import logging
 import shutil
+from pathlib import Path
+from unittest.mock import call
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import QTable
 
@@ -462,3 +465,125 @@ def test_store_results_single_mirror_mode(ray_tracing_lst_single_mirror_mode):
         "eff_flen",
         "mirror_number",
     ]
+
+
+def test_process_rx_valid_output(ray_tracing_lst, mocker):
+    mock_popen = mocker.patch("subprocess.Popen")
+    mock_popen_instance = mock_popen.return_value
+    mock_popen_instance.communicate.return_value = (b"1.0 2.0 3.0 4.0 5.0 6.0",)
+    mock_gzip_open = mocker.patch("gzip.open", mocker.mock_open(read_data=b"data"))
+    mock_copyfileobj = mocker.patch("shutil.copyfileobj")
+
+    file = Path(
+        "tests/resources/photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz"
+    )
+    containment_fraction = 0.8
+
+    result = ray_tracing_lst._process_rx(file, containment_fraction)
+
+    assert result == (2.0, 2.0, 3.0, 6.0)
+    mock_popen.assert_called_once_with(
+        ["./sim_telarray/bin/rx", "-f", "0.80", "-v"], stdin=-1, stdout=-1
+    )
+    mock_gzip_open.assert_called_once_with(file, "rb")
+    mock_copyfileobj.assert_called_once()
+
+
+def test_process_rx_file_not_found(ray_tracing_lst, mocker):
+    mock_popen = mocker.patch("subprocess.Popen")
+    mock_popen_instance = mock_popen.return_value
+    mock_popen_instance.communicate.side_effect = FileNotFoundError("rx binary not found")
+
+    file = Path("photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz")
+    containment_fraction = 0.8
+
+    with pytest.raises(FileNotFoundError, match=r"^Photon list file not found:"):
+        ray_tracing_lst._process_rx(file, containment_fraction)
+
+
+def test_process_rx_index_error(ray_tracing_lst, mocker):
+    mock_popen = mocker.patch("subprocess.Popen")
+    mock_popen_instance = mock_popen.return_value
+    mock_popen_instance.communicate.return_value = (b"",)
+
+    file = Path(
+        "tests/resources/photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz"
+    )
+    containment_fraction = 0.8
+
+    with pytest.raises(IndexError, match=r"^Unexpected output format"):
+        ray_tracing_lst._process_rx(file, containment_fraction)
+
+
+def test_analyze_image_no_rx(ray_tracing_lst, mocker):
+    mock_image = mocker.Mock()
+    mock_image.get_psf.return_value = 4.256768651160611
+    mock_image.centroid_x = 100.0
+    mock_image.get_effective_area.return_value = 200.0
+
+    photons_file = Path(
+        "photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz"
+    )
+    this_off_axis = 0.0
+    use_rx = False
+    cm_to_deg = 0.1
+    containment_fraction = 0.8
+    tel_transmission = 0.9
+
+    result = ray_tracing_lst._analyze_image(
+        mock_image,
+        photons_file,
+        this_off_axis,
+        use_rx,
+        cm_to_deg,
+        containment_fraction,
+        tel_transmission,
+    )
+    assert pytest.approx(result[0].value) == this_off_axis
+    assert pytest.approx(result[1].value) == 4.256768651160611
+    assert pytest.approx(result[2].value) == 4.25676865
+    assert pytest.approx(result[3].value) == 180.0
+    assert np.isnan(result[4])
+
+    mock_image.get_psf.assert_has_calls(
+        [call(containment_fraction, "cm"), call(containment_fraction, "deg")]
+    )
+    assert mock_image.get_psf.call_count == 2
+    mock_image.get_effective_area.assert_called_once()
+
+
+def test_analyze_image_with_rx(ray_tracing_lst, mocker):
+    mock_image = mocker.Mock()
+    mock_image.get_psf.return_value = 4.256768651160611
+    mock_image.centroid_x = 100.0
+    mock_image.get_effective_area.return_value = 200.0
+
+    photons_file = Path(
+        "photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz"
+    )
+    this_off_axis = 0.0
+    use_rx = True
+    cm_to_deg = 0.1
+    containment_fraction = 0.8
+    tel_transmission = 0.9
+
+    mock_process_rx = mocker.patch.object(
+        ray_tracing_lst, "_process_rx", return_value=(4.256768651160611, 100.0, 100.0, 200.0)
+    )
+
+    result = ray_tracing_lst._analyze_image(
+        mock_image,
+        photons_file,
+        this_off_axis,
+        use_rx,
+        cm_to_deg,
+        containment_fraction,
+        tel_transmission,
+    )
+    assert pytest.approx(result[0].value) == this_off_axis
+    assert pytest.approx(result[1].value) == 4.256768651160611
+    assert pytest.approx(result[2].value) == 4.25676865 * cm_to_deg
+    assert pytest.approx(result[3].value) == 180.0
+    assert np.isnan(result[4])
+
+    mock_process_rx.assert_called_once_with(photons_file)
