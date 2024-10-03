@@ -466,7 +466,8 @@ class RayTracing:
             image.set_psf(containment_diameter_cm, fraction=containment_fraction, unit="cm")
             image.centroid_x = centroid_x
             image.centroid_y = centroid_y
-            image.set_effective_area(eff_area * tel_transmission)
+            eff_area = eff_area * tel_transmission
+            image.set_effective_area(eff_area)
         else:
             containment_diameter_cm = image.get_psf(containment_fraction, "cm")
             containment_diameter_deg = image.get_psf(containment_fraction, "deg")
@@ -527,12 +528,10 @@ class RayTracing:
                     shutil.copyfileobj(_stdin, rx_output.stdin)
                     try:
                         rx_output = rx_output.communicate()[0].splitlines()[-1:][0].split()
-                    except IndexError:
-                        self._logger.error(f"Invalid output from rx: {rx_output}")
-                        raise
-        except FileNotFoundError:
-            self._logger.error(f"Photon list file not found: {file}")
-            raise
+                    except IndexError as e:
+                        raise IndexError(f"Unexpected output format from rx: {rx_output}") from e
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Photon list file not found: {file}") from e
         containment_diameter_cm = 2 * float(rx_output[0])
         x_mean = float(rx_output[1])
         y_mean = float(rx_output[2])
