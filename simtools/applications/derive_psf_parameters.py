@@ -319,11 +319,9 @@ def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
     ray = RayTracing(
         telescope_model=tel_model,
         simtel_path=args_dict["simtel_path"],
-        config_data={
-            "source_distance": args_dict["src_distance"] * u.km,
-            "zenith_angle": args_dict["zenith"] * u.deg,
-            "off_axis_angle": [0.0 * u.deg],
-        },
+        zenith_angle=args_dict["zenith"] * u.deg,
+        source_distance=args_dict["src_distance"] * u.km,
+        off_axis_angle=[0.0] * u.deg,
     )
 
     ray.simulate(test=args_dict["test"], force=True)

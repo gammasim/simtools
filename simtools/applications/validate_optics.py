@@ -135,32 +135,19 @@ def main():  # noqa: D103
         mongo_db_config=db_config,
     )
 
-    ######################################################################
-    # This is here as an example how to change parameters when necessary.
-    ######################################################################
-    # pars_to_change = {
-    #     'mirror_focal_length': 1608.3,
-    #     'mirror_offset': -177.5,
-    #     'camera_body_diameter': 289.7,
-    #     'telescope_transmission': 1
-    # }
-    # tel_model.change_multiple_parameters(**pars_to_change)
-
     print(f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n")
 
     ray = RayTracing(
         telescope_model=tel_model,
         simtel_path=args_dict["simtel_path"],
-        config_data={
-            "source_distance": args_dict["src_distance"] * u.km,
-            "zenith_angle": args_dict["zenith"] * u.deg,
-            "off_axis_angle": np.linspace(
-                0,
-                args_dict["max_offset"],
-                int(args_dict["max_offset"] / args_dict["offset_steps"]) + 1,
-            )
-            * u.deg,
-        },
+        zenith_angle=args_dict["zenith"] * u.deg,
+        source_distance=args_dict["src_distance"] * u.km,
+        off_axis_angle=np.linspace(
+            0,
+            args_dict["max_offset"],
+            int(args_dict["max_offset"] / args_dict["offset_steps"]) + 1,
+        )
+        * u.deg,
     )
     ray.simulate(test=args_dict["test"], force=False)
     ray.analyze(force=True)
