@@ -17,22 +17,21 @@ __all__ = ["SimulatorRayTracing"]
 
 class SimulatorRayTracing(SimtelRunner):
     """
-    SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.
+    Perform ray tracing simulations with sim_telarray.
 
     Parameters
     ----------
-    telescope_model: str
-        Instance of TelescopeModel class.
+    telescope_model: TelescopeModel
+        telescope model
     label: str
-        Instance label. Important for output file naming.
+        label used for output file naming.
     simtel_path: str or Path
         Location of sim_telarray installation.
     config_data: namedtuple
-        namedtuple containing the configurable parameters: zenith_angle,
-        off_axis_angle, source_distance, single_mirror_mode, use_random_focal_length,
+        namedtuple containing the configurable parameters as values (expected units in
+        brackets): zenith_angle (deg), off_axis_angle (deg), source_distance (km),
+         single_mirror_mode, use_random_focal_length,
         mirror_numbers.
-    config_file: str or Path
-        Path of the yaml file containing the configurable parameters.
     force_simulate: bool
         Remove existing files and force re-running of the ray-tracing simulation.
     """
@@ -67,9 +66,9 @@ class SimulatorRayTracing(SimtelRunner):
 
     def _load_required_files(self, force_simulate):
         """
-        Which file are required for running depends on the mode.
+        Load required files for the simulation. Depends on the running mode.
 
-        Here we define and write some information into these files. Log files are always required.
+        Initialize files for the simulation.
 
         Parameters
         ----------
@@ -77,8 +76,7 @@ class SimulatorRayTracing(SimtelRunner):
             Remove existing files and force re-running of the ray-tracing simulation.
         """
         # This file is not actually needed and does not exist in simtools.
-        # However, we need to provide the name of a CORSIKA input file to sim_telarray
-        # so it is set up here.
+        # It is required as CORSIKA input file to sim_telarray
         self._corsika_file = self._simtel_path.joinpath("run9991.corsika.gz")
 
         # Loop to define and remove existing files.
@@ -89,9 +87,9 @@ class SimulatorRayTracing(SimtelRunner):
                 suffix=".log" if base_name == "log" else ".lis",
                 site=self.telescope_model.site,
                 telescope_model_name=self.telescope_model.name,
-                source_distance=self.config.source_distance.to("km").value,
-                zenith_angle=self.config.zenith_angle.to("deg").value,
-                off_axis_angle=self.config.off_axis_angle.to("deg").value,
+                source_distance=self.config.source_distance,
+                zenith_angle=self.config.zenith_angle,
+                off_axis_angle=self.config.off_axis_angle,
                 mirror_number=(
                     self.config.mirror_numbers if self.config.single_mirror_mode else None
                 ),
@@ -110,26 +108,20 @@ class SimulatorRayTracing(SimtelRunner):
                 file.write("# List of photons for RayTracing simulations\n")
                 file.write(f"#{50 * '='}\n")
                 file.write(f"# config_file = {self.telescope_model.get_config_file()}\n")
-                file.write(f"# zenith_angle [deg] = {self.config.zenith_angle.to('deg').value}\n")
-                file.write(
-                    f"# off_axis_angle [deg] = {self.config.off_axis_angle.to('deg').value}\n"
-                )
-                file.write(
-                    f"# source_distance [km] = {self.config.source_distance.to('km').value}\n"
-                )
+                file.write(f"# zenith_angle [deg] = {self.config.zenith_angle}\n")
+                file.write(f"# off_axis_angle [deg] = {self.config.off_axis_angle}\n")
+                file.write(f"# source_distance [km] = {self.config.source_distance}\n")
                 if self.config.single_mirror_mode:
                     file.write(f"# mirror_number = {self.config.mirror_numbers}\n\n")
 
-            # Filling in star file with a single light source.
-            # Parameters defining light source:
+            # Filling a star file with a single light source defined by
             # - azimuth
             # - elevation
             # - flux
             # - distance of light source
             with self._stars_file.open("w", encoding="utf-8") as file:
                 file.write(
-                    f"0. {90.0 - self.config.zenith_angle.to('deg').value} "
-                    f"1.0 {self.config.source_distance.to('km').value}\n"
+                    f"0. {90.0 - self.config.zenith_angle} 1.0 {self.config.source_distance}\n"
                 )
 
         if self.config.single_mirror_mode:
@@ -139,7 +131,7 @@ class SimulatorRayTracing(SimtelRunner):
     def _make_run_command(
         self, run_number=None, input_file=None
     ):  # pylint: disable=unused-argument
-        """Return the command to run simtel_array."""
+        """Generate simtel_array run command."""
         if self.config.single_mirror_mode:
             # TODO SSTs without mirror_focal_length
             _mirror_focal_length = float(
@@ -158,7 +150,7 @@ class SimulatorRayTracing(SimtelRunner):
         )
         command += super().get_config_option(
             "telescope_theta",
-            self.config.zenith_angle.to("deg").value + self.config.off_axis_angle.to("deg").value,
+            self.config.zenith_angle + self.config.off_axis_angle,
         )
         command += super().get_config_option("star_photons", str(self.photons_per_run))
         command += super().get_config_option("telescope_phi", "0")
@@ -185,7 +177,7 @@ class SimulatorRayTracing(SimtelRunner):
                 ),
             )
             command += super().get_config_option(
-                "focal_length", self.config.source_distance.value * u.km.to(u.cm)
+                "focal_length", self.config.source_distance * u.km.to(u.cm)
             )
             command += super().get_config_option("dish_shape_length", _mirror_focal_length)
             command += super().get_config_option("mirror_focal_length", _mirror_focal_length)
@@ -198,29 +190,26 @@ class SimulatorRayTracing(SimtelRunner):
         return command
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
-        """Check run results.
+        """
+        Check run results.
+
+        Photon list files should have at least 100 lines.
+
+        Returns
+        -------
+        bool
+            True if photon list is not empty.
 
         Raises
         ------
         RuntimeError
             if Photon list is empty.
         """
-        # Checking run
-        if not self._is_photon_list_file_ok():
-            msg = "Photon list is empty."
-            self._logger.error(msg)
-            raise RuntimeError(msg)
-
-    def _is_photon_list_file_ok(self):
-        """Check if the photon list is valid."""
-        n_lines = 0
         with open(self._photons_file, "rb") as ff:
-            for _ in ff:
-                n_lines += 1
-                if n_lines > 100:
-                    break
-
-        return n_lines > 100
+            n_lines = sum(1 for _ in ff)
+        if n_lines < 100:
+            raise RuntimeError("Photon list is empty.")
+        return True
 
     def _write_out_single_pixel_camera_file(self):
         """Write out the single pixel camera file."""
