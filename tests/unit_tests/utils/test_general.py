@@ -62,7 +62,7 @@ def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) ->
 
 
 def test_collect_dict_from_url(io_handler) -> None:
-    _file = "tests/resources/test_parameters.yml"
+    _file = "tests/resources/num_gains.schema.yml"
     _reference_dict = gen.collect_data_from_file_or_dict(_file, None)
 
     _url = url_simtools
@@ -370,7 +370,7 @@ def test_collect_data_dict_from_json():
 
 
 def test_collect_data_from_http():
-    _file = "tests/resources/test_parameters.yml"
+    _file = "tests/resources/num_gains.schema.yml"
     url = url_simtools
 
     data = gen.collect_data_from_http(url + _file)
