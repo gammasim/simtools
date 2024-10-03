@@ -35,15 +35,23 @@ class RayTracing:
     Parameters
     ----------
     telescope_model: TelescopeModel
-        Instance of the TelescopeModel class.
-    label: str
-        Instance label.
+        telescope model
     simtel_path: str (or Path)
         Location of sim_telarray installation.
-    config_data: dict.
-        Dict containing the configurable parameters.
-    config_file: str or Path
-        Path of the yaml file containing the configurable parameters.
+    label: str
+        label used for output file naming.
+    zenith_angle: astropy.units.Quantity
+        Zenith angle.
+    off_axis_angle: list of astropy.units.Quantity
+        Off-axis angles.
+    source_distance: astropy.units.Quantity
+        Source distance.
+    single_mirror_mode: bool
+        Single mirror mode flag.
+    use_random_focal_length: bool
+        Use random focal length flag.
+    mirror_numbers: list, str
+        List of mirror numbers (or 'all').
     """
 
     YLABEL = {
@@ -87,23 +95,12 @@ class RayTracing:
         self.output_directory = self._io_handler.get_output_directory(
             label=self.label, sub_dir="ray-tracing"
         )
-
+        self.output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
+        self._file_results = self.output_directory.joinpath("results").joinpath(
+            self._generate_file_name(file_type="ray-tracing", suffix=".ecsv")
+        )
         self._psf_images = None
         self._results = None
-        self._has_results = False
-
-        # Results file
-        file_name_results = names.generate_file_name(
-            file_type="ray-tracing",
-            suffix=".ecsv",
-            site=self.telescope_model.site,
-            telescope_model_name=self.telescope_model.name,
-            source_distance=self.config.source_distance.value,
-            zenith_angle=self.config.zenith_angle.value,
-            label=self.label,
-        )
-        self.output_directory.joinpath("results").mkdir(parents=True, exist_ok=True)
-        self._file_results = self.output_directory.joinpath("results").joinpath(file_name_results)
 
     def __repr__(self):
         """Return string representation of RayTracing class."""
@@ -136,9 +133,9 @@ class RayTracing:
         off_axis_angle = np.around(off_axis_angle, 5)
 
         return config_data(
-            zenith_angle=zenith_angle,
-            off_axis_angle=off_axis_angle,
-            source_distance=source_distance,
+            zenith_angle=zenith_angle.to("deg").value,
+            off_axis_angle=off_axis_angle.to("deg").value,
+            source_distance=source_distance.to("km").value,
             single_mirror_mode=single_mirror_mode,
             use_random_focal_length=use_random_focal_length,
             mirror_numbers=mirror_numbers,
@@ -165,7 +162,7 @@ class RayTracing:
         mir_focal_length = self.telescope_model.get_parameter_value("mirror_focal_length")
         source_distance = 2 * float(mir_focal_length) * u.cm.to(u.km) * u.km
 
-        if mirror_numbers[0] == "all":
+        if "all" in mirror_numbers:
             mirror_numbers = list(range(0, self.telescope_model.mirrors.number_of_mirrors))
 
         return source_distance, mirror_numbers
@@ -199,19 +196,14 @@ class RayTracing:
                 )
                 simtel.run(test=test)
 
-                photons_file_name = names.generate_file_name(
-                    file_type="photons",
-                    suffix=".lis",
-                    site=self.telescope_model.site,
-                    telescope_model_name=self.telescope_model.name,
-                    source_distance=self.config.source_distance.value,
-                    zenith_angle=self.config.zenith_angle.value,
-                    off_axis_angle=this_off_axis,
-                    mirror_number=this_mirror if self.config.single_mirror_mode else None,
-                    label=self.label,
+                photons_file = self.output_directory.joinpath(
+                    self._generate_file_name(
+                        file_type="photons",
+                        suffix=".lis",
+                        off_axis_angle=this_off_axis,
+                        mirror_number=this_mirror if self.config.single_mirror_mode else None,
+                    )
                 )
-                photons_file = self.output_directory.joinpath(photons_file_name)
-
                 self._logger.debug("Using gzip to compress the photons file.")
 
                 with open(photons_file, "rb") as f_in:
@@ -274,7 +266,6 @@ class RayTracing:
 
         if do_analyze:
             self._store_results(_rows)
-        self._has_results = True
         if export:
             self.export_results()
 
@@ -319,10 +310,13 @@ class RayTracing:
             for this_mirror in all_mirrors:
                 self._logger.debug(f"Analyzing RayTracing for off_axis={this_off_axis}")
 
-                if self.config.single_mirror_mode:
-                    self._logger.debug(f"mirror_number={this_mirror}")
+                photons_file = self.output_directory.joinpath(
+                    self._generate_file_name(
+                        "photons", ".lis", off_axis_angle=this_off_axis, mirror_number=this_mirror
+                    )
+                    + ".gz"
+                )
 
-                photons_file = self._get_photons_file(this_off_axis, this_mirror)
                 tel_transmission = compute_telescope_transmission(
                     tel_transmission_pars, this_off_axis
                 )
@@ -398,8 +392,8 @@ class RayTracing:
             suffix=".lis",
             site=self.telescope_model.site,
             telescope_model_name=self.telescope_model.name,
-            source_distance=self.config.source_distance.value,
-            zenith_angle=self.config.zenith_angle.value,
+            source_distance=self.config.source_distance,
+            zenith_angle=self.config.zenith_angle,
             off_axis_angle=this_off_axis,
             mirror_number=this_mirror if self.config.single_mirror_mode else None,
             label=self.label,
@@ -547,16 +541,15 @@ class RayTracing:
 
     def export_results(self):
         """Export results to a csv file."""
-        if not self._has_results:
-            self._logger.error("Cannot export results because it does not exist")
-        else:
+        if self._results:
             self._logger.info(f"Exporting results to {self._file_results}")
             astropy.io.ascii.write(self._results, self._file_results, format="ecsv", overwrite=True)
+        else:
+            self._logger.error("No results to export")
 
     def _read_results(self):
         """Read existing results file and store it in _results."""
         self._results = astropy.io.ascii.read(self._file_results, format="ecsv")
-        self._has_results = True
 
     def plot(self, key, save=False, **kwargs):
         """
@@ -588,15 +581,10 @@ class RayTracing:
             raise exc
 
         if save:
-            plot_file_name = names.generate_file_name(
+            plot_file_name = self._generate_file_name(
                 file_type="ray-tracing",
                 suffix=".pdf",
                 extra_label=key,
-                site=self.telescope_model.site,
-                telescope_model_name=self.telescope_model.name,
-                source_distance=self.config.source_distance.value,
-                zenith_angle=self.config.zenith_angle.value,
-                label=self.label,
             )
             self.output_directory.joinpath("figures").mkdir(exist_ok=True)
             plot_file = self.output_directory.joinpath("figures").joinpath(plot_file_name)
@@ -625,7 +613,7 @@ class RayTracing:
             raise KeyError(msg)
 
         ax = plt.gca()
-        ax.hist([r.value for r in self._results[key]], **kwargs)
+        ax.hist(self._results[key], **kwargs)
 
     def get_mean(self, key):
         """
@@ -690,6 +678,23 @@ class RayTracing:
             if self._psf_images and this_off_axis in self._psf_images:
                 images.append(self._psf_images[this_off_axis])
         if len(images) == 0:
-            self._logger.error("No image found")
+            self._logger.warning("No image found")
             return None
         return images
+
+    def _generate_file_name(
+        self, file_type, suffix, off_axis_angle=None, mirror_number=None, extra_label=None
+    ):
+        """Generate file name for output files."""
+        return names.generate_file_name(
+            file_type=file_type,
+            suffix=suffix,
+            site=self.telescope_model.site,
+            telescope_model_name=self.telescope_model.name,
+            source_distance=self.config.source_distance,
+            zenith_angle=self.config.zenith_angle,
+            off_axis_angle=off_axis_angle,
+            mirror_number=mirror_number if self.config.single_mirror_mode else None,
+            label=self.label,
+            extra_label=extra_label,
+        )
