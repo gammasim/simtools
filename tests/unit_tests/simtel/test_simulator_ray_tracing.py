@@ -43,7 +43,7 @@ def simulator_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path):
     return SimulatorRayTracing(
         simtel_path=simtel_path,
         telescope_model=telescope_model_sst,
-        config_data=ray_tracing_sst.config._replace(off_axis_angle=0 * u.deg, mirror_numbers=0),
+        config_data=ray_tracing_sst.config._replace(off_axis_angle=0.0, mirror_numbers=0),
         label="test-simtel-runner-ray-tracing",
     )
 
@@ -54,7 +54,7 @@ def simulator_ray_tracing_single_mirror(ray_tracing_mst, telescope_model_mst, si
         simtel_path=simtel_path,
         telescope_model=telescope_model_mst,
         config_data=ray_tracing_mst.config._replace(
-            off_axis_angle=0 * u.deg, mirror_numbers=0, single_mirror_mode=True
+            off_axis_angle=0, mirror_numbers=0, single_mirror_mode=True
         ),
         label="test-simtel-runner-ray-tracing",
     )
@@ -166,30 +166,14 @@ def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror, mod
 
 
 def test_check_run_result(simulator_ray_tracing):
-    """
-    Testing here that the file does not exist because no simulations
-    are run in unit tests. This function is tested for the positive case
-    in the integration tests.
-    """
-
     with pytest.raises(RuntimeError):
         simulator_ray_tracing._check_run_result()
 
-
-def test_is_photon_list_file_ok(simulator_ray_tracing):
-    """
-    Testing here that the file does not exist because no simulations
-    are run in unit tests. This function is tested for the positive case
-    in the integration tests.
-    """
-    assert not simulator_ray_tracing._is_photon_list_file_ok()
-
-    # Now add manually entries to the photons file to test the function works as expected
+    # Add manually entries to the photons file to test the function works as expected
     simulator_ray_tracing._load_required_files(force_simulate=False)
     with simulator_ray_tracing._photons_file.open("a") as file:
         file.writelines(150 * [f"{1}\n"])
-
-    assert simulator_ray_tracing._is_photon_list_file_ok()
+    assert simulator_ray_tracing._check_run_result()
 
 
 def test_write_out_single_pixel_camera_file(
