@@ -30,7 +30,7 @@ class SimulatorRayTracing(SimtelRunner):
     config_data: namedtuple
         namedtuple containing the configurable parameters as values (expected units in
         brackets): zenith_angle (deg), off_axis_angle (deg), source_distance (km),
-         single_mirror_mode, use_random_focal_length,
+        single_mirror_mode, use_random_focal_length,
         mirror_numbers.
     force_simulate: bool
         Remove existing files and force re-running of the ray-tracing simulation.
