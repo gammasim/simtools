@@ -133,7 +133,7 @@ class SimulatorRayTracing(SimtelRunner):
     ):  # pylint: disable=unused-argument
         """Generate simtel_array run command."""
         if self.config.single_mirror_mode:
-            # TODO SSTs without mirror_focal_length
+            # Note: no mirror length defined for dual-mirror telescopes
             _mirror_focal_length = float(
                 self.telescope_model.get_parameter_value("mirror_focal_length")
             )
@@ -163,7 +163,6 @@ class SimulatorRayTracing(SimtelRunner):
         command += super().get_config_option("maximum_telescopes", "1")
         command += super().get_config_option("show", "all")
         command += super().get_config_option("camera_filter", "none")
-        # TODO this is a hack
         if self.config.single_mirror_mode:
             command += super().get_config_option("focus_offset", "all:0.")
             command += super().get_config_option("camera_config_file", "single_pixel_camera.dat")
