@@ -5,6 +5,7 @@ from pathlib import Path
 
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.runners.simtel_runner import SimtelRunner
+from simtools.utils import general
 
 __all__ = ["SimulatorCameraEfficiency"]
 
@@ -38,6 +39,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         file_log=None,
         zenith_angle=None,
         nsb_spectrum=None,
+        skip_correction_to_nsb_spectrum=False,
     ):
         """Initialize SimtelRunner."""
         self._logger = logging.getLogger(__name__)
@@ -52,6 +54,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         self._file_log = file_log
         self.zenith_angle = zenith_angle
         self.nsb_spectrum = nsb_spectrum
+        self.skip_correction_to_nsb_spectrum = skip_correction_to_nsb_spectrum
 
     @property
     def nsb_spectrum(self):
@@ -64,7 +67,10 @@ class SimulatorCameraEfficiency(SimtelRunner):
         if nsb_spectrum is not None:
             self._nsb_spectrum = self._validate_or_fix_nsb_spectrum_file_format(nsb_spectrum)
         else:
-            self._nsb_spectrum = None
+            self._nsb_spectrum = (
+                self._telescope_model.config_file_directory
+                / Path(self._telescope_model.get_parameter_value("nsb_reference_spectrum")).name
+            )
 
     def _make_run_command(
         self, run_number=None, input_file=None
@@ -115,7 +121,11 @@ class SimulatorCameraEfficiency(SimtelRunner):
                 "mirror_reflectivity", "secondary_mirror_incidence_angle"
             )
 
-        command = str(self._simtel_path.joinpath("sim_telarray/bin/testeff"))
+        command = str(self._simtel_path.joinpath("sim_telarray/testeff"))
+        if self.skip_correction_to_nsb_spectrum:
+            command += " -nc"  # Do not apply correction to original altitude where B&E was derived
+        command += " -I"  # Clear the fall-back configuration directories
+        command += f" -I{self._telescope_model.config_file_directory}"
         if self.nsb_spectrum is not None:
             command += f" -fnsb {self.nsb_spectrum}"
         command += " -nm -nsb-extra"
@@ -123,7 +133,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
         command += f" -flen {focal_length}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
-        if mirror_class == 1:
+        if mirror_class == 0:
             command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
         command += f" -fref {mirror_reflectivity}"
         if mirror_class == 2:
@@ -141,7 +151,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
         )
         command += f" -fqe {self._telescope_model.get_parameter_value('quantum_efficiency')}"
         command += " 200 1000"  # lmin and lmax
-        command += " 300 26"  # Xmax, ioatm (Konrad always uses 26)
+        command += " 300"  # Xmax
+        command += f" {self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" {self.zenith_angle}"
         command += f" 2>{self._file_log}"
         command += f" >{self._file_simtel}"
@@ -234,8 +245,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
         validated_nsb_spectrum_file = (
             self._telescope_model.config_file_directory / Path(nsb_spectrum_file).name
         )
-        with open(nsb_spectrum_file, encoding="utf-8") as file:
-            lines = file.readlines()
+
+        lines = general.read_file_encoded_in_utf_or_latin(nsb_spectrum_file)
+
         with open(validated_nsb_spectrum_file, "w", encoding="utf-8") as file:
             for line in lines:
                 if line.startswith("#"):
