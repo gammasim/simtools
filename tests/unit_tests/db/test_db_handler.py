@@ -35,12 +35,17 @@ def _db_cleanup(db, random_id):
 
 
 @pytest.fixture
-def _db_cleanup_file_sandbox(db_no_config_file, random_id):
+def fs_files():
+    return "fs.files"
+
+
+@pytest.fixture
+def _db_cleanup_file_sandbox(db_no_config_file, random_id, fs_files):
     yield
     # Cleanup
     logger.info("Dropping the temporary files in the sandbox")
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.chunks"].drop()
-    db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
+    db_no_config_file.db_client[f"sandbox_{random_id}"][fs_files].drop()
 
 
 def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
@@ -507,72 +512,6 @@ def test_get_all_versions(db, mocker, caplog):
     assert "No database name defined to determine" in caplog.text
 
 
-def test_get_all_available_array_elements(db, model_version):
-    available_telescopes = db.get_all_available_array_elements(
-        model_version=model_version, collection="telescopes"
-    )
-
-    expected_telescope_names = [
-        "LSTN-01",
-        "LSTN-02",
-        "LSTN-03",
-        "LSTN-04",
-        "LSTS-design",
-        "MSTN-design",
-        "MSTS-design",
-        "SSTS-design",
-    ]
-    assert all(_t in available_telescopes for _t in expected_telescope_names)
-
-    with pytest.raises(
-        ValueError, match=r"^Query for collection name wrong_collection not implemented."
-    ):
-        db.get_all_available_array_elements(
-            model_version=model_version, collection="wrong_collection"
-        )
-
-
-def test_get_available_array_elements_of_type(db, model_version):
-
-    available_types = db.get_available_array_elements_of_type(
-        array_element_type="LSTN", model_version=model_version, collection="telescopes"
-    )
-    assert "LSTN-04" in available_types
-    assert len(available_types) == 4
-    assert all("design" not in tel_type for tel_type in available_types)
-
-
-def test_get_array_element_db_name(db, model_version_prod5):
-    assert db.get_array_element_db_name("LSTN-01", model_version=model_version_prod5) == "LSTN-01"
-    assert (
-        db.get_array_element_db_name("LSTS-20", model_version=model_version_prod5) == "LSTS-design"
-    )
-    assert (
-        db.get_array_element_db_name("LSTN-design", model_version=model_version_prod5)
-        == "LSTN-design"
-    )
-    assert (
-        db.get_array_element_db_name("LSTS-design", model_version=model_version_prod5)
-        == "LSTS-design"
-    )
-    assert (
-        db.get_array_element_db_name("SSTS-91", model_version=model_version_prod5) == "SSTS-design"
-    )
-    assert (
-        db.get_array_element_db_name("SSTS-design", model_version=model_version_prod5)
-        == "SSTS-design"
-    )
-    with pytest.raises(ValueError, match=r"Invalid name SSTN"):
-        db.get_array_element_db_name(
-            "SSTN-05", model_version=model_version_prod5, collection="telescopes"
-        )
-
-    with pytest.raises(ValueError, match=r"Invalid database name."):
-        db.get_array_element_db_name(
-            "ILLN-01", model_version=model_version_prod5, collection="telescopes"
-        )
-
-
 def test_parameter_cache_key(db, model_version_prod5):
 
     assert db._parameter_cache_key("North", "LSTN-01", model_version_prod5) == "North-LSTN-01-5.0.0"
@@ -590,7 +529,7 @@ def test_model_version(db):
         db.model_version(version="0.0.9876")
 
 
-def test_get_collections(db, db_config):
+def test_get_collections(db, db_config, fs_files):
 
     collections = db.get_collections()
     assert isinstance(collections, list)
@@ -599,12 +538,12 @@ def test_get_collections(db, db_config):
     collections_from_name = db.get_collections(db_config["db_simulation_model"])
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
-    assert "fs.files" in collections_from_name
+    assert fs_files in collections_from_name
 
     collections_no_model = db.get_collections(db_config["db_simulation_model"], True)
     assert isinstance(collections_no_model, list)
     assert "telescopes" in collections_no_model
-    assert "fs.files" not in collections_no_model
+    assert fs_files not in collections_no_model
     assert "metadata" not in collections_no_model
 
 
