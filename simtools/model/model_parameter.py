@@ -71,13 +71,7 @@ class ModelParameter:
         self.model_version = model_version
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
-            names.validate_array_element_name(
-                self.db.get_array_element_db_name(
-                    array_element_name=array_element_name,
-                    model_version=self.model_version,
-                    collection=self.collection,
-                )
-            )
+            names.validate_array_element_name(array_element_name)
             if array_element_name is not None
             else None
         )
