@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+g6e9dcf7 Manual</title>
+    <title>Database support &#8212; simtools v0.1.dev1+g6b389be Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=5b906ffd"></script>
+    <script src="../_static/documentation_options.js?v=16f0b683"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6e9dcf7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6b389be Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -461,11 +461,8 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.delete_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.delete_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_file_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_file_db()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_available_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_available_array_elements()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_versions()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_element_db_name"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_element_db_name()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_element_list_for_db_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_element_list_for_db_query()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_available_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_available_array_elements_of_type()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collection()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collections"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collections()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_corsika_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_corsika_configuration_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_derived_values"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_derived_values()</span></code></a></li>
@@ -707,33 +704,6 @@ from telescope LSTN-01.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_available_array_elements">
-<span class="sig-name descname"><span class="pre">get_all_available_array_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_all_available_array_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_available_array_elements" title="Link to this definition">#</a></dt>
-<dd><p>Get all available array element names in the specified collection in the DB.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Which version to get the array elements of</p>
-</dd>
-<dt><strong>collection: str</strong></dt><dd><p>Which collection to get the array elements from:
-i.e. telescopes, calibration_devices</p>
-</dd>
-<dt><strong>db_name</strong><span class="classifier">str</span></dt><dd><p>Database name</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>_available_array_elements: list</dt><dd><p>List of all array element names found in collection</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_versions">
 <span class="sig-name descname"><span class="pre">get_all_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_all_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_versions" title="Link to this definition">#</a></dt>
 <dd><p>Get all version entries in the DB of collection and/or a specific parameter.</p>
@@ -768,82 +738,21 @@ i.e. telescopes, calibration_devices</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_array_element_db_name">
-<span class="sig-name descname"><span class="pre">get_array_element_db_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_array_element_db_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_array_element_db_name" title="Link to this definition">#</a></dt>
-<dd><p>Translate array element name to the name used in the DB.</p>
-<p>This is required, as not all array elements are defined in the database yet. In these cases,
-use the “design” array element.</p>
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_collection">
+<span class="sig-name descname"><span class="pre">get_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_collection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_collection" title="Link to this definition">#</a></dt>
+<dd><p>Get a collection from the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN-01)</p>
+<dt><strong>db_name: str</strong></dt><dd><p>Name of the DB.</p>
 </dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
-</dd>
-<dt><strong>collection: str</strong></dt><dd><p>collection of array element (e.g. telescopes, calibration_devices)</p>
+<dt><strong>collection_name: str</strong></dt><dd><p>Name of the collection.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Array element model name as used in the DB.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>If the array element name is not found in the database.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_array_element_list_for_db_query">
-<span class="sig-name descname"><span class="pre">get_array_element_list_for_db_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_array_element_list_for_db_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_array_element_list_for_db_query" title="Link to this definition">#</a></dt>
-<dd><p>Return a list of array element names to be used for querying the database.</p>
-<p>The first entry of the list is the design array element (if it exists in the DB),
-followed by the actual array element model name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN-01).</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of array element model names as used in the DB.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_available_array_elements_of_type">
-<span class="sig-name descname"><span class="pre">get_available_array_elements_of_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_available_array_elements_of_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_available_array_elements_of_type" title="Link to this definition">#</a></dt>
-<dd><p>Get all array elements of a certain type in the specified collection in the DB.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>array_element_type</strong><span class="classifier">str</span></dt><dd><p>Type of the array element (e.g. LSTN, MSTS)</p>
-</dd>
-<dt><strong>model_version</strong><span class="classifier">str</span></dt><dd><p>Which version to get the array elements of</p>
-</dd>
-<dt><strong>collection</strong><span class="classifier">str</span></dt><dd><p>Which collection to get the array elements from:
-i.e. telescopes, calibration_devices</p>
-</dd>
-<dt><strong>db_name</strong><span class="classifier">str</span></dt><dd><p>Database name</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of all array element names found in collection</p>
+<dt>pymongo.collection.Collection</dt><dd><p>The collection from the DB.</p>
 </dd>
 </dl>
 </dd>
@@ -1252,11 +1161,8 @@ If the field does not exist, it will be added.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.delete_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.delete_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_file_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_file_db()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_available_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_available_array_elements()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_versions()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_element_db_name"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_element_db_name()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_element_list_for_db_query"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_element_list_for_db_query()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_available_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_available_array_elements_of_type()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collection()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collections"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collections()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_corsika_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_corsika_configuration_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_derived_values"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_derived_values()</span></code></a></li>

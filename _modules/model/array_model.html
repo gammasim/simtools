@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.array_model &#8212; simtools v0.1.dev1+g6e9dcf7 Manual</title>
+    <title>model.array_model &#8212; simtools v0.1.dev1+g6b389be Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=5b906ffd"></script>
+    <script src="../../_static/documentation_options.js?v=16f0b683"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6e9dcf7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6b389be Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -384,7 +384,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">QTable</span>
 
 <span class="kn">from</span> <span class="nn">simtools.data_model</span> <span class="kn">import</span> <span class="n">data_reader</span>
-<span class="kn">from</span> <span class="nn">simtools.db</span> <span class="kn">import</span> <span class="n">db_handler</span>
+<span class="kn">from</span> <span class="nn">simtools.db</span> <span class="kn">import</span> <span class="n">db_array_elements</span><span class="p">,</span> <span class="n">db_handler</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span> <span class="nn">simtools.model.site_model</span> <span class="kn">import</span> <span class="n">SiteModel</span>
 <span class="kn">from</span> <span class="nn">simtools.model.telescope_model</span> <span class="kn">import</span> <span class="n">TelescopeModel</span>
@@ -729,6 +729,8 @@ document.write(`
 <span class="sd">        type (e.g., MSTN). In the latter case, all telescopes of this specific</span>
 <span class="sd">        type are added.</span>
 
+<span class="sd">        TODO check</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        array_elements_list: list</span>
@@ -761,8 +763,9 @@ document.write(`
 <span class="sd">        dict</span>
 <span class="sd">            Dict with array elements.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">all_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_available_array_elements_of_type</span><span class="p">(</span>
+        <span class="n">all_elements</span> <span class="o">=</span> <span class="n">db_array_elements</span><span class="o">.</span><span class="n">get_array_elements_of_type</span><span class="p">(</span>
             <span class="n">array_element_type</span><span class="o">=</span><span class="n">array_element_type</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span>
             <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
             <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
         <span class="p">)</span>

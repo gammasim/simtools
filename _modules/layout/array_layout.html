@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.array_layout &#8212; simtools v0.1.dev1+g6e9dcf7 Manual</title>
+    <title>layout.array_layout &#8212; simtools v0.1.dev1+g6b389be Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=5b906ffd"></script>
+    <script src="../../_static/documentation_options.js?v=16f0b683"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6e9dcf7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6b389be Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -783,9 +783,33 @@ document.write(`
             <span class="n">table</span><span class="p">[</span><span class="s2">&quot;position_z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">position</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">table</span>
 
-    <span class="k">def</span> <span class="nf">_set_telescope_auxiliary_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_telescope_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get telescope model from the database.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope_name: str</span>
+<span class="sd">            Name of the telescope.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TelescopeModel</span>
+<span class="sd">            Telescope model instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TelescopeModel</span><span class="p">(</span>
+            <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope_name</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+            <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_telescope_auxiliary_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope</span><span class="p">,</span> <span class="n">telescope_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set auxiliary CORSIKA parameters for a telescope.</span>
+
+<span class="sd">        Uses as default the design model if telescope is not found in the database.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -793,18 +817,19 @@ document.write(`
 <span class="sd">            Instance of TelescopePosition.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">:</span>
+        <span class="n">telescope_name</span> <span class="o">=</span> <span class="n">telescope_name</span> <span class="k">if</span> <span class="n">telescope_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">telescope</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;telescopes&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Reading auxiliary telescope parameters for </span><span class="si">{</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Reading auxiliary telescope parameters for </span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot; (model version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
-            <span class="n">tel_model</span> <span class="o">=</span> <span class="n">TelescopeModel</span><span class="p">(</span>
-                <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
-                <span class="n">telescope_name</span><span class="o">=</span><span class="n">telescope</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
-                <span class="n">mongo_db_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">,</span>
-                <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tel_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telescope_model</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">tel_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_telescope_model</span><span class="p">(</span>
+                    <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-design&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
             <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;telescope_axis_height&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope_sphere_radius&quot;</span><span class="p">):</span>
                 <span class="n">telescope</span><span class="o">.</span><span class="n">set_auxiliary_parameter</span><span class="p">(</span>
                     <span class="n">para</span><span class="p">,</span> <span class="n">tel_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="n">para</span><span class="p">)</span>
@@ -812,7 +837,9 @@ document.write(`
 
 <div class="viewcode-block" id="ArrayLayout.add_telescope">
 <a class="viewcode-back" href="../../api-reference/array_layout.html#layout.array_layout.ArrayLayout.add_telescope">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_telescope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tel_corsika_z</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_telescope</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">crs_name</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tel_corsika_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">design_model</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an individual telescope to the telescope list.</span>
 
@@ -831,9 +858,12 @@ document.write(`
 <span class="sd">        tel_corsika_z: astropy.units.quantity.Quantity</span>
 <span class="sd">            CORSIKA z-position (requires setting of CORSIKA observation level and telescope sphere\</span>
 <span class="sd">            center).</span>
+<span class="sd">        design_model: str</span>
+<span class="sd">            Name of the design model (optional).</span>
+<span class="sd">            If none, telescope type + &quot;-design&quot; is used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tel</span> <span class="o">=</span> <span class="n">TelescopePosition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">telescope_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_telescope_auxiliary_parameters</span><span class="p">(</span><span class="n">tel</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_telescope_auxiliary_parameters</span><span class="p">(</span><span class="n">tel</span><span class="p">,</span> <span class="n">design_model</span><span class="p">)</span>
         <span class="n">tel</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span><span class="n">crs_name</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">altitude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">tel</span><span class="o">.</span><span class="n">set_altitude</span><span class="p">(</span><span class="n">altitude</span><span class="p">)</span>
