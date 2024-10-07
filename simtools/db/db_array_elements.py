@@ -48,7 +48,7 @@ def get_array_elements(db, model_version, collection):
             if doc["parameter"] == "design_model":
                 _all_available_array_elements[doc["instrument"]] = doc["value"]
         except KeyError as exc:
-            raise KeyError("Incomplete array element entry in the database.") from exc
+            raise KeyError(f"Incomplete array element entry in the database: {doc}.") from exc
 
     if len(_all_available_array_elements) == 0:
         raise ValueError(f"No array elements found in DB collection {collection}.")
