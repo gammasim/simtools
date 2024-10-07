@@ -35,12 +35,17 @@ def _db_cleanup(db, random_id):
 
 
 @pytest.fixture
-def _db_cleanup_file_sandbox(db_no_config_file, random_id):
+def fs_files():
+    return "fs.files"
+
+
+@pytest.fixture
+def _db_cleanup_file_sandbox(db_no_config_file, random_id, fs_files):
     yield
     # Cleanup
     logger.info("Dropping the temporary files in the sandbox")
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.chunks"].drop()
-    db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.files"].drop()
+    db_no_config_file.db_client[f"sandbox_{random_id}"][fs_files].drop()
 
 
 def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
@@ -528,7 +533,7 @@ def test_model_version(db):
         db.model_version(version="0.0.9876")
 
 
-def test_get_collections(db, db_config):
+def test_get_collections(db, db_config, fs_files):
 
     collections = db.get_collections()
     assert isinstance(collections, list)
@@ -537,12 +542,12 @@ def test_get_collections(db, db_config):
     collections_from_name = db.get_collections(db_config["db_simulation_model"])
     assert isinstance(collections_from_name, list)
     assert "telescopes" in collections_from_name
-    assert "fs.files" in collections_from_name
+    assert fs_files in collections_from_name
 
     collections_no_model = db.get_collections(db_config["db_simulation_model"], True)
     assert isinstance(collections_no_model, list)
     assert "telescopes" in collections_no_model
-    assert "fs.files" not in collections_no_model
+    assert fs_files not in collections_no_model
     assert "metadata" not in collections_no_model
 
 
