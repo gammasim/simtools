@@ -11,7 +11,7 @@ from packaging.version import Version
 from pymongo import ASCENDING, MongoClient
 from pymongo.errors import BulkWriteError
 
-from simtools.db import db_from_repo_handler
+from simtools.db import db_array_elements, db_from_repo_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names, value_conversion
 
@@ -59,7 +59,6 @@ class DatabaseHandler:
 
         self.mongo_db_config = mongo_db_config
         self.io_handler = io_handler.IOHandler()
-        self._available_array_elements = None
         self.list_of_collections = {}
 
         self._set_up_connection()
@@ -187,8 +186,8 @@ class DatabaseHandler:
         _site, _array_element_name, _model_version = self._validate_model_input(
             site, array_element_name, model_version
         )
-        array_element_list = self.get_array_element_list_for_db_query(
-            _array_element_name, model_version
+        array_element_list = db_array_elements.get_array_element_list_for_db_query(
+            _array_element_name, self, _model_version, collection
         )
         pars = {}
         for array_element in array_element_list:
@@ -221,6 +220,26 @@ class DatabaseHandler:
             DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = pars
 
         return pars
+
+    def get_collection(self, db_name, collection_name):
+        """
+        Get a collection from the DB.
+
+        Parameters
+        ----------
+        db_name: str
+            Name of the DB.
+        collection_name: str
+            Name of the collection.
+
+        Returns
+        -------
+        pymongo.collection.Collection
+            The collection from the DB.
+
+        """
+        db_name = self._get_db_name(db_name)
+        return DatabaseHandler.db_client[db_name][collection_name]
 
     def export_file_db(self, db_name, dest, file_name):
         """
@@ -330,7 +349,7 @@ class DatabaseHandler:
             if query returned zero results.
 
         """
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.get_collection(db_name, collection_name)
         _parameters = {}
 
         query = {
@@ -433,7 +452,7 @@ class DatabaseHandler:
             if query returned zero results.
 
         """
-        collection = DatabaseHandler.db_client[db_name].sites
+        collection = self.get_collection(db_name, "sites")
         _parameters = {}
 
         query = {
@@ -725,7 +744,7 @@ class DatabaseHandler:
             f"to the new array element {new_array_element_name} in the {db_to_copy_to} DB"
         )
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.get_collection(db_name, collection_name)
         db_entries = []
 
         _version_to_copy = self.model_version(version_to_copy)
@@ -740,7 +759,7 @@ class DatabaseHandler:
             db_entries.append(post)
 
         self._logger.info(f"Creating new array element {new_array_element_name}")
-        collection = DatabaseHandler.db_client[db_to_copy_to][collection_to_copy_to]
+        collection = self.get_collection(db_to_copy_to, collection_to_copy_to)
         try:
             collection.insert_many(db_entries)
         except BulkWriteError as exc:
@@ -780,7 +799,7 @@ class DatabaseHandler:
         """
         db_name = self._get_db_name(db_name)
 
-        _collection = DatabaseHandler.db_client[db_name][collection]
+        _collection = self.get_collection(db_name, collection)
         if collection_to_copy_to is None:
             collection_to_copy_to = collection
         db_entries = []
@@ -792,7 +811,7 @@ class DatabaseHandler:
         self._logger.info(
             f"Copying documents matching the following query {query}\nto {db_to_copy_to}"
         )
-        _collection = DatabaseHandler.db_client[db_to_copy_to][collection_to_copy_to]
+        _collection = self.get_collection(db_to_copy_to, collection_to_copy_to)
         try:
             _collection.insert_many(db_entries)
         except BulkWriteError as exc:
@@ -823,7 +842,7 @@ class DatabaseHandler:
                 }
 
         """
-        _collection = DatabaseHandler.db_client[db_name][collection]
+        _collection = self.get_collection(db_name, collection)
 
         if "version" in query:
             query["version"] = self.model_version(query["version"])
@@ -883,7 +902,7 @@ class DatabaseHandler:
         if field not in allowed_fields:
             raise ValueError(f"The field {field} must be one of {', '.join(allowed_fields)}")
 
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.get_collection(db_name, collection_name)
         _model_version = self.model_version(model_version, db_name)
 
         query = {
@@ -985,7 +1004,7 @@ class DatabaseHandler:
 
         """
         db_name = self._get_db_name(db_name)
-        collection = DatabaseHandler.db_client[db_name][collection_name]
+        collection = self.get_collection(db_name, collection_name)
 
         db_entry = {}
         if any(
@@ -1192,7 +1211,7 @@ class DatabaseHandler:
                 [collection] if collection else self.get_collections(db_name, True)
             )
             for collection_name in collections_to_query:
-                db_collection = DatabaseHandler.db_client[db_name][collection_name]
+                db_collection = self.get_collection(db_name, collection_name)
                 sorted_posts = db_collection.find(query).sort("version", ASCENDING)
                 all_versions.update(post["version"] for post in sorted_posts)
             DatabaseHandler.model_versions_cached[_cache_key] = list(all_versions)
@@ -1201,148 +1220,6 @@ class DatabaseHandler:
             self._logger.warning(f"The query {query} did not return any results. No versions found")
 
         return DatabaseHandler.model_versions_cached[_cache_key]
-
-    def get_all_available_array_elements(self, model_version, collection, db_name=None):
-        """
-        Get all available array element names in the specified collection in the DB.
-
-        Parameters
-        ----------
-        db_name: str
-            the name of the DB
-        model_version: str
-            Which version to get the array elements of
-        collection: str
-            Which collection to get the array elements from:
-            i.e. telescopes, calibration_devices
-        db_name : str
-            Database name
-
-        Returns
-        -------
-        _available_array_elements: list
-            List of all array element names found in collection
-
-        """
-        db_name = self._get_db_name(db_name)
-        db_collection = DatabaseHandler.db_client[db_name][collection]
-
-        query = {"version": self.model_version(model_version)}
-        _all_available_array_elements = (
-            db_collection.find(query).sort("instrument", ASCENDING).distinct("instrument")
-        )
-        if len(_all_available_array_elements) == 0:
-            raise ValueError(f"Query for collection name {collection} not implemented.")
-
-        return _all_available_array_elements
-
-    def get_available_array_elements_of_type(
-        self, array_element_type, model_version, collection, db_name=None
-    ):
-        """
-        Get all array elements of a certain type in the specified collection in the DB.
-
-        Parameters
-        ----------
-        array_element_type : str
-            Type of the array element (e.g. LSTN, MSTS)
-        model_version : str
-            Which version to get the array elements of
-        collection : str
-            Which collection to get the array elements from:
-            i.e. telescopes, calibration_devices
-        db_name : str
-            Database name
-
-        Returns
-        -------
-        list
-            List of all array element names found in collection
-
-        """
-        all_elements = self.get_all_available_array_elements(model_version, collection, db_name)
-        return [
-            entry
-            for entry in all_elements
-            if entry.startswith(array_element_type) and "design" not in entry
-        ]
-
-    def get_array_element_list_for_db_query(self, array_element_name, model_version):
-        """
-        Return a list of array element names to be used for querying the database.
-
-        The first entry of the list is the design array element (if it exists in the DB),
-        followed by the actual array element model name.
-
-        Parameters
-        ----------
-        array_element_name: str
-            Name of the array element model (e.g. MSTN-01).
-        model_version: str
-            Model version.
-
-        Returns
-        -------
-        list
-            List of array element model names as used in the DB.
-
-        """
-        if "-design" in array_element_name:
-            return [array_element_name]
-        try:
-            return [
-                self.get_array_element_db_name(
-                    names.get_array_element_type_from_name(array_element_name) + "-design",
-                    model_version,
-                ),
-                self.get_array_element_db_name(array_element_name, model_version),
-            ]
-        except ValueError:  # e.g., no design model defined for this array element type
-            return [
-                self.get_array_element_db_name(array_element_name, model_version),
-            ]
-
-    def get_array_element_db_name(self, array_element_name, model_version, collection="telescopes"):
-        """
-        Translate array element name to the name used in the DB.
-
-        This is required, as not all array elements are defined in the database yet. In these cases,
-        use the "design" array element.
-
-        Parameters
-        ----------
-        array_element_name: str
-            Name of the array element model (e.g. MSTN-01)
-        model_version: str
-            Model version.
-        collection: str
-            collection of array element (e.g. telescopes, calibration_devices)
-
-        Returns
-        -------
-        str
-            Array element model name as used in the DB.
-
-        Raises
-        ------
-        ValueError
-            If the array element name is not found in the database.
-
-        """
-        if self._available_array_elements is None:
-            self._available_array_elements = self.get_all_available_array_elements(
-                model_version, collection
-            )
-        _array_element_name_validated = names.validate_array_element_name(array_element_name)
-        if _array_element_name_validated in self._available_array_elements:
-            return _array_element_name_validated
-        _design_name = (
-            f"{names.get_array_element_type_from_name(_array_element_name_validated)}-design"
-        )
-        if _design_name in self._available_array_elements:
-            return _design_name
-
-        raise ValueError("Invalid database name.")
 
     def _parameter_cache_key(self, site, array_element_name, model_version):
         """
@@ -1387,6 +1264,7 @@ class DatabaseHandler:
         _cache_key = self._parameter_cache_key(site, array_element_name, model_version)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
+        db_array_elements.get_array_elements.cache_clear()
 
     def get_collections(self, db_name=None, model_collections_only=False):
         """
