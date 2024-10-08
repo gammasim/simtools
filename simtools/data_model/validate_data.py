@@ -5,6 +5,7 @@ import os
 import re
 from pathlib import Path
 
+import jsonschema
 import numpy as np
 from astropy import units as u
 from astropy.table import Column, Table, unique
@@ -142,7 +143,9 @@ class DataValidator:
         unit_as_list = [None if unit == "null" else unit for unit in unit_as_list]
         for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
             if self._get_data_description(index).get("type", None) == "dict":
-                self._logger.debug(f"Skipping validation of dict type for entry {index}")
+                self._validate_data_dict_using_json_schema(
+                    self.data_dict["value"], self._get_data_description(index).get("json_schema")
+                )
             else:
                 self._check_data_type(np.array(value).dtype, index)
             if self.data_dict.get("type") != "string":
@@ -157,6 +160,27 @@ class DataValidator:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
 
         self._check_version_string(self.data_dict.get("version"))
+
+    def _validate_data_dict_using_json_schema(self, data, json_schema):
+        """
+        Validate a dictionary using a json schema.
+
+        Parameters
+        ----------
+        data: dict
+            Data dictionary
+        json_schema: dict
+            JSON schema
+        """
+        if json_schema is None:
+            self._logger.debug("Skipping validation of dict type")
+            return
+        self._logger.debug("Validation of dict type using JSON schema")
+        try:
+            jsonschema.validate(data, json_schema)
+        except jsonschema.exceptions.ValidationError as exc:
+            self._logger.error(f"Validation error: {exc}")
+            raise exc
 
     def _validate_data_table(self):
         """Validate tabulated data."""
