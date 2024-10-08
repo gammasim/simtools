@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools.data_model import data_reader
-from simtools.db import db_handler
+from simtools.db import db_array_elements, db_handler
 from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -92,6 +92,7 @@ class ArrayModel:
             mongo_db_config=self.mongo_db_config,
             model_version=self.model_version,
             label=self.label,
+            array_model=self,
         )
 
         array_elements = {}
@@ -107,6 +108,11 @@ class ArrayModel:
         elif self.layout_name is not None:
             array_elements = self._get_array_elements_from_list(
                 site_model.get_array_elements_for_layout(self.layout_name)
+            )
+        if array_elements == {}:
+            raise ValueError(
+                "No array elements found. "
+                "Possibly missing valid layout name or missing telescope list."
             )
         telescope_model = self._build_telescope_models(site_model, array_elements)
         return array_elements, site_model, telescope_model
@@ -326,6 +332,8 @@ class ArrayModel:
         type (e.g., MSTN). In the latter case, all telescopes of this specific
         type are added.
 
+        TODO check
+
         Parameters
         ----------
         array_elements_list: list
@@ -358,8 +366,9 @@ class ArrayModel:
         dict
             Dict with array elements.
         """
-        all_elements = self.db.get_available_array_elements_of_type(
+        all_elements = db_array_elements.get_array_elements_of_type(
             array_element_type=array_element_type,
+            db=self.db,
             model_version=self.model_version,
             collection="telescopes",
         )

@@ -1,6 +1,6 @@
-ARG BUILD_OPT="prod6-sc"
+ARG BUILD_OPT="prod6-baseline"
 ARG HADRONIC_MODEL="qgs2"
-ARG VERSION="240318"
+ARG VERSION="240927"
 FROM ghcr.io/gammasim/simtools-corsika-sim-telarray-${HADRONIC_MODEL}-${BUILD_OPT}-${VERSION}
 WORKDIR /workdir
 ENV DEBIAN_FRONTEND=noninteractive
@@ -9,7 +9,6 @@ RUN microdnf update -y && microdnf install -y \
     findutils \
     gcc-c++ \
     git \
-    procps \
     python3.11-pip \
     python3.11-devel \
     wget && \

@@ -740,7 +740,7 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     return False
 
 
-def convert_list_to_string(data, comma_separated=False):
+def convert_list_to_string(data, comma_separated=False, shorten_list=True):
     """
     Convert arrays to string (if required).
 
@@ -750,6 +750,10 @@ def convert_list_to_string(data, comma_separated=False):
         Object of data to convert (e.g., double or list)
     comma_separated: bool
         If True, return arrays as comma separated strings.
+    shorten_list: bool
+        If True and the array contains all the same values,
+        return a shortened string for sim_telarray like "all: value".
+        This is useful to make the configuration files more readable.
 
     Returns
     -------
@@ -759,6 +763,8 @@ def convert_list_to_string(data, comma_separated=False):
     """
     if data is None or not isinstance(data, list | np.ndarray):
         return data
+    if shorten_list and len(data) > 10 and all(np.isclose(item, data[0]) for item in data):
+        return f"all: {data[0]}"
     if comma_separated:
         return ", ".join(str(item) for item in data)
     return " ".join(str(item) for item in data)
@@ -815,3 +821,36 @@ def _load_yaml_using_astropy(file):
 
     file.seek(0)
     return astropy_yaml.load(file)
+
+
+def read_file_encoded_in_utf_or_latin(file_name):
+    """
+    Read a file encoded in UTF-8 or Latin-1.
+
+    Parameters
+    ----------
+    file_name: str
+        Name of the file to be read.
+
+    Returns
+    -------
+    list
+        List of lines read from the file.
+
+    Raises
+    ------
+    UnicodeDecodeError
+        If the file cannot be decoded using UTF-8 or Latin-1.
+    """
+    try:
+        with open(file_name, encoding="utf-8") as file:
+            lines = file.readlines()
+    except UnicodeDecodeError:
+        logging.debug("Unable to decode file using UTF-8. Trying Latin-1.")
+        try:
+            with open(file_name, encoding="latin-1") as file:
+                lines = file.readlines()
+        except UnicodeDecodeError as exc:
+            raise UnicodeDecodeError("Unable to decode file using UTF-8 or Latin-1.") from exc
+
+    return lines

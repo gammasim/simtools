@@ -14,8 +14,8 @@
         Path of local copy of model parameter repository.
     db_name (str, required)
         Name of new DB to be created.
-    type (str, required)
-        Type of data to be uploaded to the DB. Options are: model_parameters, metadata
+    type (str, optional)
+        Type of data to be uploaded to the DB. Options are: model_parameters
 
     Examples
     --------
@@ -27,15 +27,6 @@
             --input_path /path/to/repository \
             --db_name new_db_name \
             --type model_parameters
-
-    Upload metadata from repository to the DB:
-
-    .. code-block:: console
-
-        simtools-db-add_model-parameters-from-repository-to-db \
-            --input_path /path/to/repository/metadata \
-            --db_name new_db_name \
-            --type metadata
 """
 
 import logging
@@ -73,7 +64,7 @@ def _parse(label=None, description=None):
     config.parser.add_argument(
         "--db_name",
         help="Name of the new model parameter database to be created.",
-        type=str,
+        type=str.strip,
         required=True,
     )
     config.parser.add_argument(
@@ -82,7 +73,7 @@ def _parse(label=None, description=None):
         type=str,
         required=False,
         default="model_parameters",
-        choices=["model_parameters", "metadata"],
+        choices=["model_parameters"],
     )
 
     args_dict, db_config = config.initialize(
@@ -129,31 +120,6 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_prefix, logge
         file=par_dict["file"],
         unit=par_dict.get("unit", None),
         file_prefix=file_prefix,
-    )
-
-
-def _add_metadata_to_db(args_dict, db, logger):
-    """
-    Add metadata to the DB.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Command line arguments.
-    db_name : str
-        Name of the database to be created.
-    logger : logging.Logger
-        Logger object.
-    """
-    logger.info("Adding metadata to the DB")
-    input_path = Path(args_dict["input_path"])
-    simulation_model_tags = gen.collect_data_from_file_or_dict(
-        file_name=input_path / "simulation_model_tags.json", in_dict=None
-    )
-    logger.info(f"Adding simulation model tags to the DB {simulation_model_tags['Tags']}")
-    db.add_tagged_version(
-        tags=simulation_model_tags["Tags"],
-        db_name=args_dict["db_name"],
     )
 
 
@@ -211,10 +177,7 @@ def main():
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    if args_dict["type"] == "metadata":
-        _add_metadata_to_db(args_dict, db, logger)
-    else:
-        _add_model_parameters_to_db(args_dict, db, logger)
+    _add_model_parameters_to_db(args_dict, db, logger)
 
 
 if __name__ == "__main__":
