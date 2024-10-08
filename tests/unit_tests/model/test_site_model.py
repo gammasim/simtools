@@ -40,6 +40,14 @@ def test_get_corsika_site_parameters(db_config, model_version):
     assert "ARRANG" in _north.get_corsika_site_parameters(config_file_style=True)
 
 
+def test_get_corsika_site_parameters_with_model_directory(array_model):
+    """Test that the amtospheric profile file is provided with the model directory."""
+    corsika_site_parameters = array_model.site_model.get_corsika_site_parameters(
+        config_file_style=True
+    )
+    assert "test/model/" in str(corsika_site_parameters["IACT ATMOFILE"][0])
+
+
 def test_get_array_elements_for_layout(db_config, model_version):
     _north = SiteModel(
         site="North",
@@ -68,3 +76,30 @@ def test_get_list_of_array_layouts(db_config, model_version):
 
     assert isinstance(_north.get_list_of_array_layouts(), list)
     assert "test_layout" in _north.get_list_of_array_layouts()
+
+
+def test_export_atmospheric_transmission_file(db_config, model_version, tmp_path, mocker):
+    _south = SiteModel(
+        site="South",
+        mongo_db_config=db_config,
+        label="testing-sitemodel",
+        model_version=model_version,
+    )
+
+    mocker.patch.object(_south, "get_parameter_value", return_value="test_atmospheric_profile")
+    mocker.patch.object(_south.db, "export_model_files")
+
+    model_directory = tmp_path / "model"
+    model_directory.mkdir()
+
+    _south.export_atmospheric_transmission_file(model_directory)
+
+    _south.db.export_model_files.assert_called_once_with(
+        {
+            "atmospheric_transmission_file": {
+                "value": "test_atmospheric_profile",
+                "file": True,
+            }
+        },
+        model_directory,
+    )

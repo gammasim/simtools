@@ -311,6 +311,8 @@ class SimulatorLightEmission(SimtelRunner):
         _, angles = self.calibration_pointing_direction()
 
         command = f"{self._simtel_path.joinpath('sim_telarray/bin/sim_telarray/')}"
+        command += " -I"
+        command += f" -I{self._telescope_model.config_file_directory}"
         command += f" -c {self._telescope_model.get_config_file(no_export=True)}"
         if not self.test:
             self._remove_line_from_config(

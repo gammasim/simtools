@@ -71,13 +71,7 @@ class ModelParameter:
         self.model_version = model_version
         self.site = names.validate_site_name(site) if site is not None else None
         self.name = (
-            names.validate_array_element_name(
-                self.db.get_array_element_db_name(
-                    array_element_name=array_element_name,
-                    model_version=self.model_version,
-                    collection=self.collection,
-                )
-            )
+            names.validate_array_element_name(array_element_name)
             if array_element_name is not None
             else None
         )
@@ -271,7 +265,7 @@ class ModelParameter:
             return
 
         self._config_file_directory = self.io_handler.get_output_directory(
-            label=(self.label or self.name), sub_dir="model"
+            label=self.label, sub_dir="model"
         )
 
         # Setting file name and the location
@@ -570,3 +564,29 @@ class ModelParameter:
                 model_version=self.model_version,
                 label=self.label,
             )
+
+    def export_nsb_spectrum_to_telescope_altitude_correction_file(self, model_directory):
+        """
+        Export the NSB spectrum to the telescope altitude correction file.
+
+        This method is needed because testeff corrects the NSB spectrum from the original altitude
+        used in the Benn & Ellison model to the telescope altitude.
+        This is done internally in testeff, but the NSB spectrum is not written out to the model
+        directory. This method allows to export it explicitly.
+
+        Parameters
+        ----------
+        model_directory: Path
+            Model directory to export the file to.
+        """
+        self.db.export_model_files(
+            {
+                "nsb_spectrum_at_2200m": {
+                    "value": self._simulation_config_parameters["simtel"][
+                        "correct_nsb_spectrum_to_telescope_altitude"
+                    ]["value"],
+                    "file": True,
+                }
+            },
+            model_directory,
+        )

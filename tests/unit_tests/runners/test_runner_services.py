@@ -43,6 +43,20 @@ def runner_service_config_only(corsika_config_mock_array_model):
 
 
 @pytest.fixture
+def runner_service_config_only_diffuse_gamma(corsika_config_mock_array_model):
+    """Runner services object with simplified config."""
+    corsika_config_mock_array_model.primary_particle = {
+        "primary_id_type": "common_name",
+        "primary": "gamma",
+    }
+
+    return runner_services.RunnerServices(
+        corsika_config=corsika_config_mock_array_model,
+        label="test-corsika-runner",
+    )
+
+
+@pytest.fixture
 def file_base_name():
     """Base name for simulation test file."""
     return "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-runner"
@@ -58,6 +72,19 @@ def test_get_info_for_file_name(runner_service_config_only):
     info_for_file_name = runner_service_config_only._get_info_for_file_name(run_number=1)
     assert info_for_file_name["run_number"] == 1
     assert info_for_file_name["primary"] == "proton"
+    assert info_for_file_name["array_name"] == "test_layout"
+    assert info_for_file_name["site"] == "South"
+    assert info_for_file_name["label"] == "test-corsika-runner"
+    assert info_for_file_name["zenith"] == pytest.approx(20)
+    assert info_for_file_name["azimuth"] == pytest.approx(0)
+
+
+def test_get_info_for_file_name_diffuse_gamma(runner_service_config_only_diffuse_gamma):
+    info_for_file_name = runner_service_config_only_diffuse_gamma._get_info_for_file_name(
+        run_number=1
+    )
+    assert info_for_file_name["run_number"] == 1
+    assert info_for_file_name["primary"] == "gamma_diffuse"
     assert info_for_file_name["array_name"] == "test_layout"
     assert info_for_file_name["site"] == "South"
     assert info_for_file_name["label"] == "test-corsika-runner"
