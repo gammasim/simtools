@@ -10,6 +10,21 @@ description: |-
   Array layout definitions.
 data:
   - type: dict
+    json_schema:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+          elements:
+            type: array
+            items:
+              type: string
+        required:
+          - name
+          - elements
+        additionalProperties: false
 instrument:
   class: Site
   type:
