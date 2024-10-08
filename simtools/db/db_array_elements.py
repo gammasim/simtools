@@ -87,7 +87,7 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
     except ValueError:
         return [names.get_array_element_type_from_name(array_element_name) + "-design"]
     try:
-        return [array_element_name, _available_array_elements[array_element_name]]
+        return [_available_array_elements[array_element_name], array_element_name]
     except KeyError:
         pass
 

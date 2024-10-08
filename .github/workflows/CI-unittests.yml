@@ -66,7 +66,7 @@ jobs:
 
       - name: Install mamba dependencies
         if: matrix.install-method == 'mamba'
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
           create-args: python=${{ matrix.python-version }}

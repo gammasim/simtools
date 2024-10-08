@@ -60,15 +60,15 @@ def test_get_array_element_list_for_db_query(db, model_version):
 
     assert db_array_elements.get_array_element_list_for_db_query(
         "LSTN-01", db=db, model_version=model_version, collection="telescopes"
-    ) == ["LSTN-01", "LSTN-design"]
+    ) == ["LSTN-design", "LSTN-01"]
 
     assert db_array_elements.get_array_element_list_for_db_query(
         "MSTS-10", db=db, model_version=model_version, collection="telescopes"
-    ) == ["MSTS-10", "MSTS-design"]
+    ) == ["MSTS-design", "MSTS-10"]
 
     assert db_array_elements.get_array_element_list_for_db_query(
         "MSTS-301", db=db, model_version=model_version, collection="telescopes"
-    ) == ["MSTS-301", "MSTN-design"]
+    ) == ["MSTN-design", "MSTS-301"]
 
     assert db_array_elements.get_array_element_list_for_db_query(
         "MSTS-design", db=db, model_version=model_version, collection="telescopes"
