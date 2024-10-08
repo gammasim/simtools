@@ -82,7 +82,7 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
     """
     _available_array_elements = get_array_elements(db, model_version, collection)
     try:
-        return [array_element_name, _available_array_elements[array_element_name]]
+        return [_available_array_elements[array_element_name], array_element_name]
     except KeyError:
         pass
 
