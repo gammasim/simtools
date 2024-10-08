@@ -61,7 +61,7 @@ jobs:
       # Dependencies required to avoid errors
       # reported by linters
       - name: Install mamba dependencies
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
           init-shell: bash
