@@ -15,3 +15,14 @@ def test_check_array_elements():
 
     with pytest.raises(ValueError, match=r"^Invalid name"):
         format_checkers.check_array_element("not_an_array_element")
+
+
+def test_check_array_trigger_name():
+    assert format_checkers.check_array_trigger_name("MSTN_array")
+    assert format_checkers.check_array_trigger_name("MSTN_single_telescope")
+
+    with pytest.raises(ValueError, match=r"^Invalid name"):
+        format_checkers.check_array_trigger_name("not_an_array_trigger")
+
+    with pytest.raises(ValueError, match=r"^Array trigger name"):
+        format_checkers.check_array_trigger_name("MSTN")
