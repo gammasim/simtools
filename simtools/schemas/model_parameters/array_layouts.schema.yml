@@ -21,6 +21,7 @@ data:
             type: array
             items:
               type: string
+              format: array_element
         required:
           - name
           - elements

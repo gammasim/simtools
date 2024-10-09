@@ -12,6 +12,7 @@ from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
+from simtools.data_model import format_checkers
 
 __all__ = ["DataValidator"]
 
@@ -177,7 +178,7 @@ class DataValidator:
             return
         self._logger.debug("Validation of dict type using JSON schema")
         try:
-            jsonschema.validate(data, json_schema)
+            jsonschema.validate(data, json_schema, format_checker=format_checkers.format_checker)
         except jsonschema.exceptions.ValidationError as exc:
             self._logger.error(f"Validation error: {exc}")
             raise exc

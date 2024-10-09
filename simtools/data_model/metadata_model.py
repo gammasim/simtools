@@ -11,24 +11,14 @@ Follows CTAO top-level data model definition.
 import logging
 from importlib.resources import files
 
-import astropy.units as u
 import jsonschema
 
 import simtools.constants
 import simtools.utils.general as gen
+from simtools.data_model import format_checkers
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
-
-
-@jsonschema.Draft7Validator.FORMAT_CHECKER.checks("astropy_unit", ValueError)
-def check_astropy_unit(unit_string):
-    """Validate astropy units (including dimensionless) for jsonschema."""
-    try:
-        u.Unit(unit_string)
-        return True
-    except ValueError:
-        return unit_string == "dimensionless"
 
 
 def validate_schema(data, schema_file):
@@ -51,9 +41,7 @@ def validate_schema(data, schema_file):
     schema, schema_file = _load_schema(schema_file)
 
     try:
-        jsonschema.validate(
-            data, schema=schema, format_checker=jsonschema.Draft7Validator.FORMAT_CHECKER
-        )
+        jsonschema.validate(data, schema=schema, format_checker=format_checkers.format_checker)
     except jsonschema.exceptions.ValidationError:
         _logger.error(f"Failed using {schema}")
         raise
