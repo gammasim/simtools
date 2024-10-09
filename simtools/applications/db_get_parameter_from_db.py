@@ -49,12 +49,15 @@ r"""
 
 """
 
+import json
 import logging
+from pathlib import Path
 from pprint import pprint
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
+from simtools.io_operations import io_handler
 
 
 def _parse():
@@ -73,6 +76,13 @@ def _parse():
         default="telescopes",
         required=False,
     )
+    config.parser.add_argument(
+        "--output_file",
+        help="output file name (if not given: print to stdout)",
+        type=str,
+        required=False,
+    )
+
     return config.initialize(db_config=True, simulation_model="telescope")
 
 
@@ -85,8 +95,11 @@ def main():  # noqa: D103
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     if args_dict["db_collection"] == "configuration_sim_telarray":
-        pars = db.get_sim_telarray_configuration_parameters(
-            args_dict["site"], args_dict["telescope"], args_dict["model_version"]
+        pars = db.get_model_parameters(
+            args_dict["site"],
+            args_dict["telescope"],
+            args_dict["model_version"],
+            collection="configuration_sim_telarray",
         )
     elif args_dict["db_collection"] == "configuration_corsika":
         pars = db.get_corsika_configuration_parameters(args_dict["model_version"])
@@ -101,9 +114,17 @@ def main():  # noqa: D103
         pars = db.get_site_parameters(args_dict["site"], args_dict["model_version"])
     if args_dict["parameter"] not in pars:
         raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
-    print()
-    pprint(pars[args_dict["parameter"]])
-    print()
+    if args_dict["output_file"] is not None:
+        _io_handler = io_handler.IOHandler()
+        pars[args_dict["parameter"]].pop("_id")
+        pars[args_dict["parameter"]].pop("entry_date")
+        _output_file = Path(_io_handler.get_output_directory()) / args_dict["output_file"]
+        with open(_output_file, "w", encoding="utf-8") as json_file:
+            json.dump(pars[args_dict["parameter"]], json_file, indent=4)
+    else:
+        print()
+        pprint(pars[args_dict["parameter"]])
+        print()
 
 
 if __name__ == "__main__":

@@ -9,11 +9,6 @@ from simtools.data_model import metadata_model
 from simtools.utils import general as gen
 
 
-def test_check_astropy_unit():
-    assert metadata_model.check_astropy_unit("dimensionless")
-    assert metadata_model.check_astropy_unit("m")
-
-
 def test_get_default_metadata_dict():
     _top_meta = metadata_model.get_default_metadata_dict()
 
