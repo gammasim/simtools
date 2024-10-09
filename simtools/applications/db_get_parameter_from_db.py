@@ -95,8 +95,11 @@ def main():  # noqa: D103
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     if args_dict["db_collection"] == "configuration_sim_telarray":
-        pars = db.get_sim_telarray_configuration_parameters(
-            args_dict["site"], args_dict["telescope"], args_dict["model_version"]
+        pars = db.get_model_parameters(
+            args_dict["site"],
+            args_dict["telescope"],
+            args_dict["model_version"],
+            collection="configuration_sim_telarray",
         )
     elif args_dict["db_collection"] == "configuration_corsika":
         pars = db.get_corsika_configuration_parameters(args_dict["model_version"])

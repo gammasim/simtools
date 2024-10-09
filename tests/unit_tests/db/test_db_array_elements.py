@@ -1,14 +1,28 @@
 #!/usr/bin/python3
 
+import time
+
 import pytest
 
 from simtools.db import db_array_elements
 
 
 def test_get_array_elements(db, model_version):
-    available_telescopes = db_array_elements.get_array_elements(
-        db=db, model_version=model_version, collection="telescopes"
+
+    time_1 = time.time()
+    db_array_elements.get_array_elements(
+        db.get_collection(db_name=None, collection_name="telescopes"),
+        db.model_version(model_version),
     )
+    time_2 = time.time()
+    available_telescopes = db_array_elements.get_array_elements(
+        db.get_collection(db_name=None, collection_name="telescopes"),
+        db.model_version(model_version),
+    )
+    time_3 = time.time()
+
+    # check that the second call is much faster than the first one
+    assert (time_2 - time_1) > 0.1 * (time_3 - time_2)
 
     expected_telescope_names = {
         "LSTN-01": "LSTN-design",
@@ -24,7 +38,8 @@ def test_get_array_elements(db, model_version):
         assert expected_telescope_names[_t] in available_telescopes[_t]
 
     available_calibration_devices = db_array_elements.get_array_elements(
-        db=db, model_version=model_version, collection="calibration_devices"
+        db.get_collection(db_name=None, collection_name="calibration_devices"),
+        db.model_version(model_version),
     )
     expected_calibration_devices = {
         "ILLN-01": "ILLN-design",
@@ -34,11 +49,10 @@ def test_get_array_elements(db, model_version):
         assert _d in available_calibration_devices
         assert expected_calibration_devices[_d] in available_calibration_devices[_d]
 
-    with pytest.raises(
-        ValueError, match=r"^No array elements found in DB collection wrong_collection."
-    ):
+    with pytest.raises(ValueError, match=r"^No array elements found in DB collection"):
         db_array_elements.get_array_elements(
-            db=db, model_version=model_version, collection="wrong_collection"
+            db.get_collection(db_name=None, collection_name="wrong_collection"),
+            db.model_version(model_version),
         )
 
 
@@ -64,6 +78,10 @@ def test_get_array_element_list_for_db_query(db, model_version):
         db_array_elements.get_array_element_list_for_db_query(
             "MSTS-301", db=db, model_version=model_version, collection="calibration_devices"
         )
+
+    assert db_array_elements.get_array_element_list_for_db_query(
+        "LSTN-02", db=db, model_version=model_version, collection="configuration_sim_telarray"
+    ) == ["LSTN-design"]
 
 
 def test_get_array_elements_of_type(db, model_version):

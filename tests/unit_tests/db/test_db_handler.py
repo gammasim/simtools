@@ -147,10 +147,14 @@ def test_get_derived_values(db, model_version_prod5):
 
 def test_get_sim_telarray_configuration_parameters(db, model_version):
 
-    _pars = db.get_sim_telarray_configuration_parameters("North", "LSTN-01", model_version)
+    _pars = db.get_model_parameters(
+        "North", "LSTN-01", model_version, collection="configuration_sim_telarray"
+    )
     assert "min_photoelectrons" in _pars
 
-    _pars = db.get_sim_telarray_configuration_parameters("North", "LSTN-design", model_version)
+    _pars = db.get_model_parameters(
+        "North", "LSTN-design", model_version, collection="configuration_sim_telarray"
+    )
     assert "min_photoelectrons" in _pars
 
 
