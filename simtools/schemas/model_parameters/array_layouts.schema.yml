@@ -22,6 +22,7 @@ data:
             type: array
             items:
               type: string
+              format: array_element
               description: Name of the array element.
         required:
           - name
