@@ -148,7 +148,7 @@ class DataValidator:
                 )
             else:
                 self._check_data_type(np.array(value).dtype, index)
-            if self.data_dict.get("type") != "string":
+            if self.data_dict.get("type") not in ("string", "dict"):
                 self._check_for_not_a_number(value, index)
                 value_as_list[index], unit_as_list[index] = self._check_and_convert_units(
                     value, unit, index
