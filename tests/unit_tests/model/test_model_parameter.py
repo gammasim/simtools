@@ -146,11 +146,11 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
     telescope_copy._load_parameters_from_db()
-    mock_db.assert_called_once()
+    assert mock_db.call_count == 2
 
     telescope_copy.db = None
     telescope_copy._load_parameters_from_db()
-    not mock_db.assert_called_once()
+    assert mock_db.call_count == 2
 
 
 def test_extra_labels(telescope_model_lst):
