@@ -15,9 +15,10 @@ def check_astropy_unit(unit_string):
     """Validate astropy units (including dimensionless) for jsonschema."""
     try:
         u.Unit(unit_string)
-        return True
-    except (ValueError, TypeError):
-        return unit_string == "dimensionless"
+    except (ValueError, TypeError) as exc:
+        if unit_string != "dimensionless":
+            raise ValueError(f"'{unit_string}' is not a valid Unit") from exc
+    return True
 
 
 @format_checker.checks("array_element", raises=ValueError)
