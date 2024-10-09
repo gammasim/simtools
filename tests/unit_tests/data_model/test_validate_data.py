@@ -96,7 +96,7 @@ def reference_columns_name():
     ]
 
 
-def test_validate_and_transform(caplog):
+def test_validate_and_transform(caplog, mocker):
     data_validator = validate_data.DataValidator()
     # no input file defined
     with caplog.at_level(logging.ERROR):
@@ -113,10 +113,14 @@ def test_validate_and_transform(caplog):
 
     data_validator.data_file_name = "tests/resources/model_parameters/num_gains.json"
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
+    mock_prepare_model_parameter = mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
+    )
     with caplog.at_level(logging.INFO):
-        _dict = data_validator.validate_and_transform()
+        _dict = data_validator.validate_and_transform(True)
         assert isinstance(_dict, dict)
     assert "Validating data from:" in caplog.text
+    assert mock_prepare_model_parameter.called_once
 
 
 def test_validate_data_file(caplog):
