@@ -14,11 +14,10 @@ def check_astropy_unit(unit_string):
     try:
         u.Unit(unit_string)
         return True
-    except (ValueError, TypeError):
-        pass
-    if unit_string == "dimensionless":
-        return True
-    raise ValueError(f"'{unit_string}' is not a valid Unit")
+    except (ValueError, TypeError) as exc:
+        if unit_string == "dimensionless":
+            return True
+        raise ValueError(f"'{unit_string}' is not a valid Unit") from exc
 
 
 @format_checker.checks("array_element", raises=ValueError)
