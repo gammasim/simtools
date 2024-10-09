@@ -120,7 +120,7 @@ def test_validate_and_transform(caplog, mocker):
         _dict = data_validator.validate_and_transform(True)
         assert isinstance(_dict, dict)
     assert "Validating data from:" in caplog.text
-    assert mock_prepare_model_parameter.called_once
+    mock_prepare_model_parameter.assert_called_once()
 
 
 def test_validate_data_file(caplog):
