@@ -6,6 +6,7 @@ import shutil
 import sys
 from importlib.resources import files
 
+import jsonschema
 import numpy as np
 import pytest
 import yaml
@@ -95,7 +96,7 @@ def reference_columns_name():
     ]
 
 
-def test_validate_and_transform(caplog):
+def test_validate_and_transform(caplog, mocker):
     data_validator = validate_data.DataValidator()
     # no input file defined
     with caplog.at_level(logging.ERROR):
@@ -112,10 +113,14 @@ def test_validate_and_transform(caplog):
 
     data_validator.data_file_name = "tests/resources/model_parameters/num_gains.json"
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
+    mock_prepare_model_parameter = mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
+    )
     with caplog.at_level(logging.INFO):
-        _dict = data_validator.validate_and_transform()
+        _dict = data_validator.validate_and_transform(True)
         assert isinstance(_dict, dict)
     assert "Validating data from:" in caplog.text
+    mock_prepare_model_parameter.assert_called_once()
 
 
 def test_validate_data_file(caplog):
@@ -737,3 +742,32 @@ def test_check_version_string(caplog):
             data_validator._check_version_string(version)
 
     assert data_validator._check_version_string(None) is None
+
+
+def test_validate_data_dict_using_json_schema(caplog):
+    data_validator = validate_data.DataValidator()
+
+    valid_json_schema = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "value": {"type": "number"},
+        },
+        "required": ["name", "value"],
+    }
+    valid_data = {"name": "test", "value": 123}
+
+    with caplog.at_level(logging.DEBUG):
+        data_validator._validate_data_dict_using_json_schema(valid_data, valid_json_schema)
+    assert "Validation of dict type using JSON schema" in caplog.text
+
+    invalid_data = {"name": "test", "value": "not_a_number"}
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(jsonschema.exceptions.ValidationError):
+            data_validator._validate_data_dict_using_json_schema(invalid_data, valid_json_schema)
+    assert "Validation error:" in caplog.text
+
+    with caplog.at_level(logging.DEBUG):
+        data_validator._validate_data_dict_using_json_schema(valid_data, None)
+    assert "Skipping validation of dict type" in caplog.text
