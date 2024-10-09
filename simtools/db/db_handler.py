@@ -50,7 +50,6 @@ class DatabaseHandler:
     site_parameters_cached = {}
     model_parameters_cached = {}
     model_versions_cached = {}
-    sim_telarray_configuration_parameters_cached = {}
     corsika_configuration_parameters_cached = {}
 
     def __init__(self, mongo_db_config=None):
@@ -192,7 +191,7 @@ class DatabaseHandler:
         pars = {}
         for array_element in array_element_list:
             _array_elements_cache_key = self._parameter_cache_key(
-                site, array_element, model_version
+                site, array_element, model_version, collection
             )
             try:
                 pars.update(DatabaseHandler.model_parameters_cached[_array_elements_cache_key])
@@ -536,8 +535,8 @@ class DatabaseHandler:
             return self.get_corsika_configuration_parameters(model_version)
         if simulation_software == "simtel":
             if site and array_element_name:
-                return self.get_sim_telarray_configuration_parameters(
-                    site, array_element_name, model_version
+                return self.get_model_parameters(
+                    site, array_element_name, model_version, collection="configuration_sim_telarray"
                 )
             return {}
         raise ValueError(f"Unknown simulation software: {simulation_software}")
@@ -572,60 +571,6 @@ class DatabaseHandler:
             )
         )
         return DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key]
-
-    def get_sim_telarray_configuration_parameters(self, site, array_element_name, model_version):
-        """
-        Get sim_telarray configuration parameters from the DB for a specific array element.
-
-        Parameters
-        ----------
-        site : str
-            Site name.
-        array_element_name : str
-            Name of the array element model (e.g. MSTN).
-        model_version : str
-            Version of the model.
-
-        Returns
-        -------
-        dict
-            Configuration parameters for sim_telarray
-        """
-        _, _array_element_name, _model_version = self._validate_model_input(
-            site, array_element_name, model_version
-        )
-        _array_elements_cache_key = self._parameter_cache_key(
-            site, array_element_name, model_version
-        )
-        try:
-            return DatabaseHandler.sim_telarray_configuration_parameters_cached[
-                _array_elements_cache_key
-            ]
-        except KeyError:
-            pass
-        pars = {}
-        try:
-            pars = self.read_mongo_db(
-                self._get_db_name(),
-                _array_element_name,
-                _model_version,
-                run_location=None,
-                collection_name="configuration_sim_telarray",
-                write_files=False,
-            )
-        except ValueError:
-            pars = self.read_mongo_db(
-                self._get_db_name(),
-                names.get_array_element_type_from_name(_array_element_name) + "-design",
-                _model_version,
-                run_location=None,
-                collection_name="configuration_sim_telarray",
-                write_files=False,
-            )
-        DatabaseHandler.sim_telarray_configuration_parameters_cached[_array_elements_cache_key] = (
-            pars
-        )
-        return pars
 
     def _validate_model_input(self, site, array_element_name, model_version):
         """
@@ -1221,7 +1166,7 @@ class DatabaseHandler:
 
         return DatabaseHandler.model_versions_cached[_cache_key]
 
-    def _parameter_cache_key(self, site, array_element_name, model_version):
+    def _parameter_cache_key(self, site, array_element_name, model_version, collection=None):
         """
         Create a cache key for the parameter cache dictionaries.
 
@@ -1233,6 +1178,8 @@ class DatabaseHandler:
             Array element name.
         model_version: str
             Model version.
+        collection: str
+            DB collection name.
 
         Returns
         -------
@@ -1245,6 +1192,8 @@ class DatabaseHandler:
         if array_element_name:
             parts.append(array_element_name)
         parts.append(model_version)
+        if collection:
+            parts.append(collection)
         return "-".join(parts)
 
     def _reset_parameter_cache(self, site, array_element_name, model_version):
