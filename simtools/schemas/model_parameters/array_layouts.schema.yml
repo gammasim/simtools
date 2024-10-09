@@ -17,10 +17,12 @@ data:
         properties:
           name:
             type: string
+            description: Name of the array layout.
           elements:
             type: array
             items:
               type: string
+              description: Name of the array element.
         required:
           - name
           - elements
