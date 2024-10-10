@@ -135,6 +135,17 @@ def main():  # noqa: D103
         mongo_db_config=db_config,
     )
 
+    ######################################################################
+    # This is here as an example how to change parameters when necessary.
+    ######################################################################
+    # pars_to_change = {
+    #     'mirror_focal_length': 1608.3,
+    #     'mirror_offset': -177.5,
+    #     'camera_body_diameter': 289.7,
+    #     'telescope_transmission': 1
+    # }
+    # tel_model.change_multiple_parameters(**pars_to_change)
+
     print(f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n")
 
     ray = RayTracing(
