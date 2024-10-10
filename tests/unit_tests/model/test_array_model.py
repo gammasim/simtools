@@ -77,7 +77,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
         "array_coordinates_LaPalma_alpha.dat",
         "NectarCAM_lightguide_efficiency_POP_131019.dat",
         "Pulse_template_nectarCam_17042020-noshift.dat",
-        "array_trigger_prod6_lapalma_4_26_0.dat",
+        "array_triggers.dat",
         "atm_trans_2156_1_3_2_0_0_0.1_0.1.dat",
         "atmprof_ecmwf_north_winter_fixed.dat",
         "camera_CTA-LST-1_analogsum21_v2020-04-14.dat",
