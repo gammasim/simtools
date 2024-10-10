@@ -98,6 +98,11 @@ definitions:
           Use `file` if the parameter describes a file name.
           Use `data_table` if the parameter describes a data table
           (requires TABLE_COLUMNS description)"
+      json_schema:
+        $ref: "http://json-schema.org/draft-06/schema#"
+        description: |-
+          "json schema describing the parameter"
+        additionalProperties: true
       unit:
         $ref: '#/definitions/Unit'
       allowed_range:
