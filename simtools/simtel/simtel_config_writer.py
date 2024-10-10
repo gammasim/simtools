@@ -48,6 +48,7 @@ class SimtelConfigWriter:
         self._label = label
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
+        self.array_trigger_file = None
 
     def write_telescope_config_file(self, config_file_path, parameters, config_parameters=None):
         """
@@ -77,8 +78,9 @@ class SimtelConfigWriter:
                 parameters.update(config_parameters)
 
             for _simtel_name, value in parameters.items():
-                if _simtel_name == "array_triggers":
-                    file.write("array_trigger = array_triggers.dat\n")
+                if _simtel_name.startswith("array_trigger"):
+                    if self.array_trigger_file is not None:
+                        file.write(f"array_triggers = {self.array_trigger_file}\n")
                 elif _simtel_name:
                     file.write(f"{_simtel_name} = {self._get_value_string_for_simtel(value)}\n")
             _config_meta = self._get_simtel_metadata("telescope")
@@ -298,7 +300,7 @@ class SimtelConfigWriter:
                 search_telescope_parameters=False,
                 search_site_parameters=True,
             )
-            _simtel_name, value = self._convert_site_parameters_to_simtel_format(
+            _simtel_name, value = self._convert_model_parameters_to_simtel_format(
                 _simtel_name, value, model_path, telescope_model
             )
             if _simtel_name is not None:
@@ -308,7 +310,7 @@ class SimtelConfigWriter:
             file.write(f"{self.TAB}{_simtel_name} = {value}\n")
         file.write("\n")
 
-    def _convert_site_parameters_to_simtel_format(
+    def _convert_model_parameters_to_simtel_format(
         self, simtel_name, value, model_path, telescope_model
     ):
         """
@@ -378,12 +380,12 @@ class SimtelConfigWriter:
                 ).to("m")
                 trigger_lines[tel_type] += f" minsep {min_sep}"
 
-        array_triggers_file = model_path / "array_triggers.dat"
-        with open(array_triggers_file, "w", encoding="utf-8") as file:
+        self.array_trigger_file = "array_triggers.dat"
+        with open(model_path / self.array_trigger_file, "w", encoding="utf-8") as file:
             file.write("# Array trigger definition\n")
             file.writelines(f"{line}\n" for line in trigger_lines.values())
 
-        return array_triggers_file.name
+        return self.array_trigger_file
 
     def _get_array_trigger_for_telescope_type(self, array_triggers, telescope_type):
         """

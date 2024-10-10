@@ -55,6 +55,17 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     )
     assert file_has_text(file, "num_gains = 1")
 
+    simtel_config_writer.write_telescope_config_file(
+        config_file_path=file, parameters={"array_triggers": "array_triggers.dat"}
+    )
+    assert not file_has_text(file, "array_triggers = array_triggers.dat")
+
+    simtel_config_writer.array_trigger_file = "array_triggers.dat"
+    simtel_config_writer.write_telescope_config_file(
+        config_file_path=file, parameters={"array_triggers": "array_triggers.dat"}
+    )
+    assert file_has_text(file, "array_triggers = array_triggers.dat")
+
 
 def test_get_simtel_metadata(simtel_config_writer):
 
@@ -102,13 +113,13 @@ def test_get_array_trigger_for_telescope_type(simtel_config_writer):
     assert result is None
 
 
-def test_convert_site_parameters_to_simtel_format(
+def test_convert_model_parameters_to_simtel_format(
     simtel_config_writer, tmp_test_directory, telescope_model_lst
 ):
     model_path = Path(tmp_test_directory) / "model"
     model_path.mkdir(exist_ok=True)
 
-    simtel_name, value = simtel_config_writer._convert_site_parameters_to_simtel_format(
+    simtel_name, value = simtel_config_writer._convert_model_parameters_to_simtel_format(
         "some_parameter", "some_value", model_path, {"LSTN-01": telescope_model_lst}
     )
     assert simtel_name == "some_parameter"
@@ -123,7 +134,7 @@ def test_convert_site_parameters_to_simtel_format(
             "hard_stereo": {"value": True, "unit": None},
         },
     ]
-    simtel_name, value = simtel_config_writer._convert_site_parameters_to_simtel_format(
+    simtel_name, value = simtel_config_writer._convert_model_parameters_to_simtel_format(
         "array_triggers", array_triggers, model_path, {"LSTN-01": telescope_model_lst}
     )
     assert simtel_name == "array_triggers"
