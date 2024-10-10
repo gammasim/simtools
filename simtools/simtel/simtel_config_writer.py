@@ -64,6 +64,10 @@ class SimtelConfigWriter:
             Simulation software configuration parameters
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
+
+        if config_parameters:
+            parameters.update(config_parameters)
+
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
@@ -73,9 +77,6 @@ class SimtelConfigWriter:
                 " - TELESCOPE $(TELESCOPE)\n"
             )
             file.write("#endif\n\n")
-
-            if config_parameters:
-                parameters.update(config_parameters)
 
             for _simtel_name, value in parameters.items():
                 if _simtel_name.startswith("array_trigger"):
