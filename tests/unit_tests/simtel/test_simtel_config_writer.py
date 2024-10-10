@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -79,3 +80,55 @@ def test_get_value_string_for_simtel(simtel_config_writer):
     assert simtel_config_writer._get_value_string_for_simtel([1, 2, 3]) == "1 2 3"
     assert simtel_config_writer._get_value_string_for_simtel(np.array([1, 2, 3])) == "1 2 3"
     assert simtel_config_writer._get_value_string_for_simtel(5) == 5
+
+
+def test_get_array_trigger_for_telescope_type(simtel_config_writer):
+    array_triggers = [
+        {"name": "LSTN_array", "multiplicity": {"value": 2}, "width": {"value": 10, "unit": "ns"}},
+        {"name": "MSTN_single_telescope", "multiplicity": {"value": 1}},
+    ]
+
+    result = simtel_config_writer._get_array_trigger_for_telescope_type(array_triggers, "LSTN")
+    assert result is not None
+    assert result["name"] == "LSTN_array"
+    assert result["multiplicity"]["value"] == 2
+    assert result["width"]["value"] == 10
+    assert result["width"]["unit"] == "ns"
+
+    result = simtel_config_writer._get_array_trigger_for_telescope_type(array_triggers, "MSTN")
+    assert result is None
+
+    result = simtel_config_writer._get_array_trigger_for_telescope_type(array_triggers, "SST")
+    assert result is None
+
+
+def test_convert_site_parameters_to_simtel_format(
+    simtel_config_writer, tmp_test_directory, telescope_model_lst
+):
+    model_path = Path(tmp_test_directory) / "model"
+    model_path.mkdir(exist_ok=True)
+
+    simtel_name, value = simtel_config_writer._convert_site_parameters_to_simtel_format(
+        "some_parameter", "some_value", model_path, {"LSTN-01": telescope_model_lst}
+    )
+    assert simtel_name == "some_parameter"
+    assert value == "some_value"
+
+    array_triggers = [
+        {
+            "name": "LSTN_array",
+            "multiplicity": {"value": 2},
+            "width": {"value": 10, "unit": "ns"},
+            "min_separation": {"value": 40, "unit": "m"},
+            "hard_stereo": {"value": True, "unit": None},
+        },
+    ]
+    simtel_name, value = simtel_config_writer._convert_site_parameters_to_simtel_format(
+        "array_triggers", array_triggers, model_path, {"LSTN-01": telescope_model_lst}
+    )
+    assert simtel_name == "array_triggers"
+    assert value == "array_triggers.dat"
+
+    with open(Path(model_path) / value) as f:
+        content = f.read()
+        assert "Trigger 2 of 1" in content
