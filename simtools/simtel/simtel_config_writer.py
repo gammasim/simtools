@@ -77,7 +77,9 @@ class SimtelConfigWriter:
                 parameters.update(config_parameters)
 
             for _simtel_name, value in parameters.items():
-                if _simtel_name:
+                if _simtel_name == "array_triggers":
+                    file.write("array_trigger = array_triggers.dat\n")
+                elif _simtel_name:
                     file.write(f"{_simtel_name} = {self._get_value_string_for_simtel(value)}\n")
             _config_meta = self._get_simtel_metadata("telescope")
             for _simtel_name, value in _config_meta.items():
