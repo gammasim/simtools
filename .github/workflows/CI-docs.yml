@@ -41,14 +41,14 @@ jobs:
             ! -name "__init__.py" \
             ! -path "simtools/_*" -prune)
           FULLY_DOCUMENTED="TRUE"
-          for M in $MODULES; do
-              module=$(basename $M .py)
+          for M in "$MODULES"; do
+              module=$(basename "$M" .py)
               if ! grep -q "$module" docs/source/api-reference/*.md; then
                 echo "Undocumented module: $module"
                 FULLY_DOCUMENTED="FALSE"
               fi
           done
-          if [[ $FULLY_DOCUMENTED = "FALSE" ]]; then
+          if [[ "$FULLY_DOCUMENTED" = "FALSE" ]]; then
               exit 1
           fi
 
