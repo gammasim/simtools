@@ -316,12 +316,12 @@ def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
     else:
         raise ValueError("No best parameters found")
 
-    ray = RayTracing.from_kwargs(
+    ray = RayTracing(
         telescope_model=tel_model,
         simtel_path=args_dict["simtel_path"],
-        source_distance=args_dict["src_distance"] * u.km,
         zenith_angle=args_dict["zenith"] * u.deg,
-        off_axis_angle=[0.0 * u.deg],
+        source_distance=args_dict["src_distance"] * u.km,
+        off_axis_angle=[0.0] * u.deg,
     )
 
     ray.simulate(test=args_dict["test"], force=True)

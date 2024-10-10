@@ -148,13 +148,15 @@ def main():  # noqa: D103
 
     print(f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n")
 
-    ray = RayTracing.from_kwargs(
+    ray = RayTracing(
         telescope_model=tel_model,
         simtel_path=args_dict["simtel_path"],
-        source_distance=args_dict["src_distance"] * u.km,
         zenith_angle=args_dict["zenith"] * u.deg,
+        source_distance=args_dict["src_distance"] * u.km,
         off_axis_angle=np.linspace(
-            0, args_dict["max_offset"], int(args_dict["max_offset"] / args_dict["offset_steps"]) + 1
+            0,
+            args_dict["max_offset"],
+            int(args_dict["max_offset"] / args_dict["offset_steps"]) + 1,
         )
         * u.deg,
     )

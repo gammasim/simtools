@@ -344,15 +344,15 @@ def main():  # noqa: D103
     def run(rnda):
         """Run the simulations for one given value of rnda."""
         tel.change_parameter("mirror_reflection_random_angle", rnda)
-        ray = RayTracing.from_kwargs(
+        ray = RayTracing(
             telescope_model=tel,
+            simtel_path=args_dict.get("simtel_path", None),
             single_mirror_mode=True,
             mirror_numbers=(
                 list(range(1, args_dict["number_of_mirrors_to_test"] + 1))
                 if args_dict["test"]
                 else "all"
             ),
-            simtel_path=args_dict.get("simtel_path", None),
             use_random_focal_length=args_dict["use_random_flen"],
         )
         ray.simulate(test=args_dict["test"], force=True)  # force has to be True, always
