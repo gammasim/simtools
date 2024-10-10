@@ -173,6 +173,9 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable", None),
 }
 
+# local dir
+locale_dirs = []
+
 # myst (markdown options)
 myst_heading_anchors = 3
 myst_enable_extensions = {

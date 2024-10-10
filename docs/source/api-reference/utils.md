@@ -49,10 +49,3 @@ the util module.
 .. automodule:: constants
    :members:
 ```
-
-## version
-
-```{eval-rst}
-.. automodule:: version
-   :members:
-```
