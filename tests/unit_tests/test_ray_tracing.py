@@ -140,7 +140,7 @@ def test_export_results(simtel_path, ray_tracing_lst, caplog):
 
     ray = ray_tracing_lst
     ray.export_results()
-    assert "" in caplog.text
+    assert "No results to export" in caplog.text
 
 
 def test_ray_tracing_plot(ray_tracing_lst, caplog, invalid_key, invalid_key_message):
