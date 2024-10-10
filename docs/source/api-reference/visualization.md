@@ -25,3 +25,9 @@ the visualization module.
 .. automodule:: visualization.legend_handlers
    :members:
 ```
+
+## plot_camera
+
+```{eval-rst}
+.. automodule:: visualization.plot_camera
+   :members:
