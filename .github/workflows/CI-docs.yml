@@ -38,7 +38,7 @@ jobs:
         run: |-
           MODULES=$(find simtools -type f -name "*.py" \
             ! -path "simtools/applications/*" \
-            ! -name "__init__.py" \
+            ! -name "__init__.py" ! -name "version.y" \
             ! -path "simtools/_*" -prune)
           FULLY_DOCUMENTED="TRUE"
           for M in "${MODULES[@]}"; do
