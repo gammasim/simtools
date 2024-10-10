@@ -14,6 +14,15 @@ Data products ingested or produced by simtools generally follows the CTAO data m
    :members:
 ```
 
+(format_checkers)=
+
+## format_checkers
+
+```{eval-rst}
+.. automodule:: data_model.format_checkers
+   :members:
+```
+
 (datamodelmetadatacollector)=
 
 ## metadata_collector
