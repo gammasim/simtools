@@ -167,6 +167,23 @@ def _validate_name(name, all_names):
     raise ValueError(msg)
 
 
+def validate_array_element_type(name):
+    """
+    Validate array element type (e.g., LSTN, MSTN).
+
+    Parameters
+    ----------
+    name: str
+        Array element type.
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+    return _validate_name(name, array_elements())
+
+
 def validate_array_element_name(name):
     """
     Validate array element name (e.g., MSTN-design, MSTN-01).
