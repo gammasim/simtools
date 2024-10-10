@@ -286,6 +286,8 @@ class SimtelConfigWriter:
             Site model.
         model_path: Path
             Path to the model for writing of additional files.
+        telescope_model: dict of TelescopeModel
+            Telescope models.
         """
         file.write(self.TAB + "% Site parameters\n")
         _site_parameters = site_model.get_simtel_parameters()
@@ -322,6 +324,8 @@ class SimtelConfigWriter:
             Value to convert.
         model_path: Path
             Path to the model for writing of additional files.
+        telescope_model: dict of TelescopeModel
+            Telescope models.
 
         Returns
         -------
@@ -342,6 +346,8 @@ class SimtelConfigWriter:
             Array trigger definitions.
         model_path: Path
             Path to the model for writing of additional files.
+        telescope_model: dict of TelescopeModel
+            Telescope models.
         """
         trigger_per_telescope_type = {}
         for count, (tel_name, _) in enumerate(telescope_model.items()):
