@@ -1,24 +1,30 @@
 #!/usr/bin/python3
 
+r"""Class to read and manage relevant model parameters for a given telescope model."""
+
 import logging
-import simtools.utils.names as names
+
+from simtools.utils import names
 
 
 class ReadParameters:
+    """Read and manage model parameter data."""
 
-    def __init__(
-            self
-            ):
-
+    def __init__(self, telescope_model):
+        """Initialise class with a telescope model."""
         self._logger = logging.getLogger(__name__)
+        self.telescope_model = telescope_model
 
+    def get_all_parameter_descriptions(self):
+        """
+        Get descriptions of all available parameters.
 
-    def _get_parameter_descriptions(self):
-        '''
-        A function to return the descriptions and short descriptions
-        of all parameters as dictionary values
-        with the model parameter names as the keys.
-        '''
+        Returns
+        -------
+            tuple: A tuple containing two dictionaries:
+                - parameter_description: Maps parameter names to their descriptions.
+                - short_description: Maps parameter names to their short descriptions.
+        """
         all_parameter_dictionaries = names.telescope_parameters()
         all_parameter_names = all_parameter_dictionaries.keys()
 
@@ -27,34 +33,37 @@ class ReadParameters:
 
         for parameter in all_parameter_names:
 
-            parameter_description[parameter] =f'{all_parameter_dictionaries[parameter].get("description")}'
-            short_description[parameter] = f'{all_parameter_dictionaries[parameter].get("short_description")}'
-            
+            parameter_description[parameter] = (
+                f'{all_parameter_dictionaries[parameter].get("description")}'
+            )
+            short_description[parameter] = (
+                f'{all_parameter_dictionaries[parameter].get("short_description")}'
+            )
 
         return parameter_description, short_description
 
+    def get_telescope_parameter_data(self):
+        """
+        Get model parameter data for a given telescope.
 
-
-    def get_telescope_parameter_data(self, telescope_model):
-        '''
-        A function to get the name, value, unit, and descriptions
-        of all the relevant parameters associated with a given telescope.
-        '''
-
-        parameter_dictionaries = telescope_model._parameters
-        parameter_names = parameter_dictionaries.keys()
+        Returns
+        -------
+            list: A list of lists containing parameter names, combined values with units,
+                  descriptions, and short descriptions.
+        """
+        parameter_descriptions = self.get_all_parameter_descriptions()
+        parameter_names = parameter_descriptions[0].keys()
 
         data = []
         for parameter in parameter_names:
-            value = parameter_dictionaries[parameter].get('value')
-            unit = parameter_dictionaries[parameter].get('unit')
-            description = self._get_parameter_descriptions()[0].get(parameter)
-            short_description = self._get_parameter_descriptions()[1].get(parameter)	   
-            data.append([parameter, value, unit, description, short_description])
 
+            try:
+                value = self.telescope_model.get_parameter_value_with_unit(parameter)
+            except KeyError:  # if parameter not in telescope model
+                continue
+
+            description = parameter_descriptions[0].get(parameter)
+            short_description = parameter_descriptions[1].get(parameter)
+            data.append([parameter, value, description, short_description])
 
         return data
-
-
-
-
