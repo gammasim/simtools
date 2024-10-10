@@ -157,7 +157,8 @@ class RayTracing:
         """
         self._logger.debug(
             "Single mirror mode is activated - "
-            "source distance is being recalculated to 2 * focal length"
+            "source distance is being recalculated to 2 * focal length "
+            " (this is not correct for dual-mirror telescopes)."
         )
         mir_focal_length = self.telescope_model.get_parameter_value("mirror_focal_length")
         source_distance = 2 * float(mir_focal_length) * u.cm.to(u.km) * u.km
