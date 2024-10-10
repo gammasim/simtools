@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     MODEL_VERSION: 6.0.0
     ARRAY_LAYOUT_NAME: subsystem_lsts
     ROTATE_ANGLE: 20
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/array_layout_subsystem_lsts_North_ground_20deg.pdf
-    - OUTPUT_FILE: application-plots/array_layout_subsystem_lsts_North_ground_20deg.png
+    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground_20deg.pdf
+    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground_20deg.png

@@ -5,7 +5,7 @@ CTA_SIMPIPE:
     SITE: North
     MODEL_VERSION: 6.0.0
     ARRAY_LAYOUT_NAME: subsystem_lsts
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/array_layout_subsystem_lsts_North_ground_0deg.png
-    - OUTPUT_FILE: application-plots/array_layout_subsystem_lsts_North_ground_0deg.pdf
+    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground_0deg.png
+    - OUTPUT_FILE: array_layout_subsystem_lsts_North_ground_0deg.pdf

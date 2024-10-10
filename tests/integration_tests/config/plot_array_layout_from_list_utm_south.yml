@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
     COORDINATE_SYSTEM: utm
     MODEL_VERSION: 6.0.0
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/array_layout_list_South_utm_0deg.png
-    - OUTPUT_FILE: application-plots/array_layout_list_South_utm_0deg.pdf
+    - OUTPUT_FILE: array_layout_list_South_utm_0deg.png
+    - OUTPUT_FILE: array_layout_list_South_utm_0deg.pdf

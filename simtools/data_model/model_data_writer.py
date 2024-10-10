@@ -57,9 +57,7 @@ class ModelDataWriter:
                 use_plain_output_path=args_dict.get("use_plain_output_path", False),
             )
         try:
-            self.product_data_file = self.io_handler.get_output_file(
-                file_name=product_data_file, dir_type="simtools-result"
-            )
+            self.product_data_file = self.io_handler.get_output_file(file_name=product_data_file)
         except TypeError:
             self.product_data_file = None
         self.product_data_format = self._astropy_data_format(product_data_format)

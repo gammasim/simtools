@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: test-json
   CONFIGURATION:
     OUTPUT_FILE: test.json
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     SCHEMA: simtools/schemas/metadata.metaschema.yml
   INTEGRATION_TESTS:
     - OUTPUT_FILE: test.json

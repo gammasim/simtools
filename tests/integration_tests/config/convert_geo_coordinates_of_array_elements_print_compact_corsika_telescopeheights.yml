@@ -5,7 +5,7 @@ CTA_SIMPIPE:
     INPUT: ./tests/resources/telescope_positions-North-utm.ecsv
     EXPORT: ground
     MODEL_VERSION: 6.0.0
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     OUTPUT_FILE: test.ecsv
     SKIP_OUTPUT_VALIDATION: true
     SELECT_ASSETS: ['LSTN', 'MSTN']

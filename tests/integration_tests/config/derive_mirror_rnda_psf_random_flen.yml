@@ -10,7 +10,7 @@ CTA_SIMPIPE:
     USE_RANDOM_FLEN: true
     RNDA: 0.0063
     TEST: true
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: TEST.ecsv

@@ -24,7 +24,7 @@ def simtel_config_writer(model_version):
 def test_write_array_config_file(
     simtel_config_writer, telescope_model_lst, io_handler, file_has_text, site_model_north
 ):
-    file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt", dir_type="test")
+    file = io_handler.get_output_file(file_name="simtel-config-writer_array.txt")
     telescope_model = {
         "LSTN-01": telescope_model_lst,
         "LSTN-02": telescope_model_lst,
@@ -46,9 +46,7 @@ def test_write_array_config_file(
 
 
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
-    file = io_handler.get_output_file(
-        file_name="simtel-config-writer_telescope.txt", dir_type="test"
-    )
+    file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt")
     simtel_config_writer.write_telescope_config_file(
         config_file_path=file, parameters={"num_gains": 1}
     )
