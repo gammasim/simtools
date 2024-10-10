@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.assertions &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
+    <title>db.db_array_elements &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/testing/assertions';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/db/db_array_elements';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -300,7 +300,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/testing/assertions.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/db/db_array_elements.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -374,168 +374,144 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for testing.assertions</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Functions asserting certain conditions are met (used e.g., in integration tests).&quot;&quot;&quot;</span>
+  <h1>Source code for db.db_array_elements</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Retrieval of array elements from the database.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">ASCENDING</span>
 
-<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 
-<div class="viewcode-block" id="assert_file_type">
-<a class="viewcode-back" href="../../api-reference/testing.html#testing.assertions.assert_file_type">[docs]</a>
-<span class="k">def</span> <span class="nf">assert_file_type</span><span class="p">(</span><span class="n">file_type</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<div class="viewcode-block" id="get_array_elements">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_array_elements.get_array_elements">[docs]</a>
+<span class="nd">@lru_cache</span>
+<span class="k">def</span> <span class="nf">get_array_elements</span><span class="p">(</span><span class="n">db_collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Assert that the file is of the given type.</span>
+<span class="sd">    Get all array element names and their design model for a given DB collection.</span>
+
+<span class="sd">    Uses the &#39;design_model&#39; parameter to determine the design model of the array element.</span>
+<span class="sd">    Assumes that a design model is defined for every array element.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    file_type: str</span>
-<span class="sd">        File type (json, yaml).</span>
-<span class="sd">    file_name: str</span>
-<span class="sd">        File name.</span>
+<span class="sd">    db_collection:</span>
+<span class="sd">        pymongo.collection.Collection</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">       Model version.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;json&quot;</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="n">file_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;yml&quot;</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;yml&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">except</span> <span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="c1"># no dedicated tests for other file types, checking suffix only</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File type test is checking suffix only for </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> (suffix: </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">))&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="n">file_type</span></div>
-
-
-
-<div class="viewcode-block" id="assert_n_showers_and_energy_range">
-<a class="viewcode-back" href="../../api-reference/testing.html#testing.assertions.assert_n_showers_and_energy_range">[docs]</a>
-<span class="k">def</span> <span class="nf">assert_n_showers_and_energy_range</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Assert the number of showers and the energy range.</span>
-
-<span class="sd">    The number of showers should be consistent with the required one (up to 1% tolerance)</span>
-<span class="sd">    and the energies simulated are required to be within the configured ones.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file: Path</span>
-<span class="sd">        Path to the sim_telarray file.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">eventio.simtel.simtelfile</span> <span class="kn">import</span> <span class="n">SimTelFile</span>  <span class="c1"># pylint: disable=import-outside-toplevel</span>
-
-    <span class="n">simulated_energies</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">simulation_config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">with</span> <span class="n">SimTelFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">simulation_config</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mc_run_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">iter_mc_events</span><span class="p">():</span>
-            <span class="n">simulated_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;mc_shower&quot;</span><span class="p">][</span><span class="s2">&quot;energy&quot;</span><span class="p">])</span>
-
-    <span class="c1"># The relative tolerance is set to 1% because ~0.5% shower simulations do not</span>
-    <span class="c1"># succeed, without resulting in an error. This tolerance therefore is not an issue.</span>
-    <span class="n">consistent_n_showers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span>
-        <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">simulated_energies</span><span class="p">)),</span> <span class="n">simulation_config</span><span class="p">[</span><span class="s2">&quot;n_showers&quot;</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-2</span>
-    <span class="p">)</span>
-    <span class="n">consistent_energy_range</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
-        <span class="n">simulation_config</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">energy</span> <span class="o">&lt;=</span> <span class="n">simulation_config</span><span class="p">[</span><span class="s2">&quot;E_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">simulated_energies</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">consistent_n_showers</span> <span class="ow">and</span> <span class="n">consistent_energy_range</span></div>
-
-
-
-<div class="viewcode-block" id="assert_expected_output">
-<a class="viewcode-back" href="../../api-reference/testing.html#testing.assertions.assert_expected_output">[docs]</a>
-<span class="k">def</span> <span class="nf">assert_expected_output</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_output</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Assert that the expected output is present in the sim_telarray file.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file: Path</span>
-<span class="sd">        Path to the sim_telarray file.</span>
-<span class="sd">    expected_output: dict</span>
-<span class="sd">        Expected output values.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">eventio.simtel.simtelfile</span> <span class="kn">import</span> <span class="n">SimTelFile</span>  <span class="c1"># pylint: disable=import-outside-toplevel</span>
-
-    <span class="n">item_to_check</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">SimTelFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s2">&quot;pe_sum&quot;</span> <span class="ow">in</span> <span class="n">expected_output</span><span class="p">:</span>
-                <span class="n">item_to_check</span><span class="p">[</span><span class="s2">&quot;pe_sum&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                    <span class="n">event</span><span class="p">[</span><span class="s2">&quot;photoelectron_sums&quot;</span><span class="p">][</span><span class="s2">&quot;n_pe&quot;</span><span class="p">][</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;photoelectron_sums&quot;</span><span class="p">][</span><span class="s2">&quot;n_pe&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;trigger_time&quot;</span> <span class="ow">in</span> <span class="n">expected_output</span><span class="p">:</span>
-                <span class="n">item_to_check</span><span class="p">[</span><span class="s2">&quot;trigger_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;trigger_information&quot;</span><span class="p">][</span><span class="s2">&quot;trigger_times&quot;</span><span class="p">])</span>
-            <span class="k">if</span> <span class="s2">&quot;photons&quot;</span> <span class="ow">in</span> <span class="n">expected_output</span><span class="p">:</span>
-                <span class="n">item_to_check</span><span class="p">[</span><span class="s2">&quot;photons&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                    <span class="n">event</span><span class="p">[</span><span class="s2">&quot;photoelectron_sums&quot;</span><span class="p">][</span><span class="s2">&quot;photons_atm_qe&quot;</span><span class="p">][</span>
-                        <span class="n">event</span><span class="p">[</span><span class="s2">&quot;photoelectron_sums&quot;</span><span class="p">][</span><span class="s2">&quot;photons&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                    <span class="p">]</span>
-                <span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">expected_output</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_to_check</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No data found for </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">item_to_check</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Mean of </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is not in the expected range, got </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">item_to_check</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="k">return</span> <span class="kc">True</span></div>
-
-
-
-<div class="viewcode-block" id="check_output_from_sim_telarray">
-<a class="viewcode-back" href="../../api-reference/testing.html#testing.assertions.check_output_from_sim_telarray">[docs]</a>
-<span class="k">def</span> <span class="nf">check_output_from_sim_telarray</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_output</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Check that the sim_telarray simulation result is reasonable and matches the expected output.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    file: Path</span>
-<span class="sd">        Path to the sim_telarray file.</span>
-<span class="sd">    expected_output: dict</span>
-<span class="sd">        Expected output values.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dict with array element names found and their design model</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If the file is not a zstd compressed file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">!=</span> <span class="s2">&quot;.zst&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Expected output file </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> is not a zstd compressed file &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;(i.e., a sim_telarray file).&quot;</span>
-        <span class="p">)</span>
+<span class="sd">        If query for collection name not implemented.</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If array element entry in the database is incomplete.</span>
 
-    <span class="k">return</span> <span class="n">assert_n_showers_and_energy_range</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">)</span> <span class="ow">and</span> <span class="n">assert_expected_output</span><span class="p">(</span>
-        <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">expected_output</span><span class="o">=</span><span class="n">expected_output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">}</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">db_collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+        <span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="n">ASCENDING</span>
+    <span class="p">)</span>
+
+    <span class="n">_all_available_array_elements</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">doc</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;design_model&quot;</span><span class="p">:</span>
+                <span class="n">_all_available_array_elements</span><span class="p">[</span><span class="n">doc</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">doc</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Incomplete array element entry in the database: </span><span class="si">{</span><span class="n">doc</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_all_available_array_elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No array elements found in DB collection </span><span class="si">{</span><span class="n">db_collection</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_all_available_array_elements</span></div>
+
+
+
+<div class="viewcode-block" id="get_array_element_list_for_db_query">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_array_elements.get_array_element_list_for_db_query">[docs]</a>
+<span class="k">def</span> <span class="nf">get_array_element_list_for_db_query</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get array element name and design model for querying the database.</span>
+
+<span class="sd">    Return a list of array element names to be used for querying the database for a given array</span>
+<span class="sd">    element. This is in most cases the array element itself and its design model.</span>
+<span class="sd">    In cases of no design model available, the design model of the array element is returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_element_name: str</span>
+<span class="sd">        Name of the array element model (e.g. MSTN-01).</span>
+<span class="sd">    db: DBHandler</span>
+<span class="sd">        Instance of the database handler</span>
+<span class="sd">    model_version: str</span>
+<span class="sd">        Model version.</span>
+<span class="sd">    collection: str</span>
+<span class="sd">        DB collection to get the array elements from (e.g., telescopes, calibration_devices)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of array element model names as used in the DB.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_available_array_elements</span> <span class="o">=</span> <span class="n">get_array_elements</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">),</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-design&quot;</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_available_array_elements</span><span class="p">[</span><span class="n">array_element_name</span><span class="p">],</span> <span class="n">array_element_name</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">array_element_name</span> <span class="ow">in</span> <span class="n">_available_array_elements</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">array_element_name</span><span class="p">]</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Array element (</span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">) not found in DB.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_array_elements_of_type">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_array_elements.get_array_elements_of_type">[docs]</a>
+<span class="k">def</span> <span class="nf">get_array_elements_of_type</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get all array elements of a certain type in the specified collection in the DB.</span>
+
+<span class="sd">    Return e.g. for array_element_type=&#39;MSTS&#39; all MSTS array elements found in the collection.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_element_type : str</span>
+<span class="sd">        Type of the array element (e.g. LSTN, MSTS)</span>
+<span class="sd">    model_version : str</span>
+<span class="sd">        Which version to get the array elements of</span>
+<span class="sd">    collection : str</span>
+<span class="sd">        Which collection to get the array elements from:</span>
+<span class="sd">        i.e. telescopes, calibration_devices</span>
+<span class="sd">    db_name : str</span>
+<span class="sd">        Database name</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        Sorted list of all array element names found in collection</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_available_array_elements</span> <span class="o">=</span> <span class="n">get_array_elements</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">),</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">_available_array_elements</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">)]</span>
     <span class="p">)</span></div>
 
 </pre></div>

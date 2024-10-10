@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+gc823dbe Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=5c22f453"></script>
+    <script src="../_static/documentation_options.js?v=de386d94"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc823dbe Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -458,6 +458,11 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.data_reader.read_value_from_file"><code class="docutils literal notranslate"><span class="pre">read_value_from_file()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#format-checkers">format_checkers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.format_checkers.check_array_element"><code class="docutils literal notranslate"><span class="pre">check_array_element()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.format_checkers.check_astropy_unit"><code class="docutils literal notranslate"><span class="pre">check_astropy_unit()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.metadata_collector">metadata_collector</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.metadata_collector.MetadataCollector"><code class="docutils literal notranslate"><span class="pre">MetadataCollector</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.metadata_collector.MetadataCollector.collect_meta_data"><code class="docutils literal notranslate"><span class="pre">MetadataCollector.collect_meta_data()</span></code></a></li>
@@ -581,6 +586,22 @@ Return None if no value is found in the file.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+<section id="format-checkers">
+<span id="id1"></span><h2>format_checkers<a class="headerlink" href="#format-checkers" title="Link to this heading">#</a></h2>
+<p id="module-data_model.format_checkers">Custom format checkers for jsonschema validation.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="data_model.format_checkers.check_array_element">
+<span class="sig-prename descclassname"><span class="pre">data_model.format_checkers.</span></span><span class="sig-name descname"><span class="pre">check_array_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/format_checkers.html#check_array_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.format_checkers.check_array_element" title="Link to this definition">#</a></dt>
+<dd><p>Validate array elements for jsonschema.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_model.format_checkers.check_astropy_unit">
+<span class="sig-prename descclassname"><span class="pre">data_model.format_checkers.</span></span><span class="sig-name descname"><span class="pre">check_astropy_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit_string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/format_checkers.html#check_astropy_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.format_checkers.check_astropy_unit" title="Link to this definition">#</a></dt>
+<dd><p>Validate astropy units (including dimensionless) for jsonschema.</p>
 </dd></dl>
 
 </section>
@@ -974,6 +995,11 @@ metadata file.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.data_reader">data_reader</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.data_reader.read_table_from_file"><code class="docutils literal notranslate"><span class="pre">read_table_from_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.data_reader.read_value_from_file"><code class="docutils literal notranslate"><span class="pre">read_value_from_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#format-checkers">format_checkers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.format_checkers.check_array_element"><code class="docutils literal notranslate"><span class="pre">check_array_element()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.format_checkers.check_astropy_unit"><code class="docutils literal notranslate"><span class="pre">check_astropy_unit()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.metadata_collector">metadata_collector</a><ul class="nav section-nav flex-column">

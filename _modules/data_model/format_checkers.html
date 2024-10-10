@@ -6,9 +6,8 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>generate_default_metadata &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>data_model.format_checkers &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
   
   
   
@@ -40,11 +39,9 @@
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/generate_default_metadata';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/data_model/format_checkers';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="generate_simtel_array_histograms" href="generate_simtel_array_histograms.html" />
-    <link rel="prev" title="generate_corsika_histograms" href="generate_corsika_histograms.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -109,6 +106,8 @@
     <div class="bd-container__inner bd-page-width">
       
       
+      
+        
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -185,46 +184,46 @@
                 </a>
             </li>
         </ul>
-        <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">User Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="../applications.html">simtools Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="calculate_trigger_rate.html">calculate_trigger_rate</a></li>
-<li class="toctree-l3"><a class="reference internal" href="convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="convert_geo_coordinates_of_array_elements.html">convert_geo_coordinates_of_array_elements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="db_add_file_to_db.html">db_add_file_to_db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="db_get_file_from_db.html">db_get_file_from_db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="db_inspect_databases.html">db_inspect_databases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="derive_mirror_rnda.html">derive_mirror_rnda</a></li>
-<li class="toctree-l3"><a class="reference internal" href="derive_psf_parameters.html">derive_psf_parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generate_array_config.html">generate_array_config</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generate_corsika_histograms.html">generate_corsika_histograms</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">generate_default_metadata</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generate_regular_arrays.html">generate_regular_arrays</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_array_layout.html">plot_array_layout</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulate_light_emission.html">simulate_light_emission</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
-<li class="toctree-l3"><a class="reference internal" href="submit_data_from_external.html">submit_data_from_external</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validate_camera_efficiency.html">validate_camera_efficiency</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validate_camera_fov.html">validate_camera_fov</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validate_cumulative_psf.html">validate_cumulative_psf</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validate_file_using_schema.html">validate_file_using_schema</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validate_optics.html">validate_optics</a></li>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user-guide/index.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/getting_started.html">Getting Started</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../user-guide/applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/calculate_trigger_rate.html">calculate_trigger_rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/convert_all_model_parameters_from_simtel.html">convert_all_model_parameters_from_simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/convert_geo_coordinates_of_array_elements.html">convert_geo_coordinates_of_array_elements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/db_add_file_to_db.html">db_add_file_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/db_get_file_from_db.html">db_get_file_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/db_inspect_databases.html">db_inspect_databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/derive_mirror_rnda.html">derive_mirror_rnda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/derive_psf_parameters.html">derive_psf_parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/generate_array_config.html">generate_array_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/generate_corsika_histograms.html">generate_corsika_histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/generate_default_metadata.html">generate_default_metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/generate_regular_arrays.html">generate_regular_arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/plot_array_layout.html">plot_array_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_light_emission.html">simulate_light_emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_prod.html">simulate_prod</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/submit_data_from_external.html">submit_data_from_external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_camera_efficiency.html">validate_camera_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_camera_fov.html">validate_camera_fov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_cumulative_psf.html">validate_cumulative_psf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_file_using_schema.html">validate_file_using_schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_optics.html">validate_optics</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../auxiliary_files.html">Auxiliary Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../model_parameters.html">Simulation Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../databases.html">Databases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../simulation_software.html">Simulation Software</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../productions.html">Simulation Productions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../docker_files.html">Containers (docker files)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/auxiliary_files.html">Auxiliary Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/model_parameters.html">Simulation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/databases.html">Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/simulation_software.html">Simulation Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/productions.html">Simulation Productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user-guide/docker_files.html">Containers (docker files)</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../api-reference/index.html">API Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -301,98 +300,18 @@
 <div class="article-header-buttons">
 
 
-
-
-
-<div class="dropdown dropdown-source-buttons">
-  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
-    <i class="fab fa-github"></i>
-  </button>
-  <ul class="dropdown-menu">
-      
-      
-      
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/generate_default_metadata.rst?plain=1" target="_blank"
-   class="btn btn-sm btn-source-file-button dropdown-item"
-   title="Show source"
-   data-bs-placement="left" data-bs-toggle="tooltip"
->
-  
-
-<span class="btn__icon-container">
-  <i class="fas fa-code"></i>
-  </span>
-<span class="btn__text-container">Show source</span>
-</a>
-</li>
-      
-      
-      
-      
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/generate_default_metadata.html&body=Your%20issue%20content%20here." target="_blank"
-   class="btn btn-sm btn-source-issues-button dropdown-item"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/data_model/format_checkers.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
-   data-bs-placement="left" data-bs-toggle="tooltip"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
 >
   
 
 <span class="btn__icon-container">
   <i class="fas fa-lightbulb"></i>
   </span>
-<span class="btn__text-container">Open issue</span>
+
 </a>
-</li>
-      
-  </ul>
-</div>
-
-
-
-
-
-
-<div class="dropdown dropdown-download-buttons">
-  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
-    <i class="fas fa-download"></i>
-  </button>
-  <ul class="dropdown-menu">
-      
-      
-      
-      <li><a href="../../_sources/user-guide/applications/generate_default_metadata.rst" target="_blank"
-   class="btn btn-sm btn-download-source-button dropdown-item"
-   title="Download source file"
-   data-bs-placement="left" data-bs-toggle="tooltip"
->
-  
-
-<span class="btn__icon-container">
-  <i class="fas fa-file"></i>
-  </span>
-<span class="btn__text-container">.rst</span>
-</a>
-</li>
-      
-      
-      
-      
-      <li>
-<button onclick="window.print()"
-  class="btn btn-sm btn-download-pdf-button dropdown-item"
-  title="Print to PDF"
-  data-bs-placement="left" data-bs-toggle="tooltip"
->
-  
-
-<span class="btn__icon-container">
-  <i class="fas fa-file-pdf"></i>
-  </span>
-<span class="btn__text-container">.pdf</span>
-</button>
-</li>
-      
-  </ul>
-</div>
 
 
 
@@ -430,9 +349,7 @@ document.write(`
   </button>
 `);
 </script>
-<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="fa-solid fa-list"></span>
-</button>
+
 </div></div>
       
     </div>
@@ -443,20 +360,11 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>generate_default_metadata</h1>
+    <h1></h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
-            <div>
-                <h2> Contents </h2>
-            </div>
-            <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-</ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -466,29 +374,40 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-generate_default_metadata">
-<span id="generate-default-metadata"></span><h1>generate_default_metadata<a class="headerlink" href="#module-generate_default_metadata" title="Link to this heading">#</a></h1>
-<p>Generate a default simtools metadata file from a json schema.</p>
-<section id="command-line-arguments">
-<h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
-<dl class="simple">
-<dt>schema (str, optional)</dt><dd><p>Schema file describing the input data
-(default: simtools/schemas/metadata.metaschema.yml)</p>
-</dd>
-<dt>output_file (str, optional)</dt><dd><p>Output file name.</p>
-</dd>
-</dl>
-</section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-default-metadata \\</span>
-<span class="go">    --schema simtools/schemas/metadata.metaschema.yml \\</span>
-<span class="go">    --output_file default_metadata.yml</span>
-</pre></div>
-</div>
-</section>
-</section>
+  <h1>Source code for data_model.format_checkers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Custom format checkers for jsonschema validation.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">import</span> <span class="nn">jsonschema</span>
+
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+
+<span class="n">format_checker</span> <span class="o">=</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">FormatChecker</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="check_astropy_unit">
+<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.format_checkers.check_astropy_unit">[docs]</a>
+<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;astropy_unit&quot;</span><span class="p">,</span> <span class="n">raises</span><span class="o">=</span><span class="ne">ValueError</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">check_astropy_unit</span><span class="p">(</span><span class="n">unit_string</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate astropy units (including dimensionless) for jsonschema.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit_string</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">unit_string</span> <span class="o">!=</span> <span class="s2">&quot;dimensionless&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">unit_string</span><span class="si">}</span><span class="s2">&#39; is not a valid Unit&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="check_array_element">
+<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.format_checkers.check_array_element">[docs]</a>
+<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;array_element&quot;</span><span class="p">,</span> <span class="n">raises</span><span class="o">=</span><span class="ne">ValueError</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">check_array_element</span><span class="p">(</span><span class="n">element</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate array elements for jsonschema.&quot;&quot;&quot;</span>
+    <span class="n">names</span><span class="o">.</span><span class="n">validate_array_element_name</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+</pre></div>
 
                 </article>
               
@@ -500,46 +419,12 @@ document.write(`
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="generate_corsika_histograms.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">generate_corsika_histograms</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="generate_simtel_array_histograms.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">generate_simtel_array_histograms</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> Contents
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>

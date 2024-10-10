@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Visualization &#8212; simtools v0.1.dev1+gc823dbe Manual</title>
+    <title>Visualization &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=5c22f453"></script>
+    <script src="../_static/documentation_options.js?v=de386d94"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc823dbe Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -486,6 +486,10 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareOffPixelHandler"><code class="docutils literal notranslate"><span class="pre">SquareOffPixelHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquarePixelHandler"><code class="docutils literal notranslate"><span class="pre">SquarePixelHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.TelescopeHandler"><code class="docutils literal notranslate"><span class="pre">TelescopeHandler</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_camera">plot_camera</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_camera.plot_pixel_layout"><code class="docutils literal notranslate"><span class="pre">plot_pixel_layout()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -914,6 +918,36 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 </dd></dl>
 
 </section>
+<section id="module-visualization.plot_camera">
+<span id="plot-camera"></span><h2>plot_camera<a class="headerlink" href="#module-visualization.plot_camera" title="Link to this heading">#</a></h2>
+<p>Plot camera pixel layout.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_camera.plot_pixel_layout">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_camera.</span></span><span class="sig-name descname"><span class="pre">plot_pixel_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">camera</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_in_sky_coor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixels_id_to_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_camera.html#plot_pixel_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_camera.plot_pixel_layout" title="Link to this definition">#</a></dt>
+<dd><p>Plot the pixel layout for an observer facing the camera.</p>
+<p>Including in the plot edge pixels, off pixels, pixel ID for the first 50 pixels,
+coordinate systems, FOV, focal length and the average edge radius.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>camera</strong><span class="classifier">Camera</span></dt><dd><p>Camera object to plot.</p>
+</dd>
+<dt><strong>camera_in_sky_coor</strong><span class="classifier">bool, optional</span></dt><dd><p>Flag to plot the camera in the sky coordinate system.</p>
+</dd>
+<dt><strong>pixels_id_to_print</strong><span class="classifier">int, optional</span></dt><dd><p>Number of pixel IDs to print in the plot.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>fig</strong><span class="classifier">plt.Figure</span></dt><dd><p>Figure with the pixel layout.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -994,6 +1028,10 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquareOffPixelHandler"><code class="docutils literal notranslate"><span class="pre">SquareOffPixelHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.SquarePixelHandler"><code class="docutils literal notranslate"><span class="pre">SquarePixelHandler</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.legend_handlers.TelescopeHandler"><code class="docutils literal notranslate"><span class="pre">TelescopeHandler</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_camera">plot_camera</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_camera.plot_pixel_layout"><code class="docutils literal notranslate"><span class="pre">plot_pixel_layout()</span></code></a></li>
 </ul>
 </li>
 </ul>

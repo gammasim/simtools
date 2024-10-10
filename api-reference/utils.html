@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+gc823dbe Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=5c22f453"></script>
+    <script src="../_static/documentation_options.js?v=de386d94"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc823dbe Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -485,6 +485,14 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_site_name"><code class="docutils literal notranslate"><span class="pre">validate_site_name()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-utils.value_conversion">value_conversion</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.value_conversion.InvalidConfigEntryError"><code class="docutils literal notranslate"><span class="pre">InvalidConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.value_conversion.MissingRequiredConfigEntryError"><code class="docutils literal notranslate"><span class="pre">MissingRequiredConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.value_conversion.UnableToIdentifyConfigEntryError"><code class="docutils literal notranslate"><span class="pre">UnableToIdentifyConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.value_conversion.validate_config_data"><code class="docutils literal notranslate"><span class="pre">validate_config_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-constants">constants</a></li>
 </ul>
             </nav>
         </div>
@@ -1084,6 +1092,73 @@ the rotation of the coordinate system is clockwise.</p>
 </dd></dl>
 
 </section>
+<section id="module-utils.value_conversion">
+<span id="value-conversion"></span><h2>value_conversion<a class="headerlink" href="#module-utils.value_conversion" title="Link to this heading">#</a></h2>
+<p>Value and quantity conversion.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="utils.value_conversion.InvalidConfigEntryError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.value_conversion.</span></span><span class="sig-name descname"><span class="pre">InvalidConfigEntryError</span></span><a class="reference internal" href="../_modules/utils/value_conversion.html#InvalidConfigEntryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.value_conversion.InvalidConfigEntryError" title="Link to this definition">#</a></dt>
+<dd><p>Exception for invalid configuration entry.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="utils.value_conversion.MissingRequiredConfigEntryError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.value_conversion.</span></span><span class="sig-name descname"><span class="pre">MissingRequiredConfigEntryError</span></span><a class="reference internal" href="../_modules/utils/value_conversion.html#MissingRequiredConfigEntryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.value_conversion.MissingRequiredConfigEntryError" title="Link to this definition">#</a></dt>
+<dd><p>Exception for missing required configuration entry.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="utils.value_conversion.UnableToIdentifyConfigEntryError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.value_conversion.</span></span><span class="sig-name descname"><span class="pre">UnableToIdentifyConfigEntryError</span></span><a class="reference internal" href="../_modules/utils/value_conversion.html#UnableToIdentifyConfigEntryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.value_conversion.UnableToIdentifyConfigEntryError" title="Link to this definition">#</a></dt>
+<dd><p>Exception for unable to identify configuration entry.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.value_conversion.validate_config_data">
+<span class="sig-prename descclassname"><span class="pre">utils.value_conversion.</span></span><span class="sig-name descname"><span class="pre">validate_config_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_unidentified</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/value_conversion.html#validate_config_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.value_conversion.validate_config_data" title="Link to this definition">#</a></dt>
+<dd><p>Validate a generic config_data dict by using the info given by the parameters dict.</p>
+<p>The entries will be validated in terms of length, units and names.</p>
+<p>See ./tests/resources/test_parameters.yml for an example of the structure
+of the parameters dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config_data: dict</strong></dt><dd><p>Input config data.</p>
+</dd>
+<dt><strong>parameters: dict</strong></dt><dd><p>Parameter information necessary for validation.</p>
+</dd>
+<dt><strong>ignore_unidentified: bool, optional</strong></dt><dd><p>If set to True, unidentified parameters provided in config_data are ignored
+and a debug message is printed. Otherwise, an unidentified parameter leads to an error.
+Default is False.</p>
+</dd>
+<dt><strong>_logger: Logger, optional</strong></dt><dd><p>Logger object for logging messages. If not provided, defaults to printing to console.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>namedtuple:</dt><dd><p>Containing the validated config data entries.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>UnableToIdentifyConfigEntryError</dt><dd><p>When an entry in config_data cannot be identified among the parameters.</p>
+</dd>
+<dt>MissingRequiredConfigEntryError</dt><dd><p>When a parameter without default value is not given in config_data.</p>
+</dd>
+<dt>InvalidConfigEntryError</dt><dd><p>When an entry in config_data is invalid (wrong len, wrong unit, …).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-constants">
+<span id="constants"></span><h2>constants<a class="headerlink" href="#module-constants" title="Link to this heading">#</a></h2>
+<p>Project wide constants.</p>
+</section>
 </section>
 
 
@@ -1163,6 +1238,14 @@ the rotation of the coordinate system is clockwise.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.names.validate_site_name"><code class="docutils literal notranslate"><span class="pre">validate_site_name()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-utils.value_conversion">value_conversion</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.value_conversion.InvalidConfigEntryError"><code class="docutils literal notranslate"><span class="pre">InvalidConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.value_conversion.MissingRequiredConfigEntryError"><code class="docutils literal notranslate"><span class="pre">MissingRequiredConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.value_conversion.UnableToIdentifyConfigEntryError"><code class="docutils literal notranslate"><span class="pre">UnableToIdentifyConfigEntryError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.value_conversion.validate_config_data"><code class="docutils literal notranslate"><span class="pre">validate_config_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-constants">constants</a></li>
 </ul>
   </nav></div>
 

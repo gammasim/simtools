@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+gc823dbe Manual</title>
+    <title>Database support &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=5c22f453"></script>
+    <script src="../_static/documentation_options.js?v=de386d94"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc823dbe Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -475,6 +475,12 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.update_parameter_field"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.update_parameter_field()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-array-elements">db_array_elements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_element_list_for_db_query"><code class="docutils literal notranslate"><span class="pre">get_array_element_list_for_db_query()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements"><code class="docutils literal notranslate"><span class="pre">get_array_elements()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">get_array_elements_of_type()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-from-repo-handler">db_from_repo_handler</a><ul class="nav section-nav flex-column">
@@ -1045,9 +1051,102 @@ If the field does not exist, it will be added.</p>
 </dd></dl>
 
 </section>
+<section id="db-array-elements">
+<h2>db_array_elements<a class="headerlink" href="#db-array-elements" title="Link to this heading">#</a></h2>
+<p id="module-db.db_array_elements"><span id="id1"></span>Retrieval of array elements from the database.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_array_elements.get_array_element_list_for_db_query">
+<span class="sig-prename descclassname"><span class="pre">db.db_array_elements.</span></span><span class="sig-name descname"><span class="pre">get_array_element_list_for_db_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_array_elements.html#get_array_element_list_for_db_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_array_elements.get_array_element_list_for_db_query" title="Link to this definition">#</a></dt>
+<dd><p>Get array element name and design model for querying the database.</p>
+<p>Return a list of array element names to be used for querying the database for a given array
+element. This is in most cases the array element itself and its design model.
+In cases of no design model available, the design model of the array element is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN-01).</p>
+</dd>
+<dt><strong>db: DBHandler</strong></dt><dd><p>Instance of the database handler</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
+</dd>
+<dt><strong>collection: str</strong></dt><dd><p>DB collection to get the array elements from (e.g., telescopes, calibration_devices)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>List of array element model names as used in the DB.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_array_elements.get_array_elements">
+<span class="sig-prename descclassname"><span class="pre">db.db_array_elements.</span></span><span class="sig-name descname"><span class="pre">get_array_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_array_elements.html#get_array_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_array_elements.get_array_elements" title="Link to this definition">#</a></dt>
+<dd><p>Get all array element names and their design model for a given DB collection.</p>
+<p>Uses the ‘design_model’ parameter to determine the design model of the array element.
+Assumes that a design model is defined for every array element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_collection:</strong></dt><dd><p>pymongo.collection.Collection</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dict with array element names found and their design model</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If query for collection name not implemented.</p>
+</dd>
+<dt>KeyError</dt><dd><p>If array element entry in the database is incomplete.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="db.db_array_elements.get_array_elements_of_type">
+<span class="sig-prename descclassname"><span class="pre">db.db_array_elements.</span></span><span class="sig-name descname"><span class="pre">get_array_elements_of_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_array_elements.html#get_array_elements_of_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_array_elements.get_array_elements_of_type" title="Link to this definition">#</a></dt>
+<dd><p>Get all array elements of a certain type in the specified collection in the DB.</p>
+<p>Return e.g. for array_element_type=’MSTS’ all MSTS array elements found in the collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>array_element_type</strong><span class="classifier">str</span></dt><dd><p>Type of the array element (e.g. LSTN, MSTS)</p>
+</dd>
+<dt><strong>model_version</strong><span class="classifier">str</span></dt><dd><p>Which version to get the array elements of</p>
+</dd>
+<dt><strong>collection</strong><span class="classifier">str</span></dt><dd><p>Which collection to get the array elements from:
+i.e. telescopes, calibration_devices</p>
+</dd>
+<dt><strong>db_name</strong><span class="classifier">str</span></dt><dd><p>Database name</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>Sorted list of all array element names found in collection</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="db-from-repo-handler">
 <h2>db_from_repo_handler<a class="headerlink" href="#db-from-repo-handler" title="Link to this heading">#</a></h2>
-<p id="module-db.db_from_repo_handler"><span id="id1"></span>Module to mimic DB interaction for simulation model DB development.</p>
+<p id="module-db.db_from_repo_handler"><span id="id2"></span>Module to mimic DB interaction for simulation model DB development.</p>
 <p>Read simulation model values from files in simulation model repository.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="db.db_from_repo_handler.update_model_parameters_from_repo">
@@ -1150,6 +1249,12 @@ If the field does not exist, it will be added.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.update_parameter_field"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.update_parameter_field()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-array-elements">db_array_elements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_element_list_for_db_query"><code class="docutils literal notranslate"><span class="pre">get_array_element_list_for_db_query()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements"><code class="docutils literal notranslate"><span class="pre">get_array_elements()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">get_array_elements_of_type()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-from-repo-handler">db_from_repo_handler</a><ul class="nav section-nav flex-column">

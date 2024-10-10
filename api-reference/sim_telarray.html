@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+gc823dbe Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=5c22f453"></script>
+    <script src="../_static/documentation_options.js?v=de386d94"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc823dbe Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -530,6 +530,16 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-camera-efficiency">simulator_camera_efficiency</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_camera_efficiency.SimulatorCameraEfficiency"><code class="docutils literal notranslate"><span class="pre">SimulatorCameraEfficiency</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_camera_efficiency.SimulatorCameraEfficiency.nsb_spectrum"><code class="docutils literal notranslate"><span class="pre">SimulatorCameraEfficiency.nsb_spectrum</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-light-emission">simulator_light_emission</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.calibration_pointing_direction()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.light_emission_default_configuration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.prepare_script()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.telescope_calibration_device_distance"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.telescope_calibration_device_distance()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1405,6 +1415,112 @@ the difference between this exponent and the one used for the shower simulations
 </dd></dl>
 
 </section>
+<section id="simulator-light-emission">
+<h2>simulator_light_emission<a class="headerlink" href="#simulator-light-emission" title="Link to this heading">#</a></h2>
+<p id="module-simtel.simulator_light_emission"><span id="simulate-light-1"></span>Simulation using the light emission package for calibration.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_light_emission.</span></span><span class="sig-name descname"><span class="pre">SimulatorLightEmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_le_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">le_application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">light_source_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission" title="Link to this definition">#</a></dt>
+<dd><p>Interface with sim_telarray to perform light emission package simulations.</p>
+<p>The light emission package is used to simulate a artificial light source, used for calibration.</p>
+<p>The angle and pointing vector calculations use the convention north (x) towards
+east (-y).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_model:</strong></dt><dd><p>Instance of the TelescopeModel class.</p>
+</dd>
+<dt><strong>calibration_model:</strong></dt><dd><p>CalibrationModel instance to define calibration device.</p>
+</dd>
+<dt><strong>site_model:</strong></dt><dd><p>SiteModel instance to define the site specific parameters.</p>
+</dd>
+<dt><strong>default_le_config: dict</strong></dt><dd><p>defines parameters for running the sim_telarray light emission application.</p>
+</dd>
+<dt><strong>le_application: str</strong></dt><dd><p>Name of the application. Default sim_telarray application running
+the sim_telarray LightEmission package is xyzls.</p>
+</dd>
+<dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
+</dd>
+<dt><strong>light_source_type: str</strong></dt><dd><p>The light source type.</p>
+</dd>
+<dt><strong>label: str</strong></dt><dd><p>Label for output directory.</p>
+</dd>
+<dt><strong>config_data: dict</strong></dt><dd><p>Dict containing the configurable parameters.</p>
+</dd>
+<dt><strong>config_file: str or Path</strong></dt><dd><p>Path of the yaml file containing the configurable parameters.</p>
+</dd>
+<dt><strong>test: bool</strong></dt><dd><p>Test flag.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction">
+<span class="sig-name descname"><span class="pre">calibration_pointing_direction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.calibration_pointing_direction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the pointing of the calibration device towards the telescope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list</dt><dd><p>The pointing vector from the calibration device to the telescope.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">light_emission_default_configuration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.light_emission_default_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration" title="Link to this definition">#</a></dt>
+<dd><p>Get default light emission configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Default configuration light emission.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.prepare_script">
+<span class="sig-name descname"><span class="pre">prepare_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generate_postscript</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.prepare_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script" title="Link to this definition">#</a></dt>
+<dd><p>Build and return bash run script containing the light-emission command.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>plot: bool</strong></dt><dd><p>If output should be plotted.</p>
+</dd>
+<dt><strong>generate_postscript: bool</strong></dt><dd><p>If postscript should be generated with read_cta.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Path</dt><dd><p>Full path of the run script.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simulator_light_emission.SimulatorLightEmission.telescope_calibration_device_distance">
+<span class="sig-name descname"><span class="pre">telescope_calibration_device_distance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_light_emission.html#SimulatorLightEmission.telescope_calibration_device_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_light_emission.SimulatorLightEmission.telescope_calibration_device_distance" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the distance between the telescope and the calibration device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astropy Quantity</dt><dd><p>The distance between the telescope and the calibration device.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="simulator-ray-tracing">
 <h2>simulator_ray_tracing<a class="headerlink" href="#simulator-ray-tracing" title="Link to this heading">#</a></h2>
 <p id="module-simtel.simulator_ray_tracing"><span id="simulate-ray-tracing-1"></span>Simulation runner for ray tracing simulations.</p>
@@ -1597,6 +1713,16 @@ default: 1</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-camera-efficiency">simulator_camera_efficiency</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_camera_efficiency.SimulatorCameraEfficiency"><code class="docutils literal notranslate"><span class="pre">SimulatorCameraEfficiency</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_camera_efficiency.SimulatorCameraEfficiency.nsb_spectrum"><code class="docutils literal notranslate"><span class="pre">SimulatorCameraEfficiency.nsb_spectrum</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-light-emission">simulator_light_emission</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.calibration_pointing_direction()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.light_emission_default_configuration()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.prepare_script()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_light_emission.SimulatorLightEmission.telescope_calibration_device_distance"><code class="docutils literal notranslate"><span class="pre">SimulatorLightEmission.telescope_calibration_device_distance()</span></code></a></li>
 </ul>
 </li>
 </ul>
