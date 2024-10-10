@@ -1,94 +1,81 @@
 #!/usr/bin/python3
 
+r"""
+Generate markdown reports for relevant model parameters.
+
+The generated reports include detailed information on each parameter,
+such as the parameter name, value, unit, description, and short description.
+The reports are then uploaded as GitLab Pages using GitLab's CI workflow.
+"""
+
 import logging
-import simtools.utils.general as gen
 from pathlib import Path
-from simtools.reporting.read_parameters import ReadParameters
+
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
+from simtools.reporting.read_parameters import ReadParameters
+from simtools.utils import general as gen
 
 
 def _parse(label):
     """Parse command line configuration."""
     config = configurator.Configurator(
-            label=label,
-            description=(
-                "Generate an html report for all the model parameters for a given model version associated with a given telescope at a given site."
-                ),
-            )
+        label=label,
+        description=("Generate a markdown report for model parameters."),
+    )
 
     return config.initialize(db_config=True, simulation_model=["telescope"])
 
 
-
-def generate_html_report(label, args_dict, data):
-    '''
-    A function to generate an html file to report the parameter values.
-    '''
-
+def generate_markdown_report(output_folder, args_dict, data):
+    """Generate a markdown file to report the parameter values."""
     io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory(label)
-    output_filename = f'{output_path}/{args_dict["telescope"]}_v_{args_dict["model_version"]}'
+    output_path = io_handler_instance.get_output_directory(output_folder)
+    output_filename = f'{output_path}/{args_dict["telescope"]}_v_{args_dict["model_version"]}.md'
 
-    # Start writing the HTML file
-    with open(output_filename + '.html', 'w') as file:
-        # HTML boilerplate
-        file.write("<html><head><title>%s</title>\n" %args_dict["telescope"])
-        file.write("<style>\n")
-        file.write("body { font-family: Arial, sans-serif; margin: 40px; }\n")
-        file.write("h1 { color: #333; }\n")
-        file.write("table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n")
-        file.write("th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }\n")
-        file.write("th { background-color: #f2f2f2; }\n")
-        file.write("</style>\n")
-        file.write("</head><body>\n")
-        file.write("<h1>Parameter report for %s telescope %s in model version %s<h1>" %(args_dict["site"], args_dict["telescope"], args_dict["model_version"]))
+    # Start writing the Markdown file
+    with open(output_filename, "w", encoding="utf-8") as file:
+        # Write the main title for the report
+        file.write(
+            f"# Parameter Report for {args_dict['site']}"
+            f" Telescope {args_dict['telescope']} (Version {args_dict['model_version']})\n\n"
+        )
 
         # Write the section header to specify the telescope
-        file.write("<h2>%s</h2>\n" %args_dict['telescope'])
-        file.write("<hr>\n")
+        file.write(f"## {args_dict['telescope']}\n\n")
+        file.write("---\n\n")
 
         # Start the table for displaying parameters
-        file.write("<table>\n")
-        file.write("<tr><th>Parameter Name</th><th>Value</th><th>Unit</th><th>Short Description</th></tr>\n")
+        file.write("| Parameter Name | Values | Short Description |\n")
+        file.write("|----------------|--------|-------------------|\n")
 
         # Write each parameter to the table
         for item in data:
-            file.write(f"<tr><td>{item[0]}</td><td>{item[1]}</td><td>{item[2]}</td><td>{item[4]}</td></tr>\n")
-
-        file.write("</table>\n")
-
-    # End the HTML file
-    with open(output_filename + '.html', 'a') as file:
-        file.write("</body></html>\n")
+            file.write(f"| {item[0]} | {item[1]} | {item[3]} |\n")
 
 
+if __name__ == "__main__":
 
-
-def main(): 
-    label = Path(__file__).stem
-    args_dict, db_config = _parse(label)
+    label_name = Path(__file__).stem
+    args, db_config = _parse(label_name)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
+    logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
 
     telescope_model = TelescopeModel(
-            site=args_dict["site"],
-            telescope_name=args_dict["telescope"],
-            model_version=args_dict["model_version"],
-            label=label,
-            mongo_db_config=db_config,
-            )
+        site=args["site"],
+        telescope_name=args["telescope"],
+        model_version=args["model_version"],
+        label=label_name,
+        mongo_db_config=db_config,
+    )
 
+    parameter_data = ReadParameters(telescope_model).get_telescope_parameter_data()
 
-    data = ReadParameters().get_telescope_parameter_data(telescope_model)
-    
-    generate_html_report(label, args_dict, data) 
+    generate_markdown_report(label_name, args, parameter_data)
 
-    logger.info(f"HTML report generated: {args_dict['telescope']} for model version {args_dict['model_version']}")
-
-
-if __name__ == '__main__':
-    main()
+    logger.info(
+        f"Markdown report generated: {args['site']}"
+        f" Telescope {args['telescope']} (model version {args['model_version']})"
+    )
