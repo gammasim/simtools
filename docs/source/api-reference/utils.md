@@ -35,3 +35,17 @@ the util module.
 .. automodule:: utils.names
    :members:
 ```
+
+## value_conversion
+
+```{eval-rst}
+.. automodule:: utils.value_conversion
+   :members:
+```
+
+## constants
+
+```{eval-rst}
+.. automodule:: constants
+   :members:
+```
