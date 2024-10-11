@@ -333,8 +333,13 @@ class SimtelConfigWriter:
         str, any
             Converted parameter name and value.
         """
-        if simtel_name == "array_triggers":
-            value = self._write_array_triggers_file(value, model_path, telescope_model)
+        conversion_dict = {
+            "array_triggers": self._write_array_triggers_file,
+        }
+        try:
+            value = conversion_dict[simtel_name](value, model_path, telescope_model)
+        except KeyError:
+            pass
         return simtel_name, value
 
     def _write_array_triggers_file(self, array_triggers, model_path, telescope_model):
