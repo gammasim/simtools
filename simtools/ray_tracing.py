@@ -161,7 +161,7 @@ class RayTracing:
             " (this is not correct for dual-mirror telescopes)."
         )
         mir_focal_length = self.telescope_model.get_parameter_value("mirror_focal_length")
-        source_distance = 2 * float(mir_focal_length) * u.cm.to(u.km) * u.km
+        source_distance = (2 * float(mir_focal_length) * u.cm).to(u.km)
 
         if "all" in mirror_numbers:
             mirror_numbers = list(range(0, self.telescope_model.mirrors.number_of_mirrors))
