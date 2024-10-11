@@ -234,16 +234,40 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
 
     """
 
-    if "camera-efficiency" in config["APPLICATION"]:
-        pytest.skip(
-            "Any applications calling testeff are skipped for now "
-            "due to a limitation of testeff not allowing to specify the include directory."
-        )
+    skip_camera_efficiency(config)
 
     # The db_add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
     # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
     monkeypatch.setattr("sys.stdin", StringIO("y\n"))
+
+    logger.info(f"Test configuration from config file: {config}")
+
+    tmp_output_path = create_tmp_output_path(tmp_test_directory, config)
+
+    logger.info(f"Model version: {request.config.getoption('--model_version')}")
+    logger.info(f"Application configuration: {config}")
+    cmd, config_file_model_version = prepare_config_and_command(config, tmp_output_path, request)
+
+    execute_and_validate(cmd, config, request, config_file_model_version)
+
+
+def create_tmp_output_path(tmp_test_directory, config):
+    """
+    Create temporary output path.
+
+    Parameters
+    ----------
+    tmp_test_directory: str
+        Temporary directory.
+    config: dict
+        Configuration dictionary.
+
+    Returns
+    -------
+    str: path to the temporary output directory.
+
+    """
 
     try:
         tmp_output_path = Path(tmp_test_directory).joinpath(
@@ -254,10 +278,31 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
         raise exc
     tmp_output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Temporary output path: {tmp_output_path}")
-    logger.info(f"Test configuration from config file: {config}")
-    logger.info(f"Model version: {request.config.getoption('--model_version')}")
+    return tmp_output_path
+
+
+def prepare_config_and_command(config, tmp_output_path, request):
+    """
+    Prepare configuration and command for the application test.
+
+    Parameters
+    ----------
+    config: dict
+        Configuration dictionary.
+    tmp_output_path: str
+        Temporary output path.
+    request: request
+        Request object.
+
+    Returns
+    -------
+    str: command to run the application test.
+    str: config file model version.
+
+    """
+
+    model_version_requested = request.config.getoption("--model_version")
     if "CONFIGURATION" in config:
-        model_version_requested = request.config.getoption("--model_version")
         if "MODEL_VERSION_USE_CURRENT" in config:
             model_version_config = config["CONFIGURATION"]["MODEL_VERSION"]
             if (
@@ -265,7 +310,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
                 and model_version_requested is not None
             ):
                 pytest.skip(
-                    "Model version requested {model_version_requested} not supported for this test"
+                    f"Model version requested {model_version_requested} not supported for this test"
                 )
         config_file, config_string, config_file_model_version = prepare_configuration(
             config["CONFIGURATION"],
@@ -282,13 +327,29 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
         config_file=config_file,
         config_string=config_string,
     )
-    logger.info(f"Application configuration: {config}")
+    return cmd, config_file_model_version
+
+
+def execute_and_validate(cmd, config, request, config_file_model_version):
+    """
+    Execute application and validate output.
+
+    Parameters
+    ----------
+    cmd: str
+        Command to run the application test.
+    config: dict
+        Configuration dictionary.
+    request: request
+        Request object.
+    config_file_model_version: str
+        Model version from the configuration file.
+
+    """
 
     logger.info(f"Running application: {cmd}")
     assert os.system(cmd) == 0, f"Application failed: {cmd}"
 
-    # output validation for tests with default values
-    # executed only for the model version as given in the config file
     if request.config.getoption("--model_version") is None:
         validate_application_output(config)
     elif config_file_model_version is not None:
@@ -296,3 +357,35 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
         _from_config_file = config_file_model_version
         if _from_command_line == _from_config_file:
             validate_application_output(config)
+
+
+def skip_camera_efficiency(config):
+    """
+    Skip camera efficiency tests if the old version of testeff is used.
+    """
+    if "camera-efficiency" in config["APPLICATION"]:
+        if not new_testeff_version():
+            pytest.skip(
+                "Any applications calling the old version of testeff are skipped "
+                "due to a limitation of the old testeff not allowing to specify "
+                "the include directory. Please update your sim_telarray tarball."
+            )
+        full_test_name = f"{config['APPLICATION']}_{config['TEST_NAME']}"
+        if "simtools-validate-camera-efficiency_SSTS" == full_test_name:
+            pytest.skip(
+                "The test simtools-validate-camera-efficiency_SSTS is skipped "
+                "since the fake SST mirrors are not yet implemented (#1155)"
+            )
+
+
+def new_testeff_version():
+    """
+    Testeff has been updated to allow to specify the include directory.
+    This test checks if the new version is used.
+    """
+
+    with open("/workdir/sim_telarray/sim_telarray/testeff.c") as file:
+        file_content = file.read()
+        if "/* Combine the include paths such that those from '-I...' options */" in file_content:
+            return True
+        return False

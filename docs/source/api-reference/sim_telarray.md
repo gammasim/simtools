@@ -67,6 +67,15 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## simulator_light_emission
+
+(simulate-light-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simulator_light_emission
+   :members:
+```
+
 ## simulator_ray_tracing
 
 (simulate-ray-tracing-1)=
