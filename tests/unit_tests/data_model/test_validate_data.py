@@ -771,3 +771,56 @@ def test_validate_data_dict_using_json_schema(caplog):
     with caplog.at_level(logging.DEBUG):
         data_validator._validate_data_dict_using_json_schema(valid_data, None)
     assert "Skipping validation of dict type" in caplog.text
+
+
+def test_get_value_and_units_as_lists():
+    data_validator = validate_data.DataValidator()
+
+    # Test with single value and unit
+    data_validator.data_dict = {"value": 100, "unit": "m"}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100]
+    assert units == ["m"]
+
+    # Test with list of values and units
+    data_validator.data_dict = {"value": [100, 200], "unit": ["m", "cm"]}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100, 200]
+    assert units == ["m", "cm"]
+
+    # Test with numpy array of values and units
+    data_validator.data_dict = {"value": np.array([100, 200]), "unit": np.array(["m", "cm"])}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100, 200]
+    assert units == ["m", "cm"]
+
+    # Test with unit as "null"
+    data_validator.data_dict = {"value": [100, 200], "unit": ["m", "null"]}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100, 200]
+    assert units == ["m", None]
+
+    # Test with mixed types
+    data_validator.data_dict = {"value": [100, 200], "unit": np.array(["m", "cm"])}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100, 200]
+    assert units == ["m", "cm"]
+
+
+def test_validate_value_and_unit_for_dict(reference_columns):
+    data_validator = validate_data.DataValidator()
+    data_validator._data_description = reference_columns
+
+    # Test case for dict type
+    data_validator.data_dict = {"value": {"key": "value"}, "unit": None, "type": "dict"}
+    data_validator._data_description[0]["type"] = "dict"
+    data_validator._data_description[0]["json_schema"] = {
+        "type": "object",
+        "properties": {"key": {"type": "string"}},
+        "required": ["key"],
+    }
+    value, unit = data_validator._validate_value_and_unit(
+        data_validator.data_dict["value"], data_validator.data_dict["unit"], 0
+    )
+    assert value == {"key": "value"}
+    assert unit is None
