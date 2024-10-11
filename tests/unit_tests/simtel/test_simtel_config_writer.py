@@ -87,23 +87,23 @@ def test_get_value_string_for_simtel(simtel_config_writer):
     assert simtel_config_writer._get_value_string_for_simtel(5) == 5
 
 
-def test_get_array_trigger_for_telescope_type(simtel_config_writer):
+def test_get_array_triggers_for_telescope_type(simtel_config_writer):
     array_triggers = [
         {"name": "LSTN_array", "multiplicity": {"value": 2}, "width": {"value": 10, "unit": "ns"}},
         {"name": "MSTN_single_telescope", "multiplicity": {"value": 1}},
     ]
 
-    result = simtel_config_writer._get_array_trigger_for_telescope_type(array_triggers, "LSTN")
+    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "LSTN")
     assert result is not None
     assert result["name"] == "LSTN_array"
     assert result["multiplicity"]["value"] == 2
     assert result["width"]["value"] == 10
     assert result["width"]["unit"] == "ns"
 
-    result = simtel_config_writer._get_array_trigger_for_telescope_type(array_triggers, "MSTN")
+    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "MSTN")
     assert result is None
 
-    result = simtel_config_writer._get_array_trigger_for_telescope_type(array_triggers, "SST")
+    result = simtel_config_writer._get_array_triggers_for_telescope_type(array_triggers, "SST")
     assert result is None
 
 
