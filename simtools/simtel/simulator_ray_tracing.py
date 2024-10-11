@@ -4,10 +4,9 @@ import logging
 
 import astropy.units as u
 
-import simtools.utils.general as gen
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
-from simtools.utils import names, value_conversion
+from simtools.utils import names
 
 __all__ = ["SimulatorRayTracing"]
 
@@ -18,43 +17,21 @@ __all__ = ["SimulatorRayTracing"]
 
 class SimulatorRayTracing(SimtelRunner):
     """
-    SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.
-
-    Configurable parameters:
-        zenith_angle:
-            len: 1
-            unit: deg
-            default: 20 deg
-        off_axis_angle:
-            len: 1
-            unit: deg
-            default: 0 deg
-        source_distance:
-            len: 1
-            unit: km
-            default: 10 km
-        single_mirror_mode:
-            len: 1
-            default: False
-        use_random_focal_length:
-            len: 1
-            default: False
-        mirror_numbers:
-            len: 1
-            default: 1
+    Perform ray tracing simulations with sim_telarray.
 
     Parameters
     ----------
-    telescope_model: str
-        Instance of TelescopeModel class.
+    telescope_model: TelescopeModel
+        telescope model
     label: str
-        Instance label. Important for output file naming.
+        label used for output file naming.
     simtel_path: str or Path
         Location of sim_telarray installation.
-    config_data: dict
-        Dict containing the configurable parameters.
-    config_file: str or Path
-        Path of the yaml file containing the configurable parameters.
+    config_data: namedtuple
+        namedtuple containing the configurable parameters as values (expected units in
+        brackets): zenith_angle (deg), off_axis_angle (deg), source_distance (km),
+        single_mirror_mode, use_random_focal_length,
+        mirror_numbers.
     force_simulate: bool
         Remove existing files and force re-running of the ray-tracing simulation.
     """
@@ -65,7 +42,6 @@ class SimulatorRayTracing(SimtelRunner):
         label=None,
         simtel_path=None,
         config_data=None,
-        config_file=None,
         force_simulate=False,
         test=False,
     ):
@@ -81,13 +57,7 @@ class SimulatorRayTracing(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self._base_directory = self.io_handler.get_output_directory(self.label, "ray-tracing")
 
-        # Loading config_data
-        self.config = value_conversion.validate_config_data(
-            gen.collect_data_from_file_or_dict(config_file, config_data),
-            self.ray_tracing_default_configuration(True),
-        )
-
-        # RayTracing - default parameters
+        self.config = config_data
         self._rep_number = 0
         self.runs_per_set = 1 if self.config.single_mirror_mode else 20
         self.photons_per_run = 100000 if not test else 5000
@@ -96,9 +66,9 @@ class SimulatorRayTracing(SimtelRunner):
 
     def _load_required_files(self, force_simulate):
         """
-        Which file are required for running depends on the mode.
+        Load required files for the simulation. Depends on the running mode.
 
-        Here we define and write some information into these files. Log files are always required.
+        Initialize files for the simulation.
 
         Parameters
         ----------
@@ -106,8 +76,7 @@ class SimulatorRayTracing(SimtelRunner):
             Remove existing files and force re-running of the ray-tracing simulation.
         """
         # This file is not actually needed and does not exist in simtools.
-        # However, we need to provide the name of a CORSIKA input file to sim_telarray
-        # so it is set up here.
+        # It is required as CORSIKA input file to sim_telarray
         self._corsika_file = self._simtel_path.joinpath("run9991.corsika.gz")
 
         # Loop to define and remove existing files.
@@ -145,8 +114,7 @@ class SimulatorRayTracing(SimtelRunner):
                 if self.config.single_mirror_mode:
                     file.write(f"# mirror_number = {self.config.mirror_numbers}\n\n")
 
-            # Filling in star file with a single light source.
-            # Parameters defining light source:
+            # Filling a star file with a single light source defined by
             # - azimuth
             # - elevation
             # - flux
@@ -163,8 +131,9 @@ class SimulatorRayTracing(SimtelRunner):
     def _make_run_command(
         self, run_number=None, input_file=None
     ):  # pylint: disable=unused-argument
-        """Return the command to run simtel_array."""
+        """Generate simtel_array run command."""
         if self.config.single_mirror_mode:
+            # Note: no mirror length defined for dual-mirror telescopes
             _mirror_focal_length = float(
                 self.telescope_model.get_parameter_value("mirror_focal_length")
             )
@@ -180,7 +149,8 @@ class SimulatorRayTracing(SimtelRunner):
             "altitude", self.telescope_model.get_parameter_value("corsika_observation_level")
         )
         command += super().get_config_option(
-            "telescope_theta", self.config.zenith_angle + self.config.off_axis_angle
+            "telescope_theta",
+            self.config.zenith_angle + self.config.off_axis_angle,
         )
         command += super().get_config_option("star_photons", str(self.photons_per_run))
         command += super().get_config_option("telescope_phi", "0")
@@ -219,31 +189,26 @@ class SimulatorRayTracing(SimtelRunner):
         return command
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
-        """Check run results.
+        """
+        Check run results.
+
+        Photon list files should have at least 100 lines.
+
+        Returns
+        -------
+        bool
+            True if photon list is not empty.
 
         Raises
         ------
         RuntimeError
             if Photon list is empty.
         """
-        # Checking run
-        if not self._is_photon_list_file_ok():
-            msg = "Photon list is empty."
-            self._logger.error(msg)
-            raise RuntimeError(msg)
-
-        self._logger.debug("Everything looks fine with output file.")
-
-    def _is_photon_list_file_ok(self):
-        """Check if the photon list is valid."""
-        n_lines = 0
         with open(self._photons_file, "rb") as ff:
-            for _ in ff:
-                n_lines += 1
-                if n_lines > 100:
-                    break
-
-        return n_lines > 100
+            n_lines = sum(1 for _ in ff)
+        if n_lines < 100:
+            raise RuntimeError("Photon list is empty.")
+        return True
 
     def _write_out_single_pixel_camera_file(self):
         """Write out the single pixel camera file."""
@@ -266,41 +231,3 @@ class SimulatorRayTracing(SimtelRunner):
             file.write("30   1.0\n")
             file.write("60   1.0\n")
             file.write("90   1.0\n")
-
-    @staticmethod
-    def ray_tracing_default_configuration(config_runner=False):
-        """
-        Get default ray tracing configuration.
-
-        Returns
-        -------
-        dict
-            Default configuration for ray tracing.
-
-        """
-        return {
-            "zenith_angle": {
-                "len": 1,
-                "unit": u.Unit("deg"),
-                "default": 20.0 * u.deg,
-                "names": ["zenith", "theta"],
-            },
-            "off_axis_angle": {
-                "len": 1 if config_runner else None,
-                "unit": u.Unit("deg"),
-                "default": 0.0 * u.deg,
-                "names": ["offaxis", "offset"],
-            },
-            "source_distance": {
-                "len": 1,
-                "unit": u.Unit("km"),
-                "default": 10.0 * u.km,
-                "names": ["sourcedist", "srcdist"],
-            },
-            "single_mirror_mode": {"len": 1, "default": False},
-            "use_random_focal_length": {"len": 1, "default": False},
-            "mirror_numbers": {
-                "len": 1 if config_runner else None,
-                "default": 1 if config_runner else "all",
-            },
-        }
