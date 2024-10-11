@@ -351,7 +351,7 @@ class SimtelConfigWriter:
             Telescope models.
         """
         trigger_per_telescope_type = {}
-        for count, (tel_name, _) in enumerate(telescope_model.items()):
+        for count, tel_name in enumerate(telescope_model.keys()):
             telescope_type = names.get_array_element_type_from_name(tel_name)
             trigger_per_telescope_type.setdefault(telescope_type, []).append(count + 1)
 
