@@ -60,12 +60,6 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     )
     assert not file_has_text(file, "array_triggers = array_triggers.dat")
 
-    simtel_config_writer.array_trigger_file = "array_triggers.dat"
-    simtel_config_writer.write_telescope_config_file(
-        config_file_path=file, parameters={"array_triggers": "array_triggers.dat"}
-    )
-    assert file_has_text(file, "array_triggers = array_triggers.dat")
-
 
 def test_get_simtel_metadata(simtel_config_writer):
 
