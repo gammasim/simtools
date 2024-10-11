@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>validate_cumulative_psf &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
+    <title>validate_cumulative_psf &#8212; simtools v0.1.dev1+g9371f79 Manual</title>
   
   
   
@@ -35,8 +35,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=de386d94"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/documentation_options.js?v=b10f3ec4"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/validate_cumulative_psf';</script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9371f79 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -526,12 +526,12 @@ document.write(`
     <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope_model_file&quot;</span><span class="p">):</span>
         <span class="n">tel_model</span><span class="o">.</span><span class="n">change_multiple_parameters_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope_model_file&quot;</span><span class="p">])</span>
 
-    <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="o">.</span><span class="n">from_kwargs</span><span class="p">(</span>
+    <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
         <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
         <span class="n">simtel_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">],</span>
-        <span class="n">source_distance</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;src_distance&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
         <span class="n">zenith_angle</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-        <span class="n">off_axis_angle</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">],</span>
+        <span class="n">source_distance</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;src_distance&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
+        <span class="n">off_axis_angle</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">ray</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_ray_tracing &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
+    <title>simtel.simulator_ray_tracing &#8212; simtools v0.1.dev1+g9371f79 Manual</title>
   
   
   
@@ -35,8 +35,8 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=de386d94"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/documentation_options.js?v=b10f3ec4"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simulator_ray_tracing';</script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9371f79 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -381,10 +381,9 @@ document.write(`
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 
-<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span> <span class="nn">simtools.runners.simtel_runner</span> <span class="kn">import</span> <span class="n">SimtelRunner</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span><span class="p">,</span> <span class="n">value_conversion</span>
+<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorRayTracing&quot;</span><span class="p">]</span>
 
@@ -397,43 +396,21 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_ray_tracing.SimulatorRayTracing">[docs]</a>
 <span class="k">class</span> <span class="nc">SimulatorRayTracing</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.</span>
-
-<span class="sd">    Configurable parameters:</span>
-<span class="sd">        zenith_angle:</span>
-<span class="sd">            len: 1</span>
-<span class="sd">            unit: deg</span>
-<span class="sd">            default: 20 deg</span>
-<span class="sd">        off_axis_angle:</span>
-<span class="sd">            len: 1</span>
-<span class="sd">            unit: deg</span>
-<span class="sd">            default: 0 deg</span>
-<span class="sd">        source_distance:</span>
-<span class="sd">            len: 1</span>
-<span class="sd">            unit: km</span>
-<span class="sd">            default: 10 km</span>
-<span class="sd">        single_mirror_mode:</span>
-<span class="sd">            len: 1</span>
-<span class="sd">            default: False</span>
-<span class="sd">        use_random_focal_length:</span>
-<span class="sd">            len: 1</span>
-<span class="sd">            default: False</span>
-<span class="sd">        mirror_numbers:</span>
-<span class="sd">            len: 1</span>
-<span class="sd">            default: 1</span>
+<span class="sd">    Perform ray tracing simulations with sim_telarray.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    telescope_model: str</span>
-<span class="sd">        Instance of TelescopeModel class.</span>
+<span class="sd">    telescope_model: TelescopeModel</span>
+<span class="sd">        telescope model</span>
 <span class="sd">    label: str</span>
-<span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">        label used for output file naming.</span>
 <span class="sd">    simtel_path: str or Path</span>
 <span class="sd">        Location of sim_telarray installation.</span>
-<span class="sd">    config_data: dict</span>
-<span class="sd">        Dict containing the configurable parameters.</span>
-<span class="sd">    config_file: str or Path</span>
-<span class="sd">        Path of the yaml file containing the configurable parameters.</span>
+<span class="sd">    config_data: namedtuple</span>
+<span class="sd">        namedtuple containing the configurable parameters as values (expected units in</span>
+<span class="sd">        brackets): zenith_angle (deg), off_axis_angle (deg), source_distance (km),</span>
+<span class="sd">        single_mirror_mode, use_random_focal_length,</span>
+<span class="sd">        mirror_numbers.</span>
 <span class="sd">    force_simulate: bool</span>
 <span class="sd">        Remove existing files and force re-running of the ray-tracing simulation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -444,7 +421,6 @@ document.write(`
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">simtel_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">config_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">force_simulate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -460,13 +436,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;ray-tracing&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Loading config_data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">value_conversion</span><span class="o">.</span><span class="n">validate_config_data</span><span class="p">(</span>
-            <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file_or_dict</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">config_data</span><span class="p">),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ray_tracing_default_configuration</span><span class="p">(</span><span class="kc">True</span><span class="p">),</span>
-        <span class="p">)</span>
-
-        <span class="c1"># RayTracing - default parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config_data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rep_number</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">runs_per_set</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="mi">20</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span> <span class="o">=</span> <span class="mi">100000</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">test</span> <span class="k">else</span> <span class="mi">5000</span>
@@ -475,9 +445,9 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_load_required_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_simulate</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Which file are required for running depends on the mode.</span>
+<span class="sd">        Load required files for the simulation. Depends on the running mode.</span>
 
-<span class="sd">        Here we define and write some information into these files. Log files are always required.</span>
+<span class="sd">        Initialize files for the simulation.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -485,8 +455,7 @@ document.write(`
 <span class="sd">            Remove existing files and force re-running of the ray-tracing simulation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># This file is not actually needed and does not exist in simtools.</span>
-        <span class="c1"># However, we need to provide the name of a CORSIKA input file to sim_telarray</span>
-        <span class="c1"># so it is set up here.</span>
+        <span class="c1"># It is required as CORSIKA input file to sim_telarray</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_corsika_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;run9991.corsika.gz&quot;</span><span class="p">)</span>
 
         <span class="c1"># Loop to define and remove existing files.</span>
@@ -524,8 +493,7 @@ document.write(`
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
                     <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# mirror_number = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mirror_numbers</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-            <span class="c1"># Filling in star file with a single light source.</span>
-            <span class="c1"># Parameters defining light source:</span>
+            <span class="c1"># Filling a star file with a single light source defined by</span>
             <span class="c1"># - azimuth</span>
             <span class="c1"># - elevation</span>
             <span class="c1"># - flux</span>
@@ -542,8 +510,9 @@ document.write(`
     <span class="k">def</span> <span class="nf">_make_run_command</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the command to run simtel_array.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate simtel_array run command.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span><span class="p">:</span>
+            <span class="c1"># Note: no mirror length defined for dual-mirror telescopes</span>
             <span class="n">_mirror_focal_length</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;mirror_focal_length&quot;</span><span class="p">)</span>
             <span class="p">)</span>
@@ -559,7 +528,8 @@ document.write(`
             <span class="s2">&quot;altitude&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;corsika_observation_level&quot;</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">off_axis_angle</span>
+            <span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;star_photons&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span><span class="p">))</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
@@ -598,31 +568,26 @@ document.write(`
         <span class="k">return</span> <span class="n">command</span>
 
     <span class="k">def</span> <span class="nf">_check_run_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check run results.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check run results.</span>
+
+<span class="sd">        Photon list files should have at least 100 lines.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if photon list is not empty.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
 <span class="sd">            if Photon list is empty.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Checking run</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_photon_list_file_ok</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Photon list is empty.&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Everything looks fine with output file.&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_is_photon_list_file_ok</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the photon list is valid.&quot;&quot;&quot;</span>
-        <span class="n">n_lines</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_photons_file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ff</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">ff</span><span class="p">:</span>
-                <span class="n">n_lines</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="k">if</span> <span class="n">n_lines</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
-                    <span class="k">break</span>
-
-        <span class="k">return</span> <span class="n">n_lines</span> <span class="o">&gt;</span> <span class="mi">100</span>
+            <span class="n">n_lines</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">ff</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_lines</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Photon list is empty.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">_write_out_single_pixel_camera_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write out the single pixel camera file.&quot;&quot;&quot;</span>
@@ -644,48 +609,7 @@ document.write(`
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;0    1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;30   1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;60   1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;90   1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<div class="viewcode-block" id="SimulatorRayTracing.ray_tracing_default_configuration">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_ray_tracing.SimulatorRayTracing.ray_tracing_default_configuration">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">ray_tracing_default_configuration</span><span class="p">(</span><span class="n">config_runner</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get default ray tracing configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Default configuration for ray tracing.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">20.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">,</span> <span class="s2">&quot;theta&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;off_axis_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">config_runner</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;offaxis&quot;</span><span class="p">,</span> <span class="s2">&quot;offset&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;source_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s2">&quot;km&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
-                <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sourcedist&quot;</span><span class="p">,</span> <span class="s2">&quot;srcdist&quot;</span><span class="p">],</span>
-            <span class="p">},</span>
-            <span class="s2">&quot;single_mirror_mode&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-            <span class="s2">&quot;use_random_focal_length&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
-            <span class="s2">&quot;mirror_numbers&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">config_runner</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">config_runner</span> <span class="k">else</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">}</span></div>
-</div>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;90   1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 </pre></div>
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+g9371f79 Manual</title>
   
   
   
@@ -35,8 +35,8 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=de386d94"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/documentation_options.js?v=b10f3ec4"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/utils/general';</script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9371f79 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -399,7 +399,6 @@ document.write(`
     <span class="s2">&quot;InvalidConfigDataError&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_log_level_from_user&quot;</span><span class="p">,</span>
     <span class="s2">&quot;remove_substring_recursively_from_dict&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;separate_args_and_config_data&quot;</span><span class="p">,</span>
     <span class="s2">&quot;set_default_kwargs&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_log_excerpt&quot;</span><span class="p">,</span>
     <span class="s2">&quot;sort_arrays&quot;</span><span class="p">,</span>
@@ -763,38 +762,6 @@ document.write(`
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
-
-
-<div class="viewcode-block" id="separate_args_and_config_data">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.separate_args_and_config_data">[docs]</a>
-<span class="k">def</span> <span class="nf">separate_args_and_config_data</span><span class="p">(</span><span class="n">expected_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Separate kwargs into arguments expected for class instancing class and the config_data dict.</span>
-
-<span class="sd">    This function is specific for methods from_kwargs in classes which use the validate_config_data</span>
-<span class="sd">    system.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    expected_args: list of str</span>
-<span class="sd">        List of arguments expected for the class.</span>
-<span class="sd">    **kwargs</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict, dict</span>
-<span class="sd">        A dict with the args collected and another one with config_data.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">args</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">config_data</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expected_args</span><span class="p">:</span>
-            <span class="n">args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">config_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-    <span class="k">return</span> <span class="n">args</span><span class="p">,</span> <span class="n">config_data</span></div>
-
 
 
 <span class="k">def</span> <span class="nf">program_is_executable</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g9371f79 Manual</title>
   
   
   
@@ -36,8 +36,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=de386d94"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/documentation_options.js?v=b10f3ec4"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/sim_telarray';</script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9371f79 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -545,10 +545,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-ray-tracing">simulator_ray_tracing</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_ray_tracing.SimulatorRayTracing"><code class="docutils literal notranslate"><span class="pre">SimulatorRayTracing</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_ray_tracing.SimulatorRayTracing.ray_tracing_default_configuration"><code class="docutils literal notranslate"><span class="pre">SimulatorRayTracing.ray_tracing_default_configuration()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_ray_tracing.SimulatorRayTracing"><code class="docutils literal notranslate"><span class="pre">SimulatorRayTracing</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1526,66 +1523,27 @@ the sim_telarray LightEmission package is xyzls.</p>
 <p id="module-simtel.simulator_ray_tracing"><span id="simulate-ray-tracing-1"></span>Simulation runner for ray tracing simulations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simulator_ray_tracing.SimulatorRayTracing">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_ray_tracing.</span></span><span class="sig-name descname"><span class="pre">SimulatorRayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_simulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_ray_tracing.html#SimulatorRayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_ray_tracing.SimulatorRayTracing" title="Link to this definition">#</a></dt>
-<dd><p>SimulatorRayTracing is the interface with sim_telarray to perform ray tracing simulations.</p>
-<dl class="simple">
-<dt>Configurable parameters:</dt><dd><dl class="simple">
-<dt>zenith_angle:</dt><dd><p>len: 1
-unit: deg
-default: 20 deg</p>
-</dd>
-<dt>off_axis_angle:</dt><dd><p>len: 1
-unit: deg
-default: 0 deg</p>
-</dd>
-<dt>source_distance:</dt><dd><p>len: 1
-unit: km
-default: 10 km</p>
-</dd>
-<dt>single_mirror_mode:</dt><dd><p>len: 1
-default: False</p>
-</dd>
-<dt>use_random_focal_length:</dt><dd><p>len: 1
-default: False</p>
-</dd>
-<dt>mirror_numbers:</dt><dd><p>len: 1
-default: 1</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simulator_ray_tracing.</span></span><span class="sig-name descname"><span class="pre">SimulatorRayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_simulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_ray_tracing.html#SimulatorRayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_ray_tracing.SimulatorRayTracing" title="Link to this definition">#</a></dt>
+<dd><p>Perform ray tracing simulations with sim_telarray.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>telescope_model: str</strong></dt><dd><p>Instance of TelescopeModel class.</p>
+<dt><strong>telescope_model: TelescopeModel</strong></dt><dd><p>telescope model</p>
 </dd>
-<dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
+<dt><strong>label: str</strong></dt><dd><p>label used for output file naming.</p>
 </dd>
 <dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
 </dd>
-<dt><strong>config_data: dict</strong></dt><dd><p>Dict containing the configurable parameters.</p>
-</dd>
-<dt><strong>config_file: str or Path</strong></dt><dd><p>Path of the yaml file containing the configurable parameters.</p>
+<dt><strong>config_data: namedtuple</strong></dt><dd><p>namedtuple containing the configurable parameters as values (expected units in
+brackets): zenith_angle (deg), off_axis_angle (deg), source_distance (km),
+single_mirror_mode, use_random_focal_length,
+mirror_numbers.</p>
 </dd>
 <dt><strong>force_simulate: bool</strong></dt><dd><p>Remove existing files and force re-running of the ray-tracing simulation.</p>
 </dd>
 </dl>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simulator_ray_tracing.SimulatorRayTracing.ray_tracing_default_configuration">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ray_tracing_default_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_runner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_ray_tracing.html#SimulatorRayTracing.ray_tracing_default_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_ray_tracing.SimulatorRayTracing.ray_tracing_default_configuration" title="Link to this definition">#</a></dt>
-<dd><p>Get default ray tracing configuration.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>dict</dt><dd><p>Default configuration for ray tracing.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>
@@ -1728,10 +1686,7 @@ default: 1</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-ray-tracing">simulator_ray_tracing</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_ray_tracing.SimulatorRayTracing"><code class="docutils literal notranslate"><span class="pre">SimulatorRayTracing</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_ray_tracing.SimulatorRayTracing.ray_tracing_default_configuration"><code class="docutils literal notranslate"><span class="pre">SimulatorRayTracing.ray_tracing_default_configuration()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_ray_tracing.SimulatorRayTracing"><code class="docutils literal notranslate"><span class="pre">SimulatorRayTracing</span></code></a></li>
 </ul>
 </li>
 </ul>

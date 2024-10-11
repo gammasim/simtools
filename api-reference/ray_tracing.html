@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Ray Tracing &#8212; simtools v0.1.dev1+gf9046f8 Manual</title>
+    <title>Ray Tracing &#8212; simtools v0.1.dev1+g9371f79 Manual</title>
   
   
   
@@ -36,8 +36,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=de386d94"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/documentation_options.js?v=b10f3ec4"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/ray_tracing';</script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gf9046f8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9371f79 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -457,7 +457,6 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing"><code class="docutils literal notranslate"><span class="pre">RayTracing</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.analyze"><code class="docutils literal notranslate"><span class="pre">RayTracing.analyze()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.export_results"><code class="docutils literal notranslate"><span class="pre">RayTracing.export_results()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.from_kwargs"><code class="docutils literal notranslate"><span class="pre">RayTracing.from_kwargs()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.get_mean"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_mean()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.get_std_dev"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_std_dev()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.images"><code class="docutils literal notranslate"><span class="pre">RayTracing.images()</span></code></a></li>
@@ -489,20 +488,28 @@ At the moment, the RayTracing class includes the whole dish mode (default one) a
 <p>Ray tracing simulations and analysis.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ray_tracing.RayTracing">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.</span></span><span class="sig-name descname"><span class="pre">RayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing.html#RayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.RayTracing" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.</span></span><span class="sig-name descname"><span class="pre">RayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle=&lt;Quantity</span> <span class="pre">20.</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis_angle=&lt;Quantity</span> <span class="pre">[0.]</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_distance=&lt;Quantity</span> <span class="pre">10.</span> <span class="pre">km&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_random_focal_length=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_numbers='all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing.html#RayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.RayTracing" title="Link to this definition">#</a></dt>
 <dd><p>Ray tracing simulations and analysis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>telescope_model: TelescopeModel</strong></dt><dd><p>Instance of the TelescopeModel class.</p>
-</dd>
-<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
+<dt><strong>telescope_model: TelescopeModel</strong></dt><dd><p>telescope model</p>
 </dd>
 <dt><strong>simtel_path: str (or Path)</strong></dt><dd><p>Location of sim_telarray installation.</p>
 </dd>
-<dt><strong>config_data: dict.</strong></dt><dd><p>Dict containing the configurable parameters.</p>
+<dt><strong>label: str</strong></dt><dd><p>label used for output file naming.</p>
 </dd>
-<dt><strong>config_file: str or Path</strong></dt><dd><p>Path of the yaml file containing the configurable parameters.</p>
+<dt><strong>zenith_angle: astropy.units.Quantity</strong></dt><dd><p>Zenith angle.</p>
+</dd>
+<dt><strong>off_axis_angle: list of astropy.units.Quantity</strong></dt><dd><p>Off-axis angles.</p>
+</dd>
+<dt><strong>source_distance: astropy.units.Quantity</strong></dt><dd><p>Source distance.</p>
+</dd>
+<dt><strong>single_mirror_mode: bool</strong></dt><dd><p>Single mirror mode flag.</p>
+</dd>
+<dt><strong>use_random_focal_length: bool</strong></dt><dd><p>Use random focal length flag.</p>
+</dd>
+<dt><strong>mirror_numbers: list, str</strong></dt><dd><p>List of mirror numbers (or ‘all’).</p>
 </dd>
 </dl>
 </dd>
@@ -510,8 +517,8 @@ At the moment, the RayTracing class includes the whole dish mode (default one) a
 <dl class="py method">
 <dt class="sig sig-object py" id="ray_tracing.RayTracing.analyze">
 <span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_rx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_tel_transmission</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">containment_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing.html#RayTracing.analyze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.RayTracing.analyze" title="Link to this definition">#</a></dt>
-<dd><p>Raytracing analysis.</p>
-<p>Involves the following: read simtel files, compute psfs and eff areas and store the
+<dd><p>Ray tracing analysis.</p>
+<p>Involves the following: read simtel files, compute PSFs and eff areas, store the
 results in _results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -538,27 +545,6 @@ interval [0,1]</p>
 <dt class="sig sig-object py" id="ray_tracing.RayTracing.export_results">
 <span class="sig-name descname"><span class="pre">export_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing.html#RayTracing.export_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.RayTracing.export_results" title="Link to this definition">#</a></dt>
 <dd><p>Export results to a csv file.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="ray_tracing.RayTracing.from_kwargs">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing.html#RayTracing.from_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.RayTracing.from_kwargs" title="Link to this definition">#</a></dt>
-<dd><p>Build a RayTracing object from kwargs only.</p>
-<p>The configurable parameters can be given as kwargs, instead of using the
-config_data or config_file arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>kwargs</strong></dt><dd><p>Containing the arguments and the configurable parameters.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Instance of this class.</dt><dd></dd>
-</dl>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -742,7 +728,6 @@ config_data or config_file arguments.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing"><code class="docutils literal notranslate"><span class="pre">RayTracing</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.analyze"><code class="docutils literal notranslate"><span class="pre">RayTracing.analyze()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.export_results"><code class="docutils literal notranslate"><span class="pre">RayTracing.export_results()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.from_kwargs"><code class="docutils literal notranslate"><span class="pre">RayTracing.from_kwargs()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.get_mean"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_mean()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.get_std_dev"><code class="docutils literal notranslate"><span class="pre">RayTracing.get_std_dev()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ray_tracing.RayTracing.images"><code class="docutils literal notranslate"><span class="pre">RayTracing.images()</span></code></a></li>
