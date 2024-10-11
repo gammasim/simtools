@@ -357,7 +357,7 @@ class SimtelConfigWriter:
 
         trigger_lines = {}
         for tel_type, tel_list in trigger_per_telescope_type.items():
-            trigger_dict = self._get_array_trigger_for_telescope_type(array_triggers, tel_type)
+            trigger_dict = self._get_array_triggers_for_telescope_type(array_triggers, tel_type)
             trigger_lines[tel_type] = f"Trigger {trigger_dict['multiplicity']['value']} of "
             trigger_lines[tel_type] += ", ".join(map(str, tel_list))
             if (
@@ -379,14 +379,14 @@ class SimtelConfigWriter:
                 ).to("m")
                 trigger_lines[tel_type] += f" minsep {min_sep}"
 
-        array_trigger_file = "array_triggers.dat"
-        with open(model_path / array_trigger_file, "w", encoding="utf-8") as file:
+        array_triggers_file = "array_triggers.dat"
+        with open(model_path / array_triggers_file, "w", encoding="utf-8") as file:
             file.write("# Array trigger definition\n")
             file.writelines(f"{line}\n" for line in trigger_lines.values())
 
-        return array_trigger_file
+        return array_triggers_file
 
-    def _get_array_trigger_for_telescope_type(self, array_triggers, telescope_type):
+    def _get_array_triggers_for_telescope_type(self, array_triggers, telescope_type):
         """
         Get array trigger for a specific telescope type.
 
