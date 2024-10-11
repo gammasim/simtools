@@ -66,7 +66,7 @@ jobs:
 
       - name: Install mamba dependencies
         if: matrix.install-method == 'mamba'
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
           create-args: python=${{ matrix.python-version }}
@@ -102,7 +102,7 @@ jobs:
             --cov --cov-report=xml
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v2.3.0
+      - uses: SonarSource/sonarqube-scan-action@v3.0.0
         if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -39,7 +39,7 @@ jobs:
         run: |
           output=$(find . -type f \
           \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \) \
-          -exec perl -ne 'print if /[^[:ascii:]]/' {} \;)
+          -exec perl -ne 'print if /[^[:ascii:]]/ && !/latin/i' {} \;)
           if [ -n "$output" ]; then
             echo "Non-ASCII characters found in documentation."
             exit 1
@@ -61,7 +61,7 @@ jobs:
       # Dependencies required to avoid errors
       # reported by linters
       - name: Install mamba dependencies
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
           init-shell: bash

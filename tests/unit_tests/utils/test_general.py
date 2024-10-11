@@ -62,7 +62,7 @@ def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) ->
 
 
 def test_collect_dict_from_url(io_handler) -> None:
-    _file = "tests/resources/test_parameters.yml"
+    _file = "tests/resources/num_gains.schema.yml"
     _reference_dict = gen.collect_data_from_file_or_dict(_file, None)
 
     _url = url_simtools
@@ -119,15 +119,6 @@ def test_get_file_age(tmp_test_directory) -> None:
     # Ensure that the function raises FileNotFoundError for a non-existent file
     with pytest.raises(FileNotFoundError):
         gen.get_file_age(tmp_test_directory / "nonexistent_file.txt")
-
-
-def test_separate_args_and_config_data() -> None:
-    # Test the function "separate_args_and_config_data"
-    expected_args = ["arg1", "arg2"]
-    kwargs = {"arg1": 1, "arg2": 2, "arg3": 3}
-    args, config_data = gen.separate_args_and_config_data(expected_args, **kwargs)
-    assert args == {"arg1": 1, "arg2": 2}
-    assert config_data == {"arg3": 3}
 
 
 def test_get_log_excerpt(tmp_test_directory) -> None:
@@ -379,7 +370,7 @@ def test_collect_data_dict_from_json():
 
 
 def test_collect_data_from_http():
-    _file = "tests/resources/test_parameters.yml"
+    _file = "tests/resources/num_gains.schema.yml"
     url = url_simtools
 
     data = gen.collect_data_from_http(url + _file)
@@ -609,3 +600,36 @@ def test_convert_string_to_list():
     # import for list of dimensionless entries in database
     assert gen.convert_string_to_list(",") == ["", ""]
     assert gen.convert_string_to_list(" , , ") == ["", "", ""]
+
+
+def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
+    """
+    Test the read_file_encoded_in_utf_or_latin function.
+    """
+
+    # Test with a UTF-8 encoded file.
+    utf8_file = tmp_test_directory / "utf8_file.txt"
+    utf8_content = "This is a UTF-8 encoded file.\n"
+    with open(utf8_file, "w", encoding="utf-8") as file:
+        file.write(utf8_content)
+    lines = gen.read_file_encoded_in_utf_or_latin(utf8_file)
+    assert lines == [utf8_content]
+
+    # Test with a Latin-1 encoded file.
+    latin1_file = tmp_test_directory / "latin1_file.txt"
+    latin1_content = "This is a Latin-1 encoded file with latin character ñ.\n"
+    with open(latin1_file, "w", encoding="latin-1") as file:
+        file.write(latin1_content)
+    with caplog.at_level(logging.DEBUG):
+        lines = gen.read_file_encoded_in_utf_or_latin(latin1_file)
+        assert lines == [latin1_content]
+        assert "Unable to decode file using UTF-8. Trying Latin-1." in caplog.text
+
+    # I could not find a way to create a file that cannot be decoded with Latin-1
+    # and raises a UnicodeDecodeError. I left the raise statement in the function
+    # in case we ever encounter such a file, but I cannot test it here.
+
+    # Test with a non-existent file.
+    non_existent_file = tmp_test_directory / "non_existent_file.txt"
+    with pytest.raises(FileNotFoundError):
+        gen.read_file_encoded_in_utf_or_latin(non_existent_file)

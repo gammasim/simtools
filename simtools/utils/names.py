@@ -77,7 +77,7 @@ def site_parameters():
 
 
 def telescope_parameters():
-    return load_model_parameters(class_key_list=("Structure", "Camera"))
+    return load_model_parameters(class_key_list=("Structure", "Camera", "Telescope"))
 
 
 def validate_array_element_id_name(name):
@@ -165,6 +165,23 @@ def _validate_name(name, all_names):
 
     msg = f"Invalid name {name}"
     raise ValueError(msg)
+
+
+def validate_array_element_type(name):
+    """
+    Validate array element type (e.g., LSTN, MSTN).
+
+    Parameters
+    ----------
+    name: str
+        Array element type.
+
+    Returns
+    -------
+    str
+        Validated name.
+    """
+    return _validate_name(name, array_elements())
 
 
 def validate_array_element_name(name):

@@ -146,11 +146,11 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
     telescope_copy._load_parameters_from_db()
-    mock_db.assert_called_once()
+    assert mock_db.call_count == 2
 
     telescope_copy.db = None
     telescope_copy._load_parameters_from_db()
-    not mock_db.assert_called_once()
+    assert mock_db.call_count == 2
 
 
 def test_extra_labels(telescope_model_lst):
@@ -168,7 +168,7 @@ def test_get_simtel_parameters(telescope_model_lst):
 
 
 def test_change_parameter(telescope_model_lst):
-    tel_model = telescope_model_lst
+    tel_model = copy.deepcopy(telescope_model_lst)
 
     logger.info(f"Old camera_pixels:{tel_model.get_parameter_value('camera_pixels')}")
     tel_model.change_parameter("camera_pixels", 9999)
@@ -340,3 +340,26 @@ def test_get_config_file(telescope_model_lst, mocker):
     telescope_copy._is_config_file_up_to_date = False
     telescope_copy.get_config_file(no_export=True)
     not mock_export.assert_called_once()
+
+
+def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_model_lst, mocker):
+    model_directory = Path("test_model_directory")
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+
+    mock_db_export = mocker.patch.object(DatabaseHandler, "export_model_files")
+    mock_simulation_config_parameters = {
+        "simtel": {"correct_nsb_spectrum_to_telescope_altitude": {"value": "test_value"}}
+    }
+    telescope_copy._simulation_config_parameters = mock_simulation_config_parameters
+
+    telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(model_directory)
+
+    mock_db_export.assert_called_once_with(
+        {
+            "nsb_spectrum_at_2200m": {
+                "value": "test_value",
+                "file": True,
+            }
+        },
+        model_directory,
+    )
