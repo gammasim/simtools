@@ -1,12 +1,14 @@
 """Retrieval of array elements from the database."""
 
-from functools import cache
+from functools import lru_cache
 
 from pymongo import ASCENDING
 
+from simtools.utils import names
 
-@cache
-def get_array_elements(db, model_version, collection):
+
+@lru_cache
+def get_array_elements(db_collection, model_version):
     """
     Get all array element names and their design model for a given DB collection.
 
@@ -15,12 +17,10 @@ def get_array_elements(db, model_version, collection):
 
     Parameters
     ----------
-    db: DBHandler
-        Instance of the database handler
+    db_collection:
+        pymongo.collection.Collection
     model_version: str
        Model version.
-    collection: str
-        Database collection (e.g., telescopes, calibration_devices)
 
     Returns
     -------
@@ -35,9 +35,7 @@ def get_array_elements(db, model_version, collection):
         If array element entry in the database is incomplete.
 
     """
-    db_collection = db.get_collection(db_name=None, collection_name=collection)
-
-    query = {"version": db.model_version(model_version)}
+    query = {"version": model_version}
     results = db_collection.find(query, {"instrument": 1, "value": 1, "parameter": 1}).sort(
         "instrument", ASCENDING
     )
@@ -51,7 +49,7 @@ def get_array_elements(db, model_version, collection):
             raise KeyError(f"Incomplete array element entry in the database: {doc}.") from exc
 
     if len(_all_available_array_elements) == 0:
-        raise ValueError(f"No array elements found in DB collection {collection}.")
+        raise ValueError(f"No array elements found in DB collection {db_collection}.")
 
     return _all_available_array_elements
 
@@ -62,6 +60,7 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
 
     Return a list of array element names to be used for querying the database for a given array
     element. This is in most cases the array element itself and its design model.
+    In cases of no design model available, the design model of the array element is returned.
 
     Parameters
     ----------
@@ -80,7 +79,13 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
         List of array element model names as used in the DB.
 
     """
-    _available_array_elements = get_array_elements(db, model_version, collection)
+    try:
+        _available_array_elements = get_array_elements(
+            db.get_collection(db_name=None, collection_name=collection),
+            db.model_version(model_version),
+        )
+    except ValueError:
+        return [names.get_array_element_type_from_name(array_element_name) + "-design"]
     try:
         return [_available_array_elements[array_element_name], array_element_name]
     except KeyError:
@@ -89,7 +94,7 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
     if array_element_name in _available_array_elements.values():
         return [array_element_name]
 
-    raise ValueError(f"Array element ({array_element_name}) not found in DB.")
+    raise ValueError(f"Array element {array_element_name} not found in DB.")
 
 
 def get_array_elements_of_type(array_element_type, db, model_version, collection):
@@ -116,7 +121,10 @@ def get_array_elements_of_type(array_element_type, db, model_version, collection
         Sorted list of all array element names found in collection
 
     """
-    _available_array_elements = get_array_elements(db, model_version, collection)
+    _available_array_elements = get_array_elements(
+        db.get_collection(db_name=None, collection_name=collection),
+        db.model_version(model_version),
+    )
     return sorted(
         [entry for entry in _available_array_elements if entry.startswith(array_element_type)]
     )
