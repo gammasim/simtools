@@ -62,7 +62,7 @@ def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) ->
 
 
 def test_collect_dict_from_url(io_handler) -> None:
-    _file = "tests/resources/test_parameters.yml"
+    _file = "tests/resources/num_gains.schema.yml"
     _reference_dict = gen.collect_data_from_file_or_dict(_file, None)
 
     _url = url_simtools
@@ -119,15 +119,6 @@ def test_get_file_age(tmp_test_directory) -> None:
     # Ensure that the function raises FileNotFoundError for a non-existent file
     with pytest.raises(FileNotFoundError):
         gen.get_file_age(tmp_test_directory / "nonexistent_file.txt")
-
-
-def test_separate_args_and_config_data() -> None:
-    # Test the function "separate_args_and_config_data"
-    expected_args = ["arg1", "arg2"]
-    kwargs = {"arg1": 1, "arg2": 2, "arg3": 3}
-    args, config_data = gen.separate_args_and_config_data(expected_args, **kwargs)
-    assert args == {"arg1": 1, "arg2": 2}
-    assert config_data == {"arg3": 3}
 
 
 def test_get_log_excerpt(tmp_test_directory) -> None:
@@ -379,7 +370,7 @@ def test_collect_data_dict_from_json():
 
 
 def test_collect_data_from_http():
-    _file = "tests/resources/test_parameters.yml"
+    _file = "tests/resources/num_gains.schema.yml"
     url = url_simtools
 
     data = gen.collect_data_from_http(url + _file)
