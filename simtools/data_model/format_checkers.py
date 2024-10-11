@@ -28,8 +28,8 @@ def check_array_element(element):
     return True
 
 
-@format_checker.checks("array_trigger_name", raises=ValueError)
-def check_array_trigger_name(name):
+@format_checker.checks("array_triggers_name", raises=ValueError)
+def check_array_triggers_name(name):
     """Validate array trigger names for jsonschema."""
     pattern = r"(.*)(?=_single_telescope|_array)"
     if not re.match(pattern, name):

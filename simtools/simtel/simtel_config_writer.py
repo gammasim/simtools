@@ -2,7 +2,9 @@
 """Configuration file writer for sim_telarray."""
 
 import logging
+from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
@@ -61,6 +63,10 @@ class SimtelConfigWriter:
             Simulation software configuration parameters
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
+
+        if config_parameters:
+            parameters.update(config_parameters)
+
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
@@ -71,10 +77,9 @@ class SimtelConfigWriter:
             )
             file.write("#endif\n\n")
 
-            if config_parameters:
-                parameters.update(config_parameters)
-
             for _simtel_name, value in parameters.items():
+                if _simtel_name.startswith("array_trigger"):
+                    continue  # array trigger is a site parameter, not a telescope parameter
                 if _simtel_name:
                     file.write(f"{_simtel_name} = {self._get_value_string_for_simtel(value)}\n")
             _config_meta = self._get_simtel_metadata("telescope")
@@ -170,7 +175,9 @@ class SimtelConfigWriter:
             file.write(self.TAB + "echo *****************************\n\n")
 
             # Writing site parameters
-            self._write_site_parameters(file, site_model)
+            self._write_site_parameters(
+                file, site_model, Path(config_file_path).parent, telescope_model
+            )
 
             # Maximum telescopes
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
@@ -268,7 +275,7 @@ class SimtelConfigWriter:
         header += f"{comment_char}\n"
         file.write(header)
 
-    def _write_site_parameters(self, file, site_model):
+    def _write_site_parameters(self, file, site_model, model_path, telescope_model):
         """
         Write site parameters.
 
@@ -278,6 +285,10 @@ class SimtelConfigWriter:
             File to write on.
         site_model: SiteModel
             Site model.
+        model_path: Path
+            Path to the model for writing of additional files.
+        telescope_model: dict of TelescopeModel
+            Telescope models.
         """
         file.write(self.TAB + "% Site parameters\n")
         _site_parameters = site_model.get_simtel_parameters()
@@ -288,9 +299,109 @@ class SimtelConfigWriter:
                 search_telescope_parameters=False,
                 search_site_parameters=True,
             )
+            _simtel_name, value = self._convert_model_parameters_to_simtel_format(
+                _simtel_name, value, model_path, telescope_model
+            )
             if _simtel_name is not None:
                 file.write(f"{self.TAB}{_simtel_name} = {value}\n")
         _simtel_meta = self._get_simtel_metadata("site")
         for _simtel_name, value in _simtel_meta.items():
             file.write(f"{self.TAB}{_simtel_name} = {value}\n")
         file.write("\n")
+
+    def _convert_model_parameters_to_simtel_format(
+        self, simtel_name, value, model_path, telescope_model
+    ):
+        """
+        Convert model parameter value to simtel format.
+
+        This might involve format or unit conversion and writing to a parameter file.
+
+        Parameters
+        ----------
+        simtel_name: str
+            Parameter name.
+        value: any
+            Value to convert.
+        model_path: Path
+            Path to the model for writing of additional files.
+        telescope_model: dict of TelescopeModel
+            Telescope models.
+
+        Returns
+        -------
+        str, any
+            Converted parameter name and value.
+        """
+        conversion_dict = {
+            "array_triggers": self._write_array_triggers_file,
+        }
+        try:
+            value = conversion_dict[simtel_name](value, model_path, telescope_model)
+        except KeyError:
+            pass
+        return simtel_name, value
+
+    def _write_array_triggers_file(self, array_triggers, model_path, telescope_model):
+        """
+        Write array trigger definition file in simtel format.
+
+        Parameters
+        ----------
+        array_triggers: dict
+            Array trigger definitions.
+        model_path: Path
+            Path to the model for writing of additional files.
+        telescope_model: dict of TelescopeModel
+            Telescope models.
+        """
+        trigger_per_telescope_type = {}
+        for count, tel_name in enumerate(telescope_model.keys()):
+            telescope_type = names.get_array_element_type_from_name(tel_name)
+            trigger_per_telescope_type.setdefault(telescope_type, []).append(count + 1)
+
+        trigger_lines = {}
+        for tel_type, tel_list in trigger_per_telescope_type.items():
+            trigger_dict = self._get_array_triggers_for_telescope_type(array_triggers, tel_type)
+            trigger_lines[tel_type] = f"Trigger {trigger_dict['multiplicity']['value']} of "
+            trigger_lines[tel_type] += ", ".join(map(str, tel_list))
+            if all(trigger_dict["width"][key] is not None for key in ["value", "unit"]):
+                width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to(
+                    "ns"
+                )
+                trigger_lines[tel_type] += f" width {width}"
+            if trigger_dict.get("hard_stereo"):
+                trigger_lines[tel_type] += " hard_stereo"
+            if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
+                min_sep = trigger_dict["min_separation"]["value"] * u.Unit(
+                    trigger_dict["min_separation"]["unit"]
+                ).to("m")
+                trigger_lines[tel_type] += f" minsep {min_sep}"
+
+        array_triggers_file = "array_triggers.dat"
+        with open(model_path / array_triggers_file, "w", encoding="utf-8") as file:
+            file.write("# Array trigger definition\n")
+            file.writelines(f"{line}\n" for line in trigger_lines.values())
+
+        return array_triggers_file
+
+    def _get_array_triggers_for_telescope_type(self, array_triggers, telescope_type):
+        """
+        Get array trigger for a specific telescope type.
+
+        Parameters
+        ----------
+        array_triggers: dict
+            Array trigger definitions.
+        telescope_type: str
+            Telescope type.
+
+        Returns
+        -------
+        dict
+            Array trigger for the telescope type.
+        """
+        for trigger_dict in array_triggers:
+            if trigger_dict["name"] == telescope_type + "_array":
+                return trigger_dict
+        return None
