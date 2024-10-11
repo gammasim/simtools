@@ -94,7 +94,7 @@ def get_array_element_list_for_db_query(array_element_name, db, model_version, c
     if array_element_name in _available_array_elements.values():
         return [array_element_name]
 
-    raise ValueError(f"Array element ({array_element_name}) not found in DB.")
+    raise ValueError(f"Array element {array_element_name} not found in DB.")
 
 
 def get_array_elements_of_type(array_element_type, db, model_version, collection):
