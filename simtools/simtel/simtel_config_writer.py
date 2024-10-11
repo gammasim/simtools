@@ -48,7 +48,6 @@ class SimtelConfigWriter:
         self._label = label
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
-        self.array_trigger_file = None
 
     def write_telescope_config_file(self, config_file_path, parameters, config_parameters=None):
         """
@@ -80,9 +79,8 @@ class SimtelConfigWriter:
 
             for _simtel_name, value in parameters.items():
                 if _simtel_name.startswith("array_trigger"):
-                    if self.array_trigger_file is not None:
-                        file.write(f"array_triggers = {self.array_trigger_file}\n")
-                elif _simtel_name:
+                    continue  # array trigger is a site parameter, not a telescope parameter
+                if _simtel_name:
                     file.write(f"{_simtel_name} = {self._get_value_string_for_simtel(value)}\n")
             _config_meta = self._get_simtel_metadata("telescope")
             for _simtel_name, value in _config_meta.items():
@@ -381,12 +379,12 @@ class SimtelConfigWriter:
                 ).to("m")
                 trigger_lines[tel_type] += f" minsep {min_sep}"
 
-        self.array_trigger_file = "array_triggers.dat"
-        with open(model_path / self.array_trigger_file, "w", encoding="utf-8") as file:
+        array_trigger_file = "array_triggers.dat"
+        with open(model_path / array_trigger_file, "w", encoding="utf-8") as file:
             file.write("# Array trigger definition\n")
             file.writelines(f"{line}\n" for line in trigger_lines.values())
 
-        return self.array_trigger_file
+        return array_trigger_file
 
     def _get_array_trigger_for_telescope_type(self, array_triggers, telescope_type):
         """
