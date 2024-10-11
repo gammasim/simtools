@@ -99,6 +99,16 @@ def test_validate_site_name(invalid_name):
         names.validate_site_name("Not a site")
 
 
+def test_validate_array_element_type(invalid_name):
+    assert "LSTN" == names.validate_array_element_type("LSTN")
+    assert "ILLS" == names.validate_array_element_type("ILLS")
+
+    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
+        names.validate_array_element_type("Not a type")
+    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
+        names.validate_array_element_type("LSTN-01")
+
+
 def test_validate_array_element_name(invalid_name):
     telescopes = {
         "LSTN-Design": "LSTN-design",
