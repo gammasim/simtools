@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_writer &#8212; simtools v0.1.dev1+gad0a0d5 Manual</title>
+    <title>simtel.simtel_config_writer &#8212; simtools v0.1.dev1+g3f9c521 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c5a3a84e"></script>
+    <script src="../../_static/documentation_options.js?v=f4ad7d7a"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gad0a0d5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3f9c521 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -379,7 +379,9 @@ document.write(`
 <span class="sd">&quot;&quot;&quot;Configuration file writer for sim_telarray.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
@@ -442,6 +444,10 @@ document.write(`
 <span class="sd">            Simulation software configuration parameters</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing telescope config file </span><span class="si">{</span><span class="n">config_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config_parameters</span><span class="p">:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">config_parameters</span><span class="p">)</span>
+
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_write_header</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;TELESCOPE CONFIGURATION FILE&quot;</span><span class="p">)</span>
 
@@ -452,10 +458,9 @@ document.write(`
             <span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#endif</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">config_parameters</span><span class="p">:</span>
-                <span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">config_parameters</span><span class="p">)</span>
-
             <span class="k">for</span> <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">_simtel_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;array_trigger&quot;</span><span class="p">):</span>
+                    <span class="k">continue</span>  <span class="c1"># array trigger is a site parameter, not a telescope parameter</span>
                 <span class="k">if</span> <span class="n">_simtel_name</span><span class="p">:</span>
                     <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value_string_for_simtel</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">_config_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_metadata</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">)</span>
@@ -554,7 +559,9 @@ document.write(`
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;echo *****************************</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="c1"># Writing site parameters</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_write_site_parameters</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_site_parameters</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">telescope_model</span>
+            <span class="p">)</span>
 
             <span class="c1"># Maximum telescopes</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;maximum_telescopes = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -656,7 +663,7 @@ document.write(`
         <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_write_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_write_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write site parameters.</span>
 
@@ -666,6 +673,10 @@ document.write(`
 <span class="sd">            File to write on.</span>
 <span class="sd">        site_model: SiteModel</span>
 <span class="sd">            Site model.</span>
+<span class="sd">        model_path: Path</span>
+<span class="sd">            Path to the model for writing of additional files.</span>
+<span class="sd">        telescope_model: dict of TelescopeModel</span>
+<span class="sd">            Telescope models.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;% Site parameters</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">_site_parameters</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_simtel_parameters</span><span class="p">()</span>
@@ -676,12 +687,112 @@ document.write(`
                 <span class="n">search_telescope_parameters</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">search_site_parameters</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>
+                <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="n">_simtel_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">_simtel_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_metadata</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_simtel_meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">simtel_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert model parameter value to simtel format.</span>
+
+<span class="sd">        This might involve format or unit conversion and writing to a parameter file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simtel_name: str</span>
+<span class="sd">            Parameter name.</span>
+<span class="sd">        value: any</span>
+<span class="sd">            Value to convert.</span>
+<span class="sd">        model_path: Path</span>
+<span class="sd">            Path to the model for writing of additional files.</span>
+<span class="sd">        telescope_model: dict of TelescopeModel</span>
+<span class="sd">            Telescope models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str, any</span>
+<span class="sd">            Converted parameter name and value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">conversion_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;array_triggers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_array_triggers_file</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">conversion_dict</span><span class="p">[</span><span class="n">simtel_name</span><span class="p">](</span><span class="n">value</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">simtel_name</span><span class="p">,</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">_write_array_triggers_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write array trigger definition file in simtel format.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array_triggers: dict</span>
+<span class="sd">            Array trigger definitions.</span>
+<span class="sd">        model_path: Path</span>
+<span class="sd">            Path to the model for writing of additional files.</span>
+<span class="sd">        telescope_model: dict of TelescopeModel</span>
+<span class="sd">            Telescope models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">trigger_per_telescope_type</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="n">tel_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">telescope_type</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">tel_name</span><span class="p">)</span>
+            <span class="n">trigger_per_telescope_type</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">telescope_type</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">trigger_lines</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">tel_type</span><span class="p">,</span> <span class="n">tel_list</span> <span class="ow">in</span> <span class="n">trigger_per_telescope_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">trigger_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_triggers_for_telescope_type</span><span class="p">(</span><span class="n">array_triggers</span><span class="p">,</span> <span class="n">tel_type</span><span class="p">)</span>
+            <span class="n">trigger_lines</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Trigger </span><span class="si">{</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s1">&#39;multiplicity&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> of &quot;</span>
+            <span class="n">trigger_lines</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">tel_list</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">]):</span>
+                <span class="n">width</span> <span class="o">=</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+                    <span class="s2">&quot;ns&quot;</span>
+                <span class="p">)</span>
+                <span class="n">trigger_lines</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; width </span><span class="si">{</span><span class="n">width</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">trigger_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hard_stereo&quot;</span><span class="p">):</span>
+                <span class="n">trigger_lines</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">&quot; hard_stereo&quot;</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;min_separation&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">]):</span>
+                <span class="n">min_sep</span> <span class="o">=</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;min_separation&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span>
+                    <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;min_separation&quot;</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+                <span class="n">trigger_lines</span><span class="p">[</span><span class="n">tel_type</span><span class="p">]</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; minsep </span><span class="si">{</span><span class="n">min_sep</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">array_triggers_file</span> <span class="o">=</span> <span class="s2">&quot;array_triggers.dat&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">model_path</span> <span class="o">/</span> <span class="n">array_triggers_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Array trigger definition</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">trigger_lines</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">array_triggers_file</span>
+
+    <span class="k">def</span> <span class="nf">_get_array_triggers_for_telescope_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">telescope_type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get array trigger for a specific telescope type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        array_triggers: dict</span>
+<span class="sd">            Array trigger definitions.</span>
+<span class="sd">        telescope_type: str</span>
+<span class="sd">            Telescope type.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Array trigger for the telescope type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">trigger_dict</span> <span class="ow">in</span> <span class="n">array_triggers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">trigger_dict</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">telescope_type</span> <span class="o">+</span> <span class="s2">&quot;_array&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">trigger_dict</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 </pre></div>
 
