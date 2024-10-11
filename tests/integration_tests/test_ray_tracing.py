@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
-import gzip
 import logging
 from copy import copy
-from pathlib import Path
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -19,11 +17,6 @@ logger.setLevel(logging.DEBUG)
 @pytest.mark.parametrize("telescope_model_name", ["SSTS-design"])
 def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler, model_version):
     # Test with 3 SSTs
-    config_data = {
-        "source_distance": 10 * u.km,
-        "zenith_angle": 20 * u.deg,
-        "off_axis_angle": [0, 1.0, 2.0, 3.0, 4.0] * u.deg,
-    }
     tel = TelescopeModel(
         site="south",
         telescope_name=telescope_model_name,
@@ -32,22 +25,25 @@ def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler, 
         mongo_db_config=db_config,
     )
 
-    ray = RayTracing(telescope_model=tel, simtel_path=simtel_path_no_mock, config_data=config_data)
+    ray = RayTracing(
+        telescope_model=tel,
+        simtel_path=simtel_path_no_mock,
+        zenith_angle=20.0 * u.deg,
+        source_distance=10.0 * u.km,
+        off_axis_angle=[0, 1.0, 2.0, 3.0, 4.0] * u.deg,
+    )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
 
 
 def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
-    config_data = {
-        "source_distance": 10 * u.km,
-        "zenith_angle": 20 * u.deg,
-        "off_axis_angle": [0, 2.5, 5.0] * u.deg,
-    }
 
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         simtel_path=simtel_path_no_mock,
-        config_data=config_data,
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+        off_axis_angle=[0, 2.5, 5.0] * u.deg,
     )
 
     ray.simulate(test=True, force=True)
@@ -82,16 +78,12 @@ def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
 
 
 def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_sst):
-    config_data = {
-        "source_distance": 10 * u.km,
-        "zenith_angle": 20 * u.deg,
-        "off_axis_angle": [0, 2.5, 5.0] * u.deg,
-    }
-
     ray = RayTracing(
         telescope_model=telescope_model_sst,
         simtel_path=simtel_path_no_mock,
-        config_data=config_data,
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+        off_axis_angle=[0, 2.5, 5.0] * u.deg,
     )
 
     ray.simulate(test=True, force=True)
@@ -112,12 +104,12 @@ def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_
 
 def test_single_mirror(db_config, simtel_path_no_mock, io_handler, telescope_model_mst, plot=False):
     """Test MST, single mirror PSF simulation"""
-    config_data = {"mirror_numbers": list(range(1, 5)), "single_mirror_mode": True}
 
     ray = RayTracing(
         telescope_model=telescope_model_mst,
         simtel_path=simtel_path_no_mock,
-        config_data=config_data,
+        mirror_numbers=list(range(1, 5)),
+        single_mirror_mode=True,
     )
     ray.simulate(test=True, force=True)
     ray.analyze(force=True)
@@ -133,16 +125,12 @@ def test_single_mirror(db_config, simtel_path_no_mock, io_handler, telescope_mod
 
 
 def test_integral_curve(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
-    config_data = {
-        "source_distance": 10 * u.km,
-        "zenith_angle": 20 * u.deg,
-        "off_axis_angle": [0] * u.deg,
-    }
-
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         simtel_path=simtel_path_no_mock,
-        config_data=config_data,
+        zenith_angle=20 * u.deg,
+        source_distance=10 * u.km,
+        off_axis_angle=[0] * u.deg,
     )
 
     ray.simulate(test=True, force=True)
@@ -157,34 +145,3 @@ def test_integral_curve(db_config, simtel_path_no_mock, io_handler, telescope_mo
         im.plot_cumulative(color="b")
     plot_file = io_handler.get_output_file(file_name="test_cumulative_psf.pdf", sub_dir="plots")
     plt.savefig(plot_file)
-
-
-def test_process_rx(
-    simtel_path_no_mock, io_handler, telescope_model_lst, tmp_test_directory, caplog
-):
-    """
-    Test the process_rx method of the RayTracing class with an empty file
-    and a non-existing file
-    """
-
-    config_data = {
-        "source_distance": 10 * u.km,
-        "zenith_angle": 20 * u.deg,
-        "off_axis_angle": [0, 0] * u.deg,
-    }
-
-    ray = RayTracing(
-        telescope_model=telescope_model_lst,
-        simtel_path=simtel_path_no_mock,
-        config_data=config_data,
-        label="empty_file",
-    )
-    empty_file = tmp_test_directory / "empty_file.gz"
-    with gzip.open(empty_file, "wb"):
-        assert Path(empty_file).is_file()
-    with pytest.raises(IndexError):
-        ray._process_rx(empty_file)
-    assert "Invalid output from rx" in caplog.text
-    with pytest.raises(FileNotFoundError):
-        ray._process_rx(file=tmp_test_directory / "non_existing_file.gz")
-    assert "Photon list file not found" in caplog.text
