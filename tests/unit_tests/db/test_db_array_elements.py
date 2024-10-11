@@ -74,7 +74,7 @@ def test_get_array_element_list_for_db_query(db, model_version):
         "MSTS-design", db=db, model_version=model_version, collection="telescopes"
     ) == ["MSTS-design"]
 
-    with pytest.raises(ValueError, match=r"^Array element \(MSTS-301\) not found in DB."):
+    with pytest.raises(ValueError, match=r"^Array element MSTS-301 not found in DB."):
         db_array_elements.get_array_element_list_for_db_query(
             "MSTS-301", db=db, model_version=model_version, collection="calibration_devices"
         )
