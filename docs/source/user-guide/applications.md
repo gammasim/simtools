@@ -54,6 +54,9 @@ generate_default_metadata <applications/generate_default_metadata>
 generate_simtel_array_histograms <applications/generate_simtel_array_histograms>
 generate_regular_arrays <applications/generate_regular_arrays>
 plot_array_layout <applications/plot_array_layout>
+production_scale_events <applications/production_scale_events>
+production_simulation_config <applications/production_simulation_config>
+production_computing_resources <applications/production_computing_resources>
 simulate_light_emission <applications/simulate_light_emission>
 simulate_prod <applications/simulate_prod>
 submit_data_from_external <applications/submit_data_from_external>
