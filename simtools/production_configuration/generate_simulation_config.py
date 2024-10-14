@@ -20,8 +20,6 @@ Key Components:
 
 """
 
-import os
-
 import numpy as np
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
@@ -232,34 +230,3 @@ class SimulationConfig:
             The number of existing simulated events.
         """
         return np.sum(self.evaluator.data.get("simulated_event_histogram", [0]))
-
-
-if __name__ == "__main__":
-    grid_point_config = {
-        "azimuth": 45.0,
-        "elevation": 30.0,
-        "night_sky_background": 0.5,
-    }
-
-    BASE_PATH = "/Users/znb68/PD/CTA/"
-
-    # Instantiate the StatisticalErrorEvaluator class a On-source file
-    on_source_file = os.path.join(
-        BASE_PATH, "gamma_onSource.N.BL-4LSTs15MSTs-MSTN_ID0.eff-0-CUT0.fits"
-    )
-    config = SimulationConfig(
-        grid_point_config,
-        "A",
-        "high_precision",
-        on_source_file,
-        "On-source",
-        metrics={
-            "error_eff_area": 0.02,
-            "error_sig_eff_gh": 0.02,
-            "error_energy_estimate_bdt_reg_tree": 0.05,
-            "error_gamma_ray_psf": 0.01,
-            "error_image_template_methods": 0.03,
-        },
-    )
-    params = config.configure_simulation()
-    print("Simulation Parameters:", params)
