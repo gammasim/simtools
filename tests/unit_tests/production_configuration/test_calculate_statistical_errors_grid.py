@@ -3,9 +3,9 @@ import pytest
 from astropy.io import fits
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    InterpolationHandler,
     StatisticalErrorEvaluator,
 )
+from simtools.production_configuration.interpolation_handler import InterpolationHandler
 
 
 @pytest.fixture
