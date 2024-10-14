@@ -21,6 +21,20 @@ def check_astropy_unit(unit_string):
     return True
 
 
+@format_checker.checks("astropy_unit_of_time", raises=ValueError)
+def check_astropy_unit_of_time(unit_string):
+    """Validate astropy units that this is an astropy unit of time."""
+    u.Unit(unit_string).to("s")
+    return True
+
+
+@format_checker.checks("astropy_unit_of_length", raises=ValueError)
+def check_astropy_unit_of_length(unit_string):
+    """Validate astropy units that this is an astropy unit of length."""
+    u.Unit(unit_string).to("m")
+    return True
+
+
 @format_checker.checks("array_element", raises=ValueError)
 def check_array_element(element):
     """Validate array elements for jsonschema."""
