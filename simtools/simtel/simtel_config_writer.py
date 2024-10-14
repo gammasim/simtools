@@ -365,11 +365,8 @@ class SimtelConfigWriter:
             trigger_dict = self._get_array_triggers_for_telescope_type(array_triggers, tel_type)
             trigger_lines[tel_type] = f"Trigger {trigger_dict['multiplicity']['value']} of "
             trigger_lines[tel_type] += ", ".join(map(str, tel_list))
-            if all(trigger_dict["width"][key] is not None for key in ["value", "unit"]):
-                width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to(
-                    "ns"
-                )
-                trigger_lines[tel_type] += f" width {width}"
+            width = trigger_dict["width"]["value"] * u.Unit(trigger_dict["width"]["unit"]).to("ns")
+            trigger_lines[tel_type] += f" width {width}"
             if trigger_dict.get("hard_stereo"):
                 trigger_lines[tel_type] += " hard_stereo"
             if all(trigger_dict["min_separation"][key] is not None for key in ["value", "unit"]):
