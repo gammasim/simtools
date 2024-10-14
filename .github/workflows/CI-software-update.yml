@@ -13,12 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install pylint # pre-commit uses local pylint
+      - name: Install packages (as pre-commit is running on all files after autoupdate)
         run: |
+          pip install -e '.[tests,dev,doc]'
           pip install pylint
 
       - uses: browniebroke/pre-commit-autoupdate-action@main
