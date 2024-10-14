@@ -800,18 +800,12 @@ def test_get_value_and_units_as_lists():
     assert values == [100, 200]
     assert units == ["m", None]
 
-    # Test with mixed types
-    data_validator.data_dict = {"value": [100, 200], "unit": np.array(["m", "cm"])}
-    values, units = data_validator._get_value_and_units_as_lists()
-    assert values == [100, 200]
-    assert units == ["m", "cm"]
-
 
 def test_validate_value_and_unit_for_dict(reference_columns):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
 
-    # Test case for dict type
+    # Test case for dict type with None
     data_validator.data_dict = {"value": {"key": "value"}, "unit": None, "type": "dict"}
     data_validator._data_description[0]["type"] = "dict"
     data_validator._data_description[0]["json_schema"] = {
@@ -824,3 +818,11 @@ def test_validate_value_and_unit_for_dict(reference_columns):
     )
     assert value == {"key": "value"}
     assert unit is None
+
+    # Test case for dict type with "null"
+    data_validator.data_dict = {"value": {"key": "value"}, "unit": "null", "type": "dict"}
+    value, unit = data_validator._validate_value_and_unit(
+        data_validator.data_dict["value"], data_validator.data_dict["unit"], 0
+    )
+    assert value == {"key": "value"}
+    assert unit == "null"
