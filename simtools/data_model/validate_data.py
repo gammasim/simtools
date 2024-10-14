@@ -183,10 +183,15 @@ class DataValidator:
             if isinstance(self.data_dict["unit"], list | np.ndarray)
             else [self.data_dict["unit"]]
         )
-        if isinstance(value_as_list, np.ndarray):
+        try:
             value_as_list = value_as_list.tolist()
-        if isinstance(unit_as_list, np.ndarray):
+        except AttributeError:
+            pass
+        try:
             unit_as_list = unit_as_list.tolist()
+        except AttributeError:
+            pass
+
         unit_as_list = [None if unit == "null" else unit for unit in unit_as_list]
 
         return value_as_list, unit_as_list
