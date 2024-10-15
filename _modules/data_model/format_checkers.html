@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.format_checkers &#8212; simtools v0.1.dev1+g34e2524 Manual</title>
+    <title>data_model.format_checkers &#8212; simtools v0.1.dev1+gc9429f2 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=fcd66fb7"></script>
+    <script src="../../_static/documentation_options.js?v=6d6013ee"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g34e2524 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc9429f2 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -389,7 +389,7 @@ document.write(`
 
 <div class="viewcode-block" id="check_astropy_unit">
 <a class="viewcode-back" href="../../api-reference/data_model.html#data_model.format_checkers.check_astropy_unit">[docs]</a>
-<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;astropy_unit&quot;</span><span class="p">,</span> <span class="n">raises</span><span class="o">=</span><span class="ne">ValueError</span><span class="p">)</span>
+<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;astropy_unit&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">check_astropy_unit</span><span class="p">(</span><span class="n">unit_string</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate astropy units (including dimensionless) for jsonschema.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
@@ -401,9 +401,29 @@ document.write(`
 
 
 
+<div class="viewcode-block" id="check_astropy_unit_of_time">
+<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.format_checkers.check_astropy_unit_of_time">[docs]</a>
+<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;astropy_unit_of_time&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">check_astropy_unit_of_time</span><span class="p">(</span><span class="n">unit_string</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate astropy units that this is an astropy unit of time.&quot;&quot;&quot;</span>
+    <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit_string</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="check_astropy_unit_of_length">
+<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.format_checkers.check_astropy_unit_of_length">[docs]</a>
+<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;astropy_unit_of_length)&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">check_astropy_unit_of_length</span><span class="p">(</span><span class="n">unit_string</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate astropy units that this is an astropy unit of length.&quot;&quot;&quot;</span>
+    <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit_string</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
 <div class="viewcode-block" id="check_array_element">
 <a class="viewcode-back" href="../../api-reference/data_model.html#data_model.format_checkers.check_array_element">[docs]</a>
-<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;array_element&quot;</span><span class="p">,</span> <span class="n">raises</span><span class="o">=</span><span class="ne">ValueError</span><span class="p">)</span>
+<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;array_element&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">check_array_element</span><span class="p">(</span><span class="n">element</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate array elements for jsonschema.&quot;&quot;&quot;</span>
     <span class="n">names</span><span class="o">.</span><span class="n">validate_array_element_name</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
@@ -413,7 +433,7 @@ document.write(`
 
 <div class="viewcode-block" id="check_array_triggers_name">
 <a class="viewcode-back" href="../../api-reference/data_model.html#data_model.format_checkers.check_array_triggers_name">[docs]</a>
-<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;array_triggers_name&quot;</span><span class="p">,</span> <span class="n">raises</span><span class="o">=</span><span class="ne">ValueError</span><span class="p">)</span>
+<span class="nd">@format_checker</span><span class="o">.</span><span class="n">checks</span><span class="p">(</span><span class="s2">&quot;array_triggers_name&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">check_array_triggers_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate array trigger names for jsonschema.&quot;&quot;&quot;</span>
     <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(.*)(?=_single_telescope|_array)&quot;</span>
