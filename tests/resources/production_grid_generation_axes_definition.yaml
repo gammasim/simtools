@@ -1,0 +1,25 @@
+- name: energy
+  range: [1e9, 1e14]
+  binning: 10
+  scaling: log
+  distribution: uniform
+- name: azimuth
+  range: [70, 80]
+  binning: 3
+  scaling: linear
+  distribution: uniform
+- name: zenith_angle
+  range: [20, 30]
+  binning: 3
+  scaling: linear
+  distribution: uniform
+- name: night_sky_background
+  range: [5, 6]
+  binning: 2
+  scaling: linear
+  distribution: uniform
+- name: offset
+  range: [0, 10]
+  binning: 5
+  scaling: linear
+  distribution: uniform
