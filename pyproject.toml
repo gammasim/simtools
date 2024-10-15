@@ -86,6 +86,7 @@ scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regul
 scripts.simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
 scripts.simtools-production-computing_resources = "simtools.applications.production_computing_resources:main"
+scripts.simtools-production-grid-generation = "simtools.applications.production_grid_generation:main"
 scripts.simtools-production-scale-events = "simtools.applications.production_scale_events:main"
 scripts.simtools-production-simulation-config = "simtools.applications.production_simulation_config:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
