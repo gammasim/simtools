@@ -30,7 +30,7 @@ To estimate resources, run the script from the command line as follows:
 
 .. code-block:: console
 
-    python estimate_resources.py --azimuth 60.0 --elevation 45.0 \
+    simtools-production-computing_resources --azimuth 60.0 --elevation 45.0 \
       --nsb 0.3 --site "South" --number_of_events 1e9 --lookup_file "resource_estimates.yaml"
 
 The output will show the estimated resources required for the simulation.

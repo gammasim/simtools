@@ -25,7 +25,7 @@ To evaluate statistical errors and perform interpolation, run the script from th
 
 .. code-block:: console
 
-    python statistical_error_evaluator.py --base_path /path/to/fits/ \
+    simtools-production-scale-events --base_path /path/to/fits/ \
         --zeniths 20 40 60 --offsets 0 1 2 3 4 5 --interpolate --query_point 1 180 30 0 0
 
 The output will display the scaled events for the specified grid point.
@@ -38,9 +38,9 @@ import os
 import numpy as np
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    InterpolationHandler,
     StatisticalErrorEvaluator,
 )
+from simtools.production_configuration.interpolation_handler import InterpolationHandler
 
 
 def _parse_command_line_arguments():

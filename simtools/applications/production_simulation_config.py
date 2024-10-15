@@ -32,7 +32,7 @@ To run the simulation configuration, execute the script as follows:
 
 .. code-block:: console
 
-    python configure_simulation.py --azimuth 60.0 --elevation 45.0 \
+    simtools-production-simulation-config --azimuth 60.0 --elevation 45.0 \
       --nsb 0.3 --data_level "A" --science_case "high_precision" \
       --file_path "path/to/fits_file.fits" --file_type "On-source" \
       --metrics "path/to/metrics.yaml"
