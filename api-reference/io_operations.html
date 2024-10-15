@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>I/O &#8212; simtools v0.1.dev1+gc9429f2 Manual</title>
+    <title>I/O &#8212; simtools v0.1.dev1+g9904866 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=6d6013ee"></script>
+    <script src="../_static/documentation_options.js?v=c9c7f25b"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc9429f2 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9904866 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -521,7 +521,7 @@ document.write(`
 
 <dl class="py method">
 <dt class="sig sig-object py" id="io_operations.io_handler.IOHandler.get_output_directory">
-<span class="sig-name descname"><span class="pre">get_output_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'simtools'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler.get_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler.get_output_directory" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_output_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler.get_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler.get_output_directory" title="Link to this definition">#</a></dt>
 <dd><p>Return path to output directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -529,12 +529,6 @@ document.write(`
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>
 <dt><strong>sub_dir: str</strong></dt><dd><p>Name of the subdirectory (ray-tracing, model etc)</p>
-</dd>
-<dt><strong>dir_type: str</strong></dt><dd><p>The type of directory (e.g., ‘simtools’, ‘test’, ‘simtools-result’).
-If ‘simtools-result’ is used, the output directory will be returned
-without appending a subdirectory string when using the
-use_plain_output_path option. For the cause of not using use_plain_output_path,
-output paths appended by ‘simtools-output’.</p>
 </dd>
 </dl>
 </dd>
@@ -556,7 +550,7 @@ output paths appended by ‘simtools-output’.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="io_operations.io_handler.IOHandler.get_output_file">
-<span class="sig-name descname"><span class="pre">get_output_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'simtools'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler.get_output_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler.get_output_file" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_output_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler.get_output_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler.get_output_file" title="Link to this definition">#</a></dt>
 <dd><p>Get path of an output file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -566,11 +560,6 @@ output paths appended by ‘simtools-output’.</p>
 <dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
 </dd>
 <dt><strong>sub_dir: str</strong></dt><dd><p>Name of the subdirectory (ray-tracing, model etc)</p>
-</dd>
-<dt><strong>dir_type: str</strong></dt><dd><p>Directory type (e.g., ‘simtools’, ‘test’, ‘simtools-result’)
-If ‘simtools-result’ is used, the output directory will be returned
-without appending a subdirectory string when using the
-use_plain_output_path option.</p>
 </dd>
 </dl>
 </dd>
