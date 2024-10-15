@@ -1,5 +1,5 @@
 - name: energy
-  range: [1.0e9, 1.0e14]
+  range: [1.0e+9, 1.0e+14]
   binning: 10
   scaling: log
   distribution: uniform
