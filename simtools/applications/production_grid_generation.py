@@ -33,7 +33,9 @@ To generate a grid of simulation points, execute the script as follows:
 
 .. code-block:: console
 
-    simtools-production-grid-generation --axes "path/to/axes.yaml" --data_level "B" \
+    simtools-production-grid-generation \
+      --axes  tests/resources/production_grid_generation_axes_definition.yaml\
+      --data_level "B" \
       --science_case "high_precision" --latitude 28.7622 --longitude -17.8920 \
       --height 2000 --coordinate_system "ra_dec" --observing_time "2017-09-16 00:00:00"
 
@@ -133,7 +135,6 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     axes = load_axes(args.axes)
-
     observing_location = EarthLocation(lat=args.latitude, lon=args.longitude, height=args.height)
 
     observing_time = Time(args.observing_time) if args.observing_time else Time.now()
