@@ -87,6 +87,22 @@ def test_get_parameter_value(telescope_model_lst):
 def test_get_parameter_value_with_unit(telescope_model_lst):
     tel_model = telescope_model_lst
 
+    # check handling of list of values and units including null units
+    t_1 = tel_model.get_parameter_value_with_unit("focus_offset")
+    assert isinstance(t_1, list)
+    assert isinstance(t_1[0], u.Quantity)  # list of quantities returned
+    assert t_1[0].unit == u.cm
+    assert t_1[2].unit == u.dimensionless_unscaled
+
+    # check handling of list of values with a single unit
+    t_2 = tel_model.get_parameter_value_with_unit("array_element_position_utm")
+    assert isinstance(t_2, u.Quantity)  # returns Quantity [a,b,c] with a shared unit 'm'
+    assert t_2.unit == "m"
+
+    # check handling of units with spaces in them
+    t_3 = tel_model.get_parameter_value_with_unit("teltrig_min_sigsum")
+    assert t_3.unit == "mV ns"
+
     assert isinstance(tel_model.get_parameter_value_with_unit("fadc_mhz"), u.Quantity)
     assert not isinstance(tel_model.get_parameter_value_with_unit("num_gains"), u.Quantity)
 
