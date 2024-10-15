@@ -94,9 +94,8 @@ def test_validate_schema_astropy_units(caplog):
 
     # not good
     _dict_1["data"][0]["unit"] = "not_a_unit"
-    with caplog.at_level(logging.DEBUG):
-        with pytest.raises(jsonschema.exceptions.ValidationError):
-            metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
+    with pytest.raises(ValueError, match="'not_a_unit' is not a valid Unit"):
+        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
 
 
 def test_resolve_references():
