@@ -33,77 +33,76 @@ To generate a grid of simulation points, execute the script as follows:
 
 .. code-block:: console
 
-    simtools-production-grid-generation \
+    simtools-production-grid-generation --site North --model_version "6.0.0"\
       --axes  tests/resources/production_grid_generation_axes_definition.yaml\
       --data_level "B" \
-      --science_case "high_precision" --latitude 28.7622 --longitude -17.8920 \
-      --height 2000 --coordinate_system "ra_dec" --observing_time "2017-09-16 00:00:00"
+      --science_case "high_precision" \
+      --coordinate_system "ra_dec" --observing_time "2017-09-16 00:00:00"
 
 The output will display the generated grid points and their RA/Dec coordinates
 (if applicable).
 """
 
-import argparse
 import json
 import logging
-import os
+from pathlib import Path
 
 import yaml
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
-from simtools.production_configuration.generate_production_grid import GridGeneration
+import simtools.production_configuration.generate_production_grid as gridgen
+from simtools.configuration import configurator
+from simtools.model.site_model import SiteModel
 
 
-def parse_arguments():
-    """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Generate a grid of simulation points using flexible axes definitions."
-    )
-    parser.add_argument(
+def _parse(label, description):
+    """
+    Parse command line configuration.
+
+    Parameters
+    ----------
+    label : str
+        Label describing the application.
+    description : str
+        Description of the application.
+
+    Returns
+    -------
+    CommandLineParser
+        Command line parser object.
+    """
+    config = configurator.Configurator(label=label, description=description)
+
+    config.parser.add_argument(
         "--axes",
         type=str,
         required=True,
         help="Path to a YAML or JSON file defining the grid axes.",
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--science_case", type=str, required=True, help="Science case for the grid generation."
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--coordinate_system",
         type=str,
         default="zenith_azimuth",
         help="Coordinate system ('zenith_azimuth' or 'ra_dec').",
     )
-    parser.add_argument(
-        "--latitude",
-        type=float,
-        required=True,
-        help="Latitude of the observing location (degrees).",
-    )
-    parser.add_argument(
-        "--longitude",
-        type=float,
-        required=True,
-        help="Longitude of the observing location (degrees).",
-    )
-    parser.add_argument(
-        "--height", type=float, required=True, help="Height of the observing location (meters)."
-    )
-    parser.add_argument(
+    config.parser.add_argument(
         "--observing_time",
         type=str,
-        default=None,
+        required=False,
         help="Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').",
     )
 
-    return parser.parse_args()
+    return config.initialize(db_config=True, simulation_model=["version", "site"])
 
 
-def load_axes(file_path: str) -> list[dict]:
+def load_axes(file_path: str):
     """
     Load axes definitions from a YAML or JSON file.
 
@@ -117,11 +116,11 @@ def load_axes(file_path: str) -> list[dict]:
     list[dict]
         List of axes definitions.
     """
-    if not os.path.exists(file_path):
+    if not Path(file_path).exists():
         raise FileNotFoundError(f"Axes file {file_path} not found.")
 
     with open(file_path, encoding="utf-8") as file:
-        if file_path.endswith(".yaml") or file_path.endswith(".yml"):
+        if file_path.endswith((".yaml", ".yml")):
             return yaml.safe_load(file)
         if file_path.endswith(".json"):
             return json.load(file)
@@ -130,29 +129,49 @@ def load_axes(file_path: str) -> list[dict]:
 
 def main():
     """Run the Grid Generation application."""
-    args = parse_arguments()
+    label = Path(__file__).stem
+    args_dict, db_config = _parse(
+        label,
+        "Generate a grid of simulation points using flexible axes definitions.",
+    )
 
-    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
-    axes = load_axes(args.axes)
-    observing_location = EarthLocation(lat=args.latitude, lon=args.longitude, height=args.height)
+    axes = load_axes(args_dict["axes"])
 
-    observing_time = Time(args.observing_time) if args.observing_time else Time.now()
+    site_model = SiteModel(
+        mongo_db_config=db_config,
+        model_version=args_dict["model_version"],
+        site=args_dict["site"],
+    )
 
-    grid_gen = GridGeneration(
+    ref_lat = site_model.get_parameter_value_with_unit("reference_point_latitude")
+    ref_long = site_model.get_parameter_value_with_unit("reference_point_longitude")
+    altitude = site_model.get_parameter_value_with_unit("reference_point_altitude")
+
+    observing_location = EarthLocation(lat=ref_lat, lon=ref_long, height=altitude)
+
+    observing_time = (
+        Time(args_dict["observing_time"]) if args_dict.get("observing_time") else Time.now()
+    )
+
+    grid_gen = gridgen.GridGeneration(
         axes=axes,
-        data_level=args.data_level,
-        science_case=args.science_case,
-        coordinate_system=args.coordinate_system,
+        data_level=args_dict["data_level"],
+        science_case=args_dict["science_case"],
+        coordinate_system=args_dict["coordinate_system"],
         observing_location=observing_location,
         observing_time=observing_time,
     )
 
     grid_points = grid_gen.generate_grid()
 
-    if args.coordinate_system == "ra_dec":
+    # Optionally convert to RA/Dec if requested
+    if args_dict["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
 
+    # Output grid points
     for point in grid_points:
         print(point)
 
