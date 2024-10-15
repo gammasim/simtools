@@ -163,8 +163,6 @@ class ModelParameter:
         """
         Get the value of an existing parameter of the model as an Astropy Quantity with its unit.
 
-        If no unit is provided in the model, the value is returned without a unit.
-
         Parameters
         ----------
         par_name: str
@@ -172,16 +170,30 @@ class ModelParameter:
 
         Returns
         -------
-        Astropy quantity with the value of the parameter multiplied by its unit. If no unit is \
-        provided in the model, the value is returned without a unit.
+        Astropy quantity with the value of the parameter multiplied by its unit.
+        If no unit is provided in the model, the value is returned without a unit.
 
         """
         _parameter = self._get_parameter_dict(par_name)
         _value = self.get_parameter_value(par_name, _parameter)
+
         try:
-            return _value * u.Unit(_parameter.get("unit"))
-        except (KeyError, TypeError):
-            return _value
+            _unit = [item.strip() for item in _parameter.get("unit").split(",")]
+
+            # if there is only one value or the values share one unit
+            if (isinstance(_value, (int | float))) or (len(_value) > len(_unit)):
+                return _value * u.Unit(_unit[0])
+
+            # entries with 'null' units should be returned as dimensionless
+            _astropy_units = [
+                u.Unit(item) if item != "null" else u.dimensionless_unscaled for item in _unit
+            ]
+
+            return [_value[i] * _astropy_units[i] for i in range(len(_value))]
+
+        except (KeyError, TypeError, AttributeError) as exc:
+            self._logger.debug(f"{exc} encountered, returning only value without units.")
+            return _value  # if unit is NoneType
 
     def get_parameter_type(self, par_name):
         """
