@@ -91,6 +91,8 @@ def test_get_parameter_value_with_unit(telescope_model_lst):
     t_1 = tel_model.get_parameter_value_with_unit("focus_offset")
     assert isinstance(t_1, list)
     assert isinstance(t_1[0], u.Quantity)  # list of quantities returned
+    assert t_1[0].unit == u.cm
+    assert t_1[2].unit == u.dimensionless_unscaled
 
     # check handling of list of values with a single unit
     t_2 = tel_model.get_parameter_value_with_unit("array_element_position_utm")
