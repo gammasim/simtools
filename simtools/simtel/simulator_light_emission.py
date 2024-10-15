@@ -226,6 +226,7 @@ class SimulatorLightEmission(SimtelRunner):
         x_tel, y_tel, z_tel = (
             self._telescope_model.get_parameter_value("array_element_position_ground") * u.m
         )
+        _model_directory = self.io_handler.get_output_directory(self.label, "model")
         command = f" rm {self.output_directory}/"
         command += f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n"
         command += str(self._simtel_path.joinpath("sim_telarray/LightEmission/"))
@@ -265,7 +266,7 @@ class SimulatorLightEmission(SimtelRunner):
                 )
                 command += " -a isotropic"  # angular distribution
 
-            command += f" -A {self.output_directory}/model/"
+            command += f" -A {_model_directory}/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
 
         elif self.light_source_type == "laser":
@@ -291,7 +292,7 @@ class SimulatorLightEmission(SimtelRunner):
             command += f" --telescope-phi {angle_phi}"
             command += f" --laser-theta {90-angles[2]}"
             command += f" --laser-phi {angles[3]}"  # convention north (x) towards east (-y)
-            command += f" --atmosphere {self.output_directory}/model/"
+            command += f" --atmosphere {_model_directory}/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" -o {self.output_directory}/{self.le_application[0]}.iact.gz"
         command += "\n"
@@ -351,7 +352,12 @@ class SimulatorLightEmission(SimtelRunner):
         command += super().get_config_option(
             "output_file",
             f"{self.output_directory}/"
-            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz\n",
+            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz",
+        )
+        command += super().get_config_option(
+            "histogram_file",
+            f"{self.output_directory}/"
+            f"{self.le_application[0]}_{self.le_application[1]}.ctsim.hdata\n",
         )
 
         return command

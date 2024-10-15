@@ -9,5 +9,5 @@ CTA_SIMPIPE:
     LIGHT_SOURCE_SETUP: layout
     MODEL_VERSION: 6.0.0
     LIGHT_SOURCE_TYPE: led
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     TELESCOPE_FILE: tests/resources/telescope_positions-North-ground.ecsv
