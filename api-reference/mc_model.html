@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+ga6f0eff Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g34e2524 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=4ce28356"></script>
+    <script src="../_static/documentation_options.js?v=fcd66fb7"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ga6f0eff Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g34e2524 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1304,7 +1304,6 @@ of the database structure is needed when accessing the model parameters.</p>
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_parameter_value_with_unit">
 <span class="sig-name descname"><span class="pre">get_parameter_value_with_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.get_parameter_value_with_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_parameter_value_with_unit" title="Link to this definition">#</a></dt>
 <dd><p>Get the value of an existing parameter of the model as an Astropy Quantity with its unit.</p>
-<p>If no unit is provided in the model, the value is returned without a unit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1314,7 +1313,8 @@ of the database structure is needed when accessing the model parameters.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>Astropy quantity with the value of the parameter multiplied by its unit. If no unit is         provided in the model, the value is returned without a unit.</dt><dd></dd>
+<dt>Astropy quantity with the value of the parameter multiplied by its unit.</dt><dd></dd>
+<dt>If no unit is provided in the model, the value is returned without a unit.</dt><dd></dd>
 </dl>
 </dd>
 </dl>

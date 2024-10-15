@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+ga6f0eff Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+g34e2524 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=4ce28356"></script>
+    <script src="../../_static/documentation_options.js?v=fcd66fb7"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ga6f0eff Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g34e2524 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -550,8 +550,6 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.</span>
 
-<span class="sd">        If no unit is provided in the model, the value is returned without a unit.</span>
-
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        par_name: str</span>
@@ -559,16 +557,30 @@ document.write(`
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Astropy quantity with the value of the parameter multiplied by its unit. If no unit is \</span>
-<span class="sd">        provided in the model, the value is returned without a unit.</span>
+<span class="sd">        Astropy quantity with the value of the parameter multiplied by its unit.</span>
+<span class="sd">        If no unit is provided in the model, the value is returned without a unit.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_dict</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
         <span class="n">_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">,</span> <span class="n">_parameter</span><span class="p">)</span>
+
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">_parameter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">))</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">_value</span></div>
+            <span class="n">_unit</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">_parameter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+
+            <span class="c1"># if there is only one value or the values share one unit</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)))</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">_unit</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">_unit</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="c1"># entries with &#39;null&#39; units should be returned as dimensionless</span>
+            <span class="n">_astropy_units</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span> <span class="o">!=</span> <span class="s2">&quot;null&quot;</span> <span class="k">else</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">_unit</span>
+            <span class="p">]</span>
+
+            <span class="k">return</span> <span class="p">[</span><span class="n">_value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">_astropy_units</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_value</span><span class="p">))]</span>
+
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2"> encountered, returning only value without units.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_value</span>  <span class="c1"># if unit is NoneType</span></div>
 
 
 <div class="viewcode-block" id="ModelParameter.get_parameter_type">
