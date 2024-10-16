@@ -1,5 +1,6 @@
 """Module for estimating compute and storage resources required for simulations."""
 
+import astropy.units as u
 import numpy as np
 import yaml
 
@@ -81,7 +82,19 @@ class ResourceEstimator:
             Dictionary containing the lookup table.
         """
         with open(lookup_file, encoding="utf-8") as file:
-            return yaml.safe_load(file)
+            lookup = yaml.safe_load(file)
+
+        # return as quantities
+        for _, data in lookup.items():
+            for _, resources in data.items():
+                resources["compute_per_event"] = u.Quantity(
+                    resources["compute_per_event"]["value"], resources["compute_per_event"]["unit"]
+                )
+                resources["storage_per_event"] = u.Quantity(
+                    resources["storage_per_event"]["value"], resources["storage_per_event"]["unit"]
+                )
+
+        return lookup
 
     def estimate_resources(self) -> dict:
         """
@@ -90,7 +103,7 @@ class ResourceEstimator:
         Returns
         -------
         dict
-            A dictionary with estimates for compute and storage resources.
+            A dictionary with estimates for compute and storage resources, with units.
         """
         number_of_events = self.simulation_params.get("number_of_events", 0)
         if self.existing_data:
@@ -110,7 +123,7 @@ class ResourceEstimator:
         Returns
         -------
         dict
-            A dictionary with interpolated estimates for compute and storage resources.
+            A dictionary with interpolated estimates for compute and storage resources, with units.
         """
         azimuth = self.grid_point["azimuth"]
         elevation = self.grid_point["elevation"]
@@ -123,10 +136,14 @@ class ResourceEstimator:
             ),
         )
 
-        compute_hours = closest_data["compute_hours"] * (number_of_events / closest_data["events"])
-        storage_gb = closest_data["storage_gb"] * (number_of_events / closest_data["events"])
+        compute_hours = (
+            closest_data["compute_hours"] * (number_of_events / closest_data["events"]) * u.hr
+        )
+        storage_gb = (
+            closest_data["storage_per_event"] * (number_of_events / closest_data["events"]) * u.GB
+        )
 
-        return {"compute_hours": compute_hours, "storage_gb": storage_gb}
+        return {"compute_hours": compute_hours, "storage_per_event": storage_gb}
 
     def guess_resources_per_event(self, number_of_events: int) -> dict:
         """
@@ -140,43 +157,48 @@ class ResourceEstimator:
         Returns
         -------
         dict
-            A dictionary with guessed estimates for compute and storage resources.
+            A dictionary with guessed estimates for compute and storage resources, with units.
         """
         elevation = self.grid_point["elevation"]
         elevations = sorted(self.lookup_table[self.site].keys())
 
         if elevation <= elevations[0]:
-            compute_hours_per_event = self.lookup_table[self.site][elevations[0]][
-                "compute_hours_per_event"
-            ]
-            storage_gb_per_event = self.lookup_table[self.site][elevations[0]][
-                "storage_gb_per_event"
-            ]
+            compute_per_event = self.lookup_table[self.site][elevations[0]]["compute_per_event"]
+            storage_per_event = self.lookup_table[self.site][elevations[0]]["storage_per_event"]
         elif elevation >= elevations[-1]:
-            compute_hours_per_event = self.lookup_table[self.site][elevations[-1]][
-                "compute_hours_per_event"
-            ]
-            storage_gb_per_event = self.lookup_table[self.site][elevations[-1]][
-                "storage_gb_per_event"
-            ]
+            compute_per_event = self.lookup_table[self.site][elevations[-1]]["compute_per_event"]
+            storage_per_event = self.lookup_table[self.site][elevations[-1]]["storage_per_event"]
         else:
             lower_bound = max(e for e in elevations if e <= elevation)
             upper_bound = min(e for e in elevations if e >= elevation)
             lower_values = self.lookup_table[self.site][lower_bound]
             upper_values = self.lookup_table[self.site][upper_bound]
 
-            compute_hours_per_event = np.interp(
-                elevation,
-                [lower_bound, upper_bound],
-                [lower_values["compute_hours_per_event"], upper_values["compute_hours_per_event"]],
-            )
-            storage_gb_per_event = np.interp(
-                elevation,
-                [lower_bound, upper_bound],
-                [lower_values["storage_gb_per_event"], upper_values["storage_gb_per_event"]],
+            compute_per_event = (
+                np.interp(
+                    elevation,
+                    [lower_bound, upper_bound],
+                    [
+                        lower_values["compute_per_event"].value,
+                        upper_values["compute_per_event"].value,
+                    ],
+                )
+                * lower_values["compute_per_event"].unit
             )
 
-        compute_hours = number_of_events * compute_hours_per_event
-        storage_gb = number_of_events * storage_gb_per_event
+            storage_per_event = (
+                np.interp(
+                    elevation,
+                    [lower_bound, upper_bound],
+                    [
+                        lower_values["storage_per_event"].value,
+                        upper_values["storage_per_event"].value,
+                    ],
+                )
+                * lower_values["storage_per_event"].unit
+            )
 
-        return {"compute_hours": compute_hours, "storage_gb": storage_gb}
+        compute = number_of_events * compute_per_event
+        storage = number_of_events * storage_per_event
+
+        return {"compute:": compute.to("h"), "storage:": storage.to("GB")}
