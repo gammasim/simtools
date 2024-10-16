@@ -73,7 +73,7 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
         )
 
 
-def test_dump(args_dict, tmp_test_directory):
+def test_dump(args_dict, io_handler, tmp_test_directory):
     _metadata = {"name": "test_metadata"}
     empty_table = Table()
 

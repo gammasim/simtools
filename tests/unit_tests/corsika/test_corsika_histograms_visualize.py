@@ -128,7 +128,7 @@ def test_plot_event_headers(corsika_histograms_instance_set_histograms):
 
 
 def test_save_figs_to_pdf(corsika_histograms_instance_set_histograms, io_handler):
-    output_file = io_handler.get_output_directory(dir_type="test").joinpath("test.pdf")
+    output_file = io_handler.get_output_directory().joinpath("test.pdf")
     figs_list = []
     for function_label in [
         "plot_photon_per_event_distr",
