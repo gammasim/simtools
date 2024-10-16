@@ -30,9 +30,9 @@ To estimate resources, run the script from the command line as follows:
 
 .. code-block:: console
 
-    simtools-production-computing_resources --azimuth 60.0 --elevation 45.0 \
-      --nsb 0.3 --site "South" --number_of_events 1e9 \
-      --lookup_file "production_resource_estimates.yaml"
+    simtools-production-calculate-resource-estimates --azimuth 60.0 --elevation 45.0 \
+      --nsb 0.3 --site South --number_of_events 1e9 \
+      --lookup_file "tests/resources/production_resource_estimates.yaml"
 
 The output will show the estimated resources required for the simulation.
 """
@@ -56,7 +56,7 @@ def parse_arguments():
         "--elevation", type=float, required=True, help="Elevation angle in degrees."
     )
     parser.add_argument("--nsb", type=float, required=True, help="Night sky background value.")
-    parser.add_argument("--site", type=float, required=True, help="South or North.")
+    parser.add_argument("--site", type=str, required=True, help="South or North.")
     parser.add_argument(
         "--number_of_events", type=float, required=True, help="Number of events for the simulation."
     )
@@ -66,7 +66,7 @@ def parse_arguments():
     parser.add_argument(
         "--lookup_file",
         type=str,
-        default="production_resource_estimates.yaml",
+        default="tests/resources/production_resource_estimates.yaml",
         help="Resource estimates YAML file (default: production_resource_estimates.yaml).",
     )
 
