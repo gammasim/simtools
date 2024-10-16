@@ -31,8 +31,8 @@ To estimate resources, run the script from the command line as follows:
 .. code-block:: console
 
     simtools-production-calculate-resource-estimates --azimuth 60.0 --elevation 45.0 \
-      --nsb 0.3 --site South --number_of_events 1e9 \
-      --lookup_file "tests/resources/production_resource_estimates.yaml"
+      --nsb 0.3 --site North --number_of_events 1e9 \
+      --lookup_file tests/resources/production_resource_estimates.yaml
 
 The output will show the estimated resources required for the simulation.
 """
@@ -101,17 +101,14 @@ def main():
 
     existing_data = load_existing_data(args.existing_data) if args.existing_data else []
 
-    # Create grid point configuration
     grid_point_config = {
         "azimuth": args.azimuth,
         "elevation": args.elevation,
         "night_sky_background": args.nsb,
     }
 
-    # Create simulation parameters
     simulation_params = {"number_of_events": args.number_of_events, "site": args.site}
 
-    # Instantiate ResourceEstimator
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
@@ -119,7 +116,6 @@ def main():
         lookup_file=args.lookup_file,
     )
 
-    # Estimate resources
     resources = estimator.estimate_resources()
     print("Estimated Resources:", resources)
 
