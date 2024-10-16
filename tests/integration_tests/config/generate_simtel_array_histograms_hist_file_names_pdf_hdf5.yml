@@ -7,9 +7,9 @@ CTA_SIMPIPE:
     PDF: true
     HDF5: true
     OUTPUT_FILE_NAME: test_simtel_hist_name
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     TEST: true
     USE_PLAIN_OUTPUT_PATH: true
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/test_simtel_hist_name.pdf
-    - OUTPUT_FILE: application-plots/test_simtel_hist_name.hdf5
+    - OUTPUT_FILE: test_simtel_hist_name.pdf
+    - OUTPUT_FILE: test_simtel_hist_name.hdf5

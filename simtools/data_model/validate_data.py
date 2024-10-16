@@ -130,7 +130,49 @@ class DataValidator:
             raise KeyError("Data dict does not contain a 'name' or 'parameter' key.")
         self._data_description = self._read_validation_schema(self.schema_file_name, _name)
 
-        # validation assumes lists for values and units - convert to list if required
+        value_as_list, unit_as_list = self._get_value_and_units_as_lists()
+
+        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
+            value_as_list[index], unit_as_list[index] = self._validate_value_and_unit(
+                value, unit, index
+            )
+
+        if len(value_as_list) == 1:
+            self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
+
+        self._check_version_string(self.data_dict.get("version"))
+
+    def _validate_value_and_unit(self, value, unit, index):
+        """
+        Validate value, unit, and perform type checking and conversions.
+
+        Take into account different data types and allow to use json_schema for testing.
+        """
+        if self._get_data_description(index).get("type", None) == "dict":
+            self._validate_data_dict_using_json_schema(
+                self.data_dict["value"], self._get_data_description(index).get("json_schema")
+            )
+        else:
+            self._check_data_type(np.array(value).dtype, index)
+
+        if self.data_dict.get("type") not in ("string", "dict"):
+            self._check_for_not_a_number(value, index)
+            value, unit = self._check_and_convert_units(value, unit, index)
+            for range_type in ("allowed_range", "required_range"):
+                self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
+        return value, unit
+
+    def _get_value_and_units_as_lists(self):
+        """
+        Convert value and unit to lists if required.
+
+        Returns
+        -------
+        list
+            value as list
+        list
+            unit as list
+        """
         value_as_list = (
             self.data_dict.get("value")
             if isinstance(self.data_dict["value"], list | np.ndarray)
@@ -141,26 +183,18 @@ class DataValidator:
             if isinstance(self.data_dict["unit"], list | np.ndarray)
             else [self.data_dict["unit"]]
         )
+        try:
+            value_as_list = value_as_list.tolist()
+        except AttributeError:
+            pass
+        try:
+            unit_as_list = unit_as_list.tolist()
+        except AttributeError:
+            pass
+
         unit_as_list = [None if unit == "null" else unit for unit in unit_as_list]
-        for index, (value, unit) in enumerate(zip(value_as_list, unit_as_list)):
-            if self._get_data_description(index).get("type", None) == "dict":
-                self._validate_data_dict_using_json_schema(
-                    self.data_dict["value"], self._get_data_description(index).get("json_schema")
-                )
-            else:
-                self._check_data_type(np.array(value).dtype, index)
-            if self.data_dict.get("type") not in ("string", "dict"):
-                self._check_for_not_a_number(value, index)
-                value_as_list[index], unit_as_list[index] = self._check_and_convert_units(
-                    value, unit, index
-                )
-                for range_type in ("allowed_range", "required_range"):
-                    self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
 
-        if len(value_as_list) == 1:
-            self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
-
-        self._check_version_string(self.data_dict.get("version"))
+        return value_as_list, unit_as_list
 
     def _validate_data_dict_using_json_schema(self, data, json_schema):
         """

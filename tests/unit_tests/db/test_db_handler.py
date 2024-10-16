@@ -174,7 +174,7 @@ def test_copy_array_element_db(db, random_id, io_handler, model_version):
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
         model_version=model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        run_location=io_handler.get_output_directory(sub_dir="model"),
         collection_name="telescopes",
         write_files=False,
     )
@@ -191,7 +191,7 @@ def test_copy_array_element_db(db, random_id, io_handler, model_version):
             db_name=f"sandbox_{random_id}",
             array_element_name="LSTN-test",
             model_version=model_version,
-            run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+            run_location=io_handler.get_output_directory(sub_dir="model"),
             collection_name="telescopes",
             write_files=False,
         )
@@ -263,7 +263,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
         model_version=test_model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        run_location=io_handler.get_output_directory(sub_dir="model"),
         collection_name="telescopes",
         write_files=False,
     )
@@ -299,7 +299,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
         db_name=f"sandbox_{random_id}",
         array_element_name="North",
         model_version=test_model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        run_location=io_handler.get_output_directory(sub_dir="model"),
         collection_name="sites",
         write_files=False,
     )
@@ -319,7 +319,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
         db_name=f"sandbox_{random_id}",
         array_element_name="ILLN-test",
         model_version=test_model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        run_location=io_handler.get_output_directory(sub_dir="model"),
         collection_name="calibration_devices",
         write_files=False,
     )
@@ -363,7 +363,7 @@ def test_update_parameter_field_db(db, random_id, io_handler, model_version):
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
         model_version=model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        run_location=io_handler.get_output_directory(sub_dir="model"),
         collection_name="telescopes",
         write_files=False,
     )
@@ -424,19 +424,18 @@ def test_separating_get_and_write(db, io_handler, model_version):
             file_list.append(par_now["value"])
     db.export_model_files(
         pars,
-        io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        io_handler.get_output_directory(sub_dir="model"),
     )
     logger.debug(
-        "Checking files were written to "
-        f"{io_handler.get_output_directory(sub_dir='model', dir_type='test')}"
+        "Checking files were written to " f"{io_handler.get_output_directory(sub_dir='model')}"
     )
     for file_now in file_list:
-        assert io_handler.get_output_file(file_now, sub_dir="model", dir_type="test").exists()
+        assert io_handler.get_output_file(file_now, sub_dir="model").exists()
 
 
 def test_export_file_db(db, io_handler):
     logger.info("----Testing exporting files from the DB-----")
-    output_dir = io_handler.get_output_directory(sub_dir="model", dir_type="test")
+    output_dir = io_handler.get_output_directory(sub_dir="model")
     file_name = "mirror_CTA-S-LST_v2020-04-07.dat"
     file_to_export = output_dir / file_name
     db.export_file_db(None, output_dir, file_name)
@@ -447,13 +446,9 @@ def test_export_file_db(db, io_handler):
 def test_insert_files_db(db, io_handler, random_id, caplog):
     logger.info("----Testing inserting files to the DB-----")
     logger.info(
-        "Creating a temporary file in "
-        f"{io_handler.get_output_directory(sub_dir='model', dir_type='test')}"
+        "Creating a temporary file in " f"{io_handler.get_output_directory(sub_dir='model')}"
     )
-    file_name = (
-        io_handler.get_output_directory(sub_dir="model", dir_type="test")
-        / f"test_file_{random_id}.dat"
-    )
+    file_name = io_handler.get_output_directory(sub_dir="model") / f"test_file_{random_id}.dat"
     with open(file_name, "w") as f:
         f.write("# This is a test file")
 

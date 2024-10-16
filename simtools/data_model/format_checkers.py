@@ -10,7 +10,7 @@ from simtools.utils import names
 format_checker = jsonschema.FormatChecker()
 
 
-@format_checker.checks("astropy_unit", raises=ValueError)
+@format_checker.checks("astropy_unit")
 def check_astropy_unit(unit_string):
     """Validate astropy units (including dimensionless) for jsonschema."""
     try:
@@ -21,14 +21,28 @@ def check_astropy_unit(unit_string):
     return True
 
 
-@format_checker.checks("array_element", raises=ValueError)
+@format_checker.checks("astropy_unit_of_time")
+def check_astropy_unit_of_time(unit_string):
+    """Validate astropy units that this is an astropy unit of time."""
+    u.Unit(unit_string).to("s")
+    return True
+
+
+@format_checker.checks("astropy_unit_of_length)")
+def check_astropy_unit_of_length(unit_string):
+    """Validate astropy units that this is an astropy unit of length."""
+    u.Unit(unit_string).to("m")
+    return True
+
+
+@format_checker.checks("array_element")
 def check_array_element(element):
     """Validate array elements for jsonschema."""
     names.validate_array_element_name(element)
     return True
 
 
-@format_checker.checks("array_triggers_name", raises=ValueError)
+@format_checker.checks("array_triggers_name")
 def check_array_triggers_name(name):
     """Validate array trigger names for jsonschema."""
     pattern = r"(.*)(?=_single_telescope|_array)"

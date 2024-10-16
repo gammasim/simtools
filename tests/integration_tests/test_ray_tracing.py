@@ -61,9 +61,7 @@ def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
     ray.plot("d80_deg", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plot_file_psf = io_handler.get_output_file(
-        file_name="d80_test_rx.pdf", sub_dir="plots", dir_type="test"
-    )
+    plot_file_psf = io_handler.get_output_file(file_name="d80_test_rx.pdf", sub_dir="plots")
     plt.savefig(plot_file_psf)
 
     # Plotting eff_area
@@ -75,9 +73,7 @@ def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
     ray.plot("eff_area", marker="o", linestyle=":")
     ray_rx.plot("d80_deg", marker="s", linestyle="--")
 
-    plot_file_area = io_handler.get_output_file(
-        file_name="eff_area_test_rx.pdf", sub_dir="plots", dir_type="test"
-    )
+    plot_file_area = io_handler.get_output_file(file_name="eff_area_test_rx.pdf", sub_dir="plots")
     plt.savefig(plot_file_area)
 
 
@@ -101,7 +97,7 @@ def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_
         ax.set_ylabel("Y [cm]")
         image.plot_image(psf_color="b")
         plot_file = io_handler.get_output_file(
-            file_name=f"test_plot_image_{ii}.pdf", sub_dir="plots", dir_type="test"
+            file_name=f"test_plot_image_{ii}.pdf", sub_dir="plots"
         )
         plt.savefig(plot_file)
 
@@ -124,9 +120,7 @@ def test_single_mirror(db_config, simtel_path_no_mock, io_handler, telescope_mod
     ax.set_xlabel("d80")
 
     ray.plot_histogram("d80_cm", color="r", bins=10)
-    plot_file = io_handler.get_output_file(
-        file_name="d80_hist_test.pdf", sub_dir="plots", dir_type="test"
-    )
+    plot_file = io_handler.get_output_file(file_name="d80_hist_test.pdf", sub_dir="plots")
     plt.savefig(plot_file)
 
 
@@ -149,7 +143,5 @@ def test_integral_curve(db_config, simtel_path_no_mock, io_handler, telescope_mo
     ax.set_ylabel("relative intensity")
     for im in ray.images():
         im.plot_cumulative(color="b")
-    plot_file = io_handler.get_output_file(
-        file_name="test_cumulative_psf.pdf", sub_dir="plots", dir_type="test"
-    )
+    plot_file = io_handler.get_output_file(file_name="test_cumulative_psf.pdf", sub_dir="plots")
     plt.savefig(plot_file)
