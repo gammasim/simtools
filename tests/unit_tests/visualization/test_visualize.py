@@ -29,12 +29,12 @@ def test_plot_1d(db, io_handler):
     test_file_name = "ref_LST1_2022_04_01.dat"
     db.export_file_db(
         db_name=None,
-        dest=io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        dest=io_handler.get_output_directory(sub_dir="model"),
         file_name=test_file_name,
     )
     test_data_file = gen.find_file(
         test_file_name,
-        io_handler.get_output_directory(sub_dir="model", dir_type="test"),
+        io_handler.get_output_directory(sub_dir="model"),
     )
     data_in = np.loadtxt(test_data_file, usecols=(0, 1), dtype=headers_type)
 
@@ -51,9 +51,7 @@ def test_plot_1d(db, io_handler):
 
     plt = visualize.plot_1d(data, title=title, palette="autumn")
 
-    plot_file = io_handler.get_output_file(
-        file_name="plot_1d.pdf", sub_dir="plots", dir_type="test"
-    )
+    plot_file = io_handler.get_output_file(file_name="plot_1d.pdf", sub_dir="plots")
     if plot_file.exists():
         plot_file.unlink()
     plt.savefig(plot_file)
@@ -71,9 +69,7 @@ def test_plot_table(io_handler):
 
     plt = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
 
-    plot_file = io_handler.get_output_file(
-        file_name="plot_table.pdf", sub_dir="plots", dir_type="test"
-    )
+    plot_file = io_handler.get_output_file(file_name="plot_table.pdf", sub_dir="plots")
     if plot_file.exists():
         plot_file.unlink()
     plt.savefig(plot_file)

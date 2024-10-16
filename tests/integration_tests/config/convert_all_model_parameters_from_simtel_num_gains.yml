@@ -7,7 +7,7 @@ CTA_SIMPIPE:
     TELESCOPE: LSTN-01
     MODEL_VERSION: "6.0.0"
     SCHEMA_DIRECTORY: ./tests/resources/
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
     - OUTPUT_FILE: num_gains.json
     - OUTPUT_FILE: telescope_transmission.json
