@@ -39,7 +39,7 @@ class ResourceEstimator:
         grid_point: dict[str, float],
         simulation_params: dict[str, float],
         existing_data: list[dict] | None = None,
-        lookup_file: str = "resource_estimates.yaml",
+        lookup_file: str = "production_resource_estimates.yaml",
     ):
         """
         Initialize the resource estimator.
