@@ -22,7 +22,7 @@ number_of_events (float, required)
 existing_data (str, optional)
     Path to a YAML file containing existing data for resource estimation.
 lookup_file (str, optional)
-    Path to the resource estimates YAML file (default: resource_estimates.yaml).
+    Path to the resource estimates YAML file (default: production_resource_estimates.yaml).
 
 Example
 -------
@@ -31,7 +31,8 @@ To estimate resources, run the script from the command line as follows:
 .. code-block:: console
 
     simtools-production-computing_resources --azimuth 60.0 --elevation 45.0 \
-      --nsb 0.3 --site "South" --number_of_events 1e9 --lookup_file "resource_estimates.yaml"
+      --nsb 0.3 --site "South" --number_of_events 1e9 \
+      --lookup_file "production_resource_estimates.yaml"
 
 The output will show the estimated resources required for the simulation.
 """
@@ -65,8 +66,8 @@ def parse_arguments():
     parser.add_argument(
         "--lookup_file",
         type=str,
-        default="resource_estimates.yaml",
-        help="Path to the resource estimates YAML file (default: resource_estimates.yaml).",
+        default="production_resource_estimates.yaml",
+        help="Resource estimates YAML file (default: production_resource_estimates.yaml).",
     )
 
     return parser.parse_args()
