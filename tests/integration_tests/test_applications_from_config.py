@@ -2,6 +2,7 @@
 # Integration tests for applications from config file
 #
 
+import copy
 import logging
 import os
 from io import StringIO
@@ -234,22 +235,25 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
 
     """
 
-    skip_camera_efficiency(config)
+    tmp_config = copy.deepcopy(config)
+    skip_camera_efficiency(tmp_config)
 
     # The db_add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
     # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
     monkeypatch.setattr("sys.stdin", StringIO("y\n"))
 
-    logger.info(f"Test configuration from config file: {config}")
+    logger.info(f"Test configuration from config file: {tmp_config}")
 
-    tmp_output_path = create_tmp_output_path(tmp_test_directory, config)
+    tmp_output_path = create_tmp_output_path(tmp_test_directory, tmp_config)
 
     logger.info(f"Model version: {request.config.getoption('--model_version')}")
-    logger.info(f"Application configuration: {config}")
-    cmd, config_file_model_version = prepare_config_and_command(config, tmp_output_path, request)
+    logger.info(f"Application configuration: {tmp_config}")
+    cmd, config_file_model_version = prepare_config_and_command(
+        tmp_config, tmp_output_path, request
+    )
 
-    execute_and_validate(cmd, config, request, config_file_model_version)
+    execute_and_validate(cmd, tmp_config, request, config_file_model_version)
 
 
 def create_tmp_output_path(tmp_test_directory, config):

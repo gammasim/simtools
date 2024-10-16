@@ -807,12 +807,12 @@ def test_export_and_read_histograms(corsika_histograms_instance_set_histograms, 
     file_name = Path(corsika_histograms_instance_set_histograms.output_path).joinpath(
         "tel_output_10GeV-2-gamma-20deg-CTAO-South.hdf5"
     )
-    assert io_handler.get_output_directory(dir_type="test").joinpath(file_name).exists()
+    assert io_handler.get_output_directory().joinpath(file_name).exists()
 
     # Change hdf5 file name
     corsika_histograms_instance_set_histograms.hdf5_file_name = "test.hdf5"
     corsika_histograms_instance_set_histograms.export_histograms()
-    output_file = io_handler.get_output_directory(dir_type="test").joinpath("test.hdf5")
+    output_file = io_handler.get_output_directory().joinpath("test.hdf5")
     assert output_file.exists()
 
     # Read hdf5 file

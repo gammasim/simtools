@@ -7,8 +7,8 @@ CTA_SIMPIPE:
       - './tests/resources/run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst'
     PDF: true
     OUTPUT_FILE_NAME: test_simtel_hist_name
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     TEST: true
     USE_PLAIN_OUTPUT_PATH: true
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/test_simtel_hist_name.pdf
+    - OUTPUT_FILE: test_simtel_hist_name.pdf
