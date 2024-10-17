@@ -11,7 +11,7 @@ import simtools.utils.general as gen
 _logger = logging.getLogger(__name__)
 
 
-def compare_files(file1, file2, tolerance=1.0e-5):
+def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     """
     Compare two files of file type ecsv, json or yaml.
 
@@ -23,6 +23,8 @@ def compare_files(file1, file2, tolerance=1.0e-5):
         Second file to compare
     tolerance: float
         Tolerance for comparing numerical values.
+    test_columns: list
+        List of columns to compare. If None, all columns are compared.
 
     Returns
     -------
@@ -35,7 +37,7 @@ def compare_files(file1, file2, tolerance=1.0e-5):
     if _file1_suffix != _file2_suffix:
         raise ValueError(f"File suffixes do not match: {file1} and {file2}")
     if _file1_suffix == ".ecsv":
-        return compare_ecsv_files(file1, file2, tolerance)
+        return compare_ecsv_files(file1, file2, tolerance, test_columns)
     if _file1_suffix in (".json", ".yaml", ".yml"):
         return compare_json_or_yaml_files(file1, file2)
 
@@ -79,7 +81,7 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     return data1 == data2
 
 
-def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
+def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     """
     Compare two ecsv files.
 
@@ -96,6 +98,8 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
         Second file to compare
     tolerance: float
         Tolerance for comparing numerical values.
+    test_columns: list
+        List of columns to compare. If None, all columns are compared.
 
     """
     _logger.info(f"Comparing files: {file1} and {file2}")
@@ -104,7 +108,9 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
 
     comparison_result = len(table1) == len(table2)
 
-    for col_name in table1.colnames:
+    test_columns = test_columns if test_columns else table1.colnames
+
+    for col_name in test_columns:
         if np.issubdtype(table1[col_name].dtype, np.floating):
             comparison_result = comparison_result and np.allclose(
                 table1[col_name], table2[col_name], rtol=tolerance
