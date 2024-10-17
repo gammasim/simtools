@@ -183,8 +183,6 @@ def main():
     if args_dict["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
 
-    print("grid_points after", grid_points)
-
     def serialize_quantity(value):
         """Serialize Quantity objects."""
         if hasattr(value, "unit"):
