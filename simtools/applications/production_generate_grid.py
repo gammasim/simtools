@@ -33,7 +33,7 @@ To generate a grid of simulation points, execute the script as follows:
 
 .. code-block:: console
 
-    simtools-production-grid-generation --site North --model_version "6.0.0"\
+    simtools-production-generate-grid --site North --model_version "6.0.0"\
       --axes  tests/resources/production_grid_generation_axes_definition.yaml\
       --data_level "B" \
       --science_case "high_precision" \
@@ -47,6 +47,7 @@ import json
 import logging
 from pathlib import Path
 
+import numpy as np
 import yaml
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
@@ -114,17 +115,20 @@ def load_axes(file_path: str):
     Returns
     -------
     list[dict]
-        List of axes definitions.
+        List of axes definitions with Quantity values.
     """
     if not Path(file_path).exists():
         raise FileNotFoundError(f"Axes file {file_path} not found.")
 
     with open(file_path, encoding="utf-8") as file:
         if file_path.endswith((".yaml", ".yml")):
-            return yaml.safe_load(file)
-        if file_path.endswith(".json"):
-            return json.load(file)
-        raise ValueError("Unsupported file format. Use a YAML or JSON file.")
+            axes = yaml.safe_load(file)
+        elif file_path.endswith(".json"):
+            axes = json.load(file)
+        else:
+            raise ValueError("Unsupported file format. Use a YAML or JSON file.")
+
+    return axes
 
 
 def main():
@@ -139,7 +143,7 @@ def main():
     logger.setLevel(logging.INFO)
 
     axes = load_axes(args_dict["axes"])
-
+    print("axes", axes)
     site_model = SiteModel(
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
@@ -171,9 +175,19 @@ def main():
     if args_dict["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
 
-    # Output grid points
-    for point in grid_points:
-        print(point)
+    def clean_grid_output(grid_points):
+        for point in grid_points:
+            for key, value in point.items():
+                if isinstance(value, np.float64):
+                    point[key] = float(value)
+                if key in ["ra", "dec"]:
+                    point[key] = round(point[key], 4)
+                if key == "energy":
+                    point[key] = round(point[key], 4)
+        return json.dumps(grid_points, indent=4)
+
+    clean_output = clean_grid_output(grid_points)
+    print(clean_output)
 
 
 if __name__ == "__main__":
