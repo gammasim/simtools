@@ -13,5 +13,13 @@ CTA_SIMPIPE:
     RNDA: 0.0063
     TEST: true
     OUTPUT_PATH: simtools-output
+    OUTPUT_FILE: test_derive_mirror_rnda_psf_no_tuning.ecsv
+    USE_PLAIN_OUTPUT_PATH: true
+    LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: TEST.ecsv
+    - OUTPUT_FILE: test_derive_mirror_rnda_psf_no_tuning.ecsv
+    - REFERENCE_OUTPUT_FILE: |
+        tests/resources/derive_mirror_rnda_psf_no_tuning.ecsv
+      TOLERANCE: 1.e-1
+      TEST_COLUMNS:
+        - mirror_reflection_random_angle_sigma1
