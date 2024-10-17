@@ -37,40 +37,45 @@ To estimate resources, run the script from the command line as follows:
 The output will show the estimated resources required for the simulation.
 """
 
-import argparse
 import logging
 import os
 
 import yaml
 
+import simtools.utils.general as gen
+from simtools.configuration import configurator
 from simtools.production_configuration.derive_computing_resources import ResourceEstimator
 
 
-def parse_arguments():
+def _parse():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
+    config = configurator.Configurator(
         description="Estimate compute and storage resources for simulations."
     )
-    parser.add_argument("--azimuth", type=float, required=True, help="Azimuth angle in degrees.")
-    parser.add_argument(
+    config.parser.add_argument(
+        "--azimuth", type=float, required=True, help="Azimuth angle in degrees."
+    )
+    config.parser.add_argument(
         "--elevation", type=float, required=True, help="Elevation angle in degrees."
     )
-    parser.add_argument("--nsb", type=float, required=True, help="Night sky background value.")
-    parser.add_argument("--site", type=str, required=True, help="South or North.")
-    parser.add_argument(
+    config.parser.add_argument(
+        "--nsb", type=float, required=True, help="Night sky background value."
+    )
+    config.parser.add_argument("--site", type=str, required=True, help="South or North.")
+    config.parser.add_argument(
         "--number_of_events", type=float, required=True, help="Number of events for the simulation."
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--existing_data", type=str, help="Path to YAML file containing existing data (optional)."
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--lookup_file",
         type=str,
         default="tests/resources/production_resource_estimates.yaml",
         help="Resource estimates YAML file (default: production_resource_estimates.yaml).",
     )
 
-    return parser.parse_args()
+    return config.initialize(db_config=False)
 
 
 def load_existing_data(file_path: str) -> list:
@@ -95,9 +100,10 @@ def load_existing_data(file_path: str) -> list:
 
 def main():
     """Run the Resource Estimator application."""
-    args = parse_arguments()
+    args, _ = _parse()
 
-    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
 
     existing_data = load_existing_data(args.existing_data) if args.existing_data else []
 
