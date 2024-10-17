@@ -86,13 +86,13 @@ class GridGeneration:
 
     This class generates a grid of points for a simulation based on parameters like energy, azimuth,
     zenith angle, night-sky background, and camera offset. The grid adapts to different science
-    cases and data levels, taking into account flexible axis definitions and scaling.
+    cases and data levels, taking into account flexible axis definitions, scaling, and units.
 
     Attributes
     ----------
     axes : list of dict
         List of dictionaries defining each axis with properties such as name,
-          range, binning, scaling, and distribution.
+          range, binning, scaling, distribution, and unit.
     data_level : str
         The data level (e.g., 'A', 'B', 'C') for the grid generation.
     science_case : str
@@ -121,7 +121,7 @@ class GridGeneration:
         ----------
         axes : list of dict
             List of dictionaries where each dictionary defines an axis with properties
-              such as name, range, binning, scaling, and distribution type.
+              such as name, range, binning, scaling, distribution type, and unit.
         data_level : str
             The data level (e.g., 'A', 'B', 'C') for the grid generation.
         science_case : str
@@ -152,7 +152,7 @@ class GridGeneration:
         -------
         list of dict
             A list of grid points, each represented as a dictionary with axis names
-              as keys and axis values as values.
+              as keys and axis values as values. Axis values may include units where defined.
         """
         axis_values = {}
 
@@ -162,7 +162,8 @@ class GridGeneration:
             binning = axis["binning"]
             scaling = axis.get("scaling", "linear")
             distribution = axis.get("distribution", "uniform")
-
+            unit = axis.get("unit", None)
+            print("unit", unit)
             # Create axis values based on scaling
             if scaling == "log":
                 values = np.logspace(np.log10(axis_range[0]), np.log10(axis_range[1]), binning)
@@ -171,9 +172,10 @@ class GridGeneration:
 
             # Apply distribution type
             if distribution == "power-law":
-                print(axis_range)
-                # For power-law distribution, we remap the uniformly spaced values
                 values = self.generate_power_law_values(axis_range=axis_range, binning=binning)
+
+            if unit:
+                values = values * u.Unit(unit)
 
             axis_values[name] = values
 
@@ -196,17 +198,15 @@ class GridGeneration:
         binning : int
             Number of bins (points) to generate.
         power_law_index : int
-            Index of the power-law function
+            Index of the power-law function.
 
         Returns
         -------
         numpy.ndarray
             Array of axis values following a power-law distribution.
         """
-        # Create a linearly spaced array of values between 0 and 1
         lin_space = np.linspace(0, 1, binning)
         lin_space = np.clip(lin_space, 1e-10, 1 - 1e-10)  # Avoid division by zero
-        # Apply the inverse CDF transformation for power-law
         return axis_range[0] + (axis_range[1] - axis_range[0]) * (lin_space) ** (power_law_index)
 
     def adjust_axis_range(self, axis_range, axis_name) -> tuple:
