@@ -143,6 +143,18 @@ def test_compare_files_ecsv(create_ecsv_file, file_name):
     assert compare_output.compare_files(file1, file2)
 
 
+def test_compare_files_ecsv_columns(create_ecsv_file, file_name):
+    content1 = {"col1": [1.1, 2.2, 3.3], "col2": [4.4, 5.5, 6.6]}
+    content2 = {"col1": [1.1, 2.21, 3.3], "col2": [4.47, 5.5, 6.6], "col3": [7.7, 8.8, 9.9]}
+    file1 = create_ecsv_file(file_name(1, "ecsv"), content1)
+    file2 = create_ecsv_file(file_name(2, "ecsv"), content2)
+
+    assert compare_output.compare_files(file1, file2, 0.5)
+    assert compare_output.compare_files(file1, file2, 0.005, ["col1"])
+    assert not compare_output.compare_files(file1, file2, 0.005, None)
+    assert not compare_output.compare_files(file1, file2, 0.005, ["col2"])
+
+
 def test_compare_files_json(create_json_file, file_name):
     content = {"key": 1, "value": "1.23 4.56 7.89"}
     file1 = create_json_file(file_name(1, "json"), content)
