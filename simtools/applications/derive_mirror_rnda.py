@@ -3,7 +3,7 @@
 r"""
     Derive the simulation model parameter mirror_reflection_random_angle.
 
-    This parameter is sometimes called mirror roughness and used  to match the measured
+    This parameter is sometimes called mirror roughness and used to match the measured
     containment diameter of the optical point-spread function (PSF) of individual mirror panels.
 
     Description
