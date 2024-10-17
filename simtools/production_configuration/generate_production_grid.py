@@ -78,6 +78,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.time import Time
+from astropy.units import Quantity
 
 
 class GridGeneration:
@@ -178,13 +179,18 @@ class GridGeneration:
                 values = values * u.Unit(unit)
 
             axis_values[name] = values
+        print("axis_values", axis_values)
 
-        # Generate all combinations of axis values
+        value_arrays = [value.value for value in axis_values.values()]
+        units = [value.unit for value in axis_values.values()]
+
+        grid = np.meshgrid(*value_arrays, indexing="ij")
+        print("grid", grid)
+        combinations = np.vstack(list(map(np.ravel, grid))).T
+        print("combinations", combinations)
         return [
-            dict(zip(axis_values.keys(), values))
-            for values in np.array(np.meshgrid(*axis_values.values())).T.reshape(
-                -1, len(axis_values)
-            )
+            {key: Quantity(combination[i], units[i]) for i, key in enumerate(axis_values.keys())}
+            for combination in combinations
         ]
 
     def generate_power_law_values(self, axis_range, binning, power_law_index=3):
@@ -289,9 +295,11 @@ class GridGeneration:
         SkyCoord
             SkyCoord object containing the RA/Dec coordinates.
         """
+        alt_rad = alt.to(u.rad)
+        az_rad = az.to(u.rad)
         aa = AltAz(
-            alt=alt * u.deg,
-            az=az * u.deg,
+            alt=alt_rad,
+            az=az_rad,
             location=self.observing_location,
             obstime=self.observing_time,
         )
@@ -316,9 +324,9 @@ class GridGeneration:
         if self.coordinate_system == "ra_dec":
             for point in grid_points:
                 if "zenith_angle" in point and "azimuth" in point:
-                    alt = 90.0 - point.pop("zenith_angle")  # Convert zenith to altitude
-                    az = point["azimuth"]
+                    alt = (90.0 * u.deg) - point.pop("zenith_angle")
+                    az = point.pop("azimuth")
                     radec = self.convert_altaz_to_radec(alt, az)
-                    point["ra"] = radec.ra.deg
-                    point["dec"] = radec.dec.deg
+                    point["ra"] = radec.ra.deg * u.deg
+                    point["dec"] = radec.dec.deg * u.deg
         return grid_points
