@@ -47,13 +47,13 @@ import json
 import logging
 from pathlib import Path
 
-import numpy as np
 import yaml
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
 import simtools.production_configuration.generate_production_grid as gridgen
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
 
 
@@ -99,6 +99,12 @@ def _parse(label, description):
         required=False,
         help="Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').",
     )
+    config.parser.add_argument(
+        "--output_file",
+        type=str,
+        default="grid_output.json",
+        help="Output file for the generated grid points (default: 'grid_output.json').",
+    )
 
     return config.initialize(db_config=True, simulation_model=["version", "site"])
 
@@ -142,8 +148,10 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
+    _io_handler = io_handler.IOHandler()
+    output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
+
     axes = load_axes(args_dict["axes"])
-    print("axes", axes)
     site_model = SiteModel(
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
@@ -171,23 +179,44 @@ def main():
 
     grid_points = grid_gen.generate_grid()
 
-    # Optionally convert to RA/Dec if requested
+    # Optionally convert to RA/Dec
     if args_dict["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
 
-    def clean_grid_output(grid_points):
-        for point in grid_points:
-            for key, value in point.items():
-                if isinstance(value, np.float64):
-                    point[key] = float(value)
-                if key in ["ra", "dec"]:
-                    point[key] = round(point[key], 4)
-                if key == "energy":
-                    point[key] = round(point[key], 4)
-        return json.dumps(grid_points, indent=4)
+    print("grid_points after", grid_points)
 
-    clean_output = clean_grid_output(grid_points)
-    print(clean_output)
+    def serialize_quantity(value):
+        """Serialize Quantity objects."""
+        if hasattr(value, "unit"):
+            return {"value": value.value, "unit": str(value.unit)}
+        return value
+
+    def clean_grid_output(grid_points, output_file=None):
+        cleaned_points = []
+
+        for point in grid_points:
+            cleaned_point = {}
+            for key, value in point.items():
+                if isinstance(value, dict):
+                    # nested dictionaries
+                    cleaned_point[key] = {k: serialize_quantity(v) for k, v in value.items()}
+                else:
+                    cleaned_point[key] = serialize_quantity(value)
+
+            cleaned_points.append(cleaned_point)
+
+        output_data = json.dumps(cleaned_points, indent=4)
+
+        if output_file:
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(output_data)
+            print(f"Output saved to {output_file}")
+        else:
+            print(output_data)
+
+    output_file = args_dict["output_file"]
+
+    clean_grid_output(grid_points, output_file=output_dir.joinpath(output_file))
 
 
 if __name__ == "__main__":
