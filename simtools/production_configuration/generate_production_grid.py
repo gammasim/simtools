@@ -164,7 +164,6 @@ class GridGeneration:
             scaling = axis.get("scaling", "linear")
             distribution = axis.get("distribution", "uniform")
             unit = axis.get("unit", None)
-            print("unit", unit)
             # Create axis values based on scaling
             if scaling == "log":
                 values = np.logspace(np.log10(axis_range[0]), np.log10(axis_range[1]), binning)
@@ -179,15 +178,12 @@ class GridGeneration:
                 values = values * u.Unit(unit)
 
             axis_values[name] = values
-        print("axis_values", axis_values)
 
         value_arrays = [value.value for value in axis_values.values()]
         units = [value.unit for value in axis_values.values()]
 
         grid = np.meshgrid(*value_arrays, indexing="ij")
-        print("grid", grid)
         combinations = np.vstack(list(map(np.ravel, grid))).T
-        print("combinations", combinations)
         return [
             {key: Quantity(combination[i], units[i]) for i, key in enumerate(axis_values.keys())}
             for combination in combinations
