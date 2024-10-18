@@ -10,11 +10,11 @@
 # meta: !!omap
 # - CTA:
 #     ACTIVITY:
-#       END: '2024-10-17T10:55:07'
-#       ID: a188de86-74c9-426c-8d99-2ff7cce9414a
+#       END: '2024-10-18T19:07:05'
+#       ID: dbc4200c-7cc7-4a13-9023-c1be7e0b5be6
 #       NAME: derive_mirror_rnda
-#       SOFTWARE: {NAME: simtools, VERSION: 0.7.1.dev603+gd5737230f}
-#       START: '2024-10-17T10:55:07'
+#       SOFTWARE: {NAME: simtools, VERSION: 0.7.1.dev608+g141ca6b22.d20241018}
+#       START: '2024-10-18T19:07:05'
 #       TYPE: software
 #     CONTACT: {EMAIL: null, NAME: root, ORGANIZATION: CTAO}
 #     CONTEXT:
@@ -40,7 +40,7 @@
 #     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
 #     PROCESS: {ID: null, SUBTYPE: null, TYPE: simulation}
 #     PRODUCT:
-#       CREATION_TIME: '2024-10-17T10:55:07'
+#       CREATION_TIME: '2024-10-18T19:07:05'
 #       DATA:
 #         ASSOCIATION: null
 #         CATEGORY: SIM
@@ -48,9 +48,9 @@
 #         MODEL: {NAME: null, TYPE: null, URL: null, VERSION: null}
 #         TYPE: Service
 #       DESCRIPTION: null
-#       FILENAME: TEST.ecsv
+#       FILENAME: test_derive_mirror_rnda_psf_random_flen.ecsv
 #       FORMAT: ecsv
-#       ID: a188de86-74c9-426c-8d99-2ff7cce9414a
+#       ID: dbc4200c-7cc7-4a13-9023-c1be7e0b5be6
 #       VALID: {END: null, START: null}
 #     REFERENCE: {VERSION: 1.0.0}
 # - __serialized_columns__:
@@ -72,6 +72,6 @@
 #       value: !astropy.table.SerializedColumn {name: mirror_reflection_random_angle_sigma2}
 # schema: astropy-2.0
 best_fit mirror_reflection_random_angle_sigma1 mirror_reflection_random_angle_fraction2 mirror_reflection_random_angle_sigma2 containment_radius_D80 containment_radius_sigma_D80
-True 0.006785990300045814 0.0 0.0 1.3861951673732267 0.004219395388174063
-False 0.0063 0.0 0.0 1.271678231067172 0.009631675014040608
-False 0.00693 0.0 0.0 1.4380245849348534 0.05643220373328284
+True 0.006059785352459281 0.0 0.0 1.310209331613204 0.002752512485659331
+False 0.00567 0.0 0.0 1.166592452391884 0.021627794596658423
+False 0.0063 0.0 0.0 1.5438430444558182 0.27304971375923204
