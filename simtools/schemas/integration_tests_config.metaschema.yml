@@ -75,4 +75,9 @@ definitions:
       TOLERANCE:
         description: "Allowed tolerance for floating point comparison."
         type: number
+      TEST_COLUMNS:
+        description: "List of columns to be compared."
+        type: array
+        items:
+          type: string
     title: IntegrationTest

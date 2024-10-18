@@ -3,7 +3,7 @@
 r"""
     Derive the simulation model parameter mirror_reflection_random_angle.
 
-    This parameter is sometimes called mirror roughness and used  to match the measured
+    This parameter is sometimes called mirror roughness and used to match the measured
     containment diameter of the optical point-spread function (PSF) of individual mirror panels.
 
     Description
@@ -142,7 +142,7 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.model.telescope_model import TelescopeModel
-from simtools.ray_tracing import RayTracing
+from simtools.ray_tracing.ray_tracing import RayTracing
 
 
 def _parse(label):
@@ -246,6 +246,7 @@ def _define_telescope_model(label, args_dict, db_config):
         tel.export_parameter_file("mirror_list", mirror_list_file)
     if args_dict["random_flen"] is not None:
         tel.change_parameter("random_focal_length", str(args_dict["random_flen"]))
+    tel.export_model_files()
 
     return tel
 
