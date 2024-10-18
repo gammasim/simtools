@@ -32,7 +32,7 @@ To run the simulation configuration, execute the script as follows:
 
 .. code-block:: console
 
-    simtools-production-simulation-config --azimuth 60.0 --elevation 45.0 \
+    simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \
       --nsb 0.3 --data_level "A" --science_case "high_precision" \
       --file_path "path/to/fits_file.fits" --file_type "On-source" \
       --metrics "path/to/metrics.yaml"
@@ -40,47 +40,65 @@ To run the simulation configuration, execute the script as follows:
 The output will show the configured simulation parameters.
 """
 
-import argparse
+import json
 import logging
 import os
+from pathlib import Path
 
+import astropy.units as u
 import yaml
 
+import simtools.utils.general as gen
+from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.production_configuration.generate_simulation_config import (
     SimulationConfig,
 )
 
 
-def parse_arguments():
+def _parse(label):
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Configure and run a simulation based on input parameters."
+    config = configurator.Configurator(
+        label=label, description="Configure and run a simulation based on input parameters."
     )
-    parser.add_argument("--azimuth", type=float, required=True, help="Azimuth angle in degrees.")
-    parser.add_argument(
+    config.parser.add_argument(
+        "--azimuth", type=float, required=True, help="Azimuth angle in degrees."
+    )
+    config.parser.add_argument(
         "--elevation", type=float, required=True, help="Elevation angle in degrees."
     )
-    parser.add_argument("--nsb", type=float, required=True, help="Night sky background value.")
-    parser.add_argument(
+    config.parser.add_argument(
+        "--nsb", type=float, required=True, help="Night sky background value."
+    )
+    config.parser.add_argument(
         "--data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--science_case", type=str, required=True, help="Science case for the simulation."
     )
-    parser.add_argument("--file_path", type=str, required=True, help="Path to the FITS file.")
-    parser.add_argument(
+    config.parser.add_argument(
+        "--file_path", type=str, required=True, help="Path to the FITS file."
+    )
+    config.parser.add_argument(
         "--file_type",
         type=str,
         required=True,
         help="Type of the FITS file ('On-source' or 'Offset').",
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--metrics",
         type=str,
         help="Path to YAML file containing metrics and precision as values (optional).",
     )
+    config.parser.add_argument(
+        "--output_file",
+        help="Name of the file to save the configured simulation parameters.",
+        type=str,
+        required=False,
+        default="estimated_resources.json",
+    )
 
-    return parser.parse_args()
+    return config.initialize(db_config=False)
 
 
 def load_metrics(file_path: str) -> dict:
@@ -114,30 +132,46 @@ def load_metrics(file_path: str) -> dict:
 
 def main():
     """Run the Simulation Config application."""
-    args = parse_arguments()
+    label = Path(__file__).stem
+    args, _ = _parse(label)
 
-    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
+    output_path = io_handler.IOHandler().get_output_directory(label)
+    output_filepath = Path(output_path).joinpath(f"{args['output_file']}")
 
     grid_point_config = {
-        "azimuth": args.azimuth,
-        "elevation": args.elevation,
-        "night_sky_background": args.nsb,
+        "azimuth": args["azimuth"],
+        "elevation": args["elevation"],
+        "night_sky_background": args["nsb"],
     }
 
     # Load metrics if provided
-    metrics = load_metrics(args.metrics) if args.metrics else {}
+    metrics = load_metrics(args["metrics"]) if args["metrics"] else {}
 
-    config = SimulationConfig(
+    simulation_config = SimulationConfig(
         grid_point=grid_point_config,
-        data_level=args.data_level,
-        science_case=args.science_case,
-        file_path=args.file_path,
-        file_type=args.file_type,
+        data_level=args["data_level"],
+        science_case=args["science_case"],
+        file_path=args["file_path"],
+        file_type=args["file_type"],
         metrics=metrics,
     )
 
-    simulation_params = config.configure_simulation()
-    print("Configured Simulation Parameters:", simulation_params)
+    simulation_params = simulation_config.configure_simulation()
+
+    serializable_config = {}
+
+    for key, value in simulation_params.items():
+        if isinstance(value, u.Quantity):
+            serializable_config[key] = f"{value.value} {value.unit}"
+        else:
+            serializable_config[key] = value
+
+    logger.info(f"Simulation parameters: {serializable_config}")
+    with open(output_filepath, "w", encoding="utf-8") as f:
+        json.dump(serializable_config, f, indent=4)
+    logger.info(f"Simulation parameters saved to: {output_filepath}")
 
 
 if __name__ == "__main__":
