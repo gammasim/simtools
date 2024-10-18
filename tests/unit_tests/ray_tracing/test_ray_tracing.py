@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from astropy.table import QTable
 
-from simtools.ray_tracing import RayTracing
+from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import names
 
 

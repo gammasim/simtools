@@ -5,7 +5,7 @@ import logging
 import astropy.units as u
 import pytest
 
-from simtools.ray_tracing import RayTracing
+from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
 
 logger = logging.getLogger()
