@@ -120,6 +120,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
     output_path = io_handler.IOHandler().get_output_directory(label)
+    output_filepath = Path(output_path).joinpath(f"{args['output_file']}")
 
     existing_data = load_existing_data(args.existing_data) if args["existing_data"] else []
 
@@ -139,8 +140,6 @@ def main():
     )
 
     resources = estimator.estimate_resources()
-
-    output_filepath = Path(output_path).joinpath(f"{args['output_file']}")
 
     serializable_resources = {}
 
