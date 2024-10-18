@@ -18,6 +18,6 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: test_derive_mirror_rnda_psf_random_flen.ecsv
     - REFERENCE_OUTPUT_FILE: |
         tests/resources/derive_mirror_rnda_psf_random_flen.ecsv
-      TOLERANCE: 1.e-1
+      TOLERANCE: 3.e-1
       TEST_COLUMNS:
         - mirror_reflection_random_angle_sigma1

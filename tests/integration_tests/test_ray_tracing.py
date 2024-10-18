@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import pytest
 
 from simtools.model.telescope_model import TelescopeModel
-from simtools.ray_tracing import RayTracing
+from simtools.ray_tracing.ray_tracing import RayTracing
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
