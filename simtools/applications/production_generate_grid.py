@@ -148,8 +148,8 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    _io_handler = io_handler.IOHandler()
-    output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
+    output_path = io_handler.IOHandler().get_output_directory(label)
+    output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
 
     axes = load_axes(args_dict["axes"])
     site_model = SiteModel(
@@ -212,9 +212,7 @@ def main():
         else:
             print(output_data)
 
-    output_file = args_dict["output_file"]
-
-    clean_grid_output(grid_points, output_file=output_dir.joinpath(output_file))
+    clean_grid_output(grid_points, output_file=output_filepath)
 
 
 if __name__ == "__main__":
