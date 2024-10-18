@@ -37,20 +37,24 @@ To estimate resources, run the script from the command line as follows:
 The output will show the estimated resources required for the simulation.
 """
 
+import json
 import logging
 import os
+from pathlib import Path
 
+import astropy.units as u
 import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.production_configuration.derive_computing_resources import ResourceEstimator
 
 
-def _parse():
+def _parse(label):
     """Parse command-line arguments."""
     config = configurator.Configurator(
-        description="Estimate compute and storage resources for simulations."
+        label=label, description="Estimate compute and storage resources for simulations."
     )
     config.parser.add_argument(
         "--azimuth", type=float, required=True, help="Azimuth angle in degrees."
@@ -66,13 +70,23 @@ def _parse():
         "--number_of_events", type=float, required=True, help="Number of events for the simulation."
     )
     config.parser.add_argument(
-        "--existing_data", type=str, help="Path to YAML file containing existing data (optional)."
+        "--existing_data",
+        type=str,
+        required=False,
+        help="Path to YAML file containing existing data (optional).",
     )
     config.parser.add_argument(
         "--lookup_file",
         type=str,
         default="tests/resources/production_resource_estimates.yaml",
         help="Resource estimates YAML file (default: production_resource_estimates.yaml).",
+    )
+    config.parser.add_argument(
+        "--output_file",
+        help="Name of the file to save the resource estimates.",
+        type=str,
+        required=False,
+        default="estimated_resources.json",
     )
 
     return config.initialize(db_config=False)
@@ -100,30 +114,46 @@ def load_existing_data(file_path: str) -> list:
 
 def main():
     """Run the Resource Estimator application."""
-    args, _ = _parse()
+    label = Path(__file__).stem
+    args, _ = _parse(label)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
+    output_path = io_handler.IOHandler().get_output_directory(label)
 
-    existing_data = load_existing_data(args.existing_data) if args.existing_data else []
+    existing_data = load_existing_data(args.existing_data) if args["existing_data"] else []
 
     grid_point_config = {
-        "azimuth": args.azimuth,
-        "elevation": args.elevation,
-        "night_sky_background": args.nsb,
+        "azimuth": args["azimuth"],
+        "elevation": args["elevation"],
+        "night_sky_background": args["nsb"],
     }
 
-    simulation_params = {"number_of_events": args.number_of_events, "site": args.site}
+    simulation_params = {"number_of_events": args["number_of_events"], "site": args["site"]}
 
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
         existing_data=existing_data,
-        lookup_file=args.lookup_file,
+        lookup_file=args["lookup_file"],
     )
 
     resources = estimator.estimate_resources()
-    print("Estimated Resources:", resources)
+
+    output_filepath = Path(output_path).joinpath(f"{args['output_file']}")
+
+    serializable_resources = {}
+
+    for key, value in resources.items():
+        if isinstance(value, u.Quantity):
+            serializable_resources[key] = f"{value.value} {value.unit}"
+        else:
+            serializable_resources[key] = value
+
+    logger.info(f"Estimated Resources: {serializable_resources}")
+    with open(output_filepath, "w", encoding="utf-8") as f:
+        json.dump(serializable_resources, f, indent=4)
+    logger.info(f"Estimated resources saved to: {output_filepath}")
 
 
 if __name__ == "__main__":
