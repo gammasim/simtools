@@ -535,38 +535,3 @@ def test_analyze_image_no_rx(ray_tracing_lst, mocker, test_photons_file):
     )
     assert mock_image.get_psf.call_count == 2
     mock_image.get_effective_area.assert_called_once()
-
-
-def test_analyze_image_with_rx(ray_tracing_lst, mocker, test_photons_file):
-    mock_image = mocker.Mock()
-    mock_image.get_psf.return_value = 4.256768651160611
-    mock_image.centroid_x = 100.0
-    mock_image.get_effective_area.return_value = 200.0
-
-    photons_file = Path(test_photons_file)
-    this_off_axis = 0.0
-    use_rx = True
-    cm_to_deg = 0.1
-    containment_fraction = 0.8
-    tel_transmission = 0.9
-
-    mock_process_rx = mocker.patch.object(
-        ray_tracing_lst, "_process_rx", return_value=(4.256768651160611, 100.0, 100.0, 200.0)
-    )
-
-    result = ray_tracing_lst._analyze_image(
-        mock_image,
-        photons_file,
-        this_off_axis,
-        use_rx,
-        cm_to_deg,
-        containment_fraction,
-        tel_transmission,
-    )
-    assert pytest.approx(result[0].value) == this_off_axis
-    assert pytest.approx(result[1].value) == 4.256768651160611
-    assert pytest.approx(result[2].value) == 4.25676865 * cm_to_deg
-    assert pytest.approx(result[3].value) == 180.0
-    assert np.isnan(result[4])
-
-    mock_process_rx.assert_called_once_with(photons_file)

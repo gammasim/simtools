@@ -236,7 +236,7 @@ class MirrorPanelPSF:
         print(f"Previous value = {self.rnda_start:.6f}")
         print(f"New value = {self.rnda_opt:.6f}\n")
 
-    def write_optimization_table(self):
+    def write_optimization_data(self):
         """
         Write optimization results to an astropy table (ecsv file).
 
@@ -267,10 +267,4 @@ class MirrorPanelPSF:
             args_dict=self.args_dict,
             metadata=MetadataCollector(args_dict=self.args_dict).top_level_meta,
             product_data=result_table,
-        )
-
-    def write_model_parameter(self):
-        """Write derived random reflection angle to telescope model."""
-        self._logger.info(
-            f"Writing derived random reflection angle to telescope model: {self.rnda_opt:.6f}"
         )
