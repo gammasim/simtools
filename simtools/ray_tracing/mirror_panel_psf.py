@@ -89,8 +89,8 @@ class MirrorPanelPSF:
             )
             tel.change_parameter("mirror_list", self.args_dict["mirror_list"])
             tel.export_parameter_file("mirror_list", mirror_list_file)
-        if self.args_dict["random_flen"] is not None:
-            tel.change_parameter("random_focal_length", str(self.args_dict["random_flen"]))
+        if self.args_dict["random_focal_length"] is not None:
+            tel.change_parameter("random_focal_length", str(self.args_dict["random_focal_length"]))
         tel.export_model_files()
 
         return tel
@@ -208,7 +208,7 @@ class MirrorPanelPSF:
                 if self.args_dict["test"]
                 else "all"
             ),
-            use_random_focal_length=self.args_dict["use_random_flen"],
+            use_random_focal_length=self.args_dict["use_random_focal_length"],
         )
         ray.simulate(test=self.args_dict["test"], force=True)  # force has to be True, always
         ray.analyze(force=True)

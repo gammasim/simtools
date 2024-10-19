@@ -29,8 +29,8 @@ r"""
         * file (table) with measured focal lengths per mirror panel
           (provided through ``--mirror_list``)
         * randomly generated focal lengths using an expected spread (value given through
-          ``--random_flen``) around the mean focal length (provided through the
-          Model Parameters DB). This option is switched with ``--use_random_flen``.
+          ``--random_focal_length``) around the mean focal length (provided through the
+          Model Parameters DB). This option is switched with ``--use_random_focal_length``.
 
     The tuning algorithm requires a starting value for the random reflection angle. This is either
     taken from the Model Parameters DB (default) or can be set using the argument ``--rnda``.
@@ -82,12 +82,12 @@ r"""
         default model is read from the simulation model database.
     mirror_list (file, optional)
         Table with mirror ID and panel radius.
-    use_random_flen (activation mode, optional)
-        Use random focal lengths, instead of the measured ones. The argument random_flen can be
-        used to replace the default random_focal_length from the model.
-    random_flen (float, optional)
+    use_random_focal_length (activation mode, optional)
+        Use random focal lengths, instead of the measured ones. The argument random_focal_length
+        can be used to replace the default random_focal_length from the model.
+    random_focal_length (float, optional)
         Value of the random focal lengths to replace the default random_focal_length. Only used if
-         use_random_flen is activated.
+        'use_random_focal_length' is activated.
     no_tuning (activation mode, optional)
         Turn off the tuning - A single case will be simulated and plotted.
     test (activation mode, optional)
@@ -183,14 +183,17 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
-        "--use_random_flen",
+        "--use_random_focal_length",
         help=("Use random focal lengths."),
         action="store_true",
         required=False,
     )
     config.parser.add_argument(
-        "--random_flen",
-        help="Value of the random focal length. Only used if use_random_flen is activated.",
+        "--random_focal_length",
+        help=(
+            "Value of the random focal length. "
+            "Only used if 'use_random_focal_length' is activated."
+        ),
         default=None,
         type=float,
         required=False,
