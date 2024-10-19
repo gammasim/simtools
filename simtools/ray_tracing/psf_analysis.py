@@ -112,10 +112,15 @@ class PSFImage:
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Photon list file not found: {photon_file}") from e
 
-        self.set_psf(2 * float(rx_output[0]), fraction=self._containment_fraction, unit="cm")
-        self.centroid_x = float(rx_output[1])
-        self.centroid_y = float(rx_output[2])
-        self._effective_area = float(rx_output[5])
+        try:
+            self.set_psf(2 * float(rx_output[0]), fraction=self._containment_fraction, unit="cm")
+            self.centroid_x = float(rx_output[1])
+            self.centroid_y = float(rx_output[2])
+            self._effective_area = float(rx_output[5])
+        except IndexError as e:
+            raise IndexError(f"Unexpected output format from rx: {rx_output}") from e
+        except ValueError as e:
+            raise ValueError(f"Invalid output format from rx: {rx_output}") from e
 
     def read_photon_list_from_simtel_file(self, photons_file):
         """
@@ -195,9 +200,6 @@ class PSFImage:
                     f" {self._total_area} != {total_area_in_file}"
                     " - Keeping the original value"
                 )
-            else:
-                # Do nothing - Keep the original value of _total_area
-                pass
         elif b"#" in line or len(words) == 0:
             # Skipping comments
             pass

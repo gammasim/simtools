@@ -218,8 +218,7 @@ def main():  # noqa: D103
     panel_psf = MirrorPanelPSF(label, args_dict, db_config)
     panel_psf.derive_random_reflection_angle()
     panel_psf.print_results()
-    panel_psf.write_optimization_table()
-    panel_psf.write_model_parameter()
+    panel_psf.write_optimization_data()
 
 
 if __name__ == "__main__":
