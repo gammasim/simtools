@@ -1,6 +1,6 @@
 import astropy.units as u
 
-from simtools.reporting.read_parameters import ReadParameters
+from simtools.reporting.docs_read_parameters import ReadParameters
 
 
 def test_get_all_parameter_descriptions(telescope_model_lst):
