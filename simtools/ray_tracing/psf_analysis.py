@@ -66,7 +66,10 @@ class PSFImage:
         self.centroid_y = None
         self._total_area = total_scattered_area
         self._stored_psf = {}
-        self._cm_to_deg = 180.0 / pi / focal_length if focal_length is not None else None
+        try:
+            self._cm_to_deg = 180.0 / pi / focal_length if focal_length is not None else None
+        except ZeroDivisionError as e:
+            raise ZeroDivisionError("Focal length cannot be zero") from e
         self._containment_fraction = containment_fraction
 
     def process_photon_list(self, photon_file, use_rx):
