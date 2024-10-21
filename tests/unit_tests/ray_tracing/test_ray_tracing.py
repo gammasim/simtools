@@ -30,11 +30,27 @@ def test_photons_file():
 
 
 @pytest.fixture
-def ray_tracing_lst(telescope_model_lst, simtel_path, io_handler):
+def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
+    mock_telescope_model = mocker.Mock()
+    mock_telescope_model.mirrors.number_of_mirrors = 3
+    mock_telescope_model.get_parameter_value.return_value = 10.0
+    mock_telescope_model.site = "North"
+    mock_telescope_model.name = "LSTN-01"
+    mock_telescope_model.export_config_file = mocker.Mock()
+    mock_telescope_model.mirrors.get_single_mirror_parameters = mocker.Mock(
+        return_value=(0, 0, 2600.0, 0, 0)
+    )
+
+    mock_telescope_model.config_file_path = tmp_test_directory.join("model")
+    return mock_telescope_model
+
+
+@pytest.fixture
+def ray_tracing_lst(telescope_model_lst_mock, simtel_path, io_handler):
     """A RayTracing instance with results read in that were simulated before"""
 
     ray_tracing_lst = RayTracing(
-        telescope_model=telescope_model_lst,
+        telescope_model=telescope_model_lst_mock,
         simtel_path=simtel_path,
         label="validate_optics",
         source_distance=10 * u.km,
@@ -57,10 +73,10 @@ def ray_tracing_lst(telescope_model_lst, simtel_path, io_handler):
 
 
 @pytest.fixture
-def ray_tracing_lst_single_mirror_mode(telescope_model_lst, simtel_path, io_handler):
-    telescope_model_lst.export_config_file()
+def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, simtel_path, io_handler):
+    telescope_model_lst_mock.export_config_file()
     return RayTracing(
-        telescope_model=telescope_model_lst,
+        telescope_model=telescope_model_lst_mock,
         simtel_path=simtel_path,
         label="validate_optics",
         source_distance=10 * u.km,
