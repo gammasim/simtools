@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: production_scale_events
   CONFIGURATION:
     BASE_PATH: "tests/resources/production_dl2_fits/"
-    ZENITHS: [20,52,40,60]
+    ZENITHS: [20, 40, 52, 60]
     OFFSETS: 0
     QUERY_POINT: [1, 180, 30, 0, 0]
     INTERPOLATE: True
