@@ -36,15 +36,9 @@ def generate_markdown_report(output_folder, args_dict, data):
 
     # Start writing the Markdown file
     with open(output_filename, "w", encoding="utf-8") as file:
-        # Write the main title for the report
-        file.write(
-            f"# Parameter Report for {args_dict['site']}"
-            f" Telescope {args_dict['telescope']} (Version {args_dict['model_version']})\n\n"
-        )
 
         # Write the section header to specify the telescope
-        file.write(f"## {args_dict['telescope']}\n\n")
-        file.write("---\n\n")
+        file.write(f"# {args_dict['telescope']}\n\n")
 
         # Start the table for displaying parameters
         file.write("| Parameter Name | Values | Short Description |\n")
