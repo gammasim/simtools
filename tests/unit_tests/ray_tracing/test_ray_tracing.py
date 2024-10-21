@@ -15,16 +15,6 @@ from simtools.ray_tracing.ray_tracing import INVALID_KEY_TO_PLOT, RayTracing
 
 
 @pytest.fixture
-def invalid_key_message():
-    return "Invalid key"
-
-
-@pytest.fixture
-def invalid_key():
-    return "invalid_key"
-
-
-@pytest.fixture
 def test_photons_file():
     return Path("photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz")
 
@@ -36,6 +26,7 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
     mock_telescope_model.get_parameter_value.return_value = 10.0
     mock_telescope_model.site = "North"
     mock_telescope_model.name = "LSTN-01"
+    mock_telescope_model.label = "ray_tracing"
     mock_telescope_model.export_config_file = mocker.Mock()
     mock_telescope_model.mirrors.get_single_mirror_parameters = mocker.Mock(
         return_value=(0, 0, 2600.0, 0, 0)
@@ -46,7 +37,7 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
 
 
 @pytest.fixture
-def ray_tracing_lst(telescope_model_lst_mock, simtel_path, io_handler):
+def ray_tracing_lst(telescope_model_lst_mock, simtel_path):
     """A RayTracing instance with results read in that were simulated before"""
 
     ray_tracing_lst = RayTracing(
@@ -73,7 +64,7 @@ def ray_tracing_lst(telescope_model_lst_mock, simtel_path, io_handler):
 
 
 @pytest.fixture
-def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, simtel_path, io_handler):
+def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, simtel_path):
     telescope_model_lst_mock.export_config_file()
     return RayTracing(
         telescope_model=telescope_model_lst_mock,
@@ -87,11 +78,11 @@ def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, simtel_path, io
     )
 
 
-def test_ray_tracing_init(simtel_path, io_handler, telescope_model_mst, caplog):
+def test_ray_tracing_init(simtel_path, telescope_model_lst_mock, caplog):
 
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
-            telescope_model=telescope_model_mst,
+            telescope_model=telescope_model_lst_mock,
             simtel_path=simtel_path,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
@@ -102,15 +93,15 @@ def test_ray_tracing_init(simtel_path, io_handler, telescope_model_mst, caplog):
     assert len(ray.off_axis_angle) == 2
     assert "Initializing RayTracing class" in caplog.text
     assert ray.simtel_path == simtel_path
-    assert repr(ray) == f"RayTracing(label={telescope_model_mst.label})\n"
+    assert repr(ray) == f"RayTracing(label={telescope_model_lst_mock.label})\n"
 
 
-def test_ray_tracing_single_mirror_mode(simtel_path, io_handler, telescope_model_mst, caplog):
-    telescope_model_mst.export_config_file()
+def test_ray_tracing_single_mirror_mode(simtel_path, telescope_model_lst_mock, caplog):
+    telescope_model_lst_mock.export_config_file()
 
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
-            telescope_model=telescope_model_mst,
+            telescope_model=telescope_model_lst_mock,
             simtel_path=simtel_path,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
@@ -123,15 +114,15 @@ def test_ray_tracing_single_mirror_mode(simtel_path, io_handler, telescope_model
     assert len(ray.off_axis_angle) == 2
     assert ray.single_mirror_mode
     assert "Single mirror mode is activated" in caplog.text
-    assert len(ray.mirrors) == telescope_model_mst.mirrors.number_of_mirrors
+    assert len(ray.mirrors) == telescope_model_lst_mock.mirrors.number_of_mirrors
 
 
 def test_ray_tracing_single_mirror_mode_mirror_numbers(
-    simtel_path, io_handler, telescope_model_mst, mocker
+    simtel_path, telescope_model_lst_mock, mocker
 ):
-    telescope_model_mst.export_config_file()
+    telescope_model_lst_mock.export_config_file()
     ray = RayTracing(
-        telescope_model=telescope_model_mst,
+        telescope_model=telescope_model_lst_mock,
         simtel_path=simtel_path,
         source_distance=10 * u.km,
         zenith_angle=30 * u.deg,
@@ -460,7 +451,7 @@ def test_ray_tracing_simulate(ray_tracing_lst, caplog, mocker):
     assert not photons_file.exists()
 
 
-def test_get_telescope_transmission_params_no_transmission(ray_tracing_lst, mocker):
+def test_get_telescope_transmission_params_no_transmission(ray_tracing_lst):
     """
     Test _get_telescope_transmission_params with no_tel_transmission=True.
     """
@@ -541,7 +532,7 @@ def test_analyze_image(ray_tracing_lst, mocker):
     mock_image.get_effective_area.assert_called_once_with(tel_transmission)
 
 
-def test_get_mean_std(ray_tracing_lst, caplog):
+def test_get_mean_std(ray_tracing_lst):
     ray_tracing = copy.deepcopy(ray_tracing_lst)
     _rows = [
         (0.0, 4.256768651160611, 0.1, 100.0, 200.0),
