@@ -39,6 +39,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.configuration import configurator
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.io_operations import io_handler
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
@@ -60,8 +61,12 @@ def _parse(label, description):
     config.parser.add_argument(
         "--base_path", type=str, required=True, help="Path to the FITS files for interpolation."
     )
-    config.parser.add_argument("--zeniths", nargs="+", type=str, help="List of zenith angles.")
-    config.parser.add_argument("--offsets", nargs="+", type=str, help="List of offsets in degrees.")
+    config.parser.add_argument(
+        "--zeniths", nargs="+", type=CommandLineParser.zenith_angle, help="List of zenith angles."
+    )
+    config.parser.add_argument(
+        "--offsets", nargs="+", type=float, help="List of offsets in degrees."
+    )
 
     config.parser.add_argument(
         "--interpolate", action="store_true", help="Interpolate results for a specific grid point."
@@ -69,7 +74,7 @@ def _parse(label, description):
     config.parser.add_argument(
         "--query_point",
         nargs=5,
-        type=str,
+        type=float,
         help="Grid point for interpolation (energy, azimuth, zenith, NSB, offset).",
     )
     config.parser.add_argument(
@@ -78,7 +83,7 @@ def _parse(label, description):
         default="interpolated_scaled_events.json",
         help="Output file to store the results. (default: 'interpolated_scaled_events.json').",
     )
-    return config.initialize(db_config=True)
+    return config.initialize(db_config=False)
 
 
 def main():
@@ -88,13 +93,9 @@ def main():
         label,
         "Evaluate statistical errors from FITS files and interpolate results.",
     )
-    # Better implementation might be to modify argparse to do that
-    args_dict["zeniths"] = list(map(int, args_dict["zeniths"]))
-    args_dict["offsets"] = list(map(int, args_dict["offsets"]))
-    args_dict["query_point"] = list(map(int, args_dict["query_point"]))
-
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+    logger.info(f"args dict: {args_dict}")
 
     output_path = io_handler.IOHandler().get_output_directory(label)
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
@@ -105,9 +106,8 @@ def main():
         for zenith in args_dict["zeniths"]:
             for offset in args_dict["offsets"]:
                 # no offset used here
-                file_name = (
-                    f"prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
-                )
+                file_name = f"prod6_LaPalma-{int(zenith.value)}deg_"
+                file_name += "gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
                 file_path = os.path.join(args_dict["base_path"], file_name)
                 evaluator_instances.append(
                     StatisticalErrorEvaluator(
@@ -120,7 +120,7 @@ def main():
                             "error_gamma_ray_psf": 0.01,
                             "error_image_template_methods": 0.03,
                         },
-                        grid_point=(1, 180, zenith, 0, offset),
+                        grid_point=(1, 180, zenith.value, 0, offset),
                     )
                 )
 
