@@ -25,25 +25,26 @@ To evaluate statistical errors and perform interpolation, run the script from th
 
 .. code-block:: console
 
-    simtools-production-scale-events --base_path /path/to/fits/ \
-        --zeniths 20 40 60 --offsets 0 1 2 3 4 5 --interpolate --query_point 1 180 30 0 0
+    simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \
+        --zeniths 20 52 40 60 --offsets 0 --interpolate --query_point 1 180 30 0 0
 
 The output will display the scaled events for the specified grid point.
 """
 
-import argparse
 import logging
 import os
+from pathlib import Path
 
 import numpy as np
 
+from simtools.configuration import configurator
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
 
 
-def _parse_command_line_arguments():
+def _parse(label, description):
     """
     Parse command line arguments for the statistical error evaluator application.
 
@@ -52,53 +53,55 @@ def _parse_command_line_arguments():
     argparse.Namespace
         Parsed command line arguments.
     """
-    parser = argparse.ArgumentParser(
-        description="Evaluate statistical errors from FITS files and interpolate results."
-    )
+    config = configurator.Configurator(label=label, description=description)
 
-    parser.add_argument(
-        "--base_path", type=str, required=False, help="Path to the FITS files for interpolation."
+    config.parser.add_argument(
+        "--base_path", type=str, required=True, help="Path to the FITS files for interpolation."
     )
-    parser.add_argument("--zeniths", nargs="+", type=int, help="List of zenith angles.")
-    parser.add_argument("--offsets", nargs="+", type=int, help="List of offsets in degrees.")
+    config.parser.add_argument("--zeniths", nargs="+", type=str, help="List of zenith angles.")
+    config.parser.add_argument("--offsets", nargs="+", type=str, help="List of offsets in degrees.")
 
-    parser.add_argument(
+    config.parser.add_argument(
         "--interpolate", action="store_true", help="Interpolate results for a specific grid point."
     )
-    parser.add_argument(
+    config.parser.add_argument(
         "--query_point",
         nargs=5,
-        type=int,
+        type=str,
         help="Grid point for interpolation (energy, azimuth, zenith, NSB, offset).",
     )
-
-    return parser.parse_args()
+    return config.initialize(db_config=False)
 
 
 def main():
     """Run the evaluator and interpolate."""
-    args = _parse_command_line_arguments()
+    label = Path(__file__).stem
+    args_dict, _ = _parse(
+        label,
+        "Evaluate statistical errors from FITS files and interpolate results.",
+    )
+    # Better implementation might be to modify argparse to do that
+    args_dict["zeniths"] = list(map(int, args_dict["zeniths"]))
+    args_dict["offsets"] = list(map(int, args_dict["offsets"]))
+    args_dict["query_point"] = list(map(int, args_dict["query_point"]))
 
-    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
     evaluator_instances = []
 
-    if args.base_path and args.zeniths and args.offsets:
-        for zenith in args.zeniths:
-            for offset in args.offsets:
+    if args_dict["base_path"] and args_dict["zeniths"] and args_dict["offsets"]:
+        for zenith in args_dict["zeniths"]:
+            for offset in args_dict["offsets"]:
+                # no offset used here
                 file_name = (
-                    f"prod5b-LaPalma-{zenith}deg-lin51-LL/"
-                    f"gamma_onSource.N.BL-4LSTs15MSTs-MSTN_ID0.eff-{offset}-CUT0.fits"
-                    if offset == 0
-                    else f"prod5b-LaPalma-{zenith}deg-lin51-LL/"
-                    f"gamma_cone.N.BL-4LSTs15MSTs-MSTN_ID0.eff-{offset}-CUT0.fits"
+                    f"prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
                 )
-                file_path = os.path.join(args.base_path, file_name)
-                offset_value = 2 * offset
+                file_path = os.path.join(args_dict["base_path"], file_name)
                 evaluator_instances.append(
                     StatisticalErrorEvaluator(
                         file_path,
-                        file_type="On-source" if offset == 0 else "Gamma-cone",
+                        file_type="Gamma-cone",
                         metrics={
                             "error_eff_area": 0.02,
                             "error_sig_eff_gh": 0.02,
@@ -106,7 +109,7 @@ def main():
                             "error_gamma_ray_psf": 0.01,
                             "error_image_template_methods": 0.03,
                         },
-                        grid_point=(1, 180, zenith, 0, offset_value),
+                        grid_point=(1, 180, zenith, 0, offset),
                     )
                 )
 
@@ -115,12 +118,12 @@ def main():
             evaluator.calculate_metrics()
             evaluator.calculate_scaled_events()
 
-    if args.interpolate and args.query_point:
+    if args_dict.get("interpolate") and args_dict.get("query_point"):
         # Perform interpolation for the given query point
         interpolation_handler = InterpolationHandler(evaluator_instances)
-        query_points = np.array([args.query_point])
+        query_points = np.array([args_dict["query_point"]])
         scaled_events = interpolation_handler.interpolate(query_points)
-        print(f"Scaled events for grid point {args.query_point}: {scaled_events}")
+        logger.info(f"Scaled events for grid point {args_dict['query_point']}: {scaled_events}")
 
 
 if __name__ == "__main__":
