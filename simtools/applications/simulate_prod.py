@@ -159,16 +159,18 @@ def pack_for_register(logger, simulator, args_dict):
     log_files = simulator.get_file_list(file_type="log")
     histogram_files = simulator.get_file_list(file_type="hist")
     tar_file_name = Path(log_files[0]).name.replace("log.gz", "log_hist.tar.gz")
+    directory_for_grid_upload = Path(args_dict.get("output_path")).joinpath(
+        "directory_for_grid_upload"
+    )
+    directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
+    tar_file_name = directory_for_grid_upload.joinpath(tar_file_name)
 
     with tarfile.open(tar_file_name, "w:gz") as tar:
         files_to_tar = log_files[:1] + histogram_files[:1]
         for file_to_tar in files_to_tar:
             tar.add(file_to_tar, arcname=Path(file_to_tar).name)
-    directory_for_grid_upload = Path(args_dict.get("output_path")).joinpath(
-        "directory_for_grid_upload"
-    )
-    directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
-    for file_to_move in [*output_files, tar_file_name]:
+
+    for file_to_move in [*output_files]:
         source_file = Path(file_to_move)
         destination_file = directory_for_grid_upload / source_file.name
         # Note that this will overwrite previous files which exist in the directory
