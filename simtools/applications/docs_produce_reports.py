@@ -14,7 +14,7 @@ from pathlib import Path
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
-from simtools.reporting.read_parameters import ReadParameters
+from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import general as gen
 
 
