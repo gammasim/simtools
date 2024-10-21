@@ -31,6 +31,7 @@ To evaluate statistical errors and perform interpolation, run the script from th
 The output will display the scaled events for the specified grid point.
 """
 
+import json
 import logging
 import os
 from pathlib import Path
@@ -38,6 +39,7 @@ from pathlib import Path
 import numpy as np
 
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
@@ -70,7 +72,13 @@ def _parse(label, description):
         type=str,
         help="Grid point for interpolation (energy, azimuth, zenith, NSB, offset).",
     )
-    return config.initialize(db_config=False)
+    config.parser.add_argument(
+        "--output_file",
+        type=str,
+        default="interpolated_scaled_events.json",
+        help="Output file to store the results. (default: 'interpolated_scaled_events.json').",
+    )
+    return config.initialize(db_config=True)
 
 
 def main():
@@ -87,6 +95,9 @@ def main():
 
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+
+    output_path = io_handler.IOHandler().get_output_directory(label)
+    output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
 
     evaluator_instances = []
 
@@ -117,13 +128,26 @@ def main():
         for evaluator in evaluator_instances:
             evaluator.calculate_metrics()
             evaluator.calculate_scaled_events()
+    else:
+        logger.warning(f"Base Path: {args_dict['base_path']}")
+        logger.warning(f"Zeniths: {args_dict['zeniths']}")
+        logger.warning(f"Offsets: {args_dict['offsets']}")
 
-    if args_dict.get("interpolate") and args_dict.get("query_point"):
-        # Perform interpolation for the given query point
-        interpolation_handler = InterpolationHandler(evaluator_instances)
-        query_points = np.array([args_dict["query_point"]])
-        scaled_events = interpolation_handler.interpolate(query_points)
-        logger.info(f"Scaled events for grid point {args_dict['query_point']}: {scaled_events}")
+        logger.warning("No files read")
+
+    # Perform interpolation for the given query point
+    interpolation_handler = InterpolationHandler(evaluator_instances)
+    query_points = np.array([args_dict["query_point"]])
+    scaled_events = interpolation_handler.interpolate(query_points)
+
+    output_data = {
+        "query_point": args_dict["query_point"],
+        "scaled_events": scaled_events.tolist(),
+    }
+    with open(output_filepath, "w", encoding="utf-8") as f:
+        json.dump(output_data, f, indent=4)
+    logger.info(f"Output saved to {output_filepath}")
+    logger.info(f"Scaled events for grid point {args_dict['query_point']}: {scaled_events}")
 
 
 if __name__ == "__main__":
