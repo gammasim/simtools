@@ -92,7 +92,7 @@ class RayTracing:
         self._file_results = self.output_directory.joinpath("results").joinpath(
             self._generate_file_name(file_type="ray-tracing", suffix=".ecsv")
         )
-        self._psf_images = None
+        self._psf_images = {}
         self._results = None
 
     def __repr__(self):
@@ -167,7 +167,7 @@ class RayTracing:
                 _focal_length += rng.normal(loc=0, scale=_random_focal_length[0])
             else:
                 _focal_length += rng.uniform(
-                    low=-1.0 * _random_focal_length[1], high=-1.0 * _random_focal_length[1]
+                    low=-1.0 * _random_focal_length[1], high=1.0 * _random_focal_length[1]
                 )
         return _focal_length
 
