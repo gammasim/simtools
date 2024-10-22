@@ -45,7 +45,7 @@ class MirrorPanelPSF:
 
         if self.args_dict["psf_measurement"]:
             self._get_psf_containment()
-        if not args_dict["psf_measurement_containment_mean"]:
+        if not self.args_dict["psf_measurement_containment_mean"]:
             raise ValueError("Missing PSF measurement")
 
         self.mean_d80 = None
@@ -113,8 +113,7 @@ class MirrorPanelPSF:
             )
         except KeyError as exc:
             raise KeyError(
-                "Missing column for psf measurement (psf_opt) in "
-                f"{self.args_dict['psf_measurement']}"
+                f"Missing column psf measurement (psf_opt) in {self.args_dict['psf_measurement']}"
             ) from exc
 
         self._logger.info(
@@ -133,42 +132,48 @@ class MirrorPanelPSF:
         if self.args_dict["no_tuning"]:
             self.rnda_opt = self.rnda_start
         else:
-
-            def collect_results(rnda, mean, sig):
-                self.results_rnda.append(rnda)
-                self.results_mean.append(mean)
-                self.results_sig.append(sig)
-
-            stop = False
-            mean_d80, sig_d80 = self.run_simulations_and_analysis(self.rnda_start)
-            rnda = self.rnda_start
-            sign_delta = np.sign(mean_d80 - self.args_dict["psf_measurement_containment_mean"])
-            collect_results(rnda, mean_d80, sig_d80)
-            while not stop:
-                rnda = rnda - (0.1 * self.rnda_start * sign_delta)
-                if rnda < 0:
-                    rnda = 0
-                    collect_results(rnda, mean_d80, sig_d80)
-                    break
-                mean_d80, sig_d80 = self.run_simulations_and_analysis(rnda)
-                new_sign_delta = np.sign(
-                    mean_d80 - self.args_dict["psf_measurement_containment_mean"]
-                )
-                stop = new_sign_delta != sign_delta
-                sign_delta = new_sign_delta
-                collect_results(rnda, mean_d80, sig_d80)
-
-            # Linear interpolation using two last rnda values
-            self.results_rnda, self.results_mean, self.results_sig = gen.sort_arrays(
-                self.results_rnda, self.results_mean, self.results_sig
-            )
-            self.rnda_opt = np.interp(
-                x=self.args_dict["psf_measurement_containment_mean"],
-                xp=self.results_mean,
-                fp=self.results_rnda,
-            )
+            self._optimize_reflection_angle()
 
         self.mean_d80, self.sig_d80 = self.run_simulations_and_analysis(self.rnda_opt)
+
+    def _optimize_reflection_angle(self, step_size=0.1):
+        """Optimize the random reflection angle to minimize the difference in D80 containment."""
+
+        def collect_results(rnda, mean, sig):
+            self.results_rnda.append(rnda)
+            self.results_mean.append(mean)
+            self.results_sig.append(sig)
+
+        stop = False
+        mean_d80, sig_d80 = self.run_simulations_and_analysis(self.rnda_start)
+        rnda = self.rnda_start
+        sign_delta = np.sign(mean_d80 - self.args_dict["psf_measurement_containment_mean"])
+        collect_results(rnda, mean_d80, sig_d80)
+        while not stop:
+            print("A", rnda, mean_d80, sig_d80, sign_delta, self.rnda_start)
+            rnda = rnda - (step_size * self.rnda_start * sign_delta)
+            if rnda < 0:
+                rnda = 0
+                collect_results(rnda, mean_d80, sig_d80)
+                break
+            mean_d80, sig_d80 = self.run_simulations_and_analysis(rnda)
+            new_sign_delta = np.sign(mean_d80 - self.args_dict["psf_measurement_containment_mean"])
+            stop = new_sign_delta != sign_delta
+            sign_delta = new_sign_delta
+            collect_results(rnda, mean_d80, sig_d80)
+
+        self._interpolate_optimal_rnda()
+
+    def _interpolate_optimal_rnda(self):
+        """Interpolate to find the optimal random reflection angle."""
+        self.results_rnda, self.results_mean, self.results_sig = gen.sort_arrays(
+            self.results_rnda, self.results_mean, self.results_sig
+        )
+        self.rnda_opt = np.interp(
+            x=self.args_dict["psf_measurement_containment_mean"],
+            xp=self.results_mean,
+            fp=self.results_rnda,
+        )
 
     def _get_starting_value(self):
         """Get optimization starting value from command line or previous model."""
@@ -184,7 +189,7 @@ class MirrorPanelPSF:
 
     def run_simulations_and_analysis(self, rnda):
         """
-        Run simulations and analysis for one given value of rnda.
+        Run ray tracing simulations and analysis for one given value of rnda.
 
         Parameters
         ----------
