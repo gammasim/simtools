@@ -34,10 +34,11 @@ def psf_image():
     return image
 
 
-def test_init_zero_focal_length():
+def test_init_zero_focal_length(caplog):
 
-    with pytest.raises(ZeroDivisionError):
+    with caplog.at_level(logging.WARNING):
         PSFImage(focal_length=0.0)
+    assert "Focal length is zero; no conversion from cm to deg possible." in caplog.text
 
 
 def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, caplog):
