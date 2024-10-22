@@ -170,3 +170,28 @@ def test_jsonnumpy_encoder():
 
     with pytest.raises(TypeError):
         encoder.default("abc")
+
+
+def test_dump_model_parameter(tmp_test_directory):
+
+    # single value, no unit
+    writer.ModelDataWriter.dump_model_parameter(
+        parameter_name="num_gains",
+        value=2,
+        instrument="LSTN-01",
+        model_version="6.0.0",
+        output_file=tmp_test_directory / "num_gains.json",
+        skip_output_validation=False,
+    )
+    assert Path(tmp_test_directory / "num_gains.json").is_file()
+
+    # list of value, with unit
+    writer.ModelDataWriter.dump_model_parameter(
+        parameter_name="array_element_position_utm",
+        value=[217.6596 * u.km, 3184.9951 * u.km, 218500.0 * u.cm],
+        instrument="LSTN-01",
+        model_version="6.0.0",
+        output_file=tmp_test_directory / "array_element_position_utm.json",
+        skip_output_validation=False,
+    )
+    assert Path(tmp_test_directory / "array_element_position_utm.json").is_file()

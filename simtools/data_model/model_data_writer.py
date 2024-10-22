@@ -10,8 +10,10 @@ import yaml
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.io_operations import io_handler
+from simtools.utils import names
 
 __all__ = ["ModelDataWriter"]
 
@@ -51,6 +53,8 @@ class ModelDataWriter:
         """Initialize model data writer."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
+        self.schema_dict = {}
+        # TODO should this depend on args_dict?
         if args_dict is not None:
             self.io_handler.set_paths(
                 output_path=args_dict.get("output_path", None),
@@ -92,12 +96,193 @@ class ModelDataWriter:
         )
         if validate_schema_file is not None and not args_dict.get("skip_output_validation", True):
             product_data = writer.validate_and_transform(
-                product_data=product_data,
+                product_data_table=product_data,
                 validate_schema_file=validate_schema_file,
             )
         writer.write(metadata=metadata, product_data=product_data)
 
-    def validate_and_transform(self, product_data=None, validate_schema_file=None):
+    @staticmethod
+    def dump_model_parameter(parameter_name, value, instrument, model_version, output_file):
+        """
+        Generate DB-style model parameter dict and write it to json file.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the parameter.
+        value: any
+            Value of the parameter.
+        instrument: str
+            Name of the instrument.
+        model_version: str
+            Version of the model.
+        output_file: str
+            Name of output file.
+        """
+        writer = ModelDataWriter(
+            product_data_file=output_file,
+            product_data_format="json",
+            args_dict=None,
+        )
+        _json_dict = writer.get_validated_parameter_dict(
+            parameter_name, value, instrument, model_version
+        )
+        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+
+    def get_validated_parameter_dict(self, parameter_name, value, instrument, model_version):
+        """
+        Get validated parameter dictionary.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the parameter.
+        value: any
+            Value of the parameter.
+        instrument: str
+            Name of the instrument.
+        model_version: str
+            Version of the model.
+
+        Returns
+        -------
+        dict
+            Validated parameter dictionary.
+        """
+        self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
+        schema_file = self._read_model_parameter_schema(parameter_name)
+
+        data_dict = {
+            "parameter": parameter_name,
+            "instrument": instrument,
+            "site": names.get_site_from_array_element_name(instrument),
+            "version": model_version,
+            "value": value,
+            "unit": self._get_unit_from_schema(),
+            "type": self._get_parameter_type(),  # TODO json types (e.g., float64 instead of double)
+            "applicable": self._get_parameter_applicability(instrument),
+            "file": self._parameter_is_a_file(),
+        }
+        data_dict = self.validate_and_transform(
+            product_data_dict=data_dict,
+            validate_schema_file=schema_file,
+            is_model_parameter=True,
+        )
+        # validate_and_transform converted values to units given in schema
+        if isinstance(data_dict["value"], list):
+            data_dict["value"] = [
+                val.value for val in data_dict["value"] if isinstance(val, u.Quantity)
+            ]
+        elif isinstance(data_dict["value"], u.Quantity):
+            data_dict["value"] = data_dict["value"].value
+        return data_dict
+
+    def _read_model_parameter_schema(self, parameter_name):
+        """
+        Read model parameter schema.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the parameter.
+        """
+        # TODO note names.py and how schemas are read there
+        schema_file = (
+            Path("simtools").joinpath(MODEL_PARAMETER_SCHEMA_PATH) / f"{parameter_name}.schema.yml"
+        )
+        try:
+            self.schema_dict = gen.collect_data_from_file_or_dict(
+                file_name=schema_file, in_dict=None
+            )
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Schema file not found: {schema_file}") from exc
+        return schema_file
+
+    def _get_parameter_type(self):
+        """
+        Return parameter type from schema.
+
+        Returns
+        -------
+        str
+            Parameter type
+        """
+        _parameter_type = []
+        for data in self.schema_dict["data"]:
+            _parameter_type.append(data["type"])
+        return _parameter_type if len(_parameter_type) > 1 else _parameter_type[0]
+
+    def _parameter_is_a_file(self):
+        """
+        Check if parameter is a file.
+
+        Returns
+        -------
+        bool
+            True if parameter is a file.
+
+        """
+        try:
+            return self.schema_dict["data"][0]["type"] == "file"
+        except (KeyError, IndexError):
+            pass
+        return False
+
+    def _get_parameter_applicability(self, telescope_name):
+        """
+        Check if a parameter is applicable for a given telescope using schema files.
+
+        First check for exact telescope name (e.g., LSTN-01), if not listed in the schema
+        use telescope type (LSTN).
+
+        Parameters
+        ----------
+        telescope_name: str
+            Telescope name (e.g., LSTN-01)
+
+        Returns
+        -------
+        bool
+            True if parameter is applicable to telescope.
+
+        """
+        try:
+            if telescope_name in self.schema_dict["instrument"]["type"]:
+                return True
+        except KeyError as exc:
+            self._logger.error("Schema file does not contain 'instrument:type' key.")
+            raise exc
+
+        return (
+            names.get_array_element_type_from_name(telescope_name)
+            in self.schema_dict["instrument"]["type"]
+        )
+
+    def _get_unit_from_schema(self):
+        """
+        Return unit(s) from schema dict.
+
+        Returns
+        -------
+        str or list
+            Parameter unit(s)
+        """
+        try:
+            unit_list = []
+            for data in self.schema_dict["data"]:
+                unit_list.append(data["unit"] if data["unit"] != "dimensionless" else None)
+            return unit_list if len(unit_list) > 1 else unit_list[0]
+        except (KeyError, IndexError):
+            pass
+        return None
+
+    def validate_and_transform(
+        self,
+        product_data_table=None,
+        product_data_dict=None,
+        validate_schema_file=None,
+        is_model_parameter=False,
+    ):
         """
         Validate product data using jsonschema given in metadata.
 
@@ -105,17 +290,21 @@ class ModelDataWriter:
 
         Parameters
         ----------
-        product_data: astropy Table
-            Model data to be validated
+        product_data_table: astropy Table
+            Model data to be validated.
+        product_data_dict: dict
+            Model data to be validated.
         validate_schema_file: str
             Schema file used in validation of output data.
-
+        is_model_parameter: bool
+            True if data describes a model parameter.
         """
         _validator = validate_data.DataValidator(
             schema_file=validate_schema_file,
-            data_table=product_data,
+            data_table=product_data_table,
+            data_dict=product_data_dict,
         )
-        return _validator.validate_and_transform()
+        return _validator.validate_and_transform(is_model_parameter)
 
     def write(self, product_data=None, metadata=None):
         """
@@ -169,12 +358,29 @@ class ModelDataWriter:
         FileNotFoundError
             if data writing was not successful.
         """
+        data_dict = ModelDataWriter.lists_to_strings_for_model_parameter(data_dict)
+
         try:
             with open(file_name, "w", encoding="UTF-8") as file:
                 json.dump(data_dict, file, indent=4, sort_keys=False, cls=JsonNumpyEncoder)
                 file.write("\n")
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Error writing model data to {file_name}") from exc
+
+    @staticmethod
+    def lists_to_strings_for_model_parameter(data_dict):
+        """Ensure sim_telarray style lists as strings."""
+        try:
+            if isinstance(data_dict["unit"], list):
+                data_dict["unit"] = sorted(set(data_dict["unit"]))
+            if isinstance(data_dict["type"], list):
+                data_dict["type"] = sorted(set(data_dict["type"]))
+            data_dict["value"] = gen.convert_list_to_string(data_dict["value"])
+            data_dict["unit"] = gen.convert_list_to_string(data_dict["unit"], True)
+            data_dict["type"] = gen.convert_list_to_string(data_dict["type"], True)
+        except KeyError:
+            pass
+        return data_dict
 
     def write_metadata_to_yml(self, metadata, yml_file=None, keys_lower_case=False):
         """
