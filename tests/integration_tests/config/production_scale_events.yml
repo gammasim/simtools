@@ -8,5 +8,7 @@ CTA_SIMPIPE:
     QUERY_POINT: [1, 180, 30, 0, 0]
     INTERPOLATE: True
     OUTPUT_PATH: simtools-output
+    OUTPUT_FILE: "interpolated_scaled_events.json"
+
   INTEGRATION_TESTS:
     - OUTPUT_FILE: "interpolated_scaled_events.json"
