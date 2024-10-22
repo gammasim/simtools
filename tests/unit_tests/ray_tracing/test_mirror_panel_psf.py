@@ -262,7 +262,7 @@ def test_derive_random_reflection_angle_no_tuning(mock_mirror_panel_psf):
     mirror_psf.derive_random_reflection_angle()
 
     assert mirror_psf.rnda_opt == 0.1
-    mirror_psf.run_simulations_and_analysis.assert_called_once_with(0.1)
+    mirror_psf.run_simulations_and_analysis.assert_called_once_with(0.1, save_figures=False)
     assert mirror_psf.mean_d80 == 0.5
     assert mirror_psf.sig_d80 == 0.1
 
@@ -285,7 +285,7 @@ def test_derive_random_reflection_angle_with_tuning(mock_mirror_panel_psf):
         mirror_psf.derive_random_reflection_angle()
 
         mock_optimize.assert_called_once()
-        mock_run_simulations.assert_called_once_with(mirror_psf.rnda_opt)
+        mock_run_simulations.assert_called_once_with(mirror_psf.rnda_opt, save_figures=False)
         assert mirror_psf.mean_d80 == 0.5
         assert mirror_psf.sig_d80 == 0.1
 
