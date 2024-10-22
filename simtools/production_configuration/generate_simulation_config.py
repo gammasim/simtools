@@ -208,8 +208,9 @@ class SimulationConfig:
         metric_results = self.evaluator.metric_results
 
         # Calculate average uncertainty from metrics, use 0.1 as default if not found
-        error_eff_area = metric_results.get("error_eff_area", {"uncertainties": [0.1]})
-        avg_uncertainty = np.mean(error_eff_area["uncertainties"])
+        error_eff_area = metric_results.get("error_eff_area", {"relative_errors": [0.1]})
+        print(f"error_eff_area {error_eff_area}")
+        avg_uncertainty = np.mean(error_eff_area["relative_errors"])
 
         # Calculate the base number of events from the evaluator
         base_events = self._fetch_existing_events()

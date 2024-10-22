@@ -25,6 +25,8 @@ file_type (str, required)
     Type of the FITS file ('On-source' or 'Offset').
 metrics (str, optional)
     Path to a YAML file containing metrics for evaluation.
+site (str, required)
+    The observatory site (North or South).
 
 Example
 -------
@@ -35,7 +37,7 @@ To run the simulation configuration, execute the script as follows:
     simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \
       --nsb 0.3 --data_level "A" --science_case "high_precision" \
       --file_path "path/to/fits_file.fits" --file_type "On-source" \
-      --metrics "path/to/metrics.yaml"
+      --metrics_file "path/to/metrics.yaml" --site North
 
 The output will show the configured simulation parameters.
 """
@@ -86,16 +88,23 @@ def _parse(label):
         help="Type of the FITS file ('On-source' or 'Offset').",
     )
     config.parser.add_argument(
-        "--metrics",
+        "--metrics_file",
+        required=True,
         type=str,
-        help="Path to YAML file containing metrics and precision as values (optional).",
+        help="Path to YAML file containing metrics and required precision as values (required).",
+    )
+    config.parser.add_argument(
+        "--site",
+        type=str,
+        required=True,
+        help="Site location for the simulation (e.g., 'North', 'South').",
     )
     config.parser.add_argument(
         "--output_file",
         help="Name of the file to save the configured simulation parameters.",
         type=str,
         required=False,
-        default="estimated_resources.json",
+        default="configured_simulation_params.json",
     )
 
     return config.initialize(db_config=False)
@@ -147,7 +156,7 @@ def main():
     }
 
     # Load metrics if provided
-    metrics = load_metrics(args["metrics"]) if args["metrics"] else {}
+    metrics = load_metrics(args["metrics_file"]) if args["metrics_file"] else {}
 
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,
