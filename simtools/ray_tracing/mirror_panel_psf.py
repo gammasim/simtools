@@ -121,7 +121,7 @@ class MirrorPanelPSF:
             f" +- {self.args_dict['psf_measurement_containment_sigma']:.4} cm"
         )
 
-    def derive_random_reflection_angle(self):
+    def derive_random_reflection_angle(self, save_figures=False):
         """
         Minimize the difference between measured and simulated PSF for reflection angle.
 
@@ -134,7 +134,9 @@ class MirrorPanelPSF:
         else:
             self._optimize_reflection_angle()
 
-        self.mean_d80, self.sig_d80 = self.run_simulations_and_analysis(self.rnda_opt)
+        self.mean_d80, self.sig_d80 = self.run_simulations_and_analysis(
+            self.rnda_opt, save_figures=save_figures
+        )
 
     def _optimize_reflection_angle(self, step_size=0.1):
         """Optimize the random reflection angle to minimize the difference in D80 containment."""
@@ -150,7 +152,6 @@ class MirrorPanelPSF:
         sign_delta = np.sign(mean_d80 - self.args_dict["psf_measurement_containment_mean"])
         collect_results(rnda, mean_d80, sig_d80)
         while not stop:
-            print("A", rnda, mean_d80, sig_d80, sign_delta, self.rnda_start)
             rnda = rnda - (step_size * self.rnda_start * sign_delta)
             if rnda < 0:
                 rnda = 0
@@ -187,7 +188,7 @@ class MirrorPanelPSF:
         self._logger.info(f"Start value for mirror_reflection_random_angle: {rnda_start} deg")
         return rnda_start
 
-    def run_simulations_and_analysis(self, rnda):
+    def run_simulations_and_analysis(self, rnda, save_figures=False):
         """
         Run ray tracing simulations and analysis for one given value of rnda.
 
@@ -195,6 +196,8 @@ class MirrorPanelPSF:
         ----------
         rnda: float
             Random reflection angle in degrees.
+        save_figures: bool
+            Save figures.
 
         Returns
         -------
@@ -217,6 +220,8 @@ class MirrorPanelPSF:
         )
         ray.simulate(test=self.args_dict["test"], force=True)  # force has to be True, always
         ray.analyze(force=True)
+        if save_figures:
+            ray.plot("d80_cm", save=True, d80=self.args_dict["psf_measurement_containment_mean"])
 
         return (
             ray.get_mean("d80_cm").to(u.cm).value,

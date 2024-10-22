@@ -478,7 +478,7 @@ class RayTracing:
         """Read existing results file and store it in _results."""
         self._results = astropy.io.ascii.read(self._file_results, format="ecsv")
 
-    def plot(self, key, save=False, **kwargs):
+    def plot(self, key, save=False, d80=None, **kwargs):
         """
         Plot key vs off-axis angle and save the figure in pdf.
 
@@ -488,6 +488,8 @@ class RayTracing:
             d80_cm, d80_deg, eff_area or eff_flen
         save: bool
             If True, figure will be saved.
+        d80: float
+            d80 for cumulative PSF plot.
         **kwargs:
             kwargs for plt.plot
 
@@ -515,6 +517,29 @@ class RayTracing:
             plot_file = self.output_directory.joinpath("figures").joinpath(plot_file_name)
             self._logger.info(f"Saving fig in {plot_file}")
             plot.savefig(plot_file)
+
+            for off_axis_key, image in self._psf_images.items():
+                image_file_name = self._generate_file_name(
+                    file_type="ray-tracing",
+                    off_axis_angle=off_axis_key,
+                    suffix=".pdf",
+                    extra_label=f"image_{key}",
+                )
+                image_file = self.output_directory.joinpath("figures").joinpath(image_file_name)
+                self._logger.info(f"Saving PSF image to {image_file}")
+                image.plot_image(file_name=image_file)
+
+                image_cumulative_file_name = self._generate_file_name(
+                    file_type="ray-tracing",
+                    off_axis_angle=off_axis_key,
+                    suffix=".pdf",
+                    extra_label=f"cumulative_psf_{key}",
+                )
+                image_cumulative_file = self.output_directory.joinpath("figures").joinpath(
+                    image_cumulative_file_name
+                )
+                self._logger.info(f"Saving cumulative PSF to {image_cumulative_file}")
+                image.plot_cumulative(file_name=image_cumulative_file, d80=d80)
 
     def plot_histogram(self, key, **kwargs):
         """

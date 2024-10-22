@@ -216,7 +216,7 @@ def main():  # noqa: D103
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     panel_psf = MirrorPanelPSF(label, args_dict, db_config)
-    panel_psf.derive_random_reflection_angle()
+    panel_psf.derive_random_reflection_angle(save_figures=True)
     panel_psf.print_results()
     panel_psf.write_optimization_data()
 

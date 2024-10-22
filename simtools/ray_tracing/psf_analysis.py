@@ -439,7 +439,7 @@ class PSFImage:
         result.Y = y_pos_data
         return result
 
-    def plot_image(self, centralized=True, **kwargs):
+    def plot_image(self, centralized=True, file_name=None, **kwargs):
         """
         Plot 2D image as histogram (in cm).
 
@@ -465,17 +465,22 @@ class PSFImage:
         kwargs_for_psf = collect_kwargs("psf", kwargs)
 
         ax = plt.gca()
-        # Image histogram
+        ax.set_xlabel("X Position (cm)")
+        ax.set_ylabel("Y Position (cm)")
         ax.hist2d(data["X"], data["Y"], **kwargs_for_image)
         ax.set_aspect("equal", "datalim")
 
-        # PSF circle
+        # PSF circle (80%)
         center = (0, 0) if centralized else (self.centroid_x, self.centroid_y)
         circle = plt.Circle(center, self.get_psf(0.8) / 2, **kwargs_for_psf)
         ax.add_artist(circle)
 
         ax.axhline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
         ax.axvline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
+
+        if file_name is not None:
+            plt.savefig(file_name)
+            plt.close()
 
     def get_cumulative_data(self, radius=None):
         """
@@ -508,7 +513,7 @@ class PSFImage:
 
         return result
 
-    def plot_cumulative(self, **kwargs):
+    def plot_cumulative(self, file_name=None, d80=None, **kwargs):
         """Plot cumulative data (intensity vs radius).
 
         Parameters
@@ -517,4 +522,14 @@ class PSFImage:
             image_* for the histogram plot and psf_* for the psf circle.
         """
         data = self.get_cumulative_data()
+        ax = plt.gca()
+        plt.tight_layout(pad=1.5)
+        ax.set_xlabel("Radius (cm)")
+        ax.set_ylabel("Contained light %")
         plt.plot(data[self.__PSF_RADIUS], data[self.__PSF_CUMULATIVE], **kwargs)
+        plt.axvline(x=self.get_psf(0.8) / 2, color="b", linestyle="--", linewidth=1)
+        if d80 is not None:
+            plt.axvline(x=d80 / 2.0, color="r", linestyle="--", linewidth=1)
+        if file_name is not None:
+            plt.savefig(file_name)
+            plt.close()
