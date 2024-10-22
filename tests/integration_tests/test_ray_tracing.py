@@ -63,6 +63,7 @@ def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
 
     plot_file_psf = io_handler.get_output_file(file_name="d80_test_rx.pdf", sub_dir="plots")
     plt.savefig(plot_file_psf)
+    plt.close()
 
     # Plotting eff_area
     plt.figure(figsize=(8, 6), tight_layout=True)
@@ -75,6 +76,7 @@ def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
 
     plot_file_area = io_handler.get_output_file(file_name="eff_area_test_rx.pdf", sub_dir="plots")
     plt.savefig(plot_file_area)
+    plt.close()
 
 
 def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_sst):
@@ -100,6 +102,7 @@ def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_
             file_name=f"test_plot_image_{ii}.pdf", sub_dir="plots"
         )
         plt.savefig(plot_file)
+        plt.close()
 
 
 def test_single_mirror(db_config, simtel_path_no_mock, io_handler, telescope_model_mst, plot=False):
@@ -122,6 +125,7 @@ def test_single_mirror(db_config, simtel_path_no_mock, io_handler, telescope_mod
     ray.plot_histogram("d80_cm", color="r", bins=10)
     plot_file = io_handler.get_output_file(file_name="d80_hist_test.pdf", sub_dir="plots")
     plt.savefig(plot_file)
+    plt.close()
 
 
 def test_integral_curve(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
@@ -145,3 +149,4 @@ def test_integral_curve(db_config, simtel_path_no_mock, io_handler, telescope_mo
         im.plot_cumulative(color="b")
     plot_file = io_handler.get_output_file(file_name="test_cumulative_psf.pdf", sub_dir="plots")
     plt.savefig(plot_file)
+    plt.close()
