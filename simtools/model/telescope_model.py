@@ -94,7 +94,7 @@ class TelescopeModel(ModelParameter):
         )
         if self._single_mirror_list_file_paths is None:
             self._single_mirror_list_file_paths = {}
-        self._single_mirror_list_file_paths[mirror_number] = self._config_file_directory.joinpath(
+        self._single_mirror_list_file_paths[mirror_number] = self.config_file_directory.joinpath(
             file_name
         )
 
@@ -129,14 +129,18 @@ class TelescopeModel(ModelParameter):
     def _load_mirrors(self):
         """Load the attribute mirrors by creating a Mirrors object with the mirror list file."""
         mirror_list_file_name = self.get_parameter_value("mirror_list")
+        self._logger.debug(f"Reading mirror list from {mirror_list_file_name}")
         try:
-            mirror_list_file = gen.find_file(mirror_list_file_name, self._config_file_directory)
+            mirror_list_file = gen.find_file(mirror_list_file_name, self.config_file_directory)
         except FileNotFoundError:
             mirror_list_file = gen.find_file(mirror_list_file_name, self.io_handler.model_path)
             self._logger.warning(
                 "Mirror_list_file was not found in the config directory - "
                 "Using the one found in the model_path"
             )
+        except TypeError as exc:
+            raise TypeError("Undefined mirror list") from exc
+
         self._mirrors = Mirrors(mirror_list_file, parameters=self._parameters)
 
     def get_telescope_effective_focal_length(self, unit="m", return_focal_length_if_zero=False):
