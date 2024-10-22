@@ -68,8 +68,9 @@ class PSFImage:
         self._stored_psf = {}
         try:
             self._cm_to_deg = 180.0 / pi / focal_length if focal_length is not None else None
-        except ZeroDivisionError as e:
-            raise ZeroDivisionError("Focal length cannot be zero") from e
+        except ZeroDivisionError:
+            self._cm_to_deg = None
+            self._logger.warning("Focal length is zero; no conversion from cm to deg possible.")
         self._containment_fraction = containment_fraction
 
     def process_photon_list(self, photon_file, use_rx):
