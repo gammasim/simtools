@@ -1,0 +1,15 @@
+# This YAML file contains the error metrics used for statistical error evaluation
+#  for production configuration.
+#
+# Metrics:
+#   error_eff_area: Relative error on the effective area
+#   error_sig_eff_gh: Uncertainty in gamma-hadron separation
+#   error_energy_estimate_bdt_reg_tree: Error in energy estimation using BDT regression
+#   error_gamma_ray_psf: Uncertainty in the point spread function for gamma-rays
+#   error_image_template_methods: Error in image template reconstruction methods
+
+error_eff_area: 0.02
+error_sig_eff_gh: 0.02
+error_energy_estimate_bdt_reg_tree: 0.05
+error_gamma_ray_psf: 0.01
+error_image_template_methods: 0.03
