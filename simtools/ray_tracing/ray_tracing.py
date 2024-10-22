@@ -14,6 +14,7 @@ import numpy as np
 from astropy.table import QTable
 
 from simtools.io_operations import io_handler
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.model_utils import compute_telescope_transmission
 from simtools.ray_tracing.psf_analysis import PSFImage
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
@@ -107,12 +108,20 @@ class RayTracing:
         """Initialize ray tracing configuration to namedtuple."""
         if self.single_mirror_mode:
             return self._initialize_single_mirror_mode(mirror_numbers)
-        return {
-            0: {
-                "source_distance": source_distance.to("km").value,
-                "focal_length": self.telescope_model.get_parameter_value("mirror_focal_length"),
+        try:
+            return {
+                0: {
+                    "source_distance": source_distance.to("km").value,
+                    "focal_length": self.telescope_model.get_parameter_value("mirror_focal_length"),
+                }
             }
-        }
+        except InvalidModelParameterError:
+            return {
+                0: {
+                    "source_distance": source_distance.to("km").value,
+                    "focal_length": 0.0,
+                }
+            }
 
     def _initialize_single_mirror_mode(self, mirror_numbers):
         """
