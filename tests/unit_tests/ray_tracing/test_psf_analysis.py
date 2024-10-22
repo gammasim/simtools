@@ -34,6 +34,12 @@ def psf_image():
     return image
 
 
+def test_init_zero_focal_length():
+
+    with pytest.raises(ZeroDivisionError):
+        PSFImage(focal_length=0.0)
+
+
 def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, caplog):
     test_file = io_handler.get_input_data_file(
         file_name="photons-North-LSTN-01-d10.0km-za20.0deg-off0.000deg_validate_optics.lis.gz",
