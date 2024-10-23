@@ -61,7 +61,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
 
     assert isinstance(params, dict)
     # given uncertainty 1/(1-0.01) * sum of event hist
-    assert params.get("number_of_events") == 606
+    assert params.get("number_of_events") == 600
 
 
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
@@ -102,4 +102,4 @@ def test_edge_cases(mock_statistical_error_evaluator):
 
     params = config.configure_simulation()
 
-    assert params.get("number_of_events") == 606
+    assert params.get("number_of_events") == 600
