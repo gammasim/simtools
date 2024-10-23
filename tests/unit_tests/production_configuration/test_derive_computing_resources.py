@@ -27,8 +27,14 @@ def sample_data():
             "azimuth": 60.0,
             "elevation": 45.0,
             "nsb": 0.3,
-            "compute_hours": 5000.0,
-            "storage_gb": 500.0,
+            "compute_total": {
+                "value": 5000.0,
+                "unit": "hr",
+            },
+            "storage_total": {
+                "value": 500,
+                "unit": "GB",
+            },
             "events": 1e9,
         },
     ]
@@ -270,8 +276,8 @@ def test_interpolate_resources(sample_data, file_data, monkeypatch):
     resources = estimator.interpolate_resources(number_of_events)
 
     expected_resources = {
-        "compute": u.Quantity(5000.0, u.hour),
-        "storage": u.Quantity(500.0, u.GB),
+        "compute_total": u.Quantity(5000.0, u.hour),
+        "storage_total": u.Quantity(500.0, u.GB),
     }
 
     assert resources == expected_resources
