@@ -9,26 +9,30 @@ from simtools.production_configuration.generate_production_grid import GridGener
 axes = [
     {
         "name": "energy",
-        "range": (1e9, 1e12),
-        "binning": 5,
+        "range": (1e9, 1e14),
+        "binning": 2,
         "scaling": "log",
         "distribution": "uniform",
+        "unit": "TeV",
     },
     {
         "name": "azimuth",
-        "range": (0, 90),
-        "binning": 5,
+        "range": (70, 80),
+        "binning": 2,
         "scaling": "linear",
         "distribution": "uniform",
+        "unit": "deg",
     },
     {
         "name": "zenith_angle",
-        "range": (10, 60),
-        "binning": 5,
+        "range": (20, 30),
+        "binning": 2,
         "scaling": "linear",
         "distribution": "uniform",
+        "unit": "deg",
     },
 ]
+
 
 data_level = "B"
 science_case = "high_precision"
@@ -63,7 +67,7 @@ def test_generate_power_law_values():
 
 def test_adjust_axis_range():
     adjusted_range = grid_gen.adjust_axis_range((1e9, 1e12), "energy")
-    assert adjusted_range == (1e9, 1555555555555.5557)
+    assert adjusted_range == (1e9, 1111111111111.111)
 
 
 def test_convert_altaz_to_radec():
