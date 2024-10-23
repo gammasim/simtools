@@ -136,14 +136,24 @@ class ResourceEstimator:
             ),
         )
 
-        compute_hours = (
-            closest_data["compute_hours"] * (number_of_events / closest_data["events"]) * u.hr
+        compute_total_value = closest_data["compute_total"]["value"]
+        compute_total_unit = closest_data["compute_total"]["unit"]
+
+        storage_total_value = closest_data["storage_total"]["value"]
+        storage_total_unit = closest_data["storage_total"]["unit"]
+
+        compute_total = (
+            compute_total_value
+            * (number_of_events / closest_data["events"])
+            * u.Unit(compute_total_unit)
         )
-        storage_gb = (
-            closest_data["storage_per_event"] * (number_of_events / closest_data["events"]) * u.GB
+        storage_total = (
+            storage_total_value
+            * (number_of_events / closest_data["events"])
+            * u.Unit(storage_total_unit)
         )
 
-        return {"compute_hours": compute_hours, "storage_per_event": storage_gb}
+        return {"compute_total": compute_total, "storage_total": storage_total}
 
     def guess_resources_per_event(self, number_of_events: int) -> dict:
         """
