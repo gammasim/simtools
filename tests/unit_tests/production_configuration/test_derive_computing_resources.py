@@ -114,8 +114,8 @@ def test_estimate_resources_interpolation(sample_data, file_data, monkeypatch):
     )
 
     expected_resources = {
-        "compute": u.Quantity(5000.0, u.hour),
-        "storage": u.Quantity(500.0, u.GB),
+        "compute_total": u.Quantity(5000.0, u.hour),
+        "storage_total": u.Quantity(500.0, u.GB),
     }
 
     resources = estimator.estimate_resources()
@@ -222,8 +222,19 @@ def test_load_lookup_table(sample_data, file_data, monkeypatch):
         simulation_params=simulation_params,
         lookup_file=DUMMY_YAML_FILE,
     )
-
-    assert estimator.lookup_table == lookup_table
+    expected_lookup_table = {
+        "example_site": {
+            30.0: {
+                "compute_per_event": u.Quantity(1e-6, u.hr),  # Expecting Quantity
+                "storage_per_event": u.Quantity(1e-7, u.GB),  # Expecting Quantity
+            },
+            45.0: {
+                "compute_per_event": u.Quantity(2e-6, u.hr),  # Expecting Quantity
+                "storage_per_event": u.Quantity(2e-7, u.GB),  # Expecting Quantity
+            },
+        }
+    }
+    assert estimator.lookup_table == expected_lookup_table
 
 
 @pytest.mark.parametrize(
