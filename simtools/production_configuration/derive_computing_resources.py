@@ -201,4 +201,4 @@ class ResourceEstimator:
         compute = number_of_events * compute_per_event
         storage = number_of_events * storage_per_event
 
-        return {"compute:": compute.to("h"), "storage:": storage.to("GB")}
+        return {"compute": compute.to("h"), "storage": storage.to("GB")}
