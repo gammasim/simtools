@@ -1,5 +1,6 @@
 from unittest.mock import mock_open
 
+import astropy.units as u
 import pytest
 import yaml
 
@@ -35,12 +36,24 @@ def sample_data():
     lookup_table = {
         "example_site": {
             30.0: {
-                "compute_hours_per_event": 1e-6,
-                "storage_gb_per_event": 1e-7,
+                "compute_per_event": {
+                    "value": 1e-6,
+                    "unit": "hr",
+                },
+                "storage_per_event": {
+                    "value": 1e-7,
+                    "unit": "GB",
+                },
             },
             45.0: {
-                "compute_hours_per_event": 2e-6,
-                "storage_gb_per_event": 2e-7,
+                "compute_per_event": {
+                    "value": 2e-6,
+                    "unit": "hr",
+                },
+                "storage_per_event": {
+                    "value": 2e-7,
+                    "unit": "GB",
+                },
             },
         }
     }
@@ -54,8 +67,26 @@ def sample_data():
         yaml.dump(
             {
                 "example_site": {
-                    30.0: {"compute_hours_per_event": 1e-6, "storage_gb_per_event": 1e-7},
-                    45.0: {"compute_hours_per_event": 2e-6, "storage_gb_per_event": 2e-7},
+                    30.0: {
+                        "compute_per_event": {
+                            "value": 1e-6,
+                            "unit": "hr",
+                        },
+                        "storage_per_event": {
+                            "value": 1e-7,
+                            "unit": "GB",
+                        },
+                    },
+                    45.0: {
+                        "compute_per_event": {
+                            "value": 2e-6,
+                            "unit": "hr",
+                        },
+                        "storage_per_event": {
+                            "value": 2e-7,
+                            "unit": "GB",
+                        },
+                    },
                 }
             }
         )
@@ -76,7 +107,10 @@ def test_estimate_resources_interpolation(sample_data, file_data, monkeypatch):
         lookup_file=DUMMY_YAML_FILE,
     )
 
-    expected_resources = {"compute_hours": 5000.0, "storage_gb": 500.0}
+    expected_resources = {
+        "compute": u.Quantity(5000.0, u.hour),
+        "storage": u.Quantity(500.0, u.GB),
+    }
 
     resources = estimator.estimate_resources()
     assert resources == expected_resources
@@ -88,8 +122,26 @@ def test_estimate_resources_interpolation(sample_data, file_data, monkeypatch):
         yaml.dump(
             {
                 "example_site": {
-                    30.0: {"compute_hours_per_event": 1e-6, "storage_gb_per_event": 1e-7},
-                    45.0: {"compute_hours_per_event": 2e-6, "storage_gb_per_event": 2e-7},
+                    30.0: {
+                        "compute_per_event": {
+                            "value": 1e-6,
+                            "unit": "hr",
+                        },
+                        "storage_per_event": {
+                            "value": 1e-7,
+                            "unit": "GB",
+                        },
+                    },
+                    45.0: {
+                        "compute_per_event": {
+                            "value": 2e-6,
+                            "unit": "hr",
+                        },
+                        "storage_per_event": {
+                            "value": 2e-7,
+                            "unit": "GB",
+                        },
+                    },
                 }
             }
         )
@@ -110,9 +162,13 @@ def test_guess_resources_per_event(sample_data, file_data, monkeypatch):
         lookup_file=DUMMY_YAML_FILE,
     )
 
-    expected_resources = {"compute_hours": 2e3, "storage_gb": 2e2}
+    expected_resources = {
+        "compute": u.Quantity(2000.0, u.hour),
+        "storage": u.Quantity(200.0, u.GB),
+    }
 
     resources = estimator.estimate_resources()
+
     assert resources == expected_resources
 
 
@@ -122,8 +178,26 @@ def test_guess_resources_per_event(sample_data, file_data, monkeypatch):
         yaml.dump(
             {
                 "example_site": {
-                    30.0: {"compute_hours_per_event": 1e-6, "storage_gb_per_event": 1e-7},
-                    45.0: {"compute_hours_per_event": 2e-6, "storage_gb_per_event": 2e-7},
+                    30.0: {
+                        "compute_per_event": {
+                            "value": 1e-6,
+                            "unit": "hr",
+                        },
+                        "storage_per_event": {
+                            "value": 1e-7,
+                            "unit": "GB",
+                        },
+                    },
+                    45.0: {
+                        "compute_per_event": {
+                            "value": 2e-6,
+                            "unit": "hr",
+                        },
+                        "storage_per_event": {
+                            "value": 2e-7,
+                            "unit": "GB",
+                        },
+                    },
                 }
             }
         )
@@ -152,8 +226,26 @@ def test_load_lookup_table(sample_data, file_data, monkeypatch):
         yaml.dump(
             {
                 "example_site": {
-                    30.0: {"compute_hours_per_event": 1e-6, "storage_gb_per_event": 1e-7},
-                    45.0: {"compute_hours_per_event": 2e-6, "storage_gb_per_event": 2e-7},
+                    30.0: {
+                        "compute_per_event": {
+                            "value": 1e-6,
+                            "unit": "hr",
+                        },
+                        "storage_per_event": {
+                            "value": 1e-7,
+                            "unit": "GB",
+                        },
+                    },
+                    45.0: {
+                        "compute_per_event": {
+                            "value": 2e-6,
+                            "unit": "hr",
+                        },
+                        "storage_per_event": {
+                            "value": 2e-7,
+                            "unit": "GB",
+                        },
+                    },
                 }
             }
         )
@@ -177,6 +269,9 @@ def test_interpolate_resources(sample_data, file_data, monkeypatch):
     number_of_events = 1e9
     resources = estimator.interpolate_resources(number_of_events)
 
-    expected_resources = {"compute_hours": 5000.0, "storage_gb": 500.0}
+    expected_resources = {
+        "compute": u.Quantity(5000.0, u.hour),
+        "storage": u.Quantity(500.0, u.GB),
+    }
 
     assert resources == expected_resources
