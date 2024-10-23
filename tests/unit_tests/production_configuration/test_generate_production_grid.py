@@ -75,9 +75,15 @@ def test_convert_altaz_to_radec():
 
 
 def test_convert_coordinates():
-    grid_points = [{"zenith_angle": 30, "azimuth": 45}, {"zenith_angle": 20, "azimuth": 60}]
+    grid_points = [
+        {"zenith_angle": 30 * u.deg, "azimuth": 45 * u.deg},
+        {"zenith_angle": 20 * u.deg, "azimuth": 60 * u.deg},
+    ]
     converted_points = grid_gen.convert_coordinates(grid_points)
+
     assert "ra" in converted_points[0]
     assert "dec" in converted_points[0]
-    assert isinstance(converted_points[0]["ra"], float | np.float64)
-    assert isinstance(converted_points[0]["dec"], float | np.float64)
+    assert isinstance(converted_points[0]["ra"], u.Quantity)
+    assert isinstance(converted_points[0]["dec"], u.Quantity)
+    assert converted_points[0]["ra"].unit == u.deg
+    assert converted_points[0]["dec"].unit == u.deg
