@@ -165,3 +165,52 @@ def test_calculate_metrics(test_fits_file):
         "error_image_template_methods": evaluator.error_image_template_methods,
     }
     assert evaluator.metric_results == expected_results
+
+
+@pytest.fixture
+def setup_evaluator():
+    file_path = "path_to_fits_file"
+    file_type = "On-source"
+    metrics = {
+        "error_eff_area": 0.05,
+        "error_sig_eff_gh": 0.02,
+        "error_energy_estimate_bdt_reg_tree": 0.03,
+        "error_gamma_ray_psf": 0.01,
+        "error_image_template_methods": 0.04,
+    }
+    grid_point = (1.0, 45.0, 30.0, 0.1, 0.05)
+
+    evaluator = StatisticalErrorEvaluator(file_path, file_type, metrics, grid_point)
+
+    evaluator.metric_results = {
+        "error_eff_area": {"relative_errors": np.array([0.04, 0.05, 0.06])},
+        "error_sig_eff_gh": 0.02,
+        "error_energy_estimate_bdt_reg_tree": 0.03,
+        "error_gamma_ray_psf": 0.01,
+        "error_image_template_methods": 0.04,
+    }
+
+    return evaluator
+
+
+def test_calculate_overall_metric_average(setup_evaluator):
+    evaluator = setup_evaluator
+    result = evaluator.calculate_overall_metric(metric="average")
+
+    expected_overall_average = np.mean([0.06, 0.02, 0.03, 0.01, 0.04])
+    assert result == pytest.approx(expected_overall_average)
+
+
+def test_calculate_overall_metric_maximum(setup_evaluator):
+    evaluator = setup_evaluator
+    result = evaluator.calculate_overall_metric(metric="maximum")
+
+    # Check the overall maximum error value
+    expected_overall_max = max([0.06, 0.02, 0.03, 0.01, 0.04])
+    assert result == pytest.approx(expected_overall_max)
+
+
+def test_calculate_overall_metric_invalid_metric(setup_evaluator):
+    evaluator = setup_evaluator
+    with pytest.raises(ValueError, match="Unsupported metric"):
+        evaluator.calculate_overall_metric(metric="invalid_metric")

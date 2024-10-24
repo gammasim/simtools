@@ -386,6 +386,8 @@ class StatisticalErrorEvaluator:
         max_error : float
             Maximum relative error.
         """
+        if "relative_errors" in self.metric_results["error_eff_area"]:
+            return np.max(self.metric_results["error_eff_area"]["relative_errors"])
         if self.error_eff_area:
             return np.max(self.error_eff_area["relative_errors"])
         return None
@@ -449,7 +451,7 @@ class StatisticalErrorEvaluator:
         for metric_name, result in self.metric_results.items():
             if metric_name == "error_eff_area":
                 max_errors = self.calculate_max_error_for_effective_area()
-                overall_max_errors[metric_name] = max(max_errors.values()) if max_errors else 0
+                overall_max_errors[metric_name] = max_errors if max_errors else 0
             elif metric_name in [
                 "error_sig_eff_gh",
                 "error_energy_estimate_bdt_reg_tree",
@@ -459,7 +461,7 @@ class StatisticalErrorEvaluator:
                 overall_max_errors[metric_name] = result
             else:
                 raise ValueError(f"Unsupported result type for {metric_name}: {type(result)}")
-
+        print("overall_max_errors", overall_max_errors)
         all_max_errors = list(overall_max_errors.values())
         if metric == "average":
             overall_metric = np.mean(all_max_errors)
@@ -468,6 +470,4 @@ class StatisticalErrorEvaluator:
         else:
             raise ValueError(f"Unsupported metric: {metric}")
 
-        overall_max_errors["overall_max"] = overall_metric
-
-        return overall_max_errors
+        return overall_metric
