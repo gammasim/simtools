@@ -10,6 +10,34 @@ BUILTINS_OPEN = "builtins.open"
 VALIDATE_SITE_NAME = "simtools.utils.names.validate_site_name"
 DUMMY_YAML_FILE = "dummy.yaml"
 
+# Define the shared YAML file data as a constant
+FILE_DATA = yaml.dump(
+    {
+        "example_site": {
+            30.0: {
+                "compute_per_event": {
+                    "value": 1e-6,
+                    "unit": "hr",
+                },
+                "storage_per_event": {
+                    "value": 1e-7,
+                    "unit": "GB",
+                },
+            },
+            45.0: {
+                "compute_per_event": {
+                    "value": 2e-6,
+                    "unit": "hr",
+                },
+                "storage_per_event": {
+                    "value": 2e-7,
+                    "unit": "GB",
+                },
+            },
+        }
+    }
+)
+
 
 @pytest.fixture
 def sample_data():
@@ -67,38 +95,7 @@ def sample_data():
     return grid_point_config, simulation_params, existing_data, lookup_table
 
 
-@pytest.mark.parametrize(
-    "file_data",
-    [
-        yaml.dump(
-            {
-                "example_site": {
-                    30.0: {
-                        "compute_per_event": {
-                            "value": 1e-6,
-                            "unit": "hr",
-                        },
-                        "storage_per_event": {
-                            "value": 1e-7,
-                            "unit": "GB",
-                        },
-                    },
-                    45.0: {
-                        "compute_per_event": {
-                            "value": 2e-6,
-                            "unit": "hr",
-                        },
-                        "storage_per_event": {
-                            "value": 2e-7,
-                            "unit": "GB",
-                        },
-                    },
-                }
-            }
-        )
-    ],
-    ids=["example_site_lookup_table"],
-)
+@pytest.mark.parametrize("file_data", [FILE_DATA], ids=["example_site_lookup_table"])
 def test_estimate_resources_interpolation(sample_data, file_data, monkeypatch):
     """Test resource estimation with interpolation."""
     grid_point_config, simulation_params, existing_data, _ = sample_data
@@ -122,38 +119,7 @@ def test_estimate_resources_interpolation(sample_data, file_data, monkeypatch):
     assert resources == expected_resources
 
 
-@pytest.mark.parametrize(
-    "file_data",
-    [
-        yaml.dump(
-            {
-                "example_site": {
-                    30.0: {
-                        "compute_per_event": {
-                            "value": 1e-6,
-                            "unit": "hr",
-                        },
-                        "storage_per_event": {
-                            "value": 1e-7,
-                            "unit": "GB",
-                        },
-                    },
-                    45.0: {
-                        "compute_per_event": {
-                            "value": 2e-6,
-                            "unit": "hr",
-                        },
-                        "storage_per_event": {
-                            "value": 2e-7,
-                            "unit": "GB",
-                        },
-                    },
-                }
-            }
-        )
-    ],
-    ids=["example_site_lookup_table"],
-)
+@pytest.mark.parametrize("file_data", [FILE_DATA], ids=["example_site_lookup_table"])
 def test_guess_resources_per_event(sample_data, file_data, monkeypatch):
     """Test resource estimation based on guessed resources per event."""
     grid_point_config, simulation_params, _, lookup_table = sample_data
@@ -178,38 +144,7 @@ def test_guess_resources_per_event(sample_data, file_data, monkeypatch):
     assert resources == expected_resources
 
 
-@pytest.mark.parametrize(
-    "file_data",
-    [
-        yaml.dump(
-            {
-                "example_site": {
-                    30.0: {
-                        "compute_per_event": {
-                            "value": 1e-6,
-                            "unit": "hr",
-                        },
-                        "storage_per_event": {
-                            "value": 1e-7,
-                            "unit": "GB",
-                        },
-                    },
-                    45.0: {
-                        "compute_per_event": {
-                            "value": 2e-6,
-                            "unit": "hr",
-                        },
-                        "storage_per_event": {
-                            "value": 2e-7,
-                            "unit": "GB",
-                        },
-                    },
-                }
-            }
-        )
-    ],
-    ids=["example_site_lookup_table"],
-)
+@pytest.mark.parametrize("file_data", [FILE_DATA], ids=["example_site_lookup_table"])
 def test_load_lookup_table(sample_data, file_data, monkeypatch):
     """Test loading of the lookup table from a YAML file."""
     grid_point_config, simulation_params, _, lookup_table = sample_data
@@ -222,53 +157,23 @@ def test_load_lookup_table(sample_data, file_data, monkeypatch):
         simulation_params=simulation_params,
         lookup_file=DUMMY_YAML_FILE,
     )
+
     expected_lookup_table = {
         "example_site": {
             30.0: {
-                "compute_per_event": u.Quantity(1e-6, u.hr),  # Expecting Quantity
-                "storage_per_event": u.Quantity(1e-7, u.GB),  # Expecting Quantity
+                "compute_per_event": u.Quantity(1e-6, u.hr),
+                "storage_per_event": u.Quantity(1e-7, u.GB),
             },
             45.0: {
-                "compute_per_event": u.Quantity(2e-6, u.hr),  # Expecting Quantity
-                "storage_per_event": u.Quantity(2e-7, u.GB),  # Expecting Quantity
+                "compute_per_event": u.Quantity(2e-6, u.hr),
+                "storage_per_event": u.Quantity(2e-7, u.GB),
             },
         }
     }
     assert estimator.lookup_table == expected_lookup_table
 
 
-@pytest.mark.parametrize(
-    "file_data",
-    [
-        yaml.dump(
-            {
-                "example_site": {
-                    30.0: {
-                        "compute_per_event": {
-                            "value": 1e-6,
-                            "unit": "hr",
-                        },
-                        "storage_per_event": {
-                            "value": 1e-7,
-                            "unit": "GB",
-                        },
-                    },
-                    45.0: {
-                        "compute_per_event": {
-                            "value": 2e-6,
-                            "unit": "hr",
-                        },
-                        "storage_per_event": {
-                            "value": 2e-7,
-                            "unit": "GB",
-                        },
-                    },
-                }
-            }
-        )
-    ],
-    ids=["example_site_lookup_table"],
-)
+@pytest.mark.parametrize("file_data", [FILE_DATA], ids=["example_site_lookup_table"])
 def test_interpolate_resources(sample_data, file_data, monkeypatch):
     """Test direct interpolation of resources from existing data."""
     grid_point_config, simulation_params, existing_data, _ = sample_data
