@@ -8,6 +8,8 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
 )
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
 
+PATH_FITS = "path/to/file.fits"
+
 
 @pytest.fixture
 def mock_statistical_error_evaluator():
@@ -40,13 +42,13 @@ def mock_statistical_error_evaluator():
 
 def test_initialization(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 0.0, "elevation": 0.0}
-    config = SimulationConfig(grid_point, "A", "high_precision", "path/to/file.fits", "On-source")
+    config = SimulationConfig(grid_point, "A", "high_precision", PATH_FITS, "On-source")
     config.evaluator = mock_statistical_error_evaluator
 
     assert config.grid_point == grid_point
     assert config.data_level == "A"
     assert config.science_case == "high_precision"
-    assert config.file_path == "path/to/file.fits"
+    assert config.file_path == PATH_FITS
     assert config.file_type == "On-source"
 
 
@@ -97,7 +99,7 @@ def test_calculate_viewcone(mock_statistical_error_evaluator):
 
 def test_edge_cases(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 0.0, "elevation": 0.0}
-    config = SimulationConfig(grid_point, "A", "high_precision", "path/to/file.fits", "On-source")
+    config = SimulationConfig(grid_point, "A", "high_precision", PATH_FITS, "On-source")
     config.evaluator = mock_statistical_error_evaluator
 
     params = config.configure_simulation()
