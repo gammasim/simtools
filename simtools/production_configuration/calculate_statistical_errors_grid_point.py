@@ -277,25 +277,22 @@ class StatisticalErrorEvaluator:
         if len(event_energies) != len(mc_energies):
             raise ValueError(f"Mismatch in the number of energies for file {self.file_path}")
 
-        # Calculate energy deviations
         energy_deviation = (event_energies - mc_energies) / mc_energies
 
-        # Bin the energy deviations
         bin_edges = self.create_bin_edges()
         bin_indices = np.digitize(event_energies, bin_edges) - 1
 
-        # Group deviations by bin
         energy_deviation_by_bin = [
             energy_deviation[bin_indices == i] for i in range(len(bin_edges) - 1)
         ]
 
-        # Calculate sigma (standard deviation) for each bin
+        # Calculate sigma for each bin
         sigma_energy = [np.std(d) if len(d) > 0 else np.nan for d in energy_deviation_by_bin]
 
         # Calculate delta_energy as the mean deviation for each bin
         delta_energy = [np.mean(d) if len(d) > 0 else np.nan for d in energy_deviation_by_bin]
 
-        # Combine sigma into a single measure if needed
+        # Combine sigma into a single measure
         overall_uncertainty = np.nanmean(sigma_energy)
 
         return overall_uncertainty, sigma_energy, delta_energy
@@ -365,7 +362,6 @@ class StatisticalErrorEvaluator:
                 f"Reference: {ref_value:.3f}"
             )
 
-        # Collect all results in a dictionary
         self.metric_results = {
             "error_eff_area": self.error_eff_area,
             "error_sig_eff_gh": self.error_sig_eff_gh,
