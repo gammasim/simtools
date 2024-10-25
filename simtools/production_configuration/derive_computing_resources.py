@@ -86,7 +86,7 @@ class ResourceEstimator:
 
         # return as quantities
         for _, data in lookup.items():
-            for _, resources in data.items():
+            for _, resources in data["Zenith"].items():
                 resources["compute_per_event"] = u.Quantity(
                     resources["compute_per_event"]["value"], resources["compute_per_event"]["unit"]
                 )
@@ -170,19 +170,27 @@ class ResourceEstimator:
             A dictionary with guessed estimates for compute and storage resources, with units.
         """
         elevation = self.grid_point["elevation"]
-        elevations = sorted(self.lookup_table[self.site].keys())
+        elevations = sorted(self.lookup_table[self.site]["Zenith"].keys())
 
         if elevation <= elevations[0]:
-            compute_per_event = self.lookup_table[self.site][elevations[0]]["compute_per_event"]
-            storage_per_event = self.lookup_table[self.site][elevations[0]]["storage_per_event"]
+            compute_per_event = self.lookup_table[self.site]["Zenith"][elevations[0]][
+                "compute_per_event"
+            ]
+            storage_per_event = self.lookup_table[self.site]["Zenith"][elevations[0]][
+                "storage_per_event"
+            ]
         elif elevation >= elevations[-1]:
-            compute_per_event = self.lookup_table[self.site][elevations[-1]]["compute_per_event"]
-            storage_per_event = self.lookup_table[self.site][elevations[-1]]["storage_per_event"]
+            compute_per_event = self.lookup_table[self.site]["Zenith"][elevations[-1]][
+                "compute_per_event"
+            ]
+            storage_per_event = self.lookup_table[self.site]["Zenith"][elevations[-1]][
+                "storage_per_event"
+            ]
         else:
             lower_bound = max(e for e in elevations if e <= elevation)
             upper_bound = min(e for e in elevations if e >= elevation)
-            lower_values = self.lookup_table[self.site][lower_bound]
-            upper_values = self.lookup_table[self.site][upper_bound]
+            lower_values = self.lookup_table[self.site]["Zenith"][lower_bound]
+            upper_values = self.lookup_table[self.site]["Zenith"][upper_bound]
 
             compute_per_event = (
                 np.interp(

@@ -14,26 +14,28 @@ DUMMY_YAML_FILE = "dummy.yaml"
 FILE_DATA = yaml.dump(
     {
         "example_site": {
-            30.0: {
-                "compute_per_event": {
-                    "value": 1e-6,
-                    "unit": "hr",
+            "Zenith": {
+                30.0: {
+                    "compute_per_event": {
+                        "value": 1e-6,
+                        "unit": "hr",
+                    },
+                    "storage_per_event": {
+                        "value": 1e-7,
+                        "unit": "GB",
+                    },
                 },
-                "storage_per_event": {
-                    "value": 1e-7,
-                    "unit": "GB",
+                45.0: {
+                    "compute_per_event": {
+                        "value": 2e-6,
+                        "unit": "hr",
+                    },
+                    "storage_per_event": {
+                        "value": 2e-7,
+                        "unit": "GB",
+                    },
                 },
-            },
-            45.0: {
-                "compute_per_event": {
-                    "value": 2e-6,
-                    "unit": "hr",
-                },
-                "storage_per_event": {
-                    "value": 2e-7,
-                    "unit": "GB",
-                },
-            },
+            }
         }
     }
 )
@@ -69,26 +71,28 @@ def sample_data():
 
     lookup_table = {
         "example_site": {
-            30.0: {
-                "compute_per_event": {
-                    "value": 1e-6,
-                    "unit": "hr",
+            "Zenith": {
+                30.0: {
+                    "compute_per_event": {
+                        "value": 1e-6,
+                        "unit": "hr",
+                    },
+                    "storage_per_event": {
+                        "value": 1e-7,
+                        "unit": "GB",
+                    },
                 },
-                "storage_per_event": {
-                    "value": 1e-7,
-                    "unit": "GB",
+                45.0: {
+                    "compute_per_event": {
+                        "value": 2e-6,
+                        "unit": "hr",
+                    },
+                    "storage_per_event": {
+                        "value": 2e-7,
+                        "unit": "GB",
+                    },
                 },
-            },
-            45.0: {
-                "compute_per_event": {
-                    "value": 2e-6,
-                    "unit": "hr",
-                },
-                "storage_per_event": {
-                    "value": 2e-7,
-                    "unit": "GB",
-                },
-            },
+            }
         }
     }
 
@@ -160,14 +164,16 @@ def test_load_lookup_table(sample_data, file_data, monkeypatch):
 
     expected_lookup_table = {
         "example_site": {
-            30.0: {
-                "compute_per_event": u.Quantity(1e-6, u.hr),
-                "storage_per_event": u.Quantity(1e-7, u.GB),
-            },
-            45.0: {
-                "compute_per_event": u.Quantity(2e-6, u.hr),
-                "storage_per_event": u.Quantity(2e-7, u.GB),
-            },
+            "Zenith": {
+                30.0: {
+                    "compute_per_event": u.Quantity(1e-6, u.hr),
+                    "storage_per_event": u.Quantity(1e-7, u.GB),
+                },
+                45.0: {
+                    "compute_per_event": u.Quantity(2e-6, u.hr),
+                    "storage_per_event": u.Quantity(2e-7, u.GB),
+                },
+            }
         }
     }
     assert estimator.lookup_table == expected_lookup_table
