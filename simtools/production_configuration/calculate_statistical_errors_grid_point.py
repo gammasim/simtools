@@ -206,7 +206,7 @@ class StatisticalErrorEvaluator:
 
     def calculate_energy_threshold(self):
         """
-        Calculate the energy threshold where the effective area exceeds 50% of its maximum value.
+        Calculate the energy threshold where the effective area exceeds 10% of its maximum value.
 
         Returns
         -------
@@ -217,21 +217,18 @@ class StatisticalErrorEvaluator:
         triggered_event_histogram = self.compute_histogram(self.data["event_energies"], bin_edges)
         simulated_event_histogram = self.data["simulated_event_histogram"]
 
-        # Calculate efficiencies (effective area as a function of energy)
         efficiencies, _, _ = self.compute_efficiency_and_errors(
             triggered_event_histogram, simulated_event_histogram
         )
 
-        # Determine the effective area threshold (50% of max effective area)
+        # Determine the effective area threshold (10% of max effective area)
         max_efficiency = np.max(efficiencies)
         threshold_efficiency = 0.1 * max_efficiency
 
-        # Find the first bin where efficiency exceeds the threshold
         threshold_index = np.argmax(efficiencies >= threshold_efficiency)
         if threshold_index == 0 and efficiencies[0] < threshold_efficiency:
-            return  # No valid threshold found
+            return
 
-        # Calculate the corresponding energy threshold
         self.energy_threshold = bin_edges[threshold_index]
 
     def calculate_error_eff_area(self):
