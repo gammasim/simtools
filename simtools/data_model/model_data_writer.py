@@ -47,19 +47,33 @@ class ModelDataWriter:
         Format of output file.
     args_dict: Dictionary
         Dictionary with configuration parameters.
+    output_path: str or Path
+         Path to output file.
+     use_plain_output_path: bool
+         Use plain output path.
+    args_dict: dict
+        Dictionary with configuration parameters.
+
     """
 
-    def __init__(self, product_data_file=None, product_data_format=None, args_dict=None):
+    def __init__(
+        self,
+        product_data_file=None,
+        product_data_format=None,
+        output_path=None,
+        use_plain_output_path=False,
+        args_dict=None,
+    ):
         """Initialize model data writer."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
         self.schema_dict = {}
-        # TODO should this depend on args_dict?
         if args_dict is not None:
-            self.io_handler.set_paths(
-                output_path=args_dict.get("output_path", None),
-                use_plain_output_path=args_dict.get("use_plain_output_path", False),
-            )
+            output_path = args_dict.get("output_path", output_path)
+            use_plain_output_path = args_dict.get("use_plain_output_path", use_plain_output_path)
+        self.io_handler.set_paths(
+            output_path=output_path, use_plain_output_path=use_plain_output_path
+        )
         try:
             self.product_data_file = self.io_handler.get_output_file(file_name=product_data_file)
         except TypeError:
