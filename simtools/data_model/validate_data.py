@@ -207,7 +207,7 @@ class DataValidator:
             value_as_list = [value]
             unit_as_list = [unit] if unit != "null" else [None]
 
-        unit_as_list = [None if u == "null" else u for u in unit_as_list]
+        unit_as_list = [None if w == "null" else w for w in unit_as_list]
 
         return value_as_list, unit_as_list
 

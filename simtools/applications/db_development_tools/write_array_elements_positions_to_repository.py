@@ -102,26 +102,22 @@ def write_utm_array_elements_to_repository(args_dict, logger):
     """
     array_elements = astropy.table.Table.read(args_dict["input"])
     for row in array_elements:
-        data = {
-            "parameter": "array_element_position_utm",
-            "instrument": (
-                row["telescope_name"]
-                if "telescope_name" in array_elements.colnames
-                else f"{row['asset_code']}-{row['sequence_number']}"
-            ),
-            "site": args_dict["site"],
-            "version": args_dict["model_version"],
-            "value": f"{row['utm_east']} {row['utm_north']} {row['altitude']}",
-            "unit": "m",
-            "type": "float64",
-            "applicable": True,
-            "file": False,
-        }
-        output_path = Path(args_dict["repository_path"]) / f"{data['instrument']}"
+        instrument = (
+            row["telescope_name"]
+            if "telescope_name" in array_elements.colnames
+            else f"{row['asset_code']}-{row['sequence_number']}"
+        )
+        output_path = Path(args_dict["repository_path"]) / f"{instrument}"
         output_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Writing array element positions (utm) to {output_path}")
-        ModelDataWriter.write_dict_to_model_parameter_json(
-            file_name=output_path / "array_element_position_utm.json", data_dict=data
+
+        ModelDataWriter.dump_model_parameter(
+            parameter_name="array_element_position_utm",
+            instrument=instrument,
+            value=f"{row['utm_east']} {row['utm_north']} {row['altitude']}",
+            model_version=args_dict["model_version"],
+            output_path=output_path,
+            output_file="array_element_position_utm.json",
         )
 
 
