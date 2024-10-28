@@ -376,9 +376,9 @@ def test_parameter_is_a_file(num_gains_schema):
 def test_read_model_parameter_schema():
     w1 = writer.ModelDataWriter()
 
-    assert w1._read_model_parameter_schema("num_gains") == Path(
-        "simtools/schemas/model_parameters/num_gains.schema.yml"
-    )
+    schema_file = str(w1._read_model_parameter_schema("num_gains"))
+
+    assert "simtools/schemas/model_parameters/num_gains.schema.yml" in schema_file
     assert isinstance(w1.schema_dict, dict)
 
     with pytest.raises(FileNotFoundError, match=r"^Schema file not found:"):

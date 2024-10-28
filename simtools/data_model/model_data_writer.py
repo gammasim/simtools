@@ -217,10 +217,7 @@ class ModelDataWriter:
         parameter_name: str
             Name of the parameter.
         """
-        # TODO note names.py and how schemas are read there
-        schema_file = (
-            Path("simtools").joinpath(MODEL_PARAMETER_SCHEMA_PATH) / f"{parameter_name}.schema.yml"
-        )
+        schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{parameter_name}.schema.yml"
         try:
             self.schema_dict = gen.collect_data_from_file_or_dict(
                 file_name=schema_file, in_dict=None

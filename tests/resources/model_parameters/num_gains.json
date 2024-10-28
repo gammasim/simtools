@@ -5,7 +5,7 @@
     "version": "6.0.0",
     "value": 2,
     "unit": null,
-    "type": "int64",
+    "type": "int",
     "applicable": true,
     "file": false
 }
