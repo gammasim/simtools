@@ -164,6 +164,35 @@ class DataValidator:
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
 
+    def _get_value_and_units_as_lists_from_quantity(self, value, unit):
+        """Convert value and unit to lists for astropy.Quantity."""
+        if value.size == 1:
+            value = value.to(u.Unit(unit))
+            value_as_list = [value.value]
+            unit_as_list = [value.unit.to_string()]
+        else:
+            value_as_list = []
+            unit_as_list = []
+            for v, w in zip(value, unit):
+                value_as_list.append(v.to(u.Unit(w)).value)
+                unit_as_list.append(w)
+        return value_as_list, unit_as_list
+
+    def _get_value_and_units_as_lists_from_lists(self, value, unit):
+        """Convert value and unit to lists for list or numpy array."""
+        value_as_list = []
+        unit_as_list = []
+
+        for v, w in zip(value, unit):
+            if isinstance(v, u.Quantity):
+                value_as_list.append(v.to(u.Unit(w)).value.item())
+                unit_as_list.append(w)
+            else:
+                value_as_list.append(v)
+                unit_as_list.append(w if w != "null" else None)
+
+        return value_as_list, unit_as_list
+
     def _get_value_and_units_as_lists(self):
         """
         Convert value and unit to lists if required.
@@ -182,27 +211,11 @@ class DataValidator:
         unit = self.data_dict["unit"]
 
         if isinstance(value, u.Quantity):
-            if value.size == 1:
-                value = value.to(u.Unit(unit))
-                value_as_list = [value.value]
-                unit_as_list = [value.unit.to_string()]
-            else:
-                value_as_list = []
-                unit_as_list = []
-                for v, w in zip(value, unit):
-                    value_as_list.append(v.to(u.Unit(w)).value)
-                    unit_as_list.append(w)
+            value_as_list, unit_as_list = self._get_value_and_units_as_lists_from_quantity(
+                value, unit
+            )
         elif isinstance(value, list | np.ndarray):
-            value_as_list = []
-            unit_as_list = []
-
-            for v, w in zip(value, unit):
-                if isinstance(v, u.Quantity):
-                    value_as_list.append(v.to(u.Unit(w)).value.item())
-                    unit_as_list.append(w)
-                else:
-                    value_as_list.append(v)
-                    unit_as_list.append(w if w != "null" else None)
+            value_as_list, unit_as_list = self._get_value_and_units_as_lists_from_lists(value, unit)
         else:
             value_as_list = [value]
             unit_as_list = [unit] if unit != "null" else [None]
