@@ -78,13 +78,7 @@ def _parse(label=None, description=None):
         type=str,
         required=True,
     )
-    config.parser.add_argument(
-        "--output_file",
-        help="Output file (json format)",
-        type=str,
-        required=False,
-    )
-    return config.initialize(simulation_model="telescope")
+    return config.initialize(simulation_model="telescope", output=True)
 
 
 def main():  # noqa: D103
@@ -109,18 +103,16 @@ def main():  # noqa: D103
 
     simtel_config_reader.compare_simtel_config_with_schema()
 
-    # TODO - is this check required?
-    if args_dict["output_file"]:
-        _json_dict = writer.ModelDataWriter.dump_model_parameter(
-            parameter_name=simtel_config_reader.parameter_name,
-            value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
-            instrument=args_dict["telescope"],
-            model_version=args_dict["model_version"],
-            output_file=args_dict["output_file"],
-            output_path=args_dict.get("output_path"),
-            use_plain_output_path=args_dict.get("use_plain_output_path"),
-        )
-        logger.info(f"Validated parameter: {_json_dict}")
+    _json_dict = writer.ModelDataWriter.dump_model_parameter(
+        parameter_name=simtel_config_reader.parameter_name,
+        value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
+        instrument=args_dict["telescope"],
+        model_version=args_dict["model_version"],
+        output_file=args_dict["output_file"],
+        output_path=args_dict.get("output_path"),
+        use_plain_output_path=args_dict.get("use_plain_output_path"),
+    )
+    logger.info(f"Validated parameter: {_json_dict}")
 
 
 if __name__ == "__main__":
