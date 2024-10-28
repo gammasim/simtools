@@ -23,7 +23,7 @@ url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 test_data = "Test data"
 
 
-def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) -> None:
+def test_collect_dict_data(io_handler, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml")
@@ -571,6 +571,17 @@ def test_convert_list_to_string():
         )
         == "1 1 1 1 1 1 1 1 1 1 1"
     )
+    assert (
+        gen.convert_list_to_string(
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            comma_separated=False,
+            shorten_list=False,
+            collapse_list=True,
+        )
+        == "1"
+    )
+    assert gen.convert_list_to_string([1, 2, 3], collapse_list=True) == "1 2 3"
+    assert gen.convert_list_to_string([1, 2, 3], shorten_list=True) == "1 2 3"
 
 
 def test_convert_string_to_list():
