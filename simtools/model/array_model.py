@@ -332,8 +332,6 @@ class ArrayModel:
         type (e.g., MSTN). In the latter case, all telescopes of this specific
         type are added.
 
-        TODO check
-
         Parameters
         ----------
         array_elements_list: list
