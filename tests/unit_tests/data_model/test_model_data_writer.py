@@ -22,9 +22,14 @@ ascii_format = "ascii.ecsv"
 
 
 @pytest.fixture
-def num_gains_schema():
+def num_gains_schema_file():
+    return "tests/resources/num_gains.schema.yml"
+
+
+@pytest.fixture
+def num_gains_schema(num_gains_schema_file):
     return gen.collect_data_from_file_or_dict(
-        file_name="tests/resources/num_gains.schema.yml",
+        file_name=num_gains_schema_file,
         in_dict=None,
     )
 
@@ -120,7 +125,7 @@ def test_dump(args_dict, io_handler, tmp_test_directory):
     assert Path(args_dict["output_path"]).joinpath(test_file_2).exists()
 
 
-def test_validate_and_transform(tmp_test_directory):
+def test_validate_and_transform(num_gains_schema_file):
     w_1 = writer.ModelDataWriter()
     with pytest.raises(TypeError):
         w_1.validate_and_transform(product_data_table=None, validate_schema_file=None)
@@ -146,7 +151,7 @@ def test_validate_and_transform(tmp_test_directory):
 
     return_dict = w_1.validate_and_transform(
         product_data_dict=num_gains,
-        validate_schema_file="tests/resources/num_gains.schema.yml",
+        validate_schema_file=num_gains_schema_file,
     )
     assert isinstance(return_dict, dict)
 
@@ -154,7 +159,7 @@ def test_validate_and_transform(tmp_test_directory):
     with pytest.raises(ValueError, match=r"^Value for column '0' out of range."):
         w_1.validate_and_transform(
             product_data_dict=num_gains,
-            validate_schema_file="tests/resources/num_gains.schema.yml",
+            validate_schema_file=num_gains_schema_file,
         )
 
 
