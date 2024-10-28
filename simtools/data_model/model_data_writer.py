@@ -48,9 +48,9 @@ class ModelDataWriter:
     args_dict: Dictionary
         Dictionary with configuration parameters.
     output_path: str or Path
-         Path to output file.
-     use_plain_output_path: bool
-         Use plain output path.
+        Path to output file.
+    use_plain_output_path: bool
+        Use plain output path.
     args_dict: dict
         Dictionary with configuration parameters.
 
@@ -61,7 +61,7 @@ class ModelDataWriter:
         product_data_file=None,
         product_data_format=None,
         output_path=None,
-        use_plain_output_path=False,
+        use_plain_output_path=True,
         args_dict=None,
     ):
         """Initialize model data writer."""
@@ -71,9 +71,10 @@ class ModelDataWriter:
         if args_dict is not None:
             output_path = args_dict.get("output_path", output_path)
             use_plain_output_path = args_dict.get("use_plain_output_path", use_plain_output_path)
-        self.io_handler.set_paths(
-            output_path=output_path, use_plain_output_path=use_plain_output_path
-        )
+        if output_path is not None:
+            self.io_handler.set_paths(
+                output_path=output_path, use_plain_output_path=use_plain_output_path
+            )
         try:
             self.product_data_file = self.io_handler.get_output_file(file_name=product_data_file)
         except TypeError:
@@ -116,7 +117,16 @@ class ModelDataWriter:
         writer.write(metadata=metadata, product_data=product_data)
 
     @staticmethod
-    def dump_model_parameter(parameter_name, value, instrument, model_version, output_file):
+    def dump_model_parameter(
+        parameter_name,
+        value,
+        instrument,
+        model_version,
+        output_file,
+        output_path=None,
+        use_plain_output_path=False,
+        overwrite_applicable=False,
+    ):
         """
         Generate DB-style model parameter dict and write it to json file.
 
@@ -132,16 +142,31 @@ class ModelDataWriter:
             Version of the model.
         output_file: str
             Name of output file.
+        output_path: str or Path
+            Path to output file.
+        use_plain_output_path: bool
+            Use plain output path.
+        overwrite_applicable: bool
+            Overwrite applicable parameter.
+
+        Returns
+        -------
+        dict
+            Validated parameter dictionary.
         """
         writer = ModelDataWriter(
             product_data_file=output_file,
             product_data_format="json",
             args_dict=None,
+            output_path=output_path,
+            use_plain_output_path=use_plain_output_path,
         )
         _json_dict = writer.get_validated_parameter_dict(
             parameter_name, value, instrument, model_version
         )
-        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        if _json_dict.get("applicable", False) or overwrite_applicable:
+            writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        return _json_dict
 
     def get_validated_parameter_dict(self, parameter_name, value, instrument, model_version):
         """
@@ -173,23 +198,15 @@ class ModelDataWriter:
             "version": model_version,
             "value": value,
             "unit": self._get_unit_from_schema(),
-            "type": self._get_parameter_type(),  # TODO json types (e.g., float64 instead of double)
+            "type": self._get_parameter_type(),
             "applicable": self._get_parameter_applicability(instrument),
             "file": self._parameter_is_a_file(),
         }
-        data_dict = self.validate_and_transform(
+        return self.validate_and_transform(
             product_data_dict=data_dict,
             validate_schema_file=schema_file,
             is_model_parameter=True,
         )
-        # validate_and_transform converted values to units given in schema
-        if isinstance(data_dict["value"], list):
-            data_dict["value"] = [
-                val.value for val in data_dict["value"] if isinstance(val, u.Quantity)
-            ]
-        elif isinstance(data_dict["value"], u.Quantity):
-            data_dict["value"] = data_dict["value"].value
-        return data_dict
 
     def _read_model_parameter_schema(self, parameter_name):
         """
@@ -355,8 +372,7 @@ class ModelDataWriter:
             self._logger.error(f"Error writing model data to {self.product_data_file}.")
             raise
 
-    @staticmethod
-    def write_dict_to_model_parameter_json(file_name, data_dict):
+    def write_dict_to_model_parameter_json(self, file_name, data_dict):
         """
         Write dictionary to model-parameter-style json file.
 
@@ -372,26 +388,43 @@ class ModelDataWriter:
         FileNotFoundError
             if data writing was not successful.
         """
-        data_dict = ModelDataWriter.lists_to_strings_for_model_parameter(data_dict)
-
+        data_dict = ModelDataWriter.prepare_data_dict_for_writing(data_dict)
         try:
-            with open(file_name, "w", encoding="UTF-8") as file:
+            with open(self.io_handler.get_output_file(file_name), "w", encoding="UTF-8") as file:
                 json.dump(data_dict, file, indent=4, sort_keys=False, cls=JsonNumpyEncoder)
                 file.write("\n")
         except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Error writing model data to {file_name}") from exc
+            raise FileNotFoundError(
+                f"Error writing model data to {self.io_handler.get_output_file(file_name)}"
+            ) from exc
 
     @staticmethod
-    def lists_to_strings_for_model_parameter(data_dict):
-        """Ensure sim_telarray style lists as strings."""
+    def prepare_data_dict_for_writing(data_dict):
+        """
+        Prepare data dictionary for writing to json file.
+
+        Ensure sim_telarray style lists as strings.
+        Replace "None" with "null" for unit field.
+
+        Parameters
+        ----------
+        data_dict: dict
+            Dictionary with lists.
+
+        Returns
+        -------
+        dict
+            Dictionary with lists converted to strings.
+
+        """
         try:
-            if isinstance(data_dict["unit"], list):
-                data_dict["unit"] = sorted(set(data_dict["unit"]))
-            if isinstance(data_dict["type"], list):
-                data_dict["type"] = sorted(set(data_dict["type"]))
             data_dict["value"] = gen.convert_list_to_string(data_dict["value"])
-            data_dict["unit"] = gen.convert_list_to_string(data_dict["unit"], True)
-            data_dict["type"] = gen.convert_list_to_string(data_dict["type"], True)
+            data_dict["unit"] = gen.convert_list_to_string(data_dict["unit"], comma_separated=True)
+            data_dict["type"] = gen.convert_list_to_string(
+                data_dict["type"], comma_separated=True, collapse_list=True
+            )
+            if isinstance(data_dict["unit"], str):
+                data_dict["unit"] = data_dict["unit"].replace("None", "null")
         except KeyError:
             pass
         return data_dict
