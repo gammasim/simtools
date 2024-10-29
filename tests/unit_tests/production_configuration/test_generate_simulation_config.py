@@ -34,8 +34,8 @@ def mock_statistical_error_evaluator():
     # Mock data attribute
     mock_evaluator.data = {
         "simulated_event_histogram": [100, 200, 300],
-        "core_range": [0, 1000],
-        "viewcone": [0, 10],
+        "core_range": 1000,
+        "viewcone": 10,
     }
 
     # Mock file loading function

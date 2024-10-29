@@ -117,7 +117,6 @@ class SimulationConfig:
         """
         base_area = self._fetch_simulated_core_scatter_area()
         area_factor = self._get_area_factor_from_grid_point()
-
         return base_area * area_factor
 
     def _calculate_viewcone(self) -> float:
