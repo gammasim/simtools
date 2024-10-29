@@ -36,10 +36,25 @@ def mock_args_dict(tmp_test_directory):
 
 
 @pytest.fixture
-def mock_mirror_panel_psf(mock_args_dict):
+def mock_telescope_model_string():
+    return "simtools.ray_tracing.mirror_panel_psf.TelescopeModel"
+
+
+@pytest.fixture
+def mock_find_file_string():
+    return "simtools.ray_tracing.mirror_panel_psf.gen.find_file"
+
+
+@pytest.fixture
+def mock_run_simulations_and_analysis_string():
+    return "simtools.ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis"
+
+
+@pytest.fixture
+def mock_mirror_panel_psf(mock_args_dict, mock_telescope_model_string, mock_find_file_string):
     with (
-        patch("simtools.ray_tracing.mirror_panel_psf.TelescopeModel"),
-        patch("simtools.ray_tracing.mirror_panel_psf.gen.find_file"),
+        patch(mock_telescope_model_string),
+        patch(mock_find_file_string),
     ):
         db_config = {"db": "config"}
         label = "test_label"
@@ -47,12 +62,12 @@ def mock_mirror_panel_psf(mock_args_dict):
         yield mirror_panel_psf
 
 
-def test_define_telescope_model(mock_args_dict):
+def test_define_telescope_model(mock_args_dict, mock_telescope_model_string, mock_find_file_string):
     args_dict = copy.deepcopy(mock_args_dict)
     # no mirror list, no random focal length
     with (
-        patch("simtools.ray_tracing.mirror_panel_psf.TelescopeModel") as mock_telescope_model,
-        patch("simtools.ray_tracing.mirror_panel_psf.gen.find_file") as mock_find_file,
+        patch(mock_telescope_model_string) as mock_telescope_model,
+        patch(mock_find_file_string) as mock_find_file,
     ):
 
         args_dict["mirror_list"] = None
@@ -77,8 +92,8 @@ def test_define_telescope_model(mock_args_dict):
 
     # mirror list and random focal length
     with (
-        patch("simtools.ray_tracing.mirror_panel_psf.TelescopeModel") as mock_telescope_model,
-        patch("simtools.ray_tracing.mirror_panel_psf.gen.find_file") as mock_find_file,
+        patch(mock_telescope_model_string) as mock_telescope_model,
+        patch(mock_find_file_string) as mock_find_file,
     ):
 
         args_dict["mirror_list"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv"
@@ -103,12 +118,14 @@ def test_define_telescope_model(mock_args_dict):
         tel.export_parameter_file.assert_called_once()
 
 
-def test_define_telescope_model_test_errors(mock_args_dict):
+def test_define_telescope_model_test_errors(
+    mock_args_dict, mock_telescope_model_string, mock_find_file_string
+):
     args_dict = copy.deepcopy(mock_args_dict)
     # test mode, missing PSF measurement
     with (
-        patch("simtools.ray_tracing.mirror_panel_psf.TelescopeModel"),
-        patch("simtools.ray_tracing.mirror_panel_psf.gen.find_file"),
+        patch(mock_telescope_model_string),
+        patch(mock_find_file_string),
     ):
 
         db_config = {"db": "config"}
@@ -148,7 +165,7 @@ def test_write_optimization_data(mock_mirror_panel_psf):
         mock_metadata_collector.assert_called_once()
 
 
-def test_run_simulations_and_analysis():
+def test_run_simulations_and_analysis(mock_telescope_model_string, mock_find_file_string):
     # Not using pytest.fixtures to run test in isolation (not using the same instance of the class)
     rnda = 0.1
     args_dict = {
@@ -171,8 +188,8 @@ def test_run_simulations_and_analysis():
     }
 
     with (
-        patch("simtools.ray_tracing.mirror_panel_psf.TelescopeModel"),
-        patch("simtools.ray_tracing.mirror_panel_psf.gen.find_file"),
+        patch(mock_telescope_model_string),
+        patch(mock_find_file_string),
         patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
     ):
 
@@ -250,12 +267,14 @@ def test_get_starting_value_from_model(mock_mirror_panel_psf, caplog):
     assert "Start value for mirror_reflection_random_angle: 0.3 deg" in caplog.text
 
 
-def test_derive_random_reflection_angle_no_tuning(mock_mirror_panel_psf):
+def test_derive_random_reflection_angle_no_tuning(
+    mock_mirror_panel_psf, mock_run_simulations_and_analysis_string
+):
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["no_tuning"] = True
     mirror_psf.rnda_start = 0.1
     mirror_psf.run_simulations_and_analysis = patch(
-        "simtools.ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis",
+        mock_run_simulations_and_analysis_string,
         return_value=(0.5, 0.1),
     ).start()
 
@@ -267,7 +286,9 @@ def test_derive_random_reflection_angle_no_tuning(mock_mirror_panel_psf):
     assert mirror_psf.sig_d80 == 0.1
 
 
-def test_derive_random_reflection_angle_with_tuning(mock_mirror_panel_psf):
+def test_derive_random_reflection_angle_with_tuning(
+    mock_mirror_panel_psf, mock_run_simulations_and_analysis_string
+):
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["no_tuning"] = False
     mirror_psf.rnda_start = 0.1
@@ -277,7 +298,7 @@ def test_derive_random_reflection_angle_with_tuning(mock_mirror_panel_psf):
             "simtools.ray_tracing.mirror_panel_psf.MirrorPanelPSF._optimize_reflection_angle"
         ) as mock_optimize,
         patch(
-            "simtools.ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis",
+            mock_run_simulations_and_analysis_string,
             return_value=(0.5, 0.1),
         ) as mock_run_simulations,
     ):
@@ -308,14 +329,14 @@ def test_interpolate_optimal_rnda(mock_mirror_panel_psf):
         assert mirror_psf.rnda_opt == 0.25
 
 
-def test_optimize_reflection_angle(mock_mirror_panel_psf):
+def test_optimize_reflection_angle(mock_mirror_panel_psf, mock_run_simulations_and_analysis_string):
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.rnda_start = 0.1
     mirror_psf.args_dict["psf_measurement_containment_mean"] = 0.5
 
     with (
         patch(
-            "simtools.ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis",
+            mock_run_simulations_and_analysis_string,
             side_effect=[
                 (0.7, 0.1),  # First call
                 (0.6, 0.1),  # Second call
