@@ -12,6 +12,7 @@ __all__ = [
 ]
 
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.WARNING)
 
 
 def convert_2d_to_radial_distr(hist_2d, xaxis, yaxis, bins=50, max_dist=1000):
