@@ -441,6 +441,7 @@ def main():
             light_source_type=args_dict["light_source_type"],
         )
         run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
+        log_file = f"{light_source.output_directory}/logfile.log"
         with open(log_file, "w", encoding="utf-8") as log_file:
 
             subprocess.run(
