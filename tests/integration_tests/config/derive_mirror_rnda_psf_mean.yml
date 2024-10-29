@@ -21,4 +21,6 @@ CTA_SIMPIPE:
         tests/resources/derive_mirror_rnda_psf_mean.ecsv
       TOLERANCE: 3.e-1
       TEST_COLUMNS:
-        - mirror_reflection_random_angle_sigma1
+        - TEST_COLUMN_NAME: mirror_reflection_random_angle_sigma1
+          CUT_COLUMN_NAME: best_fit
+          CUT_CONDITION: "==True"
