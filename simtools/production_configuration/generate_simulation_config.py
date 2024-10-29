@@ -117,6 +117,7 @@ class SimulationConfig:
         """
         base_area = self._fetch_simulated_core_scatter_area()
         area_factor = self._get_area_factor_from_grid_point()
+
         return base_area * area_factor
 
     def _calculate_viewcone(self) -> float:
@@ -130,6 +131,7 @@ class SimulationConfig:
         """
         base_viewcone = self._fetch_simulated_viewcone()
         viewcone_factor = self._get_viewcone_factor_from_grid_point()
+
         return base_viewcone * viewcone_factor
 
     def _get_area_factor_from_grid_point(self) -> float:
@@ -177,10 +179,9 @@ class SimulationConfig:
         Returns
         -------
         float
-            The fetched core scatter area.
+            The fetched core scatter outer bound.
         """
-        # Implement method
-        return 1.0  # Placeholder value
+        return self.evaluator.data["core_range"][0][1]
 
     def _fetch_simulated_viewcone(self) -> float:
         """
@@ -189,10 +190,9 @@ class SimulationConfig:
         Returns
         -------
         float
-            The fetched viewcone.
+            The fetched viewcone outer bound.
         """
-        # TODO: implement
-        return 1
+        return self.evaluator.data["viewcone"][0][1]
 
     def calculate_required_events(self) -> int:
         """

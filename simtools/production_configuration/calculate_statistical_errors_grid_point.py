@@ -66,6 +66,7 @@ class StatisticalErrorEvaluator:
         self.delta_energy = None
         self.error_gamma_ray_psf = None
         self.error_image_template_methods = None
+
         self.metric_results = None
         self.scaled_events = None
         self.scaled_events_gridpoint = None
@@ -92,12 +93,17 @@ class StatisticalErrorEvaluator:
                 bin_edges_high = sim_events_data["MC_ENERG_HI"]
                 simulated_event_histogram = sim_events_data["EVENTS"]
 
+                viewcone = hdul[3].data["viewcone"]  # pylint: disable=E1101
+                core_range = hdul[3].data["core_range"]  # pylint: disable=E1101
+
                 data = {
                     "event_energies": event_energies,
                     "mc_energies": mc_energies,
                     "bin_edges_low": bin_edges_low,
                     "bin_edges_high": bin_edges_high,
                     "simulated_event_histogram": simulated_event_histogram,
+                    "viewcone": viewcone,
+                    "core_range": core_range,
                 }
                 if self.grid_point is None:
                     unique_azimuths = np.unique(events_data["PNT_AZ"])
