@@ -114,7 +114,7 @@ def test_define_telescope_model(mock_args_dict, mock_telescope_model_string, moc
         )
         tel.export_model_files.assert_called_once()
         mock_find_file.assert_called_once()
-        tel.change_parameter.call_count == 2.0
+        assert tel.change_parameter.call_count == 2
         tel.export_parameter_file.assert_called_once()
 
 
