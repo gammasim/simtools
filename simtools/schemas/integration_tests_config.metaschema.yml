@@ -76,8 +76,18 @@ definitions:
         description: "Allowed tolerance for floating point comparison."
         type: number
       TEST_COLUMNS:
-        description: "List of columns to be compared."
+        description: "List of columns to be compared, each with optional cut conditions."
         type: array
         items:
-          type: string
+          type: object
+          properties:
+            TEST_COLUMN_NAME:
+              description: "Name of the column to compare."
+              type: string
+            CUT_COLUMN_NAME:
+              description: "Name of the column for applying the cut."
+              type: string
+            CUT_CONDITION:
+              description: "Condition to apply to the cut column."
+              type: string
     title: IntegrationTest
