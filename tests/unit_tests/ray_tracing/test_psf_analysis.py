@@ -17,6 +17,21 @@ logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
+def dummy_photon_file():
+    return "dummy_file.gz"
+
+
+@pytest.fixture
+def mocker_gzip_open():
+    return "gzip.open"
+
+
+@pytest.fixture
+def shutil_copyfileobj():
+    return "shutil.copyfileobj"
+
+
+@pytest.fixture
 def psf_image():
     image = PSFImage(focal_length=2800.0, containment_fraction=0.8, total_scattered_area=100)
     rng = np.random.default_rng(seed=42)
@@ -212,45 +227,42 @@ def test_get_psf(psf_image, caplog):
     assert 0.5 in image._stored_psf
 
 
-def test_process_photon_list_with_rx(mocker, psf_image):
+def test_process_photon_list_with_rx(mocker, psf_image, dummy_photon_file):
     image = psf_image
     mocker.patch.object(image, "_process_simtel_file_using_rx")
     mocker.patch.object(image, "read_photon_list_from_simtel_file")
 
-    photon_file = "dummy_file.gz"
     use_rx = True
-
-    image.process_photon_list(photon_file, use_rx)
-    image._process_simtel_file_using_rx.assert_called_once_with(photon_file)
+    image.process_photon_list(dummy_photon_file, use_rx)
+    image._process_simtel_file_using_rx.assert_called_once_with(dummy_photon_file)
     image.read_photon_list_from_simtel_file.assert_not_called()
 
 
-def test_process_photon_list_without_rx(mocker, psf_image):
+def test_process_photon_list_without_rx(mocker, psf_image, dummy_photon_file):
     image = psf_image
     mocker.patch.object(image, "_process_simtel_file_using_rx")
     mocker.patch.object(image, "read_photon_list_from_simtel_file")
 
-    photon_file = "dummy_file.gz"
     use_rx = False
-
-    image.process_photon_list(photon_file, use_rx)
-    image.read_photon_list_from_simtel_file.assert_called_once_with(photon_file)
+    image.process_photon_list(dummy_photon_file, use_rx)
+    image.read_photon_list_from_simtel_file.assert_called_once_with(dummy_photon_file)
     image._process_simtel_file_using_rx.assert_not_called()
 
 
-def test_process_simtel_file_using_rx_success(mocker, psf_image):
+def test_process_simtel_file_using_rx_success(
+    mocker, psf_image, dummy_photon_file, mocker_gzip_open, shutil_copyfileobj
+):
     image = psf_image
-    photon_file = "dummy_file.gz"
     mock_rx_output = b"0.5 0.1 0.2 0.0 0.0 100.0\n"
 
     mock_popen = mocker.patch("subprocess.Popen")
     mock_process = mock_popen.return_value
     mock_process.communicate.return_value = (mock_rx_output,)
 
-    mock_gzip_open = mocker.patch("gzip.open", mocker.mock_open(read_data=b"dummy data"))
-    mock_shutil_copyfileobj = mocker.patch("shutil.copyfileobj")
+    mock_gzip_open = mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=b"dummy data"))
+    mock_shutil_copyfileobj = mocker.patch(shutil_copyfileobj)
 
-    image._process_simtel_file_using_rx(photon_file)
+    image._process_simtel_file_using_rx(dummy_photon_file)
 
     mock_popen.assert_called_once_with(
         shlex.split(
@@ -259,7 +271,7 @@ def test_process_simtel_file_using_rx_success(mocker, psf_image):
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
-    mock_gzip_open.assert_called_once_with(photon_file, "rb")
+    mock_gzip_open.assert_called_once_with(dummy_photon_file, "rb")
     mock_shutil_copyfileobj.assert_called_once()
 
     assert image._stored_psf[image._containment_fraction] == 1.0  # 2 * 0.5
@@ -268,55 +280,57 @@ def test_process_simtel_file_using_rx_success(mocker, psf_image):
     assert image._effective_area == 100.0
 
 
-def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image):
+def test_process_simtel_file_using_rx_file_not_found(mocker, psf_image, mocker_gzip_open):
     image = psf_image
     photon_file = "non_existent_file.gz"
 
-    mocker.patch("gzip.open", side_effect=FileNotFoundError)
+    mocker.patch(mocker_gzip_open, side_effect=FileNotFoundError)
 
     with pytest.raises(FileNotFoundError, match=f"Photon list file not found: {photon_file}"):
         image._process_simtel_file_using_rx(photon_file)
 
 
-def test_process_simtel_file_using_rx_unexpected_output_format(mocker, psf_image):
+def test_process_simtel_file_using_rx_unexpected_output_format(
+    mocker, psf_image, dummy_photon_file, mocker_gzip_open, shutil_copyfileobj
+):
     image = psf_image
-    photon_file = "dummy_file.gz"
     mock_rx_output = b""
 
     mock_popen = mocker.patch("subprocess.Popen")
     mock_process = mock_popen.return_value
     mock_process.communicate.return_value = (mock_rx_output,)
 
-    mocker.patch("gzip.open", mocker.mock_open(read_data=b"dummy data"))
-    mocker.patch("shutil.copyfileobj")
+    dummy_data = b"dummy data"
+    mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
+    mocker.patch(shutil_copyfileobj)
 
     with pytest.raises(IndexError, match="Unexpected output format from rx"):
-        image._process_simtel_file_using_rx(photon_file)
+        image._process_simtel_file_using_rx(dummy_photon_file)
 
     mock_rx_output = b"1.0\n"
     mock_process.communicate.return_value = (mock_rx_output,)
 
-    mocker.patch("gzip.open", mocker.mock_open(read_data=b"dummy data"))
+    mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
     mocker.patch("shutil.copyfileobj")
 
     with pytest.raises(IndexError, match=r"^Unexpected output format from rx"):
-        image._process_simtel_file_using_rx(photon_file)
+        image._process_simtel_file_using_rx(dummy_photon_file)
 
     mock_rx_output = b"not_a_good_return_value\n"
     mock_process.communicate.return_value = (mock_rx_output,)
 
-    mocker.patch("gzip.open", mocker.mock_open(read_data=b"dummy data"))
+    mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
     mocker.patch("shutil.copyfileobj")
 
     with pytest.raises(ValueError, match=r"^Invalid output format from rx"):
-        image._process_simtel_file_using_rx(photon_file)
+        image._process_simtel_file_using_rx(dummy_photon_file)
 
 
-def test_read_photon_list_from_simtel_file_file_not_found(mocker):
+def test_read_photon_list_from_simtel_file_file_not_found(mocker, mocker_gzip_open):
     image = PSFImage(focal_length=2800.0)
     photon_file = "non_existent_file.gz"
 
-    mocker.patch("gzip.open", side_effect=FileNotFoundError)
+    mocker.patch(mocker_gzip_open, side_effect=FileNotFoundError)
 
     with pytest.raises(FileNotFoundError):
         image.read_photon_list_from_simtel_file(photon_file)

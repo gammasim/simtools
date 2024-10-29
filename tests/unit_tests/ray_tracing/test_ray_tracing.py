@@ -20,6 +20,11 @@ def test_photons_file():
 
 
 @pytest.fixture
+def off_axis_string():
+    return "Off-axis angle"
+
+
+@pytest.fixture
 def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
     mock_telescope_model = mocker.Mock()
     mock_telescope_model.mirrors.number_of_mirrors = 3
@@ -291,7 +296,7 @@ def test_images_no_psf_images(ray_tracing_lst, caplog):
     assert "No image found" in caplog.text
 
 
-def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode):
+def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_axis_string):
     """
     Test the _store_results method of the RayTracing class.
     """
@@ -304,7 +309,7 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode):
     assert isinstance(ray_tracing_lst._results, QTable)
     assert len(ray_tracing_lst._results) == len(_rows)
     assert ray_tracing_lst._results.colnames == [
-        "Off-axis angle",
+        off_axis_string,
         "d80_cm",
         "d80_deg",
         "eff_area",
@@ -320,7 +325,7 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode):
     assert len(ray_tracing_lst_single_mirror_mode._results) == len(_rows)
 
 
-def test_store_results_single_mirror_mode(ray_tracing_lst_single_mirror_mode):
+def test_store_results_single_mirror_mode(ray_tracing_lst_single_mirror_mode, off_axis_string):
     """
     Test the _store_results method of the RayTracing class with single mirror mode.
     """
@@ -339,7 +344,7 @@ def test_store_results_single_mirror_mode(ray_tracing_lst_single_mirror_mode):
     assert isinstance(ray_tracing_lst_single_mirror_mode._results, QTable)
     assert len(ray_tracing_lst_single_mirror_mode._results) == len(_rows)
     assert ray_tracing_lst_single_mirror_mode._results.colnames == [
-        "Off-axis angle",
+        off_axis_string,
         "d80_cm",
         "d80_deg",
         "eff_area",
@@ -603,7 +608,7 @@ def test_plot_histogram_invalid_key(ray_tracing_lst):
         ray_tracing_lst.plot_histogram(key="invalid_key", bins=10)
 
 
-def test_plot_valid_key(ray_tracing_lst, mocker):
+def test_plot_valid_key(ray_tracing_lst, mocker, off_axis_string):
     """
     Test the plot method of the RayTracing class with a valid key.
     """
@@ -619,7 +624,7 @@ def test_plot_valid_key(ray_tracing_lst, mocker):
 
     ray_tracing_lst._results = QTable(
         {
-            "Off-axis angle": [0.0, 2.0],
+            off_axis_string: [0.0, 2.0],
             "d80_cm": [4.256768651160611, 4.356768651160611],
             "d80_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
@@ -641,13 +646,13 @@ def test_plot_valid_key(ray_tracing_lst, mocker):
     )
 
 
-def test_plot_invalid_key(ray_tracing_lst):
+def test_plot_invalid_key(ray_tracing_lst, off_axis_string):
     """
     Test the plot method of the RayTracing class with an invalid key.
     """
     ray_tracing_lst._results = QTable(
         {
-            "Off-axis angle": [0.0, 2.0],
+            off_axis_string: [0.0, 2.0],
             "d80_cm": [4.256768651160611, 4.356768651160611],
             "d80_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
