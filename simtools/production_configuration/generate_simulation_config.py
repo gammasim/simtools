@@ -181,7 +181,7 @@ class SimulationConfig:
         float
             The fetched core scatter outer bound.
         """
-        return self.evaluator.data["core_range"][0][1]
+        return self.evaluator.data["core_range"]
 
     def _fetch_simulated_viewcone(self) -> float:
         """
@@ -192,7 +192,7 @@ class SimulationConfig:
         float
             The fetched viewcone outer bound.
         """
-        return self.evaluator.data["viewcone"][0][1]
+        return self.evaluator.data["viewcone"]
 
     def calculate_required_events(self) -> int:
         """

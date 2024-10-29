@@ -93,8 +93,8 @@ class StatisticalErrorEvaluator:
                 bin_edges_high = sim_events_data["MC_ENERG_HI"]
                 simulated_event_histogram = sim_events_data["EVENTS"]
 
-                viewcone = hdul[3].data["viewcone"]  # pylint: disable=E1101
-                core_range = hdul[3].data["core_range"]  # pylint: disable=E1101
+                viewcone = hdul[3].data["viewcone"][0][1]  # pylint: disable=E1101
+                core_range = hdul[3].data["core_range"][0][1]  # pylint: disable=E1101
 
                 data = {
                     "event_energies": event_energies,

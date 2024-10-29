@@ -36,6 +36,18 @@ def test_fits_file(tmp_path):
                     dtype=[("MC_ENERG_LO", "f4"), ("MC_ENERG_HI", "f4"), ("EVENTS", "f4")],
                 ),
             ),
+            fits.BinTableHDU(
+                name="INFO",
+                data=np.array(
+                    [
+                        ([0.0, 2800.0], [0.0, 10.0]),
+                    ],
+                    dtype=[
+                        ("core_range", ">f8", (2,)),
+                        ("viewcone", ">f8", (2,)),
+                    ],
+                ),
+            ),
         ]
     )
     hdu_list.writeto(file_path, overwrite=True)

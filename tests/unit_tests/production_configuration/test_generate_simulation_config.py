@@ -32,7 +32,11 @@ def mock_statistical_error_evaluator():
     mock_evaluator.calculate_required_events = MagicMock(return_value=1e5)
 
     # Mock data attribute
-    mock_evaluator.data = {"simulated_event_histogram": [100, 200, 300]}
+    mock_evaluator.data = {
+        "simulated_event_histogram": [100, 200, 300],
+        "core_range": [0, 1000],
+        "viewcone": [0, 10],
+    }
 
     # Mock file loading function
     mock_evaluator.load_data_from_file = MagicMock(return_value=None)
