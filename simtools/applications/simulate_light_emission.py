@@ -373,7 +373,7 @@ def main():
     if args_dict["light_source_setup"] == "variable":
         if args_dict["distances_ls"] is not None:
             default_le_config["z_pos"]["default"] = distance_list(args_dict["distances_ls"])
-        print(f"Simulating for distances of {default_le_config['z_pos']['default']}")
+        logger.info(f"Simulating for distances of {default_le_config['z_pos']['default']}")
         figures = []
         for distance in default_le_config["z_pos"]["default"]:
             le_config = default_le_config.copy()
@@ -388,34 +388,46 @@ def main():
                 light_source_type=args_dict["light_source_type"],
             )
             run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
-            subprocess.run(run_script, shell=False, check=False)
+            log_file = f"{light_source.output_directory}/logfile.log"
+            with open(log_file, "w", encoding="utf-8") as log_file:
 
-            try:
-                filename = (
-                    f"{light_source.output_directory}/"
-                    f"{light_source.le_application[0]}_{light_source.le_application[1]}.simtel.gz"
+                subprocess.run(
+                    run_script,
+                    shell=False,
+                    check=False,
+                    text=True,
+                    stdout=log_file,
+                    stderr=log_file,
                 )
-                fig = plot_simtel_ctapipe(
-                    filename,
-                    cleaning_args=[
-                        args_dict["boundary_thresh"],
-                        args_dict["picture_thresh"],
-                        args_dict["min_neighbors"],
-                    ],
-                    distance=light_source.default_le_config["z_pos"]["default"],
-                    return_cleaned=args_dict["return_cleaned"],
-                )
-                figures.append(fig)
-            except AttributeError:
-                msg = f"telescope not triggered at distance of {light_source.distance.to(u.meter)}"
-                logger.warning(msg)
 
-        save_figs_to_pdf(
-            figures,
-            f"{light_source.output_directory}/{args_dict['telescope']}_"
-            f"{light_source.le_application[0]}_"
-            f"{light_source.le_application[1]}.pdf",
-        )
+                try:
+                    filename = (
+                        f"{light_source.output_directory}/"
+                        f"{light_source.le_application[0]}_"
+                        f"{light_source.le_application[1]}.simtel.gz"
+                    )
+                    fig = plot_simtel_ctapipe(
+                        filename,
+                        cleaning_args=[
+                            args_dict["boundary_thresh"],
+                            args_dict["picture_thresh"],
+                            args_dict["min_neighbors"],
+                        ],
+                        distance=light_source.default_le_config["z_pos"]["default"],
+                        return_cleaned=args_dict["return_cleaned"],
+                    )
+                    figures.append(fig)
+                except AttributeError:
+                    msg = "telescope not triggered at distance of"
+                    msg += f"{light_source.distance.to(u.meter)}"
+                    logger.warning(msg)
+
+                save_figs_to_pdf(
+                    figures,
+                    f"{light_source.output_directory}/{args_dict['telescope']}_"
+                    f"{light_source.le_application[0]}_"
+                    f"{light_source.le_application[1]}.pdf",
+                )
 
     elif args_dict["light_source_setup"] == "layout":
 
@@ -429,31 +441,36 @@ def main():
             light_source_type=args_dict["light_source_type"],
         )
         run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
-        subprocess.run(run_script, shell=False, check=False)
-        try:
-            filename = (
-                f"{light_source.output_directory}/"
-                f"{light_source.le_application[0]}_{light_source.le_application[1]}.simtel.gz"
+        with open(log_file, "w", encoding="utf-8") as log_file:
+
+            subprocess.run(
+                run_script, shell=False, check=False, text=True, stdout=log_file, stderr=log_file
             )
-            fig = plot_simtel_ctapipe(
-                filename,
-                cleaning_args=[
-                    args_dict["boundary_thresh"],
-                    args_dict["picture_thresh"],
-                    args_dict["min_neighbors"],
-                ],
-                distance=light_source.distance,
-                return_cleaned=args_dict["return_cleaned"],
-            )
-            save_figs_to_pdf(
-                [fig],
-                f"{light_source.output_directory}/{args_dict['telescope']}_"
-                f"{light_source.le_application[0]}_"
-                f"{light_source.le_application[1]}.pdf",
-            )
-        except AttributeError:
-            msg = f"telescope not triggered at distance of {light_source.distance.to(u.meter)}"
-            logger.warning(msg)
+            try:
+                filename = (
+                    f"{light_source.output_directory}/"
+                    f"{light_source.le_application[0]}_{light_source.le_application[1]}.simtel.gz"
+                )
+                fig = plot_simtel_ctapipe(
+                    filename,
+                    cleaning_args=[
+                        args_dict["boundary_thresh"],
+                        args_dict["picture_thresh"],
+                        args_dict["min_neighbors"],
+                    ],
+                    distance=light_source.distance,
+                    return_cleaned=args_dict["return_cleaned"],
+                )
+            except AttributeError:
+                msg = f"telescope not triggered at distance of {light_source.distance.to(u.meter)}"
+                logger.warning(msg)
+
+        save_figs_to_pdf(
+            [fig],
+            f"{light_source.output_directory}/{args_dict['telescope']}_"
+            f"{light_source.le_application[0]}_"
+            f"{light_source.le_application[1]}.pdf",
+        )
 
 
 if __name__ == "__main__":
