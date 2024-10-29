@@ -311,7 +311,7 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
     mock_process.communicate.return_value = (mock_rx_output,)
 
     mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
-    mocker.patch("shutil.copyfileobj")
+    mocker.patch(shutil_copyfileobj)
 
     with pytest.raises(IndexError, match=r"^Unexpected output format from rx"):
         image._process_simtel_file_using_rx(dummy_photon_file)
@@ -320,7 +320,7 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
     mock_process.communicate.return_value = (mock_rx_output,)
 
     mocker.patch(mocker_gzip_open, mocker.mock_open(read_data=dummy_data))
-    mocker.patch("shutil.copyfileobj")
+    mocker.patch(shutil_copyfileobj)
 
     with pytest.raises(ValueError, match=r"^Invalid output format from rx"):
         image._process_simtel_file_using_rx(dummy_photon_file)
