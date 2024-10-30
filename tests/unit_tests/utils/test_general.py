@@ -23,6 +23,8 @@ url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 test_data = "Test data"
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
@@ -393,6 +395,8 @@ def test_join_url_or_path():
     assert gen.join_url_or_path("/Volume/fs01", "CTA") == Path("/Volume/fs01").joinpath("CTA")
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_change_dict_keys_case(caplog) -> None:
     # note that entries in DATA_COLUMNS:ATTRIBUTE should not be changed (not keys)
     _upper_dict = {
@@ -618,10 +622,10 @@ def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
     latin1_content = "This is a Latin-1 encoded file with latin character ñ.\n"
     with open(latin1_file, "w", encoding="latin-1") as file:
         file.write(latin1_content)
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.ERROR):
         lines = gen.read_file_encoded_in_utf_or_latin(latin1_file)
         assert lines == [latin1_content]
-        assert "Unable to decode file using UTF-8. Trying Latin-1." in caplog.text
+    assert "Unable to decode file using UTF-8. Trying Latin-1." in caplog.text
 
     # I could not find a way to create a file that cannot be decoded with Latin-1
     # and raises a UnicodeDecodeError. I left the raise statement in the function

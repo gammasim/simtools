@@ -9,7 +9,6 @@ import pytest
 from simtools.corsika.corsika_config import CorsikaConfig
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -295,6 +294,8 @@ def test_set_primary_particle(corsika_config_mock_array_model):
     assert p_pdg_id.name == "proton"
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_config_parameter(corsika_config_mock_array_model, caplog):
     cc = corsika_config_mock_array_model
     assert isinstance(cc.get_config_parameter("NSHOW"), int)

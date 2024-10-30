@@ -12,7 +12,6 @@ from ctao_cr_spectra.spectral import PowerLaw
 from simtools.simtel.simtel_io_histogram import HistogramIdNotFoundError, SimtelIOHistogram
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -43,21 +42,22 @@ def simtel_hist_hdata_io_instance(simtel_io_file_hdata):
     )
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_init_errors(simtel_io_file_hdata, caplog):
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError, match=r"view_cone needs to be passed as argument"):
-            _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata)
+    with pytest.raises(ValueError, match=r"view_cone needs to be passed as argument"):
+        _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata)
     assert "view_cone needs to be passed as argument" in caplog.text
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError, match=r"energy_range needs to be passed as argument"):
-            _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata, view_cone=[0, 10])
+    with pytest.raises(ValueError, match=r"energy_range needs to be passed as argument"):
+        _ = SimtelIOHistogram(histogram_file=simtel_io_file_hdata, view_cone=[0, 10])
     assert "energy_range needs to be passed as argument" in caplog.text
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_file_does_not_exist(caplog):
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(FileNotFoundError):
-            _ = SimtelIOHistogram(histogram_file="non_existent_file.simtel.zst")
+    with pytest.raises(FileNotFoundError):
+        _ = SimtelIOHistogram(histogram_file="non_existent_file.simtel.zst")
     assert "does not exist." in caplog.text
 
 
@@ -86,6 +86,8 @@ def test_total_num_triggered_events(simtel_hist_io_instance):
     assert total_num_triggered_events == 1.0
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_fill_event_histogram_dicts(simtel_hist_io_instance, caplog):
     (
         events_histogram,
@@ -105,9 +107,8 @@ def test_fill_event_histogram_dicts(simtel_hist_io_instance, caplog):
             new_instance.histogram[histogram_index]["id"] = 99
         if hist["id"] == 2:
             new_instance.histogram[histogram_index]["id"] = 99
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(HistogramIdNotFoundError):
-            new_instance.fill_event_histogram_dicts()
+    with pytest.raises(HistogramIdNotFoundError):
+        new_instance.fill_event_histogram_dicts()
     assert "Histograms ids not found. Please check your files." in caplog.text
 
 
@@ -143,6 +144,8 @@ def test_initialize_histogram_axes(simtel_hist_io_instance):
     assert np.array_equal(simtel_hist_io_instance.energy_axis, expected_energy_axis)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_particle_distribution_function(
     simtel_hist_io_instance, simtel_hist_hdata_io_instance, caplog
 ):
@@ -159,9 +162,8 @@ def test_get_particle_distribution_function(
         label="simulation"
     )
     assert simulation_function.index == -2.0
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError, match=r"spectral_index not found in the configuration"):
-            simtel_hist_hdata_io_instance._get_simulation_spectral_distribution_function()
+    with pytest.raises(ValueError, match=r"spectral_index not found in the configuration"):
+        simtel_hist_hdata_io_instance._get_simulation_spectral_distribution_function()
     assert_string = (
         "spectral_index not found in the configuration of the file. "
         "Consider using a .simtel file instead."
@@ -169,9 +171,8 @@ def test_get_particle_distribution_function(
     assert assert_string in caplog.text
 
     # Test invalid label
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(ValueError, match=r"Please use either"):
-            simtel_hist_io_instance.get_particle_distribution_function(label="invalid_label")
+    with pytest.raises(ValueError, match=r"Please use either"):
+        simtel_hist_io_instance.get_particle_distribution_function(label="invalid_label")
     assert "Please use either 'reference' or 'simulation'" in caplog.text
 
 

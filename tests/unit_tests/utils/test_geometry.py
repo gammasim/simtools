@@ -1,3 +1,5 @@
+import logging
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -64,6 +66,8 @@ def test_rotate_telescope_position(caplog) -> None:
         transf.rotate(x_new_array, y_new_array, 30 * u.m)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_convert_2d_to_radial_distr(caplog) -> None:
     # Test normal functioning
     max_dist = 100

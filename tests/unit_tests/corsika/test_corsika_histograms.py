@@ -2,6 +2,7 @@
 
 
 import copy
+import logging
 from pathlib import Path
 
 import boost_histogram as bh
@@ -85,10 +86,11 @@ def test_get_header_astropy_units(corsika_histograms_instance):
         assert isinstance(astropy_unit, u.core.CompositeUnit)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_hist_config_default_config(corsika_histograms_instance, caplog):
-    with caplog.at_level("WARNING"):
-        hist_config = corsika_histograms_instance.hist_config
-        assert "No histogram configuration was defined before." in caplog.text
+    hist_config = corsika_histograms_instance.hist_config
+    assert "No histogram configuration was defined before." in caplog.text
     assert isinstance(hist_config, dict)
     assert hist_config == corsika_histograms_instance._create_histogram_default_config()
 
@@ -191,6 +193,8 @@ def test_fill_histograms_no_rotation(corsika_output_file_name, io_handler):
     assert np.count_nonzero(corsika_histograms_instance_fill.hist_direction[0].values()) > 0
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, caplog):
     with pytest.raises(ValueError, match="label_not_valid is not valid."):
         corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
@@ -698,6 +702,8 @@ def test_magnetic_field(corsika_histograms_instance_set_histograms):
     assert corsika_histograms_instance_set_histograms.magnetic_field[0].unit == u.uT
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_event_parameter_info(corsika_histograms_instance_set_histograms, caplog):
     for parameter in corsika_histograms_instance_set_histograms.all_event_keys[1:]:
         assert isinstance(
@@ -715,6 +721,8 @@ def test_get_event_parameter_info(corsika_histograms_instance_set_histograms, ca
     )
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
     for parameter in corsika_histograms_instance_set_histograms.all_run_keys[1:]:
         assert isinstance(

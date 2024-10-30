@@ -9,7 +9,6 @@ from simtools.runners.simtel_runner import InvalidOutputFileError
 from simtools.simtel.simulator_array import SimulatorArray
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

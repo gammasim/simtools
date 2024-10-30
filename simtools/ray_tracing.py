@@ -75,7 +75,7 @@ class RayTracing:
     ):
         """Initialize RayTracing class."""
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("Initializing RayTracing class")
+        self._logger.info("Initializing RayTracing class")
 
         self.simtel_path = Path(simtel_path)
         self._io_handler = io_handler.IOHandler()
@@ -155,7 +155,7 @@ class RayTracing:
         tuple
             Tuple containing source distance and mirror numbers.
         """
-        self._logger.debug(
+        self._logger.info(
             "Single mirror mode is activated - "
             "source distance is being recalculated to 2 * focal length "
             " (this is not correct for dual-mirror telescopes)."

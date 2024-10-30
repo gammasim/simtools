@@ -71,6 +71,8 @@ def ray_tracing_lst_single_mirror_mode(telescope_model_lst, simtel_path, io_hand
     )
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_ray_tracing_init(simtel_path, io_handler, telescope_model_mst, caplog):
 
     with caplog.at_level(logging.DEBUG):
@@ -89,6 +91,8 @@ def test_ray_tracing_init(simtel_path, io_handler, telescope_model_mst, caplog):
     assert repr(ray) == f"RayTracing(label={telescope_model_mst.label})\n"
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_ray_tracing_single_mirror_mode(simtel_path, io_handler, telescope_model_mst, caplog):
     telescope_model_mst.export_config_file()
 
@@ -133,6 +137,8 @@ def test_ray_tracing_read_results(ray_tracing_lst):
     assert ray_tracing_lst.get_mean("d80_cm") == pytest.approx(4.256768651160611, abs=1e-5)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_export_results(simtel_path, ray_tracing_lst, caplog):
     """
     Test the export_results method of the RayTracing class without results
@@ -143,6 +149,8 @@ def test_export_results(simtel_path, ray_tracing_lst, caplog):
     assert "No results to export" in caplog.text
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_ray_tracing_plot(ray_tracing_lst, caplog, invalid_key, invalid_key_message):
     """
     Test the plot method of the RayTracing class with an invalid key and a valid key
@@ -155,9 +163,8 @@ def test_ray_tracing_plot(ray_tracing_lst, caplog, invalid_key, invalid_key_mess
     assert invalid_key_message in caplog.text
 
     # Now test a valid key
-    with caplog.at_level(logging.INFO):
-        ray_tracing_lst.plot(key="d80_cm", save=True)
-        assert "Saving fig in" in caplog.text
+    ray_tracing_lst.plot(key="d80_cm", save=True)
+    assert "Saving fig in" in caplog.text
     plot_file_name = names.generate_file_name(
         file_type="ray-tracing",
         suffix=".pdf",
@@ -172,6 +179,8 @@ def test_ray_tracing_plot(ray_tracing_lst, caplog, invalid_key, invalid_key_mess
     assert plot_file.exists() is True
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_ray_tracing_invalid_key(ray_tracing_lst, caplog, invalid_key, invalid_key_message):
     """
     Test the a few methods of the RayTracing class with an invalid key
@@ -197,6 +206,8 @@ def test_ray_tracing_get_std_dev(ray_tracing_lst):
     assert ray_tracing_lst.get_std_dev(key="d80_cm") == pytest.approx(0.8418404935128992, abs=1e-5)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_ray_tracing_no_images(ray_tracing_lst, caplog):
     """Test the images method of the RayTracing class with no images"""
 
@@ -204,6 +215,8 @@ def test_ray_tracing_no_images(ray_tracing_lst, caplog):
     assert "No image found" in caplog.text
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_ray_tracing_simulate(ray_tracing_lst, caplog, mocker):
     mock_simulator = mocker.patch("simtools.ray_tracing.SimulatorRayTracing")
     mock_simulator_instance = mock_simulator.return_value
@@ -213,9 +226,7 @@ def test_ray_tracing_simulate(ray_tracing_lst, caplog, mocker):
     mock_copyfileobj = mocker.patch("shutil.copyfileobj")
     mock_unlink = mocker.patch("pathlib.Path.unlink")
 
-    with caplog.at_level(logging.INFO):
-        ray_tracing_lst.simulate(test=True, force=True)
-
+    ray_tracing_lst.simulate(test=True, force=True)
     assert "Simulating RayTracing for off_axis=0.0, mirror=0" in caplog.text
     mock_simulator.assert_called_once_with(
         simtel_path=ray_tracing_lst.simtel_path,
@@ -374,11 +385,12 @@ def test_images_with_psf_images(ray_tracing_lst, mocker):
     assert images[0] == mock_psf_image
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_images_no_psf_images(ray_tracing_lst, caplog):
     ray_tracing_lst._psf_images = {}
 
-    with caplog.at_level(logging.WARNING):
-        images = ray_tracing_lst.images()
+    images = ray_tracing_lst.images()
 
     assert images is None
     assert "No image found" in caplog.text

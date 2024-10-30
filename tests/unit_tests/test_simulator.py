@@ -16,7 +16,6 @@ from simtools.simtel.simulator_array import SimulatorArray
 from simtools.simulator import InvalidRunsToSimulateError, Simulator
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -327,19 +326,18 @@ def test_get_runs_to_simulate(shower_simulator):
     assert isinstance(shower_simulator._get_runs_to_simulate(), list)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.DEBUG], indirect=True)
 def test_save_file_lists(shower_simulator, mocker, caplog):
-    with caplog.at_level(logging.DEBUG):
-        shower_simulator.save_file_lists()
-        assert "No files to save for output files." in caplog.text
+    shower_simulator.save_file_lists()
+    assert "No files to save for output files." in caplog.text
 
     mock_shower_simulator = copy.deepcopy(shower_simulator)
     mocker.patch.object(mock_shower_simulator, "get_file_list", return_value=["file1", "file2"])
 
-    with caplog.at_level(logging.INFO):
-        mock_shower_simulator.save_file_lists()
-        assert "Saving list of output files to" in caplog.text
+    mock_shower_simulator.save_file_lists()
+    assert "Saving list of output files to" in caplog.text
 
     mocker.patch.object(mock_shower_simulator, "get_file_list", return_value=[None, None])
-    with caplog.at_level(logging.DEBUG):
-        mock_shower_simulator.save_file_lists()
-        assert "No files to save for output files." in caplog.text
+    mock_shower_simulator.save_file_lists()
+    assert "No files to save for output files." in caplog.text

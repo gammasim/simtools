@@ -165,7 +165,7 @@ def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
         return dict(in_dict)
 
     if allow_empty:
-        _logger.debug("Input has not been provided (neither by file, nor by dict)")
+        _logger.warning("Input has not been provided (neither by file, nor by dict)")
         return None
 
     msg = "Input has not been provided (neither by file, nor by dict)"
@@ -816,7 +816,7 @@ def read_file_encoded_in_utf_or_latin(file_name):
         with open(file_name, encoding="utf-8") as file:
             lines = file.readlines()
     except UnicodeDecodeError:
-        logging.debug("Unable to decode file using UTF-8. Trying Latin-1.")
+        logging.error("Unable to decode file using UTF-8. Trying Latin-1.")
         try:
             with open(file_name, encoding="latin-1") as file:
                 lines = file.readlines()

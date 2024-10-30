@@ -93,24 +93,25 @@ def test_read_value_from_file(tmp_test_directory, reference_point_altitude_file)
     )
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.DEBUG], indirect=True)
 def test_read_value_from_file_and_validate(
     caplog, tmp_test_directory, reference_point_altitude_file
 ):
     # schema file from metadata in file
-    with caplog.at_level(logging.DEBUG):
-        data_reader.read_value_from_file(reference_point_altitude_file, validate=True)
-        assert "Successful validation of yaml/json file" in caplog.text
+    data_reader.read_value_from_file(reference_point_altitude_file, validate=True)
+    assert "Successful validation of yaml/json file" in caplog.text
 
     # schema explicitly given
     schema_dir = files("simtools").joinpath("schemas/model_parameters/")
     schema_file = str(schema_dir) + "/reference_point_altitude.schema.yml"
-    with caplog.at_level(logging.DEBUG):
-        data_reader.read_value_from_file(
-            reference_point_altitude_file,
-            schema_file=schema_file,
-            validate=True,
-        )
-        assert "Successful validation of yaml/json file" in caplog.text
+
+    data_reader.read_value_from_file(
+        reference_point_altitude_file,
+        schema_file=schema_file,
+        validate=True,
+    )
+    assert "Successful validation of yaml/json file" in caplog.text
 
     # no schema given
     test_dict_1 = {"Value": 5.0}

@@ -14,7 +14,6 @@ import simtools.utils.general as gen
 from simtools.data_model import metadata_model
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def test_get_data_model_schema_file_name():
@@ -118,6 +117,8 @@ def test_fill_associated_elements_from_args(args_dict_site):
         )
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplog):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
