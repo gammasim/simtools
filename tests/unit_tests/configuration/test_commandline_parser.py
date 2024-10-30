@@ -9,7 +9,6 @@ import pytest
 import simtools.configuration.commandline_parser as parser
 
 logger = logging.getLogger()
-
 SIMULATION_MODEL_STRING = "simulation model"
 
 
