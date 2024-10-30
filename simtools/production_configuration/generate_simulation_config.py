@@ -149,7 +149,7 @@ class SimulationConfig:
         elevation = self.grid_point.get("elevation", 0)
         night_sky_background = self.grid_point.get("night_sky_background", 0)
 
-        # TODO: implement
+        # implement reading of factor from LUT
         return azimuth + elevation + night_sky_background
 
     def _get_viewcone_factor_from_grid_point(self) -> float:
@@ -168,7 +168,7 @@ class SimulationConfig:
         elevation = self.grid_point.get("elevation", 0)
         night_sky_background = self.grid_point.get("night_sky_background", 0)
 
-        # TODO: implement
+        # implement reading of factor from LUT
         return azimuth + elevation + night_sky_background
 
     def _fetch_simulated_core_scatter_area(self) -> float:
