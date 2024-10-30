@@ -77,7 +77,6 @@ def test_calculate_error_energy_estimate_bdt_reg_tree(test_fits_file):
     evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, file_type="On-source")
     evaluator.calculate_metrics()
     error, sigma, delta = evaluator.calculate_error_energy_estimate_bdt_reg_tree()
-    # assert isinstance(error, float)
     assert isinstance(sigma, list)
     assert isinstance(delta, list)
 
