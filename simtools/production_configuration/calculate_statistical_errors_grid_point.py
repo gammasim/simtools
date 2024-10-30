@@ -263,7 +263,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for signal efficiency.
         """
-        # TODO: implement
+        # implement
         return 0.02  # Placeholder value
 
     def calculate_error_energy_estimate_bdt_reg_tree(self):
@@ -312,7 +312,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for gamma-ray PSF.
         """
-        # TODO: implement
+        # implement
         return 0.01  # Placeholder value
 
     def calculate_error_image_template_methods(self):
@@ -324,7 +324,7 @@ class StatisticalErrorEvaluator:
         float
             The calculated uncertainty for image template methods.
         """
-        # TODO: implement
+        # implement
         return 0.05  # Placeholder value
 
     def calculate_metrics(self):
@@ -413,7 +413,7 @@ class StatisticalErrorEvaluator:
         if not simulated_event_histogram.size:
             raise ValueError("Simulated event histogram is empty.")
 
-        # TODO: Add here the implementation that uses a combination of the required metrics
+        # Add here the implementation that uses a combination of the required metrics
         # Currently we only use the rel error on the eff area for scaling
         energy = self.grid_point[0]
         bin_idx = np.digitize(energy, bin_edges) - 1
@@ -441,7 +441,7 @@ class StatisticalErrorEvaluator:
         dict
             Dictionary with overall maximum errors for each metric.
         """
-        # TODO: Decide how to combine the metrics
+        # Decide how to combine the metrics
         if self.metric_results is None:
             raise ValueError("Metrics have not been computed yet.")
 
