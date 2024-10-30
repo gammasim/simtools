@@ -364,7 +364,8 @@ def test_make_simtel_script(mock_simulator):
             "-C MAXIMUM_TELESCOPES=1 "
             "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
             "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
-            "-C output_file=/directory/xyzls_layout.simtel.gz\n"
+            "-C output_file=/directory/xyzls_layout.simtel.gz "
+            "-C histogram_file=/directory/xyzls_layout.ctsim.hdata\n"
         )
 
         command = mock_simulator._make_simtel_script()

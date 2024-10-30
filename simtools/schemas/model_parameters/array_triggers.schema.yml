@@ -46,7 +46,7 @@ data:
               unit:
                 anyOf:
                   - type: string
-                    format: astropy_unit
+                    format: astropy_unit_of_time
             required: [value, unit]
           hard_stereo:
             type: object
@@ -71,7 +71,7 @@ data:
                   - type: "null"
               unit:
                 type: string
-                format: astropy_unit
+                format: astropy_unit_of_length
             required: [value, unit]
         required: [name, multiplicity, width, hard_stereo, min_separation]
 instrument:

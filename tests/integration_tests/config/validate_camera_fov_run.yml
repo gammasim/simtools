@@ -5,7 +5,7 @@ CTA_SIMPIPE:
     SITE: North
     TELESCOPE: MSTN-design
     MODEL_VERSION: 6.0.0
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: application-plots/validate_camera_fov_MSTN-design_pixel_layout.pdf
-    - OUTPUT_FILE: application-plots/validate_camera_fov_MSTN-design_pixel_layout.png
+    - OUTPUT_FILE: validate_camera_fov_MSTN-design_pixel_layout.pdf
+    - OUTPUT_FILE: validate_camera_fov_MSTN-design_pixel_layout.png
