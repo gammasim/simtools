@@ -104,7 +104,6 @@ def test_interpolation_handler(test_fits_file):
     query_point = np.array([[1, 180, 50, 0, 0.5]])
     interpolated_values = handler.interpolate(query_point)
     assert interpolated_values.shape[0] == query_point.shape[0]
-    # TODO: decide if files are added to resource repo
     # assert not np.isnan(interpolated_values).any() # requires actual file for interpolation
 
     query_point = np.array([[1e-3, 180, 40, 0, 0.5]])
