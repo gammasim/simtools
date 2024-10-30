@@ -178,7 +178,7 @@ def test_simulation_model():
 
     assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
-        if str(group.title) == "simulation model":
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "model_version" for action in group._group_actions)
             assert all(action.dest != "site" for action in group._group_actions)
             assert all(action.dest != "telescope" for action in group._group_actions)
@@ -189,7 +189,7 @@ def test_simulation_model():
     job_groups = _parser_s._action_groups
     assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
-        if str(group.title) == "simulation model":
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "model_version" for action in group._group_actions)
             assert any(action.dest == "site" for action in group._group_actions)
             assert all(action.dest != "telescope" for action in group._group_actions)
