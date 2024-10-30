@@ -10,7 +10,6 @@ import pytest
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -114,6 +113,8 @@ def test_export_parameter_dict_to_json(tmp_test_directory, config_reader_num_gai
     assert _json_file.exists()
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_compare_simtel_config_with_schema(
     config_reader_num_gains, config_reader_telescope_transmission, caplog
 ):
@@ -121,41 +122,34 @@ def test_compare_simtel_config_with_schema(
     _config_ng = config_reader_num_gains
 
     # no differences; should result in no output
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        _config_ng.compare_simtel_config_with_schema()
-        assert caplog.text == ""
+    _config_ng.compare_simtel_config_with_schema()
+    assert caplog.text == ""
 
     # no limits defined for telescope_transmission
-    caplog.clear()
     _config_tt = config_reader_telescope_transmission
-    with caplog.at_level(logging.WARNING):
-        _config_tt.compare_simtel_config_with_schema()
-        assert "Values for limits do not match" in caplog.text
-        assert "from simtel: TELESCOPE_TRANSMISSION None" in caplog.text
-        assert "from schema: telescope_transmission [0. 1.]" in caplog.text
+    _config_tt.compare_simtel_config_with_schema()
+    assert "Values for limits do not match" in caplog.text
+    assert "from simtel: TELESCOPE_TRANSMISSION None" in caplog.text
+    assert "from schema: telescope_transmission [0. 1.]" in caplog.text
 
     # change parameter type to bool; should result in no limit check
     caplog.clear()
     _config_tt.parameter_dict["type"] = "bool"
-    with caplog.at_level(logging.WARNING):
-        _config_tt.compare_simtel_config_with_schema()
-        assert "Values for limits do not match" not in caplog.text
+    _config_tt.compare_simtel_config_with_schema()
+    assert "Values for limits do not match" not in caplog.text
 
     # remove keys and elements to enforce error tests
-    caplog.clear()
     _config_ng.schema_dict["data"][0].pop("default")
-    with caplog.at_level(logging.WARNING):
-        _config_ng.compare_simtel_config_with_schema()
-        assert "from schema: num_gains None" in caplog.text
+    _config_ng.compare_simtel_config_with_schema()
+    assert "from schema: num_gains None" in caplog.text
 
-    caplog.clear()
     _config_ng.schema_dict["data"].pop(0)
-    with caplog.at_level(logging.WARNING):
-        _config_ng.compare_simtel_config_with_schema()
-        assert "from schema: num_gains None" in caplog.text
+    _config_ng.compare_simtel_config_with_schema()
+    assert "from schema: num_gains None" in caplog.text
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
 
     _config_ng = config_reader_num_gains

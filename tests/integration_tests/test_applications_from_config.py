@@ -15,7 +15,6 @@ import simtools.utils.general as gen
 from simtools.testing import assertions, compare_output
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def get_application_command(app, config_file=None, config_string=None):

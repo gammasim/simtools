@@ -1,3 +1,5 @@
+import logging
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -5,6 +7,8 @@ import pytest
 from simtools.corsika import corsika_histograms_visualize
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_kernel_plot_2d_photons(corsika_histograms_instance_set_histograms, caplog):
     corsika_histograms_instance_set_histograms.set_histograms(
         individual_telescopes=False, telescope_indices=[0, 1, 2]
@@ -58,6 +62,8 @@ def test_plot_2ds(corsika_histograms_instance_set_histograms):
         assert all(isinstance(fig, plt.Figure) for fig in figs)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_kernel_plot_1d_photons(corsika_histograms_instance_set_histograms, caplog):
     corsika_histograms_instance_set_histograms.set_histograms(
         individual_telescopes=False, telescope_indices=[0, 1, 2]

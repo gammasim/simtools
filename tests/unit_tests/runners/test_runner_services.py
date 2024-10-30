@@ -10,7 +10,6 @@ import pytest
 import simtools.runners.runner_services as runner_services
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -222,6 +221,8 @@ def test_get_run_number_string(runner_service_config_only):
         runner_service_config_only._get_run_number_string(1234567)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_resources(runner_service_mock_array_model, caplog):
     sub_log_file = runner_service_mock_array_model.get_file_name(
         file_type="sub_log", run_number=None, mode="out"

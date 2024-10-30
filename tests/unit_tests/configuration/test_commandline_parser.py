@@ -9,8 +9,6 @@ import pytest
 import simtools.configuration.commandline_parser as parser
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
 
 simulation_model_string = "simulation model"
 
@@ -49,6 +47,8 @@ def test_efficiency_interval():
         parser.CommandLineParser.efficiency_interval(-8.5)
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_zenith_angle(caplog):
     assert parser.CommandLineParser.zenith_angle(0).value == pytest.approx(0.0)
     assert parser.CommandLineParser.zenith_angle(45).value == pytest.approx(45.0)
@@ -107,6 +107,8 @@ def test_parse_integer_and_quantity(caplog):
         parser.CommandLineParser.parse_integer_and_quantity("0 m 5 m")
 
 
+@pytest.mark.usefixtures("_log_level")
+@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_azimuth_angle(caplog):
     assert parser.CommandLineParser.azimuth_angle(0).value == pytest.approx(0.0)
     assert parser.CommandLineParser.azimuth_angle(45).value == pytest.approx(45.0)
@@ -169,30 +171,30 @@ def test_simulation_model():
     _parser_n = parser.CommandLineParser()
     _parser_n.initialize_default_arguments(simulation_model=None)
 
-    # model version only, no site or telescope
+    # Model version only, no site or telescope
     _parser_v = parser.CommandLineParser()
     _parser_v.initialize_default_arguments(simulation_model=["version"])
     job_groups = _parser_v._action_groups
 
     assert simulation_model_string in [str(group.title) for group in job_groups]
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == "simulation model":
             assert any(action.dest == "model_version" for action in group._group_actions)
             assert all(action.dest != "site" for action in group._group_actions)
             assert all(action.dest != "telescope" for action in group._group_actions)
 
-    # site model can exist without a telescope model
+    # Site model can exist without a telescope model
     _parser_s = parser.CommandLineParser()
     _parser_s.initialize_default_arguments(simulation_model=["site"])
     job_groups = _parser_s._action_groups
     assert simulation_model_string in [str(group.title) for group in job_groups]
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == "simulation model":
             assert any(action.dest == "model_version" for action in group._group_actions)
             assert any(action.dest == "site" for action in group._group_actions)
             assert all(action.dest != "telescope" for action in group._group_actions)
 
-    # no telescope model without site model
+    # No telescope model without site model
     _parser_t = parser.CommandLineParser()
     _parser_t.initialize_default_arguments(simulation_model=["telescope", "site"])
     job_groups = _parser_t._action_groups
