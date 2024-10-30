@@ -11,7 +11,7 @@ CTA_SIMPIPE:
     PSF_MEASUREMENT_CONTAINMENT_MEAN: 1.4
     RNDA: 0.003
     TEST: true
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: TEST.ecsv

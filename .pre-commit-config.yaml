@@ -1,12 +1,12 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: 24.8.0
+    rev: 24.10.0
     hooks:
       - id: black
         args: ["--line-length=100"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.6.6
+    rev: v0.7.1
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -26,7 +26,7 @@ repos:
           ]
   # https://github.com/pre-commit/pre-commit-hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -40,12 +40,12 @@ repos:
         args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
   # Github action
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.1
+    rev: v1.7.3
     hooks:
       - id: actionlint
   # https://pyproject-fmt.readthedocs.io/en/latest/
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "2.2.4"
+    rev: "v2.4.3"
     hooks:
       - id: pyproject-fmt
   # codespell
@@ -55,7 +55,7 @@ repos:
       - id: codespell
   # markdownlint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.41.0
+    rev: v0.42.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD041"]

@@ -7,7 +7,7 @@ CTA_SIMPIPE:
     TELESCOPE: LSTN-01
     MODEL_VERSION: "6.0.0"
     SCHEMA: ./tests/resources/num_gains.schema.yml
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     OUTPUT_FILE: num_gains.json
   INTEGRATION_TESTS:
     - REFERENCE_OUTPUT_FILE: |

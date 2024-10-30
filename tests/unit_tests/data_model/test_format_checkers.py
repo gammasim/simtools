@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 
+import re
+
 import pytest
+from astropy.units.core import UnitConversionError
 
 from simtools.data_model import format_checkers
 
@@ -14,6 +17,28 @@ def test_check_astropy_unit():
 
     with pytest.raises(ValueError, match="'not a unit!' is not a valid Unit"):
         format_checkers.check_astropy_unit("not a unit!")
+
+
+def test_check_astropy_unit_of_time():
+    assert format_checkers.check_astropy_unit_of_time("ns")
+    with pytest.raises(
+        UnitConversionError, match=re.escape("'km' (length) and 's' (time) are not convertible")
+    ):
+        format_checkers.check_astropy_unit_of_time("km")
+
+    with pytest.raises(TypeError, match=re.escape("None is not a valid Unit")):
+        format_checkers.check_astropy_unit_of_time(None)
+
+
+def test_check_astropy_unit_of_length():
+    assert format_checkers.check_astropy_unit_of_length("km")
+    with pytest.raises(
+        UnitConversionError, match=re.escape("'ns' (time) and 'm' (length) are not convertible")
+    ):
+        format_checkers.check_astropy_unit_of_length("ns")
+
+    with pytest.raises(TypeError, match=re.escape("None is not a valid Unit")):
+        format_checkers.check_astropy_unit_of_length(None)
 
 
 def test_check_array_elements():

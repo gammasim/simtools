@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     SITE: South
     EXPORT: ground
     MODEL_VERSION: "6.0.0"
-    OUTPUT_PATH: simtools-tests
+    OUTPUT_PATH: simtools-output
     OUTPUT_FILE: test.json
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
