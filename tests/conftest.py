@@ -30,6 +30,15 @@ def _set_matplotlib_backend():
 
 
 @pytest.fixture
+def _log_level(request):
+    original_level = logger.level
+    level = request.param if hasattr(request, "param") else logging.DEBUG
+    logger.setLevel(level)
+    yield
+    logger.setLevel(original_level)
+
+
+@pytest.fixture
 def tmp_test_directory(tmpdir_factory):
     """Sets temporary test directories. Some tests depend on this structure."""
 
