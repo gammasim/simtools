@@ -10,7 +10,7 @@ import simtools.configuration.commandline_parser as parser
 
 logger = logging.getLogger()
 
-simulation_model_string = "simulation model"
+SIMULATION_MODEL_STRING = "simulation model"
 
 
 def test_site():
@@ -176,7 +176,7 @@ def test_simulation_model():
     _parser_v.initialize_default_arguments(simulation_model=["version"])
     job_groups = _parser_v._action_groups
 
-    assert simulation_model_string in [str(group.title) for group in job_groups]
+    assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
         if str(group.title) == "simulation model":
             assert any(action.dest == "model_version" for action in group._group_actions)
@@ -187,7 +187,7 @@ def test_simulation_model():
     _parser_s = parser.CommandLineParser()
     _parser_s.initialize_default_arguments(simulation_model=["site"])
     job_groups = _parser_s._action_groups
-    assert simulation_model_string in [str(group.title) for group in job_groups]
+    assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
         if str(group.title) == "simulation model":
             assert any(action.dest == "model_version" for action in group._group_actions)
@@ -198,9 +198,9 @@ def test_simulation_model():
     _parser_t = parser.CommandLineParser()
     _parser_t.initialize_default_arguments(simulation_model=["telescope", "site"])
     job_groups = _parser_t._action_groups
-    assert simulation_model_string in [str(group.title) for group in job_groups]
+    assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "model_version" for action in group._group_actions)
             assert any(action.dest == "site" for action in group._group_actions)
             assert any(action.dest == "telescope" for action in group._group_actions)
@@ -225,7 +225,7 @@ def test_layout_parsers():
     _parser_7.initialize_default_arguments(simulation_model=["layout"])
     job_groups = _parser_7._action_groups
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "array_layout_name" for action in group._group_actions)
             assert any(action.dest == "array_element_list" for action in group._group_actions)
 
@@ -233,7 +233,7 @@ def test_layout_parsers():
     _parser_8.initialize_default_arguments(simulation_model=["layout", "layout_file"])
     job_groups = _parser_8._action_groups
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "array_layout_name" for action in group._group_actions)
             assert any(action.dest == "array_element_list" for action in group._group_actions)
             assert any(action.dest == "array_layout_file" for action in group._group_actions)
