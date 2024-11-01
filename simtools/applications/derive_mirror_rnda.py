@@ -103,31 +103,26 @@ r"""
 
         simtools-derive-mirror-rnda \\
             --site South \\
-            --telescope MSTS-design \\
+            --telescope LSTS-design \\
+            --model_version 6.0.0 \\
             --containment_fraction 0.8 \\
-            --mirror_list MLTdata-preproduction.ecsv \\
-            --psf_measurement MLTdata-preproduction.ecsv \\
-            --rnda 0.0063 \\
-            --test
-
-    Runtime about 4 min.
-
-    The output is saved in ``simtools-output/derive_mirror_rnda``.
-    Use the parameter ``--output_path`` to change the output directory.
+            --mirror_list ./tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv
+            --rnda 0.003 \\
+            --psf_measurement_containment_mean 1.4 \\
 
     Expected final print-out message:
 
     .. code-block:: console
 
         Measured D80:
-        Mean = 1.403 cm, StdDev = 0.163 cm
+        Mean = 1.400 cm
 
         Simulated D80:
-        Mean = 1.404 cm, StdDev = 0.608 cm
+        Mean = 1.406 cm, StdDev = 0.005 cm
 
         mirror_random_reflection_angle
-        Previous value = 0.006300
-        New value = 0.004975
+        Previous value = 0.003000
+        New value = 0.003824
 
 """
 
