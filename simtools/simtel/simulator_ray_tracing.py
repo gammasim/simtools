@@ -184,7 +184,7 @@ class SimulatorRayTracing(SimtelRunner):
             command += super().get_config_option("mirror_align_random_distance", "0.")
             command += super().get_config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
         command += " " + str(self._corsika_file)
-        command += f" {self._log_file} 2>&1"
+        command += f" 2>&1 > {self._log_file} 2>&1"
 
         return command
 
