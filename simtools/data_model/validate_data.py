@@ -79,8 +79,10 @@ class DataValidator:
         if self.data_file_name:
             self.validate_data_file()
         if isinstance(self.data_dict, dict):
+            print("FFFFFF", self.data_dict, is_model_parameter)
             if is_model_parameter:
                 self._prepare_model_parameter()
+            print("FFFFFF", self.data_dict, is_model_parameter)
             self._validate_data_dict()
             return self.data_dict
         if isinstance(self.data_table, Table):
@@ -782,22 +784,36 @@ class DataValidator:
             raise
 
     def _prepare_model_parameter(self):
-        """Apply data preparation for model parameters."""
-        if isinstance(self.data_dict["value"], str):
-            try:
-                _is_float = self.data_dict.get("type").startswith("float") | self.data_dict.get(
-                    "type"
-                ).startswith("double")
-            except AttributeError:
-                _is_float = True
+        """
+        Apply data preparation for model parameters.
+
+        Converts strings to numeral values or lists of values, if required.
+
+        """
+        if not isinstance(self.data_dict["value"], str):
+            return
+
+        try:
+            _is_float = self.data_dict.get("type").startswith("float") | self.data_dict.get(
+                "type"
+            ).startswith("double")
+        except AttributeError:
+            _is_float = True
+
+        if np.char.isnumeric(self.data_dict["value"]):
+            self.data_dict["value"] = (
+                float(self.data_dict["value"]) if _is_float else int(self.data_dict["value"])
+            )
+        else:
             self.data_dict["value"] = gen.convert_string_to_list(
                 self.data_dict["value"], is_float=_is_float
             )
-            self.data_dict["unit"] = (
-                None
-                if self.data_dict["unit"] is None
-                else gen.convert_string_to_list(self.data_dict["unit"])
-            )
+
+        self.data_dict["unit"] = (
+            None
+            if self.data_dict["unit"] is None
+            else gen.convert_string_to_list(self.data_dict["unit"])
+        )
 
     def _check_version_string(self, version):
         """

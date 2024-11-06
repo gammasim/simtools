@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 r"""
-    Submit model parameter (value, table) through the command line.
+    Submit data file through the command line.
 
     Input data and metadata is validated, and if necessary enriched
     and converted following a pre-described schema.
