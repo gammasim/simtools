@@ -16,7 +16,6 @@ from simtools.simtel.simulator_array import SimulatorArray
 from simtools.simulator import InvalidRunsToSimulateError, Simulator
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -123,8 +122,8 @@ def test_initialize_run_list(shower_simulator, caplog):
     assert shower_simulator._initialize_run_list() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     test_shower_simulator = copy.deepcopy(shower_simulator)
     test_shower_simulator.args_dict.pop("run_number_start", None)
-    with pytest.raises(KeyError):
-        with caplog.at_level(logging.ERROR):
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
             test_shower_simulator._initialize_run_list()
     assert (
         "Error in initializing run list (missing 'run_number_start' or 'number_of_runs')"
@@ -330,16 +329,16 @@ def test_get_runs_to_simulate(shower_simulator):
 def test_save_file_lists(shower_simulator, mocker, caplog):
     with caplog.at_level(logging.DEBUG):
         shower_simulator.save_file_lists()
-        assert "No files to save for output files." in caplog.text
+    assert "No files to save for output files." in caplog.text
 
     mock_shower_simulator = copy.deepcopy(shower_simulator)
     mocker.patch.object(mock_shower_simulator, "get_file_list", return_value=["file1", "file2"])
 
     with caplog.at_level(logging.INFO):
         mock_shower_simulator.save_file_lists()
-        assert "Saving list of output files to" in caplog.text
+    assert "Saving list of output files to" in caplog.text
 
     mocker.patch.object(mock_shower_simulator, "get_file_list", return_value=[None, None])
     with caplog.at_level(logging.DEBUG):
         mock_shower_simulator.save_file_lists()
-        assert "No files to save for output files." in caplog.text
+    assert "No files to save for output files." in caplog.text
