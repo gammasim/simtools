@@ -17,6 +17,7 @@ from astropy.utils.diff import report_diff_values
 from simtools.data_model import validate_data
 
 logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
@@ -95,8 +96,6 @@ def reference_columns_name():
     ]
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_validate_and_transform(caplog, mocker):
     data_validator = validate_data.DataValidator()
     # no input file defined
@@ -107,8 +106,9 @@ def test_validate_and_transform(caplog, mocker):
 
     data_validator.data_file_name = mirror_file
     data_validator.schema_file_name = mirror_2f_schema_file
-    _table = data_validator.validate_and_transform()
-    assert isinstance(_table, Table)
+    with caplog.at_level(logging.INFO):
+        _table = data_validator.validate_and_transform()
+        assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
 
     data_validator.data_file_name = "tests/resources/model_parameters/num_gains.json"
@@ -116,25 +116,26 @@ def test_validate_and_transform(caplog, mocker):
     mock_prepare_model_parameter = mocker.patch(
         "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
     )
-    _dict = data_validator.validate_and_transform(True)
-    assert isinstance(_dict, dict)
+    with caplog.at_level(logging.INFO):
+        _dict = data_validator.validate_and_transform(True)
+        assert isinstance(_dict, dict)
     assert "Validating data from:" in caplog.text
     mock_prepare_model_parameter.assert_called_once()
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_validate_data_file(caplog):
     data_validator = validate_data.DataValidator()
     # no input file defined, should pass
     data_validator.validate_data_file()
 
     data_validator.data_file_name = mirror_file
-    data_validator.validate_data_file()
+    with caplog.at_level(logging.INFO):
+        data_validator.validate_data_file()
     assert "Validating tabled data from:" in caplog.text
 
     data_validator.data_file_name = "tests/resources/reference_point_altitude.json"
-    data_validator.validate_data_file()
+    with caplog.at_level(logging.INFO):
+        data_validator.validate_data_file()
     assert "Validating data from:" in caplog.text
 
 
@@ -193,8 +194,6 @@ def test_validate_data_columns(tmp_test_directory, caplog):
     assert "Error reading validation schema from" in caplog.text
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_sort_data(reference_columns, caplog):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
@@ -219,8 +218,9 @@ def test_sort_data(reference_columns, caplog):
     )
 
     data_validator.data_table = None
-    with pytest.raises(AttributeError):
-        data_validator._sort_data()
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(AttributeError):
+            data_validator._sort_data()
     assert "No data table defined for sorting" in caplog.text
 
     reverse_sorted_data_columns = reference_columns
@@ -239,8 +239,9 @@ def test_sort_data(reference_columns, caplog):
     assert identical_reverse_sorted
 
     data_validator_reverse.data_table = None
-    with pytest.raises(AttributeError):
-        data_validator_reverse._sort_data()
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(AttributeError):
+            data_validator_reverse._sort_data()
     assert "No data table defined for reverse sorting" in caplog.text
 
 
@@ -406,8 +407,6 @@ def test_check_and_convert_units_simple_numbers(reference_columns):
     )
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_check_and_convert_units_dimensionless(reference_columns, caplog):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
@@ -418,8 +417,11 @@ def test_check_and_convert_units_dimensionless(reference_columns, caplog):
     )
 
     # reference column requires a unit, give no unit
-    with pytest.raises(u.core.UnitConversionError):
-        data_validator._check_and_convert_units(300.0, unit="dimensionless", col_name="wavelength")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(u.core.UnitConversionError):
+            data_validator._check_and_convert_units(
+                300.0, unit="dimensionless", col_name="wavelength"
+            )
     assert "Invalid unit in data column " in caplog.text
 
 

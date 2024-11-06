@@ -46,8 +46,6 @@ def test_efficiency_interval():
         parser.CommandLineParser.efficiency_interval(-8.5)
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_zenith_angle(caplog):
     assert parser.CommandLineParser.zenith_angle(0).value == pytest.approx(0.0)
     assert parser.CommandLineParser.zenith_angle(45).value == pytest.approx(45.0)
@@ -68,8 +66,9 @@ def test_zenith_angle(caplog):
     ):
         parser.CommandLineParser.zenith_angle(190)
 
-    with pytest.raises(TypeError):
-        parser.CommandLineParser.zenith_angle("North")
+    with caplog.at_level("WARNING"):
+        with pytest.raises(TypeError):
+            parser.CommandLineParser.zenith_angle("North")
     assert "The zenith angle provided is not a valid numeric" in caplog.text
 
 
@@ -106,8 +105,6 @@ def test_parse_integer_and_quantity(caplog):
         parser.CommandLineParser.parse_integer_and_quantity("0 m 5 m")
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_azimuth_angle(caplog):
     assert parser.CommandLineParser.azimuth_angle(0).value == pytest.approx(0.0)
     assert parser.CommandLineParser.azimuth_angle(45).value == pytest.approx(45.0)
@@ -137,9 +134,9 @@ def test_azimuth_angle(caplog):
         argparse.ArgumentTypeError, match=r"^The azimuth angle given as string can only be one of"
     ):
         parser.CommandLineParser.azimuth_angle("TEST")
-
-    with pytest.raises(TypeError):
-        parser.CommandLineParser.azimuth_angle([0, 10])
+    with caplog.at_level("ERROR"):
+        with pytest.raises(TypeError):
+            parser.CommandLineParser.azimuth_angle([0, 10])
     assert "The azimuth angle provided is not a valid numerical or string value." in caplog.text
 
 

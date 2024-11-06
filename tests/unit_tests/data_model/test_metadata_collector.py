@@ -117,8 +117,6 @@ def test_fill_associated_elements_from_args(args_dict_site):
         )
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplog):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
@@ -146,8 +144,9 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     with open(tmp_test_directory / "test_read_input_metadata_file.json", "w") as f:
         json.dump(test_dict, f)
     metadata_1.args_dict["input_meta"] = tmp_test_directory / "test_read_input_metadata_file.json"
-    with pytest.raises(gen.InvalidConfigDataError):
-        metadata_1._read_input_metadata_from_file()
+    with caplog.at_level("ERROR"):
+        with pytest.raises(gen.InvalidConfigDataError):
+            metadata_1._read_input_metadata_from_file()
     assert "More than one metadata entry" in caplog.text
 
     metadata_1.args_dict["input_meta"] = "tests/resources/telescope_positions-North-utm.ecsv"

@@ -152,8 +152,6 @@ def test_get_effective_area(psf_image, caplog):
     assert "Effective Area could not be calculated" in caplog.text
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_psf(psf_image, caplog):
     image = psf_image
 

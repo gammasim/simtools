@@ -294,14 +294,13 @@ def test_set_primary_particle(corsika_config_mock_array_model):
     assert p_pdg_id.name == "proton"
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_config_parameter(corsika_config_mock_array_model, caplog):
     cc = corsika_config_mock_array_model
     assert isinstance(cc.get_config_parameter("NSHOW"), int)
     assert isinstance(cc.get_config_parameter("THETAP"), list)
-    with pytest.raises(KeyError):
-        cc.get_config_parameter("not_really_a_parameter")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            cc.get_config_parameter("not_really_a_parameter")
     assert "Parameter not_really_a_parameter" in caplog.text
 
 
