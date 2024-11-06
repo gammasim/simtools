@@ -205,8 +205,6 @@ def test_list_of_histograms(simtel_array_histograms_instance):
     assert len(list_of_histograms) == 2
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_combine_histogram_files(simtel_io_file, caplog):
     # Reading one histogram file
     instance_alone = SimtelIOHistograms(histogram_files=simtel_io_file, test=True)
@@ -221,8 +219,9 @@ def test_combine_histogram_files(simtel_io_file, caplog):
     instance_all.combined_hists[0]["lower_x"] = instance_all.combined_hists[0]["lower_x"] + 1
     instance_all._combined_hists = None
     assert instance_all._combined_hists is None
-    with pytest.raises(InconsistentHistogramFormatError):
-        _ = instance_all.combined_hists
+    with caplog.at_level("ERROR"):
+        with pytest.raises(InconsistentHistogramFormatError):
+            _ = instance_all.combined_hists
     assert "Trying to add histograms with inconsistent dimensions" in caplog.text
 
 

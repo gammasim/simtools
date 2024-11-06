@@ -113,8 +113,6 @@ def test_export_parameter_dict_to_json(tmp_test_directory, config_reader_num_gai
     assert _json_file.exists()
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_compare_simtel_config_with_schema(
     config_reader_num_gains, config_reader_telescope_transmission, caplog
 ):
@@ -126,30 +124,31 @@ def test_compare_simtel_config_with_schema(
     assert caplog.text == ""
 
     # no limits defined for telescope_transmission
-    _config_tt = config_reader_telescope_transmission
-    _config_tt.compare_simtel_config_with_schema()
+    with caplog.at_level("WARNING"):
+        _config_tt = config_reader_telescope_transmission
+        _config_tt.compare_simtel_config_with_schema()
     assert "Values for limits do not match" in caplog.text
     assert "from simtel: TELESCOPE_TRANSMISSION None" in caplog.text
     assert "from schema: telescope_transmission [0. 1.]" in caplog.text
 
     # change parameter type to bool; should result in no limit check
     caplog.clear()
-    _config_tt.parameter_dict["type"] = "bool"
-    _config_tt.compare_simtel_config_with_schema()
+    with caplog.at_level("WARNING"):
+        _config_tt.parameter_dict["type"] = "bool"
+        _config_tt.compare_simtel_config_with_schema()
     assert "Values for limits do not match" not in caplog.text
 
     # remove keys and elements to enforce error tests
-    _config_ng.schema_dict["data"][0].pop("default")
-    _config_ng.compare_simtel_config_with_schema()
+    with caplog.at_level("WARNING"):
+        _config_ng.schema_dict["data"][0].pop("default")
+        _config_ng.compare_simtel_config_with_schema()
+    assert "from schema: num_gains None" in caplog.text
+    with caplog.at_level("WARNING"):
+        _config_ng.schema_dict["data"].pop(0)
+        _config_ng.compare_simtel_config_with_schema()
     assert "from schema: num_gains None" in caplog.text
 
-    _config_ng.schema_dict["data"].pop(0)
-    _config_ng.compare_simtel_config_with_schema()
-    assert "from schema: num_gains None" in caplog.text
 
-
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
 
     _config_ng = config_reader_num_gains
@@ -165,7 +164,8 @@ def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, ca
     assert "CT1000" not in _para_dict
 
     # non existing parameter
-    _config_ng.simtel_parameter_name = "this parameter does not exist"
+    with caplog.at_level("INFO"):
+        _config_ng.simtel_parameter_name = "this parameter does not exist"
     assert _config_ng._read_simtel_config_file(simtel_config_file, "CT1") is None
     assert "No entries found for parameter" in caplog.text
 

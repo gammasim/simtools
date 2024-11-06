@@ -98,8 +98,6 @@ def test_get_telescope_effective_focal_length(telescope_model_lst, telescope_mod
     assert tel_model_sst.get_telescope_effective_focal_length("m", True) == pytest.approx(2.15)
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_position(telescope_model_lst, caplog):
     tel_model = telescope_model_lst
     xyz = tel_model.position(coordinate_system="ground")
@@ -110,8 +108,7 @@ def test_position(telescope_model_lst, caplog):
     assert pytest.approx(utm_xyz[0].value) == 217659.6
     assert pytest.approx(utm_xyz[1].value) == 3184995.1
     assert pytest.approx(utm_xyz[2].value) == 2185.0
-
-    with pytest.raises(InvalidModelParameterError):
-        tel_model.position(coordinate_system="invalid")
-
+    with caplog.at_level("ERROR"):
+        with pytest.raises(InvalidModelParameterError):
+            tel_model.position(coordinate_system="invalid")
     assert "Coordinate system invalid not found." in caplog.text

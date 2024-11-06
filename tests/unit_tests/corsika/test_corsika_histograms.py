@@ -86,10 +86,9 @@ def test_get_header_astropy_units(corsika_histograms_instance):
         assert isinstance(astropy_unit, u.core.CompositeUnit)
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.WARNING], indirect=True)
 def test_hist_config_default_config(corsika_histograms_instance, caplog):
-    hist_config = corsika_histograms_instance.hist_config
+    with caplog.at_level("WARNING"):
+        hist_config = corsika_histograms_instance.hist_config
     assert "No histogram configuration was defined before." in caplog.text
     assert isinstance(hist_config, dict)
     assert hist_config == corsika_histograms_instance._create_histogram_default_config()
@@ -702,36 +701,32 @@ def test_magnetic_field(corsika_histograms_instance_set_histograms):
     assert corsika_histograms_instance_set_histograms.magnetic_field[0].unit == u.uT
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_event_parameter_info(corsika_histograms_instance_set_histograms, caplog):
     for parameter in corsika_histograms_instance_set_histograms.all_event_keys[1:]:
         assert isinstance(
             corsika_histograms_instance_set_histograms.get_event_parameter_info(parameter),
             u.quantity.Quantity,
         )
-
-    with pytest.raises(KeyError):
-        corsika_histograms_instance_set_histograms.get_event_parameter_info(
-            "non_existent_parameter"
-        )
+    with caplog.at_level("ERROR"):
+        with pytest.raises(KeyError):
+            corsika_histograms_instance_set_histograms.get_event_parameter_info(
+                "non_existent_parameter"
+            )
     assert (
         f"key is not valid. Valid entries are "
         f"{corsika_histograms_instance_set_histograms.all_event_keys}" in caplog.text
     )
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
     for parameter in corsika_histograms_instance_set_histograms.all_run_keys[1:]:
         assert isinstance(
             corsika_histograms_instance_set_histograms.get_run_info(parameter),
             u.quantity.Quantity,
         )
-
-    with pytest.raises(KeyError):
-        corsika_histograms_instance_set_histograms.get_run_info("non_existent_parameter")
+    with caplog.at_level("ERROR"):
+        with pytest.raises(KeyError):
+            corsika_histograms_instance_set_histograms.get_run_info("non_existent_parameter")
     assert (
         f"key is not valid. Valid entries are "
         f"{corsika_histograms_instance_set_histograms.all_run_keys}" in caplog.text
