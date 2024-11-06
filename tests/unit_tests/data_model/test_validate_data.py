@@ -17,7 +17,6 @@ from astropy.utils.diff import report_diff_values
 from simtools.data_model import validate_data
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
