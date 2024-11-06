@@ -665,6 +665,19 @@ def test_validate_data_dict():
 
 def test_prepare_model_parameter():
     data_validator = validate_data.DataValidator()
+
+    # input as string without unit
+    data_validator.data_dict = {
+        "name": "num_gains",
+        "value": "2",
+        "unit": None,
+    }
+
+    # input as float plus unit
+    data_validator._prepare_model_parameter()
+    assert data_validator.data_dict["value"] == 2
+    assert data_validator.data_dict["unit"] is None
+
     data_validator.data_dict = {
         "name": "reference_point_altitude",
         "value": 1000.0,

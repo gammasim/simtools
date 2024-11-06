@@ -125,6 +125,7 @@ class ModelDataWriter:
         output_file,
         output_path=None,
         use_plain_output_path=False,
+        metadata=None,
         overwrite_applicable=False,
     ):
         """
@@ -146,6 +147,8 @@ class ModelDataWriter:
             Path to output file.
         use_plain_output_path: bool
             Use plain output path.
+        metadata: dict
+            Metadata dictionary.
         overwrite_applicable: bool
             Overwrite applicable parameter.
 
@@ -166,6 +169,7 @@ class ModelDataWriter:
         )
         if _json_dict.get("applicable", False) or overwrite_applicable:
             writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        print("FFFF", metadata)
         return _json_dict
 
     def get_validated_parameter_dict(self, parameter_name, value, instrument, model_version):
