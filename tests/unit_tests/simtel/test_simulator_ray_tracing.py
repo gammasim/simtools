@@ -5,7 +5,7 @@ import logging
 import astropy.units as u
 import pytest
 
-from simtools.ray_tracing import RayTracing
+from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.simtel.simulator_ray_tracing import SimulatorRayTracing
 
 logger = logging.getLogger()
@@ -38,11 +38,18 @@ def ray_tracing_mst(telescope_model_mst, simtel_path):
 
 
 @pytest.fixture
-def simulator_ray_tracing(ray_tracing_sst, telescope_model_sst, simtel_path):
+def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, simtel_path):
     return SimulatorRayTracing(
         simtel_path=simtel_path,
         telescope_model=telescope_model_sst,
-        config_data=ray_tracing_sst.config._replace(off_axis_angle=0.0, mirror_numbers=0),
+        config_data={
+            "zenith_angle": ray_tracing_sst.zenith_angle,
+            "off_axis_angle": 0.0,
+            "source_distance": 10,
+            "single_mirror_mode": ray_tracing_sst.single_mirror_mode,
+            "use_random_focal_length": ray_tracing_sst.use_random_focal_length,
+            "mirror_numbers": 0,
+        },
         label="test-simtel-runner-ray-tracing",
     )
 
@@ -52,9 +59,14 @@ def simulator_ray_tracing_single_mirror(ray_tracing_mst, telescope_model_mst, si
     return SimulatorRayTracing(
         simtel_path=simtel_path,
         telescope_model=telescope_model_mst,
-        config_data=ray_tracing_mst.config._replace(
-            off_axis_angle=0, mirror_numbers=0, single_mirror_mode=True
-        ),
+        config_data={
+            "zenith_angle": ray_tracing_mst.zenith_angle,
+            "off_axis_angle": 0.0,
+            "source_distance": 10.0 * u.km,
+            "single_mirror_mode": True,
+            "use_random_focal_length": ray_tracing_mst.use_random_focal_length,
+            "mirror_numbers": 0,
+        },
         label="test-simtel-runner-ray-tracing",
     )
 
@@ -80,16 +92,16 @@ def funnel_perfect_file_content():
     ]
 
 
-def test_load_required_files(simulator_ray_tracing):
-    simulator_ray_tracing._load_required_files(force_simulate=False)
+def test_load_required_files(simulator_ray_tracing_sst):
+    simulator_ray_tracing_sst._load_required_files(force_simulate=False)
 
     # This file is not actually needed and does not exist in simtools.
     # However, its name is needed too provide the name of a CORSIKA input file to sim_telarray
     # so here we check the it does not actually exist.
-    assert not simulator_ray_tracing._corsika_file.exists()
-    assert simulator_ray_tracing._photons_file.exists()
-    assert simulator_ray_tracing._stars_file.exists()
-    assert not simulator_ray_tracing.telescope_model.config_file_directory.joinpath(
+    assert not simulator_ray_tracing_sst._corsika_file.exists()
+    assert simulator_ray_tracing_sst._photons_file.exists()
+    assert simulator_ray_tracing_sst._stars_file.exists()
+    assert not simulator_ray_tracing_sst.telescope_model.config_file_directory.joinpath(
         "single_pixel_camera.dat"
     ).exists()
 
@@ -140,8 +152,8 @@ def test_load_required_files_single_mirror(
     )
 
 
-def test_make_run_command(simulator_ray_tracing, model_version):
-    command = simulator_ray_tracing._make_run_command()
+def test_make_run_command(simulator_ray_tracing_sst, model_version):
+    command = simulator_ray_tracing_sst._make_run_command()
 
     assert "bin/sim_telarray" in command
     assert (
@@ -157,29 +169,29 @@ def test_make_run_command(simulator_ray_tracing, model_version):
     )
 
 
-def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror, model_version):
+def test_make_run_command_single_mirror(simulator_ray_tracing_single_mirror):
     command = simulator_ray_tracing_single_mirror._make_run_command()
 
     assert "bin/sim_telarray" in command
     assert "focus_offset" in command
 
 
-def test_check_run_result(simulator_ray_tracing):
+def test_check_run_result(simulator_ray_tracing_sst):
     with pytest.raises(RuntimeError):
-        simulator_ray_tracing._check_run_result()
+        simulator_ray_tracing_sst._check_run_result()
 
     # Add manually entries to the photons file to test the function works as expected
-    simulator_ray_tracing._load_required_files(force_simulate=False)
-    with simulator_ray_tracing._photons_file.open("a") as file:
+    simulator_ray_tracing_sst._load_required_files(force_simulate=False)
+    with simulator_ray_tracing_sst._photons_file.open("a") as file:
         file.writelines(150 * [f"{1}\n"])
-    assert simulator_ray_tracing._check_run_result()
+    assert simulator_ray_tracing_sst._check_run_result()
 
 
 def test_write_out_single_pixel_camera_file(
-    simulator_ray_tracing, single_pixel_camera_file_content, funnel_perfect_file_content
+    simulator_ray_tracing_sst, single_pixel_camera_file_content, funnel_perfect_file_content
 ):
-    simulator_ray_tracing._write_out_single_pixel_camera_file()
+    simulator_ray_tracing_sst._write_out_single_pixel_camera_file()
 
     assert_single_pixel_and_perfect_funnel_files(
-        simulator_ray_tracing, single_pixel_camera_file_content, funnel_perfect_file_content
+        simulator_ray_tracing_sst, single_pixel_camera_file_content, funnel_perfect_file_content
     )
