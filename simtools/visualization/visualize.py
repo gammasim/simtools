@@ -808,9 +808,6 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     from ctapipe.io import EventSource
     from ctapipe.visualization import CameraDisplay
 
-    logger = logging.getLogger()
-    logger.setLevel(logging.ERROR)
-
     default_cleaning_levels = {
         "CHEC": (2, 4, 2),
         "LSTCam": (3.5, 7, 2),
