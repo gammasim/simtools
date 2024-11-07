@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.compare_output &#8212; simtools v0.1.dev1+g9d15da8 Manual</title>
+    <title>testing.compare_output &#8212; simtools v0.1.dev1+g39e75a9 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=88724eb8"></script>
+    <script src="../../_static/documentation_options.js?v=b6be91b7"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9d15da8" />
+  <meta name="docsearch:version" content="0.1.dev1+g39e75a9" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9d15da8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g39e75a9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -225,7 +225,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/mc_model.html">MC Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../api-reference/psf_analysis.html">PSF Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/sim_telarray.html">sim_telarray</a></li>
@@ -371,7 +370,7 @@
 
 <div class="viewcode-block" id="compare_files">
 <a class="viewcode-back" href="../../api-reference/testing.html#testing.compare_output.compare_files">[docs]</a>
-<span class="k">def</span> <span class="nf">compare_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">compare_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">,</span> <span class="n">test_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compare two files of file type ecsv, json or yaml.</span>
 
@@ -383,6 +382,8 @@
 <span class="sd">        Second file to compare</span>
 <span class="sd">    tolerance: float</span>
 <span class="sd">        Tolerance for comparing numerical values.</span>
+<span class="sd">    test_columns: list</span>
+<span class="sd">        List of columns to compare. If None, all columns are compared.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -395,7 +396,7 @@
     <span class="k">if</span> <span class="n">_file1_suffix</span> <span class="o">!=</span> <span class="n">_file2_suffix</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File suffixes do not match: </span><span class="si">{</span><span class="n">file1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">file2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">_file1_suffix</span> <span class="o">==</span> <span class="s2">&quot;.ecsv&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">compare_ecsv_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">compare_ecsv_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">test_columns</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">_file1_suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yml&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">compare_json_or_yaml_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">)</span>
 
@@ -445,7 +446,7 @@
 
 <div class="viewcode-block" id="compare_ecsv_files">
 <a class="viewcode-back" href="../../api-reference/testing.html#testing.compare_output.compare_ecsv_files">[docs]</a>
-<span class="k">def</span> <span class="nf">compare_ecsv_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">compare_ecsv_files</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">,</span> <span class="n">test_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compare two ecsv files.</span>
 
@@ -453,6 +454,14 @@
 
 <span class="sd">    - same number of rows</span>
 <span class="sd">    - numerical values in columns are close</span>
+
+<span class="sd">    The comparison can be restricted to a subset of columns with some additional</span>
+<span class="sd">    cuts applied. This is configured through the test_columns parameter. This is</span>
+<span class="sd">    a list of dictionaries, where each dictionary contains the following</span>
+<span class="sd">    key-value pairs:</span>
+<span class="sd">    - TEST_COLUMN_NAME: column name to compare.</span>
+<span class="sd">    - CUT_COLUMN_NAME: column for filtering.</span>
+<span class="sd">    - CUT_CONDITION: condition for filtering.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -462,21 +471,43 @@
 <span class="sd">        Second file to compare</span>
 <span class="sd">    tolerance: float</span>
 <span class="sd">        Tolerance for comparing numerical values.</span>
+<span class="sd">    test_columns: list</span>
+<span class="sd">        List of columns to compare. If None, all columns are compared.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparing files: </span><span class="si">{</span><span class="n">file1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">file2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">table1</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">)</span>
     <span class="n">table2</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file2</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">)</span>
 
-    <span class="n">comparison_result</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">table1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">table2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">test_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">test_columns</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;TEST_COLUMN_NAME&quot;</span><span class="p">:</span> <span class="n">col</span><span class="p">}</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table1</span><span class="o">.</span><span class="n">colnames</span><span class="p">]</span>
 
-    <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">table1</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">table1</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
-            <span class="n">comparison_result</span> <span class="o">=</span> <span class="n">comparison_result</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span>
-                <span class="n">table1</span><span class="p">[</span><span class="n">col_name</span><span class="p">],</span> <span class="n">table2</span><span class="p">[</span><span class="n">col_name</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tolerance</span>
-            <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">generate_mask</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a boolean mask based on the condition (note the usage of eval).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;table[&#39;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">&#39;] </span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># pylint: disable=eval-used</span>
+            <span class="k">if</span> <span class="n">condition</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">comparison_result</span></div>
+    <span class="k">for</span> <span class="n">col_dict</span> <span class="ow">in</span> <span class="n">test_columns</span><span class="p">:</span>
+        <span class="n">col_name</span> <span class="o">=</span> <span class="n">col_dict</span><span class="p">[</span><span class="s2">&quot;TEST_COLUMN_NAME&quot;</span><span class="p">]</span>
+        <span class="n">mask1</span> <span class="o">=</span> <span class="n">generate_mask</span><span class="p">(</span>
+            <span class="n">table1</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CUT_COLUMN_NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">col_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CUT_CONDITION&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mask2</span> <span class="o">=</span> <span class="n">generate_mask</span><span class="p">(</span>
+            <span class="n">table2</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CUT_COLUMN_NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">col_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CUT_CONDITION&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">table1_masked</span><span class="p">,</span> <span class="n">table2_masked</span> <span class="o">=</span> <span class="n">table1</span><span class="p">[</span><span class="n">mask1</span><span class="p">],</span> <span class="n">table2</span><span class="p">[</span><span class="n">mask2</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">table1_masked</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">table2_masked</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">table1_masked</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">table1_masked</span><span class="p">[</span><span class="n">col_name</span><span class="p">],</span> <span class="n">table2_masked</span><span class="p">[</span><span class="n">col_name</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
 
 </pre></div>
 

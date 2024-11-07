@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Testing &#8212; simtools v0.1.dev1+g9d15da8 Manual</title>
+    <title>Testing &#8212; simtools v0.1.dev1+g39e75a9 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=88724eb8"></script>
+    <script src="../_static/documentation_options.js?v=b6be91b7"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Simulator" href="simulators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9d15da8" />
+  <meta name="docsearch:version" content="0.1.dev1+g39e75a9" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9d15da8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g39e75a9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -226,7 +226,6 @@
 <li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="psf_analysis.html">PSF Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
@@ -540,13 +539,20 @@ and the energies simulated are required to be within the configured ones.</p>
 <p>Compare application output to reference output.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="testing.compare_output.compare_ecsv_files">
-<span class="sig-prename descclassname"><span class="pre">testing.compare_output.</span></span><span class="sig-name descname"><span class="pre">compare_ecsv_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/compare_output.html#compare_ecsv_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.compare_output.compare_ecsv_files" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">testing.compare_output.</span></span><span class="sig-name descname"><span class="pre">compare_ecsv_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/compare_output.html#compare_ecsv_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.compare_output.compare_ecsv_files" title="Link to this definition">#</a></dt>
 <dd><p>Compare two ecsv files.</p>
 <p>The comparison is successful if:</p>
 <ul class="simple">
 <li><p>same number of rows</p></li>
 <li><p>numerical values in columns are close</p></li>
 </ul>
+<p>The comparison can be restricted to a subset of columns with some additional
+cuts applied. This is configured through the test_columns parameter. This is
+a list of dictionaries, where each dictionary contains the following
+key-value pairs:
+- TEST_COLUMN_NAME: column name to compare.
+- CUT_COLUMN_NAME: column for filtering.
+- CUT_CONDITION: condition for filtering.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -556,6 +562,8 @@ and the energies simulated are required to be within the configured ones.</p>
 </dd>
 <dt><strong>tolerance: float</strong></dt><dd><p>Tolerance for comparing numerical values.</p>
 </dd>
+<dt><strong>test_columns: list</strong></dt><dd><p>List of columns to compare. If None, all columns are compared.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -563,7 +571,7 @@ and the energies simulated are required to be within the configured ones.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="testing.compare_output.compare_files">
-<span class="sig-prename descclassname"><span class="pre">testing.compare_output.</span></span><span class="sig-name descname"><span class="pre">compare_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/compare_output.html#compare_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.compare_output.compare_files" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">testing.compare_output.</span></span><span class="sig-name descname"><span class="pre">compare_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/compare_output.html#compare_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.compare_output.compare_files" title="Link to this definition">#</a></dt>
 <dd><p>Compare two files of file type ecsv, json or yaml.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -573,6 +581,8 @@ and the energies simulated are required to be within the configured ones.</p>
 <dt><strong>file2: str</strong></dt><dd><p>Second file to compare</p>
 </dd>
 <dt><strong>tolerance: float</strong></dt><dd><p>Tolerance for comparing numerical values.</p>
+</dd>
+<dt><strong>test_columns: list</strong></dt><dd><p>List of columns to compare. If None, all columns are compared.</p>
 </dd>
 </dl>
 </dd>

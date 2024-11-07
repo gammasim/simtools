@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_ray_tracing &#8212; simtools v0.1.dev1+g9d15da8 Manual</title>
+    <title>simtel.simulator_ray_tracing &#8212; simtools v0.1.dev1+g39e75a9 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=88724eb8"></script>
+    <script src="../../_static/documentation_options.js?v=b6be91b7"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9d15da8" />
+  <meta name="docsearch:version" content="0.1.dev1+g39e75a9" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9d15da8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g39e75a9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -225,7 +225,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/mc_model.html">MC Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../api-reference/psf_analysis.html">PSF Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/sim_telarray.html">sim_telarray</a></li>
@@ -359,6 +358,7 @@
 <span></span><span class="sd">&quot;&quot;&quot;Simulation runner for ray tracing simulations.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
 
@@ -417,7 +417,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;ray-tracing&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config_to_namedtuple</span><span class="p">(</span><span class="n">config_data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">config_data</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rep_number</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">runs_per_set</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="mi">20</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span> <span class="o">=</span> <span class="mi">100000</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">test</span> <span class="k">else</span> <span class="mi">5000</span>
@@ -447,7 +451,9 @@
                 <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.log&quot;</span> <span class="k">if</span> <span class="n">base_name</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span> <span class="k">else</span> <span class="s2">&quot;.lis&quot;</span><span class="p">,</span>
                 <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
                 <span class="n">telescope_model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="n">source_distance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">source_distance</span><span class="p">,</span>
+                <span class="n">source_distance</span><span class="o">=</span><span class="p">(</span>
+                    <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">single_mirror_mode</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">source_distance</span>
+                <span class="p">),</span>
                 <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
                 <span class="n">off_axis_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">off_axis_angle</span><span class="p">,</span>
                 <span class="n">mirror_number</span><span class="o">=</span><span class="p">(</span>
@@ -590,7 +596,29 @@
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;0    1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;30   1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;60   1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;90   1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;90   1.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_config_to_namedtuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert dict to namedtuple for configuration.&quot;&quot;&quot;</span>
+        <span class="n">config_data</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+            <span class="s2">&quot;Config&quot;</span><span class="p">,</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;zenith_angle&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;off_axis_angle&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;source_distance&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;single_mirror_mode&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;use_random_focal_length&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mirror_numbers&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">config_data</span><span class="p">(</span>
+            <span class="n">zenith_angle</span><span class="o">=</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">],</span>
+            <span class="n">off_axis_angle</span><span class="o">=</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;off_axis_angle&quot;</span><span class="p">],</span>
+            <span class="n">source_distance</span><span class="o">=</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;source_distance&quot;</span><span class="p">],</span>
+            <span class="n">single_mirror_mode</span><span class="o">=</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;single_mirror_mode&quot;</span><span class="p">],</span>
+            <span class="n">use_random_focal_length</span><span class="o">=</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;use_random_focal_length&quot;</span><span class="p">],</span>
+            <span class="n">mirror_numbers</span><span class="o">=</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;mirror_numbers&quot;</span><span class="p">],</span>
+        <span class="p">)</span></div>
 
 </pre></div>
 

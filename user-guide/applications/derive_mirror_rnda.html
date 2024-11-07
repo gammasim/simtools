@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>derive_mirror_rnda &#8212; simtools v0.1.dev1+g9d15da8 Manual</title>
+    <title>derive_mirror_rnda &#8212; simtools v0.1.dev1+g39e75a9 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=88724eb8"></script>
+    <script src="../../_static/documentation_options.js?v=b6be91b7"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="db_inspect_databases" href="db_inspect_databases.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9d15da8" />
+  <meta name="docsearch:version" content="0.1.dev1+g39e75a9" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9d15da8 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g39e75a9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -226,7 +226,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/mc_model.html">MC Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../api-reference/psf_analysis.html">PSF Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../api-reference/sim_telarray.html">sim_telarray</a></li>
@@ -451,8 +450,9 @@
   <section id="module-derive_mirror_rnda">
 <span id="derive-mirror-rnda"></span><h1>derive_mirror_rnda<a class="headerlink" href="#module-derive_mirror_rnda" title="Link to this heading">#</a></h1>
 <p>Derive the simulation model parameter mirror_reflection_random_angle.</p>
-<p>This parameter is sometimes called mirror roughness and used  to match the measured
-containment diameter of the optical point-spread function (PSF) of individual mirror panels.</p>
+<p>This parameter, often referred to as “mirror roughness,” is used to align the simulation
+with the measured containment diameter of the optical point-spread function (PSF) for
+individual mirror panels.</p>
 <section id="description">
 <h2>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
 <p>This application derives the value of the simulation model parameter
@@ -476,8 +476,8 @@ mirror panel focal length:</p>
 <li><p>file (table) with measured focal lengths per mirror panel
 (provided through <code class="docutils literal notranslate"><span class="pre">--mirror_list</span></code>)</p></li>
 <li><p>randomly generated focal lengths using an expected spread (value given through
-<code class="docutils literal notranslate"><span class="pre">--random_flen</span></code>) around the mean focal length (provided through the
-Model Parameters DB). This option is switched with <code class="docutils literal notranslate"><span class="pre">--use_random_flen</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">--random_focal_length</span></code>) around the mean focal length (provided through the
+Model Parameters DB). This option is switched with <code class="docutils literal notranslate"><span class="pre">--use_random_focal_length</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p>The tuning algorithm requires a starting value for the random reflection angle. This is either
@@ -528,13 +528,11 @@ default model is read from the simulation model database.</p>
 </dd>
 <dt>mirror_list (file, optional)</dt><dd><p>Table with mirror ID and panel radius.</p>
 </dd>
-<dt>use_random_flen (activation mode, optional)</dt><dd><p>Use random focal lengths, instead of the measured ones. The argument random_flen can be
-used to replace the default random_focal_length from the model.</p>
+<dt>use_random_focal_length (activation mode, optional)</dt><dd><p>Use random focal lengths, instead of the measured ones. The argument random_focal_length
+can be used to replace the default random_focal_length from the model.</p>
 </dd>
-<dt>random_flen (float, optional)</dt><dd><dl class="simple">
-<dt>Value of the random focal lengths to replace the default random_focal_length. Only used if</dt><dd><p>use_random_flen is activated.</p>
-</dd>
-</dl>
+<dt>random_focal_length (float, optional)</dt><dd><p>Value of the random focal lengths to replace the default random_focal_length. Only used if
+‘use_random_focal_length’ is activated.</p>
 </dd>
 <dt>no_tuning (activation mode, optional)</dt><dd><p>Turn off the tuning - A single case will be simulated and plotted.</p>
 </dd>
@@ -548,27 +546,24 @@ used to replace the default random_focal_length from the model.</p>
 simulation production 5.0.0</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-mirror-rnda \\</span>
 <span class="go">    --site South \\</span>
-<span class="go">    --telescope MSTS-design \\</span>
+<span class="go">    --telescope LSTS-design \\</span>
+<span class="go">    --model_version 6.0.0 \\</span>
 <span class="go">    --containment_fraction 0.8 \\</span>
-<span class="go">    --mirror_list MLTdata-preproduction.ecsv \\</span>
-<span class="go">    --psf_measurement MLTdata-preproduction.ecsv \\</span>
-<span class="go">    --rnda 0.0063 \\</span>
-<span class="go">    --test</span>
+<span class="go">    --mirror_list ./tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv</span>
+<span class="go">    --rnda 0.003 \\</span>
+<span class="go">    --psf_measurement_containment_mean 1.4 \\</span>
 </pre></div>
 </div>
-<p>Runtime about 4 min.</p>
-<p>The output is saved in <code class="docutils literal notranslate"><span class="pre">simtools-output/derive_mirror_rnda</span></code>.
-Use the parameter <code class="docutils literal notranslate"><span class="pre">--output_path</span></code> to change the output directory.</p>
 <p>Expected final print-out message:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Measured D80:</span>
-<span class="go">Mean = 1.403 cm, StdDev = 0.163 cm</span>
+<span class="go">Mean = 1.400 cm</span>
 
 <span class="go">Simulated D80:</span>
-<span class="go">Mean = 1.404 cm, StdDev = 0.608 cm</span>
+<span class="go">Mean = 1.406 cm, StdDev = 0.005 cm</span>
 
 <span class="go">mirror_random_reflection_angle</span>
-<span class="go">Previous value = 0.006300</span>
-<span class="go">New value = 0.004975</span>
+<span class="go">Previous value = 0.003000</span>
+<span class="go">New value = 0.003824</span>
 </pre></div>
 </div>
 </section>
