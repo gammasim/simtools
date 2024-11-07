@@ -10,7 +10,6 @@ import pytest
 import simtools.runners.runner_services as runner_services
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

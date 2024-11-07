@@ -17,7 +17,6 @@ from astropy.utils.diff import report_diff_values
 from simtools.data_model import validate_data
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
@@ -221,7 +220,7 @@ def test_sort_data(reference_columns, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(AttributeError):
             data_validator._sort_data()
-        assert "No data table defined for sorting" in caplog.text
+    assert "No data table defined for sorting" in caplog.text
 
     reverse_sorted_data_columns = reference_columns
     reverse_sorted_data_columns[0]["input_processing"] = ["remove_duplicates", "reversesort"]
@@ -242,7 +241,7 @@ def test_sort_data(reference_columns, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(AttributeError):
             data_validator_reverse._sort_data()
-        assert "No data table defined for reverse sorting" in caplog.text
+    assert "No data table defined for reverse sorting" in caplog.text
 
 
 def test_check_data_for_duplicates(reference_columns):
@@ -422,7 +421,7 @@ def test_check_and_convert_units_dimensionless(reference_columns, caplog):
             data_validator._check_and_convert_units(
                 300.0, unit="dimensionless", col_name="wavelength"
             )
-        assert "Invalid unit in data column " in caplog.text
+    assert "Invalid unit in data column " in caplog.text
 
 
 def test_check_and_convert_units_integer_arrays(reference_columns):
