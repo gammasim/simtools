@@ -824,7 +824,10 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     if len(events) > 1:
         event = events[-1]
     else:
-        event = events[0]
+        try:
+            event = events[0]
+        except IndexError:
+            event = events
     tel_id = sorted(event.r1.tel.keys())[0]
 
     calib = CameraCalibrator(subarray=source.subarray)
