@@ -13,7 +13,6 @@ from simtools.runners.corsika_simtel_runner import (
 )
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

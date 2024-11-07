@@ -9,10 +9,7 @@ import pytest
 import simtools.configuration.commandline_parser as parser
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-
-simulation_model_string = "simulation model"
+SIMULATION_MODEL_STRING = "simulation model"
 
 
 def test_site():
@@ -69,8 +66,9 @@ def test_zenith_angle(caplog):
     ):
         parser.CommandLineParser.zenith_angle(190)
 
-    with pytest.raises(TypeError):
-        parser.CommandLineParser.zenith_angle("North")
+    with caplog.at_level("WARNING"):
+        with pytest.raises(TypeError):
+            parser.CommandLineParser.zenith_angle("North")
     assert "The zenith angle provided is not a valid numeric" in caplog.text
 
 
@@ -136,9 +134,9 @@ def test_azimuth_angle(caplog):
         argparse.ArgumentTypeError, match=r"^The azimuth angle given as string can only be one of"
     ):
         parser.CommandLineParser.azimuth_angle("TEST")
-
-    with pytest.raises(TypeError):
-        parser.CommandLineParser.azimuth_angle([0, 10])
+    with caplog.at_level("ERROR"):
+        with pytest.raises(TypeError):
+            parser.CommandLineParser.azimuth_angle([0, 10])
     assert "The azimuth angle provided is not a valid numerical or string value." in caplog.text
 
 
@@ -169,36 +167,36 @@ def test_simulation_model():
     _parser_n = parser.CommandLineParser()
     _parser_n.initialize_default_arguments(simulation_model=None)
 
-    # model version only, no site or telescope
+    # Model version only, no site or telescope
     _parser_v = parser.CommandLineParser()
     _parser_v.initialize_default_arguments(simulation_model=["version"])
     job_groups = _parser_v._action_groups
 
-    assert simulation_model_string in [str(group.title) for group in job_groups]
+    assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "model_version" for action in group._group_actions)
             assert all(action.dest != "site" for action in group._group_actions)
             assert all(action.dest != "telescope" for action in group._group_actions)
 
-    # site model can exist without a telescope model
+    # Site model can exist without a telescope model
     _parser_s = parser.CommandLineParser()
     _parser_s.initialize_default_arguments(simulation_model=["site"])
     job_groups = _parser_s._action_groups
-    assert simulation_model_string in [str(group.title) for group in job_groups]
+    assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "model_version" for action in group._group_actions)
             assert any(action.dest == "site" for action in group._group_actions)
             assert all(action.dest != "telescope" for action in group._group_actions)
 
-    # no telescope model without site model
+    # No telescope model without site model
     _parser_t = parser.CommandLineParser()
     _parser_t.initialize_default_arguments(simulation_model=["telescope", "site"])
     job_groups = _parser_t._action_groups
-    assert simulation_model_string in [str(group.title) for group in job_groups]
+    assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "model_version" for action in group._group_actions)
             assert any(action.dest == "site" for action in group._group_actions)
             assert any(action.dest == "telescope" for action in group._group_actions)
@@ -223,7 +221,7 @@ def test_layout_parsers():
     _parser_7.initialize_default_arguments(simulation_model=["layout"])
     job_groups = _parser_7._action_groups
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "array_layout_name" for action in group._group_actions)
             assert any(action.dest == "array_element_list" for action in group._group_actions)
 
@@ -231,7 +229,7 @@ def test_layout_parsers():
     _parser_8.initialize_default_arguments(simulation_model=["layout", "layout_file"])
     job_groups = _parser_8._action_groups
     for group in job_groups:
-        if str(group.title) == simulation_model_string:
+        if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "array_layout_name" for action in group._group_actions)
             assert any(action.dest == "array_element_list" for action in group._group_actions)
             assert any(action.dest == "array_layout_file" for action in group._group_actions)

@@ -14,7 +14,6 @@ import simtools.utils.general as gen
 from simtools.data_model.model_data_writer import JsonNumpyEncoder
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 test_file_2 = "test_file_2.ecsv"
