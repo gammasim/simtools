@@ -1,16 +1,12 @@
 #!/usr/bin/python3
 
 import copy
-import logging
 from unittest.mock import patch
 
 import astropy.units as u
 import pytest
 
 from simtools.ray_tracing.mirror_panel_psf import MirrorPanelPSF
-
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -250,7 +246,8 @@ def test_print_results(mock_mirror_panel_psf, capsys):
 def test_get_starting_value_from_args(mock_mirror_panel_psf, caplog):
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["rnda"] = 0.5
-    rnda_start = mirror_psf._get_starting_value()
+    with caplog.at_level("INFO"):
+        rnda_start = mirror_psf._get_starting_value()
     assert rnda_start == 0.5
     assert "Start value for mirror_reflection_random_angle: 0.5 deg" in caplog.text
 
@@ -262,7 +259,8 @@ def test_get_starting_value_from_model(mock_mirror_panel_psf, caplog):
         "simtools.ray_tracing.mirror_panel_psf.TelescopeModel.get_parameter_value",
         return_value=[0.3],
     ).start()
-    rnda_start = mirror_psf._get_starting_value()
+    with caplog.at_level("INFO"):
+        rnda_start = mirror_psf._get_starting_value()
     assert rnda_start == 0.3
     assert "Start value for mirror_reflection_random_angle: 0.3 deg" in caplog.text
 
