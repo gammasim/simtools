@@ -84,7 +84,7 @@ class RayTracing:
         self.off_axis_angle = np.around(off_axis_angle.to("deg").value, 5)
         self.single_mirror_mode = single_mirror_mode
         self.use_random_focal_length = use_random_focal_length
-        self.mirrors = self._initialize_config(source_distance, mirror_numbers)
+        self.mirrors = self._initialize_mirror_configuration(source_distance, mirror_numbers)
         self.output_directory = self._io_handler.get_output_directory(
             label=self.label, sub_dir="ray-tracing"
         )
@@ -99,13 +99,13 @@ class RayTracing:
         """Return string representation of RayTracing class."""
         return f"RayTracing(label={self.label})\n"
 
-    def _initialize_config(
+    def _initialize_mirror_configuration(
         self,
         source_distance,
         mirror_numbers,
     ):
         """
-        Initialize ray tracing configuration to namedtuple.
+        Initialize mirror configuration.
 
         Note the difference between single mirror mode and nominal mode.
         In single mirror mode, a 'mirror' is a mirror panel.
