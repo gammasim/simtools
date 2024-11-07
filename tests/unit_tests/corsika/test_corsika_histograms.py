@@ -192,11 +192,10 @@ def test_fill_histograms_no_rotation(corsika_output_file_name, io_handler):
     assert np.count_nonzero(corsika_histograms_instance_fill.hist_direction[0].values()) > 0
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, caplog):
-    with pytest.raises(ValueError, match="label_not_valid is not valid."):
-        corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError, match="label_not_valid is not valid."):
+            corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
     assert "label_not_valid is not valid." in caplog.text
 
     labels = ["wavelength", "time", "altitude"]

@@ -62,28 +62,26 @@ def simtel_array_histograms_instance_file_list(simtel_io_file_list):
     return SimtelIOHistograms(histogram_files=simtel_io_file_list, test=True)
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.ERROR], indirect=True)
 def test_file_does_not_exist(caplog):
-    with pytest.raises(FileNotFoundError):
-        _ = SimtelIOHistogram(histogram_file="non_existent_file.simtel.zst")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(FileNotFoundError):
+            _ = SimtelIOHistogram(histogram_file="non_existent_file.simtel.zst")
     assert "does not exist." in caplog.text
 
 
-@pytest.mark.usefixtures("_log_level")
-@pytest.mark.parametrize("_log_level", [logging.INFO], indirect=True)
 def test_calculate_trigger_rates(
     simtel_array_histograms_instance,
     simtel_array_histograms_instance_file_list,
     simtel_hists_hdata_io_instance,
     caplog,
 ):
-    (
-        sim_event_rates,
-        triggered_event_rates,
-        triggered_event_rate_uncertainties,
-        trigger_rate_in_tables,
-    ) = simtel_array_histograms_instance.calculate_trigger_rates(print_info=False)
+    with caplog.at_level(logging.INFO):
+        (
+            sim_event_rates,
+            triggered_event_rates,
+            triggered_event_rate_uncertainties,
+            trigger_rate_in_tables,
+        ) = simtel_array_histograms_instance.calculate_trigger_rates(print_info=False)
     assert pytest.approx(sim_event_rates[0].value, 0.2) == 2e7
     assert sim_event_rates[0].unit == 1 / u.s
     assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 9008
