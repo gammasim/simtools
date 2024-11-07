@@ -125,6 +125,7 @@ def validate_application_output(config):
                     config["CONFIGURATION"]["OUTPUT_FILE"]
                 ),
                 integration_test.get("TOLERANCE", 1.0e-5),
+                integration_test.get("TEST_COLUMNS", None),
             )
 
         if "OUTPUT_FILE" in integration_test:

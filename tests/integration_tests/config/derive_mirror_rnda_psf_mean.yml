@@ -3,7 +3,7 @@ CTA_SIMPIPE:
   TEST_NAME: psf_mean
   CONFIGURATION:
     SITE: South
-    TELESCOPE: MSTS-design
+    TELESCOPE: LSTS-01
     MODEL_VERSION: 6.0.0
     CONTAINMENT_FRACTION: 0.8
     MIRROR_LIST: |
@@ -12,6 +12,15 @@ CTA_SIMPIPE:
     RNDA: 0.003
     TEST: true
     OUTPUT_PATH: simtools-output
+    OUTPUT_FILE: test_derive_mirror_rnda_psf_mean.ecsv
+    USE_PLAIN_OUTPUT_PATH: true
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: TEST.ecsv
+    - OUTPUT_FILE: test_derive_mirror_rnda_psf_mean.ecsv
+    - REFERENCE_OUTPUT_FILE: |
+        tests/resources/derive_mirror_rnda_psf_mean.ecsv
+      TOLERANCE: 3.e-1
+      TEST_COLUMNS:
+        - TEST_COLUMN_NAME: mirror_reflection_random_angle_sigma1
+          CUT_COLUMN_NAME: best_fit
+          CUT_CONDITION: "==True"
