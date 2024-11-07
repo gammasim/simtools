@@ -9,7 +9,6 @@ from astropy import units as u
 from simtools.psf_analysis import PSFImage
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

@@ -16,7 +16,6 @@ from simtools.configuration.configurator import (
 from simtools.io_operations import io_handler
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

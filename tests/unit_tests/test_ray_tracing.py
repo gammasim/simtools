@@ -137,9 +137,9 @@ def test_export_results(simtel_path, ray_tracing_lst, caplog):
     """
     Test the export_results method of the RayTracing class without results
     """
-
-    ray = ray_tracing_lst
-    ray.export_results()
+    with caplog.at_level("ERROR"):
+        ray = ray_tracing_lst
+        ray.export_results()
     assert "No results to export" in caplog.text
 
 
@@ -150,14 +150,14 @@ def test_ray_tracing_plot(ray_tracing_lst, caplog, invalid_key, invalid_key_mess
 
     ray_tracing_lst.analyze(force=False)
     # First test a wrong key
-    with pytest.raises(KeyError):
-        ray_tracing_lst.plot(key=invalid_key)
+    with caplog.at_level("INFO"):
+        with pytest.raises(KeyError):
+            ray_tracing_lst.plot(key=invalid_key)
     assert invalid_key_message in caplog.text
 
     # Now test a valid key
-    with caplog.at_level(logging.INFO):
-        ray_tracing_lst.plot(key="d80_cm", save=True)
-        assert "Saving fig in" in caplog.text
+    ray_tracing_lst.plot(key="d80_cm", save=True)
+    assert "Saving fig in" in caplog.text
     plot_file_name = names.generate_file_name(
         file_type="ray-tracing",
         suffix=".pdf",
@@ -176,17 +176,17 @@ def test_ray_tracing_invalid_key(ray_tracing_lst, caplog, invalid_key, invalid_k
     """
     Test the a few methods of the RayTracing class with an invalid key
     """
-
-    with pytest.raises(KeyError):
-        ray_tracing_lst.plot_histogram(key=invalid_key)
+    with caplog.at_level("INFO"):
+        with pytest.raises(KeyError):
+            ray_tracing_lst.plot_histogram(key=invalid_key)
     assert invalid_key_message in caplog.text
-
-    with pytest.raises(KeyError):
-        ray_tracing_lst.get_mean(key=invalid_key)
+    with caplog.at_level("INFO"):
+        with pytest.raises(KeyError):
+            ray_tracing_lst.get_mean(key=invalid_key)
     assert invalid_key_message in caplog.text
-
-    with pytest.raises(KeyError):
-        ray_tracing_lst.get_std_dev(key=invalid_key)
+    with caplog.at_level("INFO"):
+        with pytest.raises(KeyError):
+            ray_tracing_lst.get_std_dev(key=invalid_key)
     assert invalid_key_message in caplog.text
 
 
@@ -199,8 +199,8 @@ def test_ray_tracing_get_std_dev(ray_tracing_lst):
 
 def test_ray_tracing_no_images(ray_tracing_lst, caplog):
     """Test the images method of the RayTracing class with no images"""
-
-    assert ray_tracing_lst.images() is None
+    with caplog.at_level("WARNING"):
+        assert ray_tracing_lst.images() is None
     assert "No image found" in caplog.text
 
 
@@ -212,10 +212,8 @@ def test_ray_tracing_simulate(ray_tracing_lst, caplog, mocker):
     mock_gzip_open = mocker.patch("gzip.open", mocker.mock_open())
     mock_copyfileobj = mocker.patch("shutil.copyfileobj")
     mock_unlink = mocker.patch("pathlib.Path.unlink")
-
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level("INFO"):
         ray_tracing_lst.simulate(test=True, force=True)
-
     assert "Simulating RayTracing for off_axis=0.0, mirror=0" in caplog.text
     mock_simulator.assert_called_once_with(
         simtel_path=ray_tracing_lst.simtel_path,
@@ -376,8 +374,7 @@ def test_images_with_psf_images(ray_tracing_lst, mocker):
 
 def test_images_no_psf_images(ray_tracing_lst, caplog):
     ray_tracing_lst._psf_images = {}
-
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level("WARNING"):
         images = ray_tracing_lst.images()
 
     assert images is None
@@ -396,8 +393,9 @@ def test_plot_histogram_valid_key(ray_tracing_lst, mocker):
 
 
 def test_plot_histogram_invalid_key(ray_tracing_lst, caplog, invalid_key, invalid_key_message):
-    with pytest.raises(KeyError):
-        ray_tracing_lst.plot_histogram(key=invalid_key)
+    with caplog.at_level("INFO"):
+        with pytest.raises(KeyError):
+            ray_tracing_lst.plot_histogram(key=invalid_key)
     assert invalid_key_message in caplog.text
 
 
