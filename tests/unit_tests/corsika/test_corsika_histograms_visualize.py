@@ -1,3 +1,5 @@
+import logging
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -38,10 +40,11 @@ def test_kernel_plot_2d_photons(corsika_histograms_instance_set_histograms, capl
         for _, _ in enumerate(corsika_histograms_instance_set_histograms.telescope_indices):
             assert isinstance(all_figs[0], plt.Figure)
 
-    with pytest.raises(ValueError, match=r"This property does not exist. The valid entries"):
-        corsika_histograms_visualize._kernel_plot_2d_photons(
-            corsika_histograms_instance_set_histograms, "this_property_does_not_exist"
-        )
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError, match=r"This property does not exist. The valid entries"):
+            corsika_histograms_visualize._kernel_plot_2d_photons(
+                corsika_histograms_instance_set_histograms, "this_property_does_not_exist"
+            )
     assert "This property does not exist. " in caplog.text
 
 
@@ -91,11 +94,11 @@ def test_kernel_plot_1d_photons(corsika_histograms_instance_set_histograms, capl
                 assert isinstance(all_figs[0], plt.Figure)
             else:
                 assert isinstance(all_figs[i_hist], plt.Figure)
-
-    with pytest.raises(ValueError, match=r"This property does not"):
-        corsika_histograms_visualize._kernel_plot_1d_photons(
-            corsika_histograms_instance_set_histograms, "this_property_does_not_exist"
-        )
+    with caplog.at_level("ERROR"):
+        with pytest.raises(ValueError, match=r"This property does not"):
+            corsika_histograms_visualize._kernel_plot_1d_photons(
+                corsika_histograms_instance_set_histograms, "this_property_does_not_exist"
+            )
     assert "This property does not exist. " in caplog.text
 
 
