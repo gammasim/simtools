@@ -5,7 +5,6 @@ import logging
 import pytest
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def test_get_number_of_pixels(telescope_model_lst):
