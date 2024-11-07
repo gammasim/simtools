@@ -17,7 +17,6 @@ io_operations
 job_execution
 array_layout
 mc_model
-psf_analysis
 ray_tracing
 runners
 sim_telarray
