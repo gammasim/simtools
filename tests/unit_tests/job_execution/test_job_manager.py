@@ -12,7 +12,6 @@ OS_SYSTEM = "os.system"
 PATHLIB_PATH_EXISTS = "pathlib.Path.exists"
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

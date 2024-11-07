@@ -9,7 +9,6 @@ import pytest
 from simtools.model.model_parameter import InvalidModelParameterError
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.mark.xfail(reason="Missing ray_tracing for prod6 in Derived-DB")
@@ -109,10 +108,7 @@ def test_position(telescope_model_lst, caplog):
     assert pytest.approx(utm_xyz[0].value) == 217659.6
     assert pytest.approx(utm_xyz[1].value) == 3184995.1
     assert pytest.approx(utm_xyz[2].value) == 2185.0
-
-    with pytest.raises(InvalidModelParameterError):
-        tel_model.position(coordinate_system="invalid")
-
-    assert any(
-        "Coordinate system invalid not found." in message for message in caplog.text.splitlines()
-    )
+    with caplog.at_level("ERROR"):
+        with pytest.raises(InvalidModelParameterError):
+            tel_model.position(coordinate_system="invalid")
+    assert "Coordinate system invalid not found." in caplog.text
