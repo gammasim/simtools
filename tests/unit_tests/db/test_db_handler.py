@@ -10,7 +10,6 @@ from astropy import units as u
 from simtools.db import db_handler
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

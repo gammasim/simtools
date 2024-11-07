@@ -172,7 +172,8 @@ def test_export_results(ray_tracing_lst, caplog, mocker):
 def test_ray_tracing_no_images(ray_tracing_lst, caplog):
     """Test the images method of the RayTracing class with no images"""
 
-    assert ray_tracing_lst.images() is None
+    with caplog.at_level("WARNING"):
+        assert ray_tracing_lst.images() is None
     assert "No image found" in caplog.text
 
 

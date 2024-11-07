@@ -11,7 +11,6 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing.ray_tracing import RayTracing
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.mark.parametrize("telescope_model_name", ["SSTS-design"])

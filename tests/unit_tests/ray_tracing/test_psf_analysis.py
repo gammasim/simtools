@@ -12,9 +12,6 @@ from astropy import units as u
 
 from simtools.ray_tracing.psf_analysis import PSFImage
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
 
 @pytest.fixture
 def dummy_photon_file():
@@ -63,7 +60,7 @@ def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, 
     )
     image = PSFImage(focal_length=2800.0)
     image.read_photon_list_from_simtel_file(test_file)
-    logger.info(image.get_psf(0.8, "cm"))
+    image.get_psf(0.8, "cm")
 
     assert 3.343415291615846 == pytest.approx(image.get_psf(0.8, "cm"))
 
@@ -81,7 +78,7 @@ def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, 
 
     image_unzipped = PSFImage(focal_length=2800.0)
     image_unzipped.read_photon_list_from_simtel_file(unzipped_file_path)
-    logger.info(image_unzipped.get_psf(0.8, "cm"))
+    image_unzipped.get_psf(0.8, "cm")
 
     assert 3.343415291615846 == pytest.approx(image_unzipped.get_psf(0.8, "cm"))
 
