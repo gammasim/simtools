@@ -120,12 +120,15 @@ def test_compare_simtel_config_with_schema(
     _config_ng = config_reader_num_gains
 
     # no differences; should result in no output
-    _config_ng.compare_simtel_config_with_schema()
-    assert caplog.text == ""
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        _config_ng.compare_simtel_config_with_schema()
+        assert caplog.text == ""
 
     # no limits defined for telescope_transmission
-    with caplog.at_level("WARNING"):
-        _config_tt = config_reader_telescope_transmission
+    caplog.clear()
+    _config_tt = config_reader_telescope_transmission
+    with caplog.at_level(logging.WARNING):
         _config_tt.compare_simtel_config_with_schema()
     assert "Values for limits do not match" in caplog.text
     assert "from simtel: TELESCOPE_TRANSMISSION None" in caplog.text
@@ -139,6 +142,7 @@ def test_compare_simtel_config_with_schema(
     assert "Values for limits do not match" not in caplog.text
 
     # remove keys and elements to enforce error tests
+    caplog.clear()
     with caplog.at_level("WARNING"):
         _config_ng.schema_dict["data"][0].pop("default")
         _config_ng.compare_simtel_config_with_schema()
