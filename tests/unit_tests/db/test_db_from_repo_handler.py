@@ -7,7 +7,6 @@ import pytest
 from simtools.db import db_from_repo_handler
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def test_update_parameters_from_repo(caplog, db_config, simulation_model_url):

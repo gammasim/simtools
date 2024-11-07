@@ -9,7 +9,6 @@ import pytest
 from simtools.corsika.corsika_config import CorsikaConfig
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -299,8 +298,9 @@ def test_get_config_parameter(corsika_config_mock_array_model, caplog):
     cc = corsika_config_mock_array_model
     assert isinstance(cc.get_config_parameter("NSHOW"), int)
     assert isinstance(cc.get_config_parameter("THETAP"), list)
-    with pytest.raises(KeyError):
-        cc.get_config_parameter("not_really_a_parameter")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(KeyError):
+            cc.get_config_parameter("not_really_a_parameter")
     assert "Parameter not_really_a_parameter" in caplog.text
 
 

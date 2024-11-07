@@ -7,7 +7,6 @@ import re
 import pytest
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

@@ -13,7 +13,6 @@ import simtools.data_model.model_data_writer as writer
 from simtools.data_model.model_data_writer import JsonNumpyEncoder
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 test_file_2 = "test_file_2.ecsv"
