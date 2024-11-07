@@ -9,9 +9,20 @@ CTA_SIMPIPE:
     MIRROR_LIST: |
       ./tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv
     PSF_MEASUREMENT: ./tests/resources/MLTdata-preproduction.ecsv
-    USE_RANDOM_FLEN: true
+    USE_RANDOM_FOCAL_LENGTH: false
+    NO_TUNING: true
     RNDA: 0.0063
     TEST: true
     OUTPUT_PATH: simtools-output
+    OUTPUT_FILE: test_derive_mirror_rnda_psf_no_tuning.ecsv
+    USE_PLAIN_OUTPUT_PATH: true
+    LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: TEST.ecsv
+    - OUTPUT_FILE: test_derive_mirror_rnda_psf_no_tuning.ecsv
+    - REFERENCE_OUTPUT_FILE: |
+        tests/resources/derive_mirror_rnda_psf_no_tuning.ecsv
+      TOLERANCE: 1.e-1
+      TEST_COLUMNS:
+        - TEST_COLUMN_NAME: mirror_reflection_random_angle_sigma1
+          CUT_COLUMN_NAME: best_fit
+          CUT_CONDITION: "==True"
