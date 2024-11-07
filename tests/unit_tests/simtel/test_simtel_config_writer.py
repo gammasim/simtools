@@ -9,7 +9,6 @@ import pytest
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

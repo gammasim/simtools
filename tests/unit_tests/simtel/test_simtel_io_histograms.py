@@ -19,7 +19,6 @@ from simtools.simtel.simtel_io_histogram import (
 from simtools.simtel.simtel_io_histograms import SimtelIOHistograms
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -76,7 +75,6 @@ def test_calculate_trigger_rates(
     simtel_hists_hdata_io_instance,
     caplog,
 ):
-
     with caplog.at_level(logging.INFO):
         (
             sim_event_rates,
@@ -84,10 +82,10 @@ def test_calculate_trigger_rates(
             triggered_event_rate_uncertainties,
             trigger_rate_in_tables,
         ) = simtel_array_histograms_instance.calculate_trigger_rates(print_info=False)
-        assert pytest.approx(sim_event_rates[0].value, 0.2) == 2e7
-        assert sim_event_rates[0].unit == 1 / u.s
-        assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 9008
-        assert trigger_rate_in_tables[0]["Energy (TeV)"][0] == 0.001 * u.TeV
+    assert pytest.approx(sim_event_rates[0].value, 0.2) == 2e7
+    assert sim_event_rates[0].unit == 1 / u.s
+    assert pytest.approx(triggered_event_rate_uncertainties[0].value, 0.1) == 9008
+    assert trigger_rate_in_tables[0]["Energy (TeV)"][0] == 0.001 * u.TeV
     assert "Histogram" in caplog.text
     assert "Total number of simulated events" in caplog.text
     assert "Total number of triggered events" in caplog.text
@@ -219,8 +217,9 @@ def test_combine_histogram_files(simtel_io_file, caplog):
     instance_all.combined_hists[0]["lower_x"] = instance_all.combined_hists[0]["lower_x"] + 1
     instance_all._combined_hists = None
     assert instance_all._combined_hists is None
-    with pytest.raises(InconsistentHistogramFormatError):
-        _ = instance_all.combined_hists
+    with caplog.at_level("ERROR"):
+        with pytest.raises(InconsistentHistogramFormatError):
+            _ = instance_all.combined_hists
     assert "Trying to add histograms with inconsistent dimensions" in caplog.text
 
 

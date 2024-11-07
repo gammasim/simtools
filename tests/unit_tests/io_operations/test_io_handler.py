@@ -10,7 +10,6 @@ import pytest
 import simtools.io_operations.io_handler as io_handler_module
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 test_file = "test-file.txt"

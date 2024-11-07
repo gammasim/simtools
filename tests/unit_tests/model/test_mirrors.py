@@ -7,7 +7,6 @@ import pytest
 from simtools.model.mirrors import InvalidMirrorListFileError, Mirrors
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

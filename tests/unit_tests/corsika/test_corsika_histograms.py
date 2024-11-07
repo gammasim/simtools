@@ -2,6 +2,7 @@
 
 
 import copy
+import logging
 from pathlib import Path
 
 import boost_histogram as bh
@@ -88,7 +89,7 @@ def test_get_header_astropy_units(corsika_histograms_instance):
 def test_hist_config_default_config(corsika_histograms_instance, caplog):
     with caplog.at_level("WARNING"):
         hist_config = corsika_histograms_instance.hist_config
-        assert "No histogram configuration was defined before." in caplog.text
+    assert "No histogram configuration was defined before." in caplog.text
     assert isinstance(hist_config, dict)
     assert hist_config == corsika_histograms_instance._create_histogram_default_config()
 
@@ -192,8 +193,9 @@ def test_fill_histograms_no_rotation(corsika_output_file_name, io_handler):
 
 
 def test_get_hist_1d_projection(corsika_histograms_instance_set_histograms, caplog):
-    with pytest.raises(ValueError, match="label_not_valid is not valid."):
-        corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(ValueError, match="label_not_valid is not valid."):
+            corsika_histograms_instance_set_histograms._get_hist_1d_projection("label_not_valid")
     assert "label_not_valid is not valid." in caplog.text
 
     labels = ["wavelength", "time", "altitude"]
@@ -704,11 +706,11 @@ def test_get_event_parameter_info(corsika_histograms_instance_set_histograms, ca
             corsika_histograms_instance_set_histograms.get_event_parameter_info(parameter),
             u.quantity.Quantity,
         )
-
-    with pytest.raises(KeyError):
-        corsika_histograms_instance_set_histograms.get_event_parameter_info(
-            "non_existent_parameter"
-        )
+    with caplog.at_level("ERROR"):
+        with pytest.raises(KeyError):
+            corsika_histograms_instance_set_histograms.get_event_parameter_info(
+                "non_existent_parameter"
+            )
     assert (
         f"key is not valid. Valid entries are "
         f"{corsika_histograms_instance_set_histograms.all_event_keys}" in caplog.text
@@ -721,9 +723,9 @@ def test_get_run_info(corsika_histograms_instance_set_histograms, caplog):
             corsika_histograms_instance_set_histograms.get_run_info(parameter),
             u.quantity.Quantity,
         )
-
-    with pytest.raises(KeyError):
-        corsika_histograms_instance_set_histograms.get_run_info("non_existent_parameter")
+    with caplog.at_level("ERROR"):
+        with pytest.raises(KeyError):
+            corsika_histograms_instance_set_histograms.get_run_info("non_existent_parameter")
     assert (
         f"key is not valid. Valid entries are "
         f"{corsika_histograms_instance_set_histograms.all_run_keys}" in caplog.text

@@ -8,7 +8,6 @@ import pytest
 from simtools.simtel.simtel_io_events import SimtelIOEvents
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

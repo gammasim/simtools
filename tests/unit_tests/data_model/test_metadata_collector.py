@@ -14,7 +14,6 @@ import simtools.utils.general as gen
 from simtools.data_model import metadata_model
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def test_get_data_model_schema_file_name():
@@ -145,8 +144,9 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     with open(tmp_test_directory / "test_read_input_metadata_file.json", "w") as f:
         json.dump(test_dict, f)
     metadata_1.args_dict["input_meta"] = tmp_test_directory / "test_read_input_metadata_file.json"
-    with pytest.raises(gen.InvalidConfigDataError):
-        metadata_1._read_input_metadata_from_file()
+    with caplog.at_level("ERROR"):
+        with pytest.raises(gen.InvalidConfigDataError):
+            metadata_1._read_input_metadata_from_file()
     assert "More than one metadata entry" in caplog.text
 
     metadata_1.args_dict["input_meta"] = "tests/resources/telescope_positions-North-utm.ecsv"
