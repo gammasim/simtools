@@ -1,3 +1,5 @@
+import logging
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -81,7 +83,7 @@ def test_convert_2d_to_radial_distr(caplog) -> None:
     assert pytest.approx(difference[:-1], abs=1) == 0  # last value deviates
 
     # Test warning in caplog
-    with caplog.at_level("WARNING"):
+    with caplog.at_level(logging.WARNING):
         transf.convert_2d_to_radial_distr(
             distance_to_center_2d, xaxis, yaxis, bins=4 * bins, max_dist=max_dist
         )

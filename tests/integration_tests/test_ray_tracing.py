@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import pytest
 
 from simtools.model.telescope_model import TelescopeModel
-from simtools.ray_tracing import RayTracing
+from simtools.ray_tracing.ray_tracing import RayTracing
 
 logger = logging.getLogger()
 
@@ -107,6 +107,7 @@ def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_
 def test_single_mirror(db_config, simtel_path_no_mock, io_handler, telescope_model_mst, plot=False):
     """Test MST, single mirror PSF simulation"""
 
+    telescope_model_mst.export_config_file()
     ray = RayTracing(
         telescope_model=telescope_model_mst,
         simtel_path=simtel_path_no_mock,
