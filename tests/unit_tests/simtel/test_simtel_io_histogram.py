@@ -12,7 +12,6 @@ from ctao_cr_spectra.spectral import PowerLaw
 from simtools.simtel.simtel_io_histogram import HistogramIdNotFoundError, SimtelIOHistogram
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -162,10 +161,10 @@ def test_get_particle_distribution_function(
     with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError, match=r"spectral_index not found in the configuration"):
             simtel_hist_hdata_io_instance._get_simulation_spectral_distribution_function()
-    assert_string = (
-        "spectral_index not found in the configuration of the file. "
-        "Consider using a .simtel file instead."
-    )
+        assert_string = (
+            "spectral_index not found in the configuration of the file. "
+            "Consider using a .simtel file instead."
+        )
     assert assert_string in caplog.text
 
     # Test invalid label

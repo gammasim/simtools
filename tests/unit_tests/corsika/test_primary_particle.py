@@ -8,7 +8,6 @@ from particle import Corsika7ID
 from simtools.corsika.primary_particle import PrimaryParticle
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def test_init():
