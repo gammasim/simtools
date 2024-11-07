@@ -13,7 +13,6 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -155,7 +154,8 @@ def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
 
 def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_file):
     # no results available yet
-    camera_efficiency_lst.export_results()
+    with caplog.at_level(logging.ERROR):
+        camera_efficiency_lst.export_results()
     assert "Cannot export results because they do not exist" in caplog.text
 
     # results available
@@ -165,7 +165,7 @@ def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_f
     mocker.patch("builtins.open", mock_file)
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.export_results()
-        assert "Exporting summary results" in caplog.text
+    assert "Exporting summary results" in caplog.text
     mock_file().write.assert_called_once_with("TestString")
 
 
@@ -207,4 +207,4 @@ def test_save_plot(camera_efficiency_lst, mocker, caplog):
     fig_mock = mocker.MagicMock()
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst._save_plot(fig_mock, "test_plot")
-        assert "Plotted test_plot efficiency in" in caplog.text
+    assert "Plotted test_plot efficiency in" in caplog.text

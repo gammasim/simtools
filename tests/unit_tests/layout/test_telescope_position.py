@@ -14,7 +14,6 @@ from simtools.layout.telescope_position import (
 )
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
