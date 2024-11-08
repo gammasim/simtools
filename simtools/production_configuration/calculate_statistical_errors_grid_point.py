@@ -12,6 +12,7 @@ StatisticalErrorEvaluator
 import logging
 
 import numpy as np
+from astropy import units as u
 from astropy.io import fits
 
 
@@ -74,23 +75,56 @@ class StatisticalErrorEvaluator:
 
     def load_data_from_file(self):
         """
-        Load data from the dl2_mc_events_file FITS file and return relevant arrays.
+        Load data from the dl2_mc_events_file FITS file and return relevant arrays with units.
 
         Returns
         -------
         dict
-            Dictionary containing arrays from the dl2_mc_events_file FITS file.
+            Dictionary containing arrays from the dl2_mc_events_file FITS file with units.
         """
         data = {}
         try:
             with fits.open(self.file_path) as hdul:
                 events_data = hdul["EVENTS"].data  # pylint: disable=E1101
-                event_energies = events_data["ENERGY"]
-                mc_energies = events_data["MC_ENERGY"]
-
                 sim_events_data = hdul["SIMULATED EVENTS"].data  # pylint: disable=E1101
-                bin_edges_low = sim_events_data["MC_ENERG_LO"]
-                bin_edges_high = sim_events_data["MC_ENERG_HI"]
+
+                event_units = {}
+                for idx, col_name in enumerate(events_data.columns.names, start=1):
+                    unit_key = f"TUNIT{idx}"
+                    if unit_key in hdul["EVENTS"].header:  # pylint: disable=E1101
+                        event_units[col_name] = u.Unit(
+                            hdul["EVENTS"].header[unit_key]  # pylint: disable=E1101
+                        )
+                    else:
+                        event_units[col_name] = None
+
+                sim_units = {}
+                for idx, col_name in enumerate(sim_events_data.columns.names, start=1):
+                    unit_key = f"TUNIT{idx}"
+                    if unit_key in hdul["SIMULATED EVENTS"].header:  # pylint: disable=E1101
+                        sim_units[col_name] = u.Unit(
+                            hdul["SIMULATED EVENTS"].header[unit_key]  # pylint: disable=E1101
+                        )
+                    else:
+                        sim_units[col_name] = None
+
+                # Check and apply units to each column, raising an error if the unit is missing
+                if not event_units["ENERGY"]:
+                    raise ValueError("Unit for ENERGY in EVENTS data is missing.")
+                event_energies = events_data["ENERGY"] * event_units["ENERGY"]
+
+                if not event_units["MC_ENERGY"]:
+                    raise ValueError("Unit for MC_ENERGY in EVENTS data is missing.")
+                mc_energies = events_data["MC_ENERGY"] * event_units["MC_ENERGY"]
+
+                if not sim_units["MC_ENERG_LO"]:
+                    raise ValueError("Unit for MC_ENERG_LO in SIMULATED EVENTS data is missing.")
+                bin_edges_low = sim_events_data["MC_ENERG_LO"] * sim_units["MC_ENERG_LO"]
+
+                if not sim_units["MC_ENERG_HI"]:
+                    raise ValueError("Unit for MC_ENERG_HI in SIMULATED EVENTS data is missing.")
+                bin_edges_high = sim_events_data["MC_ENERG_HI"] * sim_units["MC_ENERG_HI"]
+
                 simulated_event_histogram = sim_events_data["EVENTS"]
 
                 viewcone = hdul[3].data["viewcone"][0][1]  # pylint: disable=E1101
@@ -105,6 +139,7 @@ class StatisticalErrorEvaluator:
                     "viewcone": viewcone,
                     "core_range": core_range,
                 }
+
                 if self.grid_point is None:
                     unique_azimuths = np.unique(events_data["PNT_AZ"])
                     unique_zeniths = np.unique(events_data["PNT_ALT"])
@@ -115,8 +150,7 @@ class StatisticalErrorEvaluator:
                             unique_zeniths[0],
                             0,
                             0,
-                        )  # Init gridpoint with az and zenith here
-                        # grid point(energy, azimuth, zenith, NSB, offset)
+                        )  # Initialize grid point with azimuth and zenith
 
         except (FileNotFoundError, KeyError) as e:
             logging.error(f"Error loading file {self.file_path}: {e}")
@@ -152,8 +186,10 @@ class StatisticalErrorEvaluator:
         triggered_event_histogram : array
             Histogram of triggered events.
         """
-        triggered_event_histogram, _ = np.histogram(event_energies, bins=bin_edges)
-        return triggered_event_histogram
+        event_energies = event_energies.to(bin_edges.unit)
+
+        triggered_event_histogram, _ = np.histogram(event_energies.value, bins=bin_edges.value)
+        return triggered_event_histogram * u.count
 
     def compute_efficiency_and_errors(self, triggered_event_counts, simulated_event_counts):
         """
