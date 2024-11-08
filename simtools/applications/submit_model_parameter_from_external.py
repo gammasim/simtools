@@ -3,7 +3,8 @@ r"""
     Submit a model parameter value and corresponding metadata through the command line.
 
     Input and metadata is validated, and if necessary enriched and converted following
-    the model parameter schemas.
+    the model parameter schemas. Model parameter data is written in the simtools-style
+    json format, metadata as a yaml file.
 
     Command line arguments
     ----------------------
