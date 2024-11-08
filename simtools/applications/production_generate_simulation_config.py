@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 r"""
-Configure and run a simulation based on command-line arguments.
+Configure a simulation based on command-line arguments.
 
 This application configures and
-generates simulation parameters for a specific grid point in a statistical error
+generates simulation parameters for a specific grid point in a statistical uncertainty
 evaluation setup.
 
 Command line arguments
@@ -20,7 +20,7 @@ data_level (str, required)
 science_case (str, required)
     The science case for the simulation.
 file_path (str, required)
-    Path to the FITS file used for statistical error evaluation.
+    Path to the FITS file used for statistical uncertainty evaluation.
 file_type (str, required)
     Type of the FITS file ('On-source' or 'Offset').
 metrics (str, optional)
@@ -175,10 +175,10 @@ def main():
         else:
             serializable_config[key] = value
 
-    logger.info(f"Simulation parameters: {serializable_config}")
+    logger.info(f"Simulation configuration: {serializable_config}")
     with open(output_filepath, "w", encoding="utf-8") as f:
         json.dump(serializable_config, f, indent=4)
-    logger.info(f"Simulation parameters saved to: {output_filepath}")
+    logger.info(f"Simulation configuration saved to: {output_filepath}")
 
 
 if __name__ == "__main__":
