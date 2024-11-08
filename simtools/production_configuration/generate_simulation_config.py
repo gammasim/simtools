@@ -20,11 +20,15 @@ Key Components:
 
 """
 
+import logging
+
 import numpy as np
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 class SimulationConfig:
@@ -190,9 +194,10 @@ class SimulationConfig:
 
         # Calculate average uncertainty from metrics, use 0.1 as default if not found
         error_eff_area = metric_results.get("error_eff_area", {"relative_errors": [0.1]})
-        print(f"error_eff_area {error_eff_area}")
+        _logger.info(f"error_eff_area {error_eff_area}")
         avg_uncertainty = np.mean(error_eff_area["relative_errors"])
-
+        print("avg_uncertainty", avg_uncertainty)
+        avg_uncertainty = avg_uncertainty.value
         # Calculate the base number of events from the evaluator
         base_events = self._fetch_existing_events()
 
@@ -200,7 +205,10 @@ class SimulationConfig:
         uncertainty_factor = 1 / (1 - avg_uncertainty)
         if self.science_case == "science case 1":
             uncertainty_factor *= 1.5
-        return int(base_events * uncertainty_factor)
+        print("base_events", base_events)
+        print("uncertainty_factor", uncertainty_factor)
+
+        return base_events * uncertainty_factor
 
     def _fetch_existing_events(self) -> int:
         """

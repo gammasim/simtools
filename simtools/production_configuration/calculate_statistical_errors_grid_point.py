@@ -125,7 +125,7 @@ class StatisticalErrorEvaluator:
                     raise ValueError("Unit for MC_ENERG_HI in SIMULATED EVENTS data is missing.")
                 bin_edges_high = sim_events_data["MC_ENERG_HI"] * sim_units["MC_ENERG_HI"]
 
-                simulated_event_histogram = sim_events_data["EVENTS"]
+                simulated_event_histogram = sim_events_data["EVENTS"] * u.count
 
                 viewcone = hdul[3].data["viewcone"][0][1]  # pylint: disable=E1101
                 core_range = hdul[3].data["core_range"][0][1]  # pylint: disable=E1101
@@ -197,9 +197,9 @@ class StatisticalErrorEvaluator:
 
         Parameters
         ----------
-        triggered_event_counts : array
+        triggered_event_counts : array with units
             Histogram counts of the triggered events.
-        simulated_event_counts : array
+        simulated_event_counts : array with units
             Histogram counts of the simulated events.
 
         Returns
@@ -211,21 +211,26 @@ class StatisticalErrorEvaluator:
         relative_errors : array
             Array of relative uncertainties.
         """
+        # Ensure the inputs have compatible units
+        triggered_event_counts = triggered_event_counts.to(u.ct)
+        simulated_event_counts = simulated_event_counts.to(u.ct)
+
+        # Compute efficiencies, ensuring the output is dimensionless
         efficiencies = np.divide(
             triggered_event_counts,
             simulated_event_counts,
-            out=np.zeros_like(triggered_event_counts, dtype=float),
+            out=np.zeros_like(triggered_event_counts),
             where=simulated_event_counts > 0,
+        ).to(u.dimensionless_unscaled)
+
+        # Set up a mask for valid data with a unit-consistent threshold
+        valid = (
+            (simulated_event_counts > 0 * u.ct)
+            & (triggered_event_counts <= simulated_event_counts)
+            & (triggered_event_counts > 5 * u.ct)
         )
 
-        # Calculate uncertainties with binomial distribution,
-        # apply threshold of 5 for triggered event counts data
-        valid = (
-            (simulated_event_counts > 0)
-            & (triggered_event_counts <= simulated_event_counts)
-            & (triggered_event_counts > 5)
-        )
-        uncertainties = np.zeros_like(triggered_event_counts, dtype=float)
+        uncertainties = np.zeros_like(triggered_event_counts) * u.ct**-0.5
 
         if np.any(valid):
             uncertainties[valid] = np.sqrt(
@@ -313,8 +318,8 @@ class StatisticalErrorEvaluator:
         """
         logging.info("Calculating Energy Resolution Error")
 
-        event_energies = np.array(self.data["event_energies"])
-        mc_energies = np.array(self.data["mc_energies"])
+        event_energies = self.data["event_energies"]
+        mc_energies = self.data["mc_energies"]
 
         if len(event_energies) != len(mc_energies):
             raise ValueError(f"Mismatch in the number of energies for file {self.file_path}")
