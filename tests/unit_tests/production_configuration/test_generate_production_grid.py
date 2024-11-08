@@ -34,7 +34,7 @@ axes = [
 ]
 
 
-data_level = "B"
+ctao_data_level = "B"
 science_case = "high_precision"
 coordinate_system = "ra_dec"
 
@@ -44,7 +44,7 @@ observing_location = EarthLocation(lon=longitude * u.deg, lat=latitude * u.deg, 
 observing_time = Time("2017-09-16 00:00:00")
 
 grid_gen = GridGeneration(
-    axes, data_level, science_case, coordinate_system, observing_location, observing_time
+    axes, ctao_data_level, science_case, coordinate_system, observing_location, observing_time
 )
 
 

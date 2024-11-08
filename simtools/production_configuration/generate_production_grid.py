@@ -15,7 +15,7 @@ Key Components:
   - Attributes:
     - `axes` (list of dict): List of dictionaries defining each axis with properties
       such as name, range, binning, scaling, etc.
-    - `data_level` (str): The data level for the grid generation (e.g., 'A', 'B', 'C').
+    - `ctao_data_level` (str): The data level for the grid generation (e.g., 'A', 'B', 'C').
     - `science_case` (str): The science case for the grid generation (e.g., 'high_precision').
     - `coordinate_system` (str): The coordinate system being used
     (e.g., 'zenith_azimuth' or 'ra_dec').
@@ -44,7 +44,7 @@ axes = [
 
 
 # Define data level, science case, and coordinate system
-data_level = "B"
+ctao_data_level = "B"
 science_case = "high_precision"
 coordinate_system = "ra_dec"
 
@@ -58,7 +58,7 @@ observing_location = EarthLocation(lon=longitude*u.deg, lat=latitude*u.deg, heig
 observing_time = Time('2017-09-16 0:0:0')
 
 # Create grid generation instance
-grid_gen = GridGeneration(axes, data_level, science_case, coordinate_system,
+grid_gen = GridGeneration(axes, ctao_data_level, science_case, coordinate_system,
  observing_location, observing_time)
 
 # Generate grid points
@@ -94,7 +94,7 @@ class GridGeneration:
     axes : list of dict
         List of dictionaries defining each axis with properties such as name,
           range, binning, scaling, distribution, and unit.
-    data_level : str
+    ctao_data_level : str
         The data level (e.g., 'A', 'B', 'C') for the grid generation.
     science_case : str
         The science case (e.g., 'high_precision') for the grid generation.
@@ -109,7 +109,7 @@ class GridGeneration:
     def __init__(
         self,
         axes: list[dict],
-        data_level: str,
+        ctao_data_level: str,
         science_case: str,
         coordinate_system: str = "zenith_azimuth",
         observing_location=None,
@@ -123,7 +123,7 @@ class GridGeneration:
         axes : list of dict
             List of dictionaries where each dictionary defines an axis with properties
               such as name, range, binning, scaling, distribution type, and unit.
-        data_level : str
+        ctao_data_level : str
             The data level (e.g., 'A', 'B', 'C') for the grid generation.
         science_case : str
             The science case for the grid generation.
@@ -135,7 +135,7 @@ class GridGeneration:
             The time of the observation.
         """
         self.axes = axes
-        self.data_level = data_level
+        self.ctao_data_level = ctao_data_level
         self.science_case = science_case
         self.coordinate_system = coordinate_system
         self.observing_location = (
@@ -238,11 +238,11 @@ class GridGeneration:
                     axis_range[1] * (1 + (zenith_range[1] - zenith_range[0]) / 90),
                 )
 
-        if self.data_level == "A":
+        if self.ctao_data_level == "A":
             return (axis_range[0], axis_range[1] * 0.5)
-        if self.data_level == "B":
+        if self.ctao_data_level == "B":
             return axis_range
-        if self.data_level == "C":
+        if self.ctao_data_level == "C":
             return (axis_range[0], axis_range[1] * 1.5)
 
         return axis_range

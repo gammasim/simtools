@@ -15,7 +15,7 @@ elevation (float, required)
     Elevation angle in degrees.
 nsb (float, required)
     Night sky background value.
-data_level (str, required)
+ctao_data_level (str, required)
     The data level for the simulation (e.g., 'A', 'B', 'C').
 science_case (str, required)
     The science case for the simulation.
@@ -35,7 +35,7 @@ To run the simulation configuration, execute the script as follows:
 .. code-block:: console
 
     simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \
-      --nsb 0.3 --data_level "A" --science_case "high_precision" \
+      --nsb 0.3 --ctao_data_level "A" --science_case "high_precision" \
       --file_path "path/to/fits_file.fits" --file_type "On-source" \
       --metrics_file "path/to/metrics.yaml" --site North
 
@@ -72,7 +72,7 @@ def _parse(label):
         "--nsb", type=float, required=True, help="Night sky background value."
     )
     config.parser.add_argument(
-        "--data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
+        "--ctao_data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
     )
     config.parser.add_argument(
         "--science_case", type=str, required=True, help="Science case for the simulation."
@@ -158,7 +158,7 @@ def main():
 
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,
-        data_level=args["data_level"],
+        ctao_data_level=args["ctao_data_level"],
         science_case=args["science_case"],
         file_path=args["file_path"],
         file_type=args["file_type"],

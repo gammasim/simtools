@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     AZIMUTH: 60.0
     ELEVATION: 45.0
     NSB: 0.3
-    DATA_LEVEL: "B"
+    CTAO_DATA_LEVEL: "B"
     SCIENCE_CASE: "high_precision"
     FILE_PATH: "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
     FILE_TYPE: "On-source"
