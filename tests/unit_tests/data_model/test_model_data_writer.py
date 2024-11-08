@@ -211,17 +211,19 @@ def test_json_numpy_encoder():
 
 def test_dump_model_parameter(tmp_test_directory):
 
+    model_version = "6.0.0"
+    instrument = "LSTN-01"
     # single value, no unit
     num_gains_dict = writer.ModelDataWriter.dump_model_parameter(
         parameter_name="num_gains",
         value=2,
-        instrument="LSTN-01",
-        model_version="6.0.0",
+        instrument=instrument,
+        model_version=model_version,
         output_file="num_gains.json",
         output_path=tmp_test_directory,
         use_plain_output_path=True,
     )
-    assert Path(tmp_test_directory / "num_gains.json").is_file()
+    assert Path(tmp_test_directory / model_version / instrument / "num_gains.json").is_file()
     assert isinstance(num_gains_dict, dict)
     assert num_gains_dict["value"] == 2
     assert num_gains_dict["unit"] == u.dimensionless_unscaled
@@ -230,18 +232,24 @@ def test_dump_model_parameter(tmp_test_directory):
     position_dict = writer.ModelDataWriter.dump_model_parameter(
         parameter_name="array_element_position_utm",
         value=[217.6596 * u.km, 3184.9951 * u.km, 218500.0 * u.cm],
-        instrument="LSTN-01",
-        model_version="6.0.0",
+        instrument=instrument,
+        model_version=model_version,
         output_file="array_element_position_utm.json",
         output_path=tmp_test_directory,
         use_plain_output_path=True,
+        metadata={"name": "test_metadata"},
     )
-    assert Path(tmp_test_directory / "array_element_position_utm.json").is_file()
+    assert Path(
+        tmp_test_directory / model_version / instrument / "array_element_position_utm.json"
+    ).is_file()
     assert isinstance(position_dict, dict)
     value_list = [float(value) for value in position_dict["value"].split()]
     assert pytest.approx(value_list[0]) == 217659.6
     assert pytest.approx(value_list[1]) == 3184995.1
     assert pytest.approx(value_list[2]) == 2185.0
+    assert Path(
+        tmp_test_directory / model_version / instrument / "array_element_position_utm.metadata.yml"
+    ).is_file()
 
 
 def test_get_validated_parameter_dict():
