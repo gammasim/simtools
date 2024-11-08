@@ -15,6 +15,8 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 
+_logger = logging.getLogger(__name__)
+
 
 class StatisticalErrorEvaluator:
     """
@@ -143,7 +145,15 @@ class StatisticalErrorEvaluator:
                 if self.grid_point is None:
                     unique_azimuths = np.unique(events_data["PNT_AZ"])
                     unique_zeniths = np.unique(events_data["PNT_ALT"])
+
+                    _logger.info(f"Unique azimuths: {unique_azimuths}")
+                    _logger.info(f"Unique zeniths: {unique_zeniths}")
+
                     if len(unique_azimuths) == 1 and len(unique_zeniths) == 1:
+                        _logger.info(
+                            f"Setting initial grid point with azimuth: {unique_azimuths[0]}"
+                            f" zenith: {unique_zeniths[0]}"
+                        )
                         self.grid_point = (
                             0,
                             unique_azimuths[0],
@@ -151,9 +161,27 @@ class StatisticalErrorEvaluator:
                             0,
                             0,
                         )  # Initialize grid point with azimuth and zenith
+                    else:
+                        _logger.warning(
+                            "Multiple unique values found for azimuth or zenith. "
+                            "The grid point will be set based on the first unique values."
+                        )
+                else:
+                    _logger.warning(
+                        f"Grid point already set to: {self.grid_point}. "
+                        "Overwriting with new values from file."
+                    )
+                    self.grid_point = (
+                        0,
+                        unique_azimuths[0],
+                        unique_zeniths[0],
+                        0,
+                        0,
+                    )
+                    _logger.info(f"New grid point values: {self.grid_point}")
 
         except (FileNotFoundError, KeyError) as e:
-            logging.error(f"Error loading file {self.file_path}: {e}")
+            _logger.error(f"Error loading file {self.file_path}: {e}")
         return data
 
     def create_bin_edges(self):
