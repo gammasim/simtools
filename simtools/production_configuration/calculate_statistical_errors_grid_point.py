@@ -75,12 +75,12 @@ class StatisticalErrorEvaluator:
 
     def load_data_from_file(self):
         """
-        Load data from the dl2_mc_events_file FITS file and return relevant arrays with units.
+        Load data from the dl2_mc_events_file FITS file and return dictionaries with units.
 
         Returns
         -------
         dict
-            Dictionary containing arrays from the dl2_mc_events_file FITS file with units.
+            Dictionary containing data from the dl2_mc_events_file FITS file with units.
         """
         data = {}
         try:
