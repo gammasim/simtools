@@ -57,25 +57,7 @@ class SimulationConfig:
         file_type: str,
         metrics: dict[str, float] | None = None,
     ):
-        """
-        Initialize the simulation configuration for a grid point.
-
-        Parameters
-        ----------
-        grid_point : dict
-            A dictionary representing a grid point with azimuth,
-              elevation, and night sky background.
-        ctao_data_level : str
-            The data level (e.g., 'A', 'B', 'C') for the simulation configuration.
-        science_case : str
-            The science case for the simulation configuration.
-        file_path : str
-            Path to the dl2_mc_events_file FITS file for statistical error evaluation.
-        file_type : str
-            Type of the dl2_mc_events_file FITS file ('On-source' or 'Offset').
-        metrics : dict, optional
-            Optional dictionary of metrics to evaluate.
-        """
+        """Initialize the simulation configuration for a grid point."""
         self.grid_point = grid_point
         self.ctao_data_level = ctao_data_level
         self.science_case = science_case
