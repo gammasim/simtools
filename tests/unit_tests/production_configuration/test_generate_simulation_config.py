@@ -50,7 +50,7 @@ def test_initialization(mock_statistical_error_evaluator):
     config.evaluator = mock_statistical_error_evaluator
 
     assert config.grid_point == grid_point
-    assert config.data_level == "A"
+    assert config.ctao_data_level == "A"
     assert config.science_case == "high_precision"
     assert config.file_path == PATH_FITS
     assert config.file_type == "On-source"

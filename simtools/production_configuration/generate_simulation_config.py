@@ -12,7 +12,7 @@ Key Components:
 - `SimulationConfig`: Main class to handle simulation configuration for a grid point.
   - Attributes:
     - `grid_point` (dict): Contains azimuth, elevation, and night sky background.
-    - `data_level` (str): The data level for the simulation (e.g., 'A', 'B', 'C').
+    - `ctao_data_level` (str): The data level for the simulation (e.g., 'A', 'B', 'C').
     - `science_case` (str): The science case for the simulation.
     - `file_path` (str): Path to the FITS file used for statistical error evaluation.
     - `file_type` (str): Type of the FITS file ('On-source' or 'Offset').
@@ -35,7 +35,7 @@ class SimulationConfig:
     ----------
     grid_point : dict
         Dictionary representing a grid point with azimuth, elevation, and night sky background.
-    data_level : str
+    ctao_data_level : str
         The data level (e.g., 'A', 'B', 'C') for the simulation configuration.
     science_case : str
         The science case for the simulation configuration.
@@ -50,7 +50,7 @@ class SimulationConfig:
     def __init__(
         self,
         grid_point: dict[str, float],
-        data_level: str,
+        ctao_data_level: str,
         science_case: str,
         file_path: str,
         file_type: str,
@@ -64,7 +64,7 @@ class SimulationConfig:
         grid_point : dict
             A dictionary representing a grid point with azimuth,
               elevation, and night sky background.
-        data_level : str
+        ctao_data_level : str
             The data level (e.g., 'A', 'B', 'C') for the simulation configuration.
         science_case : str
             The science case for the simulation configuration.
@@ -76,7 +76,7 @@ class SimulationConfig:
             Optional dictionary of metrics to evaluate.
         """
         self.grid_point = grid_point
-        self.data_level = data_level
+        self.ctao_data_level = ctao_data_level
         self.science_case = science_case
         self.file_path = file_path
         self.file_type = file_type

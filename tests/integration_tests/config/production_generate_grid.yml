@@ -5,7 +5,7 @@ CTA_SIMPIPE:
     SITE: "North"
     MODEL_VERSION: "6.0.0"
     AXES: tests/resources/production_grid_generation_axes_definition.yaml
-    DATA_LEVEL: "B"
+    CTAO_DATA_LEVEL: "B"
     SCIENCE_CASE: "high_precision"
     COORDINATE_SYSTEM: "ra_dec"
     OBSERVING_TIME: "2017-09-16 00:00:00"
