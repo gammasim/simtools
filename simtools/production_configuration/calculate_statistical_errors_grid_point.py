@@ -1,10 +1,10 @@
 """
-Provides functionality to evaluate statistical errors from FITS files.
+Provides functionality to evaluate statistical errors from dl2_mc_events_file FITS files.
 
 Classes
 -------
 StatisticalErrorEvaluator
-    Handles error calculation for given FITS files and specified metrics.
+    Handles error calculation for given dl2_mc_events_file FITS files and specified metrics.
 
 
 """
@@ -17,12 +17,12 @@ from astropy.io import fits
 
 class StatisticalErrorEvaluator:
     """
-    Evaluates statistical errors from a FITS file.
+    Evaluates statistical errors from a dl2_mc_events_file FITS file.
 
     Parameters
     ----------
     file_path : str
-        Path to the FITS file.
+        Path to the dl2_mc_events_file FITS file.
     file_type : str
         Type of the file, either 'On-source' or 'Offset'.
     metrics : dict, optional
@@ -39,12 +39,12 @@ class StatisticalErrorEvaluator:
         grid_point: tuple[float, float, float, float, float] | None = None,
     ):
         """
-        Initialize the evaluator with a specific FITS file, its type, and metrics to calculate.
+        Init the evaluator with a dl2_mc_events_file FITS file, its type, and metrics to calculate.
 
         Parameters
         ----------
         file_path : str
-            The path to the FITS file.
+            The path to the dl2_mc_events_file FITS file.
         file_type : str
             The type of the file ('On-source' or 'Offset').
         metrics : dict, optional
@@ -74,12 +74,12 @@ class StatisticalErrorEvaluator:
 
     def load_data_from_file(self):
         """
-        Load data from the FITS file and return relevant arrays.
+        Load data from the dl2_mc_events_file FITS file and return relevant arrays.
 
         Returns
         -------
         dict
-            Dictionary containing arrays from the FITS file.
+            Dictionary containing arrays from the dl2_mc_events_file FITS file.
         """
         data = {}
         try:
