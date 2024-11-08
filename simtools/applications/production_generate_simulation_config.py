@@ -20,9 +20,9 @@ ctao_data_level (str, required)
 science_case (str, required)
     The science case for the simulation.
 file_path (str, required)
-    Path to the FITS file used for statistical uncertainty evaluation.
+    Path to the dl2_mc_events_file FITS file used for statistical uncertainty evaluation.
 file_type (str, required)
-    Type of the FITS file ('On-source' or 'Offset').
+    Type of the dl2_mc_events_file FITS file ('On-source' or 'Offset').
 metrics (str, optional)
     Path to a YAML file containing metrics for evaluation.
 site (str, required)
@@ -78,13 +78,13 @@ def _parse(label):
         "--science_case", type=str, required=True, help="Science case for the simulation."
     )
     config.parser.add_argument(
-        "--file_path", type=str, required=True, help="Path to the FITS file."
+        "--file_path", type=str, required=True, help="Path to the dl2_mc_events_file FITS file."
     )
     config.parser.add_argument(
         "--file_type",
         type=str,
         required=True,
-        help="Type of the FITS file ('On-source' or 'Offset').",
+        help="Type of the dl2_mc_events_file FITS file ('On-source' or 'Offset').",
     )
     config.parser.add_argument(
         "--metrics_file",
