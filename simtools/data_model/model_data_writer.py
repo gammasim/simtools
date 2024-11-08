@@ -154,8 +154,6 @@ class ModelDataWriter:
         dict
             Validated parameter dictionary.
         """
-        if output_path is not None:
-            output_path = Path(output_path) / model_version / instrument
         writer = ModelDataWriter(
             product_data_file=output_file,
             product_data_format="json",
