@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import copy
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import astropy.units as u
 import pytest
@@ -193,32 +193,35 @@ def test_run_simulations_and_analysis(mock_telescope_model_string, mock_find_fil
         label = "test_label"
         mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
 
-        mock_ray_instance = mock_ray_tracing.return_value
-        mock_ray_instance.get_mean.return_value = 0.5 * u.cm
-        mock_ray_instance.get_std_dev.return_value = 0.1 * u.cm
+        with patch.object(mirror_panel_psf, "telescope_model", MagicMock()) as mock_telescope_model:
+            mock_telescope_model.change_parameter = MagicMock()
 
-        mean_d80, sig_d80 = mirror_panel_psf.run_simulations_and_analysis(rnda)
+            mock_ray_instance = mock_ray_tracing.return_value
+            mock_ray_instance.get_mean.return_value = 0.5 * u.cm
+            mock_ray_instance.get_std_dev.return_value = 0.1 * u.cm
 
-        mirror_panel_psf.telescope_model.change_parameter.assert_called_once_with(
-            "mirror_reflection_random_angle", rnda
-        )
-        mock_ray_tracing.assert_called_once_with(
-            telescope_model=mirror_panel_psf.telescope_model,
-            simtel_path=mirror_panel_psf.args_dict.get("simtel_path", None),
-            single_mirror_mode=True,
-            mirror_numbers=(
-                list(range(1, mirror_panel_psf.args_dict["number_of_mirrors_to_test"] + 1))
-                if mirror_panel_psf.args_dict["test"]
-                else "all"
-            ),
-            use_random_focal_length=mirror_panel_psf.args_dict["use_random_focal_length"],
-        )
-        mock_ray_instance.simulate.assert_called_once_with(
-            test=mirror_panel_psf.args_dict["test"], force=True
-        )
-        mock_ray_instance.analyze.assert_called_once_with(force=True)
-        assert mean_d80 == 0.5
-        assert sig_d80 == 0.1
+            mean_d80, sig_d80 = mirror_panel_psf.run_simulations_and_analysis(rnda)
+
+            mirror_panel_psf.telescope_model.change_parameter.assert_called_once_with(
+                "mirror_reflection_random_angle", rnda
+            )
+            mock_ray_tracing.assert_called_once_with(
+                telescope_model=mirror_panel_psf.telescope_model,
+                simtel_path=mirror_panel_psf.args_dict.get("simtel_path", None),
+                single_mirror_mode=True,
+                mirror_numbers=(
+                    list(range(1, mirror_panel_psf.args_dict["number_of_mirrors_to_test"] + 1))
+                    if mirror_panel_psf.args_dict["test"]
+                    else "all"
+                ),
+                use_random_focal_length=mirror_panel_psf.args_dict["use_random_focal_length"],
+            )
+            mock_ray_instance.simulate.assert_called_once_with(
+                test=mirror_panel_psf.args_dict["test"], force=True
+            )
+            mock_ray_instance.analyze.assert_called_once_with(force=True)
+            assert mean_d80 == 0.5
+            assert sig_d80 == 0.1
 
 
 def test_print_results(mock_mirror_panel_psf, capsys):
