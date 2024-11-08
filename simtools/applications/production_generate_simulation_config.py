@@ -48,7 +48,6 @@ import os
 from pathlib import Path
 
 import astropy.units as u
-import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -127,15 +126,14 @@ def load_metrics(file_path: str) -> dict:
         Example:
 
         metrics = {
-            "error_eff_area": 0.02,
-            "error_sig_eff_gh": 0.02,
-            "error_energy_estimate_bdt_reg_tree": 0.05,
-            "error_gamma_ray_psf": 0.01,
-            "error_image_template_methods": 0.03,}
+            "uncertainty_eff_area": 0.02,
+            "uncertainty_sig_eff_gh": 0.02,
+            "uncertainty_energy_estimate_bdt_reg_tree": 0.05,
+            "uncertainty_gamma_ray_psf": 0.01,
+            "uncertainty_image_template_methods": 0.03,}
     """
     if file_path and os.path.exists(file_path):
-        with open(file_path, encoding="utf-8") as file:
-            return yaml.safe_load(file)
+        return gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=True)
     return {}
 
 
