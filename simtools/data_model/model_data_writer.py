@@ -157,6 +157,8 @@ class ModelDataWriter:
         dict
             Validated parameter dictionary.
         """
+        if output_path is not None:
+            output_path = Path(output_path) / model_version / instrument
         writer = ModelDataWriter(
             product_data_file=output_file,
             product_data_format="json",
@@ -167,9 +169,11 @@ class ModelDataWriter:
         _json_dict = writer.get_validated_parameter_dict(
             parameter_name, value, instrument, model_version
         )
+        # TODO check if this makes sense
         if _json_dict.get("applicable", False) or overwrite_applicable:
             writer.write_dict_to_model_parameter_json(output_file, _json_dict)
-        print("FFFF", metadata)
+            # TODO write meta here to disk? yaml file?
+            print(metadata)
         return _json_dict
 
     def get_validated_parameter_dict(self, parameter_name, value, instrument, model_version):
@@ -391,6 +395,7 @@ class ModelDataWriter:
         """
         data_dict = ModelDataWriter.prepare_data_dict_for_writing(data_dict)
         try:
+            self._logger.info(f"Writing data to {self.io_handler.get_output_file(file_name)}")
             with open(self.io_handler.get_output_file(file_name), "w", encoding="UTF-8") as file:
                 json.dump(data_dict, file, indent=4, sort_keys=False, cls=JsonNumpyEncoder)
                 file.write("\n")

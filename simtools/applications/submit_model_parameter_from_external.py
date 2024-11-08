@@ -92,18 +92,13 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    output_file = (
-        args_dict.get("output_file")
-        if args_dict.get("output_file")
-        else f"{args_dict['parameter']}.json"
-    )
-
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name=args_dict["parameter"],
         value=args_dict["value"],
         instrument=args_dict["instrument"],
         model_version=args_dict["model_version"],
-        output_file=output_file,
+        output_file=Path(args_dict["parameter"]).with_suffix(".json"),
+        output_path=Path(args_dict["output_path"]) if args_dict.get("output_path") else None,
         use_plain_output_path=args_dict.get("use_plain_output_path"),
         metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
     )
