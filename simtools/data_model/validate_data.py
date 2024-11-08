@@ -79,10 +79,8 @@ class DataValidator:
         if self.data_file_name:
             self.validate_data_file()
         if isinstance(self.data_dict, dict):
-            print("FFFFFF", self.data_dict, is_model_parameter)
             if is_model_parameter:
                 self._prepare_model_parameter()
-            print("FFFFFF", self.data_dict, is_model_parameter)
             self._validate_data_dict()
             return self.data_dict
         if isinstance(self.data_table, Table):
