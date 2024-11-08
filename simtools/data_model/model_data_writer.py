@@ -126,7 +126,6 @@ class ModelDataWriter:
         output_path=None,
         use_plain_output_path=False,
         metadata=None,
-        overwrite_applicable=False,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -149,8 +148,6 @@ class ModelDataWriter:
             Use plain output path.
         metadata: dict
             Metadata dictionary.
-        overwrite_applicable: bool
-            Overwrite applicable parameter.
 
         Returns
         -------
@@ -169,11 +166,12 @@ class ModelDataWriter:
         _json_dict = writer.get_validated_parameter_dict(
             parameter_name, value, instrument, model_version
         )
-        # TODO check if this makes sense
-        if _json_dict.get("applicable", False) or overwrite_applicable:
-            writer.write_dict_to_model_parameter_json(output_file, _json_dict)
-            # TODO write meta here to disk? yaml file?
-            print(metadata)
+        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        if metadata is not None:
+            writer.write_metadata_to_yml(
+                metadata=metadata,
+                yml_file=output_path / f"{Path(output_file).stem}",
+            )
         return _json_dict
 
     def get_validated_parameter_dict(self, parameter_name, value, instrument, model_version):
@@ -386,7 +384,7 @@ class ModelDataWriter:
         file_name : str
             Name of output file.
         data_dict : dict
-            Dictionary to be written.
+            Data dictionary.
 
         Raises
         ------
