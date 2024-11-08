@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import copy
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import astropy.units as u
 import pytest
@@ -193,35 +193,32 @@ def test_run_simulations_and_analysis(mock_telescope_model_string, mock_find_fil
         label = "test_label"
         mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
 
-        with patch.object(mirror_panel_psf, "telescope_model", MagicMock()) as mock_telescope_model:
-            mock_telescope_model.change_parameter = MagicMock()
+        mock_ray_instance = mock_ray_tracing.return_value
+        mock_ray_instance.get_mean.return_value = 0.5 * u.cm
+        mock_ray_instance.get_std_dev.return_value = 0.1 * u.cm
 
-            mock_ray_instance = mock_ray_tracing.return_value
-            mock_ray_instance.get_mean.return_value = 0.5 * u.cm
-            mock_ray_instance.get_std_dev.return_value = 0.1 * u.cm
+        mean_d80, sig_d80 = mirror_panel_psf.run_simulations_and_analysis(rnda)
 
-            mean_d80, sig_d80 = mirror_panel_psf.run_simulations_and_analysis(rnda)
-
-            mirror_panel_psf.telescope_model.change_parameter.assert_called_once_with(
-                "mirror_reflection_random_angle", rnda
-            )
-            mock_ray_tracing.assert_called_once_with(
-                telescope_model=mirror_panel_psf.telescope_model,
-                simtel_path=mirror_panel_psf.args_dict.get("simtel_path", None),
-                single_mirror_mode=True,
-                mirror_numbers=(
-                    list(range(1, mirror_panel_psf.args_dict["number_of_mirrors_to_test"] + 1))
-                    if mirror_panel_psf.args_dict["test"]
-                    else "all"
-                ),
-                use_random_focal_length=mirror_panel_psf.args_dict["use_random_focal_length"],
-            )
-            mock_ray_instance.simulate.assert_called_once_with(
-                test=mirror_panel_psf.args_dict["test"], force=True
-            )
-            mock_ray_instance.analyze.assert_called_once_with(force=True)
-            assert mean_d80 == 0.5
-            assert sig_d80 == 0.1
+        mirror_panel_psf.telescope_model.change_parameter.assert_called_once_with(
+            "mirror_reflection_random_angle", rnda
+        )
+        mock_ray_tracing.assert_called_once_with(
+            telescope_model=mirror_panel_psf.telescope_model,
+            simtel_path=mirror_panel_psf.args_dict.get("simtel_path", None),
+            single_mirror_mode=True,
+            mirror_numbers=(
+                list(range(1, mirror_panel_psf.args_dict["number_of_mirrors_to_test"] + 1))
+                if mirror_panel_psf.args_dict["test"]
+                else "all"
+            ),
+            use_random_focal_length=mirror_panel_psf.args_dict["use_random_focal_length"],
+        )
+        mock_ray_instance.simulate.assert_called_once_with(
+            test=mirror_panel_psf.args_dict["test"], force=True
+        )
+        mock_ray_instance.analyze.assert_called_once_with(force=True)
+        assert mean_d80 == 0.5
+        assert sig_d80 == 0.1
 
 
 def test_print_results(mock_mirror_panel_psf, capsys):
@@ -274,17 +271,17 @@ def test_derive_random_reflection_angle_no_tuning(
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["no_tuning"] = True
     mirror_psf.rnda_start = 0.1
-    mirror_psf.run_simulations_and_analysis = patch(
+    with patch(
         mock_run_simulations_and_analysis_string,
         return_value=(0.5, 0.1),
-    ).start()
+    ) as mock_run_simulations_and_analysis:
 
-    mirror_psf.derive_random_reflection_angle()
+        mock_run_simulations_and_analysis.start()
+        mirror_psf.derive_random_reflection_angle()
 
-    assert mirror_psf.rnda_opt == 0.1
-    mirror_psf.run_simulations_and_analysis.assert_called_once_with(0.1, save_figures=False)
-    assert mirror_psf.mean_d80 == 0.5
-    assert mirror_psf.sig_d80 == 0.1
+        mock_run_simulations_and_analysis.assert_called_once_with(0.1, save_figures=False)
+        assert mirror_psf.mean_d80 == 0.5
+        assert mirror_psf.sig_d80 == 0.1
 
 
 def test_derive_random_reflection_angle_with_tuning(
