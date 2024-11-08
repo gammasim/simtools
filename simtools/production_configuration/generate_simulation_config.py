@@ -1,11 +1,10 @@
 """
 Module defines the `SimulationConfig` class.
 
-Used to configure and
-generate simulation parameters for a specific grid point in a statistical error
-evaluation setup. The class considers various parameters, such as azimuth,
-elevation, and night sky background, to compute core scatter areas, viewcones,
-and the required number of simulated events.
+Used to configure and generate simulation parameters for a specific grid point
+based on statistical uncertainties.
+The class considers parameters, such as azimuth, elevation, and night sky background,
+to compute core scatter area, viewcone, and the required number of simulated events.
 
 Key Components:
 ---------------
