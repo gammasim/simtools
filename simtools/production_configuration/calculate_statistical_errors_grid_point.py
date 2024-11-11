@@ -234,8 +234,6 @@ class StatisticalErrorEvaluator:
         -------
         efficiencies : array
             Array of calculated efficiencies.
-        uncertainties : array
-            Array of calculated uncertainties.
         relative_errors : array
             Array of relative uncertainties.
         """
@@ -277,7 +275,7 @@ class StatisticalErrorEvaluator:
             where=uncertainties > 0,
         )
 
-        return efficiencies, uncertainties, relative_errors
+        return efficiencies, relative_errors
 
     def calculate_energy_threshold(self):
         """
@@ -294,7 +292,7 @@ class StatisticalErrorEvaluator:
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
 
-        efficiencies, _, _ = self.compute_efficiency_and_errors(
+        efficiencies, _ = self.compute_efficiency_and_errors(
             triggered_event_histogram, simulated_event_histogram
         )
 
@@ -322,7 +320,7 @@ class StatisticalErrorEvaluator:
             self.data["event_energies_mc"], bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
-        _, _, relative_errors = self.compute_efficiency_and_errors(
+        _, relative_errors = self.compute_efficiency_and_errors(
             triggered_event_histogram, simulated_event_histogram
         )
         return {"relative_errors": relative_errors}
