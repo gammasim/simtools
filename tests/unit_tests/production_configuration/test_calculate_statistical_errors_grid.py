@@ -223,3 +223,21 @@ def test_calculate_overall_metric_invalid_metric(setup_evaluator):
     evaluator = setup_evaluator
     with pytest.raises(ValueError, match="Unsupported metric"):
         evaluator.calculate_overall_metric(metric="invalid_metric")
+
+
+def test_create_bin_edges():
+    """Test the creation of unique energy bin edges."""
+    evaluator = StatisticalErrorEvaluator(file_path="dummy_path", file_type="On-source")
+
+    evaluator.data = {
+        "bin_edges_low": np.array([1.0, 2.0, 3.0]),
+        "bin_edges_high": np.array([2.0, 3.0, 4.0]),
+    }
+
+    bin_edges = evaluator.create_bin_edges()
+    expected_bin_edges = np.array([1.0, 2.0, 3.0, 4.0])
+
+    assert isinstance(bin_edges, np.ndarray)
+    assert np.array_equal(
+        bin_edges, expected_bin_edges
+    ), f"Expected {expected_bin_edges}, got {bin_edges}"
