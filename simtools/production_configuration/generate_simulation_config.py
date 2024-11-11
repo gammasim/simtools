@@ -197,7 +197,7 @@ class SimulationConfig:
         _logger.info(f"avg_uncertainty {avg_uncertainty}")
         avg_uncertainty = avg_uncertainty.value
         # Calculate the base number of events from the evaluator
-        base_events = self._fetch_existing_events()
+        base_events = self._number_of_simulated_events()
 
         # Calculate required events
         uncertainty_factor = 1 / (1 - avg_uncertainty)
@@ -208,13 +208,13 @@ class SimulationConfig:
 
         return base_events * uncertainty_factor
 
-    def _fetch_existing_events(self) -> int:
+    def _number_of_simulated_events(self) -> int:
         """
-        Fetch the number of existing simulated events from files based on grid point conditions.
+        Fetch the number of simulated events from file.
 
         Returns
         -------
         int
-            The number of existing simulated events.
+            The number of simulated events.
         """
-        return np.sum(self.evaluator.data.get("simulated_event_histogram", [0]))
+        return self.evaluator.data.get("simulated_event_histogram", [0])

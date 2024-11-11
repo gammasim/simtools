@@ -365,18 +365,21 @@ class StatisticalErrorEvaluator:
             self.error_eff_area = self.calculate_error_eff_area()
             if self.error_eff_area:
                 avg_error = np.mean(self.error_eff_area["relative_errors"])
+                ref_value = self.metrics.get("error_eff_area", {}).get("target_error", 0.1)
                 _logger.info(
-                    f"Effective Area Error (avg): {avg_error:.3f}, "
-                    f"Reference: {self.metrics.get('error_eff_area'):.3f}"
+                    f"Effective Area Error (avg): {avg_error:.3f}, " f"Reference: {ref_value:.3f}"
                 )
 
         if "error_energy_estimate_bdt_reg_tree" in self.metrics:
             self.error_energy_estimate_bdt_reg_tree, self.sigma_energy, self.delta_energy = (
                 self.calculate_error_energy_estimate_bdt_reg_tree()
             )
+            ref_value = self.metrics.get("error_energy_estimate_bdt_reg_tree", {}).get(
+                "target_error", 0.1
+            )
             _logger.info(
                 f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
-                f"Reference: {self.metrics.get('error_energy_estimate_bdt_reg_tree'):.3f}"
+                f"Reference: {ref_value:.3f}"
             )
 
         self.metric_results = {
