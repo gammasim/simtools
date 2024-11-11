@@ -63,12 +63,9 @@ class StatisticalErrorEvaluator:
         self.data = self.load_data_from_file()
 
         self.error_eff_area = None
-        self.error_sig_eff_gh = None
         self.error_energy_estimate_bdt_reg_tree = None
         self.sigma_energy = None
         self.delta_energy = None
-        self.error_gamma_ray_psf = None
-        self.error_image_template_methods = None
 
         self.metric_results = None
         self.scaled_events = None
@@ -325,18 +322,6 @@ class StatisticalErrorEvaluator:
         )
         return {"relative_errors": relative_errors}
 
-    def calculate_error_sig_eff_gh(self):
-        """
-        Calculate the uncertainties on signal efficiency in gamma-hadron separation.
-
-        Returns
-        -------
-        float
-            The calculated uncertainty for signal efficiency.
-        """
-        # implement
-        return 0.02  # Placeholder value
-
     def calculate_error_energy_estimate_bdt_reg_tree(self):
         """
         Calculate the uncertainties in energy estimation.
@@ -374,30 +359,6 @@ class StatisticalErrorEvaluator:
 
         return overall_uncertainty, sigma_energy, delta_energy
 
-    def calculate_error_gamma_ray_psf(self):
-        """
-        Calculate the uncertainties on gamma-ray PSF (68, 80, and 95% containment radius).
-
-        Returns
-        -------
-        float
-            The calculated uncertainty for gamma-ray PSF.
-        """
-        # implement
-        return 0.01  # Placeholder value
-
-    def calculate_error_image_template_methods(self):
-        """
-        Calculate the uncertainties relevant for image template methods.
-
-        Returns
-        -------
-        float
-            The calculated uncertainty for image template methods.
-        """
-        # implement
-        return 0.05  # Placeholder value
-
     def calculate_metrics(self):
         """Calculate all defined metrics as specified in self.metrics and store results."""
         if "error_eff_area" in self.metrics:
@@ -409,13 +370,6 @@ class StatisticalErrorEvaluator:
                     f"Reference: {self.metrics.get('error_eff_area'):.3f}"
                 )
 
-        if "error_sig_eff_gh" in self.metrics:
-            self.error_sig_eff_gh = self.calculate_error_sig_eff_gh()
-            _logger.info(
-                f"Signal Efficiency Error: {self.error_sig_eff_gh:.3f}, "
-                f"Reference: {self.metrics.get('error_sig_eff_gh'):.3f}"
-            )
-
         if "error_energy_estimate_bdt_reg_tree" in self.metrics:
             self.error_energy_estimate_bdt_reg_tree, self.sigma_energy, self.delta_energy = (
                 self.calculate_error_energy_estimate_bdt_reg_tree()
@@ -425,27 +379,9 @@ class StatisticalErrorEvaluator:
                 f"Reference: {self.metrics.get('error_energy_estimate_bdt_reg_tree'):.3f}"
             )
 
-        if "error_gamma_ray_psf" in self.metrics:
-            self.error_gamma_ray_psf = self.calculate_error_gamma_ray_psf()
-            _logger.info(
-                f"Gamma-Ray PSF Error: {self.error_gamma_ray_psf:.3f} ,"
-                f"Reference: {self.metrics.get('error_gamma_ray_psf'):.3f}"
-            )
-
-        if "error_image_template_methods" in self.metrics:
-            self.error_image_template_methods = self.calculate_error_image_template_methods()
-            ref_value = self.metrics.get("error_image_template_methods")
-            _logger.info(
-                f"Image Template Methods Error: {self.error_image_template_methods:.3f}, "
-                f"Reference: {ref_value:.3f}"
-            )
-
         self.metric_results = {
             "error_eff_area": self.error_eff_area,
-            "error_sig_eff_gh": self.error_sig_eff_gh,
             "error_energy_estimate_bdt_reg_tree": self.error_energy_estimate_bdt_reg_tree,
-            "error_gamma_ray_psf": self.error_gamma_ray_psf,
-            "error_image_template_methods": self.error_image_template_methods,
         }
 
     def calculate_max_error_for_effective_area(self):
