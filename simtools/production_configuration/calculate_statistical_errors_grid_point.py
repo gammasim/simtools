@@ -383,6 +383,7 @@ class StatisticalErrorEvaluator:
             "error_eff_area": self.error_eff_area,
             "error_energy_estimate_bdt_reg_tree": self.error_energy_estimate_bdt_reg_tree,
         }
+        return self.metric_results
 
     def calculate_max_error_for_effective_area(self):
         """
