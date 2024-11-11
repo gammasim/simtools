@@ -402,35 +402,34 @@ class StatisticalErrorEvaluator:
         """Calculate all defined metrics as specified in self.metrics and store results."""
         if "error_eff_area" in self.metrics:
             self.error_eff_area = self.calculate_error_eff_area()
-            ref_value = self.metrics.get("error_eff_area")
             if self.error_eff_area:
                 avg_error = np.mean(self.error_eff_area["relative_errors"])
                 _logger.info(
-                    f"Effective Area Error (avg): {avg_error:.3f}, Reference: {ref_value:.3f}"
+                    f"Effective Area Error (avg): {avg_error:.3f}, "
+                    f"Reference: {self.metrics.get('error_eff_area'):.3f}"
                 )
 
         if "error_sig_eff_gh" in self.metrics:
             self.error_sig_eff_gh = self.calculate_error_sig_eff_gh()
-            ref_value = self.metrics.get("error_sig_eff_gh")
             _logger.info(
-                f"Signal Efficiency Error: {self.error_sig_eff_gh:.3f}, Reference: {ref_value:.3f}"
+                f"Signal Efficiency Error: {self.error_sig_eff_gh:.3f}, "
+                f"Reference: {self.metrics.get('error_sig_eff_gh'):.3f}"
             )
 
         if "error_energy_estimate_bdt_reg_tree" in self.metrics:
             self.error_energy_estimate_bdt_reg_tree, self.sigma_energy, self.delta_energy = (
                 self.calculate_error_energy_estimate_bdt_reg_tree()
             )
-            ref_value = self.metrics.get("error_energy_estimate_bdt_reg_tree")
             _logger.info(
                 f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
-                f"Reference: {ref_value:.3f}"
+                f"Reference: {self.metrics.get('error_energy_estimate_bdt_reg_tree'):.3f}"
             )
 
         if "error_gamma_ray_psf" in self.metrics:
             self.error_gamma_ray_psf = self.calculate_error_gamma_ray_psf()
-            ref_value = self.metrics.get("error_gamma_ray_psf")
             _logger.info(
-                f"Gamma-Ray PSF Error: {self.error_gamma_ray_psf:.3f}, Reference: {ref_value:.3f}"
+                f"Gamma-Ray PSF Error: {self.error_gamma_ray_psf:.3f} ,"
+                f"Reference: {self.metrics.get('error_gamma_ray_psf'):.3f}"
             )
 
         if "error_image_template_methods" in self.metrics:
