@@ -102,7 +102,7 @@ jobs:
             --cov --cov-report=xml
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v3.0.0
+      - uses: SonarSource/sonarqube-scan-action@v3.1.0
         if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
