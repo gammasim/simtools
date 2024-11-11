@@ -188,7 +188,6 @@ class SimulationConfig:
         int
             The number of simulated events required.
         """
-        # Obtain the statistical error evaluation metrics
         self.evaluator.calculate_metrics()
         metric_results = self.evaluator.metric_results
 
@@ -196,7 +195,7 @@ class SimulationConfig:
         error_eff_area = metric_results.get("error_eff_area", {"relative_errors": [0.1]})
         _logger.info(f"error_eff_area {error_eff_area}")
         avg_uncertainty = np.mean(error_eff_area["relative_errors"])
-        print("avg_uncertainty", avg_uncertainty)
+        _logger.info(f"avg_uncertainty {avg_uncertainty}")
         avg_uncertainty = avg_uncertainty.value
         # Calculate the base number of events from the evaluator
         base_events = self._fetch_existing_events()
@@ -205,8 +204,8 @@ class SimulationConfig:
         uncertainty_factor = 1 / (1 - avg_uncertainty)
         if self.science_case == "science case 1":
             uncertainty_factor *= 1.5
-        print("base_events", base_events)
-        print("uncertainty_factor", uncertainty_factor)
+        _logger.info(f"base_events {base_events}")
+        _logger.info(f"uncertainty_factor {uncertainty_factor}")
 
         return base_events * uncertainty_factor
 
