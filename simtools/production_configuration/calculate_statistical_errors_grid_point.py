@@ -221,7 +221,7 @@ class StatisticalErrorEvaluator:
 
     def compute_efficiency_and_errors(self, triggered_event_counts, simulated_event_counts):
         """
-        Compute energy efficiency and its statistical error using the binomial distribution.
+        Compute trigger efficiency and its statistical error using the binomial distribution.
 
         Parameters
         ----------
