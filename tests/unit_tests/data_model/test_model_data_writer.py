@@ -223,7 +223,7 @@ def test_dump_model_parameter(tmp_test_directory):
         output_path=tmp_test_directory,
         use_plain_output_path=True,
     )
-    assert Path(tmp_test_directory / model_version / instrument / "num_gains.json").is_file()
+    assert Path(tmp_test_directory / "num_gains.json").is_file()
     assert isinstance(num_gains_dict, dict)
     assert num_gains_dict["value"] == 2
     assert num_gains_dict["unit"] == u.dimensionless_unscaled
@@ -237,19 +237,15 @@ def test_dump_model_parameter(tmp_test_directory):
         output_file="array_element_position_utm.json",
         output_path=tmp_test_directory,
         use_plain_output_path=True,
-        metadata={"name": "test_metadata"},
+        metadata_input_dict={"name": "test_metadata"},
     )
-    assert Path(
-        tmp_test_directory / model_version / instrument / "array_element_position_utm.json"
-    ).is_file()
+    assert Path(tmp_test_directory / "array_element_position_utm.json").is_file()
     assert isinstance(position_dict, dict)
     value_list = [float(value) for value in position_dict["value"].split()]
     assert pytest.approx(value_list[0]) == 217659.6
     assert pytest.approx(value_list[1]) == 3184995.1
     assert pytest.approx(value_list[2]) == 2185.0
-    assert Path(
-        tmp_test_directory / model_version / instrument / "array_element_position_utm.metadata.yml"
-    ).is_file()
+    assert Path(tmp_test_directory / "array_element_position_utm.metadata.yml").is_file()
 
 
 def test_get_validated_parameter_dict():
