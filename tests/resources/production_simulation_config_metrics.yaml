@@ -4,8 +4,18 @@
 #   error_energy_estimate_bdt_reg_tree: Error in energy estimation using BDT regression
 
 error_eff_area:
-  target_error: 0.02
-  valid_range: [0.04, 200]  # Energy range in TeV
+  target_error:
+    value: 0.02
+  valid_range:
+    value:
+      - 0.04
+      - 200
+    unit: TeV
 error_energy_estimate_bdt_reg_tree:
-  target_error: 0.05
-  valid_range: [0.04, 200]  # Energy range in TeV
+  target_error:
+    value: 0.05
+  valid_range:
+    value:
+      - 0.04
+      - 200
+    unit: TeV
