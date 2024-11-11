@@ -182,6 +182,7 @@ class StatisticalErrorEvaluator:
 
         except (FileNotFoundError, KeyError) as e:
             _logger.error(f"Error loading file {self.file_path}: {e}")
+            raise FileNotFoundError from e
         return data
 
     def create_bin_edges(self):
