@@ -113,11 +113,11 @@ class StatisticalErrorEvaluator:
                 # Check and apply units to each column, raising an error if the unit is missing
                 if not event_units["ENERGY"]:
                     raise ValueError("Unit for ENERGY in EVENTS data is missing.")
-                event_energies = events_data["ENERGY"] * event_units["ENERGY"]
+                event_energies_reco = events_data["ENERGY"] * event_units["ENERGY"]
 
                 if not event_units["MC_ENERGY"]:
                     raise ValueError("Unit for MC_ENERGY in EVENTS data is missing.")
-                mc_energies = events_data["MC_ENERGY"] * event_units["MC_ENERGY"]
+                event_energies_mc = events_data["MC_ENERGY"] * event_units["MC_ENERGY"]
 
                 if not sim_units["MC_ENERG_LO"]:
                     raise ValueError("Unit for MC_ENERG_LO in SIMULATED EVENTS data is missing.")
@@ -133,8 +133,8 @@ class StatisticalErrorEvaluator:
                 core_range = hdul[3].data["core_range"][0][1]  # pylint: disable=E1101
 
                 data = {
-                    "event_energies": event_energies,
-                    "mc_energies": mc_energies,
+                    "event_energies": event_energies_reco,
+                    "mc_energies": event_energies_mc,
                     "bin_edges_low": bin_edges_low,
                     "bin_edges_high": bin_edges_high,
                     "simulated_event_histogram": simulated_event_histogram,
