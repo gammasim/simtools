@@ -60,7 +60,7 @@ def test_initialization(test_fits_file):
     assert evaluator.file_path == test_fits_file
     assert evaluator.file_type == "On-source"
     assert isinstance(evaluator.data, dict)
-    assert "event_energies" in evaluator.data
+    assert "event_energies_reco" in evaluator.data
 
 
 def test_calculate_error_eff_area(test_fits_file):

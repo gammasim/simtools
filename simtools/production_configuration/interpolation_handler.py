@@ -178,7 +178,7 @@ class InterpolationHandler:
         plt.plot(midpoints, evaluator.scaled_events, label="Scaled")
 
         triggered_event_histogram, _ = np.histogram(
-            evaluator.data["event_energies"], bins=evaluator.data["bin_edges_low"]
+            evaluator.data["event_energies_reco"], bins=evaluator.data["bin_edges_low"]
         )
         plt.plot(midpoints[:-1], triggered_event_histogram, label="Triggered")
 
