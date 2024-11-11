@@ -32,7 +32,7 @@ def generate_markdown_report(output_folder, args_dict, data):
     """Generate a markdown file to report the parameter values."""
     io_handler_instance = io_handler.IOHandler()
     output_path = io_handler_instance.get_output_directory(output_folder)
-    output_filename = f'{output_path}/{args_dict["telescope"]}_v_{args_dict["model_version"]}.md'
+    output_filename = f'{output_path}/v{args_dict["model_version"]}_{args_dict["telescope"]}.md'
 
     # Start writing the Markdown file
     with open(output_filename, "w", encoding="utf-8") as file:
@@ -70,6 +70,6 @@ if __name__ == "__main__":
     generate_markdown_report(label_name, args, parameter_data)
 
     logger.info(
-        f"Markdown report generated: {args['site']}"
-        f" Telescope {args['telescope']} (model version {args['model_version']})"
+        f"Markdown report generated for {args['site']}"
+        f" Telescope {args['telescope']} (v{args['model_version']})"
     )

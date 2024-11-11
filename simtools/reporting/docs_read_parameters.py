@@ -4,7 +4,6 @@ r"""Class to read and manage relevant model parameters for a given telescope mod
 
 import logging
 
-from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.utils import names
 
 
@@ -56,11 +55,12 @@ class ReadParameters:
         parameter_names = parameter_descriptions[0].keys()
 
         data = []
+
         for parameter in parameter_names:
 
-            try:
+            if self.telescope_model.has_parameter(parameter):
                 value = self.telescope_model.get_parameter_value_with_unit(parameter)
-            except InvalidModelParameterError:  # if parameter not in telescope model
+            else:
                 continue
 
             description = parameter_descriptions[0].get(parameter)
