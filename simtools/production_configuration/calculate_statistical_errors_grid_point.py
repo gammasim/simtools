@@ -364,10 +364,23 @@ class StatisticalErrorEvaluator:
         if "error_eff_area" in self.metrics:
             self.error_eff_area = self.calculate_error_eff_area()
             if self.error_eff_area:
-                avg_error = np.mean(self.error_eff_area["relative_errors"])
-                ref_value = self.metrics.get("error_eff_area", {}).get("target_error", 0.1)
+                validity_range = self.metrics.get("error_eff_area", {}).get("valid_range")
+                min_energy, max_energy = validity_range["value"][0] * u.Unit(
+                    validity_range["unit"]
+                ), validity_range["value"][1] * u.Unit(validity_range["unit"])
+
+                valid_errors = [
+                    error
+                    for energy, error in zip(
+                        self.data["bin_edges_low"], self.error_eff_area["relative_errors"]
+                    )
+                    if min_energy <= energy <= max_energy
+                ]
+                max_error = max(valid_errors) if valid_errors else 0.0
+                ref_value = self.metrics.get("error_eff_area", {}).get("target_error")["value"]
                 _logger.info(
-                    f"Effective Area Error (avg): {avg_error:.3f}, " f"Reference: {ref_value:.3f}"
+                    f"Effective Area Error (max in validity range): {max_error.value:.3f}, "
+                    f"Reference: {ref_value:.3f}"
                 )
 
         if "error_energy_estimate_bdt_reg_tree" in self.metrics:
@@ -375,8 +388,8 @@ class StatisticalErrorEvaluator:
                 self.calculate_error_energy_estimate_bdt_reg_tree()
             )
             ref_value = self.metrics.get("error_energy_estimate_bdt_reg_tree", {}).get(
-                "target_error", 0.1
-            )
+                "target_error"
+            )["value"]
             _logger.info(
                 f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
                 f"Reference: {ref_value:.3f}"
