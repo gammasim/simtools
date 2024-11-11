@@ -141,11 +141,10 @@ class StatisticalErrorEvaluator:
                     "viewcone": viewcone,
                     "core_range": core_range,
                 }
+                unique_azimuths = np.unique(events_data["PNT_AZ"])
+                unique_zeniths = np.unique(events_data["PNT_ALT"])
 
                 if self.grid_point is None:
-                    unique_azimuths = np.unique(events_data["PNT_AZ"])
-                    unique_zeniths = np.unique(events_data["PNT_ALT"])
-
                     _logger.info(f"Unique azimuths: {unique_azimuths}")
                     _logger.info(f"Unique zeniths: {unique_zeniths}")
 
@@ -171,6 +170,7 @@ class StatisticalErrorEvaluator:
                         f"Grid point already set to: {self.grid_point}. "
                         "Overwriting with new values from file."
                     )
+
                     self.grid_point = (
                         0,
                         unique_azimuths[0],
