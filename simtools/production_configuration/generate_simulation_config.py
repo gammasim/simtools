@@ -188,8 +188,7 @@ class SimulationConfig:
         int
             The number of simulated events required.
         """
-        self.evaluator.calculate_metrics()
-        metric_results = self.evaluator.metric_results
+        metric_results = self.evaluator.calculate_metrics()
 
         # Calculate average uncertainty from metrics, use 0.1 as default if not found
         error_eff_area = metric_results.get("error_eff_area", {"relative_errors": [0.1]})
