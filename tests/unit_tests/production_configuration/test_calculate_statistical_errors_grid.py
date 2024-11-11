@@ -1,3 +1,4 @@
+import astropy.units as u
 import numpy as np
 import pytest
 from astropy.io import fits
@@ -241,3 +242,24 @@ def test_create_bin_edges():
     assert np.array_equal(
         bin_edges, expected_bin_edges
     ), f"Expected {expected_bin_edges}, got {bin_edges}"
+
+
+def test_compute_efficiency_and_errors():
+    evaluator = StatisticalErrorEvaluator(file_path="dummy_path", file_type="On-source")
+
+    triggered_event_counts = np.array([10, 20, 5, 0]) * u.ct
+    simulated_event_counts = np.array([50, 40, 10, 0]) * u.ct
+
+    efficiencies, relative_errors = evaluator.compute_efficiency_and_errors(
+        triggered_event_counts, simulated_event_counts
+    )
+
+    expected_efficiencies = np.array([0.2, 0.5, 0.5, 0.0]) * u.dimensionless_unscaled
+    expected_relative_errors = np.array([0.04, 0.05, 0.0, 0.0])
+
+    assert np.allclose(
+        efficiencies, expected_efficiencies, atol=1e-2
+    ), f"Expected efficiencies {expected_efficiencies}, but got {efficiencies}"
+    assert np.allclose(
+        relative_errors, expected_relative_errors, atol=1e-2
+    ), f"Expected relative errors {expected_relative_errors}, but got {relative_errors}"
