@@ -145,8 +145,8 @@ def main():
         "Generate a grid of simulation points using flexible axes definitions.",
     )
 
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    _logger = logging.getLogger()
+    _logger.setLevel(logging.INFO)
 
     output_path = io_handler.IOHandler().get_output_directory(label)
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
@@ -208,9 +208,9 @@ def main():
         if output_file:
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(output_data)
-            print(f"Output saved to {output_file}")
+            _logger.info(f"Output saved to {output_file}")
         else:
-            print(output_data)
+            _logger.info(output_data)
 
     clean_grid_output(grid_points, output_file=output_filepath)
 

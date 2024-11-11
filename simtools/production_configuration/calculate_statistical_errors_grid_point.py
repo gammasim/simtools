@@ -404,12 +404,14 @@ class StatisticalErrorEvaluator:
             ref_value = self.metrics.get("error_eff_area")
             if self.error_eff_area:
                 avg_error = np.mean(self.error_eff_area["relative_errors"])
-                print(f"Effective Area Error (avg): {avg_error:.3f}, Reference: {ref_value:.3f}")
+                _logger.info(
+                    f"Effective Area Error (avg): {avg_error:.3f}, Reference: {ref_value:.3f}"
+                )
 
         if "error_sig_eff_gh" in self.metrics:
             self.error_sig_eff_gh = self.calculate_error_sig_eff_gh()
             ref_value = self.metrics.get("error_sig_eff_gh")
-            print(
+            _logger.info(
                 f"Signal Efficiency Error: {self.error_sig_eff_gh:.3f}, Reference: {ref_value:.3f}"
             )
 
@@ -418,7 +420,7 @@ class StatisticalErrorEvaluator:
                 self.calculate_error_energy_estimate_bdt_reg_tree()
             )
             ref_value = self.metrics.get("error_energy_estimate_bdt_reg_tree")
-            print(
+            _logger.info(
                 f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
                 f"Reference: {ref_value:.3f}"
             )
@@ -426,14 +428,14 @@ class StatisticalErrorEvaluator:
         if "error_gamma_ray_psf" in self.metrics:
             self.error_gamma_ray_psf = self.calculate_error_gamma_ray_psf()
             ref_value = self.metrics.get("error_gamma_ray_psf")
-            print(
+            _logger.info(
                 f"Gamma-Ray PSF Error: {self.error_gamma_ray_psf:.3f}, Reference: {ref_value:.3f}"
             )
 
         if "error_image_template_methods" in self.metrics:
             self.error_image_template_methods = self.calculate_error_image_template_methods()
             ref_value = self.metrics.get("error_image_template_methods")
-            print(
+            _logger.info(
                 f"Image Template Methods Error: {self.error_image_template_methods:.3f}, "
                 f"Reference: {ref_value:.3f}"
             )
@@ -530,7 +532,7 @@ class StatisticalErrorEvaluator:
                 overall_max_errors[metric_name] = result
             else:
                 raise ValueError(f"Unsupported result type for {metric_name}: {type(result)}")
-        print("overall_max_errors", overall_max_errors)
+        _logger.info(f"overall_max_errors {overall_max_errors}")
         all_max_errors = list(overall_max_errors.values())
         if metric == "average":
             overall_metric = np.mean(all_max_errors)
