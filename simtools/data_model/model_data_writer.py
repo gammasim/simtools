@@ -12,6 +12,7 @@ from astropy.io.registry.base import IORegistryError
 import simtools.utils.general as gen
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import validate_data
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
 from simtools.utils import names
 
@@ -125,7 +126,7 @@ class ModelDataWriter:
         output_file,
         output_path=None,
         use_plain_output_path=False,
-        metadata=None,
+        metadata_input_dict=None,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -146,8 +147,8 @@ class ModelDataWriter:
             Path to output file.
         use_plain_output_path: bool
             Use plain output path.
-        metadata: dict
-            Metadata dictionary.
+        metadata_input_dict: dict
+            Input to metadata collector.
 
         Returns
         -------
@@ -165,9 +166,11 @@ class ModelDataWriter:
             parameter_name, value, instrument, model_version
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
-        if metadata is not None:
+        if metadata_input_dict is not None:
+            metadata_input_dict["output_file"] = output_file
+            metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
             writer.write_metadata_to_yml(
-                metadata=metadata,
+                metadata=MetadataCollector(args_dict=metadata_input_dict).top_level_meta,
                 yml_file=output_path / f"{Path(output_file).stem}",
             )
         return _json_dict

@@ -44,7 +44,6 @@ from pathlib import Path
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.data_model.metadata_collector import MetadataCollector
 
 
 def _parse(label, description):
@@ -98,7 +97,6 @@ def main():  # noqa: D103
         if args_dict.get("output_path")
         else None
     )
-
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name=args_dict["parameter"],
         value=args_dict["value"],
@@ -107,7 +105,7 @@ def main():  # noqa: D103
         output_file=Path(args_dict["parameter"]).with_suffix(".json"),
         output_path=output_path,
         use_plain_output_path=args_dict.get("use_plain_output_path"),
-        metadata=MetadataCollector(args_dict=args_dict).top_level_meta,
+        metadata_input_dict=args_dict,
     )
 
 
