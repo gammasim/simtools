@@ -133,8 +133,8 @@ class StatisticalErrorEvaluator:
                 core_range = hdul[3].data["core_range"][0][1]  # pylint: disable=E1101
 
                 data = {
-                    "event_energies": event_energies_reco,
-                    "mc_energies": event_energies_mc,
+                    "event_energies_reco": event_energies_reco,
+                    "event_energies_mc": event_energies_mc,
                     "bin_edges_low": bin_edges_low,
                     "bin_edges_high": bin_edges_high,
                     "simulated_event_histogram": simulated_event_histogram,
@@ -198,13 +198,13 @@ class StatisticalErrorEvaluator:
         bin_edges = np.concatenate([bin_edges_low, [bin_edges_high[-1]]])
         return np.unique(bin_edges)
 
-    def compute_histogram(self, event_energies, bin_edges):
+    def compute_histogram(self, event_energies_reco, bin_edges):
         """
         Compute histogram for triggered events.
 
         Parameters
         ----------
-        event_energies : array
+        event_energies_reco : array
             Array of energies of the observed events.
         bin_edges : array
             Array of energy bin edges.
@@ -214,9 +214,9 @@ class StatisticalErrorEvaluator:
         triggered_event_histogram : array
             Histogram of triggered events.
         """
-        event_energies = event_energies.to(bin_edges.unit)
+        event_energies_reco = event_energies_reco.to(bin_edges.unit)
 
-        triggered_event_histogram, _ = np.histogram(event_energies.value, bins=bin_edges.value)
+        triggered_event_histogram, _ = np.histogram(event_energies_reco.value, bins=bin_edges.value)
         return triggered_event_histogram * u.count
 
     def compute_efficiency_and_errors(self, triggered_event_counts, simulated_event_counts):
@@ -289,7 +289,9 @@ class StatisticalErrorEvaluator:
             Energy threshold value.
         """
         bin_edges = self.create_bin_edges()
-        triggered_event_histogram = self.compute_histogram(self.data["event_energies"], bin_edges)
+        triggered_event_histogram = self.compute_histogram(
+            self.data["event_energies_mc"], bin_edges
+        )
         simulated_event_histogram = self.data["simulated_event_histogram"]
 
         efficiencies, _, _ = self.compute_efficiency_and_errors(
@@ -316,7 +318,9 @@ class StatisticalErrorEvaluator:
             Dictionary with uncertainties for the file.
         """
         bin_edges = self.create_bin_edges()
-        triggered_event_histogram = self.compute_histogram(self.data["event_energies"], bin_edges)
+        triggered_event_histogram = self.compute_histogram(
+            self.data["event_energies_mc"], bin_edges
+        )
         simulated_event_histogram = self.data["simulated_event_histogram"]
         _, _, relative_errors = self.compute_efficiency_and_errors(
             triggered_event_histogram, simulated_event_histogram
@@ -346,16 +350,16 @@ class StatisticalErrorEvaluator:
         """
         logging.info("Calculating Energy Resolution Error")
 
-        event_energies = self.data["event_energies"]
-        mc_energies = self.data["mc_energies"]
+        event_energies_reco = self.data["event_energies_reco"]
+        event_energies_mc = self.data["event_energies_mc"]
 
-        if len(event_energies) != len(mc_energies):
+        if len(event_energies_reco) != len(event_energies_mc):
             raise ValueError(f"Mismatch in the number of energies for file {self.file_path}")
 
-        energy_deviation = (event_energies - mc_energies) / mc_energies
+        energy_deviation = (event_energies_reco - event_energies_mc) / event_energies_mc
 
         bin_edges = self.create_bin_edges()
-        bin_indices = np.digitize(event_energies, bin_edges) - 1
+        bin_indices = np.digitize(event_energies_reco, bin_edges) - 1
 
         energy_deviation_by_bin = [
             energy_deviation[bin_indices == i] for i in range(len(bin_edges) - 1)
