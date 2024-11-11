@@ -141,9 +141,8 @@ class StatisticalErrorEvaluator:
                     "viewcone": viewcone,
                     "core_range": core_range,
                 }
-                unique_azimuths = np.unique(events_data["PNT_AZ"])
-                unique_zeniths = np.unique(events_data["PNT_ALT"])
-
+                unique_azimuths = np.unique(events_data["PNT_AZ"]) * u.deg
+                unique_zeniths = np.unique(events_data["PNT_ALT"]) * u.deg
                 if self.grid_point is None:
                     _logger.info(f"Unique azimuths: {unique_azimuths}")
                     _logger.info(f"Unique zeniths: {unique_zeniths}")
@@ -154,11 +153,11 @@ class StatisticalErrorEvaluator:
                             f" zenith: {unique_zeniths[0]}"
                         )
                         self.grid_point = (
-                            0,
+                            1 * u.TeV,
                             unique_azimuths[0],
                             unique_zeniths[0],
                             0,
-                            0,
+                            0 * u.deg,
                         )  # Initialize grid point with azimuth and zenith
                     else:
                         _logger.warning(
@@ -172,11 +171,11 @@ class StatisticalErrorEvaluator:
                     )
 
                     self.grid_point = (
-                        0,
+                        1 * u.TeV,
                         unique_azimuths[0],
                         unique_zeniths[0],
                         0,
-                        0,
+                        0 * u.deg,
                     )
                     _logger.info(f"New grid point values: {self.grid_point}")
 

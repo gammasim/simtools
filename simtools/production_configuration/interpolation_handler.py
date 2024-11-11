@@ -1,5 +1,6 @@
 """Interpolates between instances of StatisticalErrorEvaluator."""
 
+import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import griddata
@@ -16,10 +17,10 @@ class InterpolationHandler:
         self.evaluators = evaluators
 
         # Collect all grid points for each dimension (no uniqueness applied)
-        self.azimuths = np.array([e.grid_point[1] for e in self.evaluators])
-        self.zeniths = np.array([e.grid_point[2] for e in self.evaluators])
-        self.nsbs = np.array([e.grid_point[3] for e in self.evaluators])
-        self.offsets = np.array([e.grid_point[4] for e in self.evaluators])
+        self.azimuths = [e.grid_point[1].to(u.deg).value for e in self.evaluators]
+        self.zeniths = [e.grid_point[2].to(u.deg).value for e in self.evaluators]
+        self.nsbs = [e.grid_point[3] for e in self.evaluators]
+        self.offsets = [e.grid_point[4].to(u.deg).value for e in self.evaluators]
 
         # Collect energy grids and corresponding scaled events
         self.energy_grids = [
@@ -50,13 +51,13 @@ class InterpolationHandler:
         for e, energy_grid, scaled_events in zip(
             self.evaluators, self.energy_grids, self.scaled_events
         ):
-            az = np.full(len(energy_grid), e.grid_point[1])
-            zen = np.full(len(energy_grid), e.grid_point[2])
+            az = np.full(len(energy_grid), e.grid_point[1].to(u.deg).value)
+            zen = np.full(len(energy_grid), e.grid_point[2].to(u.deg).value)
             nsb = np.full(len(energy_grid), e.grid_point[3])
-            offset = np.full(len(energy_grid), e.grid_point[4])
+            offset = np.full(len(energy_grid), e.grid_point[4].to(u.deg).value)
 
             # Combine grid points and data
-            grid_points = np.column_stack([energy_grid, az, zen, nsb, offset])
+            grid_points = np.column_stack([energy_grid.to(u.TeV).value, az, zen, nsb, offset])
             flat_grid_points.append(grid_points)
             flat_data_list.append(scaled_events)
 

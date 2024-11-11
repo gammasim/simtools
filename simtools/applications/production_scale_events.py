@@ -37,6 +37,7 @@ import logging
 import os
 from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 
 from simtools.configuration import configurator
@@ -124,7 +125,7 @@ def main():
                             "error_gamma_ray_psf": 0.01,
                             "error_image_template_methods": 0.03,
                         },
-                        grid_point=(1, 180, zenith.value, 0, offset),
+                        grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
                     )
                 )
 
