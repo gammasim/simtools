@@ -1,7 +1,6 @@
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.io import fits
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
@@ -10,49 +9,8 @@ from simtools.production_configuration.interpolation_handler import Interpolatio
 
 
 @pytest.fixture
-def test_fits_file(tmp_path):
-    file_path = tmp_path / "test_file.fits"
-    hdu_list = fits.HDUList(
-        [
-            fits.PrimaryHDU(),
-            fits.BinTableHDU(
-                name="EVENTS",
-                data=np.array(
-                    [(1.0, 1.0, 180, 20.0), (2.0, 2.0, 180, 70.0)],
-                    dtype=[
-                        ("ENERGY", "f4"),
-                        ("MC_ENERGY", "f4"),
-                        ("PNT_AZ", "f4"),
-                        ("PNT_ALT", "f4"),
-                    ],
-                ),
-            ),
-            fits.BinTableHDU(
-                name="SIMULATED EVENTS",
-                data=np.array(
-                    [
-                        (3e-03, 1.0e-02, 7e8),
-                        (1e3, 2, 5e8),
-                    ],
-                    dtype=[("MC_ENERG_LO", "f4"), ("MC_ENERG_HI", "f4"), ("EVENTS", "f4")],
-                ),
-            ),
-            fits.BinTableHDU(
-                name="INFO",
-                data=np.array(
-                    [
-                        ([0.0, 2800.0], [0.0, 10.0]),
-                    ],
-                    dtype=[
-                        ("core_range", ">f8", (2,)),
-                        ("viewcone", ">f8", (2,)),
-                    ],
-                ),
-            ),
-        ]
-    )
-    hdu_list.writeto(file_path, overwrite=True)
-    return file_path
+def test_fits_file():
+    return "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
 
 
 def test_initialization(test_fits_file):
@@ -82,10 +40,12 @@ def test_calculate_error_energy_estimate_bdt_reg_tree(test_fits_file):
     assert isinstance(delta, list)
 
 
-def test_handle_missing_file():
+def test_handle_missing_file(caplog):
     """Test error handling for missing file."""
-    evaluator = StatisticalErrorEvaluator(file_path="missing_file.fits", file_type="On-source")
-    assert evaluator.data == {}
+    with caplog.at_level("WARNING"):
+        StatisticalErrorEvaluator(file_path="missing_file.fits", file_type="On-source")
+
+    assert "File 'missing_file.fits' not found" in caplog.text
 
 
 def test_interpolation_handler(test_fits_file):
@@ -226,9 +186,9 @@ def test_calculate_overall_metric_invalid_metric(setup_evaluator):
         evaluator.calculate_overall_metric(metric="invalid_metric")
 
 
-def test_create_bin_edges():
+def test_create_bin_edges(test_fits_file):
     """Test the creation of unique energy bin edges."""
-    evaluator = StatisticalErrorEvaluator(file_path="dummy_path", file_type="On-source")
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, file_type="On-source")
 
     evaluator.data = {
         "bin_edges_low": np.array([1.0, 2.0, 3.0]),
@@ -244,8 +204,8 @@ def test_create_bin_edges():
     ), f"Expected {expected_bin_edges}, got {bin_edges}"
 
 
-def test_compute_efficiency_and_errors():
-    evaluator = StatisticalErrorEvaluator(file_path="dummy_path", file_type="On-source")
+def test_compute_efficiency_and_errors(test_fits_file):
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, file_type="On-source")
 
     triggered_event_counts = np.array([10, 20, 5, 0]) * u.ct
     simulated_event_counts = np.array([50, 40, 10, 0]) * u.ct
