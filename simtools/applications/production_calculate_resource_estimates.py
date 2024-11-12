@@ -63,7 +63,7 @@ def _parse(label):
         "--elevation", type=float, required=True, help="Elevation angle in degrees."
     )
     config.parser.add_argument(
-        "--nsb", type=float, required=True, help="Night sky background value."
+        "--nsb", type=float, required=True, help="Night sky background in units of 1/(sr*ns*cm**2)."
     )
     config.parser.add_argument("--site", type=str, required=True, help="South or North.")
     config.parser.add_argument(

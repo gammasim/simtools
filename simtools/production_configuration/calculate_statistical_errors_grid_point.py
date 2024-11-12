@@ -376,10 +376,11 @@ class StatisticalErrorEvaluator:
                     )
                     if min_energy <= energy <= max_energy
                 ]
-                max_error = max(valid_errors) if valid_errors else 0.0
+                self.error_eff_area["max_error"] = max(valid_errors) if valid_errors else 0.0
                 ref_value = self.metrics.get("error_eff_area", {}).get("target_error")["value"]
                 _logger.info(
-                    f"Effective Area Error (max in validity range): {max_error.value:.3f}, "
+                    f"Effective Area Error (max in validity range): "
+                    f"{self.error_eff_area['max_error'].value:.3f}, "
                     f"Reference: {ref_value:.3f}"
                 )
 
@@ -394,7 +395,6 @@ class StatisticalErrorEvaluator:
                 f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
                 f"Reference: {ref_value:.3f}"
             )
-
         self.metric_results = {
             "error_eff_area": self.error_eff_area,
             "error_energy_estimate_bdt_reg_tree": self.error_energy_estimate_bdt_reg_tree,
