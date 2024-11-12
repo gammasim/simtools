@@ -273,3 +273,35 @@ relative_files = true
 source = [
   "simtools",
 ]
+
+[tool.towncrier]
+package = "simtools"
+directory = "docs/changes"
+filename = "CHANGES.md"
+underlines = [ "", "", "" ]
+title_format = "## [{version}]https://github.com/gammasim/simtools/tree/{version}) - {project_date}"
+issue_format = "`#{issue} <https://github.com/gammasim/simtools/pull/{issue}>`__"
+
+[tool.towncrier.fragment.feature]
+name = "New Features"
+showcontent = true
+
+[tool.towncrier.fragment.bugfix]
+name = "Bug Fixes"
+showcontent = true
+
+[tool.towncrier.fragment.api]
+name = "API Changes"
+showcontent = true
+
+[tool.towncrier.fragment.optimization]
+name = "Refactoring and Optimization"
+showcontent = true
+
+[tool.towncrier.fragment.maintenance]
+name = "Maintenance"
+showcontent = true
+
+[[tool.towncrier.section]]
+name = ""
+path = ""

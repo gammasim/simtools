@@ -25,12 +25,5 @@ Belows's release statements are incomplete.
 
 - (bugfixes are not listed)
 
-## Template for new release
 
-### Added
-
-### Changed
-
-### Removed
-
-### Fixed
+<!-- towncrier release notes start -->
