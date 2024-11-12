@@ -11,7 +11,7 @@ import simtools.utils.general as gen
 _logger = logging.getLogger(__name__)
 
 
-def compare_files(file1, file2, tolerance=1.0e-5):
+def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     """
     Compare two files of file type ecsv, json or yaml.
 
@@ -23,6 +23,8 @@ def compare_files(file1, file2, tolerance=1.0e-5):
         Second file to compare
     tolerance: float
         Tolerance for comparing numerical values.
+    test_columns: list
+        List of columns to compare. If None, all columns are compared.
 
     Returns
     -------
@@ -35,7 +37,7 @@ def compare_files(file1, file2, tolerance=1.0e-5):
     if _file1_suffix != _file2_suffix:
         raise ValueError(f"File suffixes do not match: {file1} and {file2}")
     if _file1_suffix == ".ecsv":
-        return compare_ecsv_files(file1, file2, tolerance)
+        return compare_ecsv_files(file1, file2, tolerance, test_columns)
     if _file1_suffix in (".json", ".yaml", ".yml"):
         return compare_json_or_yaml_files(file1, file2)
 
@@ -79,7 +81,7 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     return data1 == data2
 
 
-def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
+def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     """
     Compare two ecsv files.
 
@@ -87,6 +89,14 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
 
     - same number of rows
     - numerical values in columns are close
+
+    The comparison can be restricted to a subset of columns with some additional
+    cuts applied. This is configured through the test_columns parameter. This is
+    a list of dictionaries, where each dictionary contains the following
+    key-value pairs:
+    - TEST_COLUMN_NAME: column name to compare.
+    - CUT_COLUMN_NAME: column for filtering.
+    - CUT_CONDITION: condition for filtering.
 
     Parameters
     ----------
@@ -96,18 +106,40 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5):
         Second file to compare
     tolerance: float
         Tolerance for comparing numerical values.
+    test_columns: list
+        List of columns to compare. If None, all columns are compared.
 
     """
     _logger.info(f"Comparing files: {file1} and {file2}")
     table1 = Table.read(file1, format="ascii.ecsv")
     table2 = Table.read(file2, format="ascii.ecsv")
 
-    comparison_result = len(table1) == len(table2)
+    if test_columns is None:
+        test_columns = [{"TEST_COLUMN_NAME": col} for col in table1.colnames]
 
-    for col_name in table1.colnames:
-        if np.issubdtype(table1[col_name].dtype, np.floating):
-            comparison_result = comparison_result and np.allclose(
-                table1[col_name], table2[col_name], rtol=tolerance
-            )
+    def generate_mask(table, column, condition):
+        """Generate a boolean mask based on the condition (note the usage of eval)."""
+        return (
+            eval(f"table['{column}'] {condition}")  # pylint: disable=eval-used
+            if condition
+            else np.ones(len(table), dtype=bool)
+        )
 
-    return comparison_result
+    for col_dict in test_columns:
+        col_name = col_dict["TEST_COLUMN_NAME"]
+        mask1 = generate_mask(
+            table1, col_dict.get("CUT_COLUMN_NAME", ""), col_dict.get("CUT_CONDITION", "")
+        )
+        mask2 = generate_mask(
+            table2, col_dict.get("CUT_COLUMN_NAME", ""), col_dict.get("CUT_CONDITION", "")
+        )
+        table1_masked, table2_masked = table1[mask1], table2[mask2]
+
+        if len(table1_masked) != len(table2_masked):
+            return False
+
+        if np.issubdtype(table1_masked[col_name].dtype, np.floating):
+            if not np.allclose(table1_masked[col_name], table2_masked[col_name], rtol=tolerance):
+                return False
+
+    return True

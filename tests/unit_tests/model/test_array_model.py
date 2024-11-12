@@ -10,7 +10,6 @@ from astropy.table import QTable
 from simtools.model.array_model import ArrayModel
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture

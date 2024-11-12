@@ -15,7 +15,6 @@ import simtools.utils.general as gen
 from simtools.testing import assertions, compare_output
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def get_application_command(app, config_file=None, config_string=None):
@@ -126,6 +125,7 @@ def validate_application_output(config):
                     config["CONFIGURATION"]["OUTPUT_FILE"]
                 ),
                 integration_test.get("TOLERANCE", 1.0e-5),
+                integration_test.get("TEST_COLUMNS", None),
             )
 
         if "OUTPUT_FILE" in integration_test:

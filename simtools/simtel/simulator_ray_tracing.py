@@ -1,6 +1,7 @@
 """Simulation runner for ray tracing simulations."""
 
 import logging
+from collections import namedtuple
 
 import astropy.units as u
 
@@ -57,7 +58,11 @@ class SimulatorRayTracing(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self._base_directory = self.io_handler.get_output_directory(self.label, "ray-tracing")
 
-        self.config = config_data
+        self.config = (
+            self._config_to_namedtuple(config_data)
+            if isinstance(config_data, dict)
+            else config_data
+        )
         self._rep_number = 0
         self.runs_per_set = 1 if self.config.single_mirror_mode else 20
         self.photons_per_run = 100000 if not test else 5000
@@ -87,7 +92,9 @@ class SimulatorRayTracing(SimtelRunner):
                 suffix=".log" if base_name == "log" else ".lis",
                 site=self.telescope_model.site,
                 telescope_model_name=self.telescope_model.name,
-                source_distance=self.config.source_distance,
+                source_distance=(
+                    None if self.config.single_mirror_mode else self.config.source_distance
+                ),
                 zenith_angle=self.config.zenith_angle,
                 off_axis_angle=self.config.off_axis_angle,
                 mirror_number=(
@@ -184,7 +191,7 @@ class SimulatorRayTracing(SimtelRunner):
             command += super().get_config_option("mirror_align_random_distance", "0.")
             command += super().get_config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
         command += " " + str(self._corsika_file)
-        command += " 2>&1 > " + str(self._log_file) + " 2>&1"
+        command += f" 2>&1 > {self._log_file} 2>&1"
 
         return command
 
@@ -231,3 +238,25 @@ class SimulatorRayTracing(SimtelRunner):
             file.write("30   1.0\n")
             file.write("60   1.0\n")
             file.write("90   1.0\n")
+
+    def _config_to_namedtuple(self, data_dict):
+        """Convert dict to namedtuple for configuration."""
+        config_data = namedtuple(
+            "Config",
+            [
+                "zenith_angle",
+                "off_axis_angle",
+                "source_distance",
+                "single_mirror_mode",
+                "use_random_focal_length",
+                "mirror_numbers",
+            ],
+        )
+        return config_data(
+            zenith_angle=data_dict["zenith_angle"],
+            off_axis_angle=data_dict["off_axis_angle"],
+            source_distance=data_dict["source_distance"],
+            single_mirror_mode=data_dict["single_mirror_mode"],
+            use_random_focal_length=data_dict["use_random_focal_length"],
+            mirror_numbers=data_dict["mirror_numbers"],
+        )
