@@ -69,7 +69,7 @@ def _parse(label):
         "--elevation", type=float, required=True, help="Elevation angle in degrees."
     )
     config.parser.add_argument(
-        "--nsb", type=float, required=True, help="Night sky background value."
+        "--nsb", type=float, required=True, help="Night sky background in units of 1/(sr*ns*cm**2)."
     )
     config.parser.add_argument(
         "--ctao_data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
@@ -153,7 +153,6 @@ def main():
         "night_sky_background": args["nsb"],
     }
 
-    # Load metrics if provided
     metrics = load_metrics(args["metrics_file"]) if args["metrics_file"] else {}
 
     simulation_config = SimulationConfig(
