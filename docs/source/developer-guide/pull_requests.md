@@ -38,7 +38,7 @@ Pull requests with changes relevant enough to be noted in the CHANGELOG should a
 Possible categories are (here for the example of pull request #1234):
 
 - `1234.feature.md` for new features
-- `1234.bugfix.md` for bug fixes
+- `1234.bugfix.md` for bugfixes
 - `1234.api.md` for changes to the API
 - `1234.doc.md` for documentation changes
 - `1234.maintenance.md` for maintenance changes
