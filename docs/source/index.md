@@ -4,7 +4,7 @@
 ## Table of Contents
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 User Guide <user-guide/index>
 API Docs <api-reference/index>
 Developer Guide <developer-guide/index>

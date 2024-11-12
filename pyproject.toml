@@ -303,7 +303,3 @@ showcontent = true
 [tool.towncrier.fragment.doc]
 name = "Documentation"
 showcontent = true
-
-[[tool.towncrier.section]]
-name = ""
-path = ""
