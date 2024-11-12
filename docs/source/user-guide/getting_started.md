@@ -77,7 +77,7 @@ CTAO users can download both packages from the [sim_telarray web page](https://w
 
 ```console
 tar -czf corsika7.7_simtelarray.tar.gz
-./build_all prod5 qgs2 gsl
+./build_all prod6-sc qgs2 gsl
 ```
 
 The environmental variable `$SIMTOOLS_SIMTEL_PATH` should point towards the CORSIKA/sim_telarray installation
