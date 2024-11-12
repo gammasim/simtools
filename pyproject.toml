@@ -250,7 +250,7 @@ max-statements = 80
 max-public-methods = 50
 
 [tool.codespell]
-ignore-words = ".codespell-ignores"
+ignore-words-list = "chec,arrang,livetime"
 
 [tool.pytest.ini_options]
 markers = [

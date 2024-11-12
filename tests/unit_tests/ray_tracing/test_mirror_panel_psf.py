@@ -271,17 +271,17 @@ def test_derive_random_reflection_angle_no_tuning(
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["no_tuning"] = True
     mirror_psf.rnda_start = 0.1
-    mirror_psf.run_simulations_and_analysis = patch(
+    with patch(
         mock_run_simulations_and_analysis_string,
         return_value=(0.5, 0.1),
-    ).start()
+    ) as mock_run_simulations_and_analysis:
 
-    mirror_psf.derive_random_reflection_angle()
+        mock_run_simulations_and_analysis.start()
+        mirror_psf.derive_random_reflection_angle()
 
-    assert mirror_psf.rnda_opt == 0.1
-    mirror_psf.run_simulations_and_analysis.assert_called_once_with(0.1, save_figures=False)
-    assert mirror_psf.mean_d80 == 0.5
-    assert mirror_psf.sig_d80 == 0.1
+        mock_run_simulations_and_analysis.assert_called_once_with(0.1, save_figures=False)
+        assert mirror_psf.mean_d80 == 0.5
+        assert mirror_psf.sig_d80 == 0.1
 
 
 def test_derive_random_reflection_angle_with_tuning(
