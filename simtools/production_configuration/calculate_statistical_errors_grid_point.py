@@ -38,7 +38,7 @@ class StatisticalErrorEvaluator:
         self,
         file_path: str,
         file_type: str,
-        metrics: dict[str, float] | None = None,
+        metrics: dict[str, float],
         grid_point: tuple[float, float, float, float, float] | None = None,
     ):
         """
@@ -57,7 +57,7 @@ class StatisticalErrorEvaluator:
         """
         self.file_path = file_path
         self.file_type = file_type
-        self.metrics = metrics or {}
+        self.metrics = metrics
         self.grid_point = grid_point
 
         self.data = self.load_data_from_file()
@@ -86,7 +86,6 @@ class StatisticalErrorEvaluator:
             with fits.open(self.file_path) as hdul:
                 events_data = hdul["EVENTS"].data  # pylint: disable=E1101
                 sim_events_data = hdul["SIMULATED EVENTS"].data  # pylint: disable=E1101
-
                 event_units = {}
                 for idx, col_name in enumerate(events_data.columns.names, start=1):
                     unit_key = f"TUNIT{idx}"

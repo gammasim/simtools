@@ -88,6 +88,12 @@ def _parse(label, description):
         default="interpolated_scaled_events.json",
         help="Output file to store the results. (default: 'interpolated_scaled_events.json').",
     )
+    config.parser.add_argument(
+        "--metrics",
+        type=str,
+        default="production_simulation_config_metrics.yaml",
+        help="Metrics definition file. (default: production_simulation_config_metrics.yaml)",
+    )
     return config.initialize(db_config=False)
 
 
@@ -118,13 +124,7 @@ def main():
                     StatisticalErrorEvaluator(
                         file_path,
                         file_type="Gamma-cone",
-                        metrics={
-                            "error_eff_area": 0.02,
-                            "error_sig_eff_gh": 0.02,
-                            "error_energy_estimate_bdt_reg_tree": 0.05,
-                            "error_gamma_ray_psf": 0.01,
-                            "error_image_template_methods": 0.03,
-                        },
+                        metrics=args_dict["metrics"],
                         grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
                     )
                 )

@@ -8,7 +8,7 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
 )
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
 
-PATH_FITS = "path/to/file.fits"
+PATH_FITS = "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
 
 
 @pytest.fixture
@@ -58,9 +58,7 @@ def test_initialization(mock_statistical_error_evaluator):
 
 def test_configure_simulation(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 30.0, "elevation": 40.0}
-    config = SimulationConfig(
-        grid_point, "B", "medium_precision", "path/to/another_file.fits", "Off-source"
-    )
+    config = SimulationConfig(grid_point, "B", "medium_precision", PATH_FITS, "Off-source")
     config.evaluator = mock_statistical_error_evaluator
 
     params = config.configure_simulation()
@@ -72,9 +70,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
 
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 45.0, "elevation": 60.0}
-    config = SimulationConfig(
-        grid_point, "C", "low_precision", "path/to/some_file.fits", "On-source"
-    )
+    config = SimulationConfig(grid_point, "C", "low_precision", PATH_FITS, "On-source")
     config.evaluator = mock_statistical_error_evaluator
 
     # Mocking the method calculate_core_scatter_area
@@ -87,9 +83,7 @@ def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
 
 def test_calculate_viewcone(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 15.0, "elevation": 25.0}
-    config = SimulationConfig(
-        grid_point, "D", "ultra_precision", "path/to/viewcone_file.fits", "Off-source"
-    )
+    config = SimulationConfig(grid_point, "D", "ultra_precision", PATH_FITS, "Off-source")
     config.evaluator = mock_statistical_error_evaluator
 
     # Mocking the method calculate_viewcone
