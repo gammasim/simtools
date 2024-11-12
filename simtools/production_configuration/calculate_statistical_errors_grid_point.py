@@ -247,11 +247,11 @@ class StatisticalErrorEvaluator:
         ).to(u.dimensionless_unscaled)
 
         # Set up a mask for valid data with a unit-consistent threshold
-        valid = (
-            (simulated_event_counts > 0 * u.ct)
-            & (triggered_event_counts <= simulated_event_counts)
-            & (triggered_event_counts > 5 * u.ct)
-        )
+        if np.any(triggered_event_counts > simulated_event_counts):
+            raise ValueError(
+                "Triggered event counts exceed simulated event counts. Please check input data."
+            )
+        valid = (simulated_event_counts > 0 * u.ct) & (triggered_event_counts > 0 * u.ct)
 
         uncertainties = np.zeros_like(triggered_event_counts) * u.ct**-0.5
 

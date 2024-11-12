@@ -192,8 +192,8 @@ class SimulationConfig:
 
         error_eff_area = metric_results.get("error_eff_area", {})
         current_max_error = error_eff_area.get("max_error")
-        target_max_error = self.metrics.get("error_eff_area", {}).get("target_error", 0.01)
-        _logger.info(f"Current max error: {current_max_error:.5f}")
+        target_max_error = self.metrics.get("error_eff_area", {}).get("target_error")
+        _logger.info(f"Current max error: {current_max_error}")
         _logger.info(f"Target max error: {target_max_error['value']}")
 
         base_events = self._number_of_simulated_events()
