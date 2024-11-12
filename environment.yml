@@ -31,8 +31,8 @@ dependencies:
   - scipy
   - sphinx
   - sphinx-book-theme
-  - toml
   - towncrier
+  - toml
   - pip:
       - ctao-dpps-cosmic-ray-spectra
       - pytest-random-order
