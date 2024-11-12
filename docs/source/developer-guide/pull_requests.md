@@ -42,6 +42,7 @@ Possible categories are (here for the example of pull request #1234):
 - `1234.api.md` for changes to the API
 - `1234.doc.md` for documentation changes
 - `1234.maintenance.md` for maintenance changes
+- `1234.model.md` for changes to the simulation model
 
 Add these file to the pull request.
 
