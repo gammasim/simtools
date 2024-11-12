@@ -26,6 +26,25 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
 - pull request should focus on one problem and should be short (even though it is easier to make big ones)
 - if the problem to be solved requires many changes: break down the problem in logical pieces; explain the breakdown of the problem in an issue
 
+### CHANGELOG
+
+All notable changes to the simtools project are documented in the CHANGELOG file. Do not modify this file!
+
+```{important}
+The CHANGELOG should be written for the end-user and should not contain too many technical details.
+```
+
+Pull requests with changes relevant enough to be noted in the CHANGELOG should add a file containing a short summary of the changes to the [docs/changes](docs/changes) directory.
+Possible categories are (here for the example of pull request #1234):
+
+- `1234.feature.md` for new features
+- `1234.bugfix.md` for bug fixes
+- `1234.api.md` for changes to the API
+- `1234.doc.md` for documentation changes
+- `1234.maintenance.md` for maintenance changes
+
+Add these file to the pull request.
+
 ## Reviewing a pull request
 
 - seek to understand the purpose of the pull request; reach out to the author before reviewing if it is not clear which problem will be solved
@@ -39,3 +58,4 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
 - limit the review to the changes in the pull request. Open an issue or a follow-up pull request for anything else.
 - clearly indicate if you have no time for a review (this is OK if it is known)
 - fix small typos directly
+- confirm the changes are documented sufficiently in the `docs/changes` directory.
