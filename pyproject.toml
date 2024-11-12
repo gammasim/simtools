@@ -54,6 +54,7 @@ optional-dependencies."doc" = [
   "numpydoc",
   "sphinx",
   "sphinx-book-theme",
+  "towncrier",
 ]
 optional-dependencies."tests" = [
   "pytest",
@@ -277,10 +278,10 @@ source = [
 [tool.towncrier]
 package = "simtools"
 directory = "docs/changes"
-filename = "CHANGES.md"
+filename = "CHANGELOG.md"
 underlines = [ "", "", "" ]
-title_format = "## [{version}]https://github.com/gammasim/simtools/tree/{version}) - {project_date}"
-issue_format = "`#{issue} <https://github.com/gammasim/simtools/pull/{issue}>`__"
+title_format = "## [{version}](https://github.com/gammasim/simtools/tree/{version}) - {project_date}"
+issue_format = "[#{issue}](https://github.com/gammasim/simtools/pull/{issue})"
 
 [tool.towncrier.fragment.feature]
 name = "New Features"
@@ -294,12 +295,12 @@ showcontent = true
 name = "API Changes"
 showcontent = true
 
-[tool.towncrier.fragment.optimization]
-name = "Refactoring and Optimization"
-showcontent = true
-
 [tool.towncrier.fragment.maintenance]
 name = "Maintenance"
+showcontent = true
+
+[tool.towncrier.fragment.doc]
+name = "Documentation"
 showcontent = true
 
 [[tool.towncrier.section]]
