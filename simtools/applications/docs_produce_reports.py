@@ -49,8 +49,7 @@ def generate_markdown_report(output_folder, args_dict, data):
             file.write(f"| {item[0]} | {item[1]} | {item[3]} |\n")
 
 
-if __name__ == "__main__":
-
+def main():  # noqa: D103
     label_name = Path(__file__).stem
     args, db_config = _parse(label_name)
 
@@ -73,3 +72,7 @@ if __name__ == "__main__":
         f"Markdown report generated for {args['site']}"
         f" Telescope {args['telescope']} (v{args['model_version']})"
     )
+
+
+if __name__ == "__main__":
+    main()
