@@ -190,23 +190,29 @@ class SimulationConfig:
         """
         metric_results = self.evaluator.calculate_metrics()
 
-        # Calculate average uncertainty from metrics, use 0.1 as default if not found
-        error_eff_area = metric_results.get("error_eff_area", {"relative_errors": [0.1]})
-        _logger.info(f"error_eff_area {error_eff_area}")
-        avg_uncertainty = np.mean(error_eff_area["relative_errors"])
-        _logger.info(f"avg_uncertainty {avg_uncertainty}")
-        avg_uncertainty = avg_uncertainty.value
-        # Calculate the base number of events from the evaluator
+        error_eff_area = metric_results.get("error_eff_area", {})
+        current_max_error = error_eff_area.get("max_error")
+        target_max_error = self.metrics.get("error_eff_area", {}).get("target_error", 0.01)
+        _logger.info(f"Current max error: {current_max_error:.5f}")
+        _logger.info(f"Target max error: {target_max_error['value']}")
+
         base_events = self._number_of_simulated_events()
 
-        # Calculate required events
-        uncertainty_factor = 1 / (1 - avg_uncertainty)
-        if self.science_case == "science case 1":
-            uncertainty_factor *= 1.5
-        _logger.info(f"base_events {base_events}")
-        _logger.info(f"uncertainty_factor {uncertainty_factor}")
+        scaling_factor = (current_max_error / target_max_error["value"]) ** 2
 
-        return base_events * uncertainty_factor
+        uncertainty_factor = 1.5 if self.science_case == "science case 1" else 1.0
+        print("scaling_factor", scaling_factor.value)
+        print("uncertainty_factor", uncertainty_factor)
+        final_scaling_factor = scaling_factor.value * uncertainty_factor
+
+        required_events = base_events.value * final_scaling_factor
+
+        _logger.info(f"Base events: {base_events}")
+        _logger.info(f"Scaling factor: {scaling_factor}")
+        _logger.info(f"Uncertainty factor: {uncertainty_factor}")
+        _logger.info(f"Required events: {required_events}")
+
+        return np.sum(required_events)
 
     def _number_of_simulated_events(self) -> int:
         """
