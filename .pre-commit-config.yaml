@@ -65,3 +65,10 @@ repos:
     hooks:
       - id: yamllint
         args: ["--strict", "-d", '{rules: {line-length: {max: 250}}}']
+  # towncrier
+  - repo: https://github.com/twisted/towncrier
+    rev: 23.11.0  # run 'pre-commit autoupdate' to update
+    hooks:
+      - id: towncrier-update
+        files: $docs/changes/
+        args: ['--keep']
