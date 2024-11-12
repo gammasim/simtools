@@ -67,7 +67,7 @@ repos:
         args: ["--strict", "-d", '{rules: {line-length: {max: 250}}}']
   # towncrier
   - repo: https://github.com/twisted/towncrier
-    rev: 24.8.0  # run 'pre-commit autoupdate' to update
+    rev: 24.8.0
     hooks:
       - id: towncrier-update
         files: $docs/changes/
