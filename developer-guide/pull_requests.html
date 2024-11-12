@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Pull requests &#8212; simtools v0.1.dev1+g8ed9441 Manual</title>
+    <title>Pull requests &#8212; simtools v0.1.dev1+g19c6d66 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=0e823819"></script>
+    <script src="../_static/documentation_options.js?v=4f0691a8"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Generating Documentation" href="documentation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g8ed9441" />
+  <meta name="docsearch:version" content="0.1.dev1+g19c6d66" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g8ed9441 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g19c6d66 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -434,7 +434,10 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-issuing-a-pull-request">Before issuing a pull request</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issuing-a-pull-request">Issuing a pull request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issuing-a-pull-request">Issuing a pull request</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changelog">CHANGELOG</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reviewing-a-pull-request">Reviewing a pull request</a></li>
 </ul>
             </nav>
@@ -474,6 +477,25 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
 <li><p>pull request should focus on one problem and should be short (even though it is easier to make big ones)</p></li>
 <li><p>if the problem to be solved requires many changes: break down the problem in logical pieces; explain the breakdown of the problem in an issue</p></li>
 </ul>
+<section id="changelog">
+<h3>CHANGELOG<a class="headerlink" href="#changelog" title="Link to this heading">#</a></h3>
+<p>All notable changes to the simtools project are documented in the CHANGELOG file. Do not modify this file!</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The CHANGELOG should be written for the end-user and should not contain too many technical details.</p>
+</div>
+<p>Pull requests with changes relevant enough to be noted in the CHANGELOG should add a file containing a short summary of the changes to the <a class="reference internal" href="#docs/changes"><span class="xref myst">docs/changes</span></a> directory.
+Possible categories are (here for the example of pull request #1234):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">1234.feature.md</span></code> for new features</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1234.bugfix.md</span></code> for bugfixes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1234.api.md</span></code> for changes to the API</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1234.doc.md</span></code> for documentation changes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1234.maintenance.md</span></code> for maintenance changes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1234.model.md</span></code> for changes to the simulation model</p></li>
+</ul>
+<p>Add these file to the pull request.</p>
+</section>
 </section>
 <section id="reviewing-a-pull-request">
 <h2>Reviewing a pull request<a class="headerlink" href="#reviewing-a-pull-request" title="Link to this heading">#</a></h2>
@@ -489,6 +511,7 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
 <li><p>limit the review to the changes in the pull request. Open an issue or a follow-up pull request for anything else.</p></li>
 <li><p>clearly indicate if you have no time for a review (this is OK if it is known)</p></li>
 <li><p>fix small typos directly</p></li>
+<li><p>confirm the changes are documented sufficiently in the <code class="docutils literal notranslate"><span class="pre">docs/changes</span></code> directory.</p></li>
 </ul>
 </section>
 </section>
@@ -540,7 +563,10 @@ The following thoughts might help to obtain an efficient and pleasant reviewing 
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-issuing-a-pull-request">Before issuing a pull request</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issuing-a-pull-request">Issuing a pull request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issuing-a-pull-request">Issuing a pull request</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changelog">CHANGELOG</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reviewing-a-pull-request">Reviewing a pull request</a></li>
 </ul>
   </nav></div>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Maintainer documentation &#8212; simtools v0.1.dev1+g8ed9441 Manual</title>
+    <title>Maintainer documentation &#8212; simtools v0.1.dev1+g19c6d66 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=0e823819"></script>
+    <script src="../_static/documentation_options.js?v=4f0691a8"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -49,7 +49,7 @@
     <link rel="prev" title="Continuous Integration" href="continuous_integration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g8ed9441" />
+  <meta name="docsearch:version" content="0.1.dev1+g19c6d66" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g8ed9441 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g19c6d66 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -432,6 +432,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#changelog">Changelog</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Releases</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-feedstock">Conda feedstock</a></li>
 </ul>
@@ -447,12 +448,22 @@
                   
   <section id="maintainer-documentation">
 <span id="releases"></span><h1>Maintainer documentation<a class="headerlink" href="#maintainer-documentation" title="Link to this heading">#</a></h1>
+<section id="changelog">
+<h2>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">#</a></h2>
+<p>All notable changes to the simtools project are documented in the CHANGELOG file.</p>
+<p>Before a release, the maintainer is building the changelog using the following steps:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">towncrier build --yes --version &lt;version string&gt;</span>
+</pre></div>
+</div>
+<p>The maintainer should review the <code class="docutils literal notranslate"><span class="pre">CHANGELOG.md</span></code>, apply any necessary changes, and open a release pull request. This should be the last pull request before a release.
+The change files in the <code class="docutils literal notranslate"><span class="pre">docs/changes</span></code> directory will be deleted with the release pull request.</p>
+</section>
 <section id="id1">
 <h2>Releases<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
 <p>Simtools releases are versioned following the <a class="reference external" href="https://semver.org/">Semantic Versioning 2.0.0</a> guidelines.</p>
 <p>To prepare a release, the following steps are required:</p>
 <ol class="arabic simple">
-<li><p>Open a pull request to prepare a release.  Review the entries added to the <code class="docutils literal notranslate"><span class="pre">CHANGELOG.md</span></code> since the last release. This should be the last pull request to be merged before making the actual release.</p></li>
+<li><p>Open a pull request to prepare a release.  Run the changelog workflow using Towncrier to add entries to <code class="docutils literal notranslate"><span class="pre">CHANGELOG.md</span></code>. This should be the last pull request to be merged before making the actual release.</p></li>
 <li><p>Prepare a GitHub release with the version number and a summary of the changes.</p></li>
 <li><p>Pypi deployment is done automatically by the CI/CD pipeline.</p></li>
 <li><p>Docker images are automatically built, tagged with the version number, and pushed to the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">gammasim/simtools</a>.</p></li>
@@ -502,6 +513,7 @@
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#changelog">Changelog</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Releases</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-feedstock">Conda feedstock</a></li>
 </ul>
