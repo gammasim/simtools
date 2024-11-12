@@ -13,7 +13,6 @@ from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def test_get_parameter_type(telescope_model_lst, caplog):

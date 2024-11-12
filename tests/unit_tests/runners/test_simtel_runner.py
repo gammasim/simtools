@@ -9,7 +9,6 @@ import pytest
 from simtools.runners.simtel_runner import SimtelExecutionError, SimtelRunner
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
