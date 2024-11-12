@@ -10,11 +10,13 @@ from pathlib import Path
 
 import pytest
 import yaml
+from dotenv import load_dotenv
 
 import simtools.utils.general as gen
 from simtools.testing import assertions, compare_output
 
 logger = logging.getLogger()
+load_dotenv(".env")
 
 
 def get_application_command(app, config_file=None, config_string=None):
@@ -388,7 +390,7 @@ def new_testeff_version():
     This test checks if the new version is used.
     """
 
-    with open("/workdir/sim_telarray/sim_telarray/testeff.c") as file:
+    with open(os.path.join(os.getenv("SIMTOOLS_SIMTEL_PATH"), "sim_telarray/testeff.c")) as file:
         file_content = file.read()
         if "/* Combine the include paths such that those from '-I...' options */" in file_content:
             return True
