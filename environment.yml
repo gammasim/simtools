@@ -32,6 +32,7 @@ dependencies:
   - sphinx
   - sphinx-book-theme
   - toml
+  - towncrier
   - pip:
       - ctao-dpps-cosmic-ray-spectra
       - pytest-random-order
