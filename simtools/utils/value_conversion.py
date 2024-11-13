@@ -99,13 +99,16 @@ def split_value_and_unit(value):
             return value.value, [str(value.unit)] * len(value)
         return value.value, str(value.unit)
     if isinstance(value, str):
-        try:  # single value with unit
+        if value.isdigit():  # single integer value
+            return int(value), None
+        try:  # single value with/without unit
             return u.Quantity(value).value, str(u.Quantity(value).unit)
         except ValueError:
             value = gen.convert_string_to_list(value)
     if isinstance(value, list | np.ndarray):
         value_list = []
         unit_list = []
+        print("LL", value)
         for item in value:
             _value, _unit = split_value_and_unit(item)
             value_list.append(_value)
@@ -113,7 +116,7 @@ def split_value_and_unit(value):
                 unit_list.append(_unit)
             else:
                 unit_list.append(None)
-            return value_list, unit_list
+        return value_list, unit_list
     return value, None
 
 
