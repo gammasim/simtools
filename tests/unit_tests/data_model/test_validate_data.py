@@ -804,7 +804,7 @@ def test_get_value_and_units_as_lists():
     data_validator.data_dict = {"value": np.array([100, 200]), "unit": np.array(["m", "cm"])}
     values, units = data_validator._get_value_and_units_as_lists()
     assert values == [100, 200]
-    assert units == ["m", "cm"]
+    assert list(units) == ["m", "cm"]
 
     # Test with unit as "null"
     data_validator.data_dict = {"value": [100, 200], "unit": ["m", "null"]}

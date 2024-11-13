@@ -14,7 +14,7 @@ from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 __all__ = ["ModelDataWriter"]
 
@@ -198,15 +198,27 @@ class ModelDataWriter:
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
         schema_file = self._read_model_parameter_schema(parameter_name)
 
+        try:
+            site = names.validate_site_name(instrument)
+        except ValueError:
+            site = names.get_site_from_array_element_name(instrument)
+
+        try:
+            applicable = self._get_parameter_applicability(instrument)
+        except ValueError:
+            applicable = True  # Default to True (except that this field goes in future)
+
+        value, unit = value_conversion.split_value_and_unit(value)
+
         data_dict = {
             "parameter": parameter_name,
             "instrument": instrument,
-            "site": names.get_site_from_array_element_name(instrument),
+            "site": site,
             "version": model_version,
             "value": value,
-            "unit": self._get_unit_from_schema(),
+            "unit": unit,
             "type": self._get_parameter_type(),
-            "applicable": self._get_parameter_applicability(instrument),
+            "applicable": applicable,
             "file": self._parameter_is_a_file(),
         }
         return self.validate_and_transform(

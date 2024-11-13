@@ -13,6 +13,7 @@ from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
 from simtools.data_model import format_checkers
+from simtools.utils import value_conversion
 
 __all__ = ["DataValidator"]
 
@@ -164,35 +165,6 @@ class DataValidator:
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
 
-    def _get_value_and_units_as_lists_from_quantity(self, value, unit):
-        """Convert value and unit to lists for astropy.Quantity."""
-        if value.size == 1:
-            value = value.to(u.Unit(unit))
-            value_as_list = [value.value]
-            unit_as_list = [value.unit.to_string()]
-        else:
-            value_as_list = []
-            unit_as_list = []
-            for v, w in zip(value, unit):
-                value_as_list.append(v.to(u.Unit(w)).value)
-                unit_as_list.append(w)
-        return value_as_list, unit_as_list
-
-    def _get_value_and_units_as_lists_from_lists(self, value, unit):
-        """Convert value and unit to lists for list or numpy array."""
-        value_as_list = []
-        unit_as_list = []
-
-        for v, w in zip(value, unit):
-            if isinstance(v, u.Quantity):
-                value_as_list.append(v.to(u.Unit(w)).value.item())
-                unit_as_list.append(w)
-            else:
-                value_as_list.append(v)
-                unit_as_list.append(w if w != "null" else None)
-
-        return value_as_list, unit_as_list
-
     def _get_value_and_units_as_lists(self):
         """
         Convert value and unit to lists if required.
@@ -207,22 +179,24 @@ class DataValidator:
         list
             unit as list
         """
-        value = self.data_dict["value"]
-        unit = self.data_dict["unit"]
+        target_unit = self.data_dict["unit"]
+        value, unit = value_conversion.split_value_and_unit(self.data_dict["value"])
 
-        if isinstance(value, u.Quantity):
-            value_as_list, unit_as_list = self._get_value_and_units_as_lists_from_quantity(
-                value, unit
-            )
-        elif isinstance(value, list | np.ndarray):
-            value_as_list, unit_as_list = self._get_value_and_units_as_lists_from_lists(value, unit)
-        else:
-            value_as_list = [value]
-            unit_as_list = [unit] if unit != "null" else [None]
+        if not isinstance(value, list | np.ndarray):
+            if unit is not None:
+                value_as_list = [value * u.Unit(unit).to(u.Unit(target_unit))]
+            else:
+                value_as_list = [value]
+            return value_as_list, [target_unit]
 
-        unit_as_list = [None if w == "null" else w for w in unit_as_list]
-
-        return value_as_list, unit_as_list
+        target_unit = [None if unit == "null" else unit for unit in target_unit]
+        conversion_factor = []
+        for v, t in zip(unit, target_unit):
+            if v is None:
+                conversion_factor.append(1)
+            else:
+                conversion_factor.append(u.Unit(v).to(u.Unit(t)))
+        return [v * c for v, c in zip(value, conversion_factor)], target_unit
 
     def _validate_data_dict_using_json_schema(self, data, json_schema):
         """
