@@ -56,8 +56,10 @@ from pathlib import Path
 
 import numpy as np
 
+import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.io_operations.io_handler import IOHandler
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
@@ -83,8 +85,11 @@ def _parse(label=None, description=None):
 
     config.parser.add_argument(
         "--schema_directory",
-        help="Directory with schema files for model parameter validation",
-        required=True,
+        help=(
+            "Directory with schema files for model parameter validation "
+            "(default: simtools schema directory)"
+        ),
+        required=False,
     )
     config.parser.add_argument(
         "--simtel_cfg_file",
@@ -104,11 +109,6 @@ def _parse(label=None, description=None):
 def get_list_of_parameters_and_schema_files(schema_directory):
     """
     Return list of parameters and schema files located in schema file directory.
-
-    Parameters
-    ----------
-    schema_directory: str
-        Directory with schema files for model parameter validation
 
     Returns
     -------
@@ -203,15 +203,13 @@ def get_number_of_camera_pixel(args_dict, logger):
     """
     try:
         simtel_config_reader = SimtelConfigReader(
-            schema_file=Path(args_dict["schema_directory"]) / "camera_pixels.schema.yml",
+            schema_file=MODEL_PARAMETER_SCHEMA_PATH / "camera_pixels.schema.yml",
             simtel_config_file=args_dict["simtel_cfg_file"],
             simtel_telescope_name=args_dict["simtel_telescope_name"],
         )
         _camera_pixel = simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
-    except FileNotFoundError:
-        logger.warning(
-            "Camera pixel schema file not found. Using default value for number of camera pixels."
-        )
+    except (FileNotFoundError, AttributeError):
+        logger.warning("Failed to read camera pixel parameter.")
         _camera_pixel = None
     logger.info(f"Number of camera pixels: {_camera_pixel}")
     return _camera_pixel
@@ -241,7 +239,7 @@ def read_and_export_parameters(args_dict, logger):
 
     """
     _parameters, _schema_files = get_list_of_parameters_and_schema_files(
-        args_dict["schema_directory"]
+        args_dict.get("schema_directory", MODEL_PARAMETER_SCHEMA_PATH)
     )
     _simtel_parameters = get_list_of_simtel_parameters(args_dict["simtel_cfg_file"], logger)
 
@@ -264,17 +262,15 @@ def read_and_export_parameters(args_dict, logger):
             _parameters_not_in_simtel.append(_parameter)
             continue
 
-        _json_dict = simtel_config_reader.get_validated_parameter_dict(
-            telescope_name=args_dict["telescope"], model_version=args_dict["model_version"]
+        _json_dict = writer.ModelDataWriter.dump_model_parameter(
+            parameter_name=_parameter,
+            value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
+            instrument=args_dict["telescope"],
+            model_version=args_dict["model_version"],
+            output_file=io_handler.get_output_file(f"{_parameter}.json"),
         )
-        logger.info(f"Validated parameter {_json_dict}")
 
         simtel_config_reader.compare_simtel_config_with_schema()
-
-        if _json_dict["applicable"]:
-            simtel_config_reader.export_parameter_dict_to_json(
-                io_handler.get_output_file(f"{_parameter}.json"), _json_dict
-            )
 
         if simtel_config_reader.simtel_parameter_name.lower() in _simtel_parameters:
             _simtel_parameters.remove(simtel_config_reader.simtel_parameter_name.lower())
@@ -360,12 +356,10 @@ def print_list_of_files(args_dict, logger):
 
 
 def main():  # noqa: D103
-
     args_dict, _ = _parse(
         label=Path(__file__).stem,
         description="Convert simulation model parameters from sim_telarray to simtools format.",
     )
-
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 

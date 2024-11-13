@@ -799,6 +799,24 @@ def test_get_value_and_units_as_lists():
     assert values == [100, 200]
     assert units == ["m", None]
 
+    # Test with astropy Quantity
+    data_validator.data_dict = {"value": 100 * u.m, "unit": "km"}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [0.1]
+    assert units == ["km"]
+
+    # Test with astropy Quantities
+    data_validator.data_dict = {"value": [100 * u.m, 200 * u.km], "unit": ["m", "km"]}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100, 200]
+    assert units == ["m", "km"]
+
+    # Test with astropy Quantities
+    data_validator.data_dict = {"value": [100.0, 200] * u.m, "unit": ["m", "km"]}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100, 0.2]
+    assert units == ["m", "km"]
+
 
 def test_validate_value_and_unit_for_dict(reference_columns):
     data_validator = validate_data.DataValidator()
