@@ -243,6 +243,21 @@ def test_dump_model_parameter(tmp_test_directory):
     assert pytest.approx(value_list[1]) == 3184995.1
     assert pytest.approx(value_list[2]) == 2185.0
 
+    position_dict = writer.ModelDataWriter.dump_model_parameter(
+        parameter_name="focus_offset",
+        value=[6.55 * u.cm, 0.0 * u.deg, 0.0, 0.0],
+        instrument="LSTN-01",
+        model_version="6.0.0",
+        output_file="focus_offset.json",
+        output_path=tmp_test_directory,
+        use_plain_output_path=True,
+    )
+    value_list = [float(value) for value in position_dict["value"].split()]
+    assert pytest.approx(value_list[0]) == 6.55
+    assert pytest.approx(value_list[1]) == 0.0
+    assert pytest.approx(value_list[2]) == 0.0
+    assert pytest.approx(value_list[3]) == 0.0
+
 
 def test_get_validated_parameter_dict():
 
