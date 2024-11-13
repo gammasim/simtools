@@ -297,6 +297,23 @@ def test_get_validated_parameter_dict():
         "file": False,
     }
 
+    assert w1.get_validated_parameter_dict(
+        parameter_name="reference_point_altitude",
+        value=2.7 * u.km,
+        instrument="North",
+        model_version="0.0.1",
+    ) == {
+        "parameter": "reference_point_altitude",
+        "instrument": "North",
+        "site": "North",
+        "version": "0.0.1",
+        "value": 2700.0,
+        "unit": u.Unit("m"),
+        "type": "double",
+        "applicable": True,
+        "file": False,
+    }
+
 
 def test_get_parameter_applicability(num_gains_schema):
 

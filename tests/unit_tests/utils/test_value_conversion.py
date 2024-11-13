@@ -95,3 +95,37 @@ def test_assign_unit_to_quantity():
 
     with pytest.raises(u.UnitConversionError):
         value_conversion.get_value_as_quantity(1000 * u.TeV, u.m)
+
+
+def test_split_value_and_unit():
+    """Test the split_value_and_unit function."""
+    assert value_conversion.split_value_and_unit(100 * u.m) == (100, "m")
+
+    assert value_conversion.split_value_and_unit([100, 200] * u.m) == ([100, 200], ["m", "m"])
+
+    assert value_conversion.split_value_and_unit(np.array([100, 200]) * u.m) == (
+        [100, 200],
+        ["m", "m"],
+    )
+
+    assert value_conversion.split_value_and_unit("100") == (100, None)
+
+    assert value_conversion.split_value_and_unit("100 m") == (100, "m")
+
+    assert value_conversion.split_value_and_unit("100") == (100, None)
+
+    assert value_conversion.split_value_and_unit("hello") == ("hello", None)
+
+    assert value_conversion.split_value_and_unit(["100 m", "200 cm"]) == ([100, 200], ["m", "cm"])
+
+    assert value_conversion.split_value_and_unit(np.array(["100 m", "200 cm"])) == (
+        [100, 200],
+        ["m", "cm"],
+    )
+
+    assert value_conversion.split_value_and_unit([100, "200 cm", 300 * u.m]) == (
+        [100, 200, 300],
+        [None, "cm", "m"],
+    )
+
+    assert value_conversion.split_value_and_unit("100 cm, 200 cm") == ([100, 200], ["cm", "cm"])

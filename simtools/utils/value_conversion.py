@@ -93,10 +93,20 @@ def split_value_and_unit(value):
 
     Takes into account the case where the value is a Quantity, a number,
     or a simtools-type string encoding a list of values and units.
+
+    Parameters
+    ----------
+    value: str, int, float, bool, u.Quantity
+        Value to be parsed.
+
+    Returns
+    -------
+    value, str
+        Value and units as (value, unit), or lists of values and unites
     """
     if isinstance(value, u.Quantity):
         if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m,
-            return value.value, [str(value.unit)] * len(value)
+            return list(value.value), [str(value.unit)] * len(value)
         return value.value, str(value.unit)
     if isinstance(value, str):
         if value.isdigit():  # single integer value
