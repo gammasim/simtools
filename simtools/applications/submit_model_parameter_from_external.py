@@ -11,7 +11,7 @@ r"""
     parameter (str)
         model parameter name
     value (str, value)
-        input value
+        input value (number, string, string-type lists)
     instrument (str)
         instrument name.
     site (str)
@@ -72,7 +72,16 @@ def _parse(label, description):
     config.parser.add_argument("--site", type=str, required=True, help="Site location")
     config.parser.add_argument("--model_version", type=str, required=True, help="Model version")
 
-    config.parser.add_argument("--value", type=str, required=True, help="Model parameter value")
+    config.parser.add_argument(
+        "--value",
+        type=str,
+        required=True,
+        help=(
+            "Model parameter value. "
+            "Can be a single number, a number with a unit, or a list of values with units. "
+            'Examples: "--value=5", "--value=\'5 km\'", "--value=\'5 cm, 0.5 deg\'"'
+        ),
+    )
 
     config.parser.add_argument(
         "--input_meta",
