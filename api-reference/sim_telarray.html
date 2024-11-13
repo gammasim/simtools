@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g19c6d66 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g4622864 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=4f0691a8"></script>
+    <script src="../_static/documentation_options.js?v=9797498c"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Runners for simulation software." href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g19c6d66" />
+  <meta name="docsearch:version" content="0.1.dev1+g4622864" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g19c6d66 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4622864 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -436,8 +436,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-config-reader">simtel_config_reader</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.compare_simtel_config_with_schema()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.export_parameter_dict_to_json"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.export_parameter_dict_to_json()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.get_validated_parameter_dict"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.get_validated_parameter_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.read_simtel_config_file()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -581,37 +580,21 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_config_reader.SimtelConfigReader.export_parameter_dict_to_json">
-<span class="sig-name descname"><span class="pre">export_parameter_dict_to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dict_to_write</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_reader.html#SimtelConfigReader.export_parameter_dict_to_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_reader.SimtelConfigReader.export_parameter_dict_to_json" title="Link to this definition">#</a></dt>
-<dd><p>Export parameter dictionary to json.</p>
+<dt class="sig sig-object py" id="simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file">
+<span class="sig-name descname"><span class="pre">read_simtel_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_telescope_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_reader.html#SimtelConfigReader.read_simtel_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file" title="Link to this definition">#</a></dt>
+<dd><p>Read sim_telarray configuration file and return a dictionary with the parameter values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>file_name: str or Path</strong></dt><dd><p>File name to export to.</p>
+<dt><strong>simtel_config_file: str or Path</strong></dt><dd><p>Path of the file to read from.</p>
 </dd>
-<dt><strong>dict_to_write: dict</strong></dt><dd><p>Dictionary to export.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_config_reader.SimtelConfigReader.get_validated_parameter_dict">
-<span class="sig-name descname"><span class="pre">get_validated_parameter_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_reader.html#SimtelConfigReader.get_validated_parameter_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_reader.SimtelConfigReader.get_validated_parameter_dict" title="Link to this definition">#</a></dt>
-<dd><p>Return a validated model parameter dictionary as filled into the database.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>telescope_name: str</strong></dt><dd><p>Telescope name (e.g., LSTN-01)</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Model version string.</p>
+<dt><strong>simtel_telescope_name: str</strong></dt><dd><p>Telescope name (sim_telarray convention)</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Model parameter dictionary.</p>
+<dt>dict</dt><dd><p>Dictionary with the parameter values.</p>
 </dd>
 </dl>
 </dd>
@@ -1578,8 +1561,7 @@ mirror_numbers.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-config-reader">simtel_config_reader</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.compare_simtel_config_with_schema()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.export_parameter_dict_to_json"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.export_parameter_dict_to_json()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.get_validated_parameter_dict"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.get_validated_parameter_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.read_simtel_config_file()</span></code></a></li>
 </ul>
 </li>
 </ul>

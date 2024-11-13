@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g19c6d66 Manual</title>
+    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g4622864 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=4f0691a8"></script>
+    <script src="../../_static/documentation_options.js?v=9797498c"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g19c6d66" />
+  <meta name="docsearch:version" content="0.1.dev1+g4622864" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g19c6d66 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4622864 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -364,9 +364,6 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
-<span class="kn">from</span> <span class="nn">simtools.data_model</span> <span class="kn">import</span> <span class="n">validate_data</span>
-<span class="kn">from</span> <span class="nn">simtools.data_model.model_data_writer</span> <span class="kn">import</span> <span class="n">ModelDataWriter</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimtelConfigReader&quot;</span><span class="p">]</span>
 
@@ -426,76 +423,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_telescope_name</span> <span class="o">=</span> <span class="n">simtel_telescope_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span> <span class="o">=</span> <span class="n">camera_pixels</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_simtel_config_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_simtel_config_file</span><span class="p">(</span>
             <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span>
         <span class="p">)</span>
-
-<div class="viewcode-block" id="SimtelConfigReader.get_validated_parameter_dict">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.get_validated_parameter_dict">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_validated_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a validated model parameter dictionary as filled into the database.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        telescope_name: str</span>
-<span class="sd">            Telescope name (e.g., LSTN-01)</span>
-<span class="sd">        model_version: str</span>
-<span class="sd">            Model version string.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Model parameter dictionary.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting validated parameter dictionary for </span><span class="si">{</span><span class="n">telescope_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">type_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;str&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="s2">&quot;boolean&quot;</span><span class="p">}</span>
-        <span class="n">type_value</span> <span class="o">=</span> <span class="n">type_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
-
-        <span class="n">_json_dict</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="p">,</span>
-            <span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="n">telescope_name</span><span class="p">,</span>
-            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">),</span>
-            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">,</span>
-            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simtel_telescope_name</span><span class="p">),</span>
-            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_unit_from_schema</span><span class="p">(),</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">type_value</span><span class="p">,</span>
-            <span class="s2">&quot;applicable&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_parameter_applicability</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">),</span>
-            <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_is_a_file</span><span class="p">(),</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_parameter_dict</span><span class="p">(</span><span class="n">_json_dict</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="SimtelConfigReader.export_parameter_dict_to_json">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.export_parameter_dict_to_json">[docs]</a>
-    <span class="k">def</span> <span class="nf">export_parameter_dict_to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">dict_to_write</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Export parameter dictionary to json.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        file_name: str or Path</span>
-<span class="sd">            File name to export to.</span>
-<span class="sd">        dict_to_write: dict</span>
-<span class="sd">            Dictionary to export.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
-            <span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">],</span> <span class="kc">True</span><span class="p">)</span>
-            <span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;limits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">dict_to_write</span><span class="p">[</span><span class="s2">&quot;limits&quot;</span><span class="p">])</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting parameter dictionary to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">write_dict_to_model_parameter_json</span><span class="p">(</span>
-            <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span> <span class="n">data_dict</span><span class="o">=</span><span class="n">dict_to_write</span>
-        <span class="p">)</span></div>
-
 
     <span class="k">def</span> <span class="nf">_should_skip_limits_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if limits should be skipped.&quot;&quot;&quot;</span>
@@ -567,7 +497,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_log_mismatch_warning</span><span class="p">(</span><span class="n">data_type</span><span class="p">,</span> <span class="n">_from_simtel</span><span class="p">,</span> <span class="n">_from_schema</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_read_simtel_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelConfigReader.read_simtel_config_file">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">read_simtel_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read sim_telarray configuration file and return a dictionary with the parameter values.</span>
 
@@ -621,7 +553,8 @@
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
                 <span class="k">pass</span>
 
-        <span class="k">return</span> <span class="n">_para_dict</span>
+        <span class="k">return</span> <span class="n">_para_dict</span></div>
+
 
     <span class="k">def</span> <span class="nf">_resolve_all_in_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -782,97 +715,7 @@
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
             <span class="k">pass</span>
 
-        <span class="k">return</span> <span class="n">parameter_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">_check_parameter_applicability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if a parameter is applicable for a given telescope using schema files.</span>
-
-<span class="sd">        First check for exact telescope name, if not listed in the schema</span>
-<span class="sd">        use telescope type.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        telescope_name: str</span>
-<span class="sd">            Telescope name (e.g., LSTN-01)</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        bool</span>
-<span class="sd">            True if parameter is applicable to telescope.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">telescope_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]:</span>
-                <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Schema file does not contain &#39;instrument:type&#39; key.&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">exc</span>
-
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">)</span>
-            <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_parameter_is_a_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if parameter is a file.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        bool</span>
-<span class="sd">            True if parameter is a file.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
-            <span class="k">pass</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="k">def</span> <span class="nf">_get_unit_from_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return unit(s) from schema dict.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str or list</span>
-<span class="sd">            Parameter unit(s)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">unit_list</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]:</span>
-                <span class="n">unit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;dimensionless&quot;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">unit_list</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">unit_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
-            <span class="k">pass</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="k">def</span> <span class="nf">_validate_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_dict</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate json dictionary against model parameter data schema.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        parameter_dict: dict</span>
-<span class="sd">            Dictionary to validate.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Validated dictionary (possibly converted to reference units).</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Validating parameter dictionary </span><span class="si">{</span><span class="n">parameter_dict</span><span class="si">}</span><span class="s2"> using </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-        <span class="n">data_validator</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
-            <span class="n">schema_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_file</span><span class="p">,</span>
-            <span class="n">data_dict</span><span class="o">=</span><span class="n">parameter_dict</span><span class="p">,</span>
-            <span class="n">check_exact_data_type</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">data_validator</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">data_validator</span><span class="o">.</span><span class="n">data_dict</span></div>
+        <span class="k">return</span> <span class="n">parameter_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span></div>
 
 </pre></div>
 

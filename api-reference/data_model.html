@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g19c6d66 Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+g4622864 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=4f0691a8"></script>
+    <script src="../_static/documentation_options.js?v=9797498c"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="CORSIKA" href="corsika.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g19c6d66" />
+  <meta name="docsearch:version" content="0.1.dev1+g4622864" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g19c6d66 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4622864 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -464,6 +464,9 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.model_data_writer">model_data_writer</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.dump"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.dump()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.dump_model_parameter"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.dump_model_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.get_validated_parameter_dict"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.get_validated_parameter_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.prepare_data_dict_for_writing"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.prepare_data_dict_for_writing()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.validate_and_transform"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.validate_and_transform()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write_dict_to_model_parameter_json()</span></code></a></li>
@@ -748,7 +751,7 @@ metadata file.</p>
 <p>Model data writer module.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.model_data_writer.</span></span><span class="sig-name descname"><span class="pre">ModelDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.model_data_writer.</span></span><span class="sig-name descname"><span class="pre">ModelDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_plain_output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter" title="Link to this definition">#</a></dt>
 <dd><p>Writer for simulation model data and metadata.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -758,6 +761,12 @@ metadata file.</p>
 <dt><strong>product_data_format: str</strong></dt><dd><p>Format of output file.</p>
 </dd>
 <dt><strong>args_dict: Dictionary</strong></dt><dd><p>Dictionary with configuration parameters.</p>
+</dd>
+<dt><strong>output_path: str or Path</strong></dt><dd><p>Path to output file.</p>
+</dd>
+<dt><strong>use_plain_output_path: bool</strong></dt><dd><p>Use plain output path.</p>
+</dd>
+<dt><strong>args_dict: dict</strong></dt><dd><p>Dictionary with configuration parameters.</p>
 </dd>
 </dl>
 </dd>
@@ -785,16 +794,102 @@ metadata file.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.dump_model_parameter">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_plain_output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.dump_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.dump_model_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Generate DB-style model parameter dict and write it to json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+<dt><strong>value: any</strong></dt><dd><p>Value of the parameter.</p>
+</dd>
+<dt><strong>instrument: str</strong></dt><dd><p>Name of the instrument.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>output_file: str</strong></dt><dd><p>Name of output file.</p>
+</dd>
+<dt><strong>output_path: str or Path</strong></dt><dd><p>Path to output file.</p>
+</dd>
+<dt><strong>use_plain_output_path: bool</strong></dt><dd><p>Use plain output path.</p>
+</dd>
+<dt><strong>overwrite_applicable: bool</strong></dt><dd><p>Overwrite applicable parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Validated parameter dictionary.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.get_validated_parameter_dict">
+<span class="sig-name descname"><span class="pre">get_validated_parameter_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.get_validated_parameter_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.get_validated_parameter_dict" title="Link to this definition">#</a></dt>
+<dd><p>Get validated parameter dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter_name: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+<dt><strong>value: any</strong></dt><dd><p>Value of the parameter.</p>
+</dd>
+<dt><strong>instrument: str</strong></dt><dd><p>Name of the instrument.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Validated parameter dictionary.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.prepare_data_dict_for_writing">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">prepare_data_dict_for_writing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.prepare_data_dict_for_writing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.prepare_data_dict_for_writing" title="Link to this definition">#</a></dt>
+<dd><p>Prepare data dictionary for writing to json file.</p>
+<p>Ensure sim_telarray style lists as strings.
+Replace “None” with “null” for unit field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_dict: dict</strong></dt><dd><p>Dictionary with lists.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with lists converted to strings.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.validate_and_transform">
-<span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.validate_and_transform" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_data_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_data_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_model_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.validate_and_transform" title="Link to this definition">#</a></dt>
 <dd><p>Validate product data using jsonschema given in metadata.</p>
 <p>If necessary, transform product data to match schema.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>product_data: astropy Table</strong></dt><dd><p>Model data to be validated</p>
+<dt><strong>product_data_table: astropy Table</strong></dt><dd><p>Model data to be validated.</p>
+</dd>
+<dt><strong>product_data_dict: dict</strong></dt><dd><p>Model data to be validated.</p>
 </dd>
 <dt><strong>validate_schema_file: str</strong></dt><dd><p>Schema file used in validation of output data.</p>
+</dd>
+<dt><strong>is_model_parameter: bool</strong></dt><dd><p>True if data describes a model parameter.</p>
 </dd>
 </dl>
 </dd>
@@ -825,7 +920,7 @@ metadata file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_dict_to_model_parameter_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.write_dict_to_model_parameter_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">write_dict_to_model_parameter_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.write_dict_to_model_parameter_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json" title="Link to this definition">#</a></dt>
 <dd><p>Write dictionary to model-parameter-style json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1025,6 +1120,9 @@ metadata file.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.model_data_writer">model_data_writer</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.dump"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.dump()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.dump_model_parameter"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.dump_model_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.get_validated_parameter_dict"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.get_validated_parameter_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.prepare_data_dict_for_writing"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.prepare_data_dict_for_writing()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.validate_and_transform"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.validate_and_transform()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json"><code class="docutils literal notranslate"><span class="pre">ModelDataWriter.write_dict_to_model_parameter_json()</span></code></a></li>
