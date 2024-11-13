@@ -198,9 +198,9 @@ class ModelDataWriter:
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
         schema_file = self._read_model_parameter_schema(parameter_name)
 
-        try:  # e.g. instrument='North'
+        try:  # e.g. instrument is 'North"
             site = names.validate_site_name(instrument)
-        except ValueError:  # e.g. instrument='LSTN-01'
+        except ValueError:  # e.g. instrument is 'LSTN-01'
             site = names.get_site_from_array_element_name(instrument)
 
         try:
