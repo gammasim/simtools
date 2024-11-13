@@ -105,10 +105,11 @@ def split_value_and_unit(value):
             return u.Quantity(value).value, str(u.Quantity(value).unit)
         except ValueError:
             value = gen.convert_string_to_list(value)
+        except TypeError:  # string value (not numerical)
+            pass
     if isinstance(value, list | np.ndarray):
         value_list = []
         unit_list = []
-        print("LL", value)
         for item in value:
             _value, _unit = split_value_and_unit(item)
             value_list.append(_value)
