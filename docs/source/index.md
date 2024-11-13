@@ -9,3 +9,5 @@ User Guide <user-guide/index>
 API Docs <api-reference/index>
 Developer Guide <developer-guide/index>
 ```
+
+[Changelog](https://github.com/gammasim/simtools/blob/main/CHANGELOG.md)
