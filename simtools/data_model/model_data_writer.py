@@ -350,6 +350,7 @@ class ModelDataWriter:
             schema_file=validate_schema_file,
             data_table=product_data_table,
             data_dict=product_data_dict,
+            check_exact_data_type=False,
         )
         return _validator.validate_and_transform(is_model_parameter)
 

@@ -158,7 +158,7 @@ class DataValidator:
         else:
             self._check_data_type(np.array(value).dtype, index)
 
-        if self.data_dict.get("type") not in ("string", "dict"):
+        if self.data_dict.get("type") not in ("string", "dict", "file"):
             self._check_for_not_a_number(value, index)
             value, unit = self._check_and_convert_units(value, unit, index)
             for range_type in ("allowed_range", "required_range"):
@@ -183,19 +183,14 @@ class DataValidator:
         value, unit = value_conversion.split_value_and_unit(self.data_dict["value"])
 
         if not isinstance(value, list | np.ndarray):
-            if unit is not None:
-                value_as_list = [value * u.Unit(unit).to(u.Unit(target_unit))]
-            else:
-                value_as_list = [value]
-            return value_as_list, [target_unit]
+            value, unit = [value], [unit]
+        if not isinstance(target_unit, list | np.ndarray):
+            target_unit = [target_unit] * len(value)
 
         target_unit = [None if unit == "null" else unit for unit in target_unit]
-        conversion_factor = []
-        for v, t in zip(unit, target_unit):
-            if v is None:
-                conversion_factor.append(1)
-            else:
-                conversion_factor.append(u.Unit(v).to(u.Unit(t)))
+        conversion_factor = [
+            1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
+        ]
         return [v * c for v, c in zip(value, conversion_factor)], target_unit
 
     def _validate_data_dict_using_json_schema(self, data, json_schema):
@@ -759,33 +754,23 @@ class DataValidator:
         """
         Apply data preparation for model parameters.
 
-        Converts strings to numeral values or lists of values, if required.
+        Converts strings to numerical values or lists of values, if required.
 
         """
-        if not isinstance(self.data_dict["value"], str):
+        value = self.data_dict["value"]
+        if not isinstance(value, str):
             return
 
-        try:
-            _is_float = self.data_dict.get("type").startswith("float") | self.data_dict.get(
-                "type"
-            ).startswith("double")
-        except AttributeError:
-            _is_float = True
+        # assume float value if type is not defined
+        _is_float = self.data_dict.get("type", "float").startswith(("float", "double"))
 
-        if np.char.isnumeric(self.data_dict["value"]):
-            self.data_dict["value"] = (
-                float(self.data_dict["value"]) if _is_float else int(self.data_dict["value"])
-            )
+        if value.isnumeric():
+            self.data_dict["value"] = float(value) if _is_float else int(value)
         else:
-            self.data_dict["value"] = gen.convert_string_to_list(
-                self.data_dict["value"], is_float=_is_float
-            )
+            self.data_dict["value"] = gen.convert_string_to_list(value, is_float=_is_float)
 
-        self.data_dict["unit"] = (
-            None
-            if self.data_dict["unit"] is None
-            else gen.convert_string_to_list(self.data_dict["unit"])
-        )
+        if self.data_dict["unit"] is not None:
+            self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
 
     def _check_version_string(self, version):
         """
