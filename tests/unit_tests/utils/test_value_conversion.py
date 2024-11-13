@@ -118,14 +118,42 @@ def test_split_value_and_unit():
 
     assert value_conversion.split_value_and_unit(["100 m", "200 cm"]) == ([100, 200], ["m", "cm"])
 
-    assert value_conversion.split_value_and_unit(np.array(["100 m", "200 cm"])) == (
-        [100, 200],
+    assert value_conversion.split_value_and_unit(np.array(["100 m", "300 cm"])) == (
+        [100, 300],
         ["m", "cm"],
     )
 
-    assert value_conversion.split_value_and_unit([100, "200 cm", 300 * u.m]) == (
-        [100, 200, 300],
+    assert value_conversion.split_value_and_unit([100, "240 cm", 300 * u.m]) == (
+        [100, 240, 300],
         [None, "cm", "m"],
     )
 
-    assert value_conversion.split_value_and_unit("100 cm, 200 cm") == ([100, 200], ["cm", "cm"])
+    assert value_conversion.split_value_and_unit("100 cm, 400 cm") == ([100, 400], ["cm", "cm"])
+
+
+def test_split_value_is_quantity():
+    assert value_conversion._split_value_is_quantity(100 * u.m) == (100, "m")
+    assert value_conversion._split_value_is_quantity([100, 200] * u.m) == ([100, 200], ["m", "m"])
+    assert value_conversion._split_value_is_quantity(np.array([100, 200]) * u.m) == (
+        [100, 200],
+        ["m", "m"],
+    )
+
+
+def test_split_value_is_string():
+    assert value_conversion._split_value_is_string("100") == (100, None)
+    assert value_conversion._split_value_is_string("100 m") == (100, "m")
+    assert value_conversion._split_value_is_string("hello") == ("hello", None)
+    assert value_conversion._split_value_is_string("100 cm, 200 cm") == ([100, 200], ["cm", "cm"])
+
+
+def test_split_value_is_list():
+    assert value_conversion._split_value_is_list(["100 m", "220 cm"]) == ([100, 220], ["m", "cm"])
+    assert value_conversion._split_value_is_list(np.array(["100 m", "230 cm"])) == (
+        [100, 230],
+        ["m", "cm"],
+    )
+    assert value_conversion._split_value_is_list([100, "250 cm", 300 * u.m]) == (
+        [100, 250, 300],
+        [None, "cm", "m"],
+    )

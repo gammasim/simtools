@@ -105,30 +105,45 @@ def split_value_and_unit(value):
         Value and units as (value, unit), or lists of values and unites
     """
     if isinstance(value, u.Quantity):
-        if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m,
-            return list(value.value), [str(value.unit)] * len(value)
-        return value.value, str(value.unit)
+        return _split_value_is_quantity(value)
     if isinstance(value, str):
-        if value.isdigit():  # single integer value
-            return int(value), None
-        try:  # single value with/without unit
-            return u.Quantity(value).value, str(u.Quantity(value).unit)
-        except ValueError:
-            value = gen.convert_string_to_list(value)
-        except TypeError:  # string value (not numerical)
-            pass
+        return _split_value_is_string(value)
     if isinstance(value, list | np.ndarray):
-        value_list = []
-        unit_list = []
-        for item in value:
-            _value, _unit = split_value_and_unit(item)
-            value_list.append(_value)
-            if isinstance(_unit, str):
-                unit_list.append(_unit)
-            else:
-                unit_list.append(None)
-        return value_list, unit_list
+        return _split_value_is_list(value)
     return value, None
+
+
+def _split_value_is_quantity(value):
+    """Split value and unit for an astropy Quantity."""
+    if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m,
+        return list(value.value), [str(value.unit)] * len(value)
+    return value.value, str(value.unit)
+
+
+def _split_value_is_string(value):
+    """Split vale and unit for a string."""
+    if value.isdigit():  # single integer value
+        return int(value), None
+    try:  # single value with/without unit
+        return u.Quantity(value).value, str(u.Quantity(value).unit)
+    except ValueError:
+        return _split_value_is_list(gen.convert_string_to_list(value))
+    except TypeError:  # string value (not numerical)
+        return value, None
+
+
+def _split_value_is_list(value):
+    """Split value and unit for a list."""
+    value_list = []
+    unit_list = []
+    for item in value:
+        _value, _unit = split_value_and_unit(item)
+        value_list.append(_value)
+        if isinstance(_unit, str):
+            unit_list.append(_unit)
+        else:
+            unit_list.append(None)
+    return value_list, unit_list
 
 
 def get_value_as_quantity(value, unit):
