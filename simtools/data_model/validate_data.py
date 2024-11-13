@@ -139,6 +139,8 @@ class DataValidator:
 
         if len(value_as_list) == 1:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
+        else:
+            self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 
         self._check_version_string(self.data_dict.get("version"))
 
@@ -162,9 +164,41 @@ class DataValidator:
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
 
+    def _get_value_and_units_as_lists_from_quantity(self, value, unit):
+        """Convert value and unit to lists for astropy.Quantity."""
+        if value.size == 1:
+            value = value.to(u.Unit(unit))
+            value_as_list = [value.value]
+            unit_as_list = [value.unit.to_string()]
+        else:
+            value_as_list = []
+            unit_as_list = []
+            for v, w in zip(value, unit):
+                value_as_list.append(v.to(u.Unit(w)).value)
+                unit_as_list.append(w)
+        return value_as_list, unit_as_list
+
+    def _get_value_and_units_as_lists_from_lists(self, value, unit):
+        """Convert value and unit to lists for list or numpy array."""
+        value_as_list = []
+        unit_as_list = []
+
+        for v, w in zip(value, unit):
+            if isinstance(v, u.Quantity):
+                value_as_list.append(v.to(u.Unit(w)).value.item())
+                unit_as_list.append(w)
+            else:
+                value_as_list.append(v)
+                unit_as_list.append(w if w != "null" else None)
+
+        return value_as_list, unit_as_list
+
     def _get_value_and_units_as_lists(self):
         """
         Convert value and unit to lists if required.
+
+        Ignore unit field in data_dict if value is a astropy.Quantity.
+        Note the complications from astropy.Units, where a single value is of np.ndarray type.
 
         Returns
         -------
@@ -173,26 +207,20 @@ class DataValidator:
         list
             unit as list
         """
-        value_as_list = (
-            self.data_dict.get("value")
-            if isinstance(self.data_dict["value"], list | np.ndarray)
-            else [self.data_dict["value"]]
-        )
-        unit_as_list = (
-            self.data_dict.get("unit")
-            if isinstance(self.data_dict["unit"], list | np.ndarray)
-            else [self.data_dict["unit"]]
-        )
-        try:
-            value_as_list = value_as_list.tolist()
-        except AttributeError:
-            pass
-        try:
-            unit_as_list = unit_as_list.tolist()
-        except AttributeError:
-            pass
+        value = self.data_dict["value"]
+        unit = self.data_dict["unit"]
 
-        unit_as_list = [None if unit == "null" else unit for unit in unit_as_list]
+        if isinstance(value, u.Quantity):
+            value_as_list, unit_as_list = self._get_value_and_units_as_lists_from_quantity(
+                value, unit
+            )
+        elif isinstance(value, list | np.ndarray):
+            value_as_list, unit_as_list = self._get_value_and_units_as_lists_from_lists(value, unit)
+        else:
+            value_as_list = [value]
+            unit_as_list = [unit] if unit != "null" else [None]
+
+        unit_as_list = [None if w == "null" else w for w in unit_as_list]
 
         return value_as_list, unit_as_list
 

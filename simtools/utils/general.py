@@ -710,7 +710,7 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     return False
 
 
-def convert_list_to_string(data, comma_separated=False, shorten_list=True):
+def convert_list_to_string(data, comma_separated=False, shorten_list=False, collapse_list=False):
     """
     Convert arrays to string (if required).
 
@@ -719,11 +719,13 @@ def convert_list_to_string(data, comma_separated=False, shorten_list=True):
     data: object
         Object of data to convert (e.g., double or list)
     comma_separated: bool
-        If True, return arrays as comma separated strings.
+        If True, returns elements as a comma-separated string (default is space-separated).
     shorten_list: bool
-        If True and the array contains all the same values,
-        return a shortened string for sim_telarray like "all: value".
-        This is useful to make the configuration files more readable.
+        If True and all elements in the list are identical, returns a summary string
+        like "all: value".  This is useful to make the configuration files more readable.
+    collapse_list: bool
+        If True and all elements in the list are identical, returns a single value
+        instead of the entire list.
 
     Returns
     -------
@@ -735,6 +737,8 @@ def convert_list_to_string(data, comma_separated=False, shorten_list=True):
         return data
     if shorten_list and len(data) > 10 and all(np.isclose(item, data[0]) for item in data):
         return f"all: {data[0]}"
+    if collapse_list and len(sorted(set(data))) == 1:
+        data = [data[0]]
     if comma_separated:
         return ", ".join(str(item) for item in data)
     return " ".join(str(item) for item in data)
