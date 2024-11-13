@@ -198,15 +198,15 @@ class ModelDataWriter:
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
         schema_file = self._read_model_parameter_schema(parameter_name)
 
-        try:
+        try:  # e.g. instrument='North'
             site = names.validate_site_name(instrument)
-        except ValueError:
+        except ValueError:  # e.g. instrument='LSTN-01'
             site = names.get_site_from_array_element_name(instrument)
 
         try:
             applicable = self._get_parameter_applicability(instrument)
         except ValueError:
-            applicable = True  # Default to True (except that this field goes in future)
+            applicable = True  # Default to True (expect that this field goes in future)
 
         value, unit = value_conversion.split_value_and_unit(value)
 
