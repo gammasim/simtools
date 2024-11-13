@@ -3,7 +3,10 @@
 import logging
 import re
 
+import numpy as np
 from astropy import units as u
+
+import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
 
@@ -82,6 +85,36 @@ def get_value_unit_type(value, unit_str=None):
         base_unit = unit_str
 
     return base_value, base_unit, base_type
+
+
+def split_value_and_unit(value):
+    """
+    Split a value into its value and unit.
+
+    Takes into account the case where the value is a Quantity, a number,
+    or a simtools-type string encoding a list of values and units.
+    """
+    if isinstance(value, u.Quantity):
+        if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m,
+            return value.value, [str(value.unit)] * len(value)
+        return value.value, str(value.unit)
+    if isinstance(value, str):
+        try:  # single value with unit
+            return u.Quantity(value).value, str(u.Quantity(value).unit)
+        except ValueError:
+            value = gen.convert_string_to_list(value)
+    if isinstance(value, list | np.ndarray):
+        value_list = []
+        unit_list = []
+        for item in value:
+            _value, _unit = split_value_and_unit(item)
+            value_list.append(_value)
+            if isinstance(_unit, str):
+                unit_list.append(_unit)
+            else:
+                unit_list.append(None)
+            return value_list, unit_list
+    return value, None
 
 
 def get_value_as_quantity(value, unit):
