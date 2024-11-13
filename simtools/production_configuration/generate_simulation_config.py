@@ -22,11 +22,10 @@ Key Components:
 
 import logging
 
-import numpy as np
-
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
+from simtools.production_configuration.event_scaler import EventScaler
 
 _logger = logging.getLogger(__name__)
 
@@ -68,6 +67,7 @@ class SimulationConfig:
         self.file_type = file_type
         self.metrics = metrics or {}
         self.evaluator = StatisticalErrorEvaluator(file_path, file_type, metrics)
+        self.event_scaler = EventScaler(self.evaluator, science_case, self.metrics)
         self.simulation_params = {}
 
     def configure_simulation(self) -> dict[str, float]:
@@ -91,6 +91,19 @@ class SimulationConfig:
         }
 
         return self.simulation_params
+
+    def calculate_required_events(self) -> int:
+        """
+        Calculate the required number of simulated events based on statistical error metrics.
+
+        Uses the EventScaler to scale the events.
+
+        Returns
+        -------
+        int
+            The number of simulated events required.
+        """
+        return self.event_scaler.scale_events()
 
     def _calculate_core_scatter_area(self) -> float:
         """
@@ -135,14 +148,14 @@ class SimulationConfig:
         elevation = self.grid_point.get("elevation", 0)
         night_sky_background = self.grid_point.get("night_sky_background", 0)
 
-        # implement reading of factor from LUT
+        # Implement reading of factor from LUT
         return azimuth + elevation + night_sky_background
 
     def _get_viewcone_factor_from_grid_point(self) -> float:
         """
         Determine the viewcone factor.
 
-        Determine the factor based on the grid point's azimuth,
+        The factor is based on the grid point's azimuth,
           elevation, and night sky background.
 
         Returns
@@ -154,7 +167,7 @@ class SimulationConfig:
         elevation = self.grid_point.get("elevation", 0)
         night_sky_background = self.grid_point.get("night_sky_background", 0)
 
-        # implement reading of factor from LUT
+        # Implement reading of factor from LUT
         return azimuth + elevation + night_sky_background
 
     def _fetch_simulated_core_scatter_area(self) -> float:
@@ -178,49 +191,3 @@ class SimulationConfig:
             The fetched viewcone outer bound.
         """
         return self.evaluator.data["viewcone"]
-
-    def calculate_required_events(self) -> int:
-        """
-        Calculate the required number of simulated events based on statistical error metrics.
-
-        Returns
-        -------
-        int
-            The number of simulated events required.
-        """
-        metric_results = self.evaluator.calculate_metrics()
-
-        error_eff_area = metric_results.get("error_eff_area", {})
-        current_max_error = error_eff_area.get("max_error")
-        target_max_error = self.metrics.get("error_eff_area", {}).get("target_error")
-        _logger.info(f"Current max error: {current_max_error}")
-        _logger.info(f"Target max error: {target_max_error['value']}")
-
-        base_events = self._number_of_simulated_events()
-
-        scaling_factor = (current_max_error / target_max_error["value"]) ** 2
-
-        uncertainty_factor = 1.5 if self.science_case == "science case 1" else 1.0
-        print("scaling_factor", scaling_factor.value)
-        print("uncertainty_factor", uncertainty_factor)
-        final_scaling_factor = scaling_factor.value * uncertainty_factor
-
-        required_events = base_events.value * final_scaling_factor
-
-        _logger.info(f"Base events: {base_events}")
-        _logger.info(f"Scaling factor: {scaling_factor}")
-        _logger.info(f"Uncertainty factor: {uncertainty_factor}")
-        _logger.info(f"Required events: {required_events}")
-
-        return np.sum(required_events)
-
-    def _number_of_simulated_events(self) -> int:
-        """
-        Fetch the number of simulated events from file.
-
-        Returns
-        -------
-        int
-            The number of simulated events.
-        """
-        return self.evaluator.data.get("simulated_event_histogram", [0])
