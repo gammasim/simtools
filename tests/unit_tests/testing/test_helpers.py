@@ -8,6 +8,11 @@ import pytest
 from simtools.testing import helpers
 
 
+@pytest.fixture
+def new_testeff_version():
+    return "simtools.testing.helpers._new_testeff_version"
+
+
 def test_new_testeff_version_true():
     with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake/path"}):
         with mock.patch(
@@ -32,25 +37,25 @@ def test_new_testeff_version_no_env_var():
         helpers._new_testeff_version()
 
 
-def test_skip_camera_efficiency_old_testeff():
+def test_skip_camera_efficiency_old_testeff(new_testeff_version):
     config = {"APPLICATION": "camera-efficiency", "TEST_NAME": "some_test"}
-    with mock.patch("simtools.testing.helpers._new_testeff_version", return_value=False):
+    with mock.patch(new_testeff_version, return_value=False):
         with pytest.raises(pytest.skip.Exception):
             helpers.skip_camera_efficiency(config)
 
 
-def test_skip_camera_efficiency_new_testeff():
+def test_skip_camera_efficiency_new_testeff(new_testeff_version):
     config = {"APPLICATION": "camera-efficiency", "TEST_NAME": "some_test"}
-    with mock.patch("simtools.testing.helpers._new_testeff_version", return_value=True):
+    with mock.patch(new_testeff_version, return_value=True):
         helpers.skip_camera_efficiency(config)
 
 
-def test_skip_camera_efficiency_specific_test():
+def test_skip_camera_efficiency_specific_test(new_testeff_version):
     config = {
         "APPLICATION": "simtools-validate-camera-efficiency",
         "TEST_NAME": "SSTS",
     }
-    with mock.patch("simtools.testing.helpers._new_testeff_version", return_value=True):
+    with mock.patch(new_testeff_version, return_value=True):
         with pytest.raises(pytest.skip.Exception):
             helpers.skip_camera_efficiency(config)
 
