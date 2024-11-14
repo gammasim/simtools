@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from simtools.testing import configuration, validate_output
+from simtools.testing import configuration, helpers, validate_output
 
 logger = logging.getLogger()
 load_dotenv(".env")
@@ -35,7 +35,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     """
 
     tmp_config = copy.deepcopy(config)
-    skip_camera_efficiency(tmp_config)
+    helpers.skip_camera_efficiency(tmp_config)
 
     # The db_add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
@@ -53,35 +53,3 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     assert os.system(cmd) == 0, f"Application failed: {cmd}"
 
     validate_output.validate_all_tests(tmp_config, request, config_file_model_version)
-
-
-def skip_camera_efficiency(config):
-    """
-    Skip camera efficiency tests if the old version of testeff is used.
-    """
-    if "camera-efficiency" in config["APPLICATION"]:
-        if not new_testeff_version():
-            pytest.skip(
-                "Any applications calling the old version of testeff are skipped "
-                "due to a limitation of the old testeff not allowing to specify "
-                "the include directory. Please update your sim_telarray tarball."
-            )
-        full_test_name = f"{config['APPLICATION']}_{config['TEST_NAME']}"
-        if "simtools-validate-camera-efficiency_SSTS" == full_test_name:
-            pytest.skip(
-                "The test simtools-validate-camera-efficiency_SSTS is skipped "
-                "since the fake SST mirrors are not yet implemented (#1155)"
-            )
-
-
-def new_testeff_version():
-    """
-    Testeff has been updated to allow to specify the include directory.
-    This test checks if the new version is used.
-    """
-
-    with open(os.path.join(os.getenv("SIMTOOLS_SIMTEL_PATH"), "sim_telarray/testeff.c")) as file:
-        file_content = file.read()
-        if "/* Combine the include paths such that those from '-I...' options */" in file_content:
-            return True
-        return False
