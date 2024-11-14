@@ -33,7 +33,9 @@ class InterpolationHandler:
             (e.data["bin_edges_low"][:-1] + e.data["bin_edges_high"][:-1]) / 2
             for e in self.evaluators
         ]
-        self.scaled_events = [scaler.scale_events() for scaler in self.event_scalers]
+        self.scaled_events = [
+            scaler.scale_events(return_sum=False) for scaler in self.event_scalers
+        ]
         self.energy_thresholds = np.array([e.energy_threshold for e in self.evaluators])
 
         self.data, self.grid_points = self._build_data_array()
