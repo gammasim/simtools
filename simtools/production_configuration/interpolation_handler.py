@@ -1,4 +1,4 @@
-"""Interpolates between instances of StatisticalErrorEvaluator."""
+"""Interpolates between instances of StatisticalErrorEvaluator using EventScaler."""
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -8,29 +8,34 @@ from scipy.interpolate import griddata
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
+from simtools.production_configuration.event_scaler import EventScaler
 
 
 class InterpolationHandler:
     """Handle interpolation between multiple StatisticalErrorEvaluator instances."""
 
-    def __init__(self, evaluators: list["StatisticalErrorEvaluator"]):
+    def __init__(
+        self, evaluators: list["StatisticalErrorEvaluator"], science_case: str, metrics: dict
+    ):
         self.evaluators = evaluators
+        self.science_case = science_case
+        self.metrics = metrics
+        self.event_scalers = [
+            EventScaler(e, self.science_case, self.metrics) for e in self.evaluators
+        ]
 
-        # Collect all grid points for each dimension (no uniqueness applied)
         self.azimuths = [e.grid_point[1].to(u.deg).value for e in self.evaluators]
         self.zeniths = [e.grid_point[2].to(u.deg).value for e in self.evaluators]
         self.nsbs = [e.grid_point[3] for e in self.evaluators]
         self.offsets = [e.grid_point[4].to(u.deg).value for e in self.evaluators]
 
-        # Collect energy grids and corresponding scaled events
         self.energy_grids = [
             (e.data["bin_edges_low"][:-1] + e.data["bin_edges_high"][:-1]) / 2
             for e in self.evaluators
         ]
-        self.scaled_events = [e.scaled_events for e in self.evaluators]
+        self.scaled_events = [scaler.scale_events() for scaler in self.event_scalers]
         self.energy_thresholds = np.array([e.energy_threshold for e in self.evaluators])
 
-        # Prepare data for interpolation
         self.data, self.grid_points = self._build_data_array()
 
     def _build_data_array(self):

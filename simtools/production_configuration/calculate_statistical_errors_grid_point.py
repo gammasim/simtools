@@ -379,7 +379,7 @@ class StatisticalErrorEvaluator:
                 ref_value = self.metrics.get("error_eff_area", {}).get("target_error")["value"]
                 _logger.info(
                     f"Effective Area Error (max in validity range): "
-                    f"{self.error_eff_area['max_error'].value:.3f}, "
+                    f"{self.error_eff_area['max_error'].value:.6f}, "
                     f"Reference: {ref_value:.3f}"
                 )
 
