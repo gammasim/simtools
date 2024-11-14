@@ -41,35 +41,31 @@ class EventScaler:
         self.science_case = science_case
         self.metrics = metrics
 
-    def scale_events(self) -> float:
+    def scale_events(self, return_sum=True) -> float:
         """
         Calculate the scaled number of events based on statistical error metrics.
 
-        Returns
-        -------
-        float
-            The scaled number of events for the entire dataset.
-        """
-        scaling_factor = self._compute_scaling_factor()
-        base_events = self._number_of_simulated_events()
-        return np.sum(base_events * scaling_factor)
-
-    def scale_events_at_grid_point(self, grid_point: tuple) -> float:
-        """
-        Calculate the scaled number of events for a specific grid point (energy).
+        If `return_sum` is `True`, the method returns the sum of scaled events for the entire
+        dataset. If `return_sum` is `False`, it returns the scaled number of events for each
+        grid point (e.g., along the energy axis).
 
         Parameters
         ----------
-        grid_point : tuple
-            The grid point specifying energy, azimuth, zenith, NSB, and offset.
+        return_sum : bool, optional
+            If `True`, returns the sum of scaled events for the entire dataset. If `False`,
+            returns the scaled events for each grid point along the energy axis. Default is `True`.
 
         Returns
         -------
-        float
-            The scaled number of events for the specified grid point (energy).
+        float or np.ndarray
+            If `return_sum` is `True`, returns the total scaled number of events. If `return_sum`
+            is `False`, returns an array of scaled events along the energy axis.
         """
         scaling_factor = self._compute_scaling_factor()
-        return self._calculate_scaled_events_at_grid_point(grid_point, scaling_factor)
+        base_events = self._number_of_simulated_events()
+        if return_sum:
+            return np.sum(base_events * scaling_factor)
+        return base_events * scaling_factor
 
     def _compute_scaling_factor(self) -> float:
         """
@@ -111,8 +107,9 @@ class EventScaler:
         """
         return self.evaluator.data.get("simulated_event_histogram", [0])
 
-    def _calculate_scaled_events_at_grid_point(
-        self, grid_point: tuple, scaling_factor: float
+    def calculate_scaled_events_at_grid_point(
+        self,
+        grid_point: tuple,
     ) -> float:
         """
         Calculate the scaled number of events for a specific energy grid point.
@@ -121,8 +118,7 @@ class EventScaler:
         ----------
         grid_point : tuple
             The grid point specifying energy, azimuth, zenith, NSB, and offset.
-        scaling_factor : float
-            The scaling factor to apply to the base events.
+
 
         Returns
         -------
@@ -133,8 +129,10 @@ class EventScaler:
         bin_edges = self.evaluator.create_bin_edges()
         bin_idx = np.digitize(energy, bin_edges) - 1
 
+        scaling_factor = self._compute_scaling_factor()
+
         if bin_idx < 0 or bin_idx >= len(self.evaluator.data["simulated_event_histogram"]):
             raise ValueError(f"Energy {energy} is outside the range of the simulated events data.")
 
-        base_events = self.evaluator.data["simulated_event_histogram"][bin_idx]
+        base_events = self._number_of_simulated_events()[bin_idx]
         return base_events * scaling_factor
