@@ -39,6 +39,7 @@ dependencies = [
   "particle",
   "pymongo",
   "pyproj",
+  "pytest",
   "python-dotenv",
   "pyyaml",
   "scipy",
@@ -57,7 +58,6 @@ optional-dependencies."doc" = [
   "towncrier",
 ]
 optional-dependencies."tests" = [
-  "pytest",
   "pytest-cov",
   "pytest-mock",
   "pytest-profiling",
