@@ -14,6 +14,16 @@ def integration_test_config_files():
     return sorted(Path(simtools.__file__).parent.glob("../tests/integration_tests/config/*.yml"))
 
 
+@pytest.fixture
+def tmp_config_string():
+    return "tmp_config.yml"
+
+
+@pytest.fixture
+def mocker_pytest_skip(mocker):
+    return mocker.patch("pytest.skip")
+
+
 def test_get_list_of_test_configurations_test_names(integration_test_config_files):
     test_names = configuration.get_list_of_test_configurations(
         integration_test_config_files, get_test_names=True
@@ -127,7 +137,7 @@ def test_prepare_configuration_with_single_boolean_option(tmp_test_directory):
     assert config_file_model_version is None
 
 
-def test_prepare_configuration_with_model_version(tmp_test_directory):
+def test_prepare_configuration_with_model_version(tmp_test_directory, tmp_config_string):
     config = {"MODEL_VERSION": "v1.0"}
     model_version = "v2.0"
 
@@ -135,7 +145,7 @@ def test_prepare_configuration_with_model_version(tmp_test_directory):
         config, tmp_test_directory, model_version
     )
 
-    assert config_file == tmp_test_directory / "tmp_config.yml"
+    assert config_file == tmp_test_directory / tmp_config_string
     assert config_string is None
     assert config_file_model_version == "v1.0"
 
@@ -144,7 +154,7 @@ def test_prepare_configuration_with_model_version(tmp_test_directory):
     assert written_config["MODEL_VERSION"] == "v2.0"
 
 
-def test_prepare_configuration_with_output_path(tmp_test_directory):
+def test_prepare_configuration_with_output_path(tmp_test_directory, tmp_config_string):
     config = {"OUTPUT_PATH": "results"}
     model_version = None
 
@@ -152,7 +162,7 @@ def test_prepare_configuration_with_output_path(tmp_test_directory):
         config, tmp_test_directory, model_version
     )
 
-    assert config_file == tmp_test_directory / "tmp_config.yml"
+    assert config_file == tmp_test_directory / tmp_config_string
     assert config_string is None
     assert config_file_model_version is None
 
@@ -162,7 +172,7 @@ def test_prepare_configuration_with_output_path(tmp_test_directory):
     assert written_config["USE_PLAIN_OUTPUT_PATH"] is True
 
 
-def test_prepare_configuration_with_data_directory(tmp_test_directory):
+def test_prepare_configuration_with_data_directory(tmp_test_directory, tmp_config_string):
     config = {"DATA_DIRECTORY": "data"}
     model_version = None
 
@@ -170,7 +180,7 @@ def test_prepare_configuration_with_data_directory(tmp_test_directory):
         config, tmp_test_directory, model_version
     )
 
-    assert config_file == tmp_test_directory / "tmp_config.yml"
+    assert config_file == tmp_test_directory / tmp_config_string
     assert config_string is None
     assert config_file_model_version is None
 
@@ -179,7 +189,7 @@ def test_prepare_configuration_with_data_directory(tmp_test_directory):
     assert written_config["DATA_DIRECTORY"] == str(tmp_test_directory / "data")
 
 
-def test_prepare_configuration_with_full_config(tmp_test_directory):
+def test_prepare_configuration_with_full_config(tmp_test_directory, tmp_config_string):
     config = {"MODEL_VERSION": "v1.0", "OUTPUT_PATH": "results", "DATA_DIRECTORY": "data"}
     model_version = "v2.0"
 
@@ -187,7 +197,7 @@ def test_prepare_configuration_with_full_config(tmp_test_directory):
         config, tmp_test_directory, model_version
     )
 
-    assert config_file == tmp_test_directory / "tmp_config.yml"
+    assert config_file == tmp_test_directory / tmp_config_string
     assert config_string is None
     assert config_file_model_version == "v1.0"
 
@@ -199,7 +209,7 @@ def test_prepare_configuration_with_full_config(tmp_test_directory):
     assert written_config["DATA_DIRECTORY"] == str(tmp_test_directory / "data")
 
 
-def test_configure_with_model_version_use_current(tmp_test_directory, mocker):
+def test_configure_with_model_version_use_current(tmp_test_directory, mocker, tmp_config_string):
     config = {
         "APPLICATION": "test_app",
         "TEST_NAME": "test_name",
@@ -211,7 +221,7 @@ def test_configure_with_model_version_use_current(tmp_test_directory, mocker):
     cmd, config_file_model_version = configuration.configure(config, tmp_test_directory, request)
 
     expected_cmd = "python simtools/applications/test_app.py --config " + str(
-        tmp_test_directory / "test_app-test_name" / "tmp_config.yml"
+        tmp_test_directory / "test_app-test_name" / tmp_config_string
     )
     assert cmd == expected_cmd
     assert config_file_model_version == "v1.0"
@@ -229,7 +239,7 @@ def test_configure_without_configuration(tmp_test_directory, mocker):
     assert config_file_model_version is None
 
 
-def test_configure_with_configuration(tmp_test_directory, mocker):
+def test_configure_with_configuration(tmp_test_directory, mocker, tmp_config_string):
     config = {
         "APPLICATION": "test_app",
         "TEST_NAME": "test_name",
@@ -241,13 +251,13 @@ def test_configure_with_configuration(tmp_test_directory, mocker):
     cmd, config_file_model_version = configuration.configure(config, tmp_test_directory, request)
 
     expected_cmd = "python simtools/applications/test_app.py --config " + str(
-        tmp_test_directory / "test_app-test_name" / "tmp_config.yml"
+        tmp_test_directory / "test_app-test_name" / tmp_config_string
     )
     assert cmd == expected_cmd
     assert config_file_model_version is None
 
     with open(
-        tmp_test_directory / "test_app-test_name" / "tmp_config.yml", encoding="utf-8"
+        tmp_test_directory / "test_app-test_name" / tmp_config_string, encoding="utf-8"
     ) as file:
         written_config = yaml.safe_load(file)
     assert written_config["OUTPUT_PATH"] == str(
@@ -258,33 +268,29 @@ def test_configure_with_configuration(tmp_test_directory, mocker):
     )
 
 
-def test_skip_test_for_model_version_no_model_version_use_current(mocker):
+def test_skip_test_for_model_version_no_model_version_use_current(mocker_pytest_skip):
     config = {"CONFIGURATION": {"MODEL_VERSION": "v1.0"}}
     model_version_requested = "v1.0"
-    mocker.patch("pytest.skip")
     configuration._skip_test_for_model_version(config, model_version_requested)
     pytest.skip.assert_not_called()
 
 
-def test_skip_test_for_model_version_no_model_version_requested(mocker):
+def test_skip_test_for_model_version_no_model_version_requested(mocker_pytest_skip):
     config = {"CONFIGURATION": {"MODEL_VERSION": "v1.0", "MODEL_VERSION_USE_CURRENT": True}}
     model_version_requested = None
-    mocker.patch("pytest.skip")
     configuration._skip_test_for_model_version(config, model_version_requested)
     pytest.skip.assert_not_called()
 
 
-def test_skip_test_for_model_version_skip(mocker):
+def test_skip_test_for_model_version_skip(mocker_pytest_skip):
     config = {"CONFIGURATION": {"MODEL_VERSION": "v1.0", "MODEL_VERSION_USE_CURRENT": True}}
     model_version_requested = "v2.0"
-    mocker.patch("pytest.skip")
     configuration._skip_test_for_model_version(config, model_version_requested)
     pytest.skip.assert_called_once_with("Model version requested v2.0 not supported for this test")
 
 
-def test_skip_test_for_model_version_no_skip(mocker):
+def test_skip_test_for_model_version_no_skip(mocker_pytest_skip):
     config = {"CONFIGURATION": {"MODEL_VERSION": "v1.0", "MODEL_VERSION_USE_CURRENT": True}}
     model_version_requested = "v1.0"
-    mocker.patch("pytest.skip")
     configuration._skip_test_for_model_version(config, model_version_requested)
     pytest.skip.assert_not_called()

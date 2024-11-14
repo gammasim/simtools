@@ -53,6 +53,41 @@ def file_name():
     return _file_name
 
 
+@pytest.fixture
+def output_path():
+    return "/path/to/output"
+
+
+@pytest.fixture
+def mock_validate_application_output(mocker):
+    return mocker.patch("simtools.testing.validate_output.validate_application_output")
+
+
+@pytest.fixture
+def mock_path_exists(mocker):
+    return mocker.patch("simtools.testing.validate_output.Path.exists", return_value=True)
+
+
+@pytest.fixture
+def mock_check_output(mocker):
+    return mocker.patch("simtools.testing.assertions.check_output_from_sim_telarray")
+
+
+@pytest.fixture
+def mock_validate_reference_output_file(mocker):
+    return mocker.patch("simtools.testing.validate_output._validate_reference_output_file")
+
+
+@pytest.fixture
+def mock_validate_output_path_and_file(mocker):
+    return mocker.patch("simtools.testing.validate_output._validate_output_path_and_file")
+
+
+@pytest.fixture
+def mock_assert_file_type(mocker):
+    return mocker.patch("simtools.testing.assertions.assert_file_type")
+
+
 def test_compare_json_files_float_strings(create_json_file, file_name):
     content = {"key": 1, "value": "1.23 4.56 7.89"}
     file1 = create_json_file(file_name(1, "json"), content)
@@ -210,53 +245,41 @@ def test_compare_files_unknown_type(tmp_test_directory, file_name):
     assert not validate_output.compare_files(file1, file2)
 
 
-def test_validate_all_tests_no_model_version(mocker):
+def test_validate_all_tests_no_model_version(mocker, mock_validate_application_output):
     config = {"key": "value"}
     request = mocker.Mock()
     request.config.getoption.return_value = None
     config_file_model_version = None
 
-    mock_validate_application_output = mocker.patch(
-        "simtools.testing.validate_output.validate_application_output"
-    )
-
     validate_output.validate_all_tests(config, request, config_file_model_version)
 
     mock_validate_application_output.assert_called_once_with(config)
 
 
-def test_validate_all_tests_matching_model_version(mocker):
+def test_validate_all_tests_matching_model_version(mocker, mock_validate_application_output):
     config = {"key": "value"}
     request = mocker.Mock()
     request.config.getoption.return_value = "1.0"
     config_file_model_version = "1.0"
 
-    mock_validate_application_output = mocker.patch(
-        "simtools.testing.validate_output.validate_application_output"
-    )
-
     validate_output.validate_all_tests(config, request, config_file_model_version)
 
     mock_validate_application_output.assert_called_once_with(config)
 
 
-def test_validate_all_tests_non_matching_model_version(mocker):
+def test_validate_all_tests_non_matching_model_version(mocker, mock_validate_application_output):
     config = {"key": "value"}
     request = mocker.Mock()
     request.config.getoption.return_value = "1.0"
     config_file_model_version = "2.0"
-
-    mock_validate_application_output = mocker.patch(
-        "simtools.testing.validate_output.validate_application_output"
-    )
 
     validate_output.validate_all_tests(config, request, config_file_model_version)
 
     mock_validate_application_output.assert_not_called()
 
 
-def test_validate_reference_output_file(mocker):
-    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output", "OUTPUT_FILE": "output_file"}}
+def test_validate_reference_output_file(mocker, output_path):
+    config = {"CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"}}
     integration_test = {
         "REFERENCE_OUTPUT_FILE": "/path/to/reference/file",
         "TOLERANCE": 1.0e-5,
@@ -279,19 +302,12 @@ def test_validate_reference_output_file(mocker):
     )
 
 
-def test_validate_output_path_and_file_exists(mocker):
+def test_validate_output_path_and_file_exists(output_path, mock_path_exists, mock_check_output):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": "/path/to/output", "DATA_DIRECTORY": "/path/to/data"},
+        "CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data"},
         "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
     }
     integration_test = {"OUTPUT_FILE": "output_file"}
-
-    mock_path_exists = mocker.patch(
-        "simtools.testing.validate_output.Path.exists", return_value=True
-    )
-    mock_check_output = mocker.patch(
-        "simtools.testing.assertions.check_output_from_sim_telarray", return_value=True
-    )
 
     validate_output._validate_output_path_and_file(config, integration_test)
 
@@ -302,21 +318,16 @@ def test_validate_output_path_and_file_exists(mocker):
     )
 
 
-def test_validate_output_path_and_file_exists_no_data_directory(mocker):
+def test_validate_output_path_and_file_exists_no_data_directory(
+    output_path, mock_path_exists, mock_check_output
+):
     config = {
         "CONFIGURATION": {
-            "OUTPUT_PATH": "/path/to/output",
+            "OUTPUT_PATH": output_path,
         },
         "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
     }
     integration_test = {"OUTPUT_FILE": "output_file"}
-
-    mock_path_exists = mocker.patch(
-        "simtools.testing.validate_output.Path.exists", return_value=True
-    )
-    mock_check_output = mocker.patch(
-        "simtools.testing.assertions.check_output_from_sim_telarray", return_value=True
-    )
 
     validate_output._validate_output_path_and_file(config, integration_test)
 
@@ -327,15 +338,9 @@ def test_validate_output_path_and_file_exists_no_data_directory(mocker):
     )
 
 
-def test_validate_output_path_and_file_not_exists(mocker):
-    config = {
-        "CONFIGURATION": {"OUTPUT_PATH": "/path/to/output", "DATA_DIRECTORY": "/path/to/data"}
-    }
+def test_validate_output_path_and_file_not_exists(output_path, mock_path_exists):
+    config = {"CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data"}}
     integration_test = {"OUTPUT_FILE": "output_file"}
-
-    mock_path_exists = mocker.patch(
-        "simtools.testing.validate_output.Path.exists", return_value=False
-    )
 
     with pytest.raises(AssertionError):
         validate_output._validate_output_path_and_file(config, integration_test)
@@ -343,19 +348,14 @@ def test_validate_output_path_and_file_not_exists(mocker):
     mock_path_exists.assert_called()
 
 
-def test_validate_output_path_and_file_expected_output(mocker):
+def test_validate_output_path_and_file_expected_output(
+    output_path, mock_path_exists, mock_check_output
+):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": "/path/to/output", "DATA_DIRECTORY": "/path/to/data"},
+        "CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data2"},
         "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
     }
     integration_test = {"OUTPUT_FILE": "output_file"}
-
-    mock_path_exists = mocker.patch(
-        "simtools.testing.validate_output.Path.exists", return_value=True
-    )
-    mock_check_output = mocker.patch(
-        "simtools.testing.assertions.check_output_from_sim_telarray", return_value=True
-    )
 
     validate_output._validate_output_path_and_file(config, integration_test)
 
@@ -366,17 +366,12 @@ def test_validate_output_path_and_file_expected_output(mocker):
     )
 
 
-def test_validate_output_path_and_file_log_hist(mocker):
+def test_validate_output_path_and_file_log_hist(output_path, mock_path_exists, mock_check_output):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": "/path/to/output", "DATA_DIRECTORY": "/path/to/data"},
+        "CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data1"},
         "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
     }
     integration_test = {"OUTPUT_FILE": "log_hist_output_file"}
-
-    mock_path_exists = mocker.patch(
-        "simtools.testing.validate_output.Path.exists", return_value=True
-    )
-    mock_check_output = mocker.patch("simtools.testing.assertions.check_output_from_sim_telarray")
 
     validate_output._validate_output_path_and_file(config, integration_test)
 
@@ -384,8 +379,8 @@ def test_validate_output_path_and_file_log_hist(mocker):
     mock_check_output.assert_not_called()
 
 
-def test_validate_application_output_no_integration_tests(mocker):
-    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+def test_validate_application_output_no_integration_tests(mocker, output_path):
+    config = {"CONFIGURATION": {"OUTPUT_PATH": output_path}}
     mock_logger_info = mocker.patch("simtools.testing.validate_output._logger.info")
 
     validate_output.validate_application_output(config)
@@ -393,18 +388,16 @@ def test_validate_application_output_no_integration_tests(mocker):
     mock_logger_info.assert_not_called()
 
 
-def test_validate_application_output_with_reference_output_file(mocker):
+def test_validate_application_output_with_reference_output_file(
+    output_path,
+    mock_assert_file_type,
+    mock_validate_output_path_and_file,
+    mock_validate_reference_output_file,
+):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"},
+        "CONFIGURATION": {"OUTPUT_PATH": output_path},
         "INTEGRATION_TESTS": [{"REFERENCE_OUTPUT_FILE": "/path/to/reference/file"}],
     }
-    mock_validate_reference_output_file = mocker.patch(
-        "simtools.testing.validate_output._validate_reference_output_file"
-    )
-    mock_validate_output_path_and_file = mocker.patch(
-        "simtools.testing.validate_output._validate_output_path_and_file"
-    )
-    mock_assert_file_type = mocker.patch("simtools.testing.assertions.assert_file_type")
 
     validate_output.validate_application_output(config)
 
@@ -415,19 +408,16 @@ def test_validate_application_output_with_reference_output_file(mocker):
     mock_assert_file_type.assert_not_called()
 
 
-def test_validate_application_output_with_output_file(mocker):
+def test_validate_application_output_with_output_file(
+    output_path,
+    mock_assert_file_type,
+    mock_validate_output_path_and_file,
+    mock_validate_reference_output_file,
+):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"},
+        "CONFIGURATION": {"OUTPUT_PATH": output_path},
         "INTEGRATION_TESTS": [{"OUTPUT_FILE": "output_file"}],
     }
-    mock_validate_reference_output_file = mocker.patch(
-        "simtools.testing.validate_output._validate_reference_output_file"
-    )
-    mock_validate_output_path_and_file = mocker.patch(
-        "simtools.testing.validate_output._validate_output_path_and_file"
-    )
-    mock_assert_file_type = mocker.patch("simtools.testing.assertions.assert_file_type")
-
     validate_output.validate_application_output(config)
 
     mock_validate_reference_output_file.assert_not_called()
@@ -437,18 +427,16 @@ def test_validate_application_output_with_output_file(mocker):
     mock_assert_file_type.assert_not_called()
 
 
-def test_validate_application_output_with_file_type(mocker):
+def test_validate_application_output_with_file_type(
+    output_path,
+    mock_assert_file_type,
+    mock_validate_output_path_and_file,
+    mock_validate_reference_output_file,
+):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": "/path/to/output", "OUTPUT_FILE": "output_file"},
+        "CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"},
         "INTEGRATION_TESTS": [{"FILE_TYPE": "ecsv"}],
     }
-    mock_validate_reference_output_file = mocker.patch(
-        "simtools.testing.validate_output._validate_reference_output_file"
-    )
-    mock_validate_output_path_and_file = mocker.patch(
-        "simtools.testing.validate_output._validate_output_path_and_file"
-    )
-    mock_assert_file_type = mocker.patch("simtools.testing.assertions.assert_file_type")
 
     validate_output.validate_application_output(config)
 
@@ -462,24 +450,22 @@ def test_validate_application_output_with_file_type(mocker):
     )
 
 
-def test_validate_application_output_all_checks(mocker):
+def test_validate_application_output_all_checks(
+    output_path,
+    mock_assert_file_type,
+    mock_validate_output_path_and_file,
+    mock_validate_reference_output_file,
+):
     config = {
-        "CONFIGURATION": {"OUTPUT_PATH": "/path/to/output", "OUTPUT_FILE": "output_file"},
+        "CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"},
         "INTEGRATION_TESTS": [
             {
-                "REFERENCE_OUTPUT_FILE": "/path/to/reference/file",
+                "REFERENCE_OUTPUT_FILE": "/path/to/reference/file1",
                 "OUTPUT_FILE": "output_file",
                 "FILE_TYPE": "ecsv",
             }
         ],
     }
-    mock_validate_reference_output_file = mocker.patch(
-        "simtools.testing.validate_output._validate_reference_output_file"
-    )
-    mock_validate_output_path_and_file = mocker.patch(
-        "simtools.testing.validate_output._validate_output_path_and_file"
-    )
-    mock_assert_file_type = mocker.patch("simtools.testing.assertions.assert_file_type")
 
     validate_output.validate_application_output(config)
 
