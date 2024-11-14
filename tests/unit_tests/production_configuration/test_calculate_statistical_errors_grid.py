@@ -5,6 +5,7 @@ import pytest
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
+from simtools.production_configuration.event_scaler import EventScaler
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
 from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
@@ -83,7 +84,8 @@ def test_interpolation_handler(test_fits_file, metric):
 
 
 def test_calculate_scaled_events(test_fits_file, metric):
-    """Test the calculation of scaled events for a specific grid point."""
+    """Test the calculation of scaled events for a specific grid point using EventScaler."""
+
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file, file_type="On-source", metrics=metric
     )
@@ -101,7 +103,9 @@ def test_calculate_scaled_events(test_fits_file, metric):
 
     evaluator.create_bin_edges = lambda: np.array([1.0, 2.0, 3.0])
 
-    scaled_events = evaluator.calculate_scaled_events()
+    event_scaler = EventScaler(evaluator, science_case="science case 1", metrics=metric)
+
+    scaled_events = event_scaler.scale_events()
 
     assert isinstance(scaled_events, float)
     assert scaled_events == pytest.approx(200.0, rel=1e-2)
