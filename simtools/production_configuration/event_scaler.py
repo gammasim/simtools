@@ -79,7 +79,8 @@ class EventScaler:
         metric_results = self.evaluator.calculate_metrics()
         error_eff_area = metric_results.get("error_eff_area", {})
         current_max_error = error_eff_area.get("max_error")
-        target_max_error = self.metrics.get("error_eff_area", {}).get("target_error")
+        target_max_error = self.metrics.get("error_eff_area", {}).get("target_error")["value"]
+
         return (
             current_max_error / target_max_error
         ) ** 2 * self._apply_science_case_scaling_factor()
