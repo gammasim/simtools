@@ -94,6 +94,9 @@ def _parse(label, description):
         default="production_simulation_config_metrics.yaml",
         help="Metrics definition file. (default: production_simulation_config_metrics.yaml)",
     )
+    config.parser.add_argument(
+        "--science_case", type=str, required=True, help="Science case for the simulation."
+    )
     return config.initialize(db_config=False)
 
 
@@ -116,32 +119,31 @@ def main():
     if args_dict["base_path"] and args_dict["zeniths"] and args_dict["offsets"]:
         for zenith in args_dict["zeniths"]:
             for offset in args_dict["offsets"]:
-                # no offset used here
+                # Build file path based on base_path, zenith, and offset
                 file_name = f"prod6_LaPalma-{int(zenith.value)}deg_"
                 file_name += "gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
                 file_path = os.path.join(args_dict["base_path"], file_name)
-                evaluator_instances.append(
-                    StatisticalErrorEvaluator(
-                        file_path,
-                        file_type="Gamma-cone",
-                        metrics=args_dict["metrics"],
-                        grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
-                    )
+
+                evaluator = StatisticalErrorEvaluator(
+                    file_path,
+                    file_type="Gamma-cone",
+                    metrics=args_dict["metrics"],
+                    grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
                 )
 
-        # Calculate metrics and scaled events
-        for evaluator in evaluator_instances:
-            evaluator.calculate_metrics()
-            evaluator.calculate_scaled_events()
+                evaluator.calculate_metrics()
+                evaluator_instances.append(evaluator)
+
     else:
+        logger.warning("No files read")
         logger.warning(f"Base Path: {args_dict['base_path']}")
         logger.warning(f"Zeniths: {args_dict['zeniths']}")
         logger.warning(f"Offsets: {args_dict['offsets']}")
 
-        logger.warning("No files read")
-
     # Perform interpolation for the given query point
-    interpolation_handler = InterpolationHandler(evaluator_instances)
+    interpolation_handler = InterpolationHandler(
+        evaluator_instances, science_case=args_dict["science_case"], metrics=args_dict["metrics"]
+    )
     query_points = np.array([args_dict["query_point"]])
     scaled_events = interpolation_handler.interpolate(query_points)
 
