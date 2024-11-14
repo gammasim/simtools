@@ -10,6 +10,10 @@ import logging
 
 import numpy as np
 
+from simtools.production_configuration.calculate_statistical_errors_grid_point import (
+    StatisticalErrorEvaluator,
+)
+
 _logger = logging.getLogger(__name__)
 
 
@@ -20,7 +24,7 @@ class EventScaler:
     Supports scaling both the entire dataset and specific grid points like energy values.
     """
 
-    def __init__(self, evaluator, science_case, metrics):
+    def __init__(self, evaluator: StatisticalErrorEvaluator, science_case, metrics):
         """
         Initialize the EventScaler with the evaluator, science case, and metrics.
 

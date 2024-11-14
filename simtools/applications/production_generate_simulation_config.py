@@ -44,7 +44,6 @@ The output will show the configured simulation parameters.
 
 import json
 import logging
-import os
 from pathlib import Path
 
 import astropy.units as u
@@ -55,6 +54,7 @@ from simtools.io_operations import io_handler
 from simtools.production_configuration.generate_simulation_config import (
     SimulationConfig,
 )
+from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 
 def _parse(label):
@@ -109,58 +109,30 @@ def _parse(label):
     return config.initialize(db_config=False)
 
 
-def load_metrics(file_path: str) -> dict:
-    """
-    Load metrics from a YAML file if provided.
-
-    Parameters
-    ----------
-    file_path : str
-        Path to the metrics YAML file.
-
-    Returns
-    -------
-    dict
-        Dictionary of metrics.
-
-        Example:
-
-        metrics = {
-            "uncertainty_eff_area": 0.02,
-            "uncertainty_sig_eff_gh": 0.02,
-            "uncertainty_energy_estimate_bdt_reg_tree": 0.05,
-            "uncertainty_gamma_ray_psf": 0.01,
-            "uncertainty_image_template_methods": 0.03,}
-    """
-    if file_path and os.path.exists(file_path):
-        return gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=True)
-    return {}
-
-
 def main():
     """Run the Simulation Config application."""
     label = Path(__file__).stem
-    args, _ = _parse(label)
+    args_dict, _ = _parse(label)
 
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     output_path = io_handler.IOHandler().get_output_directory(label)
-    output_filepath = Path(output_path).joinpath(f"{args['output_file']}")
+    output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
 
     grid_point_config = {
-        "azimuth": args["azimuth"],
-        "elevation": args["elevation"],
-        "night_sky_background": args["nsb"],
+        "azimuth": args_dict["azimuth"],
+        "elevation": args_dict["elevation"],
+        "night_sky_background": args_dict["nsb"],
     }
 
-    metrics = load_metrics(args["metrics_file"]) if args["metrics_file"] else {}
+    metrics = load_metrics(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
 
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,
-        ctao_data_level=args["ctao_data_level"],
-        science_case=args["science_case"],
-        file_path=args["file_path"],
-        file_type=args["file_type"],
+        ctao_data_level=args_dict["ctao_data_level"],
+        science_case=args_dict["science_case"],
+        file_path=args_dict["file_path"],
+        file_type=args_dict["file_type"],
         metrics=metrics,
     )
 
