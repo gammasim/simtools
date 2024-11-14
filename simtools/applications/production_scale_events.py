@@ -27,7 +27,9 @@ To evaluate statistical errors and perform interpolation, run the script from th
 .. code-block:: console
 
     simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \
-        --zeniths 20 52 40 60 --offsets 0 --interpolate --query_point 1 180 30 0 0
+        --zeniths 20 52 40 60 --offsets 0 --interpolate --query_point 1 180 30 0 0 \
+        --science_case 1 --metrics_file "path/to/metrics.yaml"
+
 
 The output will display the scaled events for the specified grid point.
 """
@@ -47,6 +49,7 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
+from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 
 def _parse(label, description):
@@ -89,7 +92,7 @@ def _parse(label, description):
         help="Output file to store the results. (default: 'interpolated_scaled_events.json').",
     )
     config.parser.add_argument(
-        "--metrics",
+        "--metrics_file",
         type=str,
         default="production_simulation_config_metrics.yaml",
         help="Metrics definition file. (default: production_simulation_config_metrics.yaml)",
@@ -116,6 +119,8 @@ def main():
 
     evaluator_instances = []
 
+    metrics = load_metrics(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+
     if args_dict["base_path"] and args_dict["zeniths"] and args_dict["offsets"]:
         for zenith in args_dict["zeniths"]:
             for offset in args_dict["offsets"]:
@@ -127,7 +132,7 @@ def main():
                 evaluator = StatisticalErrorEvaluator(
                     file_path,
                     file_type="Gamma-cone",
-                    metrics=args_dict["metrics"],
+                    metrics=metrics,
                     grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
                 )
 
@@ -142,7 +147,7 @@ def main():
 
     # Perform interpolation for the given query point
     interpolation_handler = InterpolationHandler(
-        evaluator_instances, science_case=args_dict["science_case"], metrics=args_dict["metrics"]
+        evaluator_instances, science_case=args_dict["science_case"], metrics=metrics
     )
     query_points = np.array([args_dict["query_point"]])
     scaled_events = interpolation_handler.interpolate(query_points)
