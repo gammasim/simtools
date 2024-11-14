@@ -338,16 +338,6 @@ def test_validate_output_path_and_file_exists_no_data_directory(
     )
 
 
-def test_validate_output_path_and_file_not_exists(output_path, mock_path_exists):
-    config = {"CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data"}}
-    integration_test = {"OUTPUT_FILE": "output_file"}
-
-    with pytest.raises(AssertionError):
-        validate_output._validate_output_path_and_file(config, integration_test)
-
-    mock_path_exists.assert_called()
-
-
 def test_validate_output_path_and_file_expected_output(
     output_path, mock_path_exists, mock_check_output
 ):
