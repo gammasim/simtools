@@ -119,10 +119,7 @@ def configure(config, tmp_test_directory, request):
 
 def _skip_test_for_model_version(config, model_version_requested):
     """Skip test if model version requested is not supported."""
-    if (
-        config["CONFIGURATION"].get("MODEL_VERSION_USE_CURRENT") is None
-        or model_version_requested is None
-    ):
+    if config.get("MODEL_VERSION_USE_CURRENT") is None or model_version_requested is None:
         return
     model_version_config = config["CONFIGURATION"]["MODEL_VERSION"]
     if model_version_requested != model_version_config:
