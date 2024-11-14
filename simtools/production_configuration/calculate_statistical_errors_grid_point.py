@@ -68,8 +68,6 @@ class StatisticalErrorEvaluator:
         self.delta_energy = None
 
         self.metric_results = None
-        self.scaled_events = None
-        self.scaled_events_gridpoint = None
         self.energy_threshold = None
 
     def load_data_from_file(self):
@@ -414,42 +412,6 @@ class StatisticalErrorEvaluator:
         if self.error_eff_area:
             return np.max(self.error_eff_area["relative_errors"])
         return None
-
-    def calculate_scaled_events(self):
-        """
-        Calculate the scaled number of events for a specific grid point.
-
-        Parameters
-        ----------
-        grid_point : tuple, optional
-            Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
-
-        Returns
-        -------
-        float
-            Scaled number of events for the specified grid point.
-        """
-        if not self.grid_point:
-            raise Warning("Grid point data is not available for this evaluator.")
-
-        bin_edges = self.create_bin_edges()
-        simulated_event_histogram = self.data["simulated_event_histogram"]
-        if not simulated_event_histogram.size:
-            raise ValueError("Simulated event histogram is empty.")
-
-        # Add here the implementation that uses a combination of the required metrics
-        # Currently we only use the rel error on the eff area for scaling
-        energy = self.grid_point[0]
-        bin_idx = np.digitize(energy, bin_edges) - 1
-        if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
-            raise ValueError("Grid point is outside the range of the current file's data.")
-        self.scaled_events = (
-            self.data["simulated_event_histogram"]
-            * self.error_eff_area["relative_errors"]
-            / self.metrics["error_eff_area"]
-        )
-        self.scaled_events_gridpoint = self.scaled_events[bin_idx]
-        return self.scaled_events_gridpoint
 
     def calculate_overall_metric(self, metric="average"):
         """
