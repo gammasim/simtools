@@ -83,11 +83,14 @@ def _validate_output_path_and_file(config, integration_test):
     """Check if output path and file exist."""
     _logger.info(f"PATH {config['CONFIGURATION']['OUTPUT_PATH']}")
     _logger.info(f"File {integration_test['OUTPUT_FILE']}")
-    try:
-        data_path = config["CONFIGURATION"]["DATA_DIRECTORY"]
-    except KeyError:
-        data_path = config["CONFIGURATION"]["OUTPUT_PATH"]
-    assert Path(data_path).joinpath(integration_test["OUTPUT_FILE"]).exists()
+
+    data_path = config["CONFIGURATION"].get(
+        "DATA_DIRECTORY", config["CONFIGURATION"]["OUTPUT_PATH"]
+    )
+    output_file_path = Path(data_path) / integration_test["OUTPUT_FILE"]
+
+    _logger.info(f"Checking path: {output_file_path}")
+    assert output_file_path.exists()
 
     expected_output = [
         d["EXPECTED_OUTPUT"] for d in config["INTEGRATION_TESTS"] if "EXPECTED_OUTPUT" in d
@@ -100,10 +103,7 @@ def _validate_output_path_and_file(config, integration_test):
             "complies with the expected output: "
             f"{expected_output}"
         )
-        assert assertions.check_output_from_sim_telarray(
-            Path(data_path).joinpath(integration_test["OUTPUT_FILE"]),
-            expected_output,
-        )
+        assert assertions.check_output_from_sim_telarray(output_file_path, expected_output)
 
 
 def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
