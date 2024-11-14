@@ -5,13 +5,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-import simtools
 import simtools.testing.configuration as configuration
 
 
 @pytest.fixture
 def integration_test_config_files():
-    return sorted(Path(simtools.__file__).parent.glob("../tests/integration_tests/config/*.yml"))
+    config_path = Path("tests/integration_tests/config")
+    return sorted(config_path.glob("*.yml"))
 
 
 @pytest.fixture
