@@ -7,8 +7,14 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
+from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 PATH_FITS = "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+
+
+@pytest.fixture
+def metric():
+    return load_metrics("tests/resources/production_simulation_config_metrics.yaml")
 
 
 @pytest.fixture
@@ -103,11 +109,19 @@ def test_calculate_viewcone(mock_statistical_error_evaluator):
     assert viewcone_params.get("view_angle") == 45.0
 
 
-def test_edge_cases(mock_statistical_error_evaluator):
+def test_edge_cases(mock_statistical_error_evaluator, metric):
     grid_point = {"azimuth": 0.0, "elevation": 0.0}
-    config = SimulationConfig(grid_point, "A", "high_precision", PATH_FITS, "On-source")
+    config = SimulationConfig(
+        grid_point=grid_point,
+        ctao_data_level="A",
+        science_case="high_precision",
+        file_path=PATH_FITS,
+        file_type="On-source",
+        metrics=metric,
+    )
     config.evaluator = mock_statistical_error_evaluator
 
     params = config.configure_simulation()
 
-    assert params.get("number_of_events") == 600
+    expected_number_of_events = 22018
+    assert np.isclose(params.get("number_of_events").value, expected_number_of_events, atol=1e0)
