@@ -53,13 +53,14 @@ def test_calculate_error_energy_estimate_bdt_reg_tree(test_fits_file, metric):
     assert isinstance(delta, list)
 
 
-def test_handle_missing_file(caplog, metric):
-    """Test error handling for missing file."""
-    with caplog.at_level("WARNING"):
-        StatisticalErrorEvaluator(
-            file_path="missing_file.fits", file_type="On-source", metrics=metric
-        )
-    assert "File 'missing_file.fits' not found" in caplog.text
+def test_missing_file():
+    """Test initialization with a missing file."""
+    file_path = "nonexistent_file.fits"
+    file_type = "On-source"
+    metrics = {"error_eff_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}}
+
+    with pytest.raises(FileNotFoundError, match=f"Error loading file {file_path}:"):
+        StatisticalErrorEvaluator(file_path, file_type, metrics)
 
 
 def test_interpolation_handler(test_fits_file, metric):
@@ -72,7 +73,10 @@ def test_interpolation_handler(test_fits_file, metric):
     evaluator2 = StatisticalErrorEvaluator(
         file_path=test_fits_file, file_type="On-source", metrics=metric, grid_point=grid_point2
     )
-    handler = InterpolationHandler([evaluator1, evaluator2])
+    science_case = "example case"
+    handler = InterpolationHandler(
+        [evaluator1, evaluator2], science_case=science_case, metrics=metric
+    )
 
     query_point = np.array([[1, 180, 50, 0, 0.5]])
     interpolated_values = handler.interpolate(query_point)
@@ -91,24 +95,13 @@ def test_calculate_scaled_events(test_fits_file, metric):
     )
     evaluator.grid_point = (1.5, 180, 45, 0, 0.5)
 
-    evaluator.data = {
-        "simulated_event_histogram": np.array([100, 200, 300]),
-    }
-    evaluator.error_eff_area = {
-        "relative_errors": np.array([0.1, 0.2, 0.3]),
-    }
-    evaluator.metrics = {
-        "error_eff_area": np.array([0.05, 0.1, 0.15]),
-    }
-
-    evaluator.create_bin_edges = lambda: np.array([1.0, 2.0, 3.0])
-
     event_scaler = EventScaler(evaluator, science_case="science case 1", metrics=metric)
 
     scaled_events = event_scaler.scale_events()
 
-    assert isinstance(scaled_events, float)
-    assert scaled_events == pytest.approx(200.0, rel=1e-2)
+    assert isinstance(scaled_events, u.Quantity)
+    assert scaled_events.value == pytest.approx(33027, rel=1e-0)
+    assert scaled_events.unit == u.ct
 
 
 def test_calculate_metrics(test_fits_file, metric):

@@ -173,9 +173,10 @@ class StatisticalErrorEvaluator:
                     )
                     _logger.info(f"New grid point values: {self.grid_point}")
 
-        except (FileNotFoundError, KeyError) as e:
-            _logger.error(f"Error loading file {self.file_path}: {e}")
-            raise FileNotFoundError from e
+        except FileNotFoundError as e:
+            error_message = f"Error loading file {self.file_path}: {e}"
+            _logger.error(error_message)
+            raise FileNotFoundError(error_message) from e
         return data
 
     def create_bin_edges(self):

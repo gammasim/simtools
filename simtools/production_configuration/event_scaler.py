@@ -8,6 +8,7 @@ Scaling factors are calculated using error metrics and the evaluator's results.
 
 import logging
 
+import astropy.units as u
 import numpy as np
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
@@ -64,8 +65,8 @@ class EventScaler:
         scaling_factor = self._compute_scaling_factor()
         base_events = self._number_of_simulated_events()
         if return_sum:
-            return np.sum(base_events * scaling_factor)
-        return base_events * scaling_factor
+            return np.sum(base_events * scaling_factor) * u.ct
+        return base_events * scaling_factor * u.ct
 
     def _compute_scaling_factor(self) -> float:
         """
@@ -135,4 +136,4 @@ class EventScaler:
             raise ValueError(f"Energy {energy} is outside the range of the simulated events data.")
 
         base_events = self._number_of_simulated_events()[bin_idx]
-        return base_events * scaling_factor
+        return base_events * scaling_factor * u.ct
