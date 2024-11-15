@@ -359,7 +359,9 @@ class StatisticalErrorEvaluator:
 
     def calculate_metrics(self):
         """Calculate all defined metrics as specified in self.metrics and store results."""
+        print("self.metrics: ", self.metrics)
         if "error_eff_area" in self.metrics:
+
             self.error_eff_area = self.calculate_error_eff_area()
             if self.error_eff_area:
                 validity_range = self.metrics.get("error_eff_area", {}).get("valid_range")
@@ -393,6 +395,8 @@ class StatisticalErrorEvaluator:
                 f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
                 f"Reference: {ref_value:.3f}"
             )
+        else:
+            raise ValueError("Invalid metric specified.")
         self.metric_results = {
             "error_eff_area": self.error_eff_area,
             "error_energy_estimate_bdt_reg_tree": self.error_energy_estimate_bdt_reg_tree,
@@ -439,10 +443,7 @@ class StatisticalErrorEvaluator:
                 max_errors = self.calculate_max_error_for_effective_area()
                 overall_max_errors[metric_name] = max_errors if max_errors else 0
             elif metric_name in [
-                "error_sig_eff_gh",
-                "error_energy_estimate_bdt_reg_tree",
                 "error_gamma_ray_psf",
-                "error_image_template_methods",
             ]:
                 overall_max_errors[metric_name] = result
             else:

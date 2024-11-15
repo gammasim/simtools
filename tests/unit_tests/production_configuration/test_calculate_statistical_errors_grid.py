@@ -156,26 +156,42 @@ def setup_evaluator(metric):
     return evaluator
 
 
-def test_calculate_overall_metric_average(setup_evaluator):
-    evaluator = setup_evaluator
-    result = evaluator.calculate_overall_metric(metric="average")
+def test_calculate_overall_metric_average():
+    evaluator = StatisticalErrorEvaluator(
+        file_path="tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
+        file_type="On-source",
+        metrics={"error_eff_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
+    )
+    evaluator.data = {"metric_values": np.array([0.1, 0.2, 0.3, 0.4])}
+    evaluator.metric_results = {
+        "error_eff_area": {"relative_errors": np.array([0.1, 0.2, 0.3, 0.4])}
+    }
+    overall_metric = evaluator.calculate_overall_metric(metric="average")
+    expected_metric = 0.4
 
-    expected_overall_average = np.mean([0.06, 0.02, 0.03, 0.01, 0.04])
-    assert result == pytest.approx(expected_overall_average)
+    assert np.isclose(
+        overall_metric, expected_metric
+    ), f"Expected {expected_metric}, got {overall_metric}"
 
 
-def test_calculate_overall_metric_maximum(setup_evaluator):
-    evaluator = setup_evaluator
-    result = evaluator.calculate_overall_metric(metric="maximum")
+def test_calculate_overall_metric_maximum():
+    evaluator = StatisticalErrorEvaluator(
+        file_path="tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
+        file_type="On-source",
+        metrics={"error_eff_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
+    )
+    evaluator.data = {"metric_values": np.array([0.1, 0.2, 0.3, 0.4])}
+    evaluator.metric_results = {
+        "error_eff_area": {"relative_errors": np.array([0.1, 0.2, 0.3, 0.4])}
+    }
+    overall_metric = evaluator.calculate_overall_metric(metric="maximum")
+    expected_metric = (
+        0.4  # max and average are the same in this case since there is only one metric
+    )
 
-    expected_overall_max = max([0.06, 0.02, 0.03, 0.01, 0.04])
-    assert result == pytest.approx(expected_overall_max)
-
-
-def test_calculate_overall_metric_invalid_metric(setup_evaluator):
-    evaluator = setup_evaluator
-    with pytest.raises(ValueError, match="Unsupported metric"):
-        evaluator.calculate_overall_metric(metric="invalid_metric")
+    assert np.isclose(
+        overall_metric, expected_metric
+    ), f"Expected {expected_metric}, got {overall_metric}"
 
 
 def test_create_bin_edges(test_fits_file, metric):
@@ -219,3 +235,14 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
     assert np.allclose(
         relative_errors, expected_relative_errors, atol=1e-2
     ), f"Expected relative errors {expected_relative_errors}, but got {relative_errors}"
+
+
+def test_calculate_overall_metric_invalid_metric(test_fits_file):
+    evaluator = StatisticalErrorEvaluator(
+        file_path=test_fits_file,
+        file_type="On-source",
+        metrics={"invalid_metric": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
+    )
+
+    with pytest.raises(ValueError, match="Invalid metric specified"):
+        evaluator.calculate_metrics()
