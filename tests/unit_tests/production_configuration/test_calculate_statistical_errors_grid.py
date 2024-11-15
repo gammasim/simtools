@@ -203,15 +203,15 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
         file_path=test_fits_file, file_type="On-source", metrics=metric
     )
 
-    triggered_event_counts = np.array([10, 20, 5]) * u.ct
-    simulated_event_counts = np.array([100, 200, 50]) * u.ct
+    triggered_event_counts = np.array([10, 20, 5, 0]) * u.ct
+    simulated_event_counts = np.array([100, 200, 50, 0]) * u.ct
 
     efficiencies, relative_errors = evaluator.compute_efficiency_and_errors(
         triggered_event_counts, simulated_event_counts
     )
 
-    expected_efficiencies = np.array([0.2, 0.5, 0.5, 0.0]) * u.dimensionless_unscaled
-    expected_relative_errors = np.array([0.04, 0.05, 0.0, 0.0])
+    expected_efficiencies = np.array([0.1, 0.1, 0.1, 0.0]) * u.dimensionless_unscaled
+    expected_relative_errors = np.array([0.03, 0.0212132, 0.04242641, 0.0]) / u.ct**0.5
 
     assert np.allclose(
         efficiencies, expected_efficiencies, atol=1e-2
