@@ -133,10 +133,10 @@ class InterpolationHandler:
         flat_energy_thresholds = []
 
         for e in self.evaluators:
-            az = e.grid_point[1]
-            zen = e.grid_point[2]
+            az = e.grid_point[1].to(u.deg).value
+            zen = e.grid_point[2].to(u.deg).value
             nsb = e.grid_point[3]
-            offset = e.grid_point[4]
+            offset = e.grid_point[4].to(u.deg).value
             grid_point = np.array([az, zen, nsb, offset])
             flat_grid_points.append(grid_point)
             flat_energy_thresholds.append(e.energy_threshold)
