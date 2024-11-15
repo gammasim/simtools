@@ -58,14 +58,22 @@ def test_initialization(mock_statistical_error_evaluator):
 
 def test_configure_simulation(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 30.0, "elevation": 40.0}
-    config = SimulationConfig(grid_point, "B", "medium_precision", PATH_FITS, "Off-source")
+    metrics = {
+        "error_eff_area": {
+            "target_error": {"value": 0.1, "unit": "dimensionless"},
+            "valid_range": {"value": [0.04, 200], "unit": "TeV"},
+        },
+        "error_energy_estimate_bdt_reg_tree": {
+            "target_error": {"value": 0.2, "unit": "dimensionless"},
+            "valid_range": {"value": [0.04, 200], "unit": "TeV"},
+        },
+    }
+    config = SimulationConfig(grid_point, "B", "medium_precision", PATH_FITS, "Off-source", metrics)
     config.evaluator = mock_statistical_error_evaluator
 
     params = config.configure_simulation()
-
     assert isinstance(params, dict)
-    # given uncertainty 1/(1-0.01) * sum of event hist
-    assert params.get("number_of_events") == 600
+    assert np.isclose(params.get("number_of_events").value, 880.73915787, atol=1e-2)
 
 
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
