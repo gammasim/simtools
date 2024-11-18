@@ -67,6 +67,7 @@ class MetadataCollector:
         """Collect and verify product metadata from different sources."""
         self._fill_contact_meta(self.top_level_meta[self.observatory]["contact"])
         self._fill_product_meta(self.top_level_meta[self.observatory]["product"])
+        self._fill_instrument_meta(self.top_level_meta[self.observatory]["instrument"])
         self._fill_activity_meta(self.top_level_meta[self.observatory]["activity"])
         self._fill_process_meta(self.top_level_meta[self.observatory]["process"])
         self._fill_context_from_input_meta(self.top_level_meta[self.observatory]["context"])
@@ -365,6 +366,23 @@ class MetadataCollector:
 
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
+
+    def _fill_instrument_meta(self, instrument_dict):
+        """
+        Fill instrument metadata fields.
+
+        Parameters
+        ----------
+        instrument_dict: dict
+            Dictionary for instrument metadata fields.
+
+        """
+        instrument_dict["site"] = self.args_dict.get("site", None)
+        instrument_dict["ID"] = self.args_dict.get("instrument", None)
+        if instrument_dict["ID"]:
+            instrument_dict["class"] = names.get_collection_name_from_array_element_name(
+                instrument_dict["ID"]
+            )
 
     def _fill_process_meta(self, process_dict):
         """
