@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 
-def compute_telescope_transmission(pars, off_axis):
+def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:
     """
     Compute telescope transmission (0 < T < 1) for a given off-axis angle.
 
@@ -29,6 +29,11 @@ def compute_telescope_transmission(pars, off_axis):
     float
         Telescope transmission.
     """
+    if len(pars) != 4:
+        raise ValueError("Parameter list 'pars' must contain exactly 4 elements.")
+    if off_axis < 0:
+        raise ValueError("Off-axis angle 'off_axis' must be non-negative.")
+
     _deg_to_rad = math.pi / 180.0
     if pars[1] == 0:
         return pars[0]
@@ -37,19 +42,19 @@ def compute_telescope_transmission(pars, off_axis):
     return pars[0] / (1.0 + pars[2] * t ** pars[4])
 
 
-def is_two_mirror_telescope(telescope_model_name):
+def is_two_mirror_telescope(telescope_model_name: str) -> bool:
     """
-    Check if the telescope is a two mirror design.
+    Determine if the telescope model is a two-mirror telescope.
 
     Parameters
     ----------
     telescope_model_name: str
-        Telescope model name (ex. LSTN-01).
+        Name of the telescope model.
 
     Returns
     -------
     bool
-        True if the telescope is a two mirror one.
+        True if it is a two-mirror telescope, False otherwise.
     """
     tel_type = names.get_array_element_type_from_name(telescope_model_name)
     if "SST" in tel_type or "SCT" in tel_type:
