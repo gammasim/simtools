@@ -156,9 +156,9 @@ def setup_evaluator(metric):
     return evaluator
 
 
-def test_calculate_overall_metric_average():
+def test_calculate_overall_metric_average(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
-        file_path="tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
+        file_path=test_fits_file,
         file_type="On-source",
         metrics={"error_eff_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
     )
@@ -174,9 +174,9 @@ def test_calculate_overall_metric_average():
     ), f"Expected {expected_metric}, got {overall_metric}"
 
 
-def test_calculate_overall_metric_maximum():
+def test_calculate_overall_metric_maximum(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
-        file_path="tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
+        file_path=test_fits_file,
         file_type="On-source",
         metrics={"error_eff_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
     )
