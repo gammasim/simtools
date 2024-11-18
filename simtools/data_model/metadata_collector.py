@@ -29,6 +29,11 @@ class MetadataCollector:
     Collect as much metadata as possible from command line configuration, input data, environment,
     schema descriptions. Depends on the CTAO top-level metadata definition.
 
+    Two dictionaries store metadata:
+
+    - top_level_meta: metadata for the current activity
+    - input_metadata: metadata from input data
+
     Parameters
     ----------
     args_dict: dict
@@ -158,13 +163,12 @@ class MetadataCollector:
 
     def _fill_contact_meta(self, contact_dict):
         """
-        Fill contact metadata fields.
+        Fill contact metadata fields. Get user name from system level if not given.
 
         Parameters
         ----------
         contact_dict: dict
             Dictionary for contact metadata fields.
-
         """
         if contact_dict.get("name", None) is None:
             contact_dict["name"] = getpass.getuser()
@@ -172,11 +176,6 @@ class MetadataCollector:
     def _fill_associated_elements_from_args(self, associated_elements_dict):
         """
         Append association metadata set through configurator.
-
-        Note
-        ----
-        This function might go in future, as instrument
-        information will not be given via command line.
 
         Parameters
         ----------
@@ -196,16 +195,16 @@ class MetadataCollector:
         _association = {}
 
         try:
-            if self.args_dict and self.args_dict.get("site", None):
+            if "site" in self.args_dict:
                 _association["site"] = names.validate_site_name(self.args_dict["site"])
             if "telescope" in self.args_dict:
                 _telescope_name = names.validate_array_element_name(self.args_dict["telescope"])
                 _association["class"] = "telescope"
                 _association["type"] = names.get_array_element_type_from_name(_telescope_name)
                 _association["subtype"] = ""
-        except (TypeError, KeyError):
+        except (TypeError, KeyError) as exc:
             self._logger.error("Error reading association metadata from args")
-            raise
+            raise exc
 
         self._fill_context_sim_list(associated_elements_dict, _association)
 
@@ -359,7 +358,7 @@ class MetadataCollector:
             pass
 
         # DATA:MODEL
-        helper_dict = {"name": "name", "version": "version", "type": "base_schema"}
+        helper_dict = {"name": "name", "version": "version", "type": "meta_schema"}
         for key, value in helper_dict.items():
             product_dict["data"]["model"][key] = self.schema_dict.get(value, None)
         product_dict["data"]["model"]["url"] = self.schema_file
