@@ -25,9 +25,7 @@ def mocker_pytest_skip(mocker):
 
 
 def test_get_list_of_test_configurations_test_names(integration_test_config_files):
-    test_names = configuration.get_list_of_test_configurations(
-        integration_test_config_files, get_test_names=True
-    )
+    _, test_names = configuration.get_list_of_test_configurations(integration_test_config_files)
 
     for test_name in test_names:
         assert isinstance(test_name, str)
@@ -36,11 +34,8 @@ def test_get_list_of_test_configurations_test_names(integration_test_config_file
 
 
 def test_get_list_of_test_configurations(integration_test_config_files):
-    test_configs = configuration.get_list_of_test_configurations(
-        integration_test_config_files, get_test_names=False
-    )
-    test_names = configuration.get_list_of_test_configurations(
-        integration_test_config_files, get_test_names=True
+    test_configs, test_names = configuration.get_list_of_test_configurations(
+        integration_test_config_files
     )
 
     list_test_with_help = []
