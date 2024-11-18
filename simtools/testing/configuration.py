@@ -11,7 +11,7 @@ import simtools.utils.general as gen
 _logger = logging.getLogger(__name__)
 
 
-def get_list_of_test_configurations(config_files, get_test_names=False):
+def get_list_of_test_configurations(config_files):
     """
     Return list of test configuration dictionaries or test names.
 
@@ -22,8 +22,6 @@ def get_list_of_test_configurations(config_files, get_test_names=False):
     ----------
     config_files: list
         List of integration test configuration files.
-    get_test_names: bool
-        If True, return a list of test names instead of a list of configuration dictionaries.
 
     Returns
     -------
@@ -51,13 +49,13 @@ def get_list_of_test_configurations(config_files, get_test_names=False):
             ]
         )
 
-    if get_test_names:
-        return [
+    return (
+        configs,
+        [
             f"{item.get('APPLICATION', 'no-app-name')}_{item.get('TEST_NAME', 'no-test-name')}"
             for item in configs
-        ]
-
-    return configs
+        ],
+    )
 
 
 def _read_configs_from_files(config_files):
@@ -99,7 +97,7 @@ def configure(config, tmp_test_directory, request):
     if "CONFIGURATION" in config:
         _skip_test_for_model_version(config, model_version_requested)
 
-        config_file, config_string, config_file_model_version = _prepare_configuration(
+        config_file, config_string, config_file_model_version = _prepare_test_options(
             config["CONFIGURATION"],
             output_path=tmp_output_path,
             model_version=model_version_requested,
@@ -128,7 +126,7 @@ def _skip_test_for_model_version(config, model_version_requested):
         )
 
 
-def _prepare_configuration(config, output_path, model_version=None):
+def _prepare_test_options(config, output_path, model_version=None):
     """
     Prepare test configuration.
 
@@ -147,9 +145,12 @@ def _prepare_configuration(config, output_path, model_version=None):
 
     Returns
     -------
-    str: path to the temporary config file.
-    str: configuration string.
-    str: config file model version
+    config_file: str
+        Path to the temporary configuration file.
+    config_string: str
+        Command line configuration as single string.
+    config_file_model_version: str
+        Configuration file model version
 
     """
     if len(config) == 1 and next(iter(config.values())) is True:
