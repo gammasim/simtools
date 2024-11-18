@@ -308,7 +308,15 @@ def get_collection_name_from_array_element_name(name):
     str
         Collection name .
     """
-    return array_elements()[get_array_element_type_from_name(name)]["collection"]
+    try:
+        return array_elements()[get_array_element_type_from_name(name)]["collection"]
+    except ValueError:
+        pass
+    try:
+        validate_site_name(name)
+        return "sites"
+    except ValueError as exc:
+        raise ValueError(f"Invalid array element name {name}") from exc
 
 
 def get_simulation_software_name_from_parameter_name(
