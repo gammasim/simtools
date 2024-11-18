@@ -63,3 +63,12 @@ def test_skip_camera_efficiency_specific_test(new_testeff_version):
 def test_skip_camera_efficiency_not_camera_efficiency():
     config = {"APPLICATION": "other-application", "TEST_NAME": "some_test"}
     helpers.skip_camera_efficiency(config)
+
+
+def test_new_testeff_version_file_not_found():
+    with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake/path"}):
+        with mock.patch("builtins.open", side_effect=FileNotFoundError):
+            with pytest.raises(
+                FileNotFoundError, match="The testeff executable could not be found."
+            ):
+                helpers._new_testeff_version()

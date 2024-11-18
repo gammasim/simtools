@@ -29,8 +29,14 @@ def _new_testeff_version():
     This test checks if the new version is used.
     """
     testeff_path = os.path.join(os.getenv("SIMTOOLS_SIMTEL_PATH"), "sim_telarray/testeff.c")
-    with open(testeff_path, encoding="utf-8") as file:
-        file_content = file.read()
-        if "/* Combine the include paths such that those from '-I...' options */" in file_content:
-            return True
-        return False
+    try:
+        with open(testeff_path, encoding="utf-8") as file:
+            file_content = file.read()
+            if (
+                "/* Combine the include paths such that those from '-I...' options */"
+                in file_content
+            ):
+                return True
+            return False
+    except FileNotFoundError as exc:
+        raise FileNotFoundError("The testeff executable could not be found.") from exc
