@@ -84,21 +84,16 @@ class MetadataCollector:
 
         """
         # from command line
-        try:
-            if self.args_dict["schema"]:
-                self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
-                return self.args_dict["schema"]
-        except KeyError:
-            pass
+        if self.args_dict.get("schema"):
+            self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
+            return self.args_dict["schema"]
 
         # from metadata
         try:
-            if self.top_level_meta[self.observatory]["product"]["data"]["model"]["url"]:
-                self._logger.debug(
-                    "Schema file from product metadata: "
-                    f"{self.top_level_meta[self.observatory]['product']['data']['model']['url']}"
-                )
-                return self.top_level_meta[self.observatory]["product"]["data"]["model"]["url"]
+            url = self.top_level_meta[self.observatory]["product"]["data"]["model"]["url"]
+            if url:
+                self._logger.debug(f"Schema file from product metadata: {url}")
+                return url
         except KeyError:
             pass
 
@@ -109,11 +104,9 @@ class MetadataCollector:
 
         # from input metadata
         try:
-            self._logger.debug(
-                "Schema file from input metadata: "
-                f"{self.input_metadata[self.observatory]['product']['data']['model']['url']}"
-            )
-            return self.input_metadata[self.observatory]["product"]["data"]["model"]["url"]
+            url = self.input_metadata[self.observatory]["product"]["data"]["model"]["url"]
+            self._logger.debug(f"Schema file from input metadata: {url}")
+            return url
         except KeyError:
             pass
 
@@ -283,41 +276,10 @@ class MetadataCollector:
             return {}
 
         self._logger.debug("Reading meta data from %s", metadata_file_name)
-
-        # metadata from yml or json file
         if Path(metadata_file_name).suffix in (".yaml", ".yml", ".json"):
-            try:
-                _input_metadata = gen.collect_data_from_file_or_dict(
-                    file_name=metadata_file_name, in_dict=None
-                )
-                _json_type_metadata = {"Metadata", "metadata", "METADATA"}.intersection(
-                    _input_metadata
-                )
-                if len(_json_type_metadata) == 1:
-                    _input_metadata = _input_metadata[_json_type_metadata.pop()]
-                elif len(_json_type_metadata) > 1:
-                    self._logger.error(
-                        "More than one metadata entry found in %s", metadata_file_name
-                    )
-                    raise gen.InvalidConfigDataError
-            except (gen.InvalidConfigDataError, FileNotFoundError):
-                self._logger.error("Failed reading metadata from %s", metadata_file_name)
-                raise
-        # metadata from table meta in ecsv file
+            _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file_name)
         elif Path(metadata_file_name).suffix == ".ecsv":
-            from astropy.table import Table  # pylint: disable=C0415
-
-            try:
-                _input_metadata = {
-                    self.observatory.upper(): Table.read(metadata_file_name).meta[
-                        self.observatory.upper()
-                    ]
-                }
-            except (FileNotFoundError, KeyError, AttributeError):
-                self._logger.error(
-                    "Failed reading metadata for %s from %s", self.observatory, metadata_file_name
-                )
-                raise
+            _input_metadata = self._read_input_metadata_from_ecsv(metadata_file_name)
         else:
             self._logger.error("Unknown metadata file format: %s", metadata_file_name)
             raise gen.InvalidConfigDataError
@@ -328,6 +290,39 @@ class MetadataCollector:
             self._process_metadata_from_file(_input_metadata),
             lower_case=True,
         )
+
+    def _read_input_metadata_from_ecsv(self, metadata_file_name):
+        """Read input metadata from ecsv file."""
+        from astropy.table import Table  # pylint: disable=C0415
+
+        try:
+            return {
+                self.observatory.upper(): Table.read(metadata_file_name).meta[
+                    self.observatory.upper()
+                ]
+            }
+        except (FileNotFoundError, KeyError, AttributeError) as exc:
+            self._logger.error(
+                "Failed reading metadata for %s from %s", self.observatory, metadata_file_name
+            )
+            raise exc
+
+    def _read_input_metadata_from_yml_or_json(self, metadata_file_name):
+        """Read input metadata from yml or json file."""
+        try:
+            _input_metadata = gen.collect_data_from_file_or_dict(
+                file_name=metadata_file_name, in_dict=None
+            )
+            _json_type_metadata = {"Metadata", "metadata", "METADATA"}.intersection(_input_metadata)
+            if len(_json_type_metadata) == 1:
+                _input_metadata = _input_metadata[_json_type_metadata.pop()]
+            if len(_json_type_metadata) > 1:
+                self._logger.error("More than one metadata entry found in %s", metadata_file_name)
+                raise gen.InvalidConfigDataError
+        except (gen.InvalidConfigDataError, FileNotFoundError) as exc:
+            self._logger.error("Failed reading metadata from %s", metadata_file_name)
+            raise exc
+        return _input_metadata
 
     def _fill_product_meta(self, product_dict):
         """
