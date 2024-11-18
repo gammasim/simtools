@@ -401,7 +401,6 @@ class MetadataCollector:
             instrument_dict["class"] = names.get_collection_name_from_array_element_name(
                 instrument_dict["ID"]
             )
-            instrument_dict["type"] = names.get_array_element_type_from_name(instrument_dict["ID"])
 
     def _fill_process_meta(self, process_dict):
         """

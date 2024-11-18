@@ -430,9 +430,6 @@ def test_fill_instrument_meta(args_dict_site):
         assert instrument_dict["class"] == names.get_collection_name_from_array_element_name(
             instrument_dict["ID"]
         )
-        assert instrument_dict["type"] == names.get_array_element_type_from_name(
-            instrument_dict["ID"]
-        )
     else:
         assert "class" not in instrument_dict
         assert "type" not in instrument_dict
