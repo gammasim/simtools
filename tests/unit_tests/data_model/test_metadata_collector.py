@@ -4,6 +4,7 @@ import copy
 import getpass
 import json
 import logging
+import uuid
 from importlib.resources import files
 from pathlib import Path
 
@@ -12,6 +13,7 @@ import pytest
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.utils.general as gen
 from simtools.data_model import metadata_model
+from simtools.utils import names
 
 logger = logging.getLogger()
 
@@ -80,7 +82,7 @@ def test_get_site(args_dict_site):
     _collector_1 = metadata_collector.MetadataCollector(
         args_dict=args_dict_site,
     )
-    assert _collector_1.get_site() is None
+    assert _collector_1.get_site() == "South"
     assert _collector_1.get_site(from_input_meta=True) is None
 
     _collector_2 = metadata_collector.MetadataCollector(
@@ -88,7 +90,7 @@ def test_get_site(args_dict_site):
         metadata_file_name="tests/resources/telescope_positions-North-utm.meta.yml",
     )
     assert _collector_2.get_site(from_input_meta=True) == "North"
-    assert _collector_2.get_site(from_input_meta=False) is None
+    assert _collector_2.get_site(from_input_meta=False) == "South"  # from args_dict
 
 
 def test_fill_associated_elements_from_args(args_dict_site):
@@ -185,7 +187,10 @@ def test_fill_product_meta(args_dict_site):
     _product_dict["data"]["model"] = {}
     metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
 
-    assert metadata_1.top_level_meta["cta"]["product"]["id"] == "UNDEFINED_ACTIVITY_ID"
+    try:
+        uuid.UUID(metadata_1.top_level_meta["cta"]["product"]["id"])
+    except ValueError:
+        pytest.fail("Invalid UUID format in metadata")
 
     assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] is None
 
@@ -239,6 +244,10 @@ def test_merge_config_dicts(args_dict_site):
     _metadata._merge_config_dicts(d_high_priority_2, d_low_priority, add_new_fields=False)
 
     assert d_merged_no_adding == d_high_priority_2
+
+    d_high_priority = None
+    with pytest.raises(TypeError, match="Error merging dictionaries"):
+        _metadata._merge_config_dicts(d_high_priority, d_low_priority, add_new_fields=None)
 
 
 def test_fill_activity_meta(args_dict_site):
@@ -407,3 +416,23 @@ def get_example_input_schema_single_parameter():
         "short_description": "Latitude of site centre.",
         "data": [{"type": "double", "units": "deg", "allowed_range": {"min": -90.0, "max": 90.0}}],
     }
+
+
+def test_fill_instrument_meta(args_dict_site):
+    instrument_dict = {}
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    collector._fill_instrument_meta(instrument_dict)
+
+    assert instrument_dict["site"] == args_dict_site.get("site", None)
+    assert instrument_dict["ID"] == args_dict_site.get("telescope", None)
+
+    if instrument_dict["ID"]:
+        assert instrument_dict["class"] == names.get_collection_name_from_array_element_name(
+            instrument_dict["ID"]
+        )
+        assert instrument_dict["type"] == names.get_array_element_type_from_name(
+            instrument_dict["ID"]
+        )
+    else:
+        assert "class" not in instrument_dict
+        assert "type" not in instrument_dict

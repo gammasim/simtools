@@ -2,13 +2,14 @@
 Metadata collector for simtools.
 
 This should be the only module in simtools with knowledge on the
-implementation of the metadata model.
+implementation of the observatory metadata model.
 
 """
 
 import datetime
 import getpass
 import logging
+import uuid
 from importlib.resources import files
 from pathlib import Path
 
@@ -24,12 +25,12 @@ __all__ = ["MetadataCollector"]
 
 class MetadataCollector:
     """
-    Collects and combines metadata to describe the current simtools activity and its data products.
+    Collects metadata to describe the current simtools activity and its data products.
 
-    Collect as much metadata as possible from command line configuration, input data, environment,
-    schema descriptions. Depends on the CTAO top-level metadata definition.
+    Collect metadata from command line configuration, input data, environment,
+    and schema descriptions. Depends on the CTAO top-level metadata definition.
 
-    Two dictionaries store metadata:
+    Two dictionaries store two different types of metadata:
 
     - top_level_meta: metadata for the current activity
     - input_metadata: metadata from input data
@@ -42,13 +43,14 @@ class MetadataCollector:
         Name of metadata file (only required when args_dict is None)
     data_model_name: str
         Name of data model parameter
-
+    observatory: str
+        Name of observatory (default: "cta")
     """
 
-    def __init__(self, args_dict, metadata_file_name=None, data_model_name=None):
+    def __init__(self, args_dict, metadata_file_name=None, data_model_name=None, observatory="cta"):
         """Initialize metadata collector."""
         self._logger = logging.getLogger(__name__)
-        self.observatory = "cta"
+        self.observatory = observatory
         self.io_handler = io_handler.IOHandler()
 
         self.args_dict = args_dict if args_dict else {}
@@ -64,16 +66,14 @@ class MetadataCollector:
         self.collect_meta_data()
 
     def collect_meta_data(self):
-        """Collect and verify product metadata from different sources."""
-        self._fill_contact_meta(self.top_level_meta[self.observatory]["contact"])
-        self._fill_product_meta(self.top_level_meta[self.observatory]["product"])
-        self._fill_instrument_meta(self.top_level_meta[self.observatory]["instrument"])
-        self._fill_activity_meta(self.top_level_meta[self.observatory]["activity"])
-        self._fill_process_meta(self.top_level_meta[self.observatory]["process"])
-        self._fill_context_from_input_meta(self.top_level_meta[self.observatory]["context"])
-        self._fill_associated_elements_from_args(
-            self.top_level_meta[self.observatory]["context"]["associated_elements"]
-        )
+        """Collect and verify product metadata for each main-level metadata type."""
+        meta_types = self.top_level_meta[self.observatory].keys()
+        for meta_type in meta_types:
+            try:
+                fill_method = getattr(self, f"_fill_{meta_type}_meta")
+                fill_method(self.top_level_meta[self.observatory][meta_type])
+            except AttributeError:
+                self._logger.debug(f"Method _fill_{meta_type}_meta not implemented")
 
     def get_data_model_schema_file_name(self):
         """
@@ -208,6 +208,19 @@ class MetadataCollector:
             raise exc
 
         self._fill_context_sim_list(associated_elements_dict, _association)
+
+    def _fill_context_meta(self, context_dict):
+        """
+        Fill context metadata fields.
+
+        Parameters
+        ----------
+        context_dict: dict
+            Dictionary for context metadata fields.
+
+        """
+        self._fill_context_from_input_meta(context_dict)
+        self._fill_associated_elements_from_args(context_dict["associated_elements"])
 
     def _fill_context_from_input_meta(self, context_dict):
         """
@@ -345,7 +358,7 @@ class MetadataCollector:
         self.schema_file = self.get_data_model_schema_file_name()
         self.schema_dict = self.get_data_model_schema_dict()
 
-        product_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
+        product_dict["id"] = str(uuid.uuid4())
         product_dict["creation_time"] = datetime.datetime.now().isoformat(timespec="seconds")
         product_dict["description"] = self.schema_dict.get("description", None)
 
@@ -371,6 +384,9 @@ class MetadataCollector:
         """
         Fill instrument metadata fields.
 
+        Note inconsistency in command line arguments for 'ID',
+        which is either 'instrument' or 'telescope'.
+
         Parameters
         ----------
         instrument_dict: dict
@@ -378,11 +394,14 @@ class MetadataCollector:
 
         """
         instrument_dict["site"] = self.args_dict.get("site", None)
-        instrument_dict["ID"] = self.args_dict.get("instrument", None)
+        instrument_dict["ID"] = self.args_dict.get("instrument") or self.args_dict.get(
+            "telescope", None
+        )
         if instrument_dict["ID"]:
             instrument_dict["class"] = names.get_collection_name_from_array_element_name(
                 instrument_dict["ID"]
             )
+            instrument_dict["type"] = names.get_array_element_type_from_name(instrument_dict["ID"])
 
     def _fill_process_meta(self, process_dict):
         """
@@ -430,10 +449,6 @@ class MetadataCollector:
             If true: add fields from dict_low to dict_high, if they don't exist in dict_high
 
         """
-        if dict_high is None and dict_low:
-            dict_high = dict_low
-            return
-
         try:
             for k in dict_low:
                 if k in dict_high:
@@ -448,9 +463,8 @@ class MetadataCollector:
                         )
                 elif add_new_fields:
                     dict_high[k] = dict_low[k]
-        except (KeyError, TypeError):
-            self._logger.error("Error merging dictionaries")
-            raise
+        except TypeError as exc:
+            raise TypeError("Error merging dictionaries") from exc
 
     def _fill_context_sim_list(self, meta_list, new_entry_dict):
         """
