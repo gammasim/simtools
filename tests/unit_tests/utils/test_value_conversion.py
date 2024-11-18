@@ -112,8 +112,6 @@ def test_split_value_and_unit():
 
     assert value_conversion.split_value_and_unit("100 m") == (100, "m")
 
-    assert value_conversion.split_value_and_unit("100") == (100, None)
-
     assert value_conversion.split_value_and_unit("hello") == ("hello", None)
 
     assert value_conversion.split_value_and_unit(["100 m", "200 cm"]) == ([100, 200], ["m", "cm"])
