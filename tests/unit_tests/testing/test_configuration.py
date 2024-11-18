@@ -124,11 +124,11 @@ def test_get_application_command_with_no_config():
     assert command == expected_command
 
 
-def test_prepare_configuration_with_single_boolean_option(tmp_test_directory):
+def test_prepare_test_options_with_single_boolean_option(tmp_test_directory):
     config = {"VERSION": True}
     model_version = None
 
-    config_file, config_string, config_file_model_version = configuration._prepare_configuration(
+    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
         config, tmp_test_directory, model_version
     )
 
@@ -137,11 +137,11 @@ def test_prepare_configuration_with_single_boolean_option(tmp_test_directory):
     assert config_file_model_version is None
 
 
-def test_prepare_configuration_with_model_version(tmp_test_directory, tmp_config_string):
+def test_prepare_test_options_with_model_version(tmp_test_directory, tmp_config_string):
     config = {"MODEL_VERSION": "v1.0"}
     model_version = "v2.0"
 
-    config_file, config_string, config_file_model_version = configuration._prepare_configuration(
+    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
         config, tmp_test_directory, model_version
     )
 
@@ -154,11 +154,11 @@ def test_prepare_configuration_with_model_version(tmp_test_directory, tmp_config
     assert written_config["MODEL_VERSION"] == "v2.0"
 
 
-def test_prepare_configuration_with_output_path(tmp_test_directory, tmp_config_string):
+def test_prepare_test_options_with_output_path(tmp_test_directory, tmp_config_string):
     config = {"OUTPUT_PATH": "results"}
     model_version = None
 
-    config_file, config_string, config_file_model_version = configuration._prepare_configuration(
+    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
         config, tmp_test_directory, model_version
     )
 
@@ -172,11 +172,11 @@ def test_prepare_configuration_with_output_path(tmp_test_directory, tmp_config_s
     assert written_config["USE_PLAIN_OUTPUT_PATH"] is True
 
 
-def test_prepare_configuration_with_data_directory(tmp_test_directory, tmp_config_string):
+def test_prepare_test_options_with_data_directory(tmp_test_directory, tmp_config_string):
     config = {"DATA_DIRECTORY": "data"}
     model_version = None
 
-    config_file, config_string, config_file_model_version = configuration._prepare_configuration(
+    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
         config, tmp_test_directory, model_version
     )
 
@@ -189,11 +189,11 @@ def test_prepare_configuration_with_data_directory(tmp_test_directory, tmp_confi
     assert written_config["DATA_DIRECTORY"] == str(tmp_test_directory / "data")
 
 
-def test_prepare_configuration_with_full_config(tmp_test_directory, tmp_config_string):
+def test_prepare_test_options_with_full_config(tmp_test_directory, tmp_config_string):
     config = {"MODEL_VERSION": "v1.0", "OUTPUT_PATH": "results", "DATA_DIRECTORY": "data"}
     model_version = "v2.0"
 
-    config_file, config_string, config_file_model_version = configuration._prepare_configuration(
+    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
         config, tmp_test_directory, model_version
     )
 

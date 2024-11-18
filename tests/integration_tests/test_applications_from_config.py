@@ -16,8 +16,7 @@ logger = logging.getLogger()
 load_dotenv(".env")
 
 config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
-test_configs = configuration.get_list_of_test_configurations(config_files)
-test_ids = configuration.get_list_of_test_configurations(config_files, get_test_names=True)
+test_configs, test_ids = configuration.get_list_of_test_configurations(config_files)
 
 
 @pytest.mark.parametrize("config", test_configs, ids=test_ids)
