@@ -4,6 +4,7 @@
 import logging
 from pathlib import Path
 
+from simtools.model.array_model import ArrayModel
 from simtools.model.model_parameter import ModelParameter
 
 __all__ = ["SiteModel"]
@@ -21,19 +22,19 @@ class SiteModel(ModelParameter):
         MongoDB configuration.
     model_version: str
         Model version.
-    label: str
+    label: str, optional
         Instance label. Important for output file naming.
-    array_model : ArrayModel
+    array_model : ArrayModel, optional
         Array model.
     """
 
     def __init__(
         self,
-        site,
-        mongo_db_config,
-        model_version,
-        label=None,
-        array_model=None,
+        site: str,
+        mongo_db_config: dict,
+        model_version: str,
+        label: str | None = None,
+        array_model: ArrayModel | None = None,
     ):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
