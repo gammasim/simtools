@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+gfa4cc76 Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+ge9e7b11 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=e4cae58c"></script>
+    <script src="../_static/documentation_options.js?v=ff2b5500"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="CORSIKA" href="corsika.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfa4cc76" />
+  <meta name="docsearch:version" content="0.1.dev1+ge9e7b11" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gfa4cc76 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge9e7b11 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -200,6 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simulate_prod.html">simulate_prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/submit_data_from_external.html">submit_data_from_external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/submit_model_parameter_from_external.html">submit_model_parameter_from_external</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_camera_efficiency.html">validate_camera_efficiency</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_camera_fov.html">validate_camera_fov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/validate_cumulative_psf.html">validate_cumulative_psf</a></li>
@@ -619,7 +620,7 @@ implementation of the metadata model.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_model.metadata_collector.</span></span><span class="sig-name descname"><span class="pre">MetadataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/metadata_collector.html#MetadataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_collector.MetadataCollector" title="Link to this definition">#</a></dt>
 <dd><p>Collects and combines metadata to describe the current simtools activity and its data products.</p>
 <p>Collect as much metadata as possible from command line configuration, input data, environment,
-schema descriptions.  Depends on the CTAO top-level metadata definition.</p>
+schema descriptions. Depends on the CTAO top-level metadata definition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -795,7 +796,7 @@ metadata file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.model_data_writer.ModelDataWriter.dump_model_parameter">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_plain_output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.dump_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.dump_model_parameter" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_plain_output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_input_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/model_data_writer.html#ModelDataWriter.dump_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.model_data_writer.ModelDataWriter.dump_model_parameter" title="Link to this definition">#</a></dt>
 <dd><p>Generate DB-style model parameter dict and write it to json file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -814,7 +815,7 @@ metadata file.</p>
 </dd>
 <dt><strong>use_plain_output_path: bool</strong></dt><dd><p>Use plain output path.</p>
 </dd>
-<dt><strong>overwrite_applicable: bool</strong></dt><dd><p>Overwrite applicable parameter.</p>
+<dt><strong>metadata_input_dict: dict</strong></dt><dd><p>Input to metadata collector.</p>
 </dd>
 </dl>
 </dd>
@@ -927,7 +928,7 @@ Replace “None” with “null” for unit field.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>file_name</strong><span class="classifier">str</span></dt><dd><p>Name of output file.</p>
 </dd>
-<dt><strong>data_dict</strong><span class="classifier">dict</span></dt><dd><p>Dictionary to be written.</p>
+<dt><strong>data_dict</strong><span class="classifier">dict</span></dt><dd><p>Data dictionary.</p>
 </dd>
 </dl>
 </dd>

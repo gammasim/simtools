@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.value_conversion &#8212; simtools v0.1.dev1+gfa4cc76 Manual</title>
+    <title>utils.value_conversion &#8212; simtools v0.1.dev1+ge9e7b11 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=e4cae58c"></script>
+    <script src="../../_static/documentation_options.js?v=ff2b5500"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfa4cc76" />
+  <meta name="docsearch:version" content="0.1.dev1+ge9e7b11" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gfa4cc76 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge9e7b11 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -199,6 +199,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_prod.html">simulate_prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/submit_data_from_external.html">submit_data_from_external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/submit_model_parameter_from_external.html">submit_model_parameter_from_external</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_camera_efficiency.html">validate_camera_efficiency</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_camera_fov.html">validate_camera_fov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/validate_cumulative_psf.html">validate_cumulative_psf</a></li>
@@ -360,7 +361,10 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+
+<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -445,6 +449,68 @@
 
     <span class="k">return</span> <span class="n">base_value</span><span class="p">,</span> <span class="n">base_unit</span><span class="p">,</span> <span class="n">base_type</span></div>
 
+
+
+<div class="viewcode-block" id="split_value_and_unit">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.value_conversion.split_value_and_unit">[docs]</a>
+<span class="k">def</span> <span class="nf">split_value_and_unit</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split a value into its value and unit.</span>
+
+<span class="sd">    Takes into account the case where the value is a Quantity, a number,</span>
+<span class="sd">    or a simtools-type string encoding a list of values and units.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value: str, int, float, bool, u.Quantity</span>
+<span class="sd">        Value to be parsed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    value, str</span>
+<span class="sd">        Value and units as (value, unit), or lists of values and unites</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_split_value_is_quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_split_value_is_string</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_split_value_is_list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_split_value_is_quantity</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split value and unit for an astropy Quantity.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>  <span class="c1"># type [100.0, 200] * u.m,</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="p">)]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_split_value_is_string</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split vale and unit for a string.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>  <span class="c1"># single integer value</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>  <span class="c1"># single value with/without unit</span>
+        <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_split_value_is_list</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># string value (not numerical)</span>
+        <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_split_value_is_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split value and unit for a list.&quot;&quot;&quot;</span>
+    <span class="n">value_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unit_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+        <span class="n">_value</span><span class="p">,</span> <span class="n">_unit</span> <span class="o">=</span> <span class="n">split_value_and_unit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">value_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">unit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_unit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value_list</span><span class="p">,</span> <span class="n">unit_list</span>
 
 
 <div class="viewcode-block" id="get_value_as_quantity">
