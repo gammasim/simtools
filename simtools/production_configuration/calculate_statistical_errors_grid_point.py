@@ -251,7 +251,7 @@ class StatisticalErrorEvaluator:
             )
         valid = (simulated_event_counts > 0 * u.ct) & (triggered_event_counts > 0 * u.ct)
 
-        uncertainties = np.zeros_like(triggered_event_counts) * u.ct**-0.5
+        uncertainties = np.zeros_like(triggered_event_counts.value) * u.dimensionless_unscaled
 
         if np.any(valid):
             uncertainties[valid] = np.sqrt(
@@ -266,7 +266,7 @@ class StatisticalErrorEvaluator:
         # Compute relative errors
         relative_errors = np.divide(
             uncertainties,
-            np.sqrt(simulated_event_counts),
+            np.sqrt(simulated_event_counts.value),
             out=np.zeros_like(uncertainties, dtype=float),
             where=uncertainties > 0,
         )
