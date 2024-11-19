@@ -433,3 +433,62 @@ def test_fill_instrument_meta(args_dict_site):
     else:
         assert "class" not in instrument_dict
         assert "type" not in instrument_dict
+
+
+def test_clean_meta_data():
+
+    pre_clean = {
+        "reference": {"version": "1.0.0"},
+        "contact": {"organization": "CTAO", "name": "not_me", "email": None, "orcid": None},
+        "product": {
+            "valid": {
+                "start": None,
+                "end": None,
+            }
+        },
+        "context": {
+            "notes": [{"title": None, "text": None, "creation_time": None}],
+            "document": [
+                {
+                    "type": "CTAO-MC-DOC",
+                    "title": "CTA Monte Carlo Model",
+                    "id": None,
+                }
+            ],
+            "associated_elements": [
+                {"site": "North", "class": None, "type": "LSTN", "id": "design"},
+                {"site": "North"},
+            ],
+        },
+    }
+
+    post_clean = {
+        "contact": {
+            "name": "not_me",
+            "organization": "CTAO",
+        },
+        "context": {
+            "associated_elements": [
+                {
+                    "id": "design",
+                    "site": "North",
+                    "type": "LSTN",
+                },
+                {
+                    "site": "North",
+                },
+            ],
+            "document": [
+                {
+                    "title": "CTA Monte Carlo Model",
+                    "type": "CTAO-MC-DOC",
+                },
+            ],
+        },
+        "reference": {
+            "version": "1.0.0",
+        },
+    }
+
+    collector = metadata_collector.MetadataCollector({})
+    assert collector.clean_meta_data(pre_clean) == post_clean
