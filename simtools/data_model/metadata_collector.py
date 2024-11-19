@@ -179,6 +179,8 @@ class MetadataCollector:
         """
         Append association metadata set through configurator.
 
+        TODO - check how this is used for derivation tools.
+
         Parameters
         ----------
         associated_elements_dict: dict
@@ -212,7 +214,7 @@ class MetadataCollector:
 
     def _fill_context_meta(self, context_dict):
         """
-        Fill context metadata fields.
+        Fill context metadata fields with product metadata from input data.
 
         Parameters
         ----------
@@ -220,37 +222,13 @@ class MetadataCollector:
             Dictionary for context metadata fields.
 
         """
-        self._fill_context_from_input_meta(context_dict)
-        self._fill_associated_elements_from_args(context_dict["associated_elements"])
-
-    def _fill_context_from_input_meta(self, context_dict):
-        """
-        Read and validate input metadata from file and fill CONTEXT metadata fields.
-
-        Parameters
-        ----------
-        context_dict: dict
-            Dictionary with context level metadata.
-
-        Raises
-        ------
-        KeyError
-            if corresponding fields cannot by accessed in the top-level or metadata dictionaries.
-
-        """
-        try:
-            self._merge_config_dicts(context_dict, self.input_metadata[self.observatory]["context"])
-            for key in ("document", "associated_elements", "associated_data"):
-                self._copy_list_type_metadata(
-                    context_dict, self.input_metadata[self.observatory], key
-                )
-        except KeyError:
-            self._logger.debug("No context metadata defined in input metadata file.")
-
-        try:
-            self._fill_context_sim_list(
-                context_dict["associated_data"], self.input_metadata[self.observatory]["product"]
-            )
+        try:  # wide try..except as for some cases we expect that there is no product metadata
+            reduced_product_meta = {
+                key: value
+                for key, value in self.input_metadata[self.observatory]["product"].items()
+                if key in {"description", "id", "creation_time", "valid", "format", "filename"}
+            }
+            self._fill_context_sim_list(context_dict["associated_data"], reduced_product_meta)
         except (KeyError, TypeError):
             self._logger.debug("No input product metadata appended to associated data.")
 
