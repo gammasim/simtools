@@ -296,7 +296,7 @@ def get_site_from_array_element_name(name):
 
 def get_collection_name_from_array_element_name(name):
     """
-    Get collection name (e.g., telescopes, calibration_devices) of array element from name.
+    Get collection name (e.g., telescopes, calibration_devices, sites) of array element from name.
 
     Parameters
     ----------
