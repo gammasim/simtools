@@ -351,7 +351,6 @@ class StatisticalErrorEvaluator:
 
     def calculate_metrics(self):
         """Calculate all defined metrics as specified in self.metrics and store results."""
-        print("self.metrics: ", self.metrics)
         if "error_eff_area" in self.metrics:
 
             self.error_eff_area = self.calculate_error_eff_area()
