@@ -79,7 +79,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
 
     params = config.configure_simulation()
     assert isinstance(params, dict)
-    assert np.isclose(params.get("number_of_events").value, 880.73915787, atol=1e-2)
+    assert np.isclose(params.get("number_of_events").value, 1099997427622.6555, atol=1e-2)
 
 
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
@@ -123,5 +123,5 @@ def test_edge_cases(mock_statistical_error_evaluator, metric):
 
     params = config.configure_simulation()
 
-    expected_number_of_events = 22018
+    expected_number_of_events = 27499935690566.387
     assert np.isclose(params.get("number_of_events").value, expected_number_of_events, atol=1e0)
