@@ -15,7 +15,7 @@ Key Components:
     - `science_case` (str): The science case for the simulation.
     - `file_path` (str): Path to the dl2_mc_events_file file
        used for statistical error evaluation.
-    - `file_type` (str): Type of the dl2_mc_events_file file ('On-source' or 'Offset').
+    - `file_type` (str): Type of the dl2_mc_events_file file ('point-like' or 'cone').
     - `metrics` (dict, optional): Dictionary of metrics to evaluate.
 
 """
@@ -45,7 +45,7 @@ class SimulationConfig:
     file_path : str
         Path to the dl2_mc_events_file file for statistical uncertainty evaluation.
     file_type : str
-        Type of the dl2_mc_events_file file ('On-source' or 'Offset').
+        Type of the dl2_mc_events_file file ('point-like' or 'cone').
     metrics : dict, optional
         Dictionary of metrics to evaluate.
     """

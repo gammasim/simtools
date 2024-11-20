@@ -27,7 +27,7 @@ class StatisticalErrorEvaluator:
     file_path : str
         Path to the dl2_mc_events_file file.
     file_type : str
-        Type of the file, either 'On-source' or 'Offset'.
+        Type of the file, either 'point-like' or 'cone'.
     metrics : dict, optional
         Dictionary of metrics to evaluate. Default is None.
     grid_point : tuple, optional
@@ -49,7 +49,7 @@ class StatisticalErrorEvaluator:
         file_path : str
             The path to the dl2_mc_events_file file.
         file_type : str
-            The type of the file ('On-source' or 'Offset').
+            The type of the file ('point-like' or 'cone').
         metrics : dict, optional
             Dictionary specifying which metrics to compute and their reference values.
         grid_point : tuple, optional
