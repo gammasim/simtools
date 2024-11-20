@@ -185,43 +185,6 @@ class MetadataCollector:
         if contact_dict.get("name", None) is None:
             contact_dict["name"] = getpass.getuser()
 
-    def _fill_associated_elements_from_args(self, associated_elements_dict):
-        """
-        Append association metadata set through configurator.
-
-        TODO - check how this is used for derivation tools.
-
-        Parameters
-        ----------
-        associated_elements_dict: dict
-            Dictionary for associated elements field.
-
-        Raises
-        ------
-        TypeError, KeyError
-            if error reading association metadata from args.
-        KeyError
-            if metadata description cannot be filled.
-
-        """
-        self._logger.debug(f"Fill metadata from args: {self.args_dict}")
-
-        _association = {}
-
-        try:
-            if "site" in self.args_dict:
-                _association["site"] = names.validate_site_name(self.args_dict["site"])
-            if "telescope" in self.args_dict:
-                _telescope_name = names.validate_array_element_name(self.args_dict["telescope"])
-                _association["class"] = "telescope"
-                _association["type"] = names.get_array_element_type_from_name(_telescope_name)
-                _association["subtype"] = ""
-        except (TypeError, KeyError) as exc:
-            self._logger.error("Error reading association metadata from args")
-            raise exc
-
-        self._fill_context_sim_list(associated_elements_dict, _association)
-
     def _fill_context_meta(self, context_dict):
         """
         Fill context metadata fields with product metadata from input data.
