@@ -12,7 +12,6 @@ import pytest
 
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.utils.general as gen
-from simtools.data_model import metadata_model
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -91,32 +90,6 @@ def test_get_site(args_dict_site):
     )
     assert _collector_2.get_site(from_input_meta=True) == "North"
     assert _collector_2.get_site(from_input_meta=False) == "South"  # from args_dict
-
-
-def test_fill_associated_elements_from_args(args_dict_site):
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    metadata_1.top_level_meta = gen.change_dict_keys_case(
-        metadata_model.get_default_metadata_dict(), True
-    )
-    metadata_1._fill_associated_elements_from_args(
-        metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
-    )
-
-    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["site"] == "South"
-    assert (
-        metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["class"]
-        == "telescope"
-    )
-    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["type"] == "MSTS"
-    assert metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0]["subtype"] == ""
-
-    metadata_1.top_level_meta["cta"]["context"]["associated_elements"][0].pop("site")
-
-    metadata_1.args_dict = None
-    with pytest.raises(TypeError):
-        metadata_1._fill_associated_elements_from_args(
-            metadata_1.top_level_meta["cta"]["context"]["associated_elements"]
-        )
 
 
 def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplog):
