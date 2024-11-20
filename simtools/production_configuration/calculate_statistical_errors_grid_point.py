@@ -184,7 +184,7 @@ class StatisticalErrorEvaluator:
         bin_edges = np.concatenate([bin_edges_low, [bin_edges_high[-1]]])
         return np.unique(bin_edges)
 
-    def compute_histogram(self, event_energies_reco, bin_edges):
+    def compute_triggered_histogram(self, event_energies_reco, bin_edges):
         """
         Compute histogram for triggered events.
 
@@ -274,7 +274,7 @@ class StatisticalErrorEvaluator:
             Energy threshold value.
         """
         bin_edges = self.create_bin_edges()
-        triggered_event_histogram = self.compute_histogram(
+        triggered_event_histogram = self.compute_triggered_histogram(
             self.data["event_energies_mc"], bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
@@ -303,7 +303,7 @@ class StatisticalErrorEvaluator:
             Dictionary with uncertainties for the file.
         """
         bin_edges = self.create_bin_edges()
-        triggered_event_histogram = self.compute_histogram(
+        triggered_event_histogram = self.compute_triggered_histogram(
             self.data["event_energies_mc"], bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
