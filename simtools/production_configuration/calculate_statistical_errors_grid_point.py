@@ -264,7 +264,7 @@ class StatisticalErrorEvaluator:
 
         return efficiencies, relative_errors
 
-    def calculate_energy_threshold(self):
+    def calculate_energy_threshold(self, requested_eff_area_fraction=0.1):
         """
         Calculate the energy threshold where the effective area exceeds 10% of its maximum value.
 
@@ -285,7 +285,7 @@ class StatisticalErrorEvaluator:
 
         # Determine the effective area threshold (10% of max effective area)
         max_efficiency = np.max(efficiencies)
-        threshold_efficiency = 0.1 * max_efficiency
+        threshold_efficiency = requested_eff_area_fraction * max_efficiency
 
         threshold_index = np.argmax(efficiencies >= threshold_efficiency)
         if threshold_index == 0 and efficiencies[0] < threshold_efficiency:
