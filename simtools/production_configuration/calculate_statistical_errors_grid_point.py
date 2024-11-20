@@ -191,7 +191,7 @@ class StatisticalErrorEvaluator:
         Parameters
         ----------
         event_energies_reco : array
-            Array of energies of the observed events.
+            Array of reconstructed energy per event.
         bin_edges : array
             Array of energy bin edges.
 
