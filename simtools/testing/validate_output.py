@@ -7,8 +7,103 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
+
+
+def validate_all_tests(config, request, config_file_model_version):
+    """
+    Validate test output for all integration tests.
+
+    Parameters
+    ----------
+    config: dict
+        Integration test configuration dictionary.
+    request: request
+        Request object.
+    config_file_model_version: str
+        Model version from the configuration file.
+
+    """
+    if request.config.getoption("--model_version") is None:
+        validate_application_output(config)
+    elif config_file_model_version is not None:
+        _from_command_line = request.config.getoption("--model_version")
+        _from_config_file = config_file_model_version
+        if _from_command_line == _from_config_file:
+            validate_application_output(config)
+
+
+def validate_application_output(config):
+    """
+    Validate application output against expected output.
+
+    Expected output is defined in configuration file.
+
+    Parameters
+    ----------
+    config: dict
+        dictionary with the configuration for the application test.
+
+    """
+    if "INTEGRATION_TESTS" not in config:
+        return
+
+    for integration_test in config["INTEGRATION_TESTS"]:
+        _logger.info(f"Testing application output: {integration_test}")
+        if "REFERENCE_OUTPUT_FILE" in integration_test:
+            _validate_reference_output_file(config, integration_test)
+
+        if "OUTPUT_FILE" in integration_test:
+            _validate_output_path_and_file(config, integration_test)
+
+        if "FILE_TYPE" in integration_test:
+            assert assertions.assert_file_type(
+                integration_test["FILE_TYPE"],
+                Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
+                    config["CONFIGURATION"]["OUTPUT_FILE"]
+                ),
+            )
+
+
+def _validate_reference_output_file(config, integration_test):
+    """Compare with reference output file."""
+    assert compare_files(
+        integration_test["REFERENCE_OUTPUT_FILE"],
+        Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
+            config["CONFIGURATION"]["OUTPUT_FILE"]
+        ),
+        integration_test.get("TOLERANCE", 1.0e-5),
+        integration_test.get("TEST_COLUMNS", None),
+    )
+
+
+def _validate_output_path_and_file(config, integration_test):
+    """Check if output path and file exist."""
+    _logger.info(f"PATH {config['CONFIGURATION']['OUTPUT_PATH']}")
+    _logger.info(f"File {integration_test['OUTPUT_FILE']}")
+
+    data_path = config["CONFIGURATION"].get(
+        "DATA_DIRECTORY", config["CONFIGURATION"]["OUTPUT_PATH"]
+    )
+    output_file_path = Path(data_path) / integration_test["OUTPUT_FILE"]
+
+    _logger.info(f"Checking path: {output_file_path}")
+    assert output_file_path.exists()
+
+    expected_output = [
+        d["EXPECTED_OUTPUT"] for d in config["INTEGRATION_TESTS"] if "EXPECTED_OUTPUT" in d
+    ]
+    if expected_output and "log_hist" not in integration_test["OUTPUT_FILE"]:
+        # Get the expected output from the configuration file
+        expected_output = expected_output[0]
+        _logger.info(
+            f"Checking the output of {integration_test['OUTPUT_FILE']} "
+            "complies with the expected output: "
+            f"{expected_output}"
+        )
+        assert assertions.check_output_from_sim_telarray(output_file_path, expected_output)
 
 
 def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
