@@ -20,7 +20,7 @@ def metric():
 @pytest.fixture
 def mock_statistical_error_evaluator():
     metric_results = {
-        "error_eff_area": {
+        "uncertainty_effective_area": {
             "relative_errors": np.array(
                 [0.00000000e00, 1.31778332e-08, 4.74675897e-08, 1.17238332e-07]
             ),
@@ -65,7 +65,7 @@ def test_initialization(mock_statistical_error_evaluator):
 def test_configure_simulation(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 30.0, "elevation": 40.0}
     metrics = {
-        "error_eff_area": {
+        "uncertainty_effective_area": {
             "target_error": {"value": 0.1, "unit": "dimensionless"},
             "valid_range": {"value": [0.04, 200], "unit": "TeV"},
         },

@@ -1,9 +1,9 @@
 # This YAML file contains the error metrics and validity ranges for statistical error evaluation.
 # Metrics:
-#   error_eff_area: Relative error on the effective area
+#   uncertainty_effective_area: Relative error on the effective area
 #   error_energy_estimate_bdt_reg_tree: Error in energy estimation using BDT regression
 
-error_eff_area:
+uncertainty_effective_area:
   target_error:
     value: 0.02
   valid_range:
