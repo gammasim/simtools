@@ -316,7 +316,7 @@ def get_collection_name_from_array_element_name(name):
         validate_site_name(name)
         return "sites"
     except ValueError as exc:
-        raise ValueError(f"Invalid array element name {name}") from exc
+        raise ValueError(f"Invalid array element name {name}: {exc}") from exc
 
 
 def get_simulation_software_name_from_parameter_name(
