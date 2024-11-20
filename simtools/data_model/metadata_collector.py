@@ -45,9 +45,18 @@ class MetadataCollector:
         Name of data model parameter
     observatory: str
         Name of observatory (default: "cta")
+    clean_meta: bool
+        Clean metadata from None values and empty lists (default: True)
     """
 
-    def __init__(self, args_dict, metadata_file_name=None, data_model_name=None, observatory="cta"):
+    def __init__(
+        self,
+        args_dict,
+        metadata_file_name=None,
+        data_model_name=None,
+        observatory="cta",
+        clean_meta=True,
+    ):
         """Initialize metadata collector."""
         self._logger = logging.getLogger(__name__)
         self.observatory = observatory
@@ -64,7 +73,8 @@ class MetadataCollector:
             metadata_file_name=metadata_file_name
         )
         self.collect_meta_data()
-        self.top_level_meta = self.clean_meta_data(self.top_level_meta)
+        if clean_meta:
+            self.top_level_meta = self.clean_meta_data(self.top_level_meta)
 
     def collect_meta_data(self):
         """Collect and verify product metadata for each main-level metadata type."""

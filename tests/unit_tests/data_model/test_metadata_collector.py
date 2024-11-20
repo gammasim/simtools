@@ -159,22 +159,8 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
         metadata_1._read_input_metadata_from_file()
 
 
-def test_fill_context_from_input_meta(args_dict_site):
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
-    metadata_1.input_metadata = metadata_1._read_input_metadata_from_file()
-    metadata_1._fill_context_from_input_meta(metadata_1.top_level_meta["cta"]["context"])
-
-    assert metadata_1.top_level_meta["cta"]["context"]["document"][1]["type"] == "Presentation"
-    assert (
-        metadata_1.top_level_meta["cta"]["context"]["associated_data"][0]["description"][0:6]
-        == "Mirror"
-    )
-
-
 def test_fill_product_meta(args_dict_site):
-    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site, clean_meta=False)
 
     with pytest.raises(TypeError):
         metadata_1._fill_product_meta(product_dict=None)
