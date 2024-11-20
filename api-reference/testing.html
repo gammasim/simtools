@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Testing &#8212; simtools v0.1.dev1+ge9e7b11 Manual</title>
+    <title>Testing &#8212; simtools v0.1.dev1+gd986dcf Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=ff2b5500"></script>
+    <script src="../_static/documentation_options.js?v=13be57a5"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Simulator" href="simulators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge9e7b11" />
+  <meta name="docsearch:version" content="0.1.dev1+gd986dcf" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ge9e7b11 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd986dcf Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -441,10 +441,23 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.check_output_from_sim_telarray"><code class="docutils literal notranslate"><span class="pre">check_output_from_sim_telarray()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.compare_output">compare_output</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.compare_output.compare_ecsv_files"><code class="docutils literal notranslate"><span class="pre">compare_ecsv_files()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.compare_output.compare_files"><code class="docutils literal notranslate"><span class="pre">compare_files()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.compare_output.compare_json_or_yaml_files"><code class="docutils literal notranslate"><span class="pre">compare_json_or_yaml_files()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.configuration">configuration</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.configure"><code class="docutils literal notranslate"><span class="pre">configure()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.create_tmp_output_path"><code class="docutils literal notranslate"><span class="pre">create_tmp_output_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.get_application_command"><code class="docutils literal notranslate"><span class="pre">get_application_command()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.get_list_of_test_configurations"><code class="docutils literal notranslate"><span class="pre">get_list_of_test_configurations()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.validate_output">validate_output</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_ecsv_files"><code class="docutils literal notranslate"><span class="pre">compare_ecsv_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_files"><code class="docutils literal notranslate"><span class="pre">compare_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_json_or_yaml_files"><code class="docutils literal notranslate"><span class="pre">compare_json_or_yaml_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.validate_all_tests"><code class="docutils literal notranslate"><span class="pre">validate_all_tests()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.validate_application_output"><code class="docutils literal notranslate"><span class="pre">validate_application_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.helpers">helpers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.helpers.skip_camera_efficiency"><code class="docutils literal notranslate"><span class="pre">skip_camera_efficiency()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -535,12 +548,106 @@ and the energies simulated are required to be within the configured ones.</p>
 </dd></dl>
 
 </section>
-<section id="module-testing.compare_output">
-<span id="compare-output"></span><span id="compare-outputmodule"></span><h2>compare_output<a class="headerlink" href="#module-testing.compare_output" title="Link to this heading">#</a></h2>
+<section id="module-testing.configuration">
+<span id="configuration"></span><span id="testconfiguration-module"></span><h2>configuration<a class="headerlink" href="#module-testing.configuration" title="Link to this heading">#</a></h2>
+<p>Integration test configuration.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.configuration.configure">
+<span class="sig-prename descclassname"><span class="pre">testing.configuration.</span></span><span class="sig-name descname"><span class="pre">configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmp_test_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/configuration.html#configure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.configuration.configure" title="Link to this definition">#</a></dt>
+<dd><p>Prepare configuration and command for integration tests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config: dict</strong></dt><dd><p>Configuration dictionary.</p>
+</dd>
+<dt><strong>tmp_test_directory: str</strong></dt><dd><p>Temporary test directory (from pytest fixture).</p>
+</dd>
+<dt><strong>request: request</strong></dt><dd><p>Request object.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str: command to run the application test.</dt><dd></dd>
+<dt>str: config file model version.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.configuration.create_tmp_output_path">
+<span class="sig-prename descclassname"><span class="pre">testing.configuration.</span></span><span class="sig-name descname"><span class="pre">create_tmp_output_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_test_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/configuration.html#create_tmp_output_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.configuration.create_tmp_output_path" title="Link to this definition">#</a></dt>
+<dd><p>Create temporary output path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tmp_test_directory: str</strong></dt><dd><p>Temporary directory.</p>
+</dd>
+<dt><strong>config: dict</strong></dt><dd><p>Configuration dictionary.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str: path to the temporary output directory.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.configuration.get_application_command">
+<span class="sig-prename descclassname"><span class="pre">testing.configuration.</span></span><span class="sig-name descname"><span class="pre">get_application_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/configuration.html#get_application_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.configuration.get_application_command" title="Link to this definition">#</a></dt>
+<dd><p>Return the command to run the application with the given config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>app: str</strong></dt><dd><p>Name of the application.</p>
+</dd>
+<dt><strong>config_file: str</strong></dt><dd><p>Configuration file.</p>
+</dd>
+<dt><strong>config_string: str</strong></dt><dd><p>Configuration string (e.g., ‘–version’)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str: command to run the application test.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.configuration.get_list_of_test_configurations">
+<span class="sig-prename descclassname"><span class="pre">testing.configuration.</span></span><span class="sig-name descname"><span class="pre">get_list_of_test_configurations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/configuration.html#get_list_of_test_configurations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.configuration.get_list_of_test_configurations" title="Link to this definition">#</a></dt>
+<dd><p>Return list of test configuration dictionaries or test names.</p>
+<p>Read all configuration files for testing.
+Add “–help” and “–version” calls for all applications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config_files: list</strong></dt><dd><p>List of integration test configuration files.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list:</dt><dd><p>list of test names or of configuration dictionaries.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-testing.validate_output">
+<span id="validate-output"></span><span id="validate-outputmodule"></span><h2>validate_output<a class="headerlink" href="#module-testing.validate_output" title="Link to this heading">#</a></h2>
 <p>Compare application output to reference output.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="testing.compare_output.compare_ecsv_files">
-<span class="sig-prename descclassname"><span class="pre">testing.compare_output.</span></span><span class="sig-name descname"><span class="pre">compare_ecsv_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/compare_output.html#compare_ecsv_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.compare_output.compare_ecsv_files" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="testing.validate_output.compare_ecsv_files">
+<span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">compare_ecsv_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#compare_ecsv_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.compare_ecsv_files" title="Link to this definition">#</a></dt>
 <dd><p>Compare two ecsv files.</p>
 <p>The comparison is successful if:</p>
 <ul class="simple">
@@ -571,8 +678,8 @@ key-value pairs:
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="testing.compare_output.compare_files">
-<span class="sig-prename descclassname"><span class="pre">testing.compare_output.</span></span><span class="sig-name descname"><span class="pre">compare_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/compare_output.html#compare_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.compare_output.compare_files" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="testing.validate_output.compare_files">
+<span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">compare_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#compare_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.compare_files" title="Link to this definition">#</a></dt>
 <dd><p>Compare two files of file type ecsv, json or yaml.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -597,8 +704,8 @@ key-value pairs:
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="testing.compare_output.compare_json_or_yaml_files">
-<span class="sig-prename descclassname"><span class="pre">testing.compare_output.</span></span><span class="sig-name descname"><span class="pre">compare_json_or_yaml_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/compare_output.html#compare_json_or_yaml_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.compare_output.compare_json_or_yaml_files" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="testing.validate_output.compare_json_or_yaml_files">
+<span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">compare_json_or_yaml_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#compare_json_or_yaml_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.compare_json_or_yaml_files" title="Link to this definition">#</a></dt>
 <dd><p>Compare two json or yaml files.</p>
 <p>Take into account float comparison for sim_telarray string-embedded floats.</p>
 <dl class="field-list simple">
@@ -619,6 +726,49 @@ key-value pairs:
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.validate_output.validate_all_tests">
+<span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">validate_all_tests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file_model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#validate_all_tests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.validate_all_tests" title="Link to this definition">#</a></dt>
+<dd><p>Validate test output for all integration tests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config: dict</strong></dt><dd><p>Integration test configuration dictionary.</p>
+</dd>
+<dt><strong>request: request</strong></dt><dd><p>Request object.</p>
+</dd>
+<dt><strong>config_file_model_version: str</strong></dt><dd><p>Model version from the configuration file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.validate_output.validate_application_output">
+<span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">validate_application_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#validate_application_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.validate_application_output" title="Link to this definition">#</a></dt>
+<dd><p>Validate application output against expected output.</p>
+<p>Expected output is defined in configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config: dict</strong></dt><dd><p>dictionary with the configuration for the application test.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-testing.helpers">
+<span id="helpers"></span><span id="helpersmodule"></span><h2>helpers<a class="headerlink" href="#module-testing.helpers" title="Link to this heading">#</a></h2>
+<p>Helper functions for integration testing.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.helpers.skip_camera_efficiency">
+<span class="sig-prename descclassname"><span class="pre">testing.helpers.</span></span><span class="sig-name descname"><span class="pre">skip_camera_efficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/helpers.html#skip_camera_efficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.helpers.skip_camera_efficiency" title="Link to this definition">#</a></dt>
+<dd><p>Skip camera efficiency tests if the old version of testeff is used.</p>
 </dd></dl>
 
 </section>
@@ -677,10 +827,23 @@ key-value pairs:
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.check_output_from_sim_telarray"><code class="docutils literal notranslate"><span class="pre">check_output_from_sim_telarray()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.compare_output">compare_output</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.compare_output.compare_ecsv_files"><code class="docutils literal notranslate"><span class="pre">compare_ecsv_files()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.compare_output.compare_files"><code class="docutils literal notranslate"><span class="pre">compare_files()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.compare_output.compare_json_or_yaml_files"><code class="docutils literal notranslate"><span class="pre">compare_json_or_yaml_files()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.configuration">configuration</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.configure"><code class="docutils literal notranslate"><span class="pre">configure()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.create_tmp_output_path"><code class="docutils literal notranslate"><span class="pre">create_tmp_output_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.get_application_command"><code class="docutils literal notranslate"><span class="pre">get_application_command()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.get_list_of_test_configurations"><code class="docutils literal notranslate"><span class="pre">get_list_of_test_configurations()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.validate_output">validate_output</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_ecsv_files"><code class="docutils literal notranslate"><span class="pre">compare_ecsv_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_files"><code class="docutils literal notranslate"><span class="pre">compare_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_json_or_yaml_files"><code class="docutils literal notranslate"><span class="pre">compare_json_or_yaml_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.validate_all_tests"><code class="docutils literal notranslate"><span class="pre">validate_all_tests()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.validate_application_output"><code class="docutils literal notranslate"><span class="pre">validate_application_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.helpers">helpers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.helpers.skip_camera_efficiency"><code class="docutils literal notranslate"><span class="pre">skip_camera_efficiency()</span></code></a></li>
 </ul>
 </li>
 </ul>
