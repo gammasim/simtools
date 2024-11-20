@@ -103,22 +103,13 @@ class StatisticalErrorEvaluator:
                         )
                     else:
                         sim_units[col_name] = None
-
-                # Check and apply units to each column, raising an error if the unit is missing
-                if not event_units["ENERGY"]:
-                    raise ValueError("Unit for ENERGY in EVENTS data is missing.")
+                # dl2 files are required to have units for these entries
                 event_energies_reco = events_data["ENERGY"] * event_units["ENERGY"]
 
-                if not event_units["MC_ENERGY"]:
-                    raise ValueError("Unit for MC_ENERGY in EVENTS data is missing.")
                 event_energies_mc = events_data["MC_ENERGY"] * event_units["MC_ENERGY"]
 
-                if not sim_units["MC_ENERG_LO"]:
-                    raise ValueError("Unit for MC_ENERG_LO in SIMULATED EVENTS data is missing.")
                 bin_edges_low = sim_events_data["MC_ENERG_LO"] * sim_units["MC_ENERG_LO"]
 
-                if not sim_units["MC_ENERG_HI"]:
-                    raise ValueError("Unit for MC_ENERG_HI in SIMULATED EVENTS data is missing.")
                 bin_edges_high = sim_events_data["MC_ENERG_HI"] * sim_units["MC_ENERG_HI"]
 
                 simulated_event_histogram = sim_events_data["EVENTS"] * u.count
