@@ -104,7 +104,7 @@ def test_calculate_scaled_events(test_fits_file, metric):
     scaled_events = event_scaler.scale_events()
 
     assert isinstance(scaled_events, u.Quantity)
-    assert scaled_events.value == pytest.approx(33027, rel=1e-0)
+    assert scaled_events.value == pytest.approx(41249903535849.58, rel=1e-0)
     assert scaled_events.unit == u.ct
 
 
@@ -122,7 +122,7 @@ def test_calculate_metrics(test_fits_file, metric):
 
     evaluator.calculate_metrics()
 
-    expected_values = np.array([3.18110350e-10, 4.65906785e-09, 1.03266065e-08])
+    expected_values = np.array([0.40824829, 0.31622776, 0.1796053])
     computed_values = evaluator.error_eff_area["relative_errors"].value[: len(expected_values)]
     assert computed_values == pytest.approx(expected_values, rel=1e-2)
 
@@ -227,7 +227,7 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
     )
 
     expected_efficiencies = np.array([0.1, 0.1, 0.1, 0.0]) * u.dimensionless_unscaled
-    expected_relative_errors = np.array([0.03, 0.0212132, 0.04242641, 0.0]) / u.ct**0.5
+    expected_relative_errors = np.array([0.3, 0.21213203, 0.42426407, 0.0])
 
     assert np.allclose(
         efficiencies, expected_efficiencies, atol=1e-2

@@ -65,8 +65,8 @@ class EventScaler:
         scaling_factor = self._compute_scaling_factor()
         base_events = self._number_of_simulated_events()
         if return_sum:
-            return np.sum(base_events * scaling_factor) * u.ct
-        return base_events * scaling_factor * u.ct
+            return np.sum(base_events * scaling_factor)
+        return base_events * scaling_factor
 
     def _compute_scaling_factor(self) -> float:
         """
