@@ -62,7 +62,7 @@ class StatisticalErrorEvaluator:
 
         self.data = self.load_data_from_file()
 
-        self.error_eff_area = None
+        self.uncertainty_effective_area = None
         self.error_energy_estimate_bdt_reg_tree = None
         self.sigma_energy = None
         self.delta_energy = None
@@ -293,7 +293,7 @@ class StatisticalErrorEvaluator:
 
         self.energy_threshold = bin_edges[threshold_index]
 
-    def calculate_error_eff_area(self):
+    def calculate_uncertainty_effective_area(self):
         """
         Calculate the uncertainties on the effective collection area.
 
@@ -351,11 +351,13 @@ class StatisticalErrorEvaluator:
 
     def calculate_metrics(self):
         """Calculate all defined metrics as specified in self.metrics and store results."""
-        if "error_eff_area" in self.metrics:
+        if "uncertainty_effective_area" in self.metrics:
 
-            self.error_eff_area = self.calculate_error_eff_area()
-            if self.error_eff_area:
-                validity_range = self.metrics.get("error_eff_area", {}).get("valid_range")
+            self.uncertainty_effective_area = self.calculate_uncertainty_effective_area()
+            if self.uncertainty_effective_area:
+                validity_range = self.metrics.get("uncertainty_effective_area", {}).get(
+                    "valid_range"
+                )
                 min_energy, max_energy = validity_range["value"][0] * u.Unit(
                     validity_range["unit"]
                 ), validity_range["value"][1] * u.Unit(validity_range["unit"])
@@ -363,15 +365,20 @@ class StatisticalErrorEvaluator:
                 valid_errors = [
                     error
                     for energy, error in zip(
-                        self.data["bin_edges_low"], self.error_eff_area["relative_errors"]
+                        self.data["bin_edges_low"],
+                        self.uncertainty_effective_area["relative_errors"],
                     )
                     if min_energy <= energy <= max_energy
                 ]
-                self.error_eff_area["max_error"] = max(valid_errors) if valid_errors else 0.0
-                ref_value = self.metrics.get("error_eff_area", {}).get("target_error")["value"]
+                self.uncertainty_effective_area["max_error"] = (
+                    max(valid_errors) if valid_errors else 0.0
+                )
+                ref_value = self.metrics.get("uncertainty_effective_area", {}).get("target_error")[
+                    "value"
+                ]
                 _logger.info(
                     f"Effective Area Error (max in validity range): "
-                    f"{self.error_eff_area['max_error'].value:.6f}, "
+                    f"{self.uncertainty_effective_area['max_error'].value:.6f}, "
                     f"Reference: {ref_value:.3f}"
                 )
 
@@ -389,7 +396,7 @@ class StatisticalErrorEvaluator:
         else:
             raise ValueError("Invalid metric specified.")
         self.metric_results = {
-            "error_eff_area": self.error_eff_area,
+            "uncertainty_effective_area": self.uncertainty_effective_area,
             "error_energy_estimate_bdt_reg_tree": self.error_energy_estimate_bdt_reg_tree,
         }
         return self.metric_results
@@ -403,10 +410,10 @@ class StatisticalErrorEvaluator:
         max_error : float
             Maximum relative error.
         """
-        if "relative_errors" in self.metric_results["error_eff_area"]:
-            return np.max(self.metric_results["error_eff_area"]["relative_errors"])
-        if self.error_eff_area:
-            return np.max(self.error_eff_area["relative_errors"])
+        if "relative_errors" in self.metric_results["uncertainty_effective_area"]:
+            return np.max(self.metric_results["uncertainty_effective_area"]["relative_errors"])
+        if self.uncertainty_effective_area:
+            return np.max(self.uncertainty_effective_area["relative_errors"])
         return None
 
     def calculate_overall_metric(self, metric="average"):
@@ -430,7 +437,7 @@ class StatisticalErrorEvaluator:
         overall_max_errors = {}
 
         for metric_name, result in self.metric_results.items():
-            if metric_name == "error_eff_area":
+            if metric_name == "uncertainty_effective_area":
                 max_errors = self.calculate_max_error_for_effective_area()
                 overall_max_errors[metric_name] = max_errors if max_errors else 0
             elif metric_name in [
