@@ -580,19 +580,23 @@ class MetadataCollector:
             Metadata dictionary.
 
         """
+
+        def clean_list(value):
+            nested_list = [
+                self.clean_meta_data(item) if isinstance(item, dict) else item for item in value
+            ]
+            return [item for item in nested_list if item not in (None, "", [], {})]
+
         cleaned = {}
         for key, value in meta_dict.items():
-            if value is None or value == []:
+            if value in (None, []):
                 continue
             if isinstance(value, dict):
                 nested = self.clean_meta_data(value)
                 if nested:  # Only add if not empty
                     cleaned[key] = nested
             elif isinstance(value, list):
-                nested_list = [
-                    self.clean_meta_data(item) if isinstance(item, dict) else item for item in value
-                ]
-                nested_list = [item for item in nested_list if item not in (None, "", [], {})]
+                nested_list = clean_list(value)
                 if nested_list:  # Only add if not empty
                     cleaned[key] = nested_list
             else:
