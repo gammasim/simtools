@@ -3,14 +3,14 @@
 r"""
 Application to run the StatisticalErrorEvaluator and interpolate results.
 
-This application evaluates statistical errors from dl2_mc_events_file FITS files
+This application evaluates statistical errors from dl2_mc_events_file files
 based on input parameters like zenith angles and offsets, and can perform interpolation
 for a specified grid point.
 
 Command line arguments
 ----------------------
 base_path (str, required)
-    Path to the directory containing the dl2_mc_events_file FITS file for interpolation.
+    Path to the directory containing the dl2_mc_events_file file for interpolation.
 zeniths (list of int, required)
     List of zenith angles to consider.
 offsets (list of int, required)
@@ -67,7 +67,7 @@ def _parse(label, description):
         "--base_path",
         type=str,
         required=True,
-        help="Path to the dl2_mc_events_file FITS files for interpolation.",
+        help="Path to the dl2_mc_events_file files for interpolation.",
     )
     config.parser.add_argument(
         "--zeniths", nargs="+", type=CommandLineParser.zenith_angle, help="List of zenith angles."
@@ -108,7 +108,7 @@ def main():
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label,
-        "Evaluate statistical errors from dl2_mc_events_file FITS files and interpolate results.",
+        "Evaluate statistical errors from dl2_mc_events_file files and interpolate results.",
     )
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
