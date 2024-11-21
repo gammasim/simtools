@@ -92,7 +92,6 @@ class ArrayModel:
             mongo_db_config=self.mongo_db_config,
             model_version=self.model_version,
             label=self.label,
-            array_model=self,
         )
 
         array_elements = {}
