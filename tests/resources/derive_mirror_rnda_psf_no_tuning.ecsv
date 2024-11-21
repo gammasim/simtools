@@ -1,0 +1,75 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: best_fit, datatype: bool}
+# - {name: mirror_reflection_random_angle_sigma1, unit: deg, datatype: float64}
+# - {name: mirror_reflection_random_angle_fraction2, datatype: float64}
+# - {name: mirror_reflection_random_angle_sigma2, unit: deg, datatype: float64}
+# - {name: containment_radius_D80, unit: cm, datatype: float64}
+# - {name: containment_radius_sigma_D80, unit: cm, datatype: float64}
+# meta: !!omap
+# - CTA:
+#     ACTIVITY:
+#       END: '2024-10-19T11:43:08'
+#       ID: d45ad25b-dd15-40e4-93c6-cd214cbfab40
+#       NAME: derive_mirror_rnda
+#       SOFTWARE: {NAME: simtools, VERSION: 0.7.1.dev608+g141ca6b22.d20241018}
+#       START: '2024-10-19T11:43:08'
+#       TYPE: software
+#     CONTACT: {EMAIL: null, NAME: root, ORGANIZATION: CTAO}
+#     CONTEXT:
+#       ASSOCIATED_DATA:
+#       - CREATION_TIME: null
+#         DATA:
+#           ASSOCIATION: null
+#           CATEGORY: null
+#           LEVEL: null
+#           MODEL: {NAME: null, TYPE: null, URL: null, VERSION: null}
+#           TYPE: null
+#         DESCRIPTION: null
+#         FILENAME: null
+#         FORMAT: null
+#         ID: null
+#         VALID: {END: null, START: null}
+#       ASSOCIATED_ELEMENTS:
+#       - {CLASS: telescope, SITE: South, SUBTYPE: '', TYPE: MSTS}
+#       DOCUMENT:
+#       - {CREATION_TIME: null, ID: null, TITLE: null, TYPE: null, URL: null}
+#       NOTES:
+#       - {CREATION_TIME: null, TEXT: null, TITLE: null}
+#     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
+#     PROCESS: {ID: null, SUBTYPE: null, TYPE: simulation}
+#     PRODUCT:
+#       CREATION_TIME: '2024-10-19T11:43:08'
+#       DATA:
+#         ASSOCIATION: null
+#         CATEGORY: SIM
+#         LEVEL: R1
+#         MODEL: {NAME: null, TYPE: null, URL: null, VERSION: null}
+#         TYPE: Service
+#       DESCRIPTION: null
+#       FILENAME: test_derive_mirror_rnda_psf_no_tuning.ecsv
+#       FORMAT: ecsv
+#       ID: d45ad25b-dd15-40e4-93c6-cd214cbfab40
+#       VALID: {END: null, START: null}
+#     REFERENCE: {VERSION: 1.0.0}
+# - __serialized_columns__:
+#     containment_radius_D80:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: &id001 !astropy.units.Unit {unit: cm}
+#       value: !astropy.table.SerializedColumn {name: containment_radius_D80}
+#     containment_radius_sigma_D80:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id001
+#       value: !astropy.table.SerializedColumn {name: containment_radius_sigma_D80}
+#     mirror_reflection_random_angle_sigma1:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: &id002 !astropy.units.Unit {unit: deg}
+#       value: !astropy.table.SerializedColumn {name: mirror_reflection_random_angle_sigma1}
+#     mirror_reflection_random_angle_sigma2:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: *id002
+#       value: !astropy.table.SerializedColumn {name: mirror_reflection_random_angle_sigma2}
+# schema: astropy-2.0
+best_fit mirror_reflection_random_angle_sigma1 mirror_reflection_random_angle_fraction2 mirror_reflection_random_angle_sigma2 containment_radius_D80 containment_radius_sigma_D80
+True 0.0063 0.0 0.0 2.3183911028216553 0.01564003628445354

@@ -17,7 +17,6 @@ from astropy.utils.diff import report_diff_values
 from simtools.data_model import validate_data
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
@@ -221,7 +220,7 @@ def test_sort_data(reference_columns, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(AttributeError):
             data_validator._sort_data()
-        assert "No data table defined for sorting" in caplog.text
+    assert "No data table defined for sorting" in caplog.text
 
     reverse_sorted_data_columns = reference_columns
     reverse_sorted_data_columns[0]["input_processing"] = ["remove_duplicates", "reversesort"]
@@ -242,7 +241,7 @@ def test_sort_data(reference_columns, caplog):
     with caplog.at_level(logging.ERROR):
         with pytest.raises(AttributeError):
             data_validator_reverse._sort_data()
-        assert "No data table defined for reverse sorting" in caplog.text
+    assert "No data table defined for reverse sorting" in caplog.text
 
 
 def test_check_data_for_duplicates(reference_columns):
@@ -422,7 +421,7 @@ def test_check_and_convert_units_dimensionless(reference_columns, caplog):
             data_validator._check_and_convert_units(
                 300.0, unit="dimensionless", col_name="wavelength"
             )
-        assert "Invalid unit in data column " in caplog.text
+    assert "Invalid unit in data column " in caplog.text
 
 
 def test_check_and_convert_units_integer_arrays(reference_columns):
@@ -665,6 +664,19 @@ def test_validate_data_dict():
 
 def test_prepare_model_parameter():
     data_validator = validate_data.DataValidator()
+
+    # input as string without unit
+    data_validator.data_dict = {
+        "name": "num_gains",
+        "value": "2",
+        "unit": None,
+    }
+
+    # input as float plus unit
+    data_validator._prepare_model_parameter()
+    assert data_validator.data_dict["value"] == 2
+    assert data_validator.data_dict["unit"] is None
+
     data_validator.data_dict = {
         "name": "reference_point_altitude",
         "value": 1000.0,
@@ -792,13 +804,31 @@ def test_get_value_and_units_as_lists():
     data_validator.data_dict = {"value": np.array([100, 200]), "unit": np.array(["m", "cm"])}
     values, units = data_validator._get_value_and_units_as_lists()
     assert values == [100, 200]
-    assert units == ["m", "cm"]
+    assert list(units) == ["m", "cm"]
 
     # Test with unit as "null"
     data_validator.data_dict = {"value": [100, 200], "unit": ["m", "null"]}
     values, units = data_validator._get_value_and_units_as_lists()
     assert values == [100, 200]
     assert units == ["m", None]
+
+    # Test with astropy Quantity
+    data_validator.data_dict = {"value": 100 * u.m, "unit": "km"}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [0.1]
+    assert units == ["km"]
+
+    # Test with astropy Quantities
+    data_validator.data_dict = {"value": [100 * u.m, 200 * u.km], "unit": ["m", "km"]}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100, 200]
+    assert units == ["m", "km"]
+
+    # Test with astropy Quantities
+    data_validator.data_dict = {"value": [100.0, 200] * u.m, "unit": ["m", "km"]}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [100, 0.2]
+    assert units == ["m", "km"]
 
 
 def test_validate_value_and_unit_for_dict(reference_columns):
