@@ -3,7 +3,10 @@
 import logging
 import re
 
+import numpy as np
 from astropy import units as u
+
+import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
 
@@ -82,6 +85,65 @@ def get_value_unit_type(value, unit_str=None):
         base_unit = unit_str
 
     return base_value, base_unit, base_type
+
+
+def split_value_and_unit(value):
+    """
+    Split a value into its value and unit.
+
+    Takes into account the case where the value is a Quantity, a number,
+    or a simtools-type string encoding a list of values and units.
+
+    Parameters
+    ----------
+    value: str, int, float, bool, u.Quantity
+        Value to be parsed.
+
+    Returns
+    -------
+    value, str
+        Value and units as (value, unit), or lists of values and unites
+    """
+    if isinstance(value, u.Quantity):
+        return _split_value_is_quantity(value)
+    if isinstance(value, str):
+        return _split_value_is_string(value)
+    if isinstance(value, list | np.ndarray):
+        return _split_value_is_list(value)
+    return value, None
+
+
+def _split_value_is_quantity(value):
+    """Split value and unit for an astropy Quantity."""
+    if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m,
+        return list(value.value), [str(value.unit)] * len(value)
+    return value.value, str(value.unit)
+
+
+def _split_value_is_string(value):
+    """Split vale and unit for a string."""
+    if value.isdigit():  # single integer value
+        return int(value), None
+    try:  # single value with/without unit
+        return u.Quantity(value).value, str(u.Quantity(value).unit)
+    except ValueError:
+        return _split_value_is_list(gen.convert_string_to_list(value))
+    except TypeError:  # string value (not numerical)
+        return value, None
+
+
+def _split_value_is_list(value):
+    """Split value and unit for a list."""
+    value_list = []
+    unit_list = []
+    for item in value:
+        _value, _unit = split_value_and_unit(item)
+        value_list.append(_value)
+        if isinstance(_unit, str):
+            unit_list.append(_unit)
+        else:
+            unit_list.append(None)
+    return value_list, unit_list
 
 
 def get_value_as_quantity(value, unit):

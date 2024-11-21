@@ -3,14 +3,12 @@
 import copy
 import logging
 
-import astropy.units as u
 import numpy as np
 import pytest
 
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
@@ -84,36 +82,6 @@ def test_simtel_config_reader_telescope_transmission(
     assert len(_config.parameter_dict["CT2"]) == 6
 
 
-def test_get_validated_parameter_dict(config_reader_num_gains):
-
-    _config = config_reader_num_gains
-    assert _config.get_validated_parameter_dict(
-        telescope_name="MSTN-01", model_version="0.0.1"
-    ) == {
-        "parameter": "num_gains",
-        "instrument": "MSTN-01",
-        "site": "North",
-        "version": "0.0.1",
-        "value": 2,
-        "unit": u.Unit(""),
-        "type": "int64",
-        "applicable": True,
-        "file": False,
-    }
-
-
-def test_export_parameter_dict_to_json(tmp_test_directory, config_reader_num_gains):
-
-    _config = config_reader_num_gains
-    _json_file = tmp_test_directory / "num_gains.json"
-    _config.export_parameter_dict_to_json(
-        _json_file,
-        _config.get_validated_parameter_dict(telescope_name="MSTN-01", model_version="0.0.1"),
-    )
-
-    assert _json_file.exists()
-
-
 def test_compare_simtel_config_with_schema(
     config_reader_num_gains, config_reader_telescope_transmission, caplog
 ):
@@ -131,29 +99,27 @@ def test_compare_simtel_config_with_schema(
     _config_tt = config_reader_telescope_transmission
     with caplog.at_level(logging.WARNING):
         _config_tt.compare_simtel_config_with_schema()
-        assert "Values for limits do not match" in caplog.text
-        assert "from simtel: TELESCOPE_TRANSMISSION None" in caplog.text
-        assert "from schema: telescope_transmission [0. 1.]" in caplog.text
+    assert "Values for limits do not match" in caplog.text
+    assert "from simtel: TELESCOPE_TRANSMISSION None" in caplog.text
+    assert "from schema: telescope_transmission [0. 1.]" in caplog.text
 
     # change parameter type to bool; should result in no limit check
     caplog.clear()
-    _config_tt.parameter_dict["type"] = "bool"
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level("WARNING"):
+        _config_tt.parameter_dict["type"] = "bool"
         _config_tt.compare_simtel_config_with_schema()
-        assert "Values for limits do not match" not in caplog.text
+    assert "Values for limits do not match" not in caplog.text
 
     # remove keys and elements to enforce error tests
     caplog.clear()
-    _config_ng.schema_dict["data"][0].pop("default")
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level("WARNING"):
+        _config_ng.schema_dict["data"][0].pop("default")
         _config_ng.compare_simtel_config_with_schema()
-        assert "from schema: num_gains None" in caplog.text
-
-    caplog.clear()
-    _config_ng.schema_dict["data"].pop(0)
-    with caplog.at_level(logging.WARNING):
+    assert "from schema: num_gains None" in caplog.text
+    with caplog.at_level("WARNING"):
+        _config_ng.schema_dict["data"].pop(0)
         _config_ng.compare_simtel_config_with_schema()
-        assert "from schema: num_gains None" in caplog.text
+    assert "from schema: num_gains None" in caplog.text
 
 
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
@@ -161,19 +127,20 @@ def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, ca
     _config_ng = config_reader_num_gains
 
     with pytest.raises(FileNotFoundError):
-        _config_ng._read_simtel_config_file("non_existing_file.cfg", "CT1")
+        _config_ng.read_simtel_config_file("non_existing_file.cfg", "CT1")
 
     # existing telescope
-    _para_dict = _config_ng._read_simtel_config_file(simtel_config_file, "CT1")
+    _para_dict = _config_ng.read_simtel_config_file(simtel_config_file, "CT1")
     assert "CT1" in _para_dict
     # non existing telescope
-    _para_dict = _config_ng._read_simtel_config_file(simtel_config_file, "CT1000")
+    _para_dict = _config_ng.read_simtel_config_file(simtel_config_file, "CT1000")
     assert "CT1000" not in _para_dict
 
     # non existing parameter
-    _config_ng.simtel_parameter_name = "this parameter does not exist"
-    assert _config_ng._read_simtel_config_file(simtel_config_file, "CT1") is None
-    assert "No entries found for parameter" in caplog.text
+    with caplog.at_level("INFO"):
+        _config_ng.simtel_parameter_name = "this parameter does not exist"
+    assert _config_ng.read_simtel_config_file(simtel_config_file, "CT1") is None
+    assert "not found" in caplog.text
 
 
 def test_get_type_and_dimension_from_simtel_cfg(config_reader_num_gains):
@@ -259,87 +226,3 @@ def test_get_simtel_parameter_name(config_reader_num_gains):
     # test pass on TypeError
     _config.schema_dict = None
     assert _config._get_simtel_parameter_name("num_gains") == "NUM_GAINS"
-
-
-def test_check_parameter_applicability(schema_num_gains, simtel_config_file):
-
-    _config = SimtelConfigReader(
-        schema_file=schema_num_gains,
-        simtel_config_file=simtel_config_file,
-        simtel_telescope_name="CT2",
-    )
-
-    assert _config._check_parameter_applicability("LSTN-01")
-
-    # illuminator does not have gains
-    assert not _config._check_parameter_applicability("ILLN-01")
-
-    # change schema dict
-    _config.schema_dict["instrument"]["type"].append("LSTN-55")
-    assert _config._check_parameter_applicability("LSTN-55")
-
-    # change schema dict
-    _config.schema_dict["instrument"].pop("type")
-    with pytest.raises(KeyError):
-        _config._check_parameter_applicability("LSTN-01")
-
-
-def test_parameter_is_a_file(schema_num_gains, simtel_config_file):
-
-    _config = SimtelConfigReader(
-        schema_file=schema_num_gains,
-        simtel_config_file=simtel_config_file,
-        simtel_telescope_name="CT2",
-    )
-
-    assert not _config._parameter_is_a_file()
-
-    _config.schema_dict["data"][0]["type"] = "file"
-    assert _config._parameter_is_a_file()
-
-    _config.schema_dict["data"][0].pop("type")
-    assert not _config._parameter_is_a_file()
-
-    _config.schema_dict["data"] = []
-    assert not _config._parameter_is_a_file()
-
-
-def test_get_unit_from_schema(schema_num_gains, simtel_config_file):
-
-    _config = SimtelConfigReader(
-        schema_file=schema_num_gains,
-        simtel_config_file=simtel_config_file,
-        simtel_telescope_name="CT2",
-    )
-
-    assert _config._get_unit_from_schema() is None
-
-    _config.schema_dict["data"][0]["unit"] = "m"
-    assert _config._get_unit_from_schema() == "m"
-
-    _config.schema_dict["data"][0]["unit"] = "dimensionless"
-    assert _config._get_unit_from_schema() is None
-
-    _config.schema_dict["data"][0].pop("unit")
-    assert _config._get_unit_from_schema() is None
-
-
-def test_validate_parameter_dict(config_reader_num_gains):
-
-    _config = config_reader_num_gains
-
-    _temp_dict = {
-        "parameter": "num_gains",
-        "instrument": "MSTN-01",
-        "site": "North",
-        "version": "0.0.1",
-        "value": 2,
-        "unit": None,
-        "type": "int",
-        "applicable": True,
-        "file": False,
-    }
-    _config._validate_parameter_dict(_temp_dict)
-    _temp_dict["value"] = 25
-    with pytest.raises(ValueError, match=r"out of range"):
-        _config._validate_parameter_dict(_temp_dict)

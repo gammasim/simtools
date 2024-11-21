@@ -1,0 +1,12 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-submit-model-parameter-from-external
+  TEST_NAME: submit_focus_offset
+  CONFIGURATION:
+    PARAMETER: focus_offset
+    VALUE: "6.55 cm, 0.0 deg, 0.0, 0.0"
+    INSTRUMENT: LSTN-01
+    SITE: North
+    MODEL_VERSION: 6.0.0
+    INPUT_META: null
+    OUTPUT_PATH: simtools-output
+    USE_PLAIN_OUTPUT_PATH: true

@@ -39,6 +39,7 @@ dependencies = [
   "particle",
   "pymongo",
   "pyproj",
+  "pytest",
   "python-dotenv",
   "pyyaml",
   "scipy",
@@ -54,9 +55,9 @@ optional-dependencies."doc" = [
   "numpydoc",
   "sphinx",
   "sphinx-book-theme",
+  "towncrier",
 ]
 optional-dependencies."tests" = [
-  "pytest",
   "pytest-cov",
   "pytest-mock",
   "pytest-profiling",
@@ -89,6 +90,7 @@ scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:ma
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
+scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"
 scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
 scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
 scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"
@@ -246,7 +248,7 @@ max-statements = 80
 max-public-methods = 50
 
 [tool.codespell]
-ignore-words = ".codespell-ignores"
+ignore-words-list = "chec,arrang,livetime"
 
 [tool.pytest.ini_options]
 markers = [
@@ -273,3 +275,36 @@ relative_files = true
 source = [
   "simtools",
 ]
+
+[tool.towncrier]
+package = "simtools"
+directory = "docs/changes"
+filename = "CHANGELOG.md"
+underlines = [ "", "", "" ]
+title_format = "## [{version}](https://github.com/gammasim/simtools/tree/{version}) - {project_date}"
+issue_format = "[#{issue}](https://github.com/gammasim/simtools/pull/{issue})"
+start_string = "<!-- towncrier release notes start -->\n"
+
+[tool.towncrier.fragment.feature]
+name = "New Features"
+showcontent = true
+
+[tool.towncrier.fragment.bugfix]
+name = "Bug Fixes"
+showcontent = true
+
+[tool.towncrier.fragment.api]
+name = "API Changes"
+showcontent = true
+
+[tool.towncrier.fragment.maintenance]
+name = "Maintenance"
+showcontent = true
+
+[tool.towncrier.fragment.doc]
+name = "Documentation"
+showcontent = true
+
+[tool.towncrier.fragment.model]
+name = "Simulation model"
+showcontent = true

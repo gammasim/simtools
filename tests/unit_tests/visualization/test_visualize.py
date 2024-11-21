@@ -15,7 +15,6 @@ from simtools.utils import names
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def test_plot_1d(db, io_handler):
