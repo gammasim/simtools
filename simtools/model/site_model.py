@@ -4,7 +4,6 @@
 import logging
 from pathlib import Path
 
-from simtools.model.array_model import ArrayModel
 from simtools.model.model_parameter import ModelParameter
 
 __all__ = ["SiteModel"]
@@ -24,8 +23,6 @@ class SiteModel(ModelParameter):
         Model version.
     label: str, optional
         Instance label. Important for output file naming.
-    array_model : ArrayModel, optional
-        Array model.
     """
 
     def __init__(
@@ -34,22 +31,19 @@ class SiteModel(ModelParameter):
         mongo_db_config: dict,
         model_version: str,
         label: str | None = None,
-        array_model: ArrayModel | None = None,
     ):
         """Initialize SiteModel."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init SiteModel for site %s", site)
-        ModelParameter.__init__(
-            self,
+        super().__init__(
             site=site,
             mongo_db_config=mongo_db_config,
             model_version=model_version,
             db=None,
             label=label,
         )
-        self.array_model = array_model
 
-    def get_reference_point(self):
+    def get_reference_point(self) -> dict:
         """
         Get reference point coordinates as dict.
 
@@ -65,7 +59,9 @@ class SiteModel(ModelParameter):
             "epsg_code": self.get_parameter_value("epsg_code"),
         }
 
-    def get_corsika_site_parameters(self, config_file_style=False):
+    def get_corsika_site_parameters(
+        self, config_file_style: bool = False, model_directory: Path | None = None
+    ) -> dict:
         """
         Get site-related CORSIKA parameters as dict.
 
@@ -73,19 +69,18 @@ class SiteModel(ModelParameter):
 
         Parameters
         ----------
-        config_file_style bool
+        config_file_style: bool
             Return using CORSIKA config file syntax
+        model_directory: Path, optional
+            Model directory to use for file paths
 
         Returns
         -------
         dict
             Site-related CORSIKA parameters as dict
-
         """
         if config_file_style:
-            model_directory = Path("")
-            if self.array_model:
-                model_directory = self.array_model.get_config_directory()
+            model_directory = model_directory or Path("")
             return {
                 "OBSLEV": [
                     self.get_parameter_value_with_unit("corsika_observation_level").to_value("cm")
@@ -111,7 +106,7 @@ class SiteModel(ModelParameter):
             "geomag_rotation": self.get_parameter_value_with_unit("geomag_rotation"),
         }
 
-    def get_array_elements_for_layout(self, layout_name):
+    def get_array_elements_for_layout(self, layout_name: str) -> list:
         """
         Return list of array elements for a given array layout.
 
@@ -131,7 +126,7 @@ class SiteModel(ModelParameter):
                 return layout["elements"]
         raise ValueError(f"Array layout '{layout_name}' not found in '{self.site}' site model.")
 
-    def get_list_of_array_layouts(self):
+    def get_list_of_array_layouts(self) -> list:
         """
         Get list of available array layouts.
 
@@ -142,7 +137,7 @@ class SiteModel(ModelParameter):
         """
         return [layout["name"] for layout in self.get_parameter_value("array_layouts")]
 
-    def export_atmospheric_transmission_file(self, model_directory):
+    def export_atmospheric_transmission_file(self, model_directory: Path):
         """
         Export atmospheric transmission file.
 
