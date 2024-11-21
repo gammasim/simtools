@@ -39,6 +39,7 @@ dependencies = [
   "particle",
   "pymongo",
   "pyproj",
+  "pytest",
   "python-dotenv",
   "pyyaml",
   "scipy",
@@ -57,7 +58,6 @@ optional-dependencies."doc" = [
   "towncrier",
 ]
 optional-dependencies."tests" = [
-  "pytest",
   "pytest-cov",
   "pytest-mock",
   "pytest-profiling",
@@ -92,6 +92,7 @@ scripts.simtools-production-scale-events = "simtools.applications.production_sca
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
+scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"
 scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
 scripts.simtools-validate-camera-fov = "simtools.applications.validate_camera_fov:main"
 scripts.simtools-validate-cumulative-psf = "simtools.applications.validate_cumulative_psf:main"

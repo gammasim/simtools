@@ -12,8 +12,9 @@ from astropy.io.registry.base import IORegistryError
 import simtools.utils.general as gen
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import validate_data
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 __all__ = ["ModelDataWriter"]
 
@@ -125,7 +126,7 @@ class ModelDataWriter:
         output_file,
         output_path=None,
         use_plain_output_path=False,
-        overwrite_applicable=False,
+        metadata_input_dict=None,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -146,8 +147,8 @@ class ModelDataWriter:
             Path to output file.
         use_plain_output_path: bool
             Use plain output path.
-        overwrite_applicable: bool
-            Overwrite applicable parameter.
+        metadata_input_dict: dict
+            Input to metadata collector.
 
         Returns
         -------
@@ -164,8 +165,14 @@ class ModelDataWriter:
         _json_dict = writer.get_validated_parameter_dict(
             parameter_name, value, instrument, model_version
         )
-        if _json_dict.get("applicable", False) or overwrite_applicable:
-            writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        if metadata_input_dict is not None:
+            metadata_input_dict["output_file"] = output_file
+            metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
+            writer.write_metadata_to_yml(
+                metadata=MetadataCollector(args_dict=metadata_input_dict).top_level_meta,
+                yml_file=output_path / f"{Path(output_file).stem}",
+            )
         return _json_dict
 
     def get_validated_parameter_dict(self, parameter_name, value, instrument, model_version):
@@ -191,15 +198,27 @@ class ModelDataWriter:
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
         schema_file = self._read_model_parameter_schema(parameter_name)
 
+        try:  # e.g. instrument is 'North"
+            site = names.validate_site_name(instrument)
+        except ValueError:  # e.g. instrument is 'LSTN-01'
+            site = names.get_site_from_array_element_name(instrument)
+
+        try:
+            applicable = self._get_parameter_applicability(instrument)
+        except ValueError:
+            applicable = True  # Default to True (expect that this field goes in future)
+
+        value, unit = value_conversion.split_value_and_unit(value)
+
         data_dict = {
             "parameter": parameter_name,
             "instrument": instrument,
-            "site": names.get_site_from_array_element_name(instrument),
+            "site": site,
             "version": model_version,
             "value": value,
-            "unit": self._get_unit_from_schema(),
+            "unit": unit,
             "type": self._get_parameter_type(),
-            "applicable": self._get_parameter_applicability(instrument),
+            "applicable": applicable,
             "file": self._parameter_is_a_file(),
         }
         return self.validate_and_transform(
@@ -331,6 +350,7 @@ class ModelDataWriter:
             schema_file=validate_schema_file,
             data_table=product_data_table,
             data_dict=product_data_dict,
+            check_exact_data_type=False,
         )
         return _validator.validate_and_transform(is_model_parameter)
 
@@ -378,7 +398,7 @@ class ModelDataWriter:
         file_name : str
             Name of output file.
         data_dict : dict
-            Dictionary to be written.
+            Data dictionary.
 
         Raises
         ------
@@ -387,6 +407,7 @@ class ModelDataWriter:
         """
         data_dict = ModelDataWriter.prepare_data_dict_for_writing(data_dict)
         try:
+            self._logger.info(f"Writing data to {self.io_handler.get_output_file(file_name)}")
             with open(self.io_handler.get_output_file(file_name), "w", encoding="UTF-8") as file:
                 json.dump(data_dict, file, indent=4, sort_keys=False, cls=JsonNumpyEncoder)
                 file.write("\n")

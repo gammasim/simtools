@@ -664,6 +664,19 @@ def test_validate_data_dict():
 
 def test_prepare_model_parameter():
     data_validator = validate_data.DataValidator()
+
+    # input as string without unit
+    data_validator.data_dict = {
+        "name": "num_gains",
+        "value": "2",
+        "unit": None,
+    }
+
+    # input as float plus unit
+    data_validator._prepare_model_parameter()
+    assert data_validator.data_dict["value"] == 2
+    assert data_validator.data_dict["unit"] is None
+
     data_validator.data_dict = {
         "name": "reference_point_altitude",
         "value": 1000.0,
@@ -791,7 +804,7 @@ def test_get_value_and_units_as_lists():
     data_validator.data_dict = {"value": np.array([100, 200]), "unit": np.array(["m", "cm"])}
     values, units = data_validator._get_value_and_units_as_lists()
     assert values == [100, 200]
-    assert units == ["m", "cm"]
+    assert list(units) == ["m", "cm"]
 
     # Test with unit as "null"
     data_validator.data_dict = {"value": [100, 200], "unit": ["m", "null"]}
