@@ -104,7 +104,7 @@ class SimtelConfigWriter:
         if isinstance(value, bool):
             value = 1 if value else 0
         elif isinstance(value, (list, np.ndarray)):  # noqa: UP038
-            value = gen.convert_list_to_string(value)
+            value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
     def _get_simtel_metadata(self, config_type):

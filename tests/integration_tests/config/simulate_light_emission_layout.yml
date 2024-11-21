@@ -11,3 +11,5 @@ CTA_SIMPIPE:
     LIGHT_SOURCE_TYPE: led
     OUTPUT_PATH: simtools-output
     TELESCOPE_FILE: tests/resources/telescope_positions-North-ground.ecsv
+  INTEGRATION_TESTS:
+    - OUTPUT_FILE: logfile.log

@@ -14,8 +14,6 @@ import yaml
 
 import simtools.utils.general as gen
 
-logging.getLogger().setLevel(logging.DEBUG)
-
 url_desy = "https://www.desy.de"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
@@ -23,7 +21,7 @@ url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 test_data = "Test data"
 
 
-def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) -> None:
+def test_collect_dict_data(io_handler, caplog) -> None:
     in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml")
@@ -39,14 +37,15 @@ def test_collect_dict_data(args_dict, io_handler, tmp_test_directory, caplog) ->
     assert "k3" in d2.keys()
     assert d2["k4"] == ["bla", 2]
 
-    d3 = gen.collect_data_from_file_or_dict(test_yaml_file, in_dict)
+    with caplog.at_level("WARNING"):
+        d3 = gen.collect_data_from_file_or_dict(test_yaml_file, in_dict)
     assert d3 == d2
-
     assert gen.collect_data_from_file_or_dict(None, None, allow_empty=True) is None
     assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
-    with pytest.raises(AttributeError):
-        gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
+    with caplog.at_level("WARNING"):
+        with pytest.raises(AttributeError):
+            gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
     assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
 
     _lines = gen.collect_data_from_file_or_dict("tests/resources/test_file.list", None)
@@ -95,7 +94,8 @@ def test_program_is_executable(caplog) -> None:
     # (assume 'ls' exist on any system the test is running)
     assert gen.program_is_executable("/bin/ls") is not None  # The actual path should not matter
     assert gen.program_is_executable("this_program_probably_does_not_exist") is None
-    os.environ.pop("PATH", None)
+    with caplog.at_level("WARNING"):
+        os.environ.pop("PATH", None)
     assert gen.program_is_executable("this_program_probably_does_not_exist") is None
     assert "PATH environment variable is not set." in caplog.text
 
@@ -422,9 +422,9 @@ def test_change_dict_keys_case(caplog) -> None:
 
     _changed_to_upper = gen.change_dict_keys_case(copy(_lower_dict), False)
     assert _changed_to_upper == _upper_dict
-
-    with pytest.raises(AttributeError):
-        gen.change_dict_keys_case([2], False)
+    with caplog.at_level("ERROR"):
+        with pytest.raises(AttributeError):
+            gen.change_dict_keys_case([2], False)
     assert "Input is not a proper dictionary" in caplog.text
 
 
@@ -571,6 +571,17 @@ def test_convert_list_to_string():
         )
         == "1 1 1 1 1 1 1 1 1 1 1"
     )
+    assert (
+        gen.convert_list_to_string(
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            comma_separated=False,
+            shorten_list=False,
+            collapse_list=True,
+        )
+        == "1"
+    )
+    assert gen.convert_list_to_string([1, 2, 3], collapse_list=True) == "1 2 3"
+    assert gen.convert_list_to_string([1, 2, 3], shorten_list=True) == "1 2 3"
 
 
 def test_convert_string_to_list():
@@ -621,7 +632,7 @@ def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
     with caplog.at_level(logging.DEBUG):
         lines = gen.read_file_encoded_in_utf_or_latin(latin1_file)
         assert lines == [latin1_content]
-        assert "Unable to decode file using UTF-8. Trying Latin-1." in caplog.text
+    assert "Unable to decode file using UTF-8. Trying Latin-1." in caplog.text
 
     # I could not find a way to create a file that cannot be decoded with Latin-1
     # and raises a UnicodeDecodeError. I left the raise statement in the function

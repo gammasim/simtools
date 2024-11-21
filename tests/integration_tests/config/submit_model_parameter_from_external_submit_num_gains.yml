@@ -1,0 +1,12 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-submit-model-parameter-from-external
+  TEST_NAME: submit_num_gains
+  CONFIGURATION:
+    PARAMETER: num_gains
+    VALUE: 2
+    INSTRUMENT: LSTN-design
+    SITE: North
+    MODEL_VERSION: 6.0.0
+    INPUT_META: ./tests/resources/num_gains.meta.yml
+    OUTPUT_PATH: simtools-output
+    USE_PLAIN_OUTPUT_PATH: true

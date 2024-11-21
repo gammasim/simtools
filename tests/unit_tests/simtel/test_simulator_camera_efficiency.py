@@ -9,7 +9,6 @@ from simtools.camera_efficiency import CameraEfficiency
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture
