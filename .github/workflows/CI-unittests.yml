@@ -102,7 +102,7 @@ jobs:
             --cov --cov-report=xml
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v3.1.0
+      - uses: SonarSource/sonarqube-scan-action@v4.0.0
         if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -114,7 +114,7 @@ jobs:
           pytest --color=yes -n auto --dist loadscope --count 5 --random-order
 
       - name: Upload coverage report to codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: contains(matrix.extra-args, 'codecov')
         with:
           token: ${{ secrets.CODECOV_SIMTOOLS_TOKEN }}

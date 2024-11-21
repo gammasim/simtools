@@ -53,7 +53,7 @@ jobs:
             --log_level DEBUG
           done
 
-      - name: Integration config file validation
+      - name: Integration test config file validation
         run: |
           for file in tests/integration_tests/config/*.yml; do
             echo "Testing config file $file"

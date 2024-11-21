@@ -27,7 +27,7 @@ class MetadataCollector:
     Collects and combines metadata to describe the current simtools activity and its data products.
 
     Collect as much metadata as possible from command line configuration, input data, environment,
-    schema descriptions.  Depends on the CTAO top-level metadata definition.
+    schema descriptions. Depends on the CTAO top-level metadata definition.
 
     Parameters
     ----------
