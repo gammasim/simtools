@@ -8,7 +8,6 @@ Scaling factors are calculated using error metrics and the evaluator's results.
 
 import logging
 
-import astropy.units as u
 import numpy as np
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
@@ -25,13 +24,13 @@ class EventScaler:
     Supports scaling both the entire dataset and specific grid points like energy values.
     """
 
-    def __init__(self, evaluator: StatisticalErrorEvaluator, science_case, metrics):
+    def __init__(self, evaluator: StatisticalErrorEvaluator, science_case: str, metrics: dict):
         """
         Initialize the EventScaler with the evaluator, science case, and metrics.
 
         Parameters
         ----------
-        evaluator : object
+        evaluator : StatisticalErrorEvaluator
             The evaluator responsible for calculating metrics and handling event data.
         science_case : str
             The science case used to adjust the uncertainty factor.
@@ -42,7 +41,7 @@ class EventScaler:
         self.science_case = science_case
         self.metrics = metrics
 
-    def scale_events(self, return_sum=True) -> float:
+    def scale_events(self, return_sum: bool = True) -> float | np.ndarray:
         """
         Calculate the scaled number of events based on statistical error metrics.
 
@@ -99,16 +98,16 @@ class EventScaler:
         """
         return 1.5 if self.science_case == "science case 1" else 1.0
 
-    def _number_of_simulated_events(self) -> int:
+    def _number_of_simulated_events(self) -> list[int]:
         """
         Fetch the number of simulated events from the evaluator's data.
 
         Returns
         -------
-        int
+        List[int]
             The number of simulated events.
         """
-        return self.evaluator.data.get("simulated_event_histogram", [0])
+        return self.evaluator.data.get("simulated_event_histogram")
 
     def calculate_scaled_events_at_grid_point(
         self,
@@ -122,7 +121,6 @@ class EventScaler:
         grid_point : tuple
             The grid point specifying energy, azimuth, zenith, NSB, and offset.
 
-
         Returns
         -------
         float
@@ -134,8 +132,10 @@ class EventScaler:
 
         scaling_factor = self._compute_scaling_factor()
 
-        if bin_idx < 0 or bin_idx >= len(self.evaluator.data["simulated_event_histogram"]):
+        simulated_event_histogram = self.evaluator.data.get("simulated_event_histogram", [])
+
+        if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
             raise ValueError(f"Energy {energy} is outside the range of the simulated events data.")
 
         base_events = self._number_of_simulated_events()[bin_idx]
-        return base_events * scaling_factor * u.ct
+        return base_events * scaling_factor
