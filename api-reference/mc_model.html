@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g307351b Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+gb26c117 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=ab831cd7"></script>
+    <script src="../_static/documentation_options.js?v=26a08bb5"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Layout" href="array_layout.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g307351b" />
+  <meta name="docsearch:version" content="0.1.dev1+gb26c117" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g307351b Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gb26c117 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1422,7 +1422,7 @@ of the database structure is needed when accessing the model parameters.</p>
 <p id="module-model.site_model"><span id="id3"></span>Definition of site model.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="model.site_model.SiteModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.site_model.</span></span><span class="sig-name descname"><span class="pre">SiteModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.site_model.</span></span><span class="sig-name descname"><span class="pre">SiteModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel" title="Link to this definition">#</a></dt>
 <dd><p>SiteModel represents the MC model of an observatory site.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1435,14 +1435,12 @@ of the database structure is needed when accessing the model parameters.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
 </dd>
-<dt><strong>array_model</strong><span class="classifier">ArrayModel</span></dt><dd><p>Array model.</p>
-</dd>
 </dl>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="model.site_model.SiteModel.export_atmospheric_transmission_file">
-<span class="sig-name descname"><span class="pre">export_atmospheric_transmission_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.export_atmospheric_transmission_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.export_atmospheric_transmission_file" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">export_atmospheric_transmission_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/pathlib.html#pathlib.Path" title="(in Python v3.11)"><span class="pre">Path</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.export_atmospheric_transmission_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.export_atmospheric_transmission_file" title="Link to this definition">#</a></dt>
 <dd><p>Export atmospheric transmission file.</p>
 <p>This method is needed because when CORSIKA is not piped to sim_telarray,
 the atmospheric transmission file is not written out to the model directory.
@@ -1459,7 +1457,7 @@ This method allows to export it explicitly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model.site_model.SiteModel.get_array_elements_for_layout">
-<span class="sig-name descname"><span class="pre">get_array_elements_for_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_array_elements_for_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_array_elements_for_layout" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_array_elements_for_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a></span></span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_array_elements_for_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_array_elements_for_layout" title="Link to this definition">#</a></dt>
 <dd><p>Return list of array elements for a given array layout.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1479,13 +1477,15 @@ This method allows to export it explicitly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model.site_model.SiteModel.get_corsika_site_parameters">
-<span class="sig-name descname"><span class="pre">get_corsika_site_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_corsika_site_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_corsika_site_parameters" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_corsika_site_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file_style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/pathlib.html#pathlib.Path" title="(in Python v3.11)"><span class="pre">Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_corsika_site_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_corsika_site_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Get site-related CORSIKA parameters as dict.</p>
 <p>Parameters are returned with units wherever possible.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>config_file_style bool</strong></dt><dd><p>Return using CORSIKA config file syntax</p>
+<dt><strong>config_file_style: bool</strong></dt><dd><p>Return using CORSIKA config file syntax</p>
+</dd>
+<dt><strong>model_directory: Path, optional</strong></dt><dd><p>Model directory to use for file paths</p>
 </dd>
 </dl>
 </dd>
@@ -1500,7 +1500,7 @@ This method allows to export it explicitly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model.site_model.SiteModel.get_list_of_array_layouts">
-<span class="sig-name descname"><span class="pre">get_list_of_array_layouts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_list_of_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_list_of_array_layouts" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_list_of_array_layouts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a></span></span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_list_of_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_list_of_array_layouts" title="Link to this definition">#</a></dt>
 <dd><p>Get list of available array layouts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1514,7 +1514,7 @@ This method allows to export it explicitly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model.site_model.SiteModel.get_reference_point">
-<span class="sig-name descname"><span class="pre">get_reference_point</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_reference_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_reference_point" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_reference_point</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></span><a class="reference internal" href="../_modules/model/site_model.html#SiteModel.get_reference_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.site_model.SiteModel.get_reference_point" title="Link to this definition">#</a></dt>
 <dd><p>Get reference point coordinates as dict.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
