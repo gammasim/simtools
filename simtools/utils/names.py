@@ -296,7 +296,7 @@ def get_site_from_array_element_name(name):
 
 def get_collection_name_from_array_element_name(name):
     """
-    Get collection name (e.g., telescopes, calibration_devices) of array element from name.
+    Get collection name (e.g., telescopes, calibration_devices, sites) of array element from name.
 
     Parameters
     ----------
@@ -308,7 +308,15 @@ def get_collection_name_from_array_element_name(name):
     str
         Collection name .
     """
-    return array_elements()[get_array_element_type_from_name(name)]["collection"]
+    try:
+        return array_elements()[get_array_element_type_from_name(name)]["collection"]
+    except ValueError:
+        pass
+    try:
+        validate_site_name(name)
+        return "sites"
+    except ValueError as exc:
+        raise ValueError(f"Invalid array element name {name}: {exc}") from exc
 
 
 def get_simulation_software_name_from_parameter_name(

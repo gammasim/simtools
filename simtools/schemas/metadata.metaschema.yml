@@ -76,6 +76,12 @@ definitions:
                 format: email
               - type: "null"
             default: null
+          ORCID:
+            description: ORCID identifier of the contact.
+            anyOf:
+              - type: string
+              - type: "null"
+            default: null
       ###############
       PRODUCT:
         title: Product

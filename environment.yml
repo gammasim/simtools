@@ -6,7 +6,7 @@ dependencies:
   - python=3.11
   - astropy
   - boost-histogram
-  - ctapipe
+  - ctapipe-base
   - eventio
   - jsonschema
   - matplotlib-base
@@ -31,6 +31,7 @@ dependencies:
   - scipy
   - sphinx
   - sphinx-book-theme
+  - towncrier
   - toml
   - pip:
       - ctao-dpps-cosmic-ray-spectra
