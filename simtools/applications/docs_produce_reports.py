@@ -40,13 +40,12 @@ def generate_markdown_report(output_folder, args_dict, data):
         # Write the section header to specify the telescope
         file.write(f"# {args_dict['telescope']}\n\n")
 
-        # Start the table for displaying parameters
-        file.write("| Parameter Name | Values | Short Description |\n")
-        file.write("|----------------|--------|-------------------|\n")
-
-        # Write each parameter to the table
         for item in data:
-            file.write(f"| {item[0]} | {item[1]} | {item[3]} |\n")
+            file.write(f"## **{item[0]}**\n")
+            file.write(f"**Value:** {item[1]}\n")
+            file.write(f"**Short Description:** {item[2]}\n")
+            file.write("-------------------------------------------------------\n")
+            file.write("\n")
 
 
 def main():  # noqa: D103
