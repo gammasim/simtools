@@ -148,6 +148,9 @@ def test_get_class_from_telescope_name(invalid_name):
     assert "calibration_devices" == names.get_collection_name_from_array_element_name("ILLS-01")
     with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.get_site_from_array_element_name("SATW")
+    assert "sites" == names.get_collection_name_from_array_element_name("North")
+    with pytest.raises(ValueError, match="Invalid array element name Not_a_collection"):
+        names.get_collection_name_from_array_element_name("Not_a_collection")
 
 
 def test_sanitize_name(caplog):
