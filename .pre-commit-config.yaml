@@ -6,7 +6,7 @@ repos:
         args: ["--line-length=100"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.7.3
+    rev: v0.7.4
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -65,3 +65,10 @@ repos:
     hooks:
       - id: yamllint
         args: ["--strict", "-d", '{rules: {line-length: {max: 250}}}']
+  # towncrier
+  - repo: https://github.com/twisted/towncrier
+    rev: 24.8.0
+    hooks:
+      - id: towncrier-update
+        files: $docs/changes/
+        args: ['--keep']

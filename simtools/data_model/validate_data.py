@@ -13,6 +13,7 @@ from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
 from simtools.data_model import format_checkers
+from simtools.utils import value_conversion
 
 __all__ = ["DataValidator"]
 
@@ -139,6 +140,8 @@ class DataValidator:
 
         if len(value_as_list) == 1:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list[0], unit_as_list[0]
+        else:
+            self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 
         self._check_version_string(self.data_dict.get("version"))
 
@@ -155,7 +158,7 @@ class DataValidator:
         else:
             self._check_data_type(np.array(value).dtype, index)
 
-        if self.data_dict.get("type") not in ("string", "dict"):
+        if self.data_dict.get("type") not in ("string", "dict", "file"):
             self._check_for_not_a_number(value, index)
             value, unit = self._check_and_convert_units(value, unit, index)
             for range_type in ("allowed_range", "required_range"):
@@ -166,6 +169,9 @@ class DataValidator:
         """
         Convert value and unit to lists if required.
 
+        Ignore unit field in data_dict if value is a astropy.Quantity.
+        Note the complications from astropy.Units, where a single value is of np.ndarray type.
+
         Returns
         -------
         list
@@ -173,28 +179,19 @@ class DataValidator:
         list
             unit as list
         """
-        value_as_list = (
-            self.data_dict.get("value")
-            if isinstance(self.data_dict["value"], list | np.ndarray)
-            else [self.data_dict["value"]]
-        )
-        unit_as_list = (
-            self.data_dict.get("unit")
-            if isinstance(self.data_dict["unit"], list | np.ndarray)
-            else [self.data_dict["unit"]]
-        )
-        try:
-            value_as_list = value_as_list.tolist()
-        except AttributeError:
-            pass
-        try:
-            unit_as_list = unit_as_list.tolist()
-        except AttributeError:
-            pass
+        target_unit = self.data_dict["unit"]
+        value, unit = value_conversion.split_value_and_unit(self.data_dict["value"])
 
-        unit_as_list = [None if unit == "null" else unit for unit in unit_as_list]
+        if not isinstance(value, list | np.ndarray):
+            value, unit = [value], [unit]
+        if not isinstance(target_unit, list | np.ndarray):
+            target_unit = [target_unit] * len(value)
 
-        return value_as_list, unit_as_list
+        target_unit = [None if unit == "null" else unit for unit in target_unit]
+        conversion_factor = [
+            1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
+        ]
+        return [v * c for v, c in zip(value, conversion_factor)], target_unit
 
     def _validate_data_dict_using_json_schema(self, data, json_schema):
         """
@@ -754,22 +751,26 @@ class DataValidator:
             raise
 
     def _prepare_model_parameter(self):
-        """Apply data preparation for model parameters."""
-        if isinstance(self.data_dict["value"], str):
-            try:
-                _is_float = self.data_dict.get("type").startswith("float") | self.data_dict.get(
-                    "type"
-                ).startswith("double")
-            except AttributeError:
-                _is_float = True
-            self.data_dict["value"] = gen.convert_string_to_list(
-                self.data_dict["value"], is_float=_is_float
-            )
-            self.data_dict["unit"] = (
-                None
-                if self.data_dict["unit"] is None
-                else gen.convert_string_to_list(self.data_dict["unit"])
-            )
+        """
+        Apply data preparation for model parameters.
+
+        Converts strings to numerical values or lists of values, if required.
+
+        """
+        value = self.data_dict["value"]
+        if not isinstance(value, str):
+            return
+
+        # assume float value if type is not defined
+        _is_float = self.data_dict.get("type", "float").startswith(("float", "double"))
+
+        if value.isnumeric():
+            self.data_dict["value"] = float(value) if _is_float else int(value)
+        else:
+            self.data_dict["value"] = gen.convert_string_to_list(value, is_float=_is_float)
+
+        if self.data_dict["unit"] is not None:
+            self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
 
     def _check_version_string(self, version):
         """

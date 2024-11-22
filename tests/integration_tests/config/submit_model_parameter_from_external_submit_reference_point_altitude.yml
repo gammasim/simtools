@@ -1,0 +1,12 @@
+CTA_SIMPIPE:
+  APPLICATION: simtools-submit-model-parameter-from-external
+  TEST_NAME: submit_reference_point_altitude
+  CONFIGURATION:
+    PARAMETER: reference_point_altitude
+    VALUE: "2.177 km"
+    INSTRUMENT: North
+    SITE: North
+    MODEL_VERSION: 6.0.0
+    INPUT_META: null
+    OUTPUT_PATH: simtools-output
+    USE_PLAIN_OUTPUT_PATH: true

@@ -14,11 +14,30 @@ The Testing module provides tools for testing the code. This might be part of th
 
 ```
 
-(compare_outputmodule)=
+(testconfiguration_module)=
 
-## compare_output
+## configuration
 
 ```{eval-rst}
-.. automodule:: testing.compare_output
+.. automodule:: testing.configuration
+   :members:
+
+```
+
+(validate_outputmodule)=
+
+## validate_output
+
+```{eval-rst}
+.. automodule:: testing.validate_output
+   :members:
+```
+
+(helpersmodule)=
+
+## helpers
+
+```{eval-rst}
+.. automodule:: testing.helpers
    :members:
 ```

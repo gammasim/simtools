@@ -7,9 +7,6 @@ import re
 import numpy as np
 
 import simtools.utils.general as gen
-from simtools.data_model import validate_data
-from simtools.data_model.model_data_writer import ModelDataWriter
-from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]
 
@@ -67,69 +64,8 @@ class SimtelConfigReader:
         self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
         self.simtel_telescope_name = simtel_telescope_name
         self.camera_pixels = camera_pixels
-        self.parameter_dict = self._read_simtel_config_file(
+        self.parameter_dict = self.read_simtel_config_file(
             simtel_config_file, simtel_telescope_name
-        )
-
-    def get_validated_parameter_dict(self, telescope_name, model_version=None):
-        """
-        Return a validated model parameter dictionary as filled into the database.
-
-        Parameters
-        ----------
-        telescope_name: str
-            Telescope name (e.g., LSTN-01)
-        model_version: str
-            Model version string.
-
-        Returns
-        -------
-        dict
-            Model parameter dictionary.
-
-        """
-        self._logger.debug(f"Getting validated parameter dictionary for {telescope_name}")
-
-        type_mapping = {"str": "string", "bool": "boolean"}
-        type_value = type_mapping.get(
-            self.parameter_dict.get("type"), self.parameter_dict.get("type")
-        )
-
-        _json_dict = {
-            "parameter": self.parameter_name,
-            "instrument": telescope_name,
-            "site": names.get_site_from_array_element_name(telescope_name),
-            "version": model_version,
-            "value": self.parameter_dict.get(self.simtel_telescope_name),
-            "unit": self._get_unit_from_schema(),
-            "type": type_value,
-            "applicable": self._check_parameter_applicability(telescope_name),
-            "file": self._parameter_is_a_file(),
-        }
-        return self._validate_parameter_dict(_json_dict)
-
-    def export_parameter_dict_to_json(self, file_name, dict_to_write):
-        """
-        Export parameter dictionary to json.
-
-        Parameters
-        ----------
-        file_name: str or Path
-            File name to export to.
-        dict_to_write: dict
-            Dictionary to export.
-
-        """
-        try:
-            dict_to_write["value"] = gen.convert_list_to_string(dict_to_write["value"])
-            dict_to_write["unit"] = gen.convert_list_to_string(dict_to_write["unit"], True)
-            dict_to_write["limits"] = gen.convert_list_to_string(dict_to_write["limits"])
-        except KeyError:
-            pass
-
-        self._logger.info(f"Exporting parameter dictionary to {file_name}")
-        ModelDataWriter.write_dict_to_model_parameter_json(
-            file_name=file_name, data_dict=dict_to_write
         )
 
     def _should_skip_limits_check(self, data_type):
@@ -199,7 +135,7 @@ class SimtelConfigReader:
             else:
                 self._log_mismatch_warning(data_type, _from_simtel, _from_schema)
 
-    def _read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
+    def read_simtel_config_file(self, simtel_config_file, simtel_telescope_name):
         """
         Read sim_telarray configuration file and return a dictionary with the parameter values.
 
@@ -415,93 +351,3 @@ class SimtelConfigReader:
             pass
 
         return parameter_name.upper()
-
-    def _check_parameter_applicability(self, telescope_name):
-        """
-        Check if a parameter is applicable for a given telescope using schema files.
-
-        First check for exact telescope name, if not listed in the schema
-        use telescope type.
-
-        Parameters
-        ----------
-        telescope_name: str
-            Telescope name (e.g., LSTN-01)
-
-        Returns
-        -------
-        bool
-            True if parameter is applicable to telescope.
-
-        """
-        try:
-            if telescope_name in self.schema_dict["instrument"]["type"]:
-                return True
-        except KeyError as exc:
-            self._logger.error("Schema file does not contain 'instrument:type' key.")
-            raise exc
-
-        return (
-            names.get_array_element_type_from_name(telescope_name)
-            in self.schema_dict["instrument"]["type"]
-        )
-
-    def _parameter_is_a_file(self):
-        """
-        Check if parameter is a file.
-
-        Returns
-        -------
-        bool
-            True if parameter is a file.
-
-        """
-        try:
-            return self.schema_dict["data"][0]["type"] == "file"
-        except (KeyError, IndexError):
-            pass
-        return False
-
-    def _get_unit_from_schema(self):
-        """
-        Return unit(s) from schema dict.
-
-        Returns
-        -------
-        str or list
-            Parameter unit(s)
-        """
-        try:
-            unit_list = []
-            for data in self.schema_dict["data"]:
-                unit_list.append(data["unit"] if data["unit"] != "dimensionless" else None)
-            return unit_list if len(unit_list) > 1 else unit_list[0]
-        except (KeyError, IndexError):
-            pass
-        return None
-
-    def _validate_parameter_dict(self, parameter_dict):
-        """
-        Validate json dictionary against model parameter data schema.
-
-        Parameters
-        ----------
-        parameter_dict: dict
-            Dictionary to validate.
-
-        Returns
-        -------
-        dict
-            Validated dictionary (possibly converted to reference units).
-
-        """
-        self._logger.debug(
-            f"Validating parameter dictionary {parameter_dict} using {self.schema_file}"
-        )
-        data_validator = validate_data.DataValidator(
-            schema_file=self.schema_file,
-            data_dict=parameter_dict,
-            check_exact_data_type=False,
-        )
-        data_validator.validate_and_transform()
-        return data_validator.data_dict
