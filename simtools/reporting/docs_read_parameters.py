@@ -60,8 +60,14 @@ class ReadParameters:
 
             if self.telescope_model.has_parameter(parameter):
                 value = self.telescope_model.get_parameter_value_with_unit(parameter)
+                if isinstance(value, list):
+                    value = ", ".join(str(q) for q in value)
+                elif value.endswith(".dat"):
+                    print("val: ", value)
             else:
                 continue
+
+            # print('param: ', parameter, value)
 
             description = parameter_descriptions[0].get(parameter)
             short_description = parameter_descriptions[1].get(parameter)
