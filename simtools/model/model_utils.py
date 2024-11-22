@@ -20,7 +20,7 @@ def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:
     Parameters
     ----------
     pars: list of float
-        Parameters of the telescope transmission. Len(pars) should be 4.
+        Parameters of the telescope transmission. Len(pars) should be 5 or 6.
     off_axis: float
         Off-axis angle in deg.
 
@@ -29,11 +29,6 @@ def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:
     float
         Telescope transmission.
     """
-    if len(pars) != 4:
-        raise ValueError("Parameter list 'pars' must contain exactly 4 elements.")
-    if off_axis < 0:
-        raise ValueError("Off-axis angle 'off_axis' must be non-negative.")
-
     _deg_to_rad = math.pi / 180.0
     if pars[1] == 0:
         return pars[0]
