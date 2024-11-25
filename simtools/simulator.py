@@ -17,8 +17,8 @@ from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simulator_array import SimulatorArray
 
 __all__ = [
-    "Simulator",
     "InvalidRunsToSimulateError",
+    "Simulator",
 ]
 
 
