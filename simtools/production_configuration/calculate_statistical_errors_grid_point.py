@@ -1,10 +1,10 @@
 """
-Provides functionality to evaluate statistical errors from dl2_mc_events_file FITS files.
+Provides functionality to evaluate statistical errors from dl2_mc_events_file files.
 
 Classes
 -------
 StatisticalErrorEvaluator
-    Handles error calculation for given dl2_mc_events_file FITS files and specified metrics.
+    Handles error calculation for given dl2_mc_events_file files and specified metrics.
 
 
 """
@@ -20,14 +20,14 @@ _logger = logging.getLogger(__name__)
 
 class StatisticalErrorEvaluator:
     """
-    Evaluates statistical errors from a dl2_mc_events_file FITS file.
+    Evaluates statistical errors from a dl2_mc_events_file file.
 
     Parameters
     ----------
     file_path : str
-        Path to the dl2_mc_events_file FITS file.
+        Path to the dl2_mc_events_file file.
     file_type : str
-        Type of the file, either 'On-source' or 'Offset'.
+        Type of the file, either 'point-like' or 'cone'.
     metrics : dict, optional
         Dictionary of metrics to evaluate. Default is None.
     grid_point : tuple, optional
@@ -42,14 +42,14 @@ class StatisticalErrorEvaluator:
         grid_point: tuple[float, float, float, float, float] | None = None,
     ):
         """
-        Init the evaluator with a dl2_mc_events_file FITS file, its type, and metrics to calculate.
+        Init the evaluator with a dl2_mc_events_file file, its type, and metrics to calculate.
 
         Parameters
         ----------
         file_path : str
-            The path to the dl2_mc_events_file FITS file.
+            The path to the dl2_mc_events_file file.
         file_type : str
-            The type of the file ('On-source' or 'Offset').
+            The type of the file ('point-like' or 'cone').
         metrics : dict, optional
             Dictionary specifying which metrics to compute and their reference values.
         grid_point : tuple, optional
@@ -62,7 +62,7 @@ class StatisticalErrorEvaluator:
 
         self.data = self.load_data_from_file()
 
-        self.error_eff_area = None
+        self.uncertainty_effective_area = None
         self.error_energy_estimate_bdt_reg_tree = None
         self.sigma_energy = None
         self.delta_energy = None
@@ -72,12 +72,12 @@ class StatisticalErrorEvaluator:
 
     def load_data_from_file(self):
         """
-        Load data from the dl2_mc_events_file FITS file and return dictionaries with units.
+        Load data from the dl2_mc_events_file file and return dictionaries with units.
 
         Returns
         -------
         dict
-            Dictionary containing data from the dl2_mc_events_file FITS file with units.
+            Dictionary containing data from the dl2_mc_events_file file with units.
         """
         data = {}
         try:
@@ -103,22 +103,13 @@ class StatisticalErrorEvaluator:
                         )
                     else:
                         sim_units[col_name] = None
-
-                # Check and apply units to each column, raising an error if the unit is missing
-                if not event_units["ENERGY"]:
-                    raise ValueError("Unit for ENERGY in EVENTS data is missing.")
+                # dl2 files are required to have units for these entries
                 event_energies_reco = events_data["ENERGY"] * event_units["ENERGY"]
 
-                if not event_units["MC_ENERGY"]:
-                    raise ValueError("Unit for MC_ENERGY in EVENTS data is missing.")
                 event_energies_mc = events_data["MC_ENERGY"] * event_units["MC_ENERGY"]
 
-                if not sim_units["MC_ENERG_LO"]:
-                    raise ValueError("Unit for MC_ENERG_LO in SIMULATED EVENTS data is missing.")
                 bin_edges_low = sim_events_data["MC_ENERG_LO"] * sim_units["MC_ENERG_LO"]
 
-                if not sim_units["MC_ENERG_HI"]:
-                    raise ValueError("Unit for MC_ENERG_HI in SIMULATED EVENTS data is missing.")
                 bin_edges_high = sim_events_data["MC_ENERG_HI"] * sim_units["MC_ENERG_HI"]
 
                 simulated_event_histogram = sim_events_data["EVENTS"] * u.count
@@ -193,14 +184,14 @@ class StatisticalErrorEvaluator:
         bin_edges = np.concatenate([bin_edges_low, [bin_edges_high[-1]]])
         return np.unique(bin_edges)
 
-    def compute_histogram(self, event_energies_reco, bin_edges):
+    def compute_triggered_event_histogram(self, event_energies_reco, bin_edges):
         """
         Compute histogram for triggered events.
 
         Parameters
         ----------
         event_energies_reco : array
-            Array of energies of the observed events.
+            Array of reconstructed energy per event.
         bin_edges : array
             Array of energy bin edges.
 
@@ -273,7 +264,7 @@ class StatisticalErrorEvaluator:
 
         return efficiencies, relative_errors
 
-    def calculate_energy_threshold(self):
+    def calculate_energy_threshold(self, requested_eff_area_fraction=0.1):
         """
         Calculate the energy threshold where the effective area exceeds 10% of its maximum value.
 
@@ -283,7 +274,7 @@ class StatisticalErrorEvaluator:
             Energy threshold value.
         """
         bin_edges = self.create_bin_edges()
-        triggered_event_histogram = self.compute_histogram(
+        triggered_event_histogram = self.compute_triggered_event_histogram(
             self.data["event_energies_mc"], bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
@@ -294,7 +285,7 @@ class StatisticalErrorEvaluator:
 
         # Determine the effective area threshold (10% of max effective area)
         max_efficiency = np.max(efficiencies)
-        threshold_efficiency = 0.1 * max_efficiency
+        threshold_efficiency = requested_eff_area_fraction * max_efficiency
 
         threshold_index = np.argmax(efficiencies >= threshold_efficiency)
         if threshold_index == 0 and efficiencies[0] < threshold_efficiency:
@@ -302,7 +293,7 @@ class StatisticalErrorEvaluator:
 
         self.energy_threshold = bin_edges[threshold_index]
 
-    def calculate_error_eff_area(self):
+    def calculate_uncertainty_effective_area(self):
         """
         Calculate the uncertainties on the effective collection area.
 
@@ -312,7 +303,7 @@ class StatisticalErrorEvaluator:
             Dictionary with uncertainties for the file.
         """
         bin_edges = self.create_bin_edges()
-        triggered_event_histogram = self.compute_histogram(
+        triggered_event_histogram = self.compute_triggered_event_histogram(
             self.data["event_energies_mc"], bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
@@ -360,12 +351,13 @@ class StatisticalErrorEvaluator:
 
     def calculate_metrics(self):
         """Calculate all defined metrics as specified in self.metrics and store results."""
-        print("self.metrics: ", self.metrics)
-        if "error_eff_area" in self.metrics:
+        if "uncertainty_effective_area" in self.metrics:
 
-            self.error_eff_area = self.calculate_error_eff_area()
-            if self.error_eff_area:
-                validity_range = self.metrics.get("error_eff_area", {}).get("valid_range")
+            self.uncertainty_effective_area = self.calculate_uncertainty_effective_area()
+            if self.uncertainty_effective_area:
+                validity_range = self.metrics.get("uncertainty_effective_area", {}).get(
+                    "valid_range"
+                )
                 min_energy, max_energy = validity_range["value"][0] * u.Unit(
                     validity_range["unit"]
                 ), validity_range["value"][1] * u.Unit(validity_range["unit"])
@@ -373,15 +365,20 @@ class StatisticalErrorEvaluator:
                 valid_errors = [
                     error
                     for energy, error in zip(
-                        self.data["bin_edges_low"], self.error_eff_area["relative_errors"]
+                        self.data["bin_edges_low"],
+                        self.uncertainty_effective_area["relative_errors"],
                     )
                     if min_energy <= energy <= max_energy
                 ]
-                self.error_eff_area["max_error"] = max(valid_errors) if valid_errors else 0.0
-                ref_value = self.metrics.get("error_eff_area", {}).get("target_error")["value"]
+                self.uncertainty_effective_area["max_error"] = (
+                    max(valid_errors) if valid_errors else 0.0
+                )
+                ref_value = self.metrics.get("uncertainty_effective_area", {}).get("target_error")[
+                    "value"
+                ]
                 _logger.info(
                     f"Effective Area Error (max in validity range): "
-                    f"{self.error_eff_area['max_error'].value:.6f}, "
+                    f"{self.uncertainty_effective_area['max_error'].value:.6f}, "
                     f"Reference: {ref_value:.3f}"
                 )
 
@@ -399,7 +396,7 @@ class StatisticalErrorEvaluator:
         else:
             raise ValueError("Invalid metric specified.")
         self.metric_results = {
-            "error_eff_area": self.error_eff_area,
+            "uncertainty_effective_area": self.uncertainty_effective_area,
             "error_energy_estimate_bdt_reg_tree": self.error_energy_estimate_bdt_reg_tree,
         }
         return self.metric_results
@@ -413,10 +410,10 @@ class StatisticalErrorEvaluator:
         max_error : float
             Maximum relative error.
         """
-        if "relative_errors" in self.metric_results["error_eff_area"]:
-            return np.max(self.metric_results["error_eff_area"]["relative_errors"])
-        if self.error_eff_area:
-            return np.max(self.error_eff_area["relative_errors"])
+        if "relative_errors" in self.metric_results["uncertainty_effective_area"]:
+            return np.max(self.metric_results["uncertainty_effective_area"]["relative_errors"])
+        if self.uncertainty_effective_area:
+            return np.max(self.uncertainty_effective_area["relative_errors"])
         return None
 
     def calculate_overall_metric(self, metric="average"):
@@ -440,7 +437,7 @@ class StatisticalErrorEvaluator:
         overall_max_errors = {}
 
         for metric_name, result in self.metric_results.items():
-            if metric_name == "error_eff_area":
+            if metric_name == "uncertainty_effective_area":
                 max_errors = self.calculate_max_error_for_effective_area()
                 overall_max_errors[metric_name] = max_errors if max_errors else 0
             elif metric_name in [

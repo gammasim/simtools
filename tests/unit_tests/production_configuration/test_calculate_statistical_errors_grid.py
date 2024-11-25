@@ -36,13 +36,13 @@ def test_initialization(test_fits_file, metric):
     assert "event_energies_reco" in evaluator.data
 
 
-def test_calculate_error_eff_area(test_fits_file, metric):
+def test_calculate_uncertainty_effective_area(test_fits_file, metric):
     """Test the calculation of effective area error."""
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file, file_type="On-source", metrics=metric
     )
     evaluator.calculate_metrics()
-    errors = evaluator.calculate_error_eff_area()
+    errors = evaluator.calculate_uncertainty_effective_area()
     assert "relative_errors" in errors
     assert len(errors["relative_errors"]) > 0
 
@@ -62,7 +62,9 @@ def test_missing_file():
     """Test initialization with a missing file."""
     file_path = "nonexistent_file.fits"
     file_type = "On-source"
-    metrics = {"error_eff_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}}
+    metrics = {
+        "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
+    }
 
     with pytest.raises(FileNotFoundError, match=f"Error loading file {file_path}:"):
         StatisticalErrorEvaluator(file_path, file_type, metrics)
@@ -104,7 +106,7 @@ def test_calculate_scaled_events(test_fits_file, metric):
     scaled_events = event_scaler.scale_events()
 
     assert isinstance(scaled_events, u.Quantity)
-    assert scaled_events.value == pytest.approx(33027, rel=1e-0)
+    assert scaled_events.value == pytest.approx(41249903535849.58, rel=1e-0)
     assert scaled_events.unit == u.ct
 
 
@@ -122,14 +124,16 @@ def test_calculate_metrics(test_fits_file, metric):
 
     evaluator.calculate_metrics()
 
-    expected_values = np.array([3.18110350e-10, 4.65906785e-09, 1.03266065e-08])
-    computed_values = evaluator.error_eff_area["relative_errors"].value[: len(expected_values)]
+    expected_values = np.array([0.40824829, 0.31622776, 0.1796053])
+    computed_values = evaluator.uncertainty_effective_area["relative_errors"].value[
+        : len(expected_values)
+    ]
     assert computed_values == pytest.approx(expected_values, rel=1e-2)
 
     assert evaluator.error_energy_estimate_bdt_reg_tree == pytest.approx(0.33, rel=1e-2)
 
     expected_results = {
-        "error_eff_area": evaluator.error_eff_area,
+        "uncertainty_effective_area": evaluator.uncertainty_effective_area,
         "error_energy_estimate_bdt_reg_tree": evaluator.error_energy_estimate_bdt_reg_tree,
     }
     assert evaluator.metric_results == expected_results
@@ -146,7 +150,7 @@ def setup_evaluator(metric):
     )
 
     evaluator.metric_results = {
-        "error_eff_area": {"relative_errors": np.array([0.04, 0.05, 0.06])},
+        "uncertainty_effective_area": {"relative_errors": np.array([0.04, 0.05, 0.06])},
         "error_sig_eff_gh": 0.02,
         "error_energy_estimate_bdt_reg_tree": 0.03,
         "error_gamma_ray_psf": 0.01,
@@ -160,11 +164,13 @@ def test_calculate_overall_metric_average(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file,
         file_type="On-source",
-        metrics={"error_eff_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
+        metrics={
+            "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
+        },
     )
     evaluator.data = {"metric_values": np.array([0.1, 0.2, 0.3, 0.4])}
     evaluator.metric_results = {
-        "error_eff_area": {"relative_errors": np.array([0.1, 0.2, 0.3, 0.4])}
+        "uncertainty_effective_area": {"relative_errors": np.array([0.1, 0.2, 0.3, 0.4])}
     }
     overall_metric = evaluator.calculate_overall_metric(metric="average")
     expected_metric = 0.4
@@ -178,11 +184,13 @@ def test_calculate_overall_metric_maximum(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file,
         file_type="On-source",
-        metrics={"error_eff_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
+        metrics={
+            "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
+        },
     )
     evaluator.data = {"metric_values": np.array([0.1, 0.2, 0.3, 0.4])}
     evaluator.metric_results = {
-        "error_eff_area": {"relative_errors": np.array([0.1, 0.2, 0.3, 0.4])}
+        "uncertainty_effective_area": {"relative_errors": np.array([0.1, 0.2, 0.3, 0.4])}
     }
     overall_metric = evaluator.calculate_overall_metric(metric="maximum")
     expected_metric = (
@@ -227,7 +235,7 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
     )
 
     expected_efficiencies = np.array([0.1, 0.1, 0.1, 0.0]) * u.dimensionless_unscaled
-    expected_relative_errors = np.array([0.03, 0.0212132, 0.04242641, 0.0]) / u.ct**0.5
+    expected_relative_errors = np.array([0.3, 0.21213203, 0.42426407, 0.0])
 
     assert np.allclose(
         efficiencies, expected_efficiencies, atol=1e-2

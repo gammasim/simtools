@@ -13,6 +13,7 @@ from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
 from simtools.data_model import format_checkers
+from simtools.utils import value_conversion
 
 __all__ = ["DataValidator"]
 
@@ -97,7 +98,7 @@ class DataValidator:
         """
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
-                self.data_dict = gen.collect_data_from_file_or_dict(self.data_file_name, None)
+                self.data_dict = gen.collect_data_from_file(self.data_file_name)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
@@ -157,41 +158,12 @@ class DataValidator:
         else:
             self._check_data_type(np.array(value).dtype, index)
 
-        if self.data_dict.get("type") not in ("string", "dict"):
+        if self.data_dict.get("type") not in ("string", "dict", "file"):
             self._check_for_not_a_number(value, index)
             value, unit = self._check_and_convert_units(value, unit, index)
             for range_type in ("allowed_range", "required_range"):
                 self._check_range(index, np.nanmin(value), np.nanmax(value), range_type)
         return value, unit
-
-    def _get_value_and_units_as_lists_from_quantity(self, value, unit):
-        """Convert value and unit to lists for astropy.Quantity."""
-        if value.size == 1:
-            value = value.to(u.Unit(unit))
-            value_as_list = [value.value]
-            unit_as_list = [value.unit.to_string()]
-        else:
-            value_as_list = []
-            unit_as_list = []
-            for v, w in zip(value, unit):
-                value_as_list.append(v.to(u.Unit(w)).value)
-                unit_as_list.append(w)
-        return value_as_list, unit_as_list
-
-    def _get_value_and_units_as_lists_from_lists(self, value, unit):
-        """Convert value and unit to lists for list or numpy array."""
-        value_as_list = []
-        unit_as_list = []
-
-        for v, w in zip(value, unit):
-            if isinstance(v, u.Quantity):
-                value_as_list.append(v.to(u.Unit(w)).value.item())
-                unit_as_list.append(w)
-            else:
-                value_as_list.append(v)
-                unit_as_list.append(w if w != "null" else None)
-
-        return value_as_list, unit_as_list
 
     def _get_value_and_units_as_lists(self):
         """
@@ -207,22 +179,19 @@ class DataValidator:
         list
             unit as list
         """
-        value = self.data_dict["value"]
-        unit = self.data_dict["unit"]
+        target_unit = self.data_dict["unit"]
+        value, unit = value_conversion.split_value_and_unit(self.data_dict["value"])
 
-        if isinstance(value, u.Quantity):
-            value_as_list, unit_as_list = self._get_value_and_units_as_lists_from_quantity(
-                value, unit
-            )
-        elif isinstance(value, list | np.ndarray):
-            value_as_list, unit_as_list = self._get_value_and_units_as_lists_from_lists(value, unit)
-        else:
-            value_as_list = [value]
-            unit_as_list = [unit] if unit != "null" else [None]
+        if not isinstance(value, list | np.ndarray):
+            value, unit = [value], [unit]
+        if not isinstance(target_unit, list | np.ndarray):
+            target_unit = [target_unit] * len(value)
 
-        unit_as_list = [None if w == "null" else w for w in unit_as_list]
-
-        return value_as_list, unit_as_list
+        target_unit = [None if unit == "null" else unit for unit in target_unit]
+        conversion_factor = [
+            1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
+        ]
+        return [v * c for v, c in zip(value, conversion_factor)], target_unit
 
     def _validate_data_dict_using_json_schema(self, data, json_schema):
         """
@@ -707,11 +676,10 @@ class DataValidator:
         """
         try:
             if Path(schema_file).is_dir():
-                return gen.collect_data_from_file_or_dict(
+                return gen.collect_data_from_file(
                     file_name=Path(schema_file) / (parameter + ".schema.yml"),
-                    in_dict=None,
                 )["data"]
-            return gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)["data"]
+            return gen.collect_data_from_file(file_name=schema_file)["data"]
         except KeyError:
             self._logger.error(f"Error reading validation schema from {schema_file}")
             raise
@@ -782,22 +750,26 @@ class DataValidator:
             raise
 
     def _prepare_model_parameter(self):
-        """Apply data preparation for model parameters."""
-        if isinstance(self.data_dict["value"], str):
-            try:
-                _is_float = self.data_dict.get("type").startswith("float") | self.data_dict.get(
-                    "type"
-                ).startswith("double")
-            except AttributeError:
-                _is_float = True
-            self.data_dict["value"] = gen.convert_string_to_list(
-                self.data_dict["value"], is_float=_is_float
-            )
-            self.data_dict["unit"] = (
-                None
-                if self.data_dict["unit"] is None
-                else gen.convert_string_to_list(self.data_dict["unit"])
-            )
+        """
+        Apply data preparation for model parameters.
+
+        Converts strings to numerical values or lists of values, if required.
+
+        """
+        value = self.data_dict["value"]
+        if not isinstance(value, str):
+            return
+
+        # assume float value if type is not defined
+        _is_float = self.data_dict.get("type", "float").startswith(("float", "double"))
+
+        if value.isnumeric():
+            self.data_dict["value"] = float(value) if _is_float else int(value)
+        else:
+            self.data_dict["value"] = gen.convert_string_to_list(value, is_float=_is_float)
+
+        if self.data_dict["unit"] is not None:
+            self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
 
     def _check_version_string(self, version):
         """

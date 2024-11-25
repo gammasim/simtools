@@ -11,16 +11,16 @@ import yaml
 _logger = logging.getLogger(__name__)
 
 __all__ = [
-    "get_site_from_array_element_name",
-    "get_array_element_type_from_name",
     "generate_file_name",
+    "get_array_element_type_from_name",
+    "get_site_from_array_element_name",
     "layout_telescope_list_file_name",
     "sanitize_name",
-    "simtel_single_mirror_list_file_name",
     "simtel_config_file_name",
-    "validate_site_name",
+    "simtel_single_mirror_list_file_name",
     "validate_array_element_id_name",
     "validate_array_element_name",
+    "validate_site_name",
 ]
 
 
@@ -296,7 +296,7 @@ def get_site_from_array_element_name(name):
 
 def get_collection_name_from_array_element_name(name):
     """
-    Get collection name (e.g., telescopes, calibration_devices) of array element from name.
+    Get collection name (e.g., telescopes, calibration_devices, sites) of array element from name.
 
     Parameters
     ----------
@@ -308,7 +308,15 @@ def get_collection_name_from_array_element_name(name):
     str
         Collection name .
     """
-    return array_elements()[get_array_element_type_from_name(name)]["collection"]
+    try:
+        return array_elements()[get_array_element_type_from_name(name)]["collection"]
+    except ValueError:
+        pass
+    try:
+        validate_site_name(name)
+        return "sites"
+    except ValueError as exc:
+        raise ValueError(f"Invalid array element name {name}: {exc}") from exc
 
 
 def get_simulation_software_name_from_parameter_name(

@@ -23,5 +23,5 @@ def load_metrics(file_path: str) -> dict:
         Dictionary of metrics loaded from the YAML file.
     """
     if file_path and os.path.exists(file_path):
-        return gen.collect_data_from_file_or_dict(file_name=file_path, in_dict=True)
+        return gen.collect_data_from_file(file_name=file_path)
     return {}

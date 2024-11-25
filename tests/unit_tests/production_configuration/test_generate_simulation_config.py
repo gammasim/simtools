@@ -20,7 +20,7 @@ def metric():
 @pytest.fixture
 def mock_statistical_error_evaluator():
     metric_results = {
-        "error_eff_area": {
+        "uncertainty_effective_area": {
             "relative_errors": np.array(
                 [0.00000000e00, 1.31778332e-08, 4.74675897e-08, 1.17238332e-07]
             ),
@@ -65,7 +65,7 @@ def test_initialization(mock_statistical_error_evaluator):
 def test_configure_simulation(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 30.0, "elevation": 40.0}
     metrics = {
-        "error_eff_area": {
+        "uncertainty_effective_area": {
             "target_error": {"value": 0.1, "unit": "dimensionless"},
             "valid_range": {"value": [0.04, 200], "unit": "TeV"},
         },
@@ -79,7 +79,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
 
     params = config.configure_simulation()
     assert isinstance(params, dict)
-    assert np.isclose(params.get("number_of_events").value, 880.73915787, atol=1e-2)
+    assert np.isclose(params.get("number_of_events").value, 1099997427622.6555, atol=1e-2)
 
 
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
@@ -123,5 +123,5 @@ def test_edge_cases(mock_statistical_error_evaluator, metric):
 
     params = config.configure_simulation()
 
-    expected_number_of_events = 22018
+    expected_number_of_events = 27499935690566.387
     assert np.isclose(params.get("number_of_events").value, expected_number_of_events, atol=1e0)
