@@ -1,5 +1,5 @@
 """
-Provides functionality to evaluate statistical errors from DL2 MC event files.
+Provides functionality to evaluate statistical uncertainties from DL2 MC event files.
 
 Classes
 -------
@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 
 class StatisticalErrorEvaluator:
     """
-    Evaluates statistical errors from a DL2 MC event file.
+    Evaluates statistical uncertainties from a DL2 MC event file.
 
     Parameters
     ----------
@@ -418,7 +418,7 @@ class StatisticalErrorEvaluator:
 
     def calculate_overall_metric(self, metric="average"):
         """
-        Calculate an overall metric for the statistical errors.
+        Calculate an overall metric for the statistical uncertainties.
 
         Parameters
         ----------

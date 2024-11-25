@@ -3,7 +3,7 @@
 r"""
 Application to run the StatisticalErrorEvaluator and interpolate results.
 
-This application evaluates statistical errors from DL2 MC event files
+This application evaluates statistical uncertainties from DL2 MC event files
 based on input parameters like zenith angles and offsets, and can perform interpolation
 for a specified grid point.
 
@@ -22,7 +22,7 @@ query_point (list of int, optional)
 
 Example
 -------
-To evaluate statistical errors and perform interpolation, run the script from the command line:
+To evaluate statistical uncertainties and perform interpolation, run the command line script:
 
 .. code-block:: console
 
@@ -108,7 +108,7 @@ def main():
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label,
-        "Evaluate statistical errors from DL2 MC event files and interpolate results.",
+        "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
     )
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
