@@ -145,10 +145,9 @@ class StatisticalErrorEvaluator:
                             0 * u.deg,
                         )  # Initialize grid point with azimuth and zenith
                     else:
-                        _logger.warning(
-                            "Multiple unique values found for azimuth or zenith. "
-                            "The grid point will be set based on the first unique values."
-                        )
+                        msg = "Multiple unique values found for azimuth or zenith."
+                        _logger.error(msg)
+                        raise ValueError(msg)
                 else:
                     _logger.warning(
                         f"Grid point already set to: {self.grid_point}. "
