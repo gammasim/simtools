@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+g316be37 Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+gc7657ef Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=f6e6ba68"></script>
+    <script src="../_static/documentation_options.js?v=e24981e1"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Testing" href="testing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g316be37" />
+  <meta name="docsearch:version" content="0.1.dev1+gc7657ef" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g316be37 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc7657ef Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -437,7 +437,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-utils.general">general</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigDataError"><code class="docutils literal notranslate"><span class="pre">InvalidConfigDataError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.change_dict_keys_case"><code class="docutils literal notranslate"><span class="pre">change_dict_keys_case()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_data_from_file_or_dict"><code class="docutils literal notranslate"><span class="pre">collect_data_from_file_or_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_data_from_file"><code class="docutils literal notranslate"><span class="pre">collect_data_from_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_final_lines"><code class="docutils literal notranslate"><span class="pre">collect_final_lines()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_kwargs"><code class="docutils literal notranslate"><span class="pre">collect_kwargs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.get_log_excerpt"><code class="docutils literal notranslate"><span class="pre">get_log_excerpt()</span></code></a></li>
@@ -524,29 +524,19 @@ the util module.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="utils.general.collect_data_from_file_or_dict">
-<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">collect_data_from_file_or_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_empty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/general.html#collect_data_from_file_or_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.collect_data_from_file_or_dict" title="Link to this definition">#</a></dt>
-<dd><p>Collect input data from file or dictionary.</p>
+<dt class="sig sig-object py" id="utils.general.collect_data_from_file">
+<span class="sig-prename descclassname"><span class="pre">utils.general.</span></span><span class="sig-name descname"><span class="pre">collect_data_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/general.html#collect_data_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.general.collect_data_from_file" title="Link to this definition">#</a></dt>
+<dd><p>Collect data from file based on its extension.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>file_name: str</strong></dt><dd><p>Name of the yaml/json/ascii file.</p>
-</dd>
-<dt><strong>in_dict: dict</strong></dt><dd><p>Data as dict.</p>
-</dd>
-<dt><strong>allow_empty: bool</strong></dt><dd><p>If True, an error won’t be raised in case both file_name and dict are None.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>data: dict or list</dt><dd><p>Data as dict or list.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>AttributeError</dt><dd><p>If no input has been provided (neither by file, nor by dict).</p>
 </dd>
 </dl>
 </dd>
@@ -1195,7 +1185,7 @@ or a simtools-type string encoding a list of values and units.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-utils.general">general</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.InvalidConfigDataError"><code class="docutils literal notranslate"><span class="pre">InvalidConfigDataError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.change_dict_keys_case"><code class="docutils literal notranslate"><span class="pre">change_dict_keys_case()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_data_from_file_or_dict"><code class="docutils literal notranslate"><span class="pre">collect_data_from_file_or_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_data_from_file"><code class="docutils literal notranslate"><span class="pre">collect_data_from_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_final_lines"><code class="docutils literal notranslate"><span class="pre">collect_final_lines()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.collect_kwargs"><code class="docutils literal notranslate"><span class="pre">collect_kwargs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utils.general.get_log_excerpt"><code class="docutils literal notranslate"><span class="pre">get_log_excerpt()</span></code></a></li>
