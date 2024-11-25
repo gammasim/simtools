@@ -3,18 +3,18 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
+import simtools.utils.general as gen
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
-from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 PATH_FITS = "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
 
 
 @pytest.fixture
 def metric():
-    return load_metrics("tests/resources/production_simulation_config_metrics.yaml")
+    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yaml")
 
 
 @pytest.fixture

@@ -55,7 +55,6 @@ from simtools.io_operations import io_handler
 from simtools.production_configuration.generate_simulation_config import (
     SimulationConfig,
 )
-from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 
 def _parse(label):
@@ -126,7 +125,9 @@ def main():
         "night_sky_background": args_dict["nsb"],
     }
 
-    metrics = load_metrics(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    metrics = (
+        gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    )
 
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,

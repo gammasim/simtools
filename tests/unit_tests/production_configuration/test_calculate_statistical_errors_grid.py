@@ -2,12 +2,12 @@ import astropy.units as u
 import numpy as np
 import pytest
 
+import simtools.utils.general as gen
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.event_scaler import EventScaler
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
-from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def test_fits_file2():
 
 @pytest.fixture
 def metric():
-    return load_metrics("tests/resources/production_simulation_config_metrics.yaml")
+    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yaml")
 
 
 def test_initialization(test_fits_file, metric):

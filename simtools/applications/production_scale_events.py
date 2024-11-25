@@ -42,6 +42,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.io_operations import io_handler
@@ -49,7 +50,6 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
-from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 
 def _parse(label, description):
@@ -119,7 +119,9 @@ def main():
 
     evaluator_instances = []
 
-    metrics = load_metrics(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    metrics = (
+        gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    )
 
     if args_dict["base_path"] and args_dict["zeniths"] and args_dict["offsets"]:
         for zenith in args_dict["zeniths"]:
