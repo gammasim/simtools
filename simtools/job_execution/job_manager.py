@@ -6,7 +6,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 
-__all__ = ["JobManager", "JobExecutionError"]
+__all__ = ["JobExecutionError", "JobManager"]
 
 
 class JobExecutionError(Exception):
