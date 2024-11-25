@@ -15,15 +15,15 @@ import numpy as np
 import yaml
 
 __all__ = [
+    "InvalidConfigDataError",
     "change_dict_keys_case",
     "collect_data_from_file_or_dict",
     "collect_final_lines",
     "collect_kwargs",
-    "InvalidConfigDataError",
+    "get_log_excerpt",
     "get_log_level_from_user",
     "remove_substring_recursively_from_dict",
     "set_default_kwargs",
-    "get_log_excerpt",
     "sort_arrays",
 ]
 
