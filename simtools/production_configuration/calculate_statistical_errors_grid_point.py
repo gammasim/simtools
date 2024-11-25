@@ -127,7 +127,7 @@ class StatisticalErrorEvaluator:
                     "core_range": core_range,
                 }
                 unique_azimuths = np.unique(events_data["PNT_AZ"]) * u.deg
-                unique_zeniths = 90 - np.unique(events_data["PNT_ALT"]) * u.deg
+                unique_zeniths = 90 * u.deg - np.unique(events_data["PNT_ALT"]) * u.deg
                 if self.grid_point is None:
                     _logger.info(f"Unique azimuths: {unique_azimuths}")
                     _logger.info(f"Unique zeniths: {unique_zeniths}")
