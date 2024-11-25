@@ -1,7 +1,6 @@
 """Interpolates between instances of StatisticalErrorEvaluator using EventScaler."""
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import griddata
 
@@ -168,6 +167,8 @@ class InterpolationHandler:
         evaluator : StatisticalErrorEvaluator
             The evaluator for which to plot the comparison.
         """
+        import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+
         midpoints = 0.5 * (evaluator.data["bin_edges_high"] + evaluator.data["bin_edges_low"])
 
         self.grid_points = np.column_stack(
