@@ -105,7 +105,7 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
 
     """
     try:
-        data = gen.collect_data_from_file_or_dict(file_name=file_name, in_dict=None)
+        data = gen.collect_data_from_file(file_name=file_name)
     except FileNotFoundError as exc:
         _logger.error("Error reading data from %s", file_name)
         raise exc

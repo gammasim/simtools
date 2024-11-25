@@ -238,9 +238,7 @@ class ModelDataWriter:
         """
         schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{parameter_name}.schema.yml"
         try:
-            self.schema_dict = gen.collect_data_from_file_or_dict(
-                file_name=schema_file, in_dict=None
-            )
+            self.schema_dict = gen.collect_data_from_file(file_name=schema_file)
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"Schema file not found: {schema_file}") from exc
         return schema_file
