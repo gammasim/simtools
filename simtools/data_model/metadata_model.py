@@ -94,10 +94,10 @@ def _load_schema(schema_file=None):
         schema_file = files("simtools").joinpath(simtools.constants.METADATA_JSON_SCHEMA)
 
     try:
-        schema = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
+        schema = gen.collect_data_from_file(file_name=schema_file)
     except FileNotFoundError:
         schema_file = files("simtools").joinpath("schemas") / schema_file
-        schema = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
+        schema = gen.collect_data_from_file(file_name=schema_file)
     _logger.debug(f"Loading schema from {schema_file}")
     _add_array_elements("InstrumentTypeElement", schema)
 

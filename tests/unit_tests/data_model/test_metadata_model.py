@@ -55,9 +55,7 @@ def test_validate_schema_astropy_units(caplog):
 
     success_string = "Successful validation of data using schema from"
 
-    _dict_1 = gen.collect_data_from_file_or_dict(
-        file_name="tests/resources/num_gains.schema.yml", in_dict=None
-    )
+    _dict_1 = gen.collect_data_from_file(file_name="tests/resources/num_gains.schema.yml")
     with caplog.at_level(logging.DEBUG):
         metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
     assert success_string in caplog.text
