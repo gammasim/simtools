@@ -100,7 +100,6 @@ class InterpolationHandler:
         np.ndarray
             Interpolated values at the query points.
         """
-        # Remove flat dimensions from the normalized grid and query points
         reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(self.grid_points)
         reduced_query_points = query_points[:, non_flat_mask]
 
