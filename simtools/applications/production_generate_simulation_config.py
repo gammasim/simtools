@@ -35,9 +35,10 @@ To run the simulation configuration, execute the script as follows:
 .. code-block:: console
 
     simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \
-      --nsb 0.3 --ctao_data_level "A" --science_case "high_precision" \
-      --file_path "path/to/fits_file.fits" --file_type "On-source" \
-      --metrics_file "path/to/metrics.yaml" --site North
+        --nsb 0.3 --ctao_data_level "A" --science_case "high_precision" \
+        --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \
+        --file_type "point-like"    \
+        --metrics_file tests/resources/production_simulation_config_metrics.yaml --site North
 
 The output will show the configured simulation parameters.
 """

@@ -52,14 +52,14 @@ def mock_statistical_error_evaluator():
 
 def test_initialization(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 0.0, "elevation": 0.0}
-    config = SimulationConfig(grid_point, "A", "high_precision", PATH_FITS, "On-source")
+    config = SimulationConfig(grid_point, "A", "high_precision", PATH_FITS, "point-like")
     config.evaluator = mock_statistical_error_evaluator
 
     assert config.grid_point == grid_point
     assert config.ctao_data_level == "A"
     assert config.science_case == "high_precision"
     assert config.file_path == PATH_FITS
-    assert config.file_type == "On-source"
+    assert config.file_type == "point-like"
 
 
 def test_configure_simulation(mock_statistical_error_evaluator):
@@ -84,7 +84,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
 
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 45.0, "elevation": 60.0}
-    config = SimulationConfig(grid_point, "C", "low_precision", PATH_FITS, "On-source")
+    config = SimulationConfig(grid_point, "C", "low_precision", PATH_FITS, "point-like")
     config.evaluator = mock_statistical_error_evaluator
 
     # Mocking the method calculate_core_scatter_area
@@ -116,7 +116,7 @@ def test_edge_cases(mock_statistical_error_evaluator, metric):
         ctao_data_level="A",
         science_case="high_precision",
         file_path=PATH_FITS,
-        file_type="On-source",
+        file_type="point-like",
         metrics=metric,
     )
     config.evaluator = mock_statistical_error_evaluator
