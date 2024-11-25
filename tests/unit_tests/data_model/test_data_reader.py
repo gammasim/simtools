@@ -61,7 +61,7 @@ def test_read_value_from_file(tmp_test_directory, reference_point_altitude_file)
     with pytest.raises(FileNotFoundError):
         data_reader.read_value_from_file("this_file_does_not_exist.json", validate=True)
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         data_reader.read_value_from_file(None, validate=False)
 
     test_dict_1 = {"value": 5.0}
