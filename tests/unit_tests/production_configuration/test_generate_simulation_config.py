@@ -27,7 +27,7 @@ def mock_statistical_error_evaluator():
             "uncertainties": np.array([0.01]),
         },
         "error_sig_eff_gh": 0.02,
-        "error_energy_estimate_bdt_reg_tree": 0.2,
+        "energy_estimate": 0.2,
         "error_gamma_ray_psf": 0.01,
         "error_image_template_methods": 0.05,
     }
@@ -69,7 +69,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
             "target_error": {"value": 0.1, "unit": "dimensionless"},
             "valid_range": {"value": [0.04, 200], "unit": "TeV"},
         },
-        "error_energy_estimate_bdt_reg_tree": {
+        "energy_estimate": {
             "target_error": {"value": 0.2, "unit": "dimensionless"},
             "valid_range": {"value": [0.04, 200], "unit": "TeV"},
         },
