@@ -8,6 +8,7 @@ Scaling factors are calculated using error metrics and the evaluator's results.
 
 import logging
 
+import astropy.units as u
 import numpy as np
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
@@ -41,7 +42,7 @@ class EventScaler:
         self.science_case = science_case
         self.metrics = metrics
 
-    def scale_events(self, return_sum: bool = True) -> float | np.ndarray:
+    def scale_events(self, return_sum: bool = True) -> u.Quantity:
         """
         Calculate the scaled number of events based on statistical error metrics.
 
@@ -57,12 +58,15 @@ class EventScaler:
 
         Returns
         -------
-        float or np.ndarray
-            If `return_sum` is `True`, returns the total scaled number of events. If `return_sum`
-            is `False`, returns an array of scaled events along the energy axis.
+        u.Quantity
+            If `return_sum` is `True`, returns the total scaled number of events as a `u.Quantity`.
+            If `return_sum` is `False`, returns an array of scaled events along the energy axis as
+            a `u.Quantity`.
         """
         scaling_factor = self._compute_scaling_factor()
+
         base_events = self._number_of_simulated_events()
+
         if return_sum:
             return np.sum(base_events * scaling_factor)
         return base_events * scaling_factor
@@ -98,13 +102,13 @@ class EventScaler:
         """
         return 1.5 if self.science_case == "science case 1" else 1.0
 
-    def _number_of_simulated_events(self) -> list[int]:
+    def _number_of_simulated_events(self) -> u.Quantity:
         """
         Fetch the number of simulated events from the evaluator's data.
 
         Returns
         -------
-        List[int]
+        List[float]
             The number of simulated events.
         """
         return self.evaluator.data.get("simulated_event_histogram")
@@ -112,7 +116,7 @@ class EventScaler:
     def calculate_scaled_events_at_grid_point(
         self,
         grid_point: tuple,
-    ) -> float:
+    ) -> u.Quantity:
         """
         Calculate the scaled number of events for a specific energy grid point.
 
