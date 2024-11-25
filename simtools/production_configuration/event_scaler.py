@@ -108,7 +108,7 @@ class EventScaler:
 
         Returns
         -------
-        List[float]
+        u.Quantity
             The number of simulated events.
         """
         return self.evaluator.data.get("simulated_event_histogram")
@@ -141,5 +141,6 @@ class EventScaler:
         if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
             raise ValueError(f"Energy {energy} is outside the range of the simulated events data.")
 
-        base_events = self._number_of_simulated_events()[bin_idx]
-        return base_events * scaling_factor
+        base_events = self._number_of_simulated_events()
+        base_event_at_energy = base_events[bin_idx]
+        return base_event_at_energy * scaling_factor
