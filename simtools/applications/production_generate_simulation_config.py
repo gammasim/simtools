@@ -22,7 +22,7 @@ science_case (str, required)
 file_path (str, required)
     Path to file with MC events at CTAO DL2 data level. Used for statistical uncertainty evaluation.
 file_type (str, required)
-    Type of the dl2_mc_events_file file ('point-like' or 'cone').
+    Type of the DL2 MC event file ('point-like' or 'cone').
 metrics (str, optional)
     Path to a YAML file containing metrics for evaluation.
 site (str, required)
@@ -85,7 +85,7 @@ def _parse(label):
         "--file_type",
         type=str,
         required=True,
-        help="Type of the dl2_mc_events_file file ('point-like' or 'cone').",
+        help="Type of the DL2 MC event file ('point-like' or 'cone').",
     )
     config.parser.add_argument(
         "--metrics_file",
