@@ -100,7 +100,7 @@ class EventScaler:
         float
             The final scaling factor after applying uncertainty.
         """
-        return 1.5 if self.science_case == "science case 1" else 1.0
+        return 1 if self.science_case == "science case 1" else 1.0
 
     def _number_of_simulated_events(self) -> u.Quantity:
         """
