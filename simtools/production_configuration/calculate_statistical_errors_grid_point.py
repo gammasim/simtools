@@ -387,7 +387,7 @@ class StatisticalErrorEvaluator:
             )
             ref_value = self.metrics.get("energy_estimate", {}).get("target_error")["value"]
             _logger.info(
-                f"Energy Estimate Error: {self.energy_estimate:.3f}, " f"Reference: {ref_value:.3f}"
+                f"Energy Estimate Error: {self.energy_estimate:.3f}, Reference: {ref_value:.3f}"
             )
         else:
             raise ValueError("Invalid metric specified.")
