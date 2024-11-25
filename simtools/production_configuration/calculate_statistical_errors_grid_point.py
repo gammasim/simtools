@@ -1,10 +1,10 @@
 """
-Provides functionality to evaluate statistical errors from dl2_mc_events_file files.
+Provides functionality to evaluate statistical errors from DL2 MC event files.
 
 Classes
 -------
 StatisticalErrorEvaluator
-    Handles error calculation for given dl2_mc_events_file files and specified metrics.
+    Handles error calculation for given DL2 MC event files and specified metrics.
 
 
 """
@@ -20,12 +20,12 @@ _logger = logging.getLogger(__name__)
 
 class StatisticalErrorEvaluator:
     """
-    Evaluates statistical errors from a dl2_mc_events_file file.
+    Evaluates statistical errors from a DL2 MC event file.
 
     Parameters
     ----------
     file_path : str
-        Path to the dl2_mc_events_file file.
+        Path to the DL2 MC event file.
     file_type : str
         Type of the file, either 'point-like' or 'cone'.
     metrics : dict, optional
@@ -42,12 +42,12 @@ class StatisticalErrorEvaluator:
         grid_point: tuple[float, float, float, float, float] | None = None,
     ):
         """
-        Init the evaluator with a dl2_mc_events_file file, its type, and metrics to calculate.
+        Init the evaluator with a DL2 MC event file, its type, and metrics to calculate.
 
         Parameters
         ----------
         file_path : str
-            The path to the dl2_mc_events_file file.
+            The path to the DL2 MC event file.
         file_type : str
             The type of the file ('point-like' or 'cone').
         metrics : dict, optional
@@ -72,12 +72,12 @@ class StatisticalErrorEvaluator:
 
     def load_data_from_file(self):
         """
-        Load data from the dl2_mc_events_file file and return dictionaries with units.
+        Load data from the DL2 MC event file and return dictionaries with units.
 
         Returns
         -------
         dict
-            Dictionary containing data from the dl2_mc_events_file file with units.
+            Dictionary containing data from the DL2 MC event file with units.
         """
         data = {}
         try:
