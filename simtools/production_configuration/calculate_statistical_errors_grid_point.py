@@ -63,7 +63,7 @@ class StatisticalErrorEvaluator:
         self.data = self.load_data_from_file()
 
         self.uncertainty_effective_area = None
-        self.error_energy_estimate_bdt_reg_tree = None
+        self.energy_estimate = None
         self.sigma_energy = None
         self.delta_energy = None
 
@@ -312,7 +312,7 @@ class StatisticalErrorEvaluator:
         )
         return {"relative_errors": relative_errors}
 
-    def calculate_error_energy_estimate_bdt_reg_tree(self):
+    def calculate_energy_estimate(self):
         """
         Calculate the uncertainties in energy estimation.
 
@@ -382,22 +382,19 @@ class StatisticalErrorEvaluator:
                     f"Reference: {ref_value:.3f}"
                 )
 
-        if "error_energy_estimate_bdt_reg_tree" in self.metrics:
-            self.error_energy_estimate_bdt_reg_tree, self.sigma_energy, self.delta_energy = (
-                self.calculate_error_energy_estimate_bdt_reg_tree()
+        if "energy_estimate" in self.metrics:
+            self.energy_estimate, self.sigma_energy, self.delta_energy = (
+                self.calculate_energy_estimate()
             )
-            ref_value = self.metrics.get("error_energy_estimate_bdt_reg_tree", {}).get(
-                "target_error"
-            )["value"]
+            ref_value = self.metrics.get("energy_estimate", {}).get("target_error")["value"]
             _logger.info(
-                f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
-                f"Reference: {ref_value:.3f}"
+                f"Energy Estimate Error: {self.energy_estimate:.3f}, " f"Reference: {ref_value:.3f}"
             )
         else:
             raise ValueError("Invalid metric specified.")
         self.metric_results = {
             "uncertainty_effective_area": self.uncertainty_effective_area,
-            "error_energy_estimate_bdt_reg_tree": self.error_energy_estimate_bdt_reg_tree,
+            "energy_estimate": self.energy_estimate,
         }
         return self.metric_results
 

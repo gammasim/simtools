@@ -47,13 +47,13 @@ def test_calculate_uncertainty_effective_area(test_fits_file, metric):
     assert len(errors["relative_errors"]) > 0
 
 
-def test_calculate_error_energy_estimate_bdt_reg_tree(test_fits_file, metric):
+def test_calculate_energy_estimate(test_fits_file, metric):
     """Test the calculation of energy estimate error."""
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file, file_type="point-like", metrics=metric
     )
     evaluator.calculate_metrics()
-    error, sigma, delta = evaluator.calculate_error_energy_estimate_bdt_reg_tree()
+    error, sigma, delta = evaluator.calculate_energy_estimate()
     assert isinstance(sigma, list)
     assert isinstance(delta, list)
 
@@ -116,7 +116,7 @@ def test_calculate_metrics(test_fits_file, metric):
         file_path=test_fits_file, file_type="point-like", metrics=metric
     )
 
-    evaluator.calculate_error_energy_estimate_bdt_reg_tree = lambda: (
+    evaluator.calculate_energy_estimate = lambda: (
         0.33,
         [0.1, 0.2],
         [0.01, 0.02],
@@ -130,11 +130,11 @@ def test_calculate_metrics(test_fits_file, metric):
     ]
     assert computed_values == pytest.approx(expected_values, rel=1e-2)
 
-    assert evaluator.error_energy_estimate_bdt_reg_tree == pytest.approx(0.33, rel=1e-2)
+    assert evaluator.energy_estimate == pytest.approx(0.33, rel=1e-2)
 
     expected_results = {
         "uncertainty_effective_area": evaluator.uncertainty_effective_area,
-        "error_energy_estimate_bdt_reg_tree": evaluator.error_energy_estimate_bdt_reg_tree,
+        "energy_estimate": evaluator.energy_estimate,
     }
     assert evaluator.metric_results == expected_results
 
@@ -152,7 +152,7 @@ def setup_evaluator(metric):
     evaluator.metric_results = {
         "uncertainty_effective_area": {"relative_errors": np.array([0.04, 0.05, 0.06])},
         "error_sig_eff_gh": 0.02,
-        "error_energy_estimate_bdt_reg_tree": 0.03,
+        "energy_estimate": 0.03,
         "error_gamma_ray_psf": 0.01,
         "error_image_template_methods": 0.04,
     }
