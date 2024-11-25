@@ -1,5 +1,5 @@
 """
-Module defines the `SimulationConfig` class.
+Configures and generates simulation parameters for a specific grid point.
 
 Used to configure and generate simulation parameters for a specific grid point
 based on statistical uncertainties.
