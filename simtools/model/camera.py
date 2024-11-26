@@ -330,7 +330,6 @@ class Camera:
         The x,y pixel positions and focal length are assumed to have the same unit (usually cm)
         """
         self._logger.debug("Calculating the FoV")
-
         return self._calc_fov(
             self.pixels["x"],
             self.pixels["y"],
@@ -606,6 +605,8 @@ class Camera:
             Array of edge pixel indices.
         """
         if self._edge_pixel_indices is None:
+            if pixels is None:
+                pixels = self.pixels
             if neighbors is None:
                 neighbors = self.get_neighbor_pixels()
             return self._calc_edge_pixels(pixels, neighbors)

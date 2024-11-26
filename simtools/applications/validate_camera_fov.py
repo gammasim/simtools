@@ -34,7 +34,7 @@ r"""
     .. code-block:: console
 
         simtools-validate-camera-fov --site North \\
-            --telescope LST-1 --model_version 5.0.0
+            --telescope LSTN-01 --model_version 5.0.0
 
     The output is saved in simtools-output/validate_camera_fov.
 
