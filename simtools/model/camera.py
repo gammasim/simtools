@@ -409,7 +409,7 @@ class Camera:
         return [list(np.setdiff1d(neigh, [i])) for i, neigh in enumerate(neighbors)]
 
     def _find_adjacent_neighbor_pixels(
-        self, x_pos: np.ndarray, y_pos: np.ndarray, radius: float, row_coloumn_dist: float
+        self, x_pos: np.ndarray, y_pos: np.ndarray, radius: float, row_column_dist: float
     ) -> list[list[int]]:
         """
         Find adjacent neighbor pixels in cameras with square pixels.
@@ -424,7 +424,7 @@ class Camera:
             y position of each pixel
         radius: float
             Radius within which to find neighbors
-        row_coloumn_dist: float
+        row_column_dist: float
             Distance to consider for row/column adjacency.
             Should be around 20% of the pixel diameter.
 
@@ -442,7 +442,7 @@ class Camera:
             if len(nn) < 4:
                 # Go over all other pixels and search for ones which are adjacent
                 # but further than sqrt(2) away
-                self._add_additional_neighbors(i_pix, nn, x_pos, y_pos, radius, row_coloumn_dist)
+                self._add_additional_neighbors(i_pix, nn, x_pos, y_pos, radius, row_column_dist)
 
         return neighbors
 
@@ -453,7 +453,7 @@ class Camera:
         x_pos: np.ndarray,
         y_pos: np.ndarray,
         radius: float,
-        row_coloumn_dist: float,
+        row_column_dist: float,
     ):
         """
         Add neighbors for a given pixel if they are not already neighbors and are adjacent.
@@ -470,7 +470,7 @@ class Camera:
             y position of each pixel
         radius: float
             Radius within which to find neighbors
-        row_coloumn_dist: float
+        row_column_dist: float
             Distance to consider for row/column adjacency
         """
         for j_pix, _ in enumerate(x_pos):
@@ -485,8 +485,8 @@ class Camera:
                 # Need to increase the distance because of the curvature
                 # of the CHEC camera
                 if (
-                    abs(x_pos[i_pix] - x_pos[j_pix]) < row_coloumn_dist
-                    or abs(y_pos[i_pix] - y_pos[j_pix]) < row_coloumn_dist
+                    abs(x_pos[i_pix] - x_pos[j_pix]) < row_column_dist
+                    or abs(y_pos[i_pix] - y_pos[j_pix]) < row_column_dist
                 ) and dist < 1.2 * radius:
                     nn.append(j_pix)
 
