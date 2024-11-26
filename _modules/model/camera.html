@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.camera &#8212; simtools v0.1.dev1+gc7657ef Manual</title>
+    <title>model.camera &#8212; simtools v0.1.dev1+gcd7fc7c Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=e24981e1"></script>
+    <script src="../../_static/documentation_options.js?v=e537b43a"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gc7657ef" />
+  <meta name="docsearch:version" content="0.1.dev1+gcd7fc7c" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc7657ef Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gcd7fc7c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -196,6 +196,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/generate_simtel_array_histograms.html">generate_simtel_array_histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/generate_regular_arrays.html">generate_regular_arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/plot_array_layout.html">plot_array_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/production_scale_events.html">production_scale_events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/production_generate_simulation_config.html">production_generate_simulation_config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simulate_prod.html">simulate_prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/submit_data_from_external.html">submit_data_from_external</a></li>
@@ -412,7 +414,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rotate_pixels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">)</span>
 
         <span class="c1"># Initialize an empty list of neighbors, to be calculated only when necessary.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Initialize an empty list of edge pixels, to be calculated only when necessary.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_edge_pixel_indices</span> <span class="o">=</span> <span class="kc">None</span>
@@ -770,9 +772,9 @@
         <span class="k">return</span> <span class="n">fov</span><span class="p">,</span> <span class="n">average_edge_distance</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_find_neighbours</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_find_neighbors</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Use a KD-Tree to quickly find nearest neighbours.</span>
+<span class="sd">        Use a KD-Tree to quickly find nearest neighbors.</span>
 
 <span class="sd">        This applies to e.g., of the pixels in a camera or mirror facets.</span>
 
@@ -783,29 +785,29 @@
 <span class="sd">        y_pos : numpy.array_like</span>
 <span class="sd">            y position of each e.g., pixel</span>
 <span class="sd">        radius : float</span>
-<span class="sd">            radius to consider neighbour it should be slightly larger than the pixel diameter or \</span>
+<span class="sd">            radius to consider neighbor it should be slightly larger than the pixel diameter or \</span>
 <span class="sd">            mirror facet.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        neighbours: numpy.array_like</span>
-<span class="sd">            Array of neighbour indices in a list for each e.g., pixel.</span>
+<span class="sd">        neighbors: numpy.array_like</span>
+<span class="sd">            Array of neighbor indices in a list for each e.g., pixel.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_pos</span><span class="p">))</span>
         <span class="n">kdtree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
-        <span class="n">neighbours</span> <span class="o">=</span> <span class="p">[</span><span class="n">kdtree</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">radius</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span><span class="n">kdtree</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">radius</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
 
-        <span class="k">for</span> <span class="n">neighbour_now</span><span class="p">,</span> <span class="n">index_now</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">neighbours</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
-            <span class="n">neighbour_now</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">index_now</span><span class="p">)</span>  <span class="c1"># get rid of the pixel or mirror itself</span>
+        <span class="k">for</span> <span class="n">neighbor_now</span><span class="p">,</span> <span class="n">index_now</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+            <span class="n">neighbor_now</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">index_now</span><span class="p">)</span>  <span class="c1"># get rid of the pixel or mirror itself</span>
 
-        <span class="k">return</span> <span class="n">neighbours</span>
+        <span class="k">return</span> <span class="n">neighbors</span>
 
-    <span class="k">def</span> <span class="nf">_find_adjacent_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_coloumn_dist</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_find_adjacent_neighbor_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_column_dist</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Find adjacent neighbour pixels in cameras with square pixels.</span>
+<span class="sd">        Find adjacent neighbor pixels in cameras with square pixels.</span>
 
-<span class="sd">        Only directly adjacent neighbours are allowed, no diagonals.</span>
+<span class="sd">        Only directly adjacent neighbors are allowed, no diagonals.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -814,51 +816,51 @@
 <span class="sd">        y_pos : numpy.array_like</span>
 <span class="sd">            y position of each pixel</span>
 <span class="sd">        radius : float</span>
-<span class="sd">            Radius within which to find neighbours</span>
-<span class="sd">        row_coloumn_dist : float</span>
+<span class="sd">            Radius within which to find neighbors</span>
+<span class="sd">        row_column_dist : float</span>
 <span class="sd">            Distance to consider for row/column adjacency.</span>
 <span class="sd">            Should be around 20% of the pixel diameter.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        list of lists</span>
-<span class="sd">            Array of neighbour indices in a list for each pixel</span>
+<span class="sd">            Array of neighbor indices in a list for each pixel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># First find the neighbours with the usual method and the original radius</span>
-        <span class="c1"># which does not allow for diagonal neighbours.</span>
-        <span class="n">neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_neighbours</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+        <span class="c1"># First find the neighbors with the usual method and the original radius</span>
+        <span class="c1"># which does not allow for diagonal neighbors.</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_neighbors</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">neighbours</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">neighbors</span><span class="p">):</span>
             <span class="c1"># Find pixels defined as edge pixels now</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nn</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
                 <span class="c1"># Go over all other pixels and search for ones which are adjacent</span>
                 <span class="c1"># but further than sqrt(2) away</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_add_additional_neighbours</span><span class="p">(</span><span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_coloumn_dist</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_additional_neighbors</span><span class="p">(</span><span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_column_dist</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">neighbours</span>
+        <span class="k">return</span> <span class="n">neighbors</span>
 
-    <span class="k">def</span> <span class="nf">_add_additional_neighbours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_coloumn_dist</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_add_additional_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_pix</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">row_column_dist</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add neighbours for a given pixel if they are not already neighbours and are adjacent.</span>
+<span class="sd">        Add neighbors for a given pixel if they are not already neighbors and are adjacent.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        i_pix : int</span>
-<span class="sd">            Index of the pixel to find neighbours for</span>
+<span class="sd">            Index of the pixel to find neighbors for</span>
 <span class="sd">        nn : list</span>
-<span class="sd">            Current list of neighbours for the pixel</span>
+<span class="sd">            Current list of neighbors for the pixel</span>
 <span class="sd">        x_pos : numpy.array_like</span>
 <span class="sd">            x position of each pixel</span>
 <span class="sd">        y_pos : numpy.array_like</span>
 <span class="sd">            y position of each pixel</span>
 <span class="sd">        radius : float</span>
-<span class="sd">            Radius within which to find neighbours</span>
-<span class="sd">        row_coloumn_dist : float</span>
+<span class="sd">            Radius within which to find neighbors</span>
+<span class="sd">        row_column_dist : float</span>
 <span class="sd">            Distance to consider for row/column adjacency</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">j_pix</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x_pos</span><span class="p">):</span>
             <span class="c1"># No need to look at the pixel itself</span>
-            <span class="c1"># nor at any pixels already in the neighbours list</span>
+            <span class="c1"># nor at any pixels already in the neighbors list</span>
             <span class="k">if</span> <span class="n">j_pix</span> <span class="o">!=</span> <span class="n">i_pix</span> <span class="ow">and</span> <span class="n">j_pix</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nn</span><span class="p">:</span>
                 <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
                     <span class="p">(</span><span class="n">x_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
@@ -868,16 +870,16 @@
                 <span class="c1"># Need to increase the distance because of the curvature</span>
                 <span class="c1"># of the CHEC camera</span>
                 <span class="k">if</span> <span class="p">(</span>
-                    <span class="nb">abs</span><span class="p">(</span><span class="n">x_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">row_coloumn_dist</span>
-                    <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">row_coloumn_dist</span>
+                    <span class="nb">abs</span><span class="p">(</span><span class="n">x_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">row_column_dist</span>
+                    <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_pos</span><span class="p">[</span><span class="n">i_pix</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_pos</span><span class="p">[</span><span class="n">j_pix</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">row_column_dist</span>
                 <span class="p">)</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="mf">1.2</span> <span class="o">*</span> <span class="n">radius</span><span class="p">:</span>
                     <span class="n">nn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j_pix</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_calc_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_calc_neighbor_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Find adjacent neighbour pixels in cameras with hexagonal or square pixels.</span>
+<span class="sd">        Find adjacent neighbor pixels in cameras with hexagonal or square pixels.</span>
 
-<span class="sd">        Only directly  adjacent neighbours are searched for, no diagonals.</span>
+<span class="sd">        Only directly  adjacent neighbors are searched for, no diagonals.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -886,13 +888,13 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        neighbours: numpy.array_like</span>
-<span class="sd">            Array of neighbour indices in a list for each pixel</span>
+<span class="sd">        neighbors: numpy.array_like</span>
+<span class="sd">            Array of neighbor indices in a list for each pixel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Searching for neighbour pixels&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Searching for neighbor pixels&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_neighbours</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_neighbors</span><span class="p">(</span>
                 <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span>
                 <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">PMT_NEIGHBOR_RADIUS_FACTOR</span> <span class="o">*</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
@@ -900,22 +902,22 @@
         <span class="k">elif</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="c1"># Distance increased by 40% to take into account gaps in the SiPM cameras</span>
             <span class="c1"># Pixels in the same row/column can be 20% shifted from one another</span>
-            <span class="c1"># Inside find_adjacent_neighbour_pixels the distance is increased</span>
+            <span class="c1"># Inside find_adjacent_neighbor_pixels the distance is increased</span>
             <span class="c1"># further for pixels in the same row/column to 1.68*diameter.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_adjacent_neighbour_pixels</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_adjacent_neighbor_pixels</span><span class="p">(</span>
                 <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span>
                 <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">SIPM_NEIGHBOR_RADIUS_FACTOR</span> <span class="o">*</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">SIPM_ROW_COLUMN_DIST_FACTOR</span> <span class="o">*</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_diameter&quot;</span><span class="p">],</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span>
 
-<div class="viewcode-block" id="Camera.get_neighbour_pixels">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_neighbour_pixels">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_neighbour_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Camera.get_neighbor_pixels">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_neighbor_pixels">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_neighbor_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary.</span>
+<span class="sd">        Get a list of neighbor pixels by calling calc_neighbor_pixels() when necessary.</span>
 
 <span class="sd">        The purpose of this function is to ensure the calculation occurs only once and only when</span>
 <span class="sd">        necessary.</span>
@@ -927,18 +929,18 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        neighbours: numpy.array_like</span>
-<span class="sd">            Array of neighbour indices in a list for each pixel.</span>
+<span class="sd">        neighbors: numpy.array_like</span>
+<span class="sd">            Array of neighbor indices in a list for each pixel.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pixels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_neighbour_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_neighbor_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbours</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_calc_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">neighbours</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_calc_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Find the edge pixels of the camera.</span>
 
@@ -946,8 +948,8 @@
 <span class="sd">        ----------</span>
 <span class="sd">        pixels: dictionary</span>
 <span class="sd">            The dictionary produced by the read_pixel_list method of this class.</span>
-<span class="sd">        neighbours: numpy.array_like</span>
-<span class="sd">            Array of neighbour indices in a list for each pixel.</span>
+<span class="sd">        neighbors: numpy.array_like</span>
+<span class="sd">            Array of neighbor indices in a list for each pixel.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -960,10 +962,10 @@
         <span class="k">def</span> <span class="nf">is_edge_pixel</span><span class="p">(</span><span class="n">i_pix</span><span class="p">):</span>
             <span class="n">pixel_shape</span> <span class="o">=</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span>
             <span class="n">pix_on</span> <span class="o">=</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">]</span>
-            <span class="n">num_neighbours</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbours</span><span class="p">[</span><span class="n">i_pix</span><span class="p">])</span>
+            <span class="n">num_neighbors</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i_pix</span><span class="p">])</span>
 
-            <span class="n">shape_condition</span> <span class="o">=</span> <span class="p">(</span><span class="n">pixel_shape</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="ow">and</span> <span class="n">num_neighbours</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
-                <span class="n">pixel_shape</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">num_neighbours</span> <span class="o">&lt;</span> <span class="mi">4</span>
+            <span class="n">shape_condition</span> <span class="o">=</span> <span class="p">(</span><span class="n">pixel_shape</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="ow">and</span> <span class="n">num_neighbors</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="n">pixel_shape</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">num_neighbors</span> <span class="o">&lt;</span> <span class="mi">4</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">pix_on</span> <span class="ow">and</span> <span class="n">shape_condition</span>
 
@@ -975,7 +977,7 @@
 
 <div class="viewcode-block" id="Camera.get_edge_pixels">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_edge_pixels">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">neighbours</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">neighbors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the indices of the edge pixels of the camera.</span>
 
@@ -983,8 +985,8 @@
 <span class="sd">        ----------</span>
 <span class="sd">        pixels: dict</span>
 <span class="sd">            The dictionary produced by the read_pixel_list method of this class.</span>
-<span class="sd">        neighbours: numpy.array_like</span>
-<span class="sd">            Array of neighbour indices in a list for each pixel.</span>
+<span class="sd">        neighbors: numpy.array_like</span>
+<span class="sd">            Array of neighbor indices in a list for each pixel.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -994,9 +996,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_pixel_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pixels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span>
-            <span class="k">if</span> <span class="n">neighbours</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighbour_pixels</span><span class="p">()</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_edge_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="n">neighbours</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">neighbors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighbor_pixels</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_edge_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edge_pixel_indices</span></div>
 </div>

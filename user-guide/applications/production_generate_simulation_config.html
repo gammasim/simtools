@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>db_get_parameter_from_db &#8212; simtools v0.1.dev1+gcd7fc7c Manual</title>
+    <title>production_generate_simulation_config &#8212; simtools v0.1.dev1+gcd7fc7c Manual</title>
   
   
   
@@ -43,11 +43,11 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/db_get_parameter_from_db';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/production_generate_simulation_config';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="db_inspect_databases" href="db_inspect_databases.html" />
-    <link rel="prev" title="db_get_file_from_db" href="db_get_file_from_db.html" />
+    <link rel="next" title="simulate_light_emission" href="simulate_light_emission.html" />
+    <link rel="prev" title="production_scale_events" href="production_scale_events.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+gcd7fc7c" />
@@ -187,7 +187,7 @@
 <li class="toctree-l3"><a class="reference internal" href="db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="db_get_file_from_db.html">db_get_file_from_db</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">db_get_parameter_from_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="db_inspect_databases.html">db_inspect_databases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="derive_mirror_rnda.html">derive_mirror_rnda</a></li>
 <li class="toctree-l3"><a class="reference internal" href="derive_psf_parameters.html">derive_psf_parameters</a></li>
@@ -198,7 +198,7 @@
 <li class="toctree-l3"><a class="reference internal" href="generate_regular_arrays.html">generate_regular_arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_array_layout.html">plot_array_layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="production_scale_events.html">production_scale_events</a></li>
-<li class="toctree-l3"><a class="reference internal" href="production_generate_simulation_config.html">production_generate_simulation_config</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">production_generate_simulation_config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="submit_data_from_external.html">submit_data_from_external</a></li>
@@ -303,7 +303,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/db_get_parameter_from_db.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/production_generate_simulation_config.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -320,7 +320,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/db_get_parameter_from_db.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/production_generate_simulation_config.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -350,7 +350,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/db_get_parameter_from_db.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/production_generate_simulation_config.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -426,7 +426,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>db_get_parameter_from_db</h1>
+    <h1>production_generate_simulation_config</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -437,8 +437,8 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_generate_simulation_config.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -450,47 +450,53 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-db_get_parameter_from_db">
-<span id="db-get-parameter-from-db"></span><h1>db_get_parameter_from_db<a class="headerlink" href="#module-db_get_parameter_from_db" title="Link to this heading">#</a></h1>
-<p>Get a parameter entry from DB for a specific telescope or a site.</p>
-<p>The application receives a parameter name, a site, a telescope (if applicable) and a version. It then prints out the parameter entry.</p>
+  <section id="module-production_generate_simulation_config">
+<span id="production-generate-simulation-config"></span><h1>production_generate_simulation_config<a class="headerlink" href="#module-production_generate_simulation_config" title="Link to this heading">#</a></h1>
+<p>Configure a simulation based on command-line arguments.</p>
+<p>This application configures and
+generates simulation parameters for a specific grid point in a statistical uncertainty
+evaluation setup.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>parameter (str, required)</dt><dd><p>Parameter name</p>
+<dt>azimuth (float, required)</dt><dd><p>Azimuth angle in degrees.</p>
 </dd>
-<dt>site (str, required)</dt><dd><p>South or North.</p>
+<dt>elevation (float, required)</dt><dd><p>Elevation angle in degrees.</p>
 </dd>
-<dt>telescope (str, optional)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …)</p>
+<dt>nsb (float, required)</dt><dd><p>Night sky background value.</p>
 </dd>
-<dt>log_level (str, optional)</dt><dd><p>Log level to print.</p>
+<dt>ctao_data_level (str, required)</dt><dd><p>The data level for the simulation (e.g., ‘A’, ‘B’, ‘C’).</p>
+</dd>
+<dt>science_case (str, required)</dt><dd><p>The science case for the simulation.</p>
+</dd>
+<dt>file_path (str, required)</dt><dd><p>Path to file with MC events at CTAO DL2 data level. Used for statistical uncertainty evaluation.</p>
+</dd>
+<dt>file_type (str, required)</dt><dd><p>Type of the DL2 MC event file (‘point-like’ or ‘cone’).</p>
+</dd>
+<dt>metrics (str, optional)</dt><dd><p>Path to a YAML file containing metrics for evaluation.</p>
+</dd>
+<dt>site (str, required)</dt><dd><p>The observatory site (North or South).</p>
 </dd>
 </dl>
 </section>
-<section id="raises">
-<h2>Raises<a class="headerlink" href="#raises" title="Link to this heading">#</a></h2>
-<p>KeyError in case the parameter requested does not exist in the model parameters.</p>
-</section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Get the mirror_list parameter from the DB.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-db-get-parameter-from-db --parameter mirror_list \\</span>
-<span class="go">        --site North --telescope LSTN-01 \\</span>
-<span class="go">        --model_version 5.0.0</span>
+<p>To run the simulation configuration, execute the script as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \</span>
+<span class="go">    --nsb 0.3 --ctao_data_level &quot;A&quot; --science_case &quot;high_precision&quot; \</span>
+<span class="go">    --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \</span>
+<span class="go">    --file_type &quot;point-like&quot;    \</span>
+<span class="go">    --metrics_file tests/resources/production_simulation_config_metrics.yaml --site North</span>
 </pre></div>
 </div>
-<p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">{&#39;Applicable&#39;: True,</span>
-<span class="go"> &#39;File&#39;: True,</span>
-<span class="go"> &#39;Type&#39;: &#39;str&#39;,</span>
-<span class="go"> &#39;Value&#39;: &#39;mirror_CTA-N-LST1_v2019-03-31.dat&#39;,</span>
-<span class="go"> &#39;Version&#39;: &#39;5.0.0&#39;,</span>
-<span class="go"> &#39;_id&#39;: ObjectId(&#39;608834f257df2db2531b8e78&#39;),</span>
-<span class="go"> &#39;entry_date&#39;: datetime.datetime(2021, 4, 27, 15, 59, 46, tzinfo=&lt;bson.tz_util.FixedOffset \</span>
-<span class="go">  object at 0x7f601dd51d80&gt;)}</span>
-</pre></div>
-</div>
+<p>The output will show the configured simulation parameters.</p>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="production_generate_simulation_config.main">
+<span class="sig-prename descclassname"><span class="pre">production_generate_simulation_config.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_generate_simulation_config.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_generate_simulation_config.main" title="Link to this definition">#</a></dt>
+<dd><p>Run the Simulation Config application.</p>
+</dd></dl>
+
 </section>
 
 
@@ -505,20 +511,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="db_get_file_from_db.html"
+       href="production_scale_events.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">db_get_file_from_db</p>
+        <p class="prev-next-title">production_scale_events</p>
       </div>
     </a>
     <a class="right-next"
-       href="db_inspect_databases.html"
+       href="simulate_light_emission.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">db_inspect_databases</p>
+        <p class="prev-next-title">simulate_light_emission</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -540,8 +546,8 @@
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_generate_simulation_config.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 
