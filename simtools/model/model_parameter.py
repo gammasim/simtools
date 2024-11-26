@@ -468,9 +468,7 @@ class ModelParameter:
             "Insufficient validation of parameters."
         )
         self._logger.debug(f"Changing parameters from file {file_name}")
-        self.change_multiple_parameters(
-            **gen.collect_data_from_file_or_dict(file_name=file_name, in_dict=None)
-        )
+        self.change_multiple_parameters(**gen.collect_data_from_file(file_name=file_name))
 
     def change_multiple_parameters(self, **kwargs):
         """
