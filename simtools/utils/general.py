@@ -15,15 +15,15 @@ import numpy as np
 import yaml
 
 __all__ = [
+    "InvalidConfigDataError",
     "change_dict_keys_case",
-    "collect_data_from_file_or_dict",
+    "collect_data_from_file",
     "collect_final_lines",
     "collect_kwargs",
-    "InvalidConfigDataError",
+    "get_log_excerpt",
     "get_log_level_from_user",
     "remove_substring_recursively_from_dict",
     "set_default_kwargs",
-    "get_log_excerpt",
     "sort_arrays",
 ]
 
@@ -135,45 +135,7 @@ def collect_data_from_http(url):
     return data
 
 
-def collect_data_from_file_or_dict(file_name, in_dict, allow_empty=False):
-    """
-    Collect input data from file or dictionary.
-
-    Parameters
-    ----------
-    file_name: str
-        Name of the yaml/json/ascii file.
-    in_dict: dict
-        Data as dict.
-    allow_empty: bool
-        If True, an error won't be raised in case both file_name and dict are None.
-
-    Returns
-    -------
-    data: dict or list
-        Data as dict or list.
-
-    Raises
-    ------
-    AttributeError
-        If no input has been provided (neither by file, nor by dict).
-    """
-    if file_name is not None:
-        return collect_data_from_file(file_name, in_dict)
-
-    if in_dict is not None:
-        return dict(in_dict)
-
-    if allow_empty:
-        _logger.debug("Input has not been provided (neither by file, nor by dict)")
-        return None
-
-    msg = "Input has not been provided (neither by file, nor by dict)"
-    _logger.debug(msg)
-    raise AttributeError(msg)
-
-
-def collect_data_from_file(file_name, in_dict):
+def collect_data_from_file(file_name):
     """
     Collect data from file based on its extension.
 
@@ -181,17 +143,12 @@ def collect_data_from_file(file_name, in_dict):
     ----------
     file_name: str
         Name of the yaml/json/ascii file.
-    in_dict: dict
-        Data as dict.
 
     Returns
     -------
     data: dict or list
         Data as dict or list.
     """
-    if in_dict is not None:
-        _logger.warning("Both in_dict and file_name were given - file_name will be used")
-
     if is_url(file_name):
         return collect_data_from_http(file_name)
 
@@ -391,7 +348,7 @@ def program_is_executable(program):
                 if is_exe(exe_file):
                     return exe_file
         except KeyError:
-            _logger.debug("PATH environment variable is not set.")
+            _logger.warning("PATH environment variable is not set.")
             return None
 
     return None

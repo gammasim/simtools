@@ -182,7 +182,7 @@ def _pixel_type_lists(camera):
     for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
         shape = _pixel_shape(camera, x, y)
         if camera.pixels["pix_on"][i_pix]:
-            neighbors = camera.get_neighbour_pixels()[i_pix]
+            neighbors = camera.get_neighbor_pixels()[i_pix]
             if len(neighbors) < 6 and camera.pixels["pixel_shape"] in (1, 3):
                 edge_pixels.append(shape)
             elif len(neighbors) < 4 and camera.pixels["pixel_shape"] == 2:

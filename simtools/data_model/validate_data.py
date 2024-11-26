@@ -98,7 +98,7 @@ class DataValidator:
         """
         try:
             if Path(self.data_file_name).suffix in (".yml", ".yaml", ".json"):
-                self.data_dict = gen.collect_data_from_file_or_dict(self.data_file_name, None)
+                self.data_dict = gen.collect_data_from_file(self.data_file_name)
                 self._logger.info(f"Validating data from: {self.data_file_name}")
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
@@ -676,11 +676,10 @@ class DataValidator:
         """
         try:
             if Path(schema_file).is_dir():
-                return gen.collect_data_from_file_or_dict(
+                return gen.collect_data_from_file(
                     file_name=Path(schema_file) / (parameter + ".schema.yml"),
-                    in_dict=None,
                 )["data"]
-            return gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)["data"]
+            return gen.collect_data_from_file(file_name=schema_file)["data"]
         except KeyError:
             self._logger.error(f"Error reading validation schema from {schema_file}")
             raise
