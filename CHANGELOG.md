@@ -7,6 +7,13 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.8.1](https://github.com/gammasim/simtools/tree/v0.8.1) - 2024-11-26
+
+### Bugfixes
+
+- Fix authentication and writing permits for deployment of simtools to pypi. ([#1256](https://github.com/gammasim/simtools/pull/1256))
+
+
 ## [v0.8.0](https://github.com/gammasim/simtools/tree/v0.8.0) - 2024-11-26
 
 ### API Changes
