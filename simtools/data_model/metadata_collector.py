@@ -141,8 +141,8 @@ class MetadataCollector:
 
         """
         try:
-            return gen.collect_data_from_file(file_name=self.schema_file)
-        except TypeError:
+            return gen.collect_data_from_file_or_dict(file_name=self.schema_file, in_dict=None)
+        except AttributeError:
             self._logger.debug(f"No valid schema file provided ({self.schema_file}).")
         return {}
 
@@ -275,7 +275,9 @@ class MetadataCollector:
     def _read_input_metadata_from_yml_or_json(self, metadata_file_name):
         """Read input metadata from yml or json file."""
         try:
-            _input_metadata = gen.collect_data_from_file(file_name=metadata_file_name)
+            _input_metadata = gen.collect_data_from_file_or_dict(
+                file_name=metadata_file_name, in_dict=None
+            )
             _json_type_metadata = {"Metadata", "metadata", "METADATA"}.intersection(_input_metadata)
             if len(_json_type_metadata) == 1:
                 _input_metadata = _input_metadata[_json_type_metadata.pop()]

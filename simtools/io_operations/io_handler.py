@@ -4,7 +4,7 @@ import datetime
 import logging
 from pathlib import Path
 
-__all__ = ["IOHandler", "IOHandlerSingleton"]
+__all__ = ["IOHandlerSingleton", "IOHandler"]
 
 
 class IncompleteIOHandlerInitError(Exception):

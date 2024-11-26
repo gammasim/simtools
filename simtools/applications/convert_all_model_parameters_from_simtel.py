@@ -121,7 +121,7 @@ def get_list_of_parameters_and_schema_files(schema_directory):
     schema_files = sorted(Path(schema_directory).rglob("*.schema.yml"))
     parameters = []
     for schema_file in schema_files:
-        schema_dict = gen.collect_data_from_file(file_name=schema_file)
+        schema_dict = gen.collect_data_from_file_or_dict(file_name=schema_file, in_dict=None)
         parameters.append(schema_dict.get("name"))
     return parameters, schema_files
 
@@ -350,7 +350,7 @@ def print_list_of_files(args_dict, logger):
     """
     model_files = sorted(Path(args_dict["output_path"]).rglob("*.json"))
     for file in model_files:
-        model_dict = gen.collect_data_from_file(file_name=file)
+        model_dict = gen.collect_data_from_file_or_dict(file_name=file, in_dict=None)
         if model_dict.get("file"):
             logger.info(f"{file.name}: {model_dict['value']}")
 

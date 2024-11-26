@@ -102,7 +102,7 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_prefix, logge
     logger : logging.Logger
         Logger object.
     """
-    par_dict = gen.collect_data_from_file(file_name=file)
+    par_dict = gen.collect_data_from_file_or_dict(file_name=file, in_dict=None)
     logger.info(
         f"Adding the following parameter to the DB: {par_dict['parameter']} "
         f"(collection {collection} in database {db_name})"

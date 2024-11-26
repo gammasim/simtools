@@ -122,7 +122,7 @@ def validate_schema(args_dict, logger):
 
     """
     try:
-        data = gen.collect_data_from_file(file_name=args_dict["file_name"])
+        data = gen.collect_data_from_file_or_dict(file_name=args_dict["file_name"], in_dict=None)
     except FileNotFoundError as exc:
         logger.error(f"Error reading schema file from {args_dict['file_name']}")
         raise exc

@@ -66,7 +66,7 @@ def _read_configs_from_files(config_files):
         # remove new line characters from config - otherwise issues
         # with especially long file names
         _dict = gen.remove_substring_recursively_from_dict(
-            gen.collect_data_from_file(file_name=config_file), substring="\n"
+            gen.collect_data_from_file_or_dict(file_name=config_file, in_dict=None), substring="\n"
         )
         configs.append(_dict.get("CTA_SIMPIPE", None))
     return configs
