@@ -105,7 +105,7 @@ class ResourceEstimator:
         dict
             A dictionary with estimates for compute and storage resources, with units.
         """
-        number_of_events = self.simulation_params.get("number_of_events", 0)
+        number_of_events = self.simulation_params.get("number_of_events")
         if self.existing_data:
             return self.interpolate_resources(number_of_events)
 
