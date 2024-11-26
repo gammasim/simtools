@@ -1,4 +1,4 @@
-"""Module for estimating compute and storage resources required for simulations."""
+"""Estimates compute and storage requirements for a simulation production."""
 
 import astropy.units as u
 import numpy as np
