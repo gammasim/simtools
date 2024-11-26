@@ -161,8 +161,8 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
         True if the files are equal, False otherwise.
 
     """
-    data1 = gen.collect_data_from_file(file1)
-    data2 = gen.collect_data_from_file(file2)
+    data1 = gen.collect_data_from_file_or_dict(file1, in_dict=None)
+    data2 = gen.collect_data_from_file_or_dict(file2, in_dict=None)
 
     _logger.debug(f"Comparing json/yaml files: {file1} and {file2}")
 

@@ -27,7 +27,10 @@ def num_gains_schema_file():
 
 @pytest.fixture
 def num_gains_schema(num_gains_schema_file):
-    return gen.collect_data_from_file(file_name=num_gains_schema_file)
+    return gen.collect_data_from_file_or_dict(
+        file_name=num_gains_schema_file,
+        in_dict=None,
+    )
 
 
 def test_write(tmp_test_directory):

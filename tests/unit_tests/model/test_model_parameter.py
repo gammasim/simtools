@@ -216,7 +216,9 @@ def test_change_parameter(telescope_model_lst):
 
 def test_change_multiple_parameters_from_file(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
-    mocker_gen = mocker.patch("simtools.utils.general.collect_data_from_file", return_value={})
+    mocker_gen = mocker.patch(
+        "simtools.utils.general.collect_data_from_file_or_dict", return_value={}
+    )
     telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
     mocker_gen.assert_called_once()
 

@@ -18,8 +18,8 @@ from eventio.search_utils import yield_toplevel_of_type
 from eventio.simtel import MCRunHeader
 
 __all__ = [
-    "HistogramIdNotFoundError",
     "InconsistentHistogramFormatError",
+    "HistogramIdNotFoundError",
     "SimtelIOHistogram",
 ]
 

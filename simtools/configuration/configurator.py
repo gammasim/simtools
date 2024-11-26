@@ -281,8 +281,8 @@ class Configurator:
         """
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
-            _config_dict = (
-                gen.collect_data_from_file(file_name=config_file) if config_file else None
+            _config_dict = gen.collect_data_from_file_or_dict(
+                file_name=config_file, in_dict=None, allow_empty=True
             )
             # yaml parser adds \n in multiline strings, remove them
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
@@ -385,7 +385,7 @@ class Configurator:
             for key, value in input_var.items():
                 if isinstance(value, list):
                     _list_args.append("--" + key)
-                    _list_args.extend(map(str, value))
+                    _list_args += value
                 elif isinstance(value, u.Quantity) or (
                     not isinstance(value, bool) and value is not None and len(str(value)) > 0
                 ):

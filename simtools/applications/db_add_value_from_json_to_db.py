@@ -77,7 +77,9 @@ def main():  # noqa: D103
 
     if gen.user_confirm():
         for file_to_insert_now in files_to_insert:
-            par_dict = gen.collect_data_from_file(file_name=file_to_insert_now)
+            par_dict = gen.collect_data_from_file_or_dict(
+                file_name=file_to_insert_now, in_dict=None
+            )
             logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
             db.add_new_parameter(
                 db_name=db_config["db_simulation_model"],

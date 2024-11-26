@@ -83,7 +83,7 @@ def update_model_parameters_from_repo(
         _tmp_par = {}
         _parameter_file = gen.join_url_or_path(_file_path, f"{key}.json")
         try:
-            _tmp_par = gen.collect_data_from_file(file_name=_parameter_file)
+            _tmp_par = gen.collect_data_from_file_or_dict(file_name=_parameter_file, in_dict=None)
         except (FileNotFoundError, gen.InvalidConfigDataError):
             # use design array element model in case there is no model defined for this
             #  array element ID. Accept errors, as not all parameters are defined in the repository
@@ -94,8 +94,8 @@ def update_model_parameters_from_repo(
                     model_version,
                     _design_model,
                 )
-                _tmp_par = gen.collect_data_from_file(
-                    file_name=gen.join_url_or_path(_file_path, f"{key}.json")
+                _tmp_par = gen.collect_data_from_file_or_dict(
+                    file_name=gen.join_url_or_path(_file_path, f"{key}.json"), in_dict=None
                 )
             except (FileNotFoundError, TypeError, gen.InvalidConfigDataError):
                 pass

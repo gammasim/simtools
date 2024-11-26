@@ -22,36 +22,52 @@ test_data = "Test data"
 
 
 def test_collect_dict_data(io_handler, caplog) -> None:
+    in_dict = {"k1": 2, "k2": "bla"}
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml")
     if not Path(test_yaml_file).exists():
         with open(test_yaml_file, "w") as output:
             yaml.dump(dict_for_yaml, output, sort_keys=False)
 
-    d2 = gen.collect_data_from_file(test_yaml_file)
+    d1 = gen.collect_data_from_file_or_dict(None, in_dict)
+    assert "k2" in d1.keys()
+    assert d1["k1"] == 2
+
+    d2 = gen.collect_data_from_file_or_dict(test_yaml_file, None)
     assert "k3" in d2.keys()
     assert d2["k4"] == ["bla", 2]
 
-    _lines = gen.collect_data_from_file("tests/resources/test_file.list")
+    with caplog.at_level("WARNING"):
+        d3 = gen.collect_data_from_file_or_dict(test_yaml_file, in_dict)
+    assert d3 == d2
+    assert gen.collect_data_from_file_or_dict(None, None, allow_empty=True) is None
+    assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
+
+    with caplog.at_level("WARNING"):
+        with pytest.raises(AttributeError):
+            gen.collect_data_from_file_or_dict(None, None, allow_empty=False)
+    assert "Input has not been provided (neither by file, nor by dict)" in caplog.text
+
+    _lines = gen.collect_data_from_file_or_dict("tests/resources/test_file.list", None)
     assert len(_lines) == 2
 
     # astropy-type yaml file
     _file = "tests/resources/corsikaConfigTest_astropy_headers.yml"
-    _dict = gen.collect_data_from_file(_file)
+    _dict = gen.collect_data_from_file_or_dict(_file, None)
     assert isinstance(_dict, dict)
     assert len(_dict) > 0
 
 
 def test_collect_dict_from_url(io_handler) -> None:
     _file = "tests/resources/num_gains.schema.yml"
-    _reference_dict = gen.collect_data_from_file(_file)
+    _reference_dict = gen.collect_data_from_file_or_dict(_file, None)
 
     _url = url_simtools
     _url_dict = gen.collect_data_from_http(_url + _file)
 
     assert _reference_dict == _url_dict
 
-    _dict = gen.collect_data_from_file(_url + _file)
+    _dict = gen.collect_data_from_file_or_dict(_url + _file, None)
     assert isinstance(_dict, dict)
     assert len(_dict) > 0
 
@@ -346,7 +362,7 @@ def test_is_url():
 
 def test_collect_data_dict_from_json():
     _file = "tests/resources/reference_point_altitude.json"
-    data = gen.collect_data_from_file(_file)
+    data = gen.collect_data_from_file_or_dict(_file, None)
     assert len(data) == 6
     assert data["unit"] == "m"
 
