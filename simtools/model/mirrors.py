@@ -1,6 +1,7 @@
 """Definition and modeling of mirror panels."""
 
 import logging
+from pathlib import Path
 
 import astropy.io.ascii
 import astropy.units as u
@@ -20,13 +21,13 @@ class Mirrors:
 
     Parameters
     ----------
-    mirror_list_file: str
-        mirror list in sim_telarray or ecsv format (with panel focal length only).
-    parameters: dict
+    mirror_list_file: Union[str, Path]
+        Mirror list in sim_telarray or ecsv format (with panel focal length only).
+    parameters: dict, optional
         Dictionary of parameters from the database.
     """
 
-    def __init__(self, mirror_list_file, parameters=None):
+    def __init__(self, mirror_list_file: str | Path, parameters: dict | None = None):
         """Initialize Mirrors."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Mirrors Init")
@@ -180,7 +181,7 @@ class Mirrors:
         self._logger.debug(f"Mirror diameter = {self.mirror_diameter}")
         self._logger.debug(f"Number of Mirrors = {self.number_of_mirrors}")
 
-    def get_single_mirror_parameters(self, number):
+    def get_single_mirror_parameters(self, number: int) -> tuple:
         """
         Get parameters for a single mirror given by number.
 
@@ -191,7 +192,8 @@ class Mirrors:
 
         Returns
         -------
-        (pos_x, pos_y, mirror_diameter, focal_length, shape_type): tuple of float
+        tuple
+            (pos_x, pos_y, mirror_diameter, focal_length, shape_type): tuple of float
             X, Y positions, mirror_diameter, focal length and shape_type.
         """
         mask = self.mirror_table["mirror_panel_id"] == number
