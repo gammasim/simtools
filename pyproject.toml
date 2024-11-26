@@ -294,7 +294,7 @@ name = "New Features"
 showcontent = true
 
 [tool.towncrier.fragment.bugfix]
-name = "Bug Fixes"
+name = "Bugfixes"
 showcontent = true
 
 [tool.towncrier.fragment.api]
