@@ -76,6 +76,7 @@ See the [developer's guide](https://gammasim.github.io/simtools/developer-guide/
 
 - Raul R Prado (DESY)
 - Orel Gueta (DESY)
+- Eshita Joshi (DESY)
 - Tobias Kleiner (DESY)
 - Victor B. Martins (DESY)
 - Gernot Maier (DESY)
