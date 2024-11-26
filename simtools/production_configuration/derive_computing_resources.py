@@ -17,7 +17,8 @@ class ResourceEstimator:
     Attributes
     ----------
     grid_point : dict
-        Dictionary containing parameters such as azimuth, elevation, and night sky background.
+        Dictionary containing parameters such as energy (TeV), azimuth (deg),
+        zenith (deg), and night sky background.
     simulation_params : dict
         Dictionary containing simulation parameters, including the number of events and site.
     existing_data : list of dict, optional
@@ -42,23 +43,7 @@ class ResourceEstimator:
         existing_data: list[dict] | None = None,
         lookup_file: str = "production_resource_estimates.yaml",
     ):
-        """
-        Initialize the resource estimator.
-
-        Initialize with grid point parameters,
-        simulation parameters, and optional existing data.
-
-        Parameters
-        ----------
-        grid_point : dict
-            Dictionary containing grid point parameters such as azimuth,
-              elevation, and night sky background.
-        simulation_params : dict
-            Dictionary containing simulation parameters, including the number of events and site.
-        existing_data : list of dict, optional
-            List of dictionaries with historical data of compute and storage
-              resources for existing simulations.
-        """
+        """Initialize the resource estimator."""
         self.grid_point = grid_point
         self.simulation_params = simulation_params
         self.existing_data = existing_data or []
