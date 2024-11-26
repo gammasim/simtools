@@ -3,18 +3,18 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
+import simtools.utils.general as gen
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
-from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 PATH_FITS = "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
 
 
 @pytest.fixture
 def metric():
-    return load_metrics("tests/resources/production_simulation_config_metrics.yaml")
+    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yaml")
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def mock_statistical_error_evaluator():
             "uncertainties": np.array([0.01]),
         },
         "error_sig_eff_gh": 0.02,
-        "error_energy_estimate_bdt_reg_tree": 0.2,
+        "energy_estimate": 0.2,
         "error_gamma_ray_psf": 0.01,
         "error_image_template_methods": 0.05,
     }
@@ -52,14 +52,14 @@ def mock_statistical_error_evaluator():
 
 def test_initialization(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 0.0, "elevation": 0.0}
-    config = SimulationConfig(grid_point, "A", "high_precision", PATH_FITS, "On-source")
+    config = SimulationConfig(grid_point, "A", "high_precision", PATH_FITS, "point-like")
     config.evaluator = mock_statistical_error_evaluator
 
     assert config.grid_point == grid_point
     assert config.ctao_data_level == "A"
     assert config.science_case == "high_precision"
     assert config.file_path == PATH_FITS
-    assert config.file_type == "On-source"
+    assert config.file_type == "point-like"
 
 
 def test_configure_simulation(mock_statistical_error_evaluator):
@@ -69,7 +69,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
             "target_error": {"value": 0.1, "unit": "dimensionless"},
             "valid_range": {"value": [0.04, 200], "unit": "TeV"},
         },
-        "error_energy_estimate_bdt_reg_tree": {
+        "energy_estimate": {
             "target_error": {"value": 0.2, "unit": "dimensionless"},
             "valid_range": {"value": [0.04, 200], "unit": "TeV"},
         },
@@ -84,7 +84,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
 
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 45.0, "elevation": 60.0}
-    config = SimulationConfig(grid_point, "C", "low_precision", PATH_FITS, "On-source")
+    config = SimulationConfig(grid_point, "C", "low_precision", PATH_FITS, "point-like")
     config.evaluator = mock_statistical_error_evaluator
 
     # Mocking the method calculate_core_scatter_area
@@ -116,7 +116,7 @@ def test_edge_cases(mock_statistical_error_evaluator, metric):
         ctao_data_level="A",
         science_case="high_precision",
         file_path=PATH_FITS,
-        file_type="On-source",
+        file_type="point-like",
         metrics=metric,
     )
     config.evaluator = mock_statistical_error_evaluator

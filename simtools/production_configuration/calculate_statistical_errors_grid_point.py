@@ -1,10 +1,10 @@
 """
-Provides functionality to evaluate statistical errors from dl2_mc_events_file files.
+Provides functionality to evaluate statistical uncertainties from DL2 MC event files.
 
 Classes
 -------
 StatisticalErrorEvaluator
-    Handles error calculation for given dl2_mc_events_file files and specified metrics.
+    Handles error calculation for given DL2 MC event files and specified metrics.
 
 
 """
@@ -20,12 +20,12 @@ _logger = logging.getLogger(__name__)
 
 class StatisticalErrorEvaluator:
     """
-    Evaluates statistical errors from a dl2_mc_events_file file.
+    Evaluates statistical uncertainties from a DL2 MC event file.
 
     Parameters
     ----------
     file_path : str
-        Path to the dl2_mc_events_file file.
+        Path to the DL2 MC event file.
     file_type : str
         Type of the file, either 'point-like' or 'cone'.
     metrics : dict, optional
@@ -42,12 +42,12 @@ class StatisticalErrorEvaluator:
         grid_point: tuple[float, float, float, float, float] | None = None,
     ):
         """
-        Init the evaluator with a dl2_mc_events_file file, its type, and metrics to calculate.
+        Init the evaluator with a DL2 MC event file, its type, and metrics to calculate.
 
         Parameters
         ----------
         file_path : str
-            The path to the dl2_mc_events_file file.
+            The path to the DL2 MC event file.
         file_type : str
             The type of the file ('point-like' or 'cone').
         metrics : dict, optional
@@ -63,7 +63,7 @@ class StatisticalErrorEvaluator:
         self.data = self.load_data_from_file()
 
         self.uncertainty_effective_area = None
-        self.error_energy_estimate_bdt_reg_tree = None
+        self.energy_estimate = None
         self.sigma_energy = None
         self.delta_energy = None
 
@@ -72,12 +72,12 @@ class StatisticalErrorEvaluator:
 
     def load_data_from_file(self):
         """
-        Load data from the dl2_mc_events_file file and return dictionaries with units.
+        Load data from the DL2 MC event file and return dictionaries with units.
 
         Returns
         -------
         dict
-            Dictionary containing data from the dl2_mc_events_file file with units.
+            Dictionary containing data from the DL2 MC event file with units.
         """
         data = {}
         try:
@@ -127,7 +127,7 @@ class StatisticalErrorEvaluator:
                     "core_range": core_range,
                 }
                 unique_azimuths = np.unique(events_data["PNT_AZ"]) * u.deg
-                unique_zeniths = np.unique(events_data["PNT_ALT"]) * u.deg
+                unique_zeniths = 90 * u.deg - np.unique(events_data["PNT_ALT"]) * u.deg
                 if self.grid_point is None:
                     _logger.info(f"Unique azimuths: {unique_azimuths}")
                     _logger.info(f"Unique zeniths: {unique_zeniths}")
@@ -145,10 +145,9 @@ class StatisticalErrorEvaluator:
                             0 * u.deg,
                         )  # Initialize grid point with azimuth and zenith
                     else:
-                        _logger.warning(
-                            "Multiple unique values found for azimuth or zenith. "
-                            "The grid point will be set based on the first unique values."
-                        )
+                        msg = "Multiple unique values found for azimuth or zenith."
+                        _logger.error(msg)
+                        raise ValueError(msg)
                 else:
                     _logger.warning(
                         f"Grid point already set to: {self.grid_point}. "
@@ -312,7 +311,7 @@ class StatisticalErrorEvaluator:
         )
         return {"relative_errors": relative_errors}
 
-    def calculate_error_energy_estimate_bdt_reg_tree(self):
+    def calculate_energy_estimate(self):
         """
         Calculate the uncertainties in energy estimation.
 
@@ -382,22 +381,19 @@ class StatisticalErrorEvaluator:
                     f"Reference: {ref_value:.3f}"
                 )
 
-        if "error_energy_estimate_bdt_reg_tree" in self.metrics:
-            self.error_energy_estimate_bdt_reg_tree, self.sigma_energy, self.delta_energy = (
-                self.calculate_error_energy_estimate_bdt_reg_tree()
+        if "energy_estimate" in self.metrics:
+            self.energy_estimate, self.sigma_energy, self.delta_energy = (
+                self.calculate_energy_estimate()
             )
-            ref_value = self.metrics.get("error_energy_estimate_bdt_reg_tree", {}).get(
-                "target_error"
-            )["value"]
+            ref_value = self.metrics.get("energy_estimate", {}).get("target_error")["value"]
             _logger.info(
-                f"Energy Estimate Error: {self.error_energy_estimate_bdt_reg_tree:.3f}, "
-                f"Reference: {ref_value:.3f}"
+                f"Energy Estimate Error: {self.energy_estimate:.3f}, Reference: {ref_value:.3f}"
             )
         else:
             raise ValueError("Invalid metric specified.")
         self.metric_results = {
             "uncertainty_effective_area": self.uncertainty_effective_area,
-            "error_energy_estimate_bdt_reg_tree": self.error_energy_estimate_bdt_reg_tree,
+            "energy_estimate": self.energy_estimate,
         }
         return self.metric_results
 
@@ -418,7 +414,7 @@ class StatisticalErrorEvaluator:
 
     def calculate_overall_metric(self, metric="average"):
         """
-        Calculate an overall metric for the statistical errors.
+        Calculate an overall metric for the statistical uncertainties.
 
         Parameters
         ----------

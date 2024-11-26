@@ -1,5 +1,5 @@
 """
-Module defines the EventScaler class.
+Calculate the scaled number of events based on metrics.
 
 Module for scaling events based on statistical error metrics. Contains the `EventScaler` class,
 which scales the number of events for both the entire dataset and specific grid points.

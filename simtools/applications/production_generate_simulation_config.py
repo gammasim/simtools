@@ -22,7 +22,7 @@ science_case (str, required)
 file_path (str, required)
     Path to file with MC events at CTAO DL2 data level. Used for statistical uncertainty evaluation.
 file_type (str, required)
-    Type of the dl2_mc_events_file file ('point-like' or 'cone').
+    Type of the DL2 MC event file ('point-like' or 'cone').
 metrics (str, optional)
     Path to a YAML file containing metrics for evaluation.
 site (str, required)
@@ -35,9 +35,10 @@ To run the simulation configuration, execute the script as follows:
 .. code-block:: console
 
     simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \
-      --nsb 0.3 --ctao_data_level "A" --science_case "high_precision" \
-      --file_path "path/to/fits_file.fits" --file_type "On-source" \
-      --metrics_file "path/to/metrics.yaml" --site North
+        --nsb 0.3 --ctao_data_level "A" --science_case "high_precision" \
+        --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \
+        --file_type "point-like"    \
+        --metrics_file tests/resources/production_simulation_config_metrics.yaml --site North
 
 The output will show the configured simulation parameters.
 """
@@ -54,7 +55,6 @@ from simtools.io_operations import io_handler
 from simtools.production_configuration.generate_simulation_config import (
     SimulationConfig,
 )
-from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 
 def _parse(label):
@@ -84,7 +84,7 @@ def _parse(label):
         "--file_type",
         type=str,
         required=True,
-        help="Type of the dl2_mc_events_file file ('point-like' or 'cone').",
+        help="Type of the DL2 MC event file ('point-like' or 'cone').",
     )
     config.parser.add_argument(
         "--metrics_file",
@@ -125,7 +125,9 @@ def main():
         "night_sky_background": args_dict["nsb"],
     }
 
-    metrics = load_metrics(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    metrics = (
+        gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    )
 
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,

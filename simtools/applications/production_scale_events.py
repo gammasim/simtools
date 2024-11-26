@@ -3,14 +3,14 @@
 r"""
 Application to run the StatisticalErrorEvaluator and interpolate results.
 
-This application evaluates statistical errors from dl2_mc_events_file files
+This application evaluates statistical uncertainties from DL2 MC event files
 based on input parameters like zenith angles and offsets, and can perform interpolation
 for a specified grid point.
 
 Command line arguments
 ----------------------
 base_path (str, required)
-    Path to the directory containing the dl2_mc_events_file file for interpolation.
+    Path to the directory containing the DL2 MC event file for interpolation.
 zeniths (list of int, required)
     List of zenith angles to consider.
 offsets (list of int, required)
@@ -22,7 +22,7 @@ query_point (list of int, optional)
 
 Example
 -------
-To evaluate statistical errors and perform interpolation, run the script from the command line:
+To evaluate statistical uncertainties and perform interpolation, run the command line script:
 
 .. code-block:: console
 
@@ -42,6 +42,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.io_operations import io_handler
@@ -49,7 +50,6 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
-from simtools.production_configuration.production_configuration_helper_functions import load_metrics
 
 
 def _parse(label, description):
@@ -67,7 +67,7 @@ def _parse(label, description):
         "--base_path",
         type=str,
         required=True,
-        help="Path to the dl2_mc_events_file files for interpolation.",
+        help="Path to the DL2 MC event files for interpolation.",
     )
     config.parser.add_argument(
         "--zeniths", nargs="+", type=CommandLineParser.zenith_angle, help="List of zenith angles."
@@ -108,7 +108,7 @@ def main():
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label,
-        "Evaluate statistical errors from dl2_mc_events_file files and interpolate results.",
+        "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
     )
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -119,7 +119,9 @@ def main():
 
     evaluator_instances = []
 
-    metrics = load_metrics(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    metrics = (
+        gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    )
 
     if args_dict["base_path"] and args_dict["zeniths"] and args_dict["offsets"]:
         for zenith in args_dict["zeniths"]:

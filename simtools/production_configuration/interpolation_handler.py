@@ -1,7 +1,6 @@
 """Interpolates between instances of StatisticalErrorEvaluator using EventScaler."""
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import griddata
 
@@ -101,7 +100,6 @@ class InterpolationHandler:
         np.ndarray
             Interpolated values at the query points.
         """
-        # Remove flat dimensions from the normalized grid and query points
         reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(self.grid_points)
         reduced_query_points = query_points[:, non_flat_mask]
 
@@ -168,6 +166,8 @@ class InterpolationHandler:
         evaluator : StatisticalErrorEvaluator
             The evaluator for which to plot the comparison.
         """
+        import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+
         midpoints = 0.5 * (evaluator.data["bin_edges_high"] + evaluator.data["bin_edges_low"])
 
         self.grid_points = np.column_stack(
