@@ -52,7 +52,7 @@ class Camera:
         self.pixels = self._rotate_pixels(self.pixels)
 
         # Initialize an empty list of neighbors, to be calculated only when necessary.
-        self._neighbours = None
+        self._neighbors = None
 
         # Initialize an empty list of edge pixels, to be calculated only when necessary.
         self._edge_pixel_indices = None
@@ -374,9 +374,9 @@ class Camera:
         return fov, average_edge_distance
 
     @staticmethod
-    def _find_neighbours(x_pos, y_pos, radius):
+    def _find_neighbors(x_pos, y_pos, radius):
         """
-        Use a KD-Tree to quickly find nearest neighbours.
+        Use a KD-Tree to quickly find nearest neighbors.
 
         This applies to e.g., of the pixels in a camera or mirror facets.
 
@@ -387,29 +387,29 @@ class Camera:
         y_pos : numpy.array_like
             y position of each e.g., pixel
         radius : float
-            radius to consider neighbour it should be slightly larger than the pixel diameter or \
+            radius to consider neighbor it should be slightly larger than the pixel diameter or \
             mirror facet.
 
         Returns
         -------
-        neighbours: numpy.array_like
-            Array of neighbour indices in a list for each e.g., pixel.
+        neighbors: numpy.array_like
+            Array of neighbor indices in a list for each e.g., pixel.
         """
         points = np.array([x_pos, y_pos]).T
         indices = np.arange(len(x_pos))
         kdtree = KDTree(points)
-        neighbours = [kdtree.query_ball_point(p, r=radius) for p in points]
+        neighbors = [kdtree.query_ball_point(p, r=radius) for p in points]
 
-        for neighbour_now, index_now in zip(neighbours, indices):
-            neighbour_now.remove(index_now)  # get rid of the pixel or mirror itself
+        for neighbor_now, index_now in zip(neighbors, indices):
+            neighbor_now.remove(index_now)  # get rid of the pixel or mirror itself
 
-        return neighbours
+        return neighbors
 
-    def _find_adjacent_neighbour_pixels(self, x_pos, y_pos, radius, row_coloumn_dist):
+    def _find_adjacent_neighbor_pixels(self, x_pos, y_pos, radius, row_column_dist):
         """
-        Find adjacent neighbour pixels in cameras with square pixels.
+        Find adjacent neighbor pixels in cameras with square pixels.
 
-        Only directly adjacent neighbours are allowed, no diagonals.
+        Only directly adjacent neighbors are allowed, no diagonals.
 
         Parameters
         ----------
@@ -418,51 +418,51 @@ class Camera:
         y_pos : numpy.array_like
             y position of each pixel
         radius : float
-            Radius within which to find neighbours
-        row_coloumn_dist : float
+            Radius within which to find neighbors
+        row_column_dist : float
             Distance to consider for row/column adjacency.
             Should be around 20% of the pixel diameter.
 
         Returns
         -------
         list of lists
-            Array of neighbour indices in a list for each pixel
+            Array of neighbor indices in a list for each pixel
         """
-        # First find the neighbours with the usual method and the original radius
-        # which does not allow for diagonal neighbours.
-        neighbours = self._find_neighbours(x_pos, y_pos, radius)
+        # First find the neighbors with the usual method and the original radius
+        # which does not allow for diagonal neighbors.
+        neighbors = self._find_neighbors(x_pos, y_pos, radius)
 
-        for i_pix, nn in enumerate(neighbours):
+        for i_pix, nn in enumerate(neighbors):
             # Find pixels defined as edge pixels now
             if len(nn) < 4:
                 # Go over all other pixels and search for ones which are adjacent
                 # but further than sqrt(2) away
-                self._add_additional_neighbours(i_pix, nn, x_pos, y_pos, radius, row_coloumn_dist)
+                self._add_additional_neighbors(i_pix, nn, x_pos, y_pos, radius, row_column_dist)
 
-        return neighbours
+        return neighbors
 
-    def _add_additional_neighbours(self, i_pix, nn, x_pos, y_pos, radius, row_coloumn_dist):
+    def _add_additional_neighbors(self, i_pix, nn, x_pos, y_pos, radius, row_column_dist):
         """
-        Add neighbours for a given pixel if they are not already neighbours and are adjacent.
+        Add neighbors for a given pixel if they are not already neighbors and are adjacent.
 
         Parameters
         ----------
         i_pix : int
-            Index of the pixel to find neighbours for
+            Index of the pixel to find neighbors for
         nn : list
-            Current list of neighbours for the pixel
+            Current list of neighbors for the pixel
         x_pos : numpy.array_like
             x position of each pixel
         y_pos : numpy.array_like
             y position of each pixel
         radius : float
-            Radius within which to find neighbours
-        row_coloumn_dist : float
+            Radius within which to find neighbors
+        row_column_dist : float
             Distance to consider for row/column adjacency
         """
         for j_pix, _ in enumerate(x_pos):
             # No need to look at the pixel itself
-            # nor at any pixels already in the neighbours list
+            # nor at any pixels already in the neighbors list
             if j_pix != i_pix and j_pix not in nn:
                 dist = np.sqrt(
                     (x_pos[i_pix] - x_pos[j_pix]) ** 2 + (y_pos[i_pix] - y_pos[j_pix]) ** 2
@@ -472,16 +472,16 @@ class Camera:
                 # Need to increase the distance because of the curvature
                 # of the CHEC camera
                 if (
-                    abs(x_pos[i_pix] - x_pos[j_pix]) < row_coloumn_dist
-                    or abs(y_pos[i_pix] - y_pos[j_pix]) < row_coloumn_dist
+                    abs(x_pos[i_pix] - x_pos[j_pix]) < row_column_dist
+                    or abs(y_pos[i_pix] - y_pos[j_pix]) < row_column_dist
                 ) and dist < 1.2 * radius:
                     nn.append(j_pix)
 
-    def _calc_neighbour_pixels(self, pixels):
+    def _calc_neighbor_pixels(self, pixels):
         """
-        Find adjacent neighbour pixels in cameras with hexagonal or square pixels.
+        Find adjacent neighbor pixels in cameras with hexagonal or square pixels.
 
-        Only directly  adjacent neighbours are searched for, no diagonals.
+        Only directly  adjacent neighbors are searched for, no diagonals.
 
         Parameters
         ----------
@@ -490,13 +490,13 @@ class Camera:
 
         Returns
         -------
-        neighbours: numpy.array_like
-            Array of neighbour indices in a list for each pixel
+        neighbors: numpy.array_like
+            Array of neighbor indices in a list for each pixel
         """
-        self._logger.debug("Searching for neighbour pixels")
+        self._logger.debug("Searching for neighbor pixels")
 
         if pixels["pixel_shape"] == 1 or pixels["pixel_shape"] == 3:
-            self._neighbours = self._find_neighbours(
+            self._neighbors = self._find_neighbors(
                 pixels["x"],
                 pixels["y"],
                 self.PMT_NEIGHBOR_RADIUS_FACTOR * pixels["pixel_diameter"],
@@ -504,20 +504,20 @@ class Camera:
         elif pixels["pixel_shape"] == 2:
             # Distance increased by 40% to take into account gaps in the SiPM cameras
             # Pixels in the same row/column can be 20% shifted from one another
-            # Inside find_adjacent_neighbour_pixels the distance is increased
+            # Inside find_adjacent_neighbor_pixels the distance is increased
             # further for pixels in the same row/column to 1.68*diameter.
-            self._neighbours = self._find_adjacent_neighbour_pixels(
+            self._neighbors = self._find_adjacent_neighbor_pixels(
                 pixels["x"],
                 pixels["y"],
                 self.SIPM_NEIGHBOR_RADIUS_FACTOR * pixels["pixel_diameter"],
                 self.SIPM_ROW_COLUMN_DIST_FACTOR * pixels["pixel_diameter"],
             )
 
-        return self._neighbours
+        return self._neighbors
 
-    def get_neighbour_pixels(self, pixels=None):
+    def get_neighbor_pixels(self, pixels=None):
         """
-        Get a list of neighbour pixels by calling calc_neighbour_pixels() when necessary.
+        Get a list of neighbor pixels by calling calc_neighbor_pixels() when necessary.
 
         The purpose of this function is to ensure the calculation occurs only once and only when
         necessary.
@@ -529,17 +529,17 @@ class Camera:
 
         Returns
         -------
-        neighbours: numpy.array_like
-            Array of neighbour indices in a list for each pixel.
+        neighbors: numpy.array_like
+            Array of neighbor indices in a list for each pixel.
         """
-        if self._neighbours is None:
+        if self._neighbors is None:
             if pixels is None:
                 pixels = self.pixels
-            return self._calc_neighbour_pixels(pixels)
+            return self._calc_neighbor_pixels(pixels)
 
-        return self._neighbours
+        return self._neighbors
 
-    def _calc_edge_pixels(self, pixels, neighbours):
+    def _calc_edge_pixels(self, pixels, neighbors):
         """
         Find the edge pixels of the camera.
 
@@ -547,8 +547,8 @@ class Camera:
         ----------
         pixels: dictionary
             The dictionary produced by the read_pixel_list method of this class.
-        neighbours: numpy.array_like
-            Array of neighbour indices in a list for each pixel.
+        neighbors: numpy.array_like
+            Array of neighbor indices in a list for each pixel.
 
         Returns
         -------
@@ -561,10 +561,10 @@ class Camera:
         def is_edge_pixel(i_pix):
             pixel_shape = pixels["pixel_shape"]
             pix_on = pixels["pix_on"][i_pix]
-            num_neighbours = len(neighbours[i_pix])
+            num_neighbors = len(neighbors[i_pix])
 
-            shape_condition = (pixel_shape in [1, 3] and num_neighbours < 6) or (
-                pixel_shape == 2 and num_neighbours < 4
+            shape_condition = (pixel_shape in [1, 3] and num_neighbors < 6) or (
+                pixel_shape == 2 and num_neighbors < 4
             )
             return pix_on and shape_condition
 
@@ -574,7 +574,7 @@ class Camera:
 
         return edge_pixel_indices
 
-    def get_edge_pixels(self, pixels=None, neighbours=None):
+    def get_edge_pixels(self, pixels=None, neighbors=None):
         """
         Get the indices of the edge pixels of the camera.
 
@@ -582,8 +582,8 @@ class Camera:
         ----------
         pixels: dict
             The dictionary produced by the read_pixel_list method of this class.
-        neighbours: numpy.array_like
-            Array of neighbour indices in a list for each pixel.
+        neighbors: numpy.array_like
+            Array of neighbor indices in a list for each pixel.
 
         Returns
         -------
@@ -593,8 +593,8 @@ class Camera:
         if self._edge_pixel_indices is None:
             if pixels is None:
                 pixels = self.pixels
-            if neighbours is None:
-                neighbours = self.get_neighbour_pixels()
-            return self._calc_edge_pixels(pixels, neighbours)
+            if neighbors is None:
+                neighbors = self.get_neighbor_pixels()
+            return self._calc_edge_pixels(pixels, neighbors)
 
         return self._edge_pixel_indices

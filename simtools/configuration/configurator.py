@@ -385,7 +385,7 @@ class Configurator:
             for key, value in input_var.items():
                 if isinstance(value, list):
                     _list_args.append("--" + key)
-                    _list_args += value
+                    _list_args.extend(map(str, value))
                 elif isinstance(value, u.Quantity) or (
                     not isinstance(value, bool) and value is not None and len(str(value)) > 0
                 ):
