@@ -14,7 +14,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Improve primary particle API and validate consistency of user input. ([#1127](https://github.com/gammasim/simtools/pull/1127))
 - Refactor old style configuration of ray-tracing tools. ([#1142](https://github.com/gammasim/simtools/pull/1142))
 
-### Bug Fixes
+### Bugfixes
 
 - Fix triggering of telescopes in light emission package. ([#1128](https://github.com/gammasim/simtools/pull/1128))
 
