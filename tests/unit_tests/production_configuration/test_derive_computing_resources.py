@@ -197,7 +197,7 @@ def test_guess_resources_per_event_cases(sample_data, file_data, monkeypatch):
     monkeypatch.setattr(VALIDATE_SITE_NAME, lambda x: "example_site")
 
     # Case 1: zenith less than the minimum zenith in the lookup table
-    grid_point_config["zenith"] = 20.0
+    grid_point_config["zenith"] = 10.0
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
@@ -212,7 +212,7 @@ def test_guess_resources_per_event_cases(sample_data, file_data, monkeypatch):
     assert resources == expected_resources
 
     # Case 2: zenith greater than the maximum zenith in the lookup table
-    grid_point_config["zenith"] = 50.0
+    grid_point_config["zenith"] = 70.0
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
@@ -227,7 +227,7 @@ def test_guess_resources_per_event_cases(sample_data, file_data, monkeypatch):
     assert resources == expected_resources
 
     # Case 3: zenith within the range of the lookup table
-    grid_point_config["zenith"] = 40.0
+    grid_point_config["zenith"] = 30.0
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
@@ -235,8 +235,8 @@ def test_guess_resources_per_event_cases(sample_data, file_data, monkeypatch):
         lookup_file=DUMMY_YAML_FILE,
     )
     expected_resources = {
-        "compute": u.Quantity(1500.0, u.hour),
-        "storage": u.Quantity(150.0, u.GB),
+        "compute": u.Quantity(1000.0, u.hour),
+        "storage": u.Quantity(100.0, u.GB),
     }
     resources = estimator.guess_resources_per_event(1e9)
     assert resources == expected_resources
