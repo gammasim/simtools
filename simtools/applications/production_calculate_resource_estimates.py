@@ -4,15 +4,15 @@ r"""
 Estimate the required computing resources for a simulation based on command-line arguments.
 
 This application calculates compute and storage resources based on input parameters
-such as azimuth, elevation, night sky background, and the number of events.
+such as azimuth, zenith, night sky background, and the number of events.
 The user can also provide a file containing historical data for more accurate estimation.
 
 Command line arguments
 ----------------------
 azimuth (float, required)
     Azimuth angle in degrees.
-elevation (float, required)
-    Elevation angle in degrees.
+zenith (float, required)
+    zenith angle in degrees.
 nsb (float, required)
     Night sky background value.
 site (str, required)
@@ -30,7 +30,7 @@ To estimate resources, run the script from the command line as follows:
 
 .. code-block:: console
 
-    simtools-production-calculate-resource-estimates --azimuth 60.0 --elevation 45.0 \
+    simtools-production-calculate-resource-estimates --azimuth 60.0 --zenith 45.0 \
       --nsb 0.3 --site North --number_of_events 1e9 \
       --lookup_file tests/resources/production_resource_estimates.yaml
 
@@ -60,7 +60,7 @@ def _parse(label):
         "--azimuth", type=float, required=True, help="Azimuth angle in degrees."
     )
     config.parser.add_argument(
-        "--elevation", type=float, required=True, help="Elevation angle in degrees."
+        "--zenith", type=float, required=True, help="zenith angle in degrees."
     )
     config.parser.add_argument(
         "--nsb", type=float, required=True, help="Night sky background in units of 1/(sr*ns*cm**2)."
@@ -126,7 +126,7 @@ def main():
 
     grid_point_config = {
         "azimuth": args["azimuth"],
-        "elevation": args["elevation"],
+        "zenith": args["zenith"],
         "night_sky_background": args["nsb"],
     }
 
