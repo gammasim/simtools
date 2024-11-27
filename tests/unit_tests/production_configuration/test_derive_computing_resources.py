@@ -46,14 +46,14 @@ def sample_data():
     """Fixture to provide sample data for testing."""
     grid_point_config = {
         "azimuth": 60.0,
-        "elevation": 45.0,
+        "zenith": 45.0,
         "night_sky_background": 0.3,
     }
     simulation_params = {"number_of_events": 1e9, "site": "example_site"}
     existing_data = [
         {
             "azimuth": 60.0,
-            "elevation": 45.0,
+            "zenith": 45.0,
             "nsb": 0.3,
             "compute_total": {
                 "value": 5000.0,
@@ -191,13 +191,13 @@ def test_interpolate_resources(sample_data, file_data, monkeypatch):
 
 @pytest.mark.parametrize("file_data", [FILE_DATA], ids=["example_site_lookup_table"])
 def test_guess_resources_per_event_cases(sample_data, file_data, monkeypatch):
-    """Test resource estimation based on guessed resources per event for different elevation cases."""
+    """Test resource estimation based on guessed resources per event for different zenith cases."""
     grid_point_config, simulation_params, _, lookup_table = sample_data
     monkeypatch.setattr(BUILTINS_OPEN, mock_open(read_data=file_data))
     monkeypatch.setattr(VALIDATE_SITE_NAME, lambda x: "example_site")
 
-    # Case 1: Elevation less than the minimum elevation in the lookup table
-    grid_point_config["elevation"] = 20.0
+    # Case 1: zenith less than the minimum zenith in the lookup table
+    grid_point_config["zenith"] = 20.0
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
@@ -211,8 +211,8 @@ def test_guess_resources_per_event_cases(sample_data, file_data, monkeypatch):
     resources = estimator.guess_resources_per_event(1e9)
     assert resources == expected_resources
 
-    # Case 2: Elevation greater than the maximum elevation in the lookup table
-    grid_point_config["elevation"] = 50.0
+    # Case 2: zenith greater than the maximum zenith in the lookup table
+    grid_point_config["zenith"] = 50.0
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
@@ -226,8 +226,8 @@ def test_guess_resources_per_event_cases(sample_data, file_data, monkeypatch):
     resources = estimator.guess_resources_per_event(1e9)
     assert resources == expected_resources
 
-    # Case 3: Elevation within the range of the lookup table
-    grid_point_config["elevation"] = 40.0
+    # Case 3: zenith within the range of the lookup table
+    grid_point_config["zenith"] = 40.0
     estimator = ResourceEstimator(
         grid_point=grid_point_config,
         simulation_params=simulation_params,
