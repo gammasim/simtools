@@ -154,7 +154,7 @@ def check_and_log_overwrite(config_parser, logger):
     Returns
     -------
     bool
-        True if the hdf5 file exists and should be overwritten, False otherwise.
+        True if the hdf5 file exists and should be overwritten.
     """
     if Path(f"{config_parser['output_file_name']}.hdf5").exists() and config_parser["hdf5"]:
         msg = (

@@ -216,7 +216,7 @@ class TelescopeModel(ModelParameter):
         Returns
         -------
         bool:
-            True if the file is a 2D map type, False otherwise.
+            True if the file is a 2D map type.
         """
         try:
             file_name = self.get_parameter_value(par)
