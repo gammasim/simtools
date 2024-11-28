@@ -27,25 +27,25 @@ class ArrayModel:
         MongoDB configuration.
     model_version: str
         Model version.
-    label: str
+    label: str, optional
         Instance label. Used for output file naming.
-    site: str
+    site: str, optional
         Site name.
-    layout_name: str
+    layout_name: str, optional
         Layout name.
-    array_elements: str, Path, list
+    array_elements: Union[str, Path, List[str]], optional
         Array element definitions (list of array element or path to file with
         the array element positions).
     """
 
     def __init__(
         self,
-        mongo_db_config,
-        model_version,
-        label=None,
-        site=None,
-        layout_name=None,
-        array_elements=None,
+        mongo_db_config: dict,
+        model_version: str,
+        label: str | None = None,
+        site: str | None = None,
+        layout_name: str | None = None,
+        array_elements: str | Path | list[str] | None = None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class ArrayModel:
         self.mongo_db_config = mongo_db_config
         self.model_version = model_version
         self.label = label
-        self.layout_name = layout_name if layout_name else None
+        self.layout_name = layout_name
         self._config_file_path = None
         self._config_file_directory = None
         self.io_handler = io_handler.IOHandler()
@@ -66,7 +66,7 @@ class ArrayModel:
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
 
-    def _initialize(self, site, array_elements_config):
+    def _initialize(self, site: str, array_elements_config: str | Path | list[str]):
         """
         Initialize ArrayModel taking different configuration options into account.
 
@@ -74,7 +74,7 @@ class ArrayModel:
         ----------
         site: str
             Site name.
-        array_elements_config: str, Path, list
+        array_elements_config: Union[str, Path, List[str]]
             Array element definitions.
 
         Returns
@@ -108,7 +108,7 @@ class ArrayModel:
             array_elements = self._get_array_elements_from_list(
                 site_model.get_array_elements_for_layout(self.layout_name)
             )
-        if array_elements == {}:
+        if not array_elements:
             raise ValueError(
                 "No array elements found. "
                 "Possibly missing valid layout name or missing telescope list."
@@ -117,7 +117,7 @@ class ArrayModel:
         return array_elements, site_model, telescope_model
 
     @property
-    def number_of_telescopes(self):
+    def number_of_telescopes(self) -> int:
         """
         Return the number of telescopes.
 
@@ -129,7 +129,7 @@ class ArrayModel:
         return len(self.telescope_model)
 
     @property
-    def site(self):
+    def site(self) -> str:
         """
         Return site.
 
@@ -140,7 +140,7 @@ class ArrayModel:
         """
         return self.site_model.site
 
-    def _build_telescope_models(self, site_model, array_elements):
+    def _build_telescope_models(self, site_model: SiteModel, array_elements: dict) -> dict:
         """
         Build the the telescope models for all telescopes of this array.
 
@@ -150,7 +150,7 @@ class ArrayModel:
 
         Parameters
         ----------
-        site_model: str
+        site_model: SiteModel
             Site model.
         array_elements: dict
             Dict with array elements.
@@ -233,7 +233,7 @@ class ArrayModel:
         if not self._array_model_file_exported:
             self.export_simtel_array_config_file()
 
-    def get_config_file(self):
+    def get_config_file(self) -> Path:
         """
         Return the path of the array config file for sim_telarray.
 
@@ -247,7 +247,7 @@ class ArrayModel:
         self.export_all_simtel_config_files()
         return self._config_file_path
 
-    def get_config_directory(self):
+    def get_config_directory(self) -> Path:
         """
         Get the path of the array config directory for sim_telarray.
 
@@ -260,7 +260,9 @@ class ArrayModel:
             self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
         return self._config_file_directory
 
-    def _load_array_element_positions_from_file(self, array_elements_file, site):
+    def _load_array_element_positions_from_file(
+        self, array_elements_file: str | Path, site: str
+    ) -> dict:
         """
         Load array element (e.g. telescope) positions from a file into a dict.
 
@@ -268,7 +270,7 @@ class ArrayModel:
 
         Parameters
         ----------
-        array_elements_file: str
+        array_elements_file: Union[str, Path]
             Path to the file with the array element positions.
         site: str
             Site name.
@@ -287,7 +289,9 @@ class ArrayModel:
             for row in table
         }
 
-    def _get_telescope_position_parameter(self, telescope_name, site, x, y, z):
+    def _get_telescope_position_parameter(
+        self, telescope_name: str, site: str, x: u.Quantity, y: u.Quantity, z: u.Quantity
+    ) -> dict:
         """
         Return dictionary with telescope position parameters (following DB model database format).
 
@@ -323,7 +327,7 @@ class ArrayModel:
             "file": False,
         }
 
-    def _get_array_elements_from_list(self, array_elements_list):
+    def _get_array_elements_from_list(self, array_elements_list: list[str]) -> dict:
         """
         Return dictionary with array elements from a list of telescope names.
 
@@ -349,7 +353,7 @@ class ArrayModel:
                 array_elements_dict.update(self._get_all_array_elements_of_type(name))
         return array_elements_dict
 
-    def _get_all_array_elements_of_type(self, array_element_type):
+    def _get_all_array_elements_of_type(self, array_element_type: str) -> dict:
         """
         Return all array elements of a specific type using the database.
 
@@ -371,7 +375,7 @@ class ArrayModel:
         )
         return self._get_array_elements_from_list(all_elements)
 
-    def export_array_elements_as_table(self, coordinate_system="ground"):
+    def export_array_elements_as_table(self, coordinate_system: str = "ground") -> QTable:
         """
         Export array elements positions to astropy table.
 

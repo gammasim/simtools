@@ -124,7 +124,7 @@ def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     Returns
     -------
     bool
-        True if the files are equal, False otherwise.
+        True if the files are equal.
 
     """
     _file1_suffix = Path(file1).suffix
@@ -158,7 +158,7 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     Returns
     -------
     bool
-        True if the files are equal, False otherwise.
+        True if the files are equal.
 
     """
     data1 = gen.collect_data_from_file(file1)
