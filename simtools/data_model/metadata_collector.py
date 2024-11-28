@@ -523,7 +523,7 @@ class MetadataCollector:
         Returns
         -------
         bool
-            True if all entries are None, False otherwise.
+            True if all entries are None.
 
         """
         if not isinstance(input_dict, dict):

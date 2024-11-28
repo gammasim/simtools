@@ -21,7 +21,7 @@ class SiteModel(ModelParameter):
         MongoDB configuration.
     model_version: str
         Model version.
-    label: str
+    label: str, optional
         Instance label. Important for output file naming.
     """
 

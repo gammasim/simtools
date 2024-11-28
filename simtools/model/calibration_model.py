@@ -23,23 +23,20 @@ class CalibrationModel(ModelParameter):
         MongoDB configuration.
     model_version: str
         Model version.
-    label: str
+    label: str, optional
         Instance label. Important for output file naming.
     """
 
     def __init__(
         self,
-        site,
-        calibration_device_model_name,
-        mongo_db_config,
-        model_version,
-        label=None,
+        site: str,
+        calibration_device_model_name: str,
+        mongo_db_config: dict,
+        model_version: str,
+        label: str | None = None,
     ):
         """Initialize CalibrationModel."""
-        self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init CalibrationModel %s %s", site, calibration_device_model_name)
-        ModelParameter.__init__(
-            self,
+        super().__init__(
             site=site,
             array_element_name=calibration_device_model_name,
             collection="calibration_devices",
@@ -48,3 +45,6 @@ class CalibrationModel(ModelParameter):
             db=None,
             label=label,
         )
+
+        self._logger = logging.getLogger(__name__)
+        self._logger.debug("Init CalibrationModel %s %s", site, calibration_device_model_name)

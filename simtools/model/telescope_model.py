@@ -1,6 +1,7 @@
 """MC model of a telescope."""
 
 import logging
+from pathlib import Path
 
 import astropy.io.ascii
 import numpy as np
@@ -31,23 +32,20 @@ class TelescopeModel(ModelParameter):
         MongoDB configuration.
     model_version: str
         Model version.
-    label: str
+    label: str, optional
         Instance label. Important for output file naming.
     """
 
     def __init__(
         self,
-        site,
-        telescope_name,
-        mongo_db_config,
-        model_version,
-        label=None,
+        site: str,
+        telescope_name: str,
+        mongo_db_config: dict,
+        model_version: str,
+        label: str | None = None,
     ):
         """Initialize TelescopeModel."""
-        self._logger = logging.getLogger(__name__)
-        self._logger.debug("Init TelescopeModel %s %s", site, telescope_name)
-        ModelParameter.__init__(
-            self,
+        super().__init__(
             site=site,
             array_element_name=telescope_name,
             mongo_db_config=mongo_db_config,
@@ -55,6 +53,9 @@ class TelescopeModel(ModelParameter):
             db=None,
             label=label,
         )
+
+        self._logger = logging.getLogger(__name__)
+        self._logger.debug("Init TelescopeModel %s %s", site, telescope_name)
 
         self._single_mirror_list_file_paths = None
         self._mirrors = None
@@ -74,7 +75,7 @@ class TelescopeModel(ModelParameter):
             self._load_camera()
         return self._camera
 
-    def export_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero):
+    def export_single_mirror_list_file(self, mirror_number: int, set_focal_length_to_zero: bool):
         """
         Export a mirror list file with a single mirror in it.
 
@@ -107,7 +108,9 @@ class TelescopeModel(ModelParameter):
             set_focal_length_to_zero,
         )
 
-    def get_single_mirror_list_file(self, mirror_number, set_focal_length_to_zero=False):
+    def get_single_mirror_list_file(
+        self, mirror_number: int, set_focal_length_to_zero: bool = False
+    ):
         """
         Get the path to the single mirror list file.
 
@@ -143,7 +146,9 @@ class TelescopeModel(ModelParameter):
 
         self._mirrors = Mirrors(mirror_list_file, parameters=self._parameters)
 
-    def get_telescope_effective_focal_length(self, unit="m", return_focal_length_if_zero=False):
+    def get_telescope_effective_focal_length(
+        self, unit: str = "m", return_focal_length_if_zero: bool = False
+    ) -> float:
         """
         Return effective focal length.
 
@@ -160,7 +165,6 @@ class TelescopeModel(ModelParameter):
         -------
         float:
             Effective focal length.
-
         """
         try:
             eff_focal_length = self.get_parameter_value_with_unit("effective_focal_length")[0]
@@ -200,7 +204,7 @@ class TelescopeModel(ModelParameter):
             focal_length=focal_length,
         )
 
-    def is_file_2d(self, par):
+    def is_file_2d(self, par: str) -> bool:
         """
         Check if the file referenced by par is a 2D table.
 
@@ -212,7 +216,7 @@ class TelescopeModel(ModelParameter):
         Returns
         -------
         bool:
-            True if the file is a 2D map type, False otherwise.
+            True if the file is a 2D map type.
         """
         try:
             file_name = self.get_parameter_value(par)
@@ -224,7 +228,7 @@ class TelescopeModel(ModelParameter):
         with open(file, encoding="utf-8") as f:
             return "@RPOL@" in f.read()
 
-    def read_two_dim_wavelength_angle(self, file_name):
+    def read_two_dim_wavelength_angle(self, file_name: str | Path) -> dict:
         """
         Read a two dimensional distribution of wavelength and angle (z-axis can be anything).
 
@@ -259,7 +263,7 @@ class TelescopeModel(ModelParameter):
             "z": np.array(_data[:, 1:]).T,
         }
 
-    def get_on_axis_eff_optical_area(self):
+    def get_on_axis_eff_optical_area(self) -> float:
         """Return the on-axis effective optical area (derived previously for this telescope)."""
         ray_tracing_data = astropy.io.ascii.read(
             self.config_file_directory.joinpath(self.get_parameter_value("optics_properties"))
@@ -272,7 +276,7 @@ class TelescopeModel(ModelParameter):
             raise ValueError
         return ray_tracing_data["eff_area"][0]
 
-    def read_incidence_angle_distribution(self, incidence_angle_dist_file):
+    def read_incidence_angle_distribution(self, incidence_angle_dist_file: str) -> Table:
         """
         Read the incidence angle distribution from a file.
 
@@ -293,7 +297,7 @@ class TelescopeModel(ModelParameter):
         return astropy.io.ascii.read(self.config_file_directory.joinpath(incidence_angle_dist_file))
 
     @staticmethod
-    def calc_average_curve(curves, incidence_angle_dist):
+    def calc_average_curve(curves: dict, incidence_angle_dist: Table) -> Table:
         """
         Calculate an average curve from a set of curves.
 
@@ -328,7 +332,7 @@ class TelescopeModel(ModelParameter):
             names=("Wavelength", "z"),
         )
 
-    def export_table_to_model_directory(self, file_name, table):
+    def export_table_to_model_directory(self, file_name: str, table: Table) -> str:
         """
         Write out a file with the provided table to the model directory.
 
@@ -348,7 +352,7 @@ class TelescopeModel(ModelParameter):
         table.write(file_to_write_to, format="ascii.commented_header", overwrite=True)
         return file_to_write_to.absolute()
 
-    def position(self, coordinate_system="ground"):
+    def position(self, coordinate_system: str = "ground") -> list:
         """
         Get coordinates in the given system.
 
