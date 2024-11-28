@@ -1,0 +1,37 @@
+%YAML 1.2
+---
+title: Schema for adjust_gain model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: adjust_gain
+description: |-
+  Multiplicative adjustment for FADC and discriminator/comparator amplitude
+  and PMT gain.
+short_description: |-
+  Gain adjustment for amplitudes and PMT gain.
+data:
+  - type: double
+    unit: dimensionless
+    default: 1.0
+    allowed_range:
+      min: 0.1
+      max: 10.
+instrument:
+  class: Camera
+  type:
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraGainsAndEfficiency
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

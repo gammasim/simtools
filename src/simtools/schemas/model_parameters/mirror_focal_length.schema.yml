@@ -1,0 +1,42 @@
+%YAML 1.2
+---
+title: Schema for mirror_focal_length model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: mirror_focal_length
+description: |-
+  Standard focal length of mirror tiles. This parameter is only used if
+  the focal lengths of the mirror tiles in the par:mirror_list
+  are zero. For a parabolic dish any non-zero value will then force
+  all mirror tiles to have the same focal lengths (which should then match
+  the average distance of the parabolic dish from the focus, not exactly
+  the overall focal length).
+short_description: Standard focal length of mirror tiles.
+data:
+  - type: double
+    unit: cm
+    default: 0.0
+    allowed_range:
+      min: 0.
+      max: 10000.0
+    condition: mirror_class==1
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateMirrorPanelParameters
+    - ValidateOpticalPSF
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+title: Schema for nsb_sky_map model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: nsb_sky_map
+description: |-
+  An optional sky map (Az/Alt) of NSB enhancement factors, counted on top
+  of the configured pixel NSB p.e. rates and other scaling factors
+  mentioned in this section, but not any starlight which might get
+  added additionally. Recommend is to provide a regular grid in
+  azimuth and altitude. This map will be evaluated for each pixel
+  center pointed back into the sky, using the effective focal length
+  (no explicit ray-tracing), thus is only suitable for changes in
+  sky brightness exceeding the pixel sizes.
+short_description: Sky map (Az/Alt) of NSB enhancement factors.
+data:
+  - type: file
+    unit: dimensionless
+    default: None
+instrument:
+  class: Site
+  type:
+    - Atmosphere
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

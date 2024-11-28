@@ -1,0 +1,40 @@
+%YAML 1.2
+---
+title: Schema for pm_collection_efficiency model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: pm_collection_efficiency
+developer_note: Always set to 1. for CTA cameras.
+short_description: |-
+  Photoelectron collection efficiency at the first stage of the photo
+  detector.
+description: |-
+  Photoelectron collection efficiency at the first stage of the photo
+  detector. The default value is 1.0 since in most cases the non-amplified
+  photo-electrons are included in the amplitude distribution of the
+  single-p.e. spectrum.
+data:
+  - type: double
+    unit: dimensionless
+    allowed_range:
+      min: 0.01
+      max: 1.0
+    default: 1.0
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

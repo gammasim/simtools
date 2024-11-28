@@ -1,0 +1,45 @@
+%YAML 1.2
+---
+title: Schema for transit_time_error model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: transit_time_error
+short_description: Errors (r.m.s.) in transit time, not related to high voltage.
+description: |-
+  Errors (r.m.s.) in transit time, additionally to and not related to
+  those depending on applied high voltage.
+  If this parameter is set to $-1$, the readout interval is assumed to be
+  adjusted, pixel by pixel, such that resulting transit time differences
+  are within one readout time slice. For correcting transit times by
+  electronic means with time steps independent of the sampling frequency the
+  par:transit-time-compensate-step and par:transit-time-compensate-error
+  can be used.  The resulting transit time difference, after application of
+  compensation if used, is reported in the calibration data block, but only
+  up to a random accuracy defined by par:transit-time-calib-error.
+data:
+  - type: double
+    unit: ns
+    default: 0.
+    allowed_range:
+      min: -1.0
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraTimeResponse
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

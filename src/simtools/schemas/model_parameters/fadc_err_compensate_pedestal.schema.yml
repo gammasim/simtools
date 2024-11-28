@@ -1,0 +1,42 @@
+%YAML 1.2
+---
+title: Schema for fadc_err_compensate_pedestal model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_err_compensate_pedestal
+description: |-
+  R.M.S. error on the pedestal evaluation for the compensation step
+  (for high-gain channel for dual-gain readout). Accounts for the
+  inexact pedestal compensation (as camera firmware or server
+  evaluate the actual pedestal from a finite number of samples/events).
+  Used only when fadc_compensate_pedestal is activated.
+short_description: R.M.S. error on the pedestal evaluation for the compensation step.
+data:
+  - type: double
+    unit: dimensionless
+    default: 0.
+    allowed_range:
+      min: 0.
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateReadout
+    - ValidatePedestalEvents
+    - ValidateTelescopeSimulationModel
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray

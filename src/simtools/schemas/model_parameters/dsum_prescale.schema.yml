@@ -1,0 +1,44 @@
+%YAML 1.2
+---
+title: Schema for dsum_prescale model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: dsum_prescale
+developer_note: TODO - Remove comment on DDSUM_DOUBLE?
+description: |-
+  Shaped signals are scaled by first multiplying with the
+  first value (to integer unless sim\_telarray was compiled with
+  \texttt{DDSUM_DOUBLE}) and then divided by the second value
+  (discarding the remainder).
+  No such scaling is applied if first and second value are equal.
+short_description: Scaling of shaped signals.
+data:
+  - type: uint
+    description: multiplier
+    default: 0
+    unit: dimensionless
+    condition: default_trigger==DigitalSum
+  - type: uint
+    description: divider
+    default: 0
+    unit: dimensionless
+    condition: default_trigger==DigitalSum
+instrument:
+  class: Camera
+  type:
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray

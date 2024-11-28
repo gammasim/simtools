@@ -1,0 +1,61 @@
+%YAML 1.2
+---
+title: Schema for mirror_reflection_random_angle model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: mirror_reflection_random_angle
+description: |-
+  Gaussian random fluctuations of reflection angles, due to
+  small-scale surface deviations, with one or two components.
+  For two components, the random reflection angle is applied
+  separately to each projection, in the coordinate system of the mirror
+  surface, with the same r.m.s. in both projections.
+short_description: |-
+  Gaussian r.m.s. spread of random fluctuations of microscopic reflection
+  angles due to small-scale surface deviations.
+data:
+  - type: double
+    description: Projected Gaussian r.m.s. of the first component.
+    unit: deg
+    default: 0.0066
+    allowed_range:
+      min: 0.0
+      max: 2.0
+  - type: double
+    description: Fractional amplitude of second component.
+    unit: dimensionless
+    default: 0.0
+    allowed_range:
+      min: 0.0
+      max: 1.0
+  - type: double
+    description: Projected Gaussian r.m.s. of the second component.
+    unit: deg
+    default: 0.0
+    allowed_range:
+      min: 0.0
+      max: 2.0
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetMirrorPanelRandomReflection
+    - SetParameterFromExternal
+  validation:
+    - ValidateMirrorPanelParameters
+    - ValidateOpticalPSF
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+  - SimPipe Derived
+simulation_software:
+  - name: sim_telarray

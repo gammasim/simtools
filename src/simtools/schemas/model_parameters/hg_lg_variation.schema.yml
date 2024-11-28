@@ -1,0 +1,36 @@
+%YAML 1.2
+---
+title: Schema for hg_lg_variation model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: hg_lg_variation
+description: |-
+  Relative pixel-to-pixel variation of the ratio of high-gain to
+  low-gain amplitudes.
+data:
+  - type: double
+    required: false
+    condition: num_gains==2
+    default: 0.0
+    allowed_range:
+      min: 0.0
+      max: 0.25
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateReadout
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

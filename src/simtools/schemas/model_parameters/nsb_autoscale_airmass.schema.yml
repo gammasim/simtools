@@ -1,0 +1,51 @@
+%YAML 1.2
+---
+title: Schema for nsb_autoscale_airmass model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: nsb_autoscale_airmass
+description: |-
+  NSB scaling as function of airmass (zenith angle).
+  This only takes effect if nsb_scaling_factor is exactly 1.0
+short_description: NSB scaling as function of airmass (zenith angle).
+data:
+  - type: double
+    description: |-
+      Zenith-level fraction of NSB resulting from airglow.
+      Value should be on the order of 0.7.
+    unit: dimensionless
+    default: 0.0
+    allowed_range:
+      min: 0.0
+      max: 1.0
+  - type: double
+    description: |-
+      Effective extinction coefficient applicable for NSB light
+      (due to scattering it should be smaller than extinction
+      coefficient for line-of-sight propagation).
+      Value should be on the order of 0.15.
+    unit: dimensionless
+    default: 0.15
+    allowed_range:
+      min: 0.0
+      max: 1.0
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

@@ -1,0 +1,51 @@
+%YAML 1.2
+---
+title: Schema for mirror_degraded_reflection model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: mirror_degraded_reflection
+description: |-
+  Mirror degradation factor (wavelength independent).
+  Applied to the mirror reflectivity of the primary mirror
+  (note also the primary, secondary, and camera efficiency
+  degradation factors).
+  What matters typically is the overall product of the efficiencies.
+  Breaking it down into mirror(s) and/or camera degradation
+  only matters where BYPASS_OPTICS becomes involved. Then this parameter
+  is actually interpreted as being for reflection on the primary mirror
+  (would not be relevant for a flat-fielding light source directly illuminating
+  the camera or illuminating it via reflection on the secondary mirror).
+  The nightsky background in each pixel is also scaled by the same factor
+  (even if the actual simulation bypasses optical ray-tracing).
+  For wavelength-dependent degradation, the tables for reflectivity,
+  window transmission, or light-cone efficiency need to be adapted.
+short_description: |-
+  Mirror degradation factor (wavelength independent).
+data:
+  - type: double
+    unit: dimensionless
+    default: 1.
+    allowed_range:
+      min: 0.
+      max: 1.
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeStructure
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

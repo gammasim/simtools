@@ -1,0 +1,35 @@
+%YAML 1.2
+---
+title: Schema for reference_point_altitude model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: reference_point_altitude
+description: |-
+  Altitude above sea level of site reference point.
+  This location is typically identical or close to the site center.
+short_description: Altitude above sea level of site reference point.
+data:
+  - type: double
+    unit: m
+    allowed_range:
+      min: 0.0
+instrument:
+  class: Site
+  type:
+    - Observatory
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetArrayElementCoordinates
+  validation:
+    - ValidateParameterByExpert
+    - ValidateArrayElementCoordinates
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: corsika

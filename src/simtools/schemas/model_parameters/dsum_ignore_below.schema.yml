@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+title: Schema for dsum_ignore_below model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: dsum_ignore_below
+description: |-
+  FADC signals (pedestal subtracted and/or shaped) below this value,
+  i.e. in the noise, do not contribute to the digital signal sum and
+  are set to zero.  A value of zero means that no such lower threshold
+  gets applied.
+short_description: FADC signal minimum contribution to digital signal sum.
+data:
+  - type: uint
+    unit: count
+    default: 0
+    condition: default_trigger==DigitalSum
+    allowed_range:
+      min: 0
+instrument:
+  class: Camera
+  type:
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray
