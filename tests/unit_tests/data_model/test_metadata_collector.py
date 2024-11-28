@@ -18,27 +18,28 @@ logger = logging.getLogger()
 
 
 def test_get_data_model_schema_file_name():
+    schema_file_path = files("simtools") / "schemas"
     # from args_dict / command line
     args_dict = {"no_schema": "schema_file.yml"}
     _collector = metadata_collector.MetadataCollector(args_dict)
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file is None
 
-    args_dict = {"schema": "simtools/schemas/metadata.metaschema.yml"}
+    args_dict = {"schema": str(schema_file_path / "metadata.metaschema.yml")}
     _collector = metadata_collector.MetadataCollector(args_dict)
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == args_dict["schema"]
 
     # from metadata
-    _collector.top_level_meta["cta"]["product"]["data"]["model"][
-        "url"
-    ] = "simtools/schemas/top_level_meta.schema.yml"
+    _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
+        schema_file_path / "top_level_meta.schema.yml"
+    )
     schema_file = _collector.get_data_model_schema_file_name()
     # test that priority is given to args_dict (if not none)
     assert schema_file == args_dict["schema"]
     _collector.args_dict["schema"] = None
     schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == "simtools/schemas/top_level_meta.schema.yml"
+    assert schema_file == str(schema_file_path / "top_level_meta.schema.yml")
 
     _collector.top_level_meta["cta"]["product"]["data"]["model"].pop("url")
     schema_file = _collector.get_data_model_schema_file_name()
@@ -264,7 +265,7 @@ def test_process_metadata_from_file():
     assert _collector._process_metadata_from_file(meta_dict_4) == meta_dict_4
 
 
-def test__remove_line_feed():
+def test_remove_line_feed():
     collector = metadata_collector.MetadataCollector({})
     input_string = "This is a string without line feeds."
     result = collector._remove_line_feed(input_string)
