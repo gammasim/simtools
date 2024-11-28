@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.mirrors &#8212; simtools v0.1.dev1+g9155715 Manual</title>
+    <title>model.mirrors &#8212; simtools v0.1.dev1+gd9c2ffd Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=5ea7d4a4"></script>
+    <script src="../../_static/documentation_options.js?v=f7fe7528"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9155715" />
+  <meta name="docsearch:version" content="0.1.dev1+gd9c2ffd" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9155715 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd9c2ffd Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -361,6 +361,7 @@
 <span></span><span class="sd">&quot;&quot;&quot;Definition and modeling of mirror panels.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">astropy.io.ascii</span>
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
@@ -385,13 +386,13 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    mirror_list_file: str</span>
-<span class="sd">        mirror list in sim_telarray or ecsv format (with panel focal length only).</span>
-<span class="sd">    parameters: dict</span>
+<span class="sd">    mirror_list_file: Union[str, Path]</span>
+<span class="sd">        Mirror list in sim_telarray or ecsv format (with panel focal length only).</span>
+<span class="sd">    parameters: dict, optional</span>
 <span class="sd">        Dictionary of parameters from the database.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_list_file</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_list_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Mirrors.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Mirrors Init&quot;</span><span class="p">)</span>
@@ -547,7 +548,7 @@
 
 <div class="viewcode-block" id="Mirrors.get_single_mirror_parameters">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.mirrors.Mirrors.get_single_mirror_parameters">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_single_mirror_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_single_mirror_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get parameters for a single mirror given by number.</span>
 
@@ -558,7 +559,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        (pos_x, pos_y, mirror_diameter, focal_length, shape_type): tuple of float</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (pos_x, pos_y, mirror_diameter, focal_length, shape_type): tuple of float</span>
 <span class="sd">            X, Y positions, mirror_diameter, focal length and shape_type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mirror_table</span><span class="p">[</span><span class="s2">&quot;mirror_panel_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">number</span>

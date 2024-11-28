@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.array_model &#8212; simtools v0.1.dev1+g9155715 Manual</title>
+    <title>model.array_model &#8212; simtools v0.1.dev1+gd9c2ffd Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=5ea7d4a4"></script>
+    <script src="../../_static/documentation_options.js?v=f7fe7528"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9155715" />
+  <meta name="docsearch:version" content="0.1.dev1+gd9c2ffd" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9155715 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd9c2ffd Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -389,25 +389,25 @@
 <span class="sd">        MongoDB configuration.</span>
 <span class="sd">    model_version: str</span>
 <span class="sd">        Model version.</span>
-<span class="sd">    label: str</span>
+<span class="sd">    label: str, optional</span>
 <span class="sd">        Instance label. Used for output file naming.</span>
-<span class="sd">    site: str</span>
+<span class="sd">    site: str, optional</span>
 <span class="sd">        Site name.</span>
-<span class="sd">    layout_name: str</span>
+<span class="sd">    layout_name: str, optional</span>
 <span class="sd">        Layout name.</span>
-<span class="sd">    array_elements: str, Path, list</span>
+<span class="sd">    array_elements: Union[str, Path, List[str]], optional</span>
 <span class="sd">        Array element definitions (list of array element or path to file with</span>
 <span class="sd">        the array element positions).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">mongo_db_config</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="p">,</span>
-        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">layout_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">array_elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mongo_db_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">site</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">layout_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">array_elements</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize ArrayModel.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -415,7 +415,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span> <span class="o">=</span> <span class="n">model_version</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="n">layout_name</span> <span class="k">if</span> <span class="n">layout_name</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span> <span class="o">=</span> <span class="n">layout_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
@@ -428,7 +428,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_files_exported</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_elements_config</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">array_elements_config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize ArrayModel taking different configuration options into account.</span>
 
@@ -436,7 +436,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        site: str</span>
 <span class="sd">            Site name.</span>
-<span class="sd">        array_elements_config: str, Path, list</span>
+<span class="sd">        array_elements_config: Union[str, Path, List[str]]</span>
 <span class="sd">            Array element definitions.</span>
 
 <span class="sd">        Returns</span>
@@ -470,7 +470,7 @@
             <span class="n">array_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_elements_from_list</span><span class="p">(</span>
                 <span class="n">site_model</span><span class="o">.</span><span class="n">get_array_elements_for_layout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout_name</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">array_elements</span> <span class="o">==</span> <span class="p">{}:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">array_elements</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;No array elements found. &quot;</span>
                 <span class="s2">&quot;Possibly missing valid layout name or missing telescope list.&quot;</span>
@@ -479,7 +479,7 @@
         <span class="k">return</span> <span class="n">array_elements</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">telescope_model</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">number_of_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">number_of_telescopes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the number of telescopes.</span>
 
@@ -491,7 +491,7 @@
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">site</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">site</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return site.</span>
 
@@ -502,7 +502,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">site</span>
 
-    <span class="k">def</span> <span class="nf">_build_telescope_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_build_telescope_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_model</span><span class="p">:</span> <span class="n">SiteModel</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build the the telescope models for all telescopes of this array.</span>
 
@@ -512,7 +512,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        site_model: str</span>
+<span class="sd">        site_model: SiteModel</span>
 <span class="sd">            Site model.</span>
 <span class="sd">        array_elements: dict</span>
 <span class="sd">            Dict with array elements.</span>
@@ -609,7 +609,7 @@
 
 <div class="viewcode-block" id="ArrayModel.get_config_file">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.array_model.ArrayModel.get_config_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the path of the array config file for sim_telarray.</span>
 
@@ -626,7 +626,7 @@
 
 <div class="viewcode-block" id="ArrayModel.get_config_directory">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.array_model.ArrayModel.get_config_directory">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_config_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_config_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the path of the array config directory for sim_telarray.</span>
 
@@ -640,7 +640,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_load_array_element_positions_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_elements_file</span><span class="p">,</span> <span class="n">site</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_load_array_element_positions_from_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">array_elements_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load array element (e.g. telescope) positions from a file into a dict.</span>
 
@@ -648,7 +650,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        array_elements_file: str</span>
+<span class="sd">        array_elements_file: Union[str, Path]</span>
 <span class="sd">            Path to the file with the array element positions.</span>
 <span class="sd">        site: str</span>
 <span class="sd">            Site name.</span>
@@ -667,7 +669,9 @@
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_get_telescope_position_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_telescope_position_parameter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">telescope_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return dictionary with telescope position parameters (following DB model database format).</span>
 
@@ -703,7 +707,7 @@
             <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_get_array_elements_from_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_elements_list</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_array_elements_from_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_elements_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return dictionary with array elements from a list of telescope names.</span>
 
@@ -729,7 +733,7 @@
                 <span class="n">array_elements_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_all_array_elements_of_type</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">array_elements_dict</span>
 
-    <span class="k">def</span> <span class="nf">_get_all_array_elements_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_element_type</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_all_array_elements_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_element_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return all array elements of a specific type using the database.</span>
 
@@ -753,7 +757,7 @@
 
 <div class="viewcode-block" id="ArrayModel.export_array_elements_as_table">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.array_model.ArrayModel.export_array_elements_as_table">[docs]</a>
-    <span class="k">def</span> <span class="nf">export_array_elements_as_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="o">=</span><span class="s2">&quot;ground&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">export_array_elements_as_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate_system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ground&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QTable</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export array elements positions to astropy table.</span>
 
