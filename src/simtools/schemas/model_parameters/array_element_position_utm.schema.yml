@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+title: Schema for array_element_position_utm model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: array_element_position_utm
+description: |-
+  Position and alitutude of an array element (e.g., a telescope) in UTM coordinates.
+short_description: UTM coordinate position of an array element.
+data:
+  - type: double
+    unit: m
+    description: Array element position in UTM East.
+  - type: double
+    unit: m
+    description: Array element position in UTM North.
+  - type: double
+    unit: m
+    description: Array element altitude above sea level.
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+    - SetArrayElementCoordinates
+  validation:
+    - ValidateParameterByExpert
+    - ValidateArrayElementCoordinates
+source:
+  - Initial instrument setup

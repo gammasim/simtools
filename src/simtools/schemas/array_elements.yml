@@ -1,0 +1,137 @@
+%YAML 1.2
+---
+title: List of allowed array elements
+version: 0.1.0
+description: |
+  List of array elements known to simtools and its
+  corresponding database collections.
+  Also used as part of the schema validation process.
+data:
+  LSTN:
+    collection: "telescopes"
+    observatory: "CTAO"
+    site: "North"
+  MSTN:
+    collection: "telescopes"
+    observatory: "CTAO"
+    site: "North"
+  LSTS:
+    collection: "telescopes"
+    observatory: "CTAO"
+    site: "South"
+  MSTS:
+    collection: "telescopes"
+    observatory: "CTAO"
+    site: "South"
+  SSTS:
+    collection: "telescopes"
+    observatory: "CTAO"
+    site: "South"
+    description: "Small-sized telescope"
+  SCTS:
+    collection: "telescopes"
+    observatory: "CTAO"
+    site: "South"
+    description: "Mid-sized Schwarzschild-Couder telescope"
+  ILLN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Illuminator"
+  RLDN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Raman lidar"
+  STPN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Wide-field stellar photometer"
+  MSPN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Moon/sun photometer"
+  CEIN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Ceilometer"
+  WSTN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Weather station"
+  ASCN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "All-sky camera"
+  DUSN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Dust sensor"
+  LISN:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "North"
+    description: "Lightning sensor"
+  ILLS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Illuminator"
+  RLDS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Raman lidar"
+  STPS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Wide-field stellar photometer"
+  MSPS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Moon/sun photometer"
+  CEIS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Ceilometer"
+  WSTS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Weather station"
+  ASCS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "All-sky camera"
+  DUSS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Dust sensor"
+  LISS:
+    collection: "calibration_devices"
+    observatory: "CTAO"
+    site: "South"
+    description: "Lightning sensor"
+  HESS:
+    collection: "telescopes"
+    site: "South"
+    observatory: "HESS"
+  MAGIC:
+    collection: "telescopes"
+    site: "North"
+    observatory: "MAGIC"
+  VERITAS:
+    collection: "telescopes"
+    site: "North"
+    observatory: "VERITAS"

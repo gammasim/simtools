@@ -1,0 +1,42 @@
+%YAML 1.2
+---
+title: Schema for fadc_lg_noise model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: fadc_lg_noise
+description: |-
+  Gaussian r.m.s. spread of white noise per time bin in digitisation
+  (for low-gain channel, if different gains are used).
+short_description: Gaussian r.m.s. spread of white noise per time bin in digitisation (low-gain channels).
+data:
+  - type: double
+    description: |-
+      Gaussian r.m.s. spread of white noise per time bin in digitisation
+      (for low-gain channel in case of dual-readout chain)
+    condition: num_gains==2
+    unit: count
+    default: 1.3
+    allowed_range:
+      min: 0.0
+      max: 100.0
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidatePedestalEvents
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

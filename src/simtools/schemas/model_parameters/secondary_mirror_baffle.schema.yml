@@ -1,0 +1,79 @@
+%YAML 1.2
+---
+title: Schema for secondary_mirror_baffle model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: secondary_mirror_baffle
+description: |-
+  Defines a baffle around the secondary mirror to keep NSB light from
+  falling directly onto the camera. Shadowing by the baffle is applied
+  both to incoming photons and to photons reflected from the primary
+  to the secondary mirror. Absence of a baffle is indicated by $r_1=0$.
+short_description: |-
+  Defines a baffle around the secondary mirror to keep NSB light from
+  falling directly onto the camera.
+data:
+  - name: baffle_z1
+    description: |-
+      Beginning of the baffle along the optical axis, counted from the
+      primary center, which means a z value of par:secondary_ref_radius
+      times the first par:secondary_mirror_parameters value is at the
+      height of the center of the secondary.
+    type: double
+    unit: cm
+    required: true
+    condition: mirror_class==2
+    default: 0.
+  - name: baffle_z2
+    description: |-
+      End of the baffle along the optical axis, counted from the
+      primary center, which means a z value of par:secondary_ref_radius
+      times the first par:secondary_mirror_parameters value is at the
+      height of the center of the secondary.
+    type: double
+    unit: cm
+    required: true
+    condition: mirror_class==2
+    default: 0.
+  - name: radius_r1
+    description: Radius of open cylinder shape or cone shape at baffle_z1.
+    type: double
+    unit: cm
+    required: true
+    condition: mirror_class==2
+    default: 0.
+  - name: thickness_d1
+    description: |-
+      Wall thickness of the baffle. The radius radius_r1 and radius_r2
+      are the inner radii in case of finite wall thickness.
+    type: double
+    unit: cm
+    required: false
+    condition: mirror_class==2
+    default: 0.
+  - name: radius_r2
+    description: Radius of open cylinder shape or cone shape at baffle_z2.
+    type: double
+    unit: cm
+    required: false
+    condition: mirror_class==2
+    default: 0.
+instrument:
+  class: Structure
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeStructure
+    - ValidateTelescopeEfficiency
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: secondary_baffle

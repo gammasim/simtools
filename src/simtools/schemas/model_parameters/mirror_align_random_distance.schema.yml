@@ -1,0 +1,36 @@
+%YAML 1.2
+---
+title: Schema for mirror_align_random_distance model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: mirror_align_random_distance
+description: |-
+  Gaussian r.m.s. spread of random fluctuations in the aligned mirror
+  distance from the focus.
+data:
+  - type: double
+    unit: cm
+    default: 2.0
+    condition: mirror_class==1
+instrument:
+  class: Structure
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+activity:
+  setting:
+    - SetMirrorPanelAlignment
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateOpticalPSF
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+  - SimPipe Derived
+simulation_software:
+  - name: sim_telarray

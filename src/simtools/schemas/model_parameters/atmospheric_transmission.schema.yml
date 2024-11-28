@@ -1,0 +1,35 @@
+%YAML 1.2
+---
+title: Schema for atmospheric_transmission model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: atmospheric_transmission
+description: |-
+  Optical thickness as a function of photon emission altitude
+  and wavelength.
+data:
+  - type: file
+    unit: dimensionless
+    default: 'atm_trans_2147_1_10_2_0_2147.dat'
+instrument:
+  class: Site
+  type:
+    - Atmosphere
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateAtmosphericModel
+    - ValidateTelescopeSimulationModel
+source:
+  - Calibration
+simulation_software:
+  - name: corsika
+  - name: sim_telarray

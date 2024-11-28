@@ -1,0 +1,54 @@
+%YAML 1.2
+---
+title: Schema for pixels_parallel model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: pixels_parallel
+description: |-
+  Parameter controlling the orientation of the pixels, setting it to be
+  aligned with the optical axis or the focal surface normal.
+  A value of 0 indicates that the pixel is oriented such that the surface
+  is aligned with the focal surface (pixel axis parallel to focal surface
+  normal).
+  A value of 1 indicates, that pixels are only shifted parallel to the
+  optical axis. Pixel surfaces remain perpendicular to the optical axis.
+  A value of 2 places all pixels belonging to the same module
+  (as configured in the ``Pixels'' lines in the par:camera-config-file)
+  on a common plane, with its orientation along the normal to the focal
+  surface in the module center (c.o.g. of pixels) and with zero mean
+  displacements of pixels along the $z$ axis.
+  A value of 3 (=2+1) has all pixels in a common plane per module and
+  all of the modules (and thus all of the pixels) looking parallel to
+  the optical axis. The 'height' (in z) of the module is again the
+  average of where individually placed pixels would be (zero mean
+  displacement in module).
+  An extension to the camera definition file even allows for pixels to be
+  configured individually and not exactly following the focal surface
+  (in both height and orientation).
+short_description: |-
+  Parameter controlling the orientation of the pixels, setting it to be
+  aligned with the optical axis or the focal surface normal.
+data:
+  - type: uint
+    default: 1
+    allowed_range:
+      min: 0
+      max: 3
+    condition: mirror_class==2
+instrument:
+  class: Structure
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraGeometry
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

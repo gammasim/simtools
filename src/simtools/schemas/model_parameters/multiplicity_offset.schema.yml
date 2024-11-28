@@ -1,0 +1,46 @@
+%YAML 1.2
+---
+title: Schema for multiplicity_offset model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: multiplicity_offset
+description: |-
+  This number tells where the actual threshold of the telescope trigger
+  is adjusted relative to the nominal number of required pixels.
+  A value of -0.5 means that with par:trigger-pixels of 4, the sum of
+  pixel discriminator/comparator outputs must exceed 3.5 times the
+  average output amplitude for the given minimum time and by the
+  given minimum signal integral in order to accept any `sector'
+  trigger (and therefore a telescope trigger) with the majority
+  trigger logic.
+short_description: |-
+  Actual threshold of the telescope trigger, adjusted relative to the
+  number of required pixels.
+data:
+  - type: double
+    unit: dimensionless
+    default: -0.5
+    allowed_range:
+      min: -0.5
+      max: 0.5
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

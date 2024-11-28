@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+title: Schema for dsum_presum_max model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: dsum_presum_max
+description: |-
+  After bit-shifting the pre-sum, the resulting value
+  (zero-clipped, typically) may have the given maximum
+  value to be represented in the available number of bits.
+  A value of zero implies no maximum to be applied.
+short_description: Maximum of pre-sum in available number of bits.
+data:
+  - type: uint
+    unit: dimensionless
+    default: 0
+    condition: default_trigger==DigitalSum
+    allowed_range:
+      min: 0
+instrument:
+  class: Camera
+  type:
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray

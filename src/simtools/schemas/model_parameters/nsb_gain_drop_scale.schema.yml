@@ -1,0 +1,37 @@
+%YAML 1.2
+---
+title: Schema for nsb_gain_drop_scale model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: nsb_gain_drop_scale
+description: |-
+  This parameter, if non-zero, indicates the pixel p.e. rate at which the
+  gain drops to half the nominal value due to bias resistance and
+  cell capacitance (applicable as such for SiPM cameras). \\
+  \textbf{Example:} 1./(2.4 [kOhm] $\times$ 85 [fF])/1e9 [ns] = 4.90 [GHz].
+short_description: |-
+  Pixel p.e. rate at which the gain drops to half the nominal value due to
+  bias resistance and cell capacitance (SiPM cameras).
+data:
+  - type: double
+    unit: GHz
+    default: 0.0
+    allowed_range:
+      min: 0.0
+instrument:
+  class: Camera
+  type:
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateCameraGainsAndEfficiency
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

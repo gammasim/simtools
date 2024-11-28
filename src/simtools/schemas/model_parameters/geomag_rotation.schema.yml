@@ -1,0 +1,37 @@
+%YAML 1.2
+---
+title: Schema for geomag_rotation model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: geomag_rotation
+short_description: Rotation angle between geographic South and geomagnetic North.
+description: |-
+   Rotation angle between geographic South and geomagnetic North direction
+   (corresponds to CORSIKA ARRANG parameter).
+data:
+  - type: double
+    unit: deg
+    allowed_range:
+      min: -180.0
+      max: 180.0
+instrument:
+  class: Site
+  type:
+    - Atmosphere
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetGeomagneticField
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateAtmosphericModel
+    - ValidateTelescopeSimulationModel
+source:
+  - External
+simulation_software:
+  - name: corsika
