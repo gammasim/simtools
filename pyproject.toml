@@ -104,7 +104,7 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = [ "src" ]
-exclude = [ "simtools._dev_version" ]
+exclude = [ "simtools._dev_version.*" ]
 
 [tool.setuptools_scm]
 write_to = "src/simtools/_version.py"
