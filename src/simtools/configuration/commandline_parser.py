@@ -263,8 +263,8 @@ class CommandLineParser(argparse.ArgumentParser):
             _job_group.add_argument(
                 "--telescope_model_file",
                 help=(
-                    "File with changes to telescope model "
-                    " (yaml format; experimental with insufficient validation steps)."
+                    "Path to a YAML file containing modifications to the telescope model. "
+                    "This feature is intended for developers and lacks validation."
                 ),
                 type=Path,
                 required=False,
