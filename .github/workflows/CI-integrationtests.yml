@@ -90,6 +90,6 @@ jobs:
         shell: bash -l {0}
         run: |
           source /workdir/env/bin/activate
-          pip install '.[tests,dev,doc]'
+          pip install -e '.[tests,dev,doc]'
           ls /workdir/env/lib64/python3.11/site-packages/simtools/schemas/
           pytest -x --model_version=${{ matrix.type }} --color=yes --durations=20 -n auto --dist loadscope --no-cov tests/integration_tests/
