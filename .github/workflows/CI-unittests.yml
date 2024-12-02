@@ -101,12 +101,6 @@ jobs:
           pytest --durations=10 --color=yes -n auto --dist loadscope \
             --cov=simtools --cov-report=xml
 
-      - name: Upload coverage report to codecov
-        uses: codecov/codecov-action@v5
-        if: contains(matrix.extra-args, 'codecov')
-        with:
-          token: ${{ secrets.CODECOV_SIMTOOLS_TOKEN }}
-
       - name: CTAO-DPPS-SonarQube
         uses: SonarSource/sonarqube-scan-action@v4.0.0
         if: contains(matrix.extra-args, 'codecov')
@@ -118,3 +112,9 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest --color=yes -n auto --dist loadscope --count 5 --random-order
+
+      - name: Upload coverage report to codecov
+        uses: codecov/codecov-action@v5
+        if: contains(matrix.extra-args, 'codecov')
+        with:
+          token: ${{ secrets.CODECOV_SIMTOOLS_TOKEN }}
