@@ -274,9 +274,8 @@ exclude_also = [
 ]
 
 [tool.coverage.run]
-omit = [ "src/simtools/_version.py" ]
+omit = [ "src/simtools/_version.py", "*__init__*" ]
 relative_files = true
-source = [ "src/*" ]
 
 [tool.towncrier]
 package = "simtools"
