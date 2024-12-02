@@ -1,9 +1,9 @@
 """Project wide constants."""
 
-from pathlib import Path
+from importlib.resources import files
 
 # Path to metadata jsonschema
-METADATA_JSON_SCHEMA = Path(__file__).parent / "../simtools/schemas/metadata.metaschema.yml"
+METADATA_JSON_SCHEMA = files("simtools") / "schemas/metadata.metaschema.yml"
 
 # Path to model parameter schema files
-MODEL_PARAMETER_SCHEMA_PATH = Path(__file__).parent / "../simtools/schemas/model_parameters"
+MODEL_PARAMETER_SCHEMA_PATH = files("simtools") / "schemas/model_parameters"
