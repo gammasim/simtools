@@ -456,7 +456,7 @@ class ModelParameter:
         Change values of multiple existing parameters in the model from a file.
 
         This function does not modify the DB, it affects only the current instance.
-        Experimental feature: insufficient validation of parameters.
+        This feature is intended for developers and lacks validation.
 
         Parameters
         ----------
@@ -464,7 +464,7 @@ class ModelParameter:
             File containing the parameters to be changed.
         """
         self._logger.warning(
-            "Changing multiple parameters from file is an experimental feature."
+            "Changing multiple parameters from file is a feature for developers."
             "Insufficient validation of parameters."
         )
         self._logger.debug(f"Changing parameters from file {file_name}")
