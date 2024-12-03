@@ -33,6 +33,7 @@ r"""
 """
 
 import logging
+from importlib.resources import files
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -138,10 +139,7 @@ def validate_data_files(args_dict, logger):
         for file_name in Path(model_parameters_directory).rglob("*.json"):
             tmp_args_dict["file_name"] = file_name
             schema_file = (
-                Path(__file__).parent
-                / "../schemas"
-                / "model_parameters"
-                / f"{file_name.stem}.schema.yml"
+                files("simtools") / "schemas/model_parameters" / f"{file_name.stem}.schema.yml"
             )
             tmp_args_dict["schema"] = schema_file
             tmp_args_dict["data_type"] = "model_parameter"
