@@ -9,6 +9,8 @@ The reports are then uploaded as GitLab Pages using GitLab's CI workflow.
 """
 
 import logging
+from itertools import groupby
+from operator import itemgetter
 from pathlib import Path
 
 from simtools.configuration import configurator
@@ -29,23 +31,39 @@ def _parse(label):
 
 
 def generate_markdown_report(output_folder, args_dict, data):
-    """Generate a markdown file to report the parameter values."""
+    """
+    Generate a markdown file to report the parameter values.
+
+    Parameters
+    ----------
+    output_folder : str
+        The folder where the markdown file will be saved.
+    args_dict : dict
+        Configuration arguments including model version and telescope name.
+    data : list
+        Parameter data in the format:
+        [class, parameter_name, value, short_description]
+    """
+    # Sort data by class to prepare for grouping
+    data.sort(key=itemgetter(0))  # Sort by the first element (class)
+
     io_handler_instance = io_handler.IOHandler()
     output_path = io_handler_instance.get_output_directory(output_folder)
     output_filename = f'{output_path}/v{args_dict["model_version"]}_{args_dict["telescope"]}.md'
 
     # Start writing the Markdown file
     with open(output_filename, "w", encoding="utf-8") as file:
-
         # Write the section header to specify the telescope
-        file.write(f"# {args_dict['telescope']}\n\n")
+        # file.write(f"# {args_dict['telescope']}\n\n")
 
-        for item in data:
-            file.write(f"## **{item[0]}**\n")
-            file.write(f"**Value:** {item[1]}\n")
-            file.write(f"**Short Description:** {item[2]}\n")
-            file.write("-------------------------------------------------------\n")
-            file.write("\n")
+        # Group by class and write sections
+        for class_name, group in groupby(data, key=itemgetter(0)):
+            file.write(f"# {class_name}\n\n")
+            file.write("##| Parameter Name | Values | Short Description |\n\n")
+            file.write("|----------------|--------|-------------------|\n\n")
+            for _, parameter_name, value, short_description in group:
+                file.write(f"| {parameter_name} | {value} | {short_description} |\n")
+                file.write("\n")
 
 
 def main():  # noqa: D103
