@@ -6,7 +6,7 @@ repos:
         args: ["--line-length=100"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.7.4
+    rev: v0.8.1
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -37,7 +37,7 @@ repos:
     rev: v2.3.2  # most recent docstr-coverage release or commit sha
     hooks:
       - id: docstr-coverage
-        args: ["--verbose", "2", "--fail-under", "70.", "simtools"]
+        args: ["--verbose", "2", "--fail-under", "70.", "src/simtools"]
   # Github action
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.4
@@ -55,7 +55,7 @@ repos:
       - id: codespell
   # markdownlint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.42.0
+    rev: v0.43.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD041"]

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'simtools/schemas/model_parameters/*'
+      - 'src/simtools/schemas/model_parameters/*'
       - 'tests/integration_tests/config/*'
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Check for files without the suffix *.schema.yml
         run: |
-          for file in simtools/schemas/model_parameters/*.yml; do
+          for file in src/simtools/schemas/model_parameters/*.yml; do
             if [[ ! $file =~ .*schema.yml$ ]]; then
               echo "File $file does not have the suffix *.schema.yml"
               exit 1
@@ -44,9 +44,9 @@ jobs:
 
       - name: Model parameter schema validation
         run: |
-          for file in simtools/schemas/model_parameters/*.yml; do
+          for file in src/simtools/schemas/model_parameters/*.yml; do
             echo "Testing schema $file"
-            python simtools/applications/validate_file_using_schema.py \
+            python src/simtools/applications/validate_file_using_schema.py \
             --file_name "$file" \
             --schema model_parameter_and_data_schema.metaschema.yml \
             --data_type "schema" \
@@ -57,7 +57,7 @@ jobs:
         run: |
           for file in tests/integration_tests/config/*.yml; do
             echo "Testing config file $file"
-            python simtools/applications/validate_file_using_schema.py \
+            python src/simtools/applications/validate_file_using_schema.py \
             --file_name "$file" \
             --schema integration_tests_config.metaschema.yml \
             --data_type "schema" \

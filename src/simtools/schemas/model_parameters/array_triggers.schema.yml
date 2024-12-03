@@ -1,0 +1,93 @@
+%YAML 1.2
+---
+title: Schema for array_triggers model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: array_triggers
+description: |-
+  Array trigger definition. Includes specific coincidence gate
+  widths and telescope multiplicities.
+short_description: |-
+  Array trigger definition.
+data:
+  - type: dict
+    json_schema:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            format: array_trigger_name
+            description: |-
+              Name of the trigger
+              (combination of telescope type and 'array' or 'single_telescope').
+          multiplicity:
+            type: object
+            description: |-
+              Minimum number of telescopes required to trigger.
+            properties:
+              value:
+                type: integer
+                minimum: 0
+              unit:
+                type: "null"
+            required: [value]
+          width:
+            type: object
+            description: |-
+              Width of the trigger time window for stereo triggers.
+            properties:
+              value:
+                type: number
+                minimum: 0.
+              unit:
+                anyOf:
+                  - type: string
+                    format: astropy_unit_of_time
+            required: [value, unit]
+          hard_stereo:
+            type: object
+            description: |-
+              Readout requires stereo condition to be met
+              (even if condition is met for other telescope types)
+            properties:
+              value:
+                type: boolean
+              unit:
+                type: "null"
+            required: [value]
+          min_separation:
+            type: object
+            description: |-
+              Minimum separation between telescopes in the ground system to be
+              considered for stereo trigger.
+            properties:
+              value:
+                anyOf:
+                  - type: number
+                  - type: "null"
+              unit:
+                type: string
+                format: astropy_unit_of_length
+            required: [value, unit]
+        required: [name, multiplicity, width, hard_stereo, min_separation]
+instrument:
+  class: Site
+  type:
+    - Observatory
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTelescopeSimulationModel
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

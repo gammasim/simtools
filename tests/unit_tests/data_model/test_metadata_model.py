@@ -1,5 +1,6 @@
 import logging
 import os
+from importlib.resources import files
 
 import jsonschema
 import pytest
@@ -51,13 +52,11 @@ def test_validate_schema(tmp_test_directory):
 
 
 def test_validate_schema_astropy_units(caplog):
-    _schema = "simtools/schemas/model_parameter_and_data_schema.metaschema.yml"
+    _schema = files("simtools") / "schemas" / "model_parameter_and_data_schema.metaschema.yml"
 
     success_string = "Successful validation of data using schema from"
 
-    _dict_1 = gen.collect_data_from_file_or_dict(
-        file_name="tests/resources/num_gains.schema.yml", in_dict=None
-    )
+    _dict_1 = gen.collect_data_from_file(file_name="tests/resources/num_gains.schema.yml")
     with caplog.at_level(logging.DEBUG):
         metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
     assert success_string in caplog.text

@@ -7,6 +7,53 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.8.2](https://github.com/gammasim/simtools/tree/0.8.2) - 2024-12-03
+
+### Maintenance
+
+- Move simtools package layout to src-layout. ([#1264](https://github.com/gammasim/simtools/pull/1264))
+
+
+## [v0.8.1](https://github.com/gammasim/simtools/tree/v0.8.1) - 2024-11-26
+
+### Bugfixes
+
+- Fix authentication and writing permits for deployment of simtools to pypi. ([#1256](https://github.com/gammasim/simtools/pull/1256))
+
+
+## [v0.8.0](https://github.com/gammasim/simtools/tree/v0.8.0) - 2024-11-26
+
+### API Changes
+
+- Improve primary particle API and validate consistency of user input. ([#1127](https://github.com/gammasim/simtools/pull/1127))
+- Refactor old style configuration of ray-tracing tools. ([#1142](https://github.com/gammasim/simtools/pull/1142))
+
+### Bugfixes
+
+- Fix triggering of telescopes in light emission package. ([#1128](https://github.com/gammasim/simtools/pull/1128))
+
+### Documentation
+
+- Add missing API documentation for several applications. ([#1194](https://github.com/gammasim/simtools/pull/1194))
+- Add Towncrier for CHANGELOG generation for each release. ([#1236](https://github.com/gammasim/simtools/pull/1236))
+
+### New Features
+
+- Added application `submit_model_parameter_from_external.py to submit and validate a new model parameter to SimPipe. ([#1224](https://github.com/gammasim/simtools/pull/1224))
+- Add simulation production configuration tool. ([#1244](https://github.com/gammasim/simtools/pull/1244))
+
+### Maintenance
+
+- Update build command for CORSIKA/sim\_telarray to prod6-sc. ([#1235](https://github.com/gammasim/simtools/pull/1235))
+- Refactoring of integration test routines into `simtools.testing` modules. ([#1238](https://github.com/gammasim/simtools/pull/1238))
+
+### Simulation model
+
+- Move to strictly using semantic versions for models (remove e.g., 'prod5', 'prod6', 'Latest', 'Released'). ([#1123](https://github.com/gammasim/simtools/pull/1123))
+- Add schema for correction of NSB spectrum to the telescope altitude. ([#1171](https://github.com/gammasim/simtools/pull/1171))
+- Allow for class Telescope in model parameters. ([#1173](https://github.com/gammasim/simtools/pull/1173))
+
+
 ## [0.7.0](https://github.com/gammasim/simtools/tree/0.7.0) - 2024-11-12
 
 ### New Features

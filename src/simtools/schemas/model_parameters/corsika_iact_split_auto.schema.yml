@@ -1,0 +1,28 @@
+%YAML 1.2
+---
+title: Schema for corsika_iact_split_auto model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: corsika_iact_split_auto
+short_description: |-
+  Maximum number of bunches before splitting into several blocks (per telescope).
+description: |-
+  Maximum number of bunches before splitting into several blocks (per telescope).
+  If the full data block for the entire array would exceed the given number of bunches,
+  it gets split up into separate blocks per individual telescope, in order to avoid
+  exceeding the hard I/O buffer size limit.
+data:
+  - type: int
+    unit: dimensionless
+    default: 15000000
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Configuration
+simulation_software:
+  - name: corsika

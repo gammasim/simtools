@@ -1,8 +1,8 @@
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [
-  "setuptools>=65",
-  "setuptools-scm[toml]>=6.2",
+  "setuptools>=64",
+  "setuptools-scm[toml]>=8",
 ]
 
 [project]
@@ -89,6 +89,8 @@ scripts.simtools-generate-default-metadata = "simtools.applications.generate_def
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
+scripts.simtools-production-generate-simulation-config = "simtools.applications.production_generate_simulation_config:main"
+scripts.simtools-production-scale-events = "simtools.applications.production_scale_events:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
@@ -100,13 +102,14 @@ scripts.simtools-validate-file-using-schema = "simtools.applications.validate_fi
 scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
 
 [tool.setuptools]
-packages = [
-  "simtools",
-]
-include-package-data = true
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = [ "src" ]
+exclude = [ "simtools._dev_version.*" ]
 
 [tool.setuptools_scm]
-write_to = "simtools/_version.py"
+write_to = "src/simtools/_version.py"
 
 [tool.black]
 line-length = 100
@@ -260,7 +263,7 @@ minversion = "6.0"
 norecursedirs = [
   "build",
   "docs/_build",
-  "simtools/applications",
+  "src/simtools/applications",
 ]
 addopts = "-v --cov=simtools --cov-report=xml --cov-report=term"
 testpaths = "tests/unit_tests/"
@@ -273,10 +276,8 @@ exclude_also = [
 ]
 
 [tool.coverage.run]
+omit = [ "src/simtools/_version.py", "*__init__*", "src/simtools/applications/**" ]
 relative_files = true
-source = [
-  "simtools",
-]
 
 [tool.towncrier]
 package = "simtools"
@@ -292,7 +293,7 @@ name = "New Features"
 showcontent = true
 
 [tool.towncrier.fragment.bugfix]
-name = "Bug Fixes"
+name = "Bugfixes"
 showcontent = true
 
 [tool.towncrier.fragment.api]
