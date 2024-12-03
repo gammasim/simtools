@@ -14,8 +14,8 @@ import yaml
 
 import simtools.version
 
-sys.path.insert(0, os.path.abspath("../../simtools"))
-sys.path.insert(0, os.path.abspath("../../simtools/applications"))
+sys.path.insert(0, os.path.abspath("../../src/simtools"))
+sys.path.insert(0, os.path.abspath("../../src/simtools/applications"))
 sys.path.insert(0, os.path.abspath("../.."))
 
 
