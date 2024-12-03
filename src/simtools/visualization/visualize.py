@@ -28,6 +28,7 @@ __all__ = [
     "plot_array",
     "plot_hist_2d",
     "plot_table",
+    "save_figure",
     "set_style",
 ]
 
