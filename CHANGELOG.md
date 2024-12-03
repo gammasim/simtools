@@ -7,6 +7,13 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.8.2](https://github.com/gammasim/simtools/tree/0.8.2) - 2024-12-03
+
+### Maintenance
+
+- Move simtools package layout to src-layout. ([#1264](https://github.com/gammasim/simtools/pull/1264))
+
+
 ## [v0.8.1](https://github.com/gammasim/simtools/tree/v0.8.1) - 2024-11-26
 
 ### Bugfixes
