@@ -71,7 +71,6 @@ def main():
     io_handler_instance = io_handler.IOHandler()
 
     plot_config = gen.collect_data_from_file(args_dict["plot_config"])["CTA_SIMPIPE"]["PLOT"]
-    # data normalization? (e.g. divide by max value)
 
     data = {}
     for _config in plot_config["DATA"]:
