@@ -785,3 +785,25 @@ def read_file_encoded_in_utf_or_latin(file_name):
             raise UnicodeDecodeError("Unable to decode file using UTF-8 or Latin-1.") from exc
 
     return lines
+
+
+def get_structure_array_from_table(table, column_names):
+    """
+    Get a structured array from an astropy table for a selected list of columns.
+
+    Parameters
+    ----------
+    table: astropy.table.Table
+        Table to be converted.
+    column_names: list
+        List of column names to be included in the structured array.
+
+    Returns
+    -------
+    numpy.ndarray
+        Structured array containing the table data.
+    """
+    return np.array(
+        list(zip(*[np.array(table[col]) for col in column_names])),
+        dtype=[(col, np.array(table[col]).dtype) for col in column_names],
+    )

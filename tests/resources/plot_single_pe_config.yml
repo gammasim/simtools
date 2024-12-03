@@ -1,0 +1,19 @@
+CTA_SIMPIPE:
+  PLOT:
+    TYPE: single_pe
+    TITLE: 'Single p.e. response'
+    AXIS:
+      - TITLE: 'Amplitude'
+        MIN: 0.
+        MAX: 40.
+        LOG: false
+      - TITLE: 'Response'
+        RANGE:
+        MIN: 1.e-11
+        SCALE: 'log'
+    DATA:
+      - FILE_NAME: /Users/maierg/DESYCloud/CTA/Pipelines/MC-Pipeline/gammasim-tools/model-parameter-setting/submission_queue/20241126-113800-LSTN01-single_pe/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
+        TYPE: "legacy_lst_single_pe"
+        LABEL: 'LST-legacy'
+        COLUMN_X: 'amplitude'
+        COLUMN_Y: 'response'
