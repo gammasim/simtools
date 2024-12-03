@@ -31,7 +31,7 @@ dependencies = [
   "astropy",
   "boost-histogram",
   "ctao-dpps-cosmic-ray-spectra",
-  "ctapipe",
+  "ctapipe-base",
   "eventio",
   "jsonschema",
   "matplotlib",
