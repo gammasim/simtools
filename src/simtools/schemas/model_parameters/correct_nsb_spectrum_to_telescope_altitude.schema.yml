@@ -1,0 +1,35 @@
+%YAML 1.2
+---
+title: Schema for correct_nsb_spectrum_to_telescope_altitude model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: correct_nsb_spectrum_to_telescope_altitude
+description: |-
+  Correct the night-sky background spectrum to the telescope altitude from the altitude where
+  the Benn & Ellison spectrum was measured.
+  The correction is done within sim_telarray
+  and is based on the atmospheric transmission to 2200 m a.s.l (atm_trans_2200_1_3_0_0_0.dat).
+data:
+  - type: file
+    unit: dimensionless
+    default: "atm_trans_2200_1_3_0_0_0.dat"
+instrument:
+  class: Telescope
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Calibration
+simulation_software:
+  - name: simtools

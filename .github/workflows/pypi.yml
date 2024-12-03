@@ -2,12 +2,16 @@
 name: Deploy to PyPi
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: pypi-release
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 

@@ -1,0 +1,52 @@
+%YAML 1.2
+---
+title: Schema for corsika_particle_kinetic_energy_cutoff model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: corsika_particle_kinetic_energy_cutoff
+description: |-
+  Kinetic energy cutoffs for different particle types.
+data:
+  - name: hadrons
+    type: float64
+    description: Kinetic energy cutoffs for hadrons.
+    unit: GeV
+    default: 0.3
+    allowed_range:
+      min: 0.05
+    required: true
+  - name: muons
+    type: float64
+    description: Kinetic energy cutoffs for muons.
+    unit: GeV
+    default: 0.1
+    allowed_range:
+      min: 0.01
+    required: true
+  - name: electrons
+    type: float64
+    description: Kinetic energy cutoffs for electrons.
+    unit: GeV
+    default: 0.020
+    allowed_range:
+      min: 0.00005
+    required: true
+  - name: gammas
+    type: float64
+    description: Kinetic energy cutoffs for gammas.
+    unit: GeV
+    default: 0.020
+    allowed_range:
+      min: 0.00005
+    required: true
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Configuration
+simulation_software:
+  - name: corsika

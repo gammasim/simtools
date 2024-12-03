@@ -36,10 +36,10 @@ jobs:
 
       - name: Check for complete API documentation
         run: |-
-          MODULES=$(find simtools -type f -name "*.py" \
-            ! -path "simtools/applications/*" \
+          MODULES=$(find src/simtools -type f -name "*.py" \
+            ! -path "src/simtools/applications/*" \
             ! -name "__init__.py" ! -name "version.py" \
-            ! -path "simtools/_*" -prune)
+            ! -path "src/simtools/_*" -prune)
           FULLY_DOCUMENTED="TRUE"
           for M in "${MODULES[@]}"; do
               module=$(basename "$M" .py)

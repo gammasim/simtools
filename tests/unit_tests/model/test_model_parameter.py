@@ -220,12 +220,12 @@ def test_change_parameter(telescope_model_lst):
         tel_model.change_parameter("bla_bla", 9999.9)
 
 
-def test_change_multiple_parameters_from_file(telescope_model_lst, mocker):
+def test_change_multiple_parameters_from_file(telescope_model_lst, caplog, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
-    mocker_gen = mocker.patch(
-        "simtools.utils.general.collect_data_from_file_or_dict", return_value={}
-    )
-    telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
+    mocker_gen = mocker.patch("simtools.utils.general.collect_data_from_file", return_value={})
+    with caplog.at_level(logging.WARNING):
+        telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
+    assert "Changing multiple parameters from file is a feature for developers." in caplog.text
     mocker_gen.assert_called_once()
 
 
