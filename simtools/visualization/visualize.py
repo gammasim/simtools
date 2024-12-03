@@ -5,6 +5,7 @@ import copy
 import logging
 import re
 from collections import OrderedDict
+from pathlib import Path
 
 import astropy.units as u
 import matplotlib.patches as mpatches
@@ -366,6 +367,10 @@ def handle_kwargs(kwargs):
         "empty_markers": False,
         "plot_ratio": False,
         "plot_difference": False,
+        "xscale": "linear",
+        "yscale": "linear",
+        "xlim": (None, None),
+        "ylim": (None, None),
     }
     for key, default in kwargs_defaults.items():
         kwargs[key] = kwargs.pop(key, default)
@@ -419,6 +424,10 @@ def plot_main_data(data_dict, kwargs, plot_args):
         y_title_unit = _add_unit(y_title, data_now[y_title])
         plt.plot(data_now[x_title], data_now[y_title], label=label, **plot_args)
 
+    plt.xscale(kwargs["xscale"])
+    plt.yscale(kwargs["yscale"])
+    plt.xlim(kwargs["xlim"])
+    plt.ylim(kwargs["ylim"])
     plt.ylabel(y_title_unit)
     if not (kwargs["plot_ratio"] or kwargs["plot_difference"]):
         plt.xlabel(x_title_unit)
@@ -878,3 +887,26 @@ def plot_simtel_ctapipe(filename, cleaning_args, distance, return_cleaned=False)
     ax.set_axis_off()
     fig.tight_layout()
     return fig
+
+
+def save_figure(fig, output_file, figure_format=None, log_title=""):
+    """
+    Save figure to output file(s).
+
+    Parameters
+    ----------
+    fig: plt.figure
+        Figure to save.
+    output_file: Path, str
+        Path to save the figure (without suffix).
+    figure_format: list
+        List of formats to save the figure.
+    title: str
+        Title of the figure to be added to the log message.
+    """
+    figure_format = figure_format or ["pdf", "png"]
+    for fmt in figure_format:
+        _file = Path(output_file).with_suffix(f".{fmt}")
+        fig.savefig(_file, format=fmt, bbox_inches="tight")
+        logging.info(f"Saved plot {log_title} to {_file}")
+    fig.clf()
