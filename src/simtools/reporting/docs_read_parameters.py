@@ -61,6 +61,8 @@ class ReadParameters:
                         outfile.write("\n\n")
                         continue
                     outfile.write("| " + " | ".join(row) + " |\n\n")
+        print("in: ", input_path)
+        subprocess.run(["rm", input_path], check=True)
         return output_path
 
     def get_all_parameter_descriptions(self):
