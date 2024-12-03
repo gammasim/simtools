@@ -43,10 +43,10 @@ def _parse(label, description, usage):
     config = configurator.Configurator(label=label, description=description, usage=usage)
 
     config.parser.add_argument(
-        "--config_file",
+        "--plot_config",
         help="Plotting configuration file name.",
         type=str,
-        required=False,
+        required=True,
         default=None,
     )
     config.parser.add_argument(
@@ -63,13 +63,14 @@ def main():
     args_dict, _ = _parse(
         label=Path(__file__).stem,
         description="Plots tabular data.",
-        usage="simtools-plot-tabular-data --config_file config_file_name",
+        usage="""simtools-plot-tabular-data --plot_config config_file_name "
+                 --output_file output_file_name""",
     )
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     io_handler_instance = io_handler.IOHandler()
 
-    plot_config = gen.collect_data_from_file(args_dict["config_file"])["CTA_SIMPIPE"]["PLOT"]
+    plot_config = gen.collect_data_from_file(args_dict["plot_config"])["CTA_SIMPIPE"]["PLOT"]
     # data normalization? (e.g. divide by max value)
 
     data = {}
