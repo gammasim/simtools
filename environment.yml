@@ -1,10 +1,10 @@
 # A conda environment with all useful package for simtools developers
-name: simtools-dev
+name: simtools-dev-base
 channels:
   - conda-forge
 dependencies:
   - python=3.11
-  - astropy-base
+  - astropy
   - boost-histogram
   - ctapipe-base
   - eventio
