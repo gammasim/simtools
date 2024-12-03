@@ -43,7 +43,7 @@ CTA:
       MODEL:
         NAME: num_gains
         VERSION: 0.1.0
-        URL: https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/simtools/schemas/model_parameters/num_gains.schema.yml
+        URL: https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/src/simtools/schemas/model_parameters/num_gains.schema.yml
   # Additional information about the data product.
   CONTEXT:
     # List of relevant documents
