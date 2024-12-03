@@ -28,13 +28,13 @@ dynamic = [
   "version",
 ]
 dependencies = [
-  "astropy",
+  "astropy-base",
   "boost-histogram",
   "ctao-dpps-cosmic-ray-spectra",
   "ctapipe-base",
   "eventio",
   "jsonschema",
-  "matplotlib",
+  "matplotlib-base",
   "numpy",
   "particle",
   "pymongo",
