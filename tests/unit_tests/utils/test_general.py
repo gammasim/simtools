@@ -11,6 +11,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 import yaml
+from astropy.table import Table
 
 import simtools.utils.general as gen
 
@@ -626,3 +627,43 @@ def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
     non_existent_file = tmp_test_directory / "non_existent_file.txt"
     with pytest.raises(FileNotFoundError):
         gen.read_file_encoded_in_utf_or_latin(non_existent_file)
+
+
+def test_get_structure_array_from_table():
+    table = Table(
+        {
+            "col1": [1, 2, 3],
+            "col2": [4.0, 5.0, 6.0],
+            "col3": ["a", "b", "c"],
+        }
+    )
+
+    # Test with all columns
+    column_names = ["col1", "col2", "col3"]
+    structured_array = gen.get_structure_array_from_table(table, column_names)
+    assert structured_array.dtype.names == ("col1", "col2", "col3")
+    assert structured_array["col1"].tolist() == [1, 2, 3]
+    assert structured_array["col2"].tolist() == [4.0, 5.0, 6.0]
+    assert structured_array["col3"].tolist() == ["a", "b", "c"]
+
+    # Test with a subset of columns
+    column_names = ["col1", "col3"]
+    structured_array = gen.get_structure_array_from_table(table, column_names)
+    assert structured_array.dtype.names == ("col1", "col3")
+    assert structured_array["col1"].tolist() == [1, 2, 3]
+    assert structured_array["col3"].tolist() == ["a", "b", "c"]
+
+    # Test with a single column
+    column_names = ["col2"]
+    structured_array = gen.get_structure_array_from_table(table, column_names)
+    assert structured_array.dtype.names == ("col2",)
+    assert structured_array["col2"].tolist() == [4.0, 5.0, 6.0]
+
+    # Test with an empty list of columns
+    column_names = []
+    assert gen.get_structure_array_from_table(table, column_names).size == 0
+
+    # Test with a non-existent column
+    column_names = ["col1", "non_existent_col"]
+    with pytest.raises(KeyError):
+        gen.get_structure_array_from_table(table, column_names)
