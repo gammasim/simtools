@@ -47,7 +47,7 @@ def generate_markdown_report(output_path, args_dict, data):
     # Sort data by class to prepare for grouping
     data.sort(key=itemgetter(0))  # Sort by the first element (class)
 
-    output_filename = f'{output_path}/{args_dict["telescope"]}.md'
+    output_filename = output_path / Path(args_dict["telescope"] + ".md")
 
     # Start writing the Markdown file
     with Path(output_filename).open("w", encoding="utf-8") as file:
@@ -74,7 +74,7 @@ def main():  # noqa: D103
 
     io_handler_instance = io_handler.IOHandler()
     output_path = io_handler_instance.get_output_directory(
-        label=label_name, sub_dir=f"v{args['model_version']}"
+        label=label_name, sub_dir=f"{args['model_version']}"
     )
 
     logger = logging.getLogger()
