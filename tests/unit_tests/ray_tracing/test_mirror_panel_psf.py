@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import copy
+import re
 from unittest.mock import patch
 
 import astropy.units as u
@@ -23,6 +24,7 @@ def mock_args_dict(tmp_test_directory):
         "random_focal_length": None,
         "no_tuning": False,
         "rnda": 0,
+        "rtol_psf_containment": 0.1,
         "simtel_path": "path/to/simtel",
         "number_of_mirrors_to_test": 2,
         "use_random_focal_length": False,
@@ -309,47 +311,33 @@ def test_derive_random_reflection_angle_with_tuning(
         assert mirror_psf.sig_d80 == 0.1
 
 
-def test_interpolate_optimal_rnda(mock_mirror_panel_psf):
-    mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
-    mirror_psf.results_rnda = [0.1, 0.2, 0.3]
-    mirror_psf.results_mean = [0.4, 0.5, 0.6]
-    mirror_psf.results_sig = [0.01, 0.02, 0.03]
-    mirror_psf.args_dict["psf_measurement_containment_mean"] = 0.55
-
-    with patch("numpy.interp", return_value=0.25) as mock_interp:
-        mirror_psf._interpolate_optimal_rnda()
-
-        mock_interp.assert_called_once_with(
-            x=0.55,
-            xp=[0.4, 0.5, 0.6],
-            fp=[0.1, 0.2, 0.3],
-        )
-        assert mirror_psf.rnda_opt == 0.25
-
-
 def test_optimize_reflection_angle(mock_mirror_panel_psf, mock_run_simulations_and_analysis_string):
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.rnda_start = 0.1
     mirror_psf.args_dict["psf_measurement_containment_mean"] = 0.5
 
-    with (
-        patch(
-            mock_run_simulations_and_analysis_string,
-            side_effect=[
-                (0.7, 0.1),  # First call
-                (0.6, 0.1),  # Second call
-                (0.4, 0.1),  # Third call
-            ],
-        ) as mock_run_simulations,
-        patch(
-            "simtools.ray_tracing.mirror_panel_psf.MirrorPanelPSF._interpolate_optimal_rnda"
-        ) as mock_interpolate,
-    ):
+    with patch(
+        mock_run_simulations_and_analysis_string,
+        side_effect=[
+            (0.7, 0.1),  # First call
+            (0.6, 0.1),  # Second call
+            (0.45, 0.1),  # Third call
+        ],
+    ) as mock_run_simulations:
 
-        mirror_psf._optimize_reflection_angle(0.9)
+        mirror_psf._optimize_reflection_angle(relative_tolerance_d80=0.1)
 
-        assert mirror_psf.results_rnda == pytest.approx([0.1, 0.01, 0.0])
-        assert mirror_psf.results_mean == pytest.approx([0.7, 0.6, 0.6])
+        assert mirror_psf.results_rnda == pytest.approx([0.1, 0.09, 0.08])
+        assert mirror_psf.results_mean == pytest.approx([0.7, 0.6, 0.45])
         assert mirror_psf.results_sig == pytest.approx([0.1, 0.1, 0.1])
-        mock_interpolate.assert_called_once()
-        assert mock_run_simulations.call_count == 2
+        assert mock_run_simulations.call_count == 3
+
+    with patch(
+        mock_run_simulations_and_analysis_string,
+        side_effect=lambda *args, **kwargs: (0.6, 0.1),
+    ) as mock_run_simulations:
+        with pytest.raises(
+            ValueError,
+            match=re.escape("Maximum iterations (100) reached without convergence."),
+        ):
+            mirror_psf._optimize_reflection_angle(relative_tolerance_d80=0.1)
