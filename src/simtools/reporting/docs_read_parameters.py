@@ -14,10 +14,11 @@ from simtools.utils import names
 class ReadParameters:
     """Read and manage model parameter data."""
 
-    def __init__(self, telescope_model):
+    def __init__(self, telescope_model, output_folder):
         """Initialise class with a telescope model."""
         self._logger = logging.getLogger(__name__)
         self.telescope_model = telescope_model
+        self.output_folder = output_folder
 
     def _get_parameter_classes(self):
         """Load parameter classifications by category."""
@@ -40,17 +41,16 @@ class ReadParameters:
         - Path to the created Markdown file.
         """
         input_path = Path(input_file)
-        output_path = (
-            Path(input_file.replace(".dat", ".md"))
-            if input_file.endswith(".dat")
-            else Path(input_file.replace(".ecsv", ".md"))
-        )
+        subprocess.run(["mkdir", "-p", f"{self.output_folder}/data_files"], check=True)
+        output_path = Path(f"{self.output_folder}/data_files/" + input_path.stem + ".md")
 
         with (
             input_path.open("r", encoding="utf-8") as infile,
             output_path.open("w", encoding="utf-8") as outfile,
         ):
+
             for line in infile:
+                line = line.strip()
                 if line.startswith("#"):
                     comment = line.lstrip("#")
                     outfile.write(f"{comment}\n\n")
@@ -61,7 +61,7 @@ class ReadParameters:
                         outfile.write("\n\n")
                         continue
                     outfile.write("| " + " | ".join(row) + " |\n\n")
-        print("in: ", input_path)
+
         subprocess.run(["rm", input_path], check=True)
         return output_path
 
@@ -144,5 +144,4 @@ class ReadParameters:
             short_description = parameter_descriptions[1].get(parameter)
             inst_class = parameter_descriptions[2].get(parameter)
             data.append([inst_class, parameter, value, short_description])
-
         return data

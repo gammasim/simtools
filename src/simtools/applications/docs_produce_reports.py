@@ -9,6 +9,7 @@ The reports are then uploaded as GitLab Pages using GitLab's CI workflow.
 """
 
 import logging
+import subprocess
 from itertools import groupby
 from operator import itemgetter
 from pathlib import Path
@@ -47,28 +48,34 @@ def generate_markdown_report(output_folder, args_dict, data):
     # Sort data by class to prepare for grouping
     data.sort(key=itemgetter(0))  # Sort by the first element (class)
 
-    io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory(output_folder)
-    output_filename = f'{output_path}/v{args_dict["model_version"]}_{args_dict["telescope"]}.md'
+    output_filename = f'{output_folder}/{args_dict["telescope"]}.md'
 
     # Start writing the Markdown file
-    with open(output_filename, "w", encoding="utf-8") as file:
-        # Write the section header to specify the telescope
-        # file.write(f"# {args_dict['telescope']}\n\n")
-
+    with Path(output_filename).open("w", encoding="utf-8") as file:
         # Group by class and write sections
         for class_name, group in groupby(data, key=itemgetter(0)):
             file.write(f"# {class_name}\n\n")
-            file.write("##| Parameter Name | Values | Short Description |\n\n")
-            file.write("|----------------|--------|-------------------|\n\n")
+
+            # Write table header and separator row
+            # file.write("| Parameter Name | Values | Short Description |\n\n")
+            # file.write("|----------------|--------|-------------------|\n\n")
+
+            # Write table rows
             for _, parameter_name, value, short_description in group:
-                file.write(f"| {parameter_name} | {value} | {short_description} |\n")
-                file.write("\n")
+                file.write(f"**Parameter**: {parameter_name}\n\n")
+                file.write(f"**Value**: {value}\n\n")
+                file.write(f"**Short description**: {short_description}\n\n")
+                file.write("--------------------------\n\n")
+                file.write("\n\n")
 
 
 def main():  # noqa: D103
     label_name = Path(__file__).stem
     args, db_config = _parse(label_name)
+
+    io_handler_instance = io_handler.IOHandler()
+    output_path = io_handler_instance.get_output_directory(label_name)
+    subprocess.run(["mkdir", "-p", f"{output_path}/v{args['model_version']}"], check=True)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
@@ -81,9 +88,11 @@ def main():  # noqa: D103
         mongo_db_config=db_config,
     )
 
-    parameter_data = ReadParameters(telescope_model).get_telescope_parameter_data()
+    parameter_data = ReadParameters(
+        telescope_model, f"{output_path}/v{args['model_version']}"
+    ).get_telescope_parameter_data()
 
-    generate_markdown_report(label_name, args, parameter_data)
+    generate_markdown_report(f"{output_path}/v{args['model_version']}", args, parameter_data)
 
     logger.info(
         f"Markdown report generated for {args['site']}"
