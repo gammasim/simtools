@@ -9,6 +9,7 @@ CTA_SIMPIPE:
     PSF_MEASUREMENT: ./tests/resources/MLTdata-preproduction.ecsv
     USE_RANDOM_FOCAL_LENGTH: true
     RNDA: 0.0063
+    RTOL_PSF_CONTAINMENT: 0.1
     TEST: true
     OUTPUT_PATH: simtools-output
     OUTPUT_FILE: test_derive_mirror_rnda_psf_measurement.ecsv
