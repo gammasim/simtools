@@ -4,10 +4,8 @@ r"""Class to read and manage relevant model parameters for a given telescope mod
 
 import logging
 import os
-import subprocess
 from pathlib import Path
 
-from simtools.io_operations import io_handler
 from simtools.utils import names
 
 
@@ -56,7 +54,6 @@ class ReadParameters:
                         continue
                     outfile.write("| " + " | ".join(row) + " |\n\n")
 
-        subprocess.run(["rm", input_file], check=True)
         return output_file
 
     def get_all_parameter_descriptions(self):
@@ -70,23 +67,19 @@ class ReadParameters:
                 - short_description: Maps parameter names to their short descriptions.
                 - inst_class: Maps parameter names to their respective class.
         """
-        parameter_description = {}
-        short_description = {}
-        inst_class = {}
+        parameter_description, short_description, inst_class = {}, {}, {}
 
         for instrument_class in names.instrument_classes("telescope"):
-            all_parameters = names.load_model_parameters(instrument_class)
-
-            for parameter, details in all_parameters.items():
-                parameter_description[parameter] = details.get("description", "To be added.")
-                short_description[parameter] = details.get("short_description", "To be added.")
+            for parameter, details in names.load_model_parameters(instrument_class).items():
+                parameter_description[parameter] = details.get("description")
+                short_description[parameter] = details.get("short_description")
                 inst_class[parameter] = instrument_class
 
         return parameter_description, short_description, inst_class
 
     def get_telescope_parameter_data(self):
         """
-        Get model parameter data for a given telescope.
+        Get model parameter data.
 
         Returns
         -------
@@ -94,45 +87,29 @@ class ReadParameters:
                   descriptions, and short descriptions.
         """
         parameter_descriptions = self.get_all_parameter_descriptions()
-        parameter_names = parameter_descriptions[0].keys()
+        self.telescope_model.export_model_files()
 
         data = []
-        output_path = io_handler.IOHandler().get_output_directory()
-
-        for parameter in parameter_names:
-
-            if self.telescope_model.has_parameter(parameter):
-                value = self.telescope_model.get_parameter_value_with_unit(parameter)
-                if isinstance(value, list):
-                    value = ", ".join(str(q) for q in value)
-
-                elif isinstance(value, str) and value.endswith((".dat", ".ecsv")):
-                    try:
-                        subprocess.run(
-                            [
-                                "python3",
-                                "-m",
-                                "simtools.applications.db_get_file_from_db",
-                                "--file_name",
-                                value,
-                            ],
-                            capture_output=True,
-                            text=True,
-                            check=True,
-                        )
-
-                        input_filename = os.path.join(output_path, os.path.basename(value))
-                        output_filename = self._convert_to_md(input_filename)
-                        value = f"[{os.path.basename(value)}]({output_filename.as_posix()})"
-
-                    except FileNotFoundError:
-                        value = f"File not found: {value}"
-
-            else:
+        for parameter in parameter_descriptions[0]:
+            if not self.telescope_model.has_parameter(parameter):
                 continue
 
-            # description = parameter_descriptions[0].get(parameter)
-            short_description = parameter_descriptions[1].get(parameter)
+            value = self.telescope_model.get_parameter_value_with_unit(parameter)
+            if self.telescope_model.get_parameter_file_flag(parameter) and value:
+                try:
+                    input_file_name = self.telescope_model.config_file_directory / Path(value)
+                    output_file_name = self._convert_to_md(input_file_name)
+                    value = f"[{os.path.basename(value)}]({output_file_name.as_posix()})"
+                except FileNotFoundError:
+                    value = f"File not found: {value}"
+            elif isinstance(value, list):
+                value = ", ".join(str(q) for q in value)
+            else:
+                value = str(value)
+
+            description = parameter_descriptions[0].get(parameter)
+            short_description = parameter_descriptions[1].get(parameter, description)
             inst_class = parameter_descriptions[2].get(parameter)
             data.append([inst_class, parameter, value, short_description])
+
         return data
