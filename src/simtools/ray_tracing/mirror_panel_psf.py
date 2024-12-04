@@ -132,49 +132,74 @@ class MirrorPanelPSF:
         if self.args_dict["no_tuning"]:
             self.rnda_opt = self.rnda_start
         else:
-            self._optimize_reflection_angle()
+            self._optimize_reflection_angle(
+                relative_tolerance_d80=self.args_dict["rtol_psf_containment"],
+            )
 
         self.mean_d80, self.sig_d80 = self.run_simulations_and_analysis(
             self.rnda_opt, save_figures=save_figures
         )
 
-    def _optimize_reflection_angle(self, step_size=0.1):
-        """Optimize the random reflection angle to minimize the difference in D80 containment."""
+    def _optimize_reflection_angle(
+        self, relative_tolerance_d80=0.1, step_size=0.1, max_iteration=100
+    ):
+        """
+        Optimize the random reflection angle to minimize the difference in D80 containment.
+
+        Parameters
+        ----------
+        relative_tolerance_d80: float
+            Relative tolerance for the D80 containment.
+        step_size: float
+            Initial step size for optimization.
+        max_iteration: int
+            Maximum number of iterations.
+
+        Raises
+        ------
+        ValueError
+            If the optimization reaches the maximum number of iterations without converging.
+
+        """
+        self._logger.info(
+            "Optimizing random reflection angle "
+            f"(relative tolerance = {relative_tolerance_d80}, "
+            f"step size = {step_size}, max iteration = {max_iteration})"
+        )
 
         def collect_results(rnda, mean, sig):
             self.results_rnda.append(rnda)
             self.results_mean.append(mean)
             self.results_sig.append(sig)
 
-        stop = False
-        mean_d80, sig_d80 = self.run_simulations_and_analysis(self.rnda_start)
+        reference_d80 = self.args_dict["psf_measurement_containment_mean"]
         rnda = self.rnda_start
-        sign_delta = np.sign(mean_d80 - self.args_dict["psf_measurement_containment_mean"])
-        collect_results(rnda, mean_d80, sig_d80)
-        while not stop:
-            rnda = rnda - (step_size * self.rnda_start * sign_delta)
-            if rnda < 0:
-                rnda = 0
-                collect_results(rnda, mean_d80, sig_d80)
-                break
+        prev_error_d80 = float("inf")
+        iteration = 0
+
+        while True:
             mean_d80, sig_d80 = self.run_simulations_and_analysis(rnda)
-            new_sign_delta = np.sign(mean_d80 - self.args_dict["psf_measurement_containment_mean"])
-            stop = new_sign_delta != sign_delta
-            sign_delta = new_sign_delta
+            error_d80 = abs(1 - mean_d80 / reference_d80)
             collect_results(rnda, mean_d80, sig_d80)
 
-        self._interpolate_optimal_rnda()
+            if error_d80 < relative_tolerance_d80:
+                break
 
-    def _interpolate_optimal_rnda(self):
-        """Interpolate to find the optimal random reflection angle."""
-        self.results_rnda, self.results_mean, self.results_sig = gen.sort_arrays(
-            self.results_rnda, self.results_mean, self.results_sig
-        )
-        self.rnda_opt = np.interp(
-            x=self.args_dict["psf_measurement_containment_mean"],
-            xp=self.results_mean,
-            fp=self.results_rnda,
-        )
+            if mean_d80 < reference_d80:
+                rnda += step_size * self.rnda_start
+            else:
+                rnda -= step_size * self.rnda_start
+
+            if error_d80 >= prev_error_d80:
+                step_size = step_size / 2
+            prev_error_d80 = error_d80
+            iteration += 1
+            if iteration > max_iteration:
+                raise ValueError(
+                    f"Maximum iterations ({max_iteration}) reached without convergence."
+                )
+
+        self.rnda_opt = rnda
 
     def _get_starting_value(self):
         """Get optimization starting value from command line or previous model."""
