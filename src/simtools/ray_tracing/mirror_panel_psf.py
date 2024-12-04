@@ -132,24 +132,18 @@ class MirrorPanelPSF:
         if self.args_dict["no_tuning"]:
             self.rnda_opt = self.rnda_start
         else:
-            self._optimize_reflection_angle(
-                relative_tolerance_d80=self.args_dict["rtol_psf_containment"],
-            )
+            self._optimize_reflection_angle()
 
         self.mean_d80, self.sig_d80 = self.run_simulations_and_analysis(
             self.rnda_opt, save_figures=save_figures
         )
 
-    def _optimize_reflection_angle(
-        self, relative_tolerance_d80=0.1, step_size=0.1, max_iteration=100
-    ):
+    def _optimize_reflection_angle(self, step_size=0.1, max_iteration=100):
         """
         Optimize the random reflection angle to minimize the difference in D80 containment.
 
         Parameters
         ----------
-        relative_tolerance_d80: float
-            Relative tolerance for the D80 containment.
         step_size: float
             Initial step size for optimization.
         max_iteration: int
@@ -161,6 +155,7 @@ class MirrorPanelPSF:
             If the optimization reaches the maximum number of iterations without converging.
 
         """
+        relative_tolerance_d80 = self.args_dict["rtol_psf_containment"]
         self._logger.info(
             "Optimizing random reflection angle "
             f"(relative tolerance = {relative_tolerance_d80}, "
