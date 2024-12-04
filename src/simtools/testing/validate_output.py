@@ -235,6 +235,7 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
 
         if np.issubdtype(table1_masked[col_name].dtype, np.floating):
             if not np.allclose(table1_masked[col_name], table2_masked[col_name], rtol=tolerance):
+                _logger.warning(f"Column {col_name} outside of relative tolerance {tolerance}")
                 return False
 
     return True
