@@ -325,7 +325,7 @@ def test_optimize_reflection_angle(mock_mirror_panel_psf, mock_run_simulations_a
         ],
     ) as mock_run_simulations:
 
-        mirror_psf._optimize_reflection_angle(relative_tolerance_d80=0.1)
+        mirror_psf._optimize_reflection_angle()
 
         assert mirror_psf.results_rnda == pytest.approx([0.1, 0.09, 0.08])
         assert mirror_psf.results_mean == pytest.approx([0.7, 0.6, 0.45])
@@ -340,4 +340,4 @@ def test_optimize_reflection_angle(mock_mirror_panel_psf, mock_run_simulations_a
             ValueError,
             match=re.escape("Maximum iterations (100) reached without convergence."),
         ):
-            mirror_psf._optimize_reflection_angle(relative_tolerance_d80=0.1)
+            mirror_psf._optimize_reflection_angle()
