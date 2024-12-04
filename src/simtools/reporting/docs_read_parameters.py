@@ -49,18 +49,12 @@ class ReadParameters:
             output_path.open("w", encoding="utf-8") as outfile,
         ):
 
-            for line in infile:
-                line = line.strip()
-                if line.startswith("#"):
-                    comment = line.lstrip("#")
-                    outfile.write(f"{comment}\n\n")
-
-                else:
-                    row = [col.strip() for col in line.split()]
-                    if not row:
-                        outfile.write("\n\n")
-                        continue
-                    outfile.write("| " + " | ".join(row) + " |\n\n")
+            outfile.write(f"# {input_file}")
+            outfile.write("```\n")
+            file_contents = infile.read()
+            outfile.write(file_contents)
+            outfile.write("\n")
+            outfile.write("```")
 
         subprocess.run(["rm", input_path], check=True)
         return output_path
@@ -131,8 +125,8 @@ class ReadParameters:
                         )
 
                         input_filename = os.path.join(output_folder, os.path.basename(value))
-                        output_filename = self._convert_to_md(input_filename)
-                        value = f"[{os.path.basename(value)}]({output_filename.as_posix()})"
+                        self._convert_to_md(input_filename)
+                        value = f"[{os.path.basename(value)}](./data_files/{value})"
 
                     except FileNotFoundError:
                         value = f"File not found: {value}"
