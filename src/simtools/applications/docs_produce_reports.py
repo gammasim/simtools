@@ -9,7 +9,6 @@ The reports are then uploaded as GitLab Pages using GitLab's CI workflow.
 """
 
 import logging
-import subprocess
 from itertools import groupby
 from operator import itemgetter
 from pathlib import Path
@@ -31,13 +30,13 @@ def _parse(label):
     return config.initialize(db_config=True, simulation_model=["telescope"])
 
 
-def generate_markdown_report(output_folder, args_dict, data):
+def generate_markdown_report(output_path, args_dict, data):
     """
     Generate a markdown file to report the parameter values.
 
     Parameters
     ----------
-    output_folder : str
+    output_path : str
         The folder where the markdown file will be saved.
     args_dict : dict
         Configuration arguments including model version and telescope name.
@@ -48,7 +47,7 @@ def generate_markdown_report(output_folder, args_dict, data):
     # Sort data by class to prepare for grouping
     data.sort(key=itemgetter(0))  # Sort by the first element (class)
 
-    output_filename = f'{output_folder}/{args_dict["telescope"]}.md'
+    output_filename = f'{output_path}/{args_dict["telescope"]}.md'
 
     # Start writing the Markdown file
     with Path(output_filename).open("w", encoding="utf-8") as file:
@@ -74,8 +73,9 @@ def main():  # noqa: D103
     args, db_config = _parse(label_name)
 
     io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory(label_name)
-    subprocess.run(["mkdir", "-p", f"{output_path}/v{args['model_version']}"], check=True)
+    output_path = io_handler_instance.get_output_directory(
+        label=label_name, sub_dir=f"v{args['model_version']}"
+    )
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
@@ -89,10 +89,11 @@ def main():  # noqa: D103
     )
 
     parameter_data = ReadParameters(
-        telescope_model, f"{output_path}/v{args['model_version']}"
+        telescope_model,
+        output_path,
     ).get_telescope_parameter_data()
 
-    generate_markdown_report(f"{output_path}/v{args['model_version']}", args, parameter_data)
+    generate_markdown_report(output_path, args, parameter_data)
 
     logger.info(
         f"Markdown report generated for {args['site']}"
