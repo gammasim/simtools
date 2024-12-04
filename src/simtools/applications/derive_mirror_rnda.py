@@ -180,7 +180,7 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--rtol_psf_containment",
-        help=("Relative tolerance for the containment diameter. " "Default is 0.1 (10%)."),
+        help="Relative tolerance for the containment diameter (default is 0.1).",
         type=float,
         required=False,
         default=0.1,
