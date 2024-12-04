@@ -179,6 +179,13 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
+        "--rtol_psf_containment",
+        help="Relative tolerance for the containment diameter (default is 0.1).",
+        type=float,
+        required=False,
+        default=0.1,
+    )
+    config.parser.add_argument(
         "--use_random_focal_length",
         help=("Use random focal lengths."),
         action="store_true",
