@@ -56,6 +56,7 @@ generate_regular_arrays <applications/generate_regular_arrays>
 plot_array_layout <applications/plot_array_layout>
 production_scale_events <applications/production_scale_events>
 production_generate_simulation_config <applications/production_generate_simulation_config>
+production_calculate_resource_estimates <applications/production_calculate_resource_estimates>
 simulate_light_emission <applications/simulate_light_emission>
 simulate_prod <applications/simulate_prod>
 submit_data_from_external <applications/submit_data_from_external>
