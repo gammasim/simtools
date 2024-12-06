@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-
 """
 Plot tabular data read from file or from model parameter database.
 
@@ -18,8 +17,8 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.io_operations import io_handler, legacy_data_handler
-from simtools.visualization import visualize
+from simtools.io_operations import io_handler
+from simtools.visualization import plot_tables
 
 
 def _parse(label, description, usage):
@@ -60,7 +59,7 @@ def _parse(label, description, usage):
 
 def main():
     """Plot tabular data."""
-    args_dict, _ = _parse(
+    args_dict, db_config_ = _parse(
         label=Path(__file__).stem,
         description="Plots tabular data.",
         usage="""simtools-plot-tabular-data --plot_config config_file_name "
@@ -70,31 +69,14 @@ def main():
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
     io_handler_instance = io_handler.IOHandler()
 
-    plot_config = gen.collect_data_from_file(args_dict["plot_config"])["CTA_SIMPIPE"]["PLOT"]
-
-    data = {}
-    for _config in plot_config["DATA"]:
-        table = legacy_data_handler.read_legacy_data_file(
-            _config["FILE_NAME"],
-            _config["TYPE"],
-        )
-        data[_config["LABEL"]] = gen.get_structure_array_from_table(
-            table, [_config["COLUMN_X"], _config["COLUMN_Y"]]
-        )
-
-    fig = visualize.plot_1d(
-        data,
-        y_title="Response",
-        title=plot_config["TITLE"],
-        xscale=plot_config["AXIS"][0].get("SCALE", "linear"),
-        yscale=plot_config["AXIS"][1].get("SCALE", "linear"),
-        xlim=(plot_config["AXIS"][0].get("MIN"), plot_config["AXIS"][0].get("MAX")),
-        ylim=(plot_config["AXIS"][1].get("MIN"), plot_config["AXIS"][1].get("MAX")),
+    plot_config = gen.convert_keys_in_dict_to_lowercase(
+        gen.collect_data_from_file(args_dict["plot_config"])
     )
 
-    visualize.save_figure(
-        fig,
-        io_handler_instance.get_output_file(args_dict["output_file"]),
+    plot_tables.plot(
+        config=plot_config["cta_simpipe"]["plot"],
+        output_file=io_handler_instance.get_output_file(args_dict["output_file"]),
+        db_config=db_config_,
     )
 
 

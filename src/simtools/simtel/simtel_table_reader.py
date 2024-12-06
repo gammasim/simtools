@@ -48,7 +48,7 @@ def read_simtel_table(parameter_name, file_path):
     parameter_name: str
         Model parameter name.
     file_path: Path
-        Path to the sim_telarray table file.
+        Name (full path) of the sim_telarray table file.
 
     Returns
     -------
