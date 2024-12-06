@@ -807,3 +807,24 @@ def get_structure_array_from_table(table, column_names):
         list(zip(*[np.array(table[col]) for col in column_names])),
         dtype=[(col, np.array(table[col]).dtype) for col in column_names],
     )
+
+
+def convert_keys_in_dict_to_lowercase(data):
+    """
+    Recursively convert all dictionary keys to lowercase.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary to be converted.
+
+    Returns
+    -------
+    dict
+        Dictionary with all keys converted to lowercase.
+    """
+    if isinstance(data, dict):
+        return {k.lower(): convert_keys_in_dict_to_lowercase(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [convert_keys_in_dict_to_lowercase(i) for i in data]
+    return data

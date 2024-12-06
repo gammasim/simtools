@@ -372,6 +372,8 @@ def handle_kwargs(kwargs):
         "yscale": "linear",
         "xlim": (None, None),
         "ylim": (None, None),
+        "xtitle": None,
+        "ytitle": None,
     }
     for key, default in kwargs_defaults.items():
         kwargs[key] = kwargs.pop(key, default)
@@ -420,10 +422,12 @@ def plot_main_data(data_dict, kwargs, plot_args):
     """Plot the main data."""
     for label, data_now in data_dict.items():
         assert len(data_now.dtype.names) == 2, "Input array must have two columns with titles."
-        x_title, y_title = data_now.dtype.names[0], data_now.dtype.names[1]
-        x_title_unit = _add_unit(x_title, data_now[x_title])
-        y_title_unit = _add_unit(y_title, data_now[y_title])
-        plt.plot(data_now[x_title], data_now[y_title], label=label, **plot_args)
+        x_column_name, y_column_name = data_now.dtype.names[0], data_now.dtype.names[1]
+        x_title = kwargs["xtitle"] if kwargs.get("xtitle") else x_column_name
+        y_title = kwargs["ytitle"] if kwargs.get("ytitle") else y_column_name
+        x_title_unit = _add_unit(x_title, data_now[x_column_name])
+        y_title_unit = _add_unit(y_title, data_now[y_column_name])
+        plt.plot(data_now[x_column_name], data_now[y_column_name], label=label, **plot_args)
 
     plt.xscale(kwargs["xscale"])
     plt.yscale(kwargs["yscale"])
