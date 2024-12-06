@@ -41,18 +41,12 @@ class ReadParameters:
             output_file.open("w", encoding="utf-8") as outfile,
         ):
 
-            for line in infile:
-                line = line.strip()
-                if line.startswith("#"):
-                    comment = line.lstrip("#")
-                    outfile.write(f"{comment}\n\n")
-
-                else:
-                    row = [col.strip() for col in line.split()]
-                    if not row:
-                        outfile.write("\n\n")
-                        continue
-                    outfile.write("| " + " | ".join(row) + " |\n\n")
+            outfile.write(f"# {input_file}")
+            outfile.write("```\n")
+            file_contents = infile.read()
+            outfile.write(file_contents)
+            outfile.write("\n")
+            outfile.write("```")
 
         return output_file
 
@@ -90,10 +84,10 @@ class ReadParameters:
         self.telescope_model.export_model_files()
 
         data = []
+
         for parameter in parameter_descriptions[0]:
             if not self.telescope_model.has_parameter(parameter):
                 continue
-
             value = self.telescope_model.get_parameter_value_with_unit(parameter)
             if self.telescope_model.get_parameter_file_flag(parameter) and value:
                 try:
