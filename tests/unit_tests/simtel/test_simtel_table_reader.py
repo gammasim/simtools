@@ -44,3 +44,8 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
     assert table.meta["name"] == parameter_name
     assert table.meta["file"] == spe_test_file
     assert spe_meta_test_comment in table.meta["context_from_sim_telarray"]
+
+    with pytest.raises(
+        ValueError, match="Unsupported parameter for sim_telarray table reading: not_a_parameter"
+    ):
+        simtel_table_reader.read_simtel_table("not_a_parameter", spe_test_file)
