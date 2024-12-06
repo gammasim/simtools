@@ -378,3 +378,18 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
         },
         model_directory,
     )
+
+
+def test_get_model_file_as_table(telescope_model_lst, mocker):
+
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+
+    with pytest.raises(ValueError, match="Parameter not_a_parameter not found in the model"):
+        telescope_copy.get_model_file_as_table("not_a_parameter")
+
+    mock_db_export = mocker.patch.object(DatabaseHandler, "export_model_files")
+    mock_simtel_table_reader = mocker.patch("simtools.simtel.simtel_table_reader.read_simtel_table")
+    telescope_copy.get_model_file_as_table("pm_photoelectron_spectrum")
+
+    assert mock_db_export.call_count == 1
+    assert mock_simtel_table_reader.call_count == 1
