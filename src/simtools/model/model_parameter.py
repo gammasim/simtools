@@ -513,7 +513,7 @@ class ModelParameter:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
-        self.db.export_model_files(pars_from_db.values(), self.config_file_directory)
+        self.db.export_model_files(pars_from_db, self.config_file_directory)
         self._is_exported_model_files_up_to_date = True
 
     def get_model_file_as_table(self, par_name):
