@@ -14,13 +14,20 @@ CTA_SIMPIPE:
         TELESCOPE: LSTN-01
         SITE: NORTH
         MODEL_VERSION: 6.0.0
-        LABEL: 'LST (prompt)'
+        LABEL: 'LSTN (prompt)'
         COLUMN_X: 'amplitude'
         COLUMN_Y: 'response'
       - PARAMETER: pm_photoelectron_spectrum
         TELESCOPE: LSTN-01
         SITE: NORTH
         MODEL_VERSION: 6.0.0
-        LABEL: 'LST (prompt + afterpulsing)'
+        LABEL: 'LSTN (prompt + afterpulsing)'
+        COLUMN_X: 'amplitude'
+        COLUMN_Y: 'response_with_ap'
+      - PARAMETER: pm_photoelectron_spectrum
+        TELESCOPE: MSTS-design
+        SITE: South
+        MODEL_VERSION: 6.0.0
+        LABEL: 'MSTS (prompt + afterpulsing)'
         COLUMN_X: 'amplitude'
         COLUMN_Y: 'response_with_ap'

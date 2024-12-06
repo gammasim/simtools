@@ -667,3 +667,44 @@ def test_get_structure_array_from_table():
     column_names = ["col1", "non_existent_col"]
     with pytest.raises(KeyError):
         gen.get_structure_array_from_table(table, column_names)
+
+
+def test_convert_keys_in_dict_to_lowercase():
+    """
+    Test the convert_keys_in_dict_to_lowercase function.
+    """
+
+    # Test with a simple dictionary.
+    input_data = {"Key1": "value1", "Key2": "value2"}
+    expected_output = {"key1": "value1", "key2": "value2"}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a nested dictionary.
+    input_data = {"Key1": {"NestedKey1": "value1"}, "Key2": "value2"}
+    expected_output = {"key1": {"nestedkey1": "value1"}, "key2": "value2"}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a dictionary containing a list.
+    input_data = {"Key1": ["Value1", {"NestedKey1": "value1"}], "Key2": "value2"}
+    expected_output = {"key1": ["Value1", {"nestedkey1": "value1"}], "key2": "value2"}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a list of dictionaries.
+    input_data = [{"Key1": "value1"}, {"Key2": "value2"}]
+    expected_output = [{"key1": "value1"}, {"key2": "value2"}]
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a non-dictionary input.
+    input_data = "String"
+    expected_output = "String"
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with an empty dictionary.
+    input_data = {}
+    expected_output = {}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a dictionary containing mixed types.
+    input_data = {"Key1": 123, "Key2": [1, 2, 3], "Key3": {"NestedKey1": "value1"}}
+    expected_output = {"key1": 123, "key2": [1, 2, 3], "key3": {"nestedkey1": "value1"}}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
