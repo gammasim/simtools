@@ -66,7 +66,7 @@ def main():
                  --output_file output_file_name""",
     )
     logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    logger.setLevel(gen.get_log_level_from_user(args_dict.get("log_level", "INFO"))
     io_handler_instance = io_handler.IOHandler()
 
     plot_config = gen.convert_keys_in_dict_to_lowercase(
