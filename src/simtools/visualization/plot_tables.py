@@ -24,7 +24,6 @@ def plot(config, output_file, db_config=None):
         data,
         **config,
     )
-
     visualize.save_figure(fig, output_file)
 
 
@@ -48,7 +47,9 @@ def read_table_data(config, db_config):
         if "parameter" in _config:
             table = _read_table_from_model_database(_config, db_config)
         elif "file_name" in _config:
-            table = legacy_data_handler.read_legacy_data_file(_config["file_name"], _config["type"])
+            table = legacy_data_handler.read_legacy_data_as_table(
+                _config["file_name"], _config["type"]
+            )
         else:
             raise ValueError("No table data defined in configuration.")
         data[_config["label"]] = gen.get_structure_array_from_table(
