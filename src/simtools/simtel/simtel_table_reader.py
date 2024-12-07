@@ -62,6 +62,28 @@ def _data_columns_quantum_efficiency():
     )
 
 
+def _data_columns_camera_filter():
+    """
+    Column description for camera filter data (parameter camera_filter).
+
+    Returns
+    -------
+    list, str
+        List of dictionaries with column name, description and unit and a description of the table.
+    """
+    return (
+        [
+            {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+            {
+                "name": "transmission",
+                "description": "Average transmission",
+                "unit": None,
+            },
+        ],
+        "Camera window transmission",
+    )
+
+
 def read_simtel_table(parameter_name, file_path):
     """
     Read sim_telarray table file for a given parameter.
@@ -88,10 +110,10 @@ def read_simtel_table(parameter_name, file_path):
     data, meta_from_simtel = _read_simtel_data(file_path)
 
     metadata = {
-        "name": parameter_name,
-        "file": str(file_path),
-        "description:": description,
-        "context_from_sim_telarray": meta_from_simtel,
+        "Name": parameter_name,
+        "File": str(file_path),
+        "Description:": description,
+        "Context_from_sim_telarray": meta_from_simtel,
     }
 
     rows = []
