@@ -6,6 +6,7 @@ import shutil
 from copy import copy
 
 import astropy.units as u
+from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.db import db_handler
@@ -536,6 +537,11 @@ class ModelParameter:
         except KeyError as exc:
             raise ValueError(f"Parameter {par_name} not found in the model.") from exc
         self.db.export_model_files(_par_entry, self.config_file_directory)
+        if _par_entry[par_name]["value"].endswith("ecsv"):
+            return Table.read(
+                self.config_file_directory.joinpath(_par_entry[par_name]["value"]),
+                format="ascii.ecsv",
+            )
         return simtel_table_reader.read_simtel_table(
             par_name, self.config_file_directory.joinpath(_par_entry[par_name]["value"])
         )
