@@ -3,7 +3,7 @@
 
 import logging
 
-import astropy.io.ascii
+from astropy.table import Table
 
 logger = logging.getLogger(__name__)
 
@@ -12,14 +12,10 @@ def _data_columns_pm_photoelectron_spectrum():
     """
     Column description for single p.e. data (parameter pm_photoelectron_spectrum).
 
-    This is a temporary solution and will we replaced by a definition in the
-    model parameters schema files
-
     Returns
     -------
     list, str
         List of dictionaries with column name, description and unit and a description of the table.
-
     """
     return (
         [
@@ -36,6 +32,33 @@ def _data_columns_pm_photoelectron_spectrum():
             },
         ],
         "Photoelectron spectrum",
+    )
+
+
+def _data_columns_quantum_efficiency():
+    """
+    Column description for quantum efficiency data (parameter quantum_efficiency).
+
+    Returns
+    -------
+    list, str
+        List of dictionaries with column name, description and unit and a description of the table.
+    """
+    return (
+        [
+            {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+            {
+                "name": "efficiency",
+                "description": "Quantum efficiency",
+                "unit": None,
+            },
+            {
+                "name": "efficiency_rms",
+                "description": "Quantum efficiency (standard deviation)",
+                "unit": None,
+            },
+        ],
+        "Quantum efficiency",
     )
 
 
@@ -62,27 +85,34 @@ def read_simtel_table(parameter_name, file_path):
             f"Unsupported parameter for sim_telarray table reading: {parameter_name}"
         ) from exc
 
-    data, meta_from_simtel = _read_simtel_table(file_path)
+    data, meta_from_simtel = _read_simtel_data(file_path)
 
     metadata = {
         "name": parameter_name,
-        "file": file_path,
+        "file": str(file_path),
         "description:": description,
         "context_from_sim_telarray": meta_from_simtel,
     }
-    table = astropy.io.ascii.read(
-        data,
-        names=[col["name"] for col in columns_info],
-    )
+
+    rows = []
+    for line in data.splitlines():
+        parts = line.split()
+        if len(parts) < len(columns_info):  # Fill missing columns with zeros
+            parts += [0.0] * (len(columns_info) - len(parts))
+        rows.append([float(part) for part in parts])
+
+    table = Table(rows=rows, names=[col["name"] for col in columns_info])
+
     for col, info in zip(table.colnames, columns_info):
         table[col].unit = info.get("unit")
         table[col].description = info.get("description")
+
     table.meta.update(metadata)
 
     return table
 
 
-def _read_simtel_table(file_path):
+def _read_simtel_data(file_path):
     """
     Read data and comments from sim_telarray table.
 
@@ -106,6 +136,6 @@ def _read_simtel_table(file_path):
             if stripped.startswith("#"):
                 meta_lines.append(stripped.lstrip("#").strip())
             elif stripped:
-                data_lines.append(stripped.split("%%%")[0].strip())  # remove comments
+                data_lines.append(stripped.split("%%%")[0].split("#")[0].strip())  # Remove comments
 
     return "\n".join(data_lines), "\n".join(meta_lines)
