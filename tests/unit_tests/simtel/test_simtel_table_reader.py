@@ -15,10 +15,10 @@ def spe_meta_test_comment():
     return "Norm_spe processing of single-p.e. response."
 
 
-def test_read_simtel_table(spe_test_file, spe_meta_test_comment):
+def test_read_simtel_data(spe_test_file, spe_meta_test_comment):
     """Test reading of sim_telarray table file into strings."""
 
-    data, meta = simtel_table_reader._read_simtel_table(spe_test_file)
+    data, meta = simtel_table_reader._read_simtel_data(spe_test_file)
 
     assert isinstance(meta, str)
     assert spe_meta_test_comment in meta
