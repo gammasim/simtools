@@ -21,6 +21,20 @@ CTA_SIMPIPE:
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude (low gain)'
       - PARAMETER: fadc_pulse_shape
+        TELESCOPE: LSTN-02
+        SITE: NORTH
+        MODEL_VERSION: 6.0.0
+        LABEL: 'LSTN-02 (high gain)'
+        COLUMN_X: 'time'
+        COLUMN_Y: 'amplitude'
+      - PARAMETER: fadc_pulse_shape
+        TELESCOPE: LSTN-02
+        SITE: NORTH
+        MODEL_VERSION: 6.0.0
+        LABEL: 'LSTN-02 (low gain)'
+        COLUMN_X: 'time'
+        COLUMN_Y: 'amplitude (low gain)'
+      - PARAMETER: fadc_pulse_shape
         TELESCOPE: MSTN-design
         SITE: NORTH
         MODEL_VERSION: 6.0.0
