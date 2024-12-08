@@ -53,6 +53,10 @@ def read_table_data(config, db_config):
             )
         else:
             raise ValueError("No table data defined in configuration.")
+        if _config.get("normalize_y"):
+            table[_config["column_y"]] = (
+                table[_config["column_y"]] / table[_config["column_y"]].max()
+            )
         data[_config["label"]] = gen.get_structure_array_from_table(
             table, [_config["column_x"], _config["column_y"]]
         )
