@@ -2,10 +2,8 @@ CTA_SIMPIPE:
   PLOT:
     TYPE: mirror reflectivity
     TITLE: 'Mirror reflectivity'
-    XTITLE: 'Wavelength'
+    XTITLE: 'Wavelength [nm]'
     YTITLE: 'Reflectivity'
-    XSCALE: 'linear'
-    YSCALE: 'linear'
     NO_MARKERS: True
     TABLES:
       - PARAMETER: mirror_reflectivity

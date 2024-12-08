@@ -2,7 +2,7 @@ CTA_SIMPIPE:
   PLOT:
     TYPE: lightguide_efficiency_vs_incidence_angle
     TITLE: 'Light guide efficiency'
-    XTITLE: 'Incident angle'
+    XTITLE: 'Incident angle [deg]'
     YTITLE: 'Efficiency'
     NO_MARKERS: True
     TABLES:

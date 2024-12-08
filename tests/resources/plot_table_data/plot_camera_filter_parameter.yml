@@ -2,10 +2,8 @@ CTA_SIMPIPE:
   PLOT:
     TYPE: camera filter
     TITLE: 'Camera filter'
-    XTITLE: 'Wavelength'
+    XTITLE: 'Wavelength (nm)'
     YTITLE: 'Transmission'
-    XSCALE: 'linear'
-    YSCALE: 'linear'
     NO_MARKERS: True
     TABLES:
       - PARAMETER: camera_filter

@@ -2,8 +2,8 @@ CTA_SIMPIPE:
   PLOT:
     TYPE: NSB spectrum
     TITLE: 'NSB spectrum'
-    XTITLE: 'Wavelength'
-    YTITLE: 'Differential photon rate'
+    XTITLE: 'Wavelength [nm]'
+    YTITLE: 'Differential photon rate [10^9 / (nm s m^2 sr)]'
     XSCALE: 'linear'
     YSCALE: 'log'
     NO_MARKERS: True

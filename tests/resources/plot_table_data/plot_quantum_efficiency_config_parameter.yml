@@ -2,10 +2,8 @@ CTA_SIMPIPE:
   PLOT:
     TYPE: quantum_efficiency
     TITLE: 'Quantum/detection efficiency'
-    XTITLE: 'Wavelength'
+    XTITLE: 'Wavelength [nm]'
     YTITLE: 'Quantum/detection efficiency'
-    XSCALE: 'linear'
-    YSCALE: 'linear'
     NO_MARKERS: True
     TABLES:
       - PARAMETER: quantum_efficiency

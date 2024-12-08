@@ -2,10 +2,8 @@ CTA_SIMPIPE:
   PLOT:
     TYPE: Photon incident angles
     TITLE: 'Photon incident angles'
-    XTITLE: 'Photon incident angle'
+    XTITLE: 'Photon incident angle [deg]'
     YTITLE: 'Fraction'
-    XSCALE: 'linear'
-    YSCALE: 'linear'
     NO_MARKERS: True
     TABLES:
       - PARAMETER: camera_filter_incidence_angle

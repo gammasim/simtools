@@ -2,8 +2,8 @@ CTA_SIMPIPE:
   PLOT:
     TYPE: discriminator_pulse_shape
     TITLE: 'Discriminator pulse shape'
-    XTITLE: 'Amplitude'
-    YTITLE: 'Response'
+    XTITLE: 'Time [ns]'
+    YTITLE: 'Amplitude [a.u.]'
     NO_MARKERS: True
     TABLES:
       - PARAMETER: discriminator_pulse_shape
@@ -27,6 +27,7 @@ CTA_SIMPIPE:
         LABEL: 'MSTN (high gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude'
+        NORMALIZE_Y: True
       - PARAMETER: discriminator_pulse_shape
         TELESCOPE: MSTN-design
         SITE: NORTH
@@ -34,6 +35,7 @@ CTA_SIMPIPE:
         LABEL: 'MSTN (low gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude (low gain)'
+        NORMALIZE_Y: True
       - PARAMETER: discriminator_pulse_shape
         TELESCOPE: MSTS-design
         SITE: SOUTH
