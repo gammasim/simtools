@@ -275,7 +275,7 @@ class ModelParameter:
 
     def _set_config_file_directory_and_name(self):
         """Set and create the directory and the name of the config file."""
-        if self.name is None:
+        if self.name is None and self.site is None:
             return
 
         self._config_file_directory = self.io_handler.get_output_directory(
@@ -283,15 +283,14 @@ class ModelParameter:
         )
 
         # Setting file name and the location
-        if self.site is not None and self.name is not None:
-            config_file_name = names.simtel_config_file_name(
-                self.site,
-                self.model_version,
-                telescope_model_name=self.name,
-                label=self.label,
-                extra_label=self._extra_label,
-            )
-            self._config_file_path = self.config_file_directory.joinpath(config_file_name)
+        config_file_name = names.simtel_config_file_name(
+            self.site,
+            self.model_version,
+            telescope_model_name=self.name,
+            label=self.label,
+            extra_label=self._extra_label,
+        )
+        self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
         self._logger.debug(f"Config file path: {self._config_file_path}")
 
