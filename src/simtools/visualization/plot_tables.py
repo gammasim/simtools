@@ -3,6 +3,7 @@
 
 import simtools.utils.general as gen
 from simtools.io_operations import legacy_data_handler
+from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import visualize
 
@@ -73,12 +74,16 @@ def _read_table_from_model_database(table_config, db_config):
         Astropy table.
     """
     if "telescope" in table_config:
-        telescope_model = TelescopeModel(
+        model = TelescopeModel(
             site=table_config["site"],
             telescope_name=table_config["telescope"],
             model_version=table_config["model_version"],
             mongo_db_config=db_config,
         )
-        return telescope_model.get_model_file_as_table(table_config["parameter"])
-
-    return None
+    else:
+        model = SiteModel(
+            site=table_config["site"],
+            model_version=table_config["model_version"],
+            mongo_db_config=db_config,
+        )
+    return model.get_model_file_as_table(table_config["parameter"])

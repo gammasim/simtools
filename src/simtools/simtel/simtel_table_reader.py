@@ -6,6 +6,8 @@ import re
 
 from astropy.table import Table
 
+from simtools.utils import general as gen
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +29,7 @@ def _data_columns(parameter_name, n_columns, n_dim):
     Returns
     -------
     list, str
-        List of columns for n-dimensional tables defined by RPOL lines.
+        List of columns for n-dimensional tables, description.
     """
     if parameter_name == "mirror_reflectivity":
         return _data_columns_mirror_reflectivity(n_columns, n_dim)
@@ -188,6 +190,21 @@ def _data_columns_pulse_shape(n_columns):
     return _columns, "Discriminator pulse shape"
 
 
+def _data_columns_nsb_reference_spectrum():
+    """Column description for parameter nsb_reference_spectrum."""
+    return (
+        [
+            {"name": "wavelength", "description": "Wavelength", "unit": "nm"},
+            {
+                "name": "differential photon rate",
+                "description": "Differential photon rate",
+                "unit": "1.e9 / (nm s m^2 sr)",
+            },
+        ],
+        "NSB reference spectrum",
+    )
+
+
 def read_simtel_table(parameter_name, file_path):
     """
     Read sim_telarray table file for a given parameter.
@@ -255,19 +272,20 @@ def _read_simtel_data(file_path):
     n_dim_axis = None
     r_pol_axis = None
 
-    with open(file_path, encoding="utf-8") as file:
-        for line in file:
-            stripped = line.strip()
-            if "@RPOL@" in stripped:  # RPOL description for N-dimensional tables
-                match = re.search(r"#@RPOL@\[(\w+)=\]", stripped)
-                if match:
-                    r_pol_axis = match.group(1)
-            elif r_pol_axis and r_pol_axis in stripped:  # N-dimensional axis description
-                n_dim_axis = stripped.split("=")[1].split()
-            elif stripped.startswith("#"):  # Metadata
-                meta_lines.append(stripped.lstrip("#").strip())
-            elif stripped:  # Data
-                data_lines.append(stripped.split("%%%")[0].split("#")[0].strip())  # Remove comments
+    lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+
+    for line in lines:
+        stripped = line.strip()
+        if "@RPOL@" in stripped:  # RPOL description for N-dimensional tables
+            match = re.search(r"#@RPOL@\[(\w+)=\]", stripped)
+            if match:
+                r_pol_axis = match.group(1)
+        elif r_pol_axis and r_pol_axis in stripped:  # N-dimensional axis description
+            n_dim_axis = stripped.split("=")[1].split()
+        elif stripped.startswith("#"):  # Metadata
+            meta_lines.append(stripped.lstrip("#").strip())
+        elif stripped:  # Data
+            data_lines.append(stripped.split("%%%")[0].split("#")[0].strip())  # Remove comments
 
     rows = [[float(part) for part in line.split()] for line in data_lines]
     n_columns = max(len(row) for row in rows) if rows else 0
