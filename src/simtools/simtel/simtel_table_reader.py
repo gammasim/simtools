@@ -100,7 +100,6 @@ def _data_columns_camera_filter():
 
 def _data_columns_lightguide_efficiency_vs_wavelength():
     """Column description for parameter lightguide_efficiency_vs_wavelength."""
-    # TODO - check column description
     return _data_columns_lightguide_efficiency_vs_incidence_angle()
 
 
