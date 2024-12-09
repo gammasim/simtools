@@ -133,14 +133,40 @@ def test_read_table_from_model_database(mock_telescope_model_class):
     assert result == mock_table
 
 
-def test_read_table_from_model_database_no_telescope():
+@mock.patch("simtools.visualization.plot_tables.SiteModel")
+def test_read_table_from_model_database_site(mock_site_model_class):
     table_config = {
         "site": "test_site",
         "model_version": "test_version",
         "parameter": "test_parameter",
     }
     db_config = None
+    mock_site_model = mock_site_model_class.return_value
+    mock_table = mock.MagicMock()
+    mock_site_model.get_model_file_as_table.return_value = mock_table
 
-    result = plot_tables._read_table_from_model_database(table_config, db_config)
+    plot_tables._read_table_from_model_database(table_config, db_config)
 
-    assert result is None
+    mock_site_model_class.assert_called_once_with(
+        site="test_site",
+        model_version="test_version",
+        mongo_db_config=db_config,
+    )
+
+
+def test_read_table_and_normalize():
+    config = {
+        "tables": [
+            {
+                "file_name": "tests/resources//SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv",
+                "type": "legacy_lst_single_pe",
+                "label": "test_table",
+                "column_x": "amplitude",
+                "column_y": "response",
+                "normalize_y": True,
+            }
+        ]
+    }
+    data = plot_tables.read_table_data(config, None)
+    assert isinstance(data, dict)
+    assert data["test_table"]["response"].max() == 1.0

@@ -31,6 +31,7 @@ def _data_columns(parameter_name, n_columns, n_dim):
     list, str
         List of columns for n-dimensional tables, description.
     """
+    print("AAAA", parameter_name, n_columns, n_dim)
     if parameter_name == "mirror_reflectivity":
         return _data_columns_mirror_reflectivity(n_columns, n_dim)
     if parameter_name in ("discriminator_pulse_shape", "fadc_pulse_shape"):
@@ -187,7 +188,7 @@ def _data_columns_pulse_shape(n_columns):
             },
         )
 
-    return _columns, "Discriminator pulse shape"
+    return _columns, "Pulse shape"
 
 
 def _data_columns_nsb_reference_spectrum():
