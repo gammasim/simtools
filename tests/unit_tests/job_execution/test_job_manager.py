@@ -57,6 +57,8 @@ def job_messages(script_file):
 def test_test_submission_system():
     jm.JobManager(submit_engine=None)
     jm.JobManager(submit_engine="local")
+    with pytest.raises(ValueError, match="Invalid submit command: not_a_real_engine"):
+        jm.JobManager(submit_engine="not_a_real_engine")
 
 
 def test_submit_engine():
@@ -79,6 +81,13 @@ def test_check_submission_system(mock_program_is_executable, job_submitter):
     job_submitter.submit_engine = "htcondor"
     job_submitter.check_submission_system()
     assert job_submitter._logger.error.call_count == 0
+
+
+@patch("simtools.job_execution.job_manager.gen.program_is_executable", return_value=False)
+def test_check_submission_system_not_an_engine(mock_program_is_executable, job_submitter):
+    job_submitter._submit_engine = "not_an_engine"  # bypass the @setter command
+    with pytest.raises(JobExecutionError, match="Submit engine not_an_engine not found"):
+        job_submitter.check_submission_system()
 
 
 @patch("simtools.utils.general")
