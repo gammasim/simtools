@@ -116,12 +116,11 @@ def test_data_columns_pulse_shape():
         assert len(columns) == n_columns
 
 
-@mock.patch("simtools.simtel.simtel_table_reader._data_columns_mirror_reflectivity")
 @mock.patch("simtools.simtel.simtel_table_reader._data_columns_pulse_shape")
+@mock.patch("simtools.simtel.simtel_table_reader._data_columns_mirror_reflectivity")
 def test_data_columns(mock_data_columns_mirror_reflectivity, mock_data_columns_pulse_shape):
-
     simtel_table_reader._data_columns("mirror_reflectivity", 2, ["0", "20"])
-    assert mock_data_columns_mirror_reflectivity.called_once_with(2, ["0", "20"])
+    mock_data_columns_mirror_reflectivity.assert_called_once_with(2, ["0", "20"])
 
     simtel_table_reader._data_columns("fadc_pulse_shape", 4, None)
-    assert mock_data_columns_pulse_shape.called_once_with(4)
+    mock_data_columns_pulse_shape.assert_called_once_with(4)
