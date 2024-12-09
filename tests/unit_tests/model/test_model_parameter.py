@@ -140,6 +140,7 @@ def test_print_parameters(telescope_model_lst, capsys):
 def test_set_config_file_directory_and_name(telescope_model_lst, caplog):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     telescope_copy.name = None
+    telescope_copy.site = None
     with caplog.at_level(logging.DEBUG):
         telescope_copy._set_config_file_directory_and_name()
     assert "Config file path" not in caplog.text
