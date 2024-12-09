@@ -11,10 +11,11 @@ Pre-requisites for running productions:
 - simtools is installed and configured on the job submission host
 
 Productions are configured and submitted using the `simtools-simulate-prod` command.
+The submit engine is configured with the `--submit_engine` command line option.
 
 ## Running local production
 
-Choose with `SUBMIT_ENGINE: local`.
+Choose with `SUBMIT_ENGINE: local` (default value).
 
 Running a local production is a simple way to test the production system, but too slow for anything else.
 

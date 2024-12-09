@@ -21,6 +21,7 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-output
     PACK_FOR_GRID_REGISTER: true
     LOG_LEVEL: DEBUG
+    SUBMIT_ENGINE: local
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
         directory_for_grid_upload/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.log_hist.tar.gz
