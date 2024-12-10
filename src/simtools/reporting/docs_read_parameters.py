@@ -41,8 +41,10 @@ class ReadParameters:
             output_file.open("w", encoding="utf-8") as outfile,
         ):
 
-            outfile.write(f"# {input_file}")
-            outfile.write("```\n")
+            outfile.write(f"# {input_file.stem}")
+            outfile.write("\n")
+            outfile.write("```")
+            outfile.write("\n")
             file_contents = infile.read()
             outfile.write(file_contents)
             outfile.write("\n")

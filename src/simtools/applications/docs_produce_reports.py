@@ -9,6 +9,7 @@ The reports are then uploaded as GitLab Pages using GitLab's CI workflow.
 """
 
 import logging
+import textwrap
 from itertools import groupby
 from operator import itemgetter
 from pathlib import Path
@@ -56,16 +57,20 @@ def generate_markdown_report(output_path, args_dict, data):
             file.write(f"# {class_name}\n\n")
 
             # Write table header and separator row
-            # file.write("| Parameter Name | Values | Short Description |\n\n")
-            # file.write("|----------------|--------|-------------------|\n\n")
+            file.write("| Parameter Name      | Values      | Short Description           |\n")
+            file.write("|---------------------|-------------|-----------------------------|\n")
 
             # Write table rows
+            column_widths = [25, 25, 80]
             for _, parameter_name, value, short_description in group:
-                file.write(f"**Parameter**: {parameter_name}\n\n")
-                file.write(f"**Value**: {value}\n\n")
-                file.write(f"**Short description**: {short_description}\n\n")
-                file.write("--------------------------\n\n")
-                file.write("\n\n")
+                wrapped_text = textwrap.fill(str(short_description), column_widths[2]).split("\n")
+                wrapped_text = " ".join(wrapped_text)
+                file.write(
+                    f"| {parameter_name:{column_widths[0]}} |"
+                    f" {value:{column_widths[1]}} |"
+                    f" {wrapped_text} |\n"
+                )
+            file.write("\n\n")
 
 
 def main():  # noqa: D103
