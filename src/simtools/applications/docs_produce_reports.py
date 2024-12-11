@@ -28,6 +28,12 @@ def _parse(label):
         description=("Generate a markdown report for model parameters."),
     )
 
+    config.parser.add_argument(
+        "--parameter",
+        action="store_true",
+        help="Compare all parameters across model versions for one telescope.",
+    )
+
     return config.initialize(db_config=True, simulation_model=["telescope"])
 
 
@@ -46,7 +52,7 @@ def generate_markdown_report(output_path, args_dict, data):
         [class, parameter_name, value, short_description]
     """
     # Sort data by class to prepare for grouping
-    data.sort(key=itemgetter(0))  # Sort by the first element (class)
+    data.sort(key=itemgetter(0, 1))  # Sort by class and alphabetically
 
     output_filename = output_path / Path(args_dict["telescope"] + ".md")
 
@@ -63,7 +69,7 @@ def generate_markdown_report(output_path, args_dict, data):
 
             # Write table rows
             column_widths = [25, 25, 80]
-            for _, parameter_name, value, short_description in group:
+            for _, parameter_name, value, _, short_description in group:
                 wrapped_text = textwrap.fill(str(short_description), column_widths[2]).split("\n")
                 wrapped_text = " ".join(wrapped_text)
                 file.write(
@@ -94,17 +100,58 @@ def main():  # noqa: D103
         mongo_db_config=db_config,
     )
 
-    parameter_data = ReadParameters(
-        telescope_model,
-        output_path,
-    ).get_telescope_parameter_data()
+    if not args["parameter"]:
 
-    generate_markdown_report(output_path, args, parameter_data)
+        parameter_data = ReadParameters(
+            telescope_model,
+            output_path,
+        ).get_telescope_parameter_data()
 
-    logger.info(
-        f"Markdown report generated for {args['site']}"
-        f" Telescope {args['telescope']} (v{args['model_version']})"
-    )
+        generate_markdown_report(output_path, args, parameter_data)
+
+        logger.info(
+            f"Markdown report generated for {args['site']}"
+            f" Telescope {args['telescope']} (v{args['model_version']})"
+        )
+
+    else:
+        logger.info(
+            f"Comparing parameters across model versions for Telescope: {args['telescope']}"
+            f"and Site: {args['site']}."
+        )
+
+        read_params = ReadParameters(telescope_model, output_path)
+
+        all_params = read_params.get_all_parameter_descriptions()[0]
+
+        for parameter in all_params:
+            if telescope_model.has_parameter(parameter):
+                comparison_data = read_params.compare_parameter_across_versions(
+                    parameter, telescope_model
+                )
+                if comparison_data:
+                    output_filename = (
+                        io_handler_instance.get_output_directory(
+                            label=label_name, sub_dir=f"{args['telescope']}"
+                        )
+                        / f"{parameter}.md"
+                    )
+
+                    with output_filename.open("w", encoding="utf-8") as file:
+                        # Write header
+                        file.write(f"# {parameter}\n\n")
+                        file.write(f"**Telescope**: {args['telescope']}\n\n")
+                        file.write(f"**Description**: {comparison_data[0]['description']}\n\n")
+                        file.write("\n")
+
+                        # Write table header
+                        file.write("| Model Version      | Value                |\n")
+                        file.write("|--------------------|----------------------|\n")
+
+                        # Write table rows
+                        for entry in comparison_data:
+                            file.write(f"| {entry['model_version']} | {entry['value']} |\n")
+                        file.write("\n")
 
 
 if __name__ == "__main__":
