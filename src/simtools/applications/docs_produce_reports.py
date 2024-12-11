@@ -53,8 +53,9 @@ def generate_markdown_report(output_path, args_dict, data):
     # Start writing the Markdown file
     with Path(output_filename).open("w", encoding="utf-8") as file:
         # Group by class and write sections
+        file.write(f"# {args_dict['telescope']}\n")
         for class_name, group in groupby(data, key=itemgetter(0)):
-            file.write(f"# {class_name}\n\n")
+            file.write(f"## {class_name}\n\n")
 
             # Write table header and separator row
             file.write("| Parameter Name      | Values      | Short Description           |\n")
