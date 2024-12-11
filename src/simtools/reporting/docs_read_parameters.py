@@ -106,6 +106,42 @@ class ReadParameters:
             description = parameter_descriptions[0].get(parameter)
             short_description = parameter_descriptions[1].get(parameter, description)
             inst_class = parameter_descriptions[2].get(parameter)
-            data.append([inst_class, parameter, value, short_description])
+            data.append([inst_class, parameter, value, description, short_description])
 
         return data
+
+    def compare_parameter_across_versions(self, parameter_name, telescope_model):
+        """
+        Compare a parameter's value across different model versions.
+
+        Parameters
+        ----------
+        parameter_name : str
+            The name of the parameter to compare.
+        telescope_model : TelescopeModel
+            The telescope model instance.
+
+        Returns
+        -------
+        list
+            A list of dictionaries containing model version, parameter value, and description.
+        """
+        all_versions = ["5.0.0", "6.0.0"]  # TODO: remove hard coding of version list
+        comparison_data = []
+
+        for version in all_versions:
+            telescope_model.model_version = version
+            parameter_data = self.get_telescope_parameter_data()
+
+            for param in parameter_data:
+                if param[1] == parameter_name:  # Match the parameter name
+                    comparison_data.append(
+                        {
+                            "model_version": version,
+                            "value": param[2],
+                            "description": param[3],
+                        }
+                    )
+                    break
+
+        return comparison_data
