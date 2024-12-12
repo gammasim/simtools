@@ -346,6 +346,17 @@ def test_get_db_parameters():
         "db_simulation_model_url": None,
     }
 
+    # filled with one entry only
+    configurator = Configurator(config={})
+    configurator.default_config(add_db_config=True)
+    configurator.config = {
+        "db_api_port": 1234,
+    }
+    db_params = configurator._get_db_parameters()
+    assert db_params == {
+        "db_api_port": 1234,
+    }
+
     # filled config
     configurator = Configurator()
     configurator.default_config(add_db_config=True)
@@ -354,6 +365,7 @@ def test_get_db_parameters():
         "db_api_pw": "password",
         "db_api_port": 1234,
         "db_simulation_model": "Staging-CTA-Simulation-Model",
+        "db_simulation_model_url": None,
         "db_server": "localhost",
     }
 
@@ -364,6 +376,7 @@ def test_get_db_parameters():
         "db_api_port": 1234,
         "db_server": "localhost",
         "db_simulation_model": "Staging-CTA-Simulation-Model",
+        "db_simulation_model_url": None,
     }
 
     # empty config
