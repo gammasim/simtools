@@ -47,6 +47,14 @@ def _db_cleanup_file_sandbox(db_no_config_file, random_id, fs_files):
     db_no_config_file.db_client[f"sandbox_{random_id}"][fs_files].drop()
 
 
+def test_valid_db_config(db):
+    assert db.mongo_db_config == db._validate_mongo_db_config(db.mongo_db_config)
+    with pytest.raises(ValueError, match=r"Invalid MongoDB configuration"):
+        db._validate_mongo_db_config({"wrong_config": "wrong"})
+    with pytest.raises(ValueError, match=r"Invalid MongoDB configuration"):
+        db._validate_mongo_db_config({})
+
+
 def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
 
     db_no_config_file._find_latest_simulation_model_db()
