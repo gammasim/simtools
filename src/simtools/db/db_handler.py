@@ -26,7 +26,7 @@ logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 
 jsonschema_db_dict = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$schema": "https://json-schema.org/draft/2020-12/schema#",
     "type": "object",
     "description": "MongoDB configuration",
     "properties": {
@@ -100,7 +100,7 @@ class DatabaseHandler:
 
     def _validate_mongo_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration."""
-        if mongo_db_config is None:
+        if mongo_db_config is None or all(value is None for value in mongo_db_config.values()):
             return None
         try:
             jsonschema.validate(instance=mongo_db_config, schema=jsonschema_db_dict)
