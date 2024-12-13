@@ -338,6 +338,7 @@ def test_get_db_parameters():
     configurator.default_config(add_db_config=True)
     db_params = configurator._get_db_parameters()
     assert db_params == {
+        "db_api_authentication_database": "admin",
         "db_api_port": None,
         "db_api_pw": None,
         "db_api_user": None,
