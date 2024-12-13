@@ -335,7 +335,7 @@ def program_is_executable(program):
     """
 
     def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+        return Path.is_file(fpath) and os.access(fpath, os.X_OK)
 
     fpath, _ = os.path.split(program)
     if fpath:
@@ -344,7 +344,7 @@ def program_is_executable(program):
     else:
         try:
             for path in os.environ["PATH"].split(os.pathsep):
-                exe_file = os.path.join(path, program)
+                exe_file = Path(path) / program
                 if is_exe(exe_file):
                     return exe_file
         except KeyError:

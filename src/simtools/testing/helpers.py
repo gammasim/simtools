@@ -1,6 +1,7 @@
 """Helper functions for integration testing."""
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -28,7 +29,7 @@ def _new_testeff_version():
 
     This test checks if the new version is used.
     """
-    testeff_path = os.path.join(os.getenv("SIMTOOLS_SIMTEL_PATH"), "sim_telarray/testeff.c")
+    testeff_path = Path(os.getenv("SIMTOOLS_SIMTEL_PATH")) / "sim_telarray/testeff.c"
     try:
         with open(testeff_path, encoding="utf-8") as file:
             file_content = file.read()
