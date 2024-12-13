@@ -5,7 +5,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 # pylint: skip-file
-import os
 import sys
 from pathlib import Path
 
@@ -14,9 +13,9 @@ import yaml
 
 import simtools.version
 
-sys.path.insert(0, os.path.abspath("../../src/simtools"))
-sys.path.insert(0, os.path.abspath("../../src/simtools/applications"))
-sys.path.insert(0, os.path.abspath("../.."))
+sys.path.insert(0, str(Path("../../src/simtools").resolve()))
+sys.path.insert(0, str(Path("../../src/simtools/applications").resolve()))
+sys.path.insert(0, str(Path("../..").resolve()))
 
 
 def get_authors_from_citation_file():
