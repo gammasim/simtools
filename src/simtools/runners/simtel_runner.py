@@ -2,6 +2,7 @@
 
 import logging
 import os
+import stat
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -96,7 +97,7 @@ class SimtelRunner:
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        os.system(f"chmod ug+x {script_file_path}")
+        script_file_path.chmod(script_file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return script_file_path
 
     def run(self, test=False, input_file=None, run_number=None):

@@ -1,7 +1,7 @@
 """Generate run scripts and directories for CORSIKA simulations."""
 
 import logging
-import os
+import stat
 from pathlib import Path
 
 from simtools.io_operations import io_handler
@@ -141,8 +141,7 @@ class CorsikaRunner:
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
-        os.system(f"chmod ug+x {script_file_path}")
-
+        script_file_path.chmod(script_file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return script_file_path
 
     def get_resources(self, run_number=None):
