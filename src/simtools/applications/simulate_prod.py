@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-    Generate simulation configuration and run simulations (if required).
+    Generate simulation configuration and run simulations.
 
     Multipipe scripts will be produced as part of this application.
     Allows to run array layout simulation including shower and detector simulations
@@ -151,14 +151,11 @@ def main():  # noqa: D103
 
     simulator.simulate()
 
-    # pack files here only for local submission
-    # (otherwise don't know if submitted jobs are already completed)
     if simulator.submit_engine == "local":
         logger.info(
-            f"Production run is complete for primary {args_dict['primary']} showers "
-            f"coming from {args_dict['azimuth_angle']} azimuth and zenith angle of "
-            f"{args_dict['zenith_angle']} at the {args_dict['site']} site, "
-            f"using the {args_dict['model_version']} simulation model."
+            f"Production run complete for primary {args_dict['primary']} showers "
+            f"from {args_dict['azimuth_angle']} azimuth and {args_dict['zenith_angle']} zenith "
+            f"at {args_dict['site']} site, using {args_dict['model_version']} model."
         )
         if args_dict["pack_for_grid_register"]:
             simulator.pack_for_register()
@@ -167,11 +164,10 @@ def main():  # noqa: D103
     else:
         logger.info("Production run submitted to the workload manager")
         if args_dict["pack_for_grid_register"] or args_dict["save_file_lists"]:
-            msg = (
-                "Packing for grid register or saving file lists is not supported for "
+            logger.warning(
+                "Packing for grid register or saving file lists not supported for "
                 f"{simulator.submit_engine}."
             )
-            logger.warning(msg)
 
 
 if __name__ == "__main__":
