@@ -442,7 +442,7 @@ def get_file_age(file_path):
     if not Path(file_path).is_file():
         raise FileNotFoundError(f"'{file_path}' does not exist or is not a file.")
 
-    file_stats = os.stat(file_path)
+    file_stats = Path(file_path).stat()
     modification_time = file_stats.st_mtime
     current_time = time.time()
 
