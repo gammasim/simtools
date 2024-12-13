@@ -86,7 +86,7 @@ def _mock_settings_env_vars(tmp_test_directory):
 @pytest.fixture
 def simtel_path():
     """Empty string used as placeholder for simtel_path."""
-    return Path("")
+    return Path()
 
 
 @pytest.fixture
