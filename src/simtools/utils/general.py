@@ -335,7 +335,7 @@ def program_is_executable(program):
     """
 
     def is_exe(fpath):
-        return Path.is_file(fpath) and os.access(fpath, os.X_OK)
+        return fpath.is_file() and os.access(fpath, os.X_OK)
 
     fpath, _ = os.path.split(program)
     if fpath:
