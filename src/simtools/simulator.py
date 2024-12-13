@@ -2,6 +2,8 @@
 
 import logging
 import re
+import shutil
+import tarfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -68,7 +70,7 @@ class Simulator:
         self.runs = self._initialize_run_list()
         self._results = defaultdict(list)
         self._test = self.args_dict.get("test", False)
-        self._submit_engine = self.args_dict.get("submit_engine", "local")
+        self.submit_engine = self.args_dict.get("submit_engine", "local")
         self._submit_options = self.args_dict.get("submit_options", None)
         self._extra_commands = extra_commands
 
@@ -265,7 +267,7 @@ class Simulator:
         input_file_list: str or list of str
             Single file or list of files of shower simulations.
         """
-        self._logger.info(f"Submission command: {self._submit_engine}")
+        self._logger.info(f"Submission command: {self.submit_engine}")
 
         runs_and_files_to_submit = self._get_runs_and_files_to_submit(
             input_file_list=input_file_list
@@ -281,7 +283,7 @@ class Simulator:
             )
 
             job_manager = JobManager(
-                submit_engine=self._submit_engine,
+                submit_engine=self.submit_engine,
                 submit_options=self._submit_options,
                 test=self._test,
             )
@@ -560,3 +562,31 @@ class Simulator:
                         f.write(f"{line}\n")
             else:
                 self._logger.debug(f"No files to save for {file_type} files.")
+
+    def pack_for_register(self):
+        """Pack simulation output files for registering on the grid."""
+        self._logger.info("Packing the output files for registering on the grid")
+        output_files = self.get_file_list(file_type="output")
+        log_files = self.get_file_list(file_type="log")
+        histogram_files = self.get_file_list(file_type="hist")
+        tar_file_name = Path(log_files[0]).name.replace("log.gz", "log_hist.tar.gz")
+        directory_for_grid_upload = self.io_handler.get_output_directory(label=self.label).joinpath(
+            "directory_for_grid_upload"
+        )
+        tar_file_name = directory_for_grid_upload.joinpath(tar_file_name)
+
+        with tarfile.open(tar_file_name, "w:gz") as tar:
+            files_to_tar = log_files[:1] + histogram_files[:1]
+            for file_to_tar in files_to_tar:
+                tar.add(file_to_tar, arcname=Path(file_to_tar).name)
+
+        for file_to_move in [*output_files]:
+            source_file = Path(file_to_move)
+            destination_file = directory_for_grid_upload / source_file.name
+            if destination_file.exists():
+                self._logger.warning(f"Overwriting existing file: {destination_file}")
+            # Note that this will overwrite previous files which exist in the directory
+            # It should be fine for normal production since each run is on a separate node
+            # so no files are expected there.
+            shutil.move(source_file, destination_file)
+        self._logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
