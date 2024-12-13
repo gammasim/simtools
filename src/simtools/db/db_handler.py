@@ -84,9 +84,7 @@ class DatabaseHandler:
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
 
-        self.mongo_db_config = (
-            self._validate_mongo_db_config(mongo_db_config) if mongo_db_config else {}
-        )
+        self.mongo_db_config = self._validate_mongo_db_config(mongo_db_config)
         self.io_handler = io_handler.IOHandler()
         self.list_of_collections = {}
 
@@ -102,6 +100,8 @@ class DatabaseHandler:
 
     def _validate_mongo_db_config(self, mongo_db_config):
         """Validate the MongoDB configuration."""
+        if mongo_db_config is None:
+            return None
         try:
             jsonschema.validate(instance=mongo_db_config, schema=jsonschema_db_dict)
             return mongo_db_config
