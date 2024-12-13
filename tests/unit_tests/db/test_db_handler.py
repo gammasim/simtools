@@ -49,6 +49,7 @@ def _db_cleanup_file_sandbox(db_no_config_file, random_id, fs_files):
 
 def test_valid_db_config(db):
     assert db.mongo_db_config == db._validate_mongo_db_config(db.mongo_db_config)
+    assert db._validate_mongo_db_config(None) is None
     with pytest.raises(ValueError, match=r"Invalid MongoDB configuration"):
         db._validate_mongo_db_config({"wrong_config": "wrong"})
     with pytest.raises(ValueError, match=r"Invalid MongoDB configuration"):
