@@ -26,7 +26,7 @@ logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 
 jsonschema_db_dict = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft-07/schema#",
     "type": "object",
     "description": "MongoDB configuration",
     "properties": {
