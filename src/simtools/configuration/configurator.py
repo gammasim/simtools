@@ -10,6 +10,7 @@ import astropy.units as u
 from dotenv import load_dotenv
 
 import simtools.configuration.commandline_parser as argparser
+from simtools.db.db_handler import jsonschema_db_dict
 from simtools.io_operations import io_handler
 from simtools.utils import general as gen
 
@@ -443,12 +444,5 @@ class Configurator:
         dict
             Dictionary with DB parameters.
         """
-        db_params = [
-            "db_api_user",
-            "db_api_pw",
-            "db_api_port",
-            "db_server",
-            "db_simulation_model",
-            "db_simulation_model_url",
-        ]
+        db_params = jsonschema_db_dict["properties"].keys()
         return {param: self.config.get(param) for param in db_params if param in self.config}
