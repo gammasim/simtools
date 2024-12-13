@@ -6,6 +6,7 @@ from pathlib import Path
 from threading import Lock
 
 import gridfs
+import jsonschema
 from bson.objectid import ObjectId
 from packaging.version import Version
 from pymongo import ASCENDING, MongoClient
@@ -24,6 +25,39 @@ logging.getLogger("pymongo").setLevel(logging.WARNING)
 # The above comment is because pylint does not know that DatabaseHandler.db_client is subscriptable
 
 
+jsonschema_db_dict = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "description": "MongoDB configuration",
+    "properties": {
+        "db_server": {"type": "string", "description": "DB server address"},
+        "db_api_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "Port to use",
+        },
+        "db_api_user": {"type": "string", "description": "API username"},
+        "db_api_pw": {"type": "string", "description": "Password for the API user"},
+        "db_api_authentication_database": {
+            "type": "string",
+            "default": "admin",
+            "description": "DB with user info (optional)",
+        },
+        "db_simulation_model": {
+            "type": "string",
+            "description": "Name of simulation model database",
+        },
+        "db_simulation_model_url": {
+            "type": ["string", "null"],
+            "format": "uri",
+            "description": "URL to the simulation model repository (optional)",
+        },
+    },
+    "required": ["db_server", "db_api_port", "db_api_user", "db_api_pw", "db_simulation_model"],
+}
+
+
 class DatabaseHandler:
     """
     DatabaseHandler provides the interface to the DB.
@@ -31,13 +65,7 @@ class DatabaseHandler:
     Parameters
     ----------
     mongo_db_config: dict
-        Dictionary with the MongoDB configuration with the following entries:
-        "db_server" - DB server address
-        "db_api_port" - Port to use
-        "db_api_user" - API username
-        "db_api_pw" - Password for the API user
-        "db_api_authentication_database" - DB with user info (optional, default is "admin")
-        "db_simulation_model" - Name of simulation model database
+        Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).
     """
 
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
@@ -56,7 +84,9 @@ class DatabaseHandler:
         """Initialize the DatabaseHandler class."""
         self._logger = logging.getLogger(__name__)
 
-        self.mongo_db_config = mongo_db_config
+        self.mongo_db_config = (
+            self._validate_mongo_db_config(mongo_db_config) if mongo_db_config else {}
+        )
         self.io_handler = io_handler.IOHandler()
         self.list_of_collections = {}
 
@@ -69,6 +99,14 @@ class DatabaseHandler:
             lock = Lock()
             with lock:
                 DatabaseHandler.db_client = self._open_mongo_db()
+
+    def _validate_mongo_db_config(self, mongo_db_config):
+        """Validate the MongoDB configuration."""
+        try:
+            jsonschema.validate(instance=mongo_db_config, schema=jsonschema_db_dict)
+            return mongo_db_config
+        except jsonschema.exceptions.ValidationError as err:
+            raise ValueError("Invalid MongoDB configuration") from err
 
     def _open_mongo_db(self):
         """
@@ -83,25 +121,21 @@ class DatabaseHandler:
         KeyError
             If the DB configuration is invalid
         """
-        try:
-            direct_connection = self.mongo_db_config["db_server"] in (
-                "localhost",
-                "simtools-mongodb",
-            )
-            return MongoClient(
-                self.mongo_db_config["db_server"],
-                port=self.mongo_db_config["db_api_port"],
-                username=self.mongo_db_config["db_api_user"],
-                password=self.mongo_db_config["db_api_pw"],
-                authSource=self.mongo_db_config.get("db_api_authentication_database", "admin"),
-                directConnection=direct_connection,
-                ssl=not direct_connection,
-                tlsallowinvalidhostnames=True,
-                tlsallowinvalidcertificates=True,
-            )
-        except KeyError:
-            self._logger.error("Invalid setting of DB configuration")
-            raise
+        direct_connection = self.mongo_db_config["db_server"] in (
+            "localhost",
+            "simtools-mongodb",
+        )
+        return MongoClient(
+            self.mongo_db_config["db_server"],
+            port=self.mongo_db_config["db_api_port"],
+            username=self.mongo_db_config["db_api_user"],
+            password=self.mongo_db_config["db_api_pw"],
+            authSource=self.mongo_db_config.get("db_api_authentication_database", "admin"),
+            directConnection=direct_connection,
+            ssl=not direct_connection,
+            tlsallowinvalidhostnames=True,
+            tlsallowinvalidcertificates=True,
+        )
 
     def _find_latest_simulation_model_db(self):
         """
