@@ -1,5 +1,5 @@
 ---
-$schema: https://json-schema.org/draft/2020-12/schema#
+$schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsOutputMetadata'
 title: SimPipe Output Metadata Metaschema
 description: YAML representation of model parameter metaschema
@@ -7,11 +7,6 @@ version: 0.1.0
 name: metadata.metaschema
 type: object
 additionalProperties: false
-properties:
-  CTA:
-    $ref: '#/definitions/CTA'
-required:
-  - CTA
 
 definitions:
   SimtoolsOutputMetadata:

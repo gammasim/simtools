@@ -1,5 +1,5 @@
 ---
-$schema: https://json-schema.org/draft/2020-12/schema
+$schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsModelParameters'
 title: SimPipe DB Model Parameter Metaschema
 description: YAML representation of db model parameter metaschema
