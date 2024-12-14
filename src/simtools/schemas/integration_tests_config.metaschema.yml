@@ -1,5 +1,5 @@
 ---
-$schema: https://json-schema.org/draft/2020-12/schema
+$schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsIntegrationTestConfiguration'
 title: SimPipe integration test configuration metaschema
 description: YAML representation of integration test configuration metaschema
