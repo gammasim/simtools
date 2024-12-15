@@ -226,7 +226,8 @@ def test_submit_local_success(
     mock_gen.get_log_excerpt.return_value = job_messages["log_excerpt"]
     mocker.patch(PATHLIB_PATH_EXISTS, return_value=False)
 
-    job_submitter_real.submit(script_file, output_log, logfile_log)
+    with patch("builtins.open", mock_open(read_data="")):
+        job_submitter_real.submit(script_file, output_log, logfile_log)
 
     job_submitter_real._logger.info.assert_any_call(job_messages["script_message"])
     job_submitter_real._logger.info.assert_any_call(job_messages["job_output"])
