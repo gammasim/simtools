@@ -2,20 +2,21 @@
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
+# documentation root, use Path.resolve() to make it absolute, like shown here.
 
 # pylint: skip-file
-import sys
 from pathlib import Path
+from sys import path
 
 import toml
 import yaml
 
 import simtools.version
 
-sys.path.insert(0, str(Path("../../src/simtools").resolve()))
-sys.path.insert(0, str(Path("../../src/simtools/applications").resolve()))
-sys.path.insert(0, str(Path("../..").resolve()))
+path[:0] = [
+    str(Path(p).resolve())
+    for p in ["../../src/simtools", "../../src/simtools/applications", "../.."]
+]
 
 
 def get_authors_from_citation_file():

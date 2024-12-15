@@ -100,8 +100,8 @@ def main():
         table.sort("telescope_name")
         table.pprint()
 
-        output_file = args_dict.get("output_file", None)
-        if output_file is not None:
+        output_file = args_dict.get("output_file")
+        if output_file:
             output_path = Path(output_file)
             output_file = output_path.with_name(
                 f"{output_path.stem}-{args_dict['site']}-{array_name}{output_path.suffix}"
