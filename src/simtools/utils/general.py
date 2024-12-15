@@ -333,6 +333,7 @@ def program_is_executable(program):
     Follows https://stackoverflow.com/questions/377017/
 
     """
+    program = Path(program)
 
     def is_exe(fpath):
         return fpath.is_file() and os.access(fpath, os.X_OK)
