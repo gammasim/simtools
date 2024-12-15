@@ -132,17 +132,18 @@ class JobManager:
             self._logger.info("Testing (local)")
             return
 
-        shell_command = f"{self.run_script}"
-        stdout_file = f"{self.run_out_file}.out"
-        stderr_file = f"{self.run_out_file}.err"
-
         try:
             with (
-                open(stdout_file, "w", encoding="utf-8") as stdout,
-                open(stderr_file, "w", encoding="utf-8") as stderr,
+                open(f"{self.run_out_file}.out", "w", encoding="utf-8") as stdout,
+                open(f"{self.run_out_file}.err", "w", encoding="utf-8") as stderr,
             ):
                 subprocess.run(
-                    shell_command, shell=True, check=True, text=True, stdout=stdout, stderr=stderr
+                    f"{self.run_script}",
+                    shell=True,
+                    check=True,
+                    text=True,
+                    stdout=stdout,
+                    stderr=stderr,
                 )
         except subprocess.CalledProcessError as exc:
             self._logger.error(gen.get_log_excerpt(f"{self.run_out_file}.err"))
