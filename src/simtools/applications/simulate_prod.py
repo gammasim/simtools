@@ -158,7 +158,7 @@ def main():  # noqa: D103
             f"at {args_dict['site']} site, using {args_dict['model_version']} model."
         )
         if args_dict["pack_for_grid_register"]:
-            simulator.pack_for_register()
+            simulator.pack_for_register(args_dict.get("data_directory"))
         if args_dict["save_file_lists"]:
             simulator.save_file_lists()
     else:
