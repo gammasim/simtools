@@ -31,6 +31,16 @@ def output_log():
 
 
 @pytest.fixture
+def builtins_open():
+    return "builtins.open"
+
+
+@pytest.fixture
+def subprocess_run():
+    return "subprocess.run"
+
+
+@pytest.fixture
 def logfile_log():
     """Fixture for the general log file."""
     return Path("logfile.log")
@@ -197,7 +207,14 @@ def job_submitter_real():
 
 @patch("simtools.utils.general")
 def test_submit_local_real_failure(
-    mock_gen, job_submitter_real, mocker, output_log, logfile_log, script_file, job_messages
+    mock_gen,
+    job_submitter_real,
+    mocker,
+    output_log,
+    logfile_log,
+    script_file,
+    job_messages,
+    builtins_open,
 ):
     mock_gen.get_log_excerpt.return_value = job_messages["log_excerpt"]
     mocker.patch(PATHLIB_PATH_EXISTS, return_value=True)
@@ -206,7 +223,7 @@ def test_submit_local_real_failure(
     mocker.patch("simtools.utils.general.get_log_excerpt", return_value=LOG_EXCERPT)
     mocker.patch("simtools.utils.general.get_file_age", return_value=4)
 
-    with patch("builtins.open", mock_open(read_data="")):
+    with patch(builtins_open, mock_open(read_data="")):
         with pytest.raises(JobExecutionError):
             job_submitter_real.submit(script_file, output_log, logfile_log)
 
@@ -220,13 +237,21 @@ def test_submit_local_real_failure(
 
 @patch("simtools.utils.general")
 def test_submit_local_success(
-    mock_gen, job_submitter_real, mocker, output_log, logfile_log, script_file, job_messages
+    mock_gen,
+    job_submitter_real,
+    mocker,
+    output_log,
+    logfile_log,
+    script_file,
+    job_messages,
+    builtins_open,
+    subprocess_run,
 ):
-    mock_subprocess_run = mocker.patch("subprocess.run")
+    mock_subprocess_run = mocker.patch(subprocess_run)
     mock_gen.get_log_excerpt.return_value = job_messages["log_excerpt"]
     mocker.patch(PATHLIB_PATH_EXISTS, return_value=False)
 
-    with patch("builtins.open", mock_open(read_data="")):
+    with patch(builtins_open, mock_open(read_data="")):
         job_submitter_real.submit(script_file, output_log, logfile_log)
 
     job_submitter_real._logger.info.assert_any_call(job_messages["script_message"])
@@ -246,16 +271,24 @@ def test_submit_local_success(
 
 @patch("simtools.utils.general")
 def ff_test_submit_local_failure(
-    mock_gen, job_submitter_real, mocker, output_log, logfile_log, script_file, job_messages
+    mock_gen,
+    job_submitter_real,
+    mocker,
+    output_log,
+    logfile_log,
+    script_file,
+    job_messages,
+    builtins_open,
+    subprocess_run,
 ):
     mock_subprocess_run = mocker.patch(
-        "subprocess.run", side_effect=subprocess.CalledProcessError(1, "cmd")
+        subprocess_run, side_effect=subprocess.CalledProcessError(1, "cmd")
     )
     mock_gen.get_log_excerpt.return_value = job_messages["log_excerpt"]
     mocker.patch(PATHLIB_PATH_EXISTS, return_value=True)
     mock_gen.get_file_age.return_value = 4
 
-    with patch("builtins.open", mock_open(read_data="")):
+    with patch(builtins_open, mock_open(read_data="")):
         with pytest.raises(JobExecutionError):
             job_submitter_real.submit(script_file, output_log, logfile_log)
 
@@ -278,9 +311,16 @@ def ff_test_submit_local_failure(
 
 @patch("simtools.utils.general")
 def test_submit_local_test_mode(
-    mock_gen, job_submitter, mocker, output_log, logfile_log, script_file, job_messages
+    mock_gen,
+    job_submitter,
+    mocker,
+    output_log,
+    logfile_log,
+    script_file,
+    job_messages,
+    subprocess_run,
 ):
-    mock_subprocess_run = mocker.patch("subprocess.run")
+    mock_subprocess_run = mocker.patch(subprocess_run)
     mock_gen.get_log_excerpt.return_value = job_messages["log_excerpt"]
     mocker.patch(PATHLIB_PATH_EXISTS, return_value=False)
 
