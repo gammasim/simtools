@@ -1,8 +1,8 @@
 """Base class for running sim_telarray simulations."""
 
 import logging
-import os
 import stat
+import subprocess
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -115,15 +115,17 @@ class SimtelRunner:
         """
         self._logger.debug("Running sim_telarray")
 
-        command = self._make_run_command(run_number=run_number, input_file=input_file)
+        command, stdout_file, stderr_file = self._make_run_command(
+            run_number=run_number, input_file=input_file
+        )
 
         if test:
             self._logger.info(f"Running (test) with command: {command}")
-            self._run_simtel_and_check_output(command)
+            self._run_simtel_and_check_output(command, stdout_file, stderr_file)
         else:
             self._logger.debug(f"Running ({self.runs_per_set}x) with command: {command}")
             for _ in range(self.runs_per_set):
-                self._run_simtel_and_check_output(command)
+                self._run_simtel_and_check_output(command, stdout_file, stderr_file)
 
         self._check_run_result(run_number=run_number)
 
@@ -149,7 +151,7 @@ class SimtelRunner:
         self._logger.error(msg)
         raise SimtelExecutionError(msg)
 
-    def _run_simtel_and_check_output(self, command):
+    def _run_simtel_and_check_output(self, command, stdout_file, stderr_file):
         """
         Run the sim_telarray command and check the exit code.
 
@@ -158,8 +160,20 @@ class SimtelRunner:
         SimtelExecutionError
             if run was not successful.
         """
-        if os.system(command) != 0:
-            self._raise_simtel_error()
+        with (
+            open(f"{stdout_file}", "w", encoding="utf-8") as stdout,
+            open(f"{stderr_file}", "w", encoding="utf-8") as stderr,
+        ):
+            result = subprocess.run(
+                command,
+                shell=True,
+                text=True,
+                stdout=stdout,
+                stderr=stderr,
+            )
+            if result.returncode != 0:
+                self._logger.error(result.stderr)
+                self._raise_simtel_error()
 
     def _make_run_command(self, run_number=None, input_file=None):
         self._logger.debug(
@@ -168,7 +182,7 @@ class SimtelRunner:
         )
         input_file = input_file if input_file else "nofile"
         run_number = run_number if run_number else 1
-        return f"{input_file}-{run_number}"
+        return [f"{input_file}-{run_number}"]
 
     @staticmethod
     def get_config_option(par, value=None, weak_option=False):
