@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+gfe08355 Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+g9a23671 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=0f51120c"></script>
+    <script src="../../_static/documentation_options.js?v=9d805aec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfe08355" />
+  <meta name="docsearch:version" content="0.1.dev1+g9a23671" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gfe08355 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9a23671 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,6 +366,7 @@
 <span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Lock</span>
 
 <span class="kn">import</span> <span class="nn">gridfs</span>
+<span class="kn">import</span> <span class="nn">jsonschema</span>
 <span class="kn">from</span> <span class="nn">bson.objectid</span> <span class="kn">import</span> <span class="n">ObjectId</span>
 <span class="kn">from</span> <span class="nn">packaging.version</span> <span class="kn">import</span> <span class="n">Version</span>
 <span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">ASCENDING</span><span class="p">,</span> <span class="n">MongoClient</span>
@@ -384,6 +385,40 @@
 <span class="c1"># The above comment is because pylint does not know that DatabaseHandler.db_client is subscriptable</span>
 
 
+<span class="n">jsonschema_db_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://json-schema.org/draft/2020-12/schema#&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;MongoDB configuration&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;db_server&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;DB server address&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;db_api_port&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;maximum&quot;</span><span class="p">:</span> <span class="mi">65535</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Port to use&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;db_api_user&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;API username&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;db_api_pw&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Password for the API user&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;admin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;DB with user info (optional)&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Name of simulation model database&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;null&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;uri&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;URL to the simulation model repository (optional)&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_port&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_user&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_pw&quot;</span><span class="p">,</span> <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
+
 <div class="viewcode-block" id="DatabaseHandler">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler">[docs]</a>
 <span class="k">class</span> <span class="nc">DatabaseHandler</span><span class="p">:</span>
@@ -393,13 +428,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    mongo_db_config: dict</span>
-<span class="sd">        Dictionary with the MongoDB configuration with the following entries:</span>
-<span class="sd">        &quot;db_server&quot; - DB server address</span>
-<span class="sd">        &quot;db_api_port&quot; - Port to use</span>
-<span class="sd">        &quot;db_api_user&quot; - API username</span>
-<span class="sd">        &quot;db_api_pw&quot; - Password for the API user</span>
-<span class="sd">        &quot;db_api_authentication_database&quot; - DB with user info (optional, default is &quot;admin&quot;)</span>
-<span class="sd">        &quot;db_simulation_model&quot; - Name of simulation model database</span>
+<span class="sd">        Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">DB_CTA_SIMULATION_MODEL_DESCRIPTIONS</span> <span class="o">=</span> <span class="s2">&quot;CTA-Simulation-Model-Descriptions&quot;</span>
@@ -418,7 +447,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the DatabaseHandler class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="n">mongo_db_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_mongo_db_config</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">list_of_collections</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -431,6 +460,16 @@
             <span class="n">lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
             <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
                 <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">db_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_open_mongo_db</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_validate_mongo_db_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongo_db_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the MongoDB configuration.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">mongo_db_config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">mongo_db_config</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">jsonschema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">jsonschema_db_dict</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">mongo_db_config</span>
+        <span class="k">except</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid MongoDB configuration&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
 
     <span class="k">def</span> <span class="nf">_open_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -445,25 +484,21 @@
 <span class="sd">        KeyError</span>
 <span class="sd">            If the DB configuration is invalid</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">direct_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span>
-                <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;simtools-mongodb&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="n">MongoClient</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">],</span>
-                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_port&quot;</span><span class="p">],</span>
-                <span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_user&quot;</span><span class="p">],</span>
-                <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_pw&quot;</span><span class="p">],</span>
-                <span class="n">authSource</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">),</span>
-                <span class="n">directConnection</span><span class="o">=</span><span class="n">direct_connection</span><span class="p">,</span>
-                <span class="n">ssl</span><span class="o">=</span><span class="ow">not</span> <span class="n">direct_connection</span><span class="p">,</span>
-                <span class="n">tlsallowinvalidhostnames</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">tlsallowinvalidcertificates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid setting of DB configuration&quot;</span><span class="p">)</span>
-            <span class="k">raise</span>
+        <span class="n">direct_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;simtools-mongodb&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">MongoClient</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">],</span>
+            <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_port&quot;</span><span class="p">],</span>
+            <span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_user&quot;</span><span class="p">],</span>
+            <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_pw&quot;</span><span class="p">],</span>
+            <span class="n">authSource</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">,</span> <span class="s2">&quot;admin&quot;</span><span class="p">),</span>
+            <span class="n">directConnection</span><span class="o">=</span><span class="n">direct_connection</span><span class="p">,</span>
+            <span class="n">ssl</span><span class="o">=</span><span class="ow">not</span> <span class="n">direct_connection</span><span class="p">,</span>
+            <span class="n">tlsallowinvalidhostnames</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">tlsallowinvalidcertificates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_find_latest_simulation_model_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

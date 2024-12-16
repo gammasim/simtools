@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.configurator &#8212; simtools v0.1.dev1+gfe08355 Manual</title>
+    <title>configuration.configurator &#8212; simtools v0.1.dev1+g9a23671 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../../_static/documentation_options.js?v=0f51120c"></script>
+    <script src="../../_static/documentation_options.js?v=9d805aec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gfe08355" />
+  <meta name="docsearch:version" content="0.1.dev1+g9a23671" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gfe08355 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9a23671 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -370,6 +370,7 @@
 <span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
 
 <span class="kn">import</span> <span class="nn">simtools.configuration.commandline_parser</span> <span class="k">as</span> <span class="nn">argparser</span>
+<span class="kn">from</span> <span class="nn">simtools.db.db_handler</span> <span class="kn">import</span> <span class="n">jsonschema_db_dict</span>
 <span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">general</span> <span class="k">as</span> <span class="n">gen</span>
 
@@ -809,27 +810,13 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return parameters for DB configuration.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
 <span class="sd">        dict</span>
-<span class="sd">            Dictionary with DB parameters</span>
+<span class="sd">            Dictionary with DB parameters.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_db_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">_db_para</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;db_api_user&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;db_api_pw&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;db_api_port&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;db_server&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">_para</span> <span class="ow">in</span> <span class="n">_db_para</span><span class="p">:</span>
-                <span class="n">_db_dict</span><span class="p">[</span><span class="n">_para</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">_para</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-        <span class="k">return</span> <span class="n">_db_dict</span></div>
+        <span class="n">db_params</span> <span class="o">=</span> <span class="n">jsonschema_db_dict</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">param</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">db_params</span> <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">}</span></div>
 
 </pre></div>
 
