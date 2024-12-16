@@ -563,16 +563,30 @@ class Simulator:
             else:
                 self._logger.debug(f"No files to save for {file_type} files.")
 
-    def pack_for_register(self):
-        """Pack simulation output files for registering on the grid."""
+    def pack_for_register(self, directory_for_grid_upload=None):
+        """
+        Pack simulation output files for registering on the grid.
+
+        Parameters
+        ----------
+        directory_for_grid_upload: str
+            Directory for the tarball with output files.
+
+        """
         self._logger.info("Packing the output files for registering on the grid")
         output_files = self.get_file_list(file_type="output")
         log_files = self.get_file_list(file_type="log")
         histogram_files = self.get_file_list(file_type="hist")
         tar_file_name = Path(log_files[0]).name.replace("log.gz", "log_hist.tar.gz")
-        directory_for_grid_upload = self.io_handler.get_output_directory(label=self.label).joinpath(
-            "directory_for_grid_upload"
+        directory_for_grid_upload = (
+            Path(directory_for_grid_upload)
+            if directory_for_grid_upload
+            else self.io_handler.get_output_directory(label=self.label).joinpath(
+                "directory_for_grid_upload"
+            )
         )
+        directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
+
         tar_file_name = directory_for_grid_upload.joinpath(tar_file_name)
 
         with tarfile.open(tar_file_name, "w:gz") as tar:

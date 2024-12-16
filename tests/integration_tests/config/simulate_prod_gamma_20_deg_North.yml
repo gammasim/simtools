@@ -17,7 +17,7 @@ CTA_SIMPIPE:
     VIEW_CONE: "0 deg 0 deg"
     ENERGY_RANGE: "100 GeV 1 TeV"
     CORE_SCATTER: "10 500 m"
-    DATA_DIRECTORY: simtools-output
+    DATA_DIRECTORY: simtools-data
     OUTPUT_PATH: simtools-output
     PACK_FOR_GRID_REGISTER: true
     LOG_LEVEL: DEBUG
