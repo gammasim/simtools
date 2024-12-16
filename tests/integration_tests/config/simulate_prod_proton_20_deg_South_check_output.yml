@@ -16,7 +16,7 @@ CTA_SIMPIPE:
     VIEW_CONE: "0 deg 5 deg" # Decrease the view cone to 5 degrees, otherwise we do not get any triggered events
     ENERGY_RANGE: "200 GeV 800 GeV"
     CORE_SCATTER: "20 700 m"
-    DATA_DIRECTORY: simtools-output
+    DATA_DIRECTORY: simtools-output/directory_for_grid_upload
     OUTPUT_PATH: simtools-output
     SIM_TELARRAY_SEEDS: "1745,290"
     CORSIKA_TEST_SEEDS: True
@@ -24,9 +24,9 @@ CTA_SIMPIPE:
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
-        directory_for_grid_upload/run000001_proton_za20deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
+        run000001_proton_za20deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
     - OUTPUT_FILE: |
-        directory_for_grid_upload/run000001_proton_za20deg_azm180deg_South_alpha_check_output.zst
+        run000001_proton_za20deg_azm180deg_South_alpha_check_output.zst
     - EXPECTED_OUTPUT:
         # The mean trigger time for all telescopes should be
         # between 0 and 50 ns (very loose requirement)

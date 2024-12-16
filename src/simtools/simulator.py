@@ -573,7 +573,9 @@ class Simulator:
             Directory for the tarball with output files.
 
         """
-        self._logger.info("Packing the output files for registering on the grid")
+        self._logger.info(
+            f"Packing the output files for registering on the grid ({directory_for_grid_upload})"
+        )
         output_files = self.get_file_list(file_type="output")
         log_files = self.get_file_list(file_type="log")
         histogram_files = self.get_file_list(file_type="hist")
