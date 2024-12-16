@@ -35,6 +35,7 @@ jsonschema_db_dict = {
             "type": "integer",
             "minimum": 1,
             "maximum": 65535,
+            "default": 27017,
             "description": "Port to use",
         },
         "db_api_user": {"type": "string", "description": "API username"},
