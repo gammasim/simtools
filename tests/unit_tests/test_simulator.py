@@ -359,7 +359,7 @@ def test_pack_for_register(array_simulator, mocker, caplog):
     mocker.patch("tarfile.open")
 
     with caplog.at_level(logging.INFO):
-        array_simulator.pack_for_register()
+        array_simulator.pack_for_register("directory_for_grid_upload")
 
     assert "Packing the output files for registering on the grid" in caplog.text
     assert "Output files for the grid placed in" in caplog.text
