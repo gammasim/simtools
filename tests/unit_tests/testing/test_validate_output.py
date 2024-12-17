@@ -302,71 +302,26 @@ def test_validate_reference_output_file(mocker, output_path):
     )
 
 
-def test_validate_output_path_and_file_exists(output_path, mock_path_exists, mock_check_output):
+def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check_output):
     config = {
         "CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data"},
         "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
     }
-    integration_test = {"OUTPUT_FILE": "output_file"}
+    integration_test = [{"PATH": "DATA_DIRECTORY", "FILE": "output_file", "EXPECTED_OUTPUT": {}}]
 
     validate_output._validate_output_path_and_file(config, integration_test)
 
     mock_path_exists.assert_called()
     mock_check_output.assert_called_once_with(
-        Path(config["CONFIGURATION"]["DATA_DIRECTORY"]).joinpath(integration_test["OUTPUT_FILE"]),
-        "expected_output",
+        Path(config["CONFIGURATION"]["DATA_DIRECTORY"]).joinpath(integration_test[0]["FILE"]),
+        {},
     )
 
-
-def test_validate_output_path_and_file_exists_no_data_directory(
-    output_path, mock_path_exists, mock_check_output
-):
-    config = {
-        "CONFIGURATION": {
-            "OUTPUT_PATH": output_path,
-        },
-        "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
-    }
-    integration_test = {"OUTPUT_FILE": "output_file"}
-
-    validate_output._validate_output_path_and_file(config, integration_test)
-
-    mock_path_exists.assert_called()
-    mock_check_output.assert_called_once_with(
-        Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(integration_test["OUTPUT_FILE"]),
-        "expected_output",
-    )
-
-
-def test_validate_output_path_and_file_expected_output(
-    output_path, mock_path_exists, mock_check_output
-):
-    config = {
-        "CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data2"},
-        "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
-    }
-    integration_test = {"OUTPUT_FILE": "output_file"}
-
-    validate_output._validate_output_path_and_file(config, integration_test)
-
-    mock_path_exists.assert_called()
-    mock_check_output.assert_called_once_with(
-        Path(config["CONFIGURATION"]["DATA_DIRECTORY"]).joinpath(integration_test["OUTPUT_FILE"]),
-        "expected_output",
-    )
-
-
-def test_validate_output_path_and_file_log_hist(output_path, mock_path_exists, mock_check_output):
-    config = {
-        "CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data1"},
-        "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
-    }
-    integration_test = {"OUTPUT_FILE": "log_hist_output_file"}
-
-    validate_output._validate_output_path_and_file(config, integration_test)
-
-    mock_path_exists.assert_called()
-    mock_check_output.assert_not_called()
+    wrong_integration_test = [{"PATH": "WRONG_PATH", "FILE": "output_file", "EXPECTED_OUTPUT": {}}]
+    with pytest.raises(
+        KeyError, match="Path WRONG_PATH not found in integration test configuration."
+    ):
+        validate_output._validate_output_path_and_file(config, wrong_integration_test)
 
 
 def test_validate_application_output_no_integration_tests(mocker, output_path):
@@ -398,25 +353,6 @@ def test_validate_application_output_with_reference_output_file(
     mock_assert_file_type.assert_not_called()
 
 
-def test_validate_application_output_with_output_file(
-    output_path,
-    mock_assert_file_type,
-    mock_validate_output_path_and_file,
-    mock_validate_reference_output_file,
-):
-    config = {
-        "CONFIGURATION": {"OUTPUT_PATH": output_path},
-        "INTEGRATION_TESTS": [{"OUTPUT_FILE": "output_file"}],
-    }
-    validate_output.validate_application_output(config)
-
-    mock_validate_reference_output_file.assert_not_called()
-    mock_validate_output_path_and_file.assert_called_once_with(
-        config, config["INTEGRATION_TESTS"][0]
-    )
-    mock_assert_file_type.assert_not_called()
-
-
 def test_validate_application_output_with_file_type(
     output_path,
     mock_assert_file_type,
@@ -425,46 +361,16 @@ def test_validate_application_output_with_file_type(
 ):
     config = {
         "CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"},
-        "INTEGRATION_TESTS": [{"FILE_TYPE": "ecsv"}],
-    }
-
-    validate_output.validate_application_output(config)
-
-    mock_validate_reference_output_file.assert_not_called()
-    mock_validate_output_path_and_file.assert_not_called()
-    mock_assert_file_type.assert_called_once_with(
-        "ecsv",
-        Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
-            config["CONFIGURATION"]["OUTPUT_FILE"]
-        ),
-    )
-
-
-def test_validate_application_output_all_checks(
-    output_path,
-    mock_assert_file_type,
-    mock_validate_output_path_and_file,
-    mock_validate_reference_output_file,
-):
-    config = {
-        "CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"},
         "INTEGRATION_TESTS": [
-            {
-                "REFERENCE_OUTPUT_FILE": "/path/to/reference/file1",
-                "OUTPUT_FILE": "output_file",
-                "FILE_TYPE": "ecsv",
-            }
+            {"FILE_TYPE": "ecsv", "OUTPUT_FILE_TESTS": [], "OUTPUT_FILE": "output_file"}
         ],
     }
 
     validate_output.validate_application_output(config)
 
-    mock_validate_reference_output_file.assert_called_once_with(
-        config, config["INTEGRATION_TESTS"][0]
-    )
-    mock_validate_output_path_and_file.assert_called_once_with(
-        config, config["INTEGRATION_TESTS"][0]
-    )
+    mock_validate_reference_output_file.assert_not_called()
+    mock_validate_output_path_and_file.assert_called()
+    assert mock_validate_output_path_and_file.call_count == 2
     mock_assert_file_type.assert_called_once_with(
         "ecsv",
         Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(

@@ -43,9 +43,9 @@ r"""
         The location of the output directories corsika-data and simtel-data.
         the label is added to the data_directory, such that the output
         will be written to data_directory/label/simtel-data.
-    pack_for_grid_register (bool, optional)
+    pack_for_grid_register (str, optional)
         Set whether to prepare a tarball for registering the output files on the grid.
-        The files are written to the output_path/directory_for_grid_upload directory.
+        The files are written to the specified directory.
     log_level (str, optional)
         Log level to print.
 
@@ -103,10 +103,10 @@ def _parse(description=None):
     )
     config.parser.add_argument(
         "--pack_for_grid_register",
-        help="Set whether to prepare a tarball for registering the output files on the grid.",
-        action="store_true",
+        help="Directory for a tarball for registering the output files on the grid.",
+        type=str.lower,
         required=False,
-        default=False,
+        default=None,
     )
     config.parser.add_argument(
         "--save_file_lists",
@@ -157,8 +157,8 @@ def main():  # noqa: D103
             f"from {args_dict['azimuth_angle']} azimuth and {args_dict['zenith_angle']} zenith "
             f"at {args_dict['site']} site, using {args_dict['model_version']} model."
         )
-        if args_dict["pack_for_grid_register"]:
-            simulator.pack_for_register(args_dict.get("data_directory"))
+        if args_dict.get("pack_for_grid_register"):
+            simulator.pack_for_register(args_dict["pack_for_grid_register"])
         if args_dict["save_file_lists"]:
             simulator.save_file_lists()
     else:
