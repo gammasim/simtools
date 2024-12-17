@@ -154,10 +154,12 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += " 300"  # Xmax
         command += f" {self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" {self.zenith_angle}"
-        command += f" 2>{self._file_log}"
-        command += f" >{self._file_simtel}"
 
-        return f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}"
+        return (
+            f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}",
+            self._file_simtel,
+            self._file_log,
+        )
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """Check run results.
@@ -169,7 +171,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         """
         # Checking run
         if not self._file_simtel.exists():
-            msg = "Camera efficiency simulation results file does not exist"
+            msg = f"Camera efficiency simulation results file does not exist ({self._file_simtel})."
             self._logger.error(msg)
             raise RuntimeError(msg)
 
