@@ -25,7 +25,6 @@
 """
 
 import logging
-import os
 from pathlib import Path
 
 import astropy.units as u
@@ -101,10 +100,12 @@ def main():
         table.sort("telescope_name")
         table.pprint()
 
-        output_file = args_dict.get("output_file", None)
-        if output_file is not None:
-            base_name, file_extension = os.path.splitext(output_file)
-            output_file = f"{base_name}-{args_dict['site']}-{array_name}{file_extension}"
+        output_file = args_dict.get("output_file")
+        if output_file:
+            output_path = Path(output_file)
+            output_file = output_path.with_name(
+                f"{output_path.stem}-{args_dict['site']}-{array_name}{output_path.suffix}"
+            )
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
             output_file=output_file,
