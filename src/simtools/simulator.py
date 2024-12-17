@@ -592,7 +592,7 @@ class Simulator:
         tar_file_name = directory_for_grid_upload.joinpath(tar_file_name)
 
         with tarfile.open(tar_file_name, "w:gz") as tar:
-            files_to_tar = log_files[:1] + histogram_files[:1]
+            files_to_tar = (log_files[:1] if log_files else []) + (histogram_files[:1] if histogram_files else [])
             for file_to_tar in files_to_tar:
                 tar.add(file_to_tar, arcname=Path(file_to_tar).name)
 
