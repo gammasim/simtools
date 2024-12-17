@@ -74,6 +74,9 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/simtools-${{ matrix.type }}
           flavor: latest=true
 
+      - name: Output Docker tag
+        run: echo "docker_tag=${{ steps.meta.outputs.tags }}" >> $GITHUB_ENV
+
       - name: Build Docker image
         uses: docker/build-push-action@v6
         if: matrix.type == 'prod'
@@ -114,3 +117,28 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
+
+    outputs:
+      docker_tag: ${{ env.docker_tag }}
+
+  test_commandline_tools:
+    needs: build-simtools-container
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.build-simtools-container.outputs.docker_tag }}
+      options: --user 0
+
+    steps:
+
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Test command line tools
+        run: |
+          set -e
+          echo "Reading scripts defined in pyproject.toml"
+          scripts=$(grep 'scripts.simtools-' pyproject.toml | sed -e 's/^scripts\.//' -e 's/ =.*$//')
+          for script in $scripts; do
+            echo "Testing command: $script --help"
+            $script --help
+          done
