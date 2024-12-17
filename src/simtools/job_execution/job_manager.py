@@ -1,7 +1,7 @@
 """Interface to workload managers like gridengine or HTCondor."""
 
 import logging
-import os
+import subprocess
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -127,47 +127,61 @@ class JobManager:
         """
         self._logger.info("Running script locally")
 
-        shell_command = f"{self.run_script} > {self.run_out_file}.out 2> {self.run_out_file}.err"
-
-        if not self.test:
-            sys_output = os.system(shell_command)
-            if sys_output != 0:
-                msg = gen.get_log_excerpt(f"{self.run_out_file}.err")
-                self._logger.error(msg)
-                if log_file.exists() and gen.get_file_age(log_file) < 5:
-                    msg = gen.get_log_excerpt(log_file)
-                    self._logger.error(msg)
-                raise JobExecutionError("See excerpt from log file above\n")
-        else:
+        if self.test:
             self._logger.info("Testing (local)")
+            return
+
+        try:
+            with (
+                open(f"{self.run_out_file}.out", "w", encoding="utf-8") as stdout,
+                open(f"{self.run_out_file}.err", "w", encoding="utf-8") as stderr,
+            ):
+                subprocess.run(
+                    f"{self.run_script}",
+                    shell=True,
+                    check=True,
+                    text=True,
+                    stdout=stdout,
+                    stderr=stderr,
+                )
+        except subprocess.CalledProcessError as exc:
+            self._logger.error(gen.get_log_excerpt(f"{self.run_out_file}.err"))
+            if log_file.exists() and gen.get_file_age(log_file) < 5:
+                self._logger.error(gen.get_log_excerpt(log_file))
+            raise JobExecutionError("See excerpt from log file above\n") from exc
 
     def _submit_htcondor(self):
         """Submit a job described by a shell script to HTcondor."""
         _condor_file = self.run_script + ".condor"
+        lines = [
+            f"Executable = {self.run_script}",
+            f"Output = {self.run_out_file}.out",
+            f"Error = {self.run_out_file}.err",
+            f"Log = {self.run_out_file}.job",
+        ]
+        if self.submit_options:
+            lines.extend(option.lstrip() for option in self.submit_options.split(","))
+        lines.append("queue 1")
         try:
             with open(_condor_file, "w", encoding="utf-8") as file:
-                file.write(f"Executable = {self.run_script}\n")
-                file.write(f"Output = {self.run_out_file + '.out'}\n")
-                file.write(f"Error = {self.run_out_file + '.err'}\n")
-                file.write(f"Log = {self.run_out_file + '.job'}\n")
-                if self.submit_options:
-                    submit_option_list = self.submit_options.split(",")
-                    for option in submit_option_list:
-                        file.write(option.lstrip() + "\n")
-                file.write("queue 1\n")
+                file.write("\n".join(lines) + "\n")
         except FileNotFoundError as exc:
             self._logger.error(f"Failed creating condor submission file {_condor_file}")
             raise JobExecutionError from exc
 
-        self._execute(self.submit_engine, self.engines[self.submit_engine] + " " + _condor_file)
+        self._execute(self.submit_engine, [self.engines[self.submit_engine], _condor_file])
 
     def _submit_gridengine(self):
         """Submit a job described by a shell script to gridengine."""
-        this_sub_cmd = self.engines[self.submit_engine]
-        this_sub_cmd = this_sub_cmd + " -o " + self.run_out_file + ".out"
-        this_sub_cmd = this_sub_cmd + " -e " + self.run_out_file + ".err"
-
-        self._execute(self.submit_engine, this_sub_cmd + " " + self.run_script)
+        this_sub_cmd = [
+            self.engines[self.submit_engine],
+            "-o",
+            self.run_out_file + ".out",
+            "-e",
+            self.run_out_file + ".err",
+            self.run_script,
+        ]
+        self._execute(self.submit_engine, this_sub_cmd)
 
     def _execute(self, engine, shell_command):
         """
@@ -177,13 +191,12 @@ class JobManager:
         ----------
         engine : str
             Engine to use.
-        shell_command : str
-            Shell command to execute.
+        shell_command : list
+            List of shell command plus arguments.
         """
         self._logger.info(f"Submitting script to {engine}")
         self._logger.debug(shell_command)
         if not self.test:
-            os.system(shell_command)
+            subprocess.run(shell_command, shell=True, check=True)
         else:
-            self._logger.info(f"Testing ({engine})")
-            self._logger.info(shell_command)
+            self._logger.info(f"Testing ({engine}: {shell_command})")

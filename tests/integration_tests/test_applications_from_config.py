@@ -3,7 +3,7 @@
 
 import copy
 import logging
-import os
+import subprocess
 from io import StringIO
 from pathlib import Path
 
@@ -49,6 +49,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     )
 
     logger.info(f"Running application: {cmd}")
-    assert os.system(cmd) == 0, f"Application failed: {cmd}"
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    assert result.returncode == 0, f"Application failed: {cmd}"
 
     validate_output.validate_all_tests(tmp_config, request, config_file_model_version)
