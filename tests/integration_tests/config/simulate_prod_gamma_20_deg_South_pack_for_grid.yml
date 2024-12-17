@@ -21,8 +21,8 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-output
     PACK_FOR_GRID_REGISTER: simtools-grid-output
   INTEGRATION_TESTS:
-    - OUTPUT_FILE_TESTS:
-        - PATH: PACK_FOR_GRID_REGISTER
+    - TEST_OUTPUT_FILES:
+        - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
           FILE: run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South-pack-for-grid.log_hist.tar.gz
-        - PATH: PACK_FOR_GRID_REGISTER
+        - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
           FILE: run000010_gamma_za20deg_azm000deg_South_test_layout_test-production-South-pack-for-grid.zst

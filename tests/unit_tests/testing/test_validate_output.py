@@ -362,7 +362,7 @@ def test_validate_application_output_with_file_type(
     config = {
         "CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"},
         "INTEGRATION_TESTS": [
-            {"FILE_TYPE": "ecsv", "OUTPUT_FILE_TESTS": [], "OUTPUT_FILE": "output_file"}
+            {"FILE_TYPE": "ecsv", "TEST_OUTPUT_FILES": [], "OUTPUT_FILE": "output_file"}
         ],
     }
 

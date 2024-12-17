@@ -55,11 +55,12 @@ def validate_application_output(config):
         if "REFERENCE_OUTPUT_FILE" in integration_test:
             _validate_reference_output_file(config, integration_test)
 
-        if "OUTPUT_FILE_TESTS" in integration_test:
-            _validate_output_path_and_file(config, integration_test["OUTPUT_FILE_TESTS"])
+        if "TEST_OUTPUT_FILES" in integration_test:
+            _validate_output_path_and_file(config, integration_test["TEST_OUTPUT_FILES"])
         if "OUTPUT_FILE" in integration_test:
             _validate_output_path_and_file(
-                config, [{"PATH": "OUTPUT_PATH", "FILE": integration_test["OUTPUT_FILE"]}]
+                config,
+                [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": integration_test["OUTPUT_FILE"]}],
             )
 
         if "FILE_TYPE" in integration_test:
@@ -87,10 +88,10 @@ def _validate_output_path_and_file(config, integration_file_tests):
     """Check if output paths and files exist."""
     for file_test in integration_file_tests:
         try:
-            output_path = config["CONFIGURATION"][file_test["PATH"]]
+            output_path = config["CONFIGURATION"][file_test["PATH_DESCRIPTOR"]]
         except KeyError as exc:
             raise KeyError(
-                f"Path {file_test['PATH']} not found in integration test configuration."
+                f"Path {file_test['PATH_DESCRIPTOR']} not found in integration test configuration."
             ) from exc
 
         output_file_path = Path(output_path) / file_test["FILE"]

@@ -357,10 +357,12 @@ def test_pack_for_register(array_simulator, mocker, caplog):
     )
     mocker.patch("shutil.move")
     mocker.patch("tarfile.open")
+    mocker.patch("pathlib.Path.exists", return_value=True)
 
     with caplog.at_level(logging.INFO):
         array_simulator.pack_for_register("directory_for_grid_upload")
 
+    assert "Overwriting existing file" in caplog.text
     assert "Packing the output files for registering on the grid" in caplog.text
     assert "Output files for the grid placed in" in caplog.text
     tarfile.open.assert_called_once()
