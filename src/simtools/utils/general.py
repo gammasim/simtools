@@ -333,9 +333,10 @@ def program_is_executable(program):
     Follows https://stackoverflow.com/questions/377017/
 
     """
+    program = Path(program)
 
     def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+        return fpath.is_file() and os.access(fpath, os.X_OK)
 
     fpath, _ = os.path.split(program)
     if fpath:
@@ -344,7 +345,7 @@ def program_is_executable(program):
     else:
         try:
             for path in os.environ["PATH"].split(os.pathsep):
-                exe_file = os.path.join(path, program)
+                exe_file = Path(path) / program
                 if is_exe(exe_file):
                     return exe_file
         except KeyError:
@@ -442,7 +443,7 @@ def get_file_age(file_path):
     if not Path(file_path).is_file():
         raise FileNotFoundError(f"'{file_path}' does not exist or is not a file.")
 
-    file_stats = os.stat(file_path)
+    file_stats = Path(file_path).stat()
     modification_time = file_stats.st_mtime
     current_time = time.time()
 

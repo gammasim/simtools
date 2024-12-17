@@ -60,13 +60,18 @@ def test_run(simtel_runner, caplog):
 def test_run_simtel_and_check_output(simtel_runner):
 
     with pytest.raises(SimtelExecutionError):
-        simtel_runner._run_simtel_and_check_output("test-5")
-    simtel_runner._run_simtel_and_check_output("echo test")
+        simtel_runner._run_simtel_and_check_output("test-5", None, None)
+    assert simtel_runner._run_simtel_and_check_output("echo test", None, None) == 0
 
 
 def test_make_run_command(simtel_runner, caplog):
     with caplog.at_level(logging.DEBUG):
-        assert simtel_runner._make_run_command(input_file="test", run_number=5) == "test-5"
+        command, stdout_file, stderr_file = simtel_runner._make_run_command(
+            input_file="test", run_number=5
+        )
+        assert command == "test-5"
+        assert stdout_file is None
+        assert stderr_file is None
     assert "make_run_command is being called from the base class" in caplog.text
 
 
