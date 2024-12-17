@@ -140,6 +140,7 @@ lint.extend-select = [
   "N",   # pep8 naming
   "NPY", # numpy
   "PT",  # pytest
+  "PTH", # use pathlib
   "RET", # return statements
   "RUF", # ruff
   "UP",  # pyupgrade
@@ -151,6 +152,7 @@ lint.ignore = [
   "D215",   # section-underline-not-over-indented
   "G004",   # Logging statement uses f-string
   "ISC001", # incompatible with ruff format
+  "PTH123", # open("foo") should be replaced by Path("foo").open()
   "RUF012", #  Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [
