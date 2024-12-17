@@ -338,8 +338,8 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
 
     Returns
     -------
-    str, str, int, str
-        data, metadata (comments), number of columns (max value), n-dimensional axis description.
+    astropy table
+        Table with atmospheric transmission.
     """
     lines = lines = gen.read_file_encoded_in_utf_or_latin(file_path)
 
@@ -374,7 +374,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
                 heights.append(height)
                 extinctions.append(extinction_value)
         except (ValueError, IndexError):
-            print(f"Skipping malformed line: {line.strip()}")
+            logger.debug(f"Skipping malformed line: {line.strip()}")
 
     table = Table()
     table["wavelength"] = wavelengths
