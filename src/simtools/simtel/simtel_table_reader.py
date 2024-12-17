@@ -4,6 +4,7 @@
 import logging
 import re
 
+import astropy.units as u
 from astropy.table import Table
 
 from simtools.utils import general as gen
@@ -344,9 +345,15 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
     lines = lines = gen.read_file_encoded_in_utf_or_latin(file_path)
 
     header_line = None
+    observatory_level = None
     for line in lines:
-        if "H1=" in line:
-            header_line = line.split("H1=")[-1].strip()
+        if "H2=" in line and "H1=" in line:
+            match_h2 = re.search(r"H2=\s*([\d.]+)", line)
+            if match_h2:
+                observatory_level = float(match_h2.group(1)) * u.km
+
+            if "H1=" in line:
+                header_line = line.split("H1=")[-1].strip()
             break
 
     if header_line is None:
@@ -387,6 +394,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
             "File": str(file_path),
             "Description": "Atmospheric transmission",
             "Context_from_sim_telarray": "\n".join(meta_lines),
+            "observatory_level": observatory_level,
         }
     )
 

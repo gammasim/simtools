@@ -3,6 +3,7 @@
 import logging
 from unittest import mock
 
+import astropy.units as u
 import pytest
 
 import simtools.simtel.simtel_table_reader as simtel_table_reader
@@ -175,6 +176,8 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     assert table["wavelength"][0] == 200
     assert table["altitude"][0] == 2.206
     assert table["extinction"][0] == 0.264958
+    assert isinstance(table.meta["observatory_level"], u.Quantity)
+    assert table.meta["observatory_level"] == 2.156 * u.km
 
     test_data += "\n   # not a comment"  # invalid, as comment not at beginning of line
     with mock.patch(mock_string, return_value=test_data.splitlines()):
