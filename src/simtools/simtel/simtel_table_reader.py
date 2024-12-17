@@ -252,6 +252,9 @@ def read_simtel_table(parameter_name, file_path):
     Table
         Astropy table.
     """
+    if parameter_name == "atmospheric_transmission":
+        return _read_simtel_data_for_atmospheric_transmission(file_path)
+
     rows, meta_from_simtel, n_columns, n_dim = _read_simtel_data(file_path)
     columns_info, description = _data_columns(parameter_name, n_columns, n_dim)
 
@@ -322,3 +325,69 @@ def _read_simtel_data(file_path):
     n_columns = max(len(row) for row in rows) if rows else 0
 
     return rows, "\n".join(meta_lines), n_columns, n_dim_axis
+
+
+def _read_simtel_data_for_atmospheric_transmission(file_path):
+    """
+    Read data and comments from sim_telarray table for atmospheric_transmission.
+
+    Parameters
+    ----------
+    file_path: Path
+        Path to the sim_telarray table file.
+
+    Returns
+    -------
+    str, str, int, str
+        data, metadata (comments), number of columns (max value), n-dimensional axis description.
+    """
+    lines = lines = gen.read_file_encoded_in_utf_or_latin(file_path)
+
+    header_line = None
+    for line in lines:
+        if "H1=" in line:
+            header_line = line.split("H1=")[-1].strip()
+            break
+
+    if header_line is None:
+        raise ValueError(f"Header with 'H1=' not found file {file_path}")
+
+    height_bins = [float(x.replace(",", "")) for x in header_line.split()]
+
+    wavelengths = []
+    heights = []
+    extinctions = []
+    meta_lines = []
+
+    for line in lines:
+        if line.startswith("#") or not line.strip():
+            meta_lines.append(line.lstrip("#").strip())
+            continue
+        parts = line.split()
+        try:
+            wl = float(parts[0])
+            for i, height in enumerate(height_bins):
+                extinction_value = float(parts[i + 1])
+                if extinction_value == 99999.0:
+                    continue
+                wavelengths.append(wl)
+                heights.append(height)
+                extinctions.append(extinction_value)
+        except (ValueError, IndexError):
+            print(f"Skipping malformed line: {line.strip()}")
+
+    table = Table()
+    table["wavelength"] = wavelengths
+    table["altitude"] = heights
+    table["extinction"] = extinctions
+
+    table.meta.update(
+        {
+            "Name": "atmospheric_transmission",
+            "File": str(file_path),
+            "Description": "Atmospheric transmission",
+            "Context_from_sim_telarray": "\n".join(meta_lines),
+        }
+    )
+
+    return table

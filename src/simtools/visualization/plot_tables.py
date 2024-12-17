@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 """Plot tabular data."""
 
+import numpy as np
+
 import simtools.utils.general as gen
 from simtools.io_operations import legacy_data_handler
 from simtools.model.site_model import SiteModel
@@ -57,6 +59,12 @@ def read_table_data(config, db_config):
             table[_config["column_y"]] = (
                 table[_config["column_y"]] / table[_config["column_y"]].max()
             )
+        if _config.get("select_values"):
+            table = _select_values_from_table(
+                table,
+                _config["select_values"]["column_name"],
+                _config["select_values"]["value"],
+            )
         data[_config["label"]] = gen.get_structure_array_from_table(
             table, [_config["column_x"], _config["column_y"]]
         )
@@ -91,3 +99,8 @@ def _read_table_from_model_database(table_config, db_config):
             mongo_db_config=db_config,
         )
     return model.get_model_file_as_table(table_config["parameter"])
+
+
+def _select_values_from_table(table, column_name, value):
+    """Return a table with only the rows where column_name == value."""
+    return table[np.isclose(table[column_name], value)]
