@@ -914,4 +914,5 @@ def save_figure(fig, output_file, figure_format=None, log_title=""):
         _file = Path(output_file).with_suffix(f".{fmt}")
         fig.savefig(_file, format=fmt, bbox_inches="tight")
         logging.info(f"Saved plot {log_title} to {_file}")
-    plt.close(fig)
+
+    fig.clf()
