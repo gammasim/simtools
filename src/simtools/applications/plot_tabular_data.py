@@ -8,7 +8,7 @@ plotting details.
 Command line arguments
 ----------------------
 config_file (str, required)
-    Configuration file name.
+    Configuration file name for plotting.
 
 """
 
