@@ -160,10 +160,9 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     204       0.264762  0.527657  1.047906  1.560804  2.564867  3.539938  4.956099  7.197119  9.210340  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00  99999.00
     """
 
-    with mock.patch(
-        "simtools.utils.general.read_file_encoded_in_utf_or_latin",
-        return_value=test_data.splitlines(),
-    ):
+    mock_string = "simtools.utils.general.read_file_encoded_in_utf_or_latin"
+
+    with mock.patch(mock_string, return_value=test_data.splitlines()):
         table = simtel_table_reader._read_simtel_data_for_atmospheric_transmission("dummy_path")
 
     assert len(table) == 45
@@ -178,18 +177,12 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     assert table["extinction"][0] == 0.264958
 
     test_data += "\n   # not a comment"  # invalid, as comment not at beginning of line
-    with mock.patch(
-        "simtools.utils.general.read_file_encoded_in_utf_or_latin",
-        return_value=test_data.splitlines(),
-    ):
+    with mock.patch(mock_string, return_value=test_data.splitlines()):
         with caplog.at_level(logging.DEBUG):
             simtel_table_reader._read_simtel_data_for_atmospheric_transmission("dummy_path")
         assert "Skipping malformed line" in caplog.text
 
     test_data = "\n".join(line for line in test_data.splitlines() if "H1=" not in line)
-    with mock.patch(
-        "simtools.utils.general.read_file_encoded_in_utf_or_latin",
-        return_value=test_data.splitlines(),
-    ):
+    with mock.patch(mock_string, return_value=test_data.splitlines()):
         with pytest.raises(ValueError, match=r"^Header with 'H1='"):
             simtel_table_reader._read_simtel_data_for_atmospheric_transmission("dummy_path")
