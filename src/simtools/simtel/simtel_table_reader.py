@@ -43,6 +43,38 @@ def _data_columns(parameter_name, n_columns, n_dim):
         ) from exc
 
 
+def _data_columns_atmospheric_profile():
+    """Column representation for parameter atmospheric_profile."""
+    return (
+        [
+            {"name": "altitude", "description": "Altitude", "unit": "km"},
+            {"name": "density", "description": "Density", "unit": "g/cm^3"},
+            {"name": "thickness", "description": "Thickness", "unit": "g/cm^2"},
+            {
+                "name": "refractive_index",
+                "description": "Refractive index (n-1)",
+                "unit": None,
+            },
+            {
+                "name": "temperature",
+                "description": "Temperature",
+                "unit": "K",
+            },
+            {
+                "name": "pressure",
+                "description": "Pressure",
+                "unit": "mbar",
+            },
+            {
+                "name": "pw/w",
+                "description": "Partial pressure of water vapor",
+                "unit": None,
+            },
+        ],
+        "Atmospheric profile",
+    )
+
+
 def _data_columns_pm_photoelectron_spectrum():
     """Column description for parameter pm_photoelectron_spectrum."""
     return (
