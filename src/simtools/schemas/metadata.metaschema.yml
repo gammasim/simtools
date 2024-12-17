@@ -8,7 +8,6 @@ name: metadata.metaschema
 type: object
 additionalProperties: false
 
-
 definitions:
   SimtoolsOutputMetadata:
     type: object
