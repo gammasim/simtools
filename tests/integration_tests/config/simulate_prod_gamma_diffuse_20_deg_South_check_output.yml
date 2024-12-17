@@ -16,24 +16,25 @@ CTA_SIMPIPE:
     VIEW_CONE: "0 deg 10 deg"
     ENERGY_RANGE: "100 GeV 500 GeV"
     CORE_SCATTER: "20 700 m"
-    DATA_DIRECTORY: simtools-output/directory_for_grid_upload
+    DATA_DIRECTORY: simtools-data
     OUTPUT_PATH: simtools-output
     SIM_TELARRAY_SEEDS: "1745,290"
     CORSIKA_TEST_SEEDS: True
-    PACK_FOR_GRID_REGISTER: true
+    PACK_FOR_GRID_REGISTER: simtools-grid-output
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: |
-        run000001_gamma_diffuse_za20deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
-    - OUTPUT_FILE: |
-        run000001_gamma_diffuse_za20deg_azm180deg_South_alpha_check_output.zst
-    - EXPECTED_OUTPUT:
-        # The mean trigger time for all telescopes should be
-        # between 0 and 50 ns (very loose requirement)
-        trigger_time: [0, 50]
-        # The mean number of photoelectrons for telescopes with a signal
-        # should be between 20 and 1000 (very loose requirement)
-        pe_sum: [20, 1000]
-        # The mean number of photons per telescope after atmospheric absorption and QE
-        # should be between 90 and 1000 (very loose requirement)
-        photons: [90, 1000]
+    - OUTPUT_FILE_TESTS:
+        - PATH: PACK_FOR_GRID_REGISTER
+          FILE: run000001_gamma_diffuse_za20deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
+        - PATH: PACK_FOR_GRID_REGISTER
+          FILE: run000001_gamma_diffuse_za20deg_azm180deg_South_alpha_check_output.zst
+          EXPECTED_OUTPUT:
+            # The mean trigger time for all telescopes should be
+            # between 0 and 50 ns (very loose requirement)
+            trigger_time: [0, 50]
+            # The mean number of photoelectrons for telescopes with a signal
+            # should be between 20 and 1000 (very loose requirement)
+            pe_sum: [20, 1000]
+            # The mean number of photons per telescope after atmospheric absorption and QE
+            # should be between 90 and 1000 (very loose requirement)
+            photons: [90, 1000]
