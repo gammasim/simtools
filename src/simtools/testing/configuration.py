@@ -3,12 +3,15 @@
 import logging
 from pathlib import Path
 
-import pytest
 import yaml
 
 import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
+
+
+class VersionError(Exception):
+    """Raise if model version requested is not supported."""
 
 
 def get_list_of_test_configurations(config_files):
@@ -121,7 +124,7 @@ def _skip_test_for_model_version(config, model_version_requested):
         return
     model_version_config = config["CONFIGURATION"]["MODEL_VERSION"]
     if model_version_requested != model_version_config:
-        pytest.skip(
+        raise VersionError(
             f"Model version requested {model_version_requested} not supported for this test"
         )
 
