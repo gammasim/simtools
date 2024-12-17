@@ -22,10 +22,10 @@ CTA_SIMPIPE:
     PACK_FOR_GRID_REGISTER: simtools-grid-output
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
-    - OUTPUT_FILE_TESTS:
-      - PATH: PACK_FOR_GRID_REGISTER
+    - TEST_OUTPUT_FILES:
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: run000001_gamma_za20deg_azm180deg_North_alpha_check_output.log_hist.tar.gz
-      - PATH: PACK_FOR_GRID_REGISTER
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: run000001_gamma_za20deg_azm180deg_North_alpha_check_output.zst
         EXPECTED_OUTPUT:
             # The mean trigger time for all telescopes should be
