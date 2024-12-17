@@ -307,7 +307,9 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
         "CONFIGURATION": {"OUTPUT_PATH": output_path, "DATA_DIRECTORY": "/path/to/data"},
         "INTEGRATION_TESTS": [{"EXPECTED_OUTPUT": "expected_output"}],
     }
-    integration_test = [{"PATH": "DATA_DIRECTORY", "FILE": "output_file", "EXPECTED_OUTPUT": {}}]
+    integration_test = [
+        {"PATH_DESCRIPTOR": "DATA_DIRECTORY", "FILE": "output_file", "EXPECTED_OUTPUT": {}}
+    ]
 
     validate_output._validate_output_path_and_file(config, integration_test)
 
@@ -317,7 +319,9 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
         {},
     )
 
-    wrong_integration_test = [{"PATH": "WRONG_PATH", "FILE": "output_file", "EXPECTED_OUTPUT": {}}]
+    wrong_integration_test = [
+        {"PATH_DESCRIPTOR": "WRONG_PATH", "FILE": "output_file", "EXPECTED_OUTPUT": {}}
+    ]
     with pytest.raises(
         KeyError, match="Path WRONG_PATH not found in integration test configuration."
     ):
