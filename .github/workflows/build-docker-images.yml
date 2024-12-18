@@ -77,7 +77,8 @@ jobs:
       - name: Output Docker tag
         if: matrix.type == 'prod'
         run: |
-          echo "docker_tag=$(echo '${{ steps.meta.outputs.tags }}' | tr '\n' ' ')" >> "$GITHUB_ENV"
+          echo "docker_tag=$(echo '${{ steps.meta.outputs.tags }}' | head -n 1)" >> "$GITHUB_ENV"
+          echo "DOCKER TAG: $docker_tag"
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
