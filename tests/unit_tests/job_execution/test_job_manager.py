@@ -124,7 +124,7 @@ def test_submit_htcondor(mock_gen, job_submitter, mocker, output_log, logfile_lo
     job_submitter.submit_engine = "htcondor"
     mock_file = mocker.mock_open()
     mocker.patch("builtins.open", mock_file)
-    mock_execute = mocker.patch.object(job_submitter, "_execute")
+    mock_execute = mocker.patch.object(job_submitter, "_execute", return_value=0)
 
     job_submitter.submit(script_file, output_log, logfile_log)
 
@@ -176,7 +176,7 @@ def test_submit_htcondor_no_script(mock_gen, job_submitter, mocker, output_log, 
 @patch("simtools.utils.general")
 def test_submit_gridengine(mock_gen, job_submitter, mocker, output_log, logfile_log, script_file):
     job_submitter.submit_engine = "gridengine"
-    mock_execute = mocker.patch.object(job_submitter, "_execute")
+    mock_execute = mocker.patch.object(job_submitter, "_execute", return_value=0)
 
     job_submitter.submit(script_file, output_log, logfile_log)
 
