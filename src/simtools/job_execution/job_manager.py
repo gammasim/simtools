@@ -116,7 +116,7 @@ class JobManager:
         else:
             submit_result = getattr(self, f"_submit_{self.submit_engine}")()
 
-        if submit_result:
+        if submit_result != 0:
             raise JobExecutionError(f"Job submission failed with return code {submit_result}")
 
     def _submit_local(self, log_file):
@@ -138,7 +138,7 @@ class JobManager:
 
         if self.test:
             self._logger.info("Testing (local)")
-            return None
+            return 0
 
         result = None
         try:
