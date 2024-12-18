@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Simulation Productions &#8212; simtools v0.1.dev1+g6adb9f9 Manual</title>
+    <title>Simulation Productions &#8212; simtools v0.1.dev1+g29750b9 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=bfb25cdd"></script>
+    <script src="../_static/documentation_options.js?v=40429d04"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Simulation Software" href="simulation_software.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g6adb9f9" />
+  <meta name="docsearch:version" content="0.1.dev1+g29750b9" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6adb9f9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g29750b9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -466,10 +466,11 @@ Simtools is designed to use the CTAO workload management system, but it is flexi
 <li><p>production configuration exists (see e.g., <a class="reference internal" href="#../tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml"><span class="xref myst">simulate_prod_gamma_20_deg_North.yml</span></a>)</p></li>
 <li><p>simtools is installed and configured on the job submission host</p></li>
 </ul>
-<p>Productions are configured and submitted using the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> command.</p>
+<p>Productions are configured and submitted using the <code class="docutils literal notranslate"><span class="pre">simtools-simulate-prod</span></code> command.
+The submit engine is configured with the <code class="docutils literal notranslate"><span class="pre">--submit_engine</span></code> command line option.</p>
 <section id="running-local-production">
 <h2>Running local production<a class="headerlink" href="#running-local-production" title="Link to this heading">#</a></h2>
-<p>Choose with <code class="docutils literal notranslate"><span class="pre">SUBMIT_ENGINE:</span> <span class="pre">local</span></code>.</p>
+<p>Choose with <code class="docutils literal notranslate"><span class="pre">SUBMIT_ENGINE:</span> <span class="pre">local</span></code> (default value).</p>
 <p>Running a local production is a simple way to test the production system, but too slow for anything else.</p>
 </section>
 <section id="running-productions-using-hccondor-or-grid-engine">

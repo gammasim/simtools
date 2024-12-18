@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.validate_output &#8212; simtools v0.1.dev1+g6adb9f9 Manual</title>
+    <title>testing.validate_output &#8212; simtools v0.1.dev1+g29750b9 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=bfb25cdd"></script>
+    <script src="../../_static/documentation_options.js?v=40429d04"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g6adb9f9" />
+  <meta name="docsearch:version" content="0.1.dev1+g29750b9" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6adb9f9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g29750b9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -425,8 +425,13 @@
         <span class="k">if</span> <span class="s2">&quot;REFERENCE_OUTPUT_FILE&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
             <span class="n">_validate_reference_output_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="s2">&quot;TEST_OUTPUT_FILES&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+            <span class="n">_validate_output_path_and_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;TEST_OUTPUT_FILES&quot;</span><span class="p">])</span>
         <span class="k">if</span> <span class="s2">&quot;OUTPUT_FILE&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
-            <span class="n">_validate_output_path_and_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">)</span>
+            <span class="n">_validate_output_path_and_file</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">,</span>
+                <span class="p">[{</span><span class="s2">&quot;PATH_DESCRIPTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;FILE&quot;</span><span class="p">:</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;OUTPUT_FILE&quot;</span><span class="p">]}],</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="s2">&quot;FILE_TYPE&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">assert_file_type</span><span class="p">(</span>
@@ -450,31 +455,25 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_validate_output_path_and_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if output path and file exist.&quot;&quot;&quot;</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PATH </span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CONFIGURATION&#39;</span><span class="p">][</span><span class="s1">&#39;OUTPUT_PATH&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">integration_test</span><span class="p">[</span><span class="s1">&#39;OUTPUT_FILE&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_validate_output_path_and_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_file_tests</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if output paths and files exist.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">file_test</span> <span class="ow">in</span> <span class="n">integration_file_tests</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">][</span><span class="n">file_test</span><span class="p">[</span><span class="s2">&quot;PATH_DESCRIPTOR&quot;</span><span class="p">]]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Path </span><span class="si">{</span><span class="n">file_test</span><span class="p">[</span><span class="s1">&#39;PATH_DESCRIPTOR&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not found in integration test configuration.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
 
-    <span class="n">data_path</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">&quot;DATA_DIRECTORY&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">][</span><span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">]</span>
-    <span class="p">)</span>
-    <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;OUTPUT_FILE&quot;</span><span class="p">]</span>
+        <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">file_test</span><span class="p">[</span><span class="s2">&quot;FILE&quot;</span><span class="p">]</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking path: </span><span class="si">{</span><span class="n">output_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
 
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking path: </span><span class="si">{</span><span class="n">output_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-
-    <span class="n">expected_output</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;EXPECTED_OUTPUT&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;INTEGRATION_TESTS&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;EXPECTED_OUTPUT&quot;</span> <span class="ow">in</span> <span class="n">d</span>
-    <span class="p">]</span>
-    <span class="k">if</span> <span class="n">expected_output</span> <span class="ow">and</span> <span class="s2">&quot;log_hist&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;OUTPUT_FILE&quot;</span><span class="p">]:</span>
-        <span class="c1"># Get the expected output from the configuration file</span>
-        <span class="n">expected_output</span> <span class="o">=</span> <span class="n">expected_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Checking the output of </span><span class="si">{</span><span class="n">integration_test</span><span class="p">[</span><span class="s1">&#39;OUTPUT_FILE&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
-            <span class="s2">&quot;complies with the expected output: &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">expected_output</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-        <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">check_output_from_sim_telarray</span><span class="p">(</span><span class="n">output_file_path</span><span class="p">,</span> <span class="n">expected_output</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;EXPECTED_OUTPUT&quot;</span> <span class="ow">in</span> <span class="n">file_test</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">check_output_from_sim_telarray</span><span class="p">(</span>
+                <span class="n">output_file_path</span><span class="p">,</span>
+                <span class="n">file_test</span><span class="p">[</span><span class="s2">&quot;EXPECTED_OUTPUT&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
 
 
 <div class="viewcode-block" id="compare_files">
