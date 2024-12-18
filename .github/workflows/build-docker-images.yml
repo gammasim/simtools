@@ -118,6 +118,7 @@ jobs:
           scripts=$(grep 'scripts.simtools-' pyproject.toml | sed -e 's/^scripts\.//' -e 's/ =.*$//')
           for script in $scripts; do
             echo "Testing command: $script --help"
+            docker run --rm ${{ env.TEST_TAG }} $script --help
           done
         shell: /usr/bin/bash -e {0}
 
