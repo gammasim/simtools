@@ -4,6 +4,7 @@ import copy
 import logging
 import math
 import shutil
+import tarfile
 from pathlib import Path
 
 import pytest
@@ -342,3 +343,32 @@ def test_save_file_lists(shower_simulator, mocker, caplog):
     with caplog.at_level(logging.DEBUG):
         mock_shower_simulator.save_file_lists()
     assert "No files to save for output files." in caplog.text
+
+
+def test_pack_for_register(array_simulator, mocker, caplog):
+    mocker.patch.object(
+        array_simulator,
+        "get_file_list",
+        side_effect=[
+            ["output_file1", "output_file2"],
+            ["log_file1", "log_file2"],
+            ["hist_file1", "hist_file2"],
+        ],
+    )
+    mocker.patch("shutil.move")
+    mocker.patch("tarfile.open")
+    mocker.patch("pathlib.Path.exists", return_value=True)
+
+    with caplog.at_level(logging.INFO):
+        array_simulator.pack_for_register("directory_for_grid_upload")
+
+    assert "Overwriting existing file" in caplog.text
+    assert "Packing the output files for registering on the grid" in caplog.text
+    assert "Output files for the grid placed in" in caplog.text
+    tarfile.open.assert_called_once()
+    shutil.move.assert_any_call(
+        Path("output_file1"), Path("directory_for_grid_upload/output_file1")
+    )
+    shutil.move.assert_any_call(
+        Path("output_file2"), Path("directory_for_grid_upload/output_file2")
+    )
