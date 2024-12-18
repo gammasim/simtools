@@ -74,12 +74,6 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/simtools-${{ matrix.type }}
           flavor: latest=true
 
-      - name: Output Docker tag
-        if: matrix.type == 'prod'
-        run: |
-          echo "docker_tag=$(echo '${{ steps.meta.outputs.tags }}' | head -n 1)" >> "$GITHUB_ENV"
-          echo "DOCKER TAG: ${{ env.docker_tag }}"
-
       - name: Build Docker image
         uses: docker/build-push-action@v6
         if: matrix.type == 'prod'
@@ -133,6 +127,3 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-${{ matrix.type }}
-
-    outputs:
-      docker_tag: ${{ env.docker_tag }}
