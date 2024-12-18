@@ -344,22 +344,9 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
     """
     lines = lines = gen.read_file_encoded_in_utf_or_latin(file_path)
 
-    header_line = None
-    observatory_level = None
-    for line in lines:
-        if "H2=" in line and "H1=" in line:
-            match_h2 = re.search(r"H2=\s*([\d.]+)", line)
-            if match_h2:
-                observatory_level = float(match_h2.group(1)) * u.km
-
-            if "H1=" in line:
-                header_line = line.split("H1=")[-1].strip()
-            break
-
-    if header_line is None:
-        raise ValueError(f"Header with 'H1=' not found file {file_path}")
-
-    height_bins = [float(x.replace(",", "")) for x in header_line.split()]
+    observatory_level, height_bins = _read_header_line_for_atmospheric_transmission(
+        lines, file_path
+    )
 
     wavelengths = []
     heights = []
@@ -399,3 +386,25 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
     )
 
     return table
+
+
+def _read_header_line_for_atmospheric_transmission(lines, file_path):
+    """Reader observatory level and height bins from header line for atmospheric transmission."""
+    header_line = None
+    observatory_level = None
+    for line in lines:
+        if "H2=" in line and "H1=" in line:
+            match_h2 = re.search(r"H2=\s*([\d.]+)", line)
+            if match_h2:
+                observatory_level = float(match_h2.group(1)) * u.km
+
+            if "H1=" in line:
+                header_line = line.split("H1=")[-1].strip()
+            break
+
+    if header_line is None:
+        raise ValueError(f"Header with 'H1=' not found file {file_path}")
+
+    height_bins = [float(x.replace(",", "")) for x in header_line.split()]
+
+    return observatory_level, height_bins
