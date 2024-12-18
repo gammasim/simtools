@@ -90,6 +90,18 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.type }}
           tags: ${{ env.TEST_TAG }}
 
+      - name: Save Docker image to tarball
+        if: matrix.type == 'prod'
+        run: |
+          docker save -o simtools.tar ${{ env.TEST_TAG }}
+
+      - name: Upload Docker image tarball
+        if: matrix.type == 'prod'
+        uses: actions/upload-artifact@v4
+        with:
+          name: simtools-tarball
+          path: simtools.tar
+
       # test the prod image with one application using the database
       # and the sim_telarray installation
       - name: Test Docker image
@@ -125,16 +137,21 @@ jobs:
       docker_tag: ${{ env.docker_tag }}
 
   test_commandline_tools:
-    needs: build-simtools-container
     runs-on: ubuntu-latest
-    container:
-      image: ${{ needs.build-simtools-container.outputs.docker_tag }}
-      options: --user 0
-
+    needs: build-simtools-container
     steps:
 
-      - name: checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download Docker image tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: simtools-tarball
+
+      - name: Load Docker image from tarball
+        run: |
+          docker load -i simtools.tar
 
       - name: Test command line tools
         run: |
