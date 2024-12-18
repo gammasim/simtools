@@ -75,6 +75,7 @@ jobs:
           flavor: latest=true
 
       - name: Output Docker tag
+        if: matrix.type == 'prod'
         run: |
           echo "docker_tag=$(echo '${{ steps.meta.outputs.tags }}' | tr '\n' ' ')" >> "$GITHUB_ENV"
 
