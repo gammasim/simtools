@@ -75,7 +75,8 @@ jobs:
           flavor: latest=true
 
       - name: Output Docker tag
-        run: echo "docker_tag=$(echo '${{ steps.meta.outputs.tags }}' | cut -d',' -f1)" >> "$GITHUB_ENV"
+        run: |
+          echo "docker_tag=$(echo '${{ steps.meta.outputs.tags }}' | tr '\n' ' ')" >> "$GITHUB_ENV"
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
