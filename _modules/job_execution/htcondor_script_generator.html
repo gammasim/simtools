@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>io_operations.hdf5_handler &#8212; simtools v0.1.dev1+g1fb6a24 Manual</title>
+    <title>job_execution.htcondor_script_generator &#8212; simtools v0.1.dev1+g1fb6a24 Manual</title>
   
   
   
@@ -42,7 +42,7 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/io_operations/hdf5_handler';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/job_execution/htcondor_script_generator';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -297,7 +297,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/io_operations/hdf5_handler.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/job_execution/htcondor_script_generator.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -363,127 +363,143 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for io_operations.hdf5_handler</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Helper module for reading and writing in hd5 format.&quot;&quot;&quot;</span>
+  <h1>Source code for job_execution.htcondor_script_generator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;HT Condor script generator for simulation production.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">PosixPath</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">tables</span>
-<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>
-<span class="kn">from</span> <span class="nn">ctapipe.io</span> <span class="kn">import</span> <span class="n">read_table</span>
-
-<span class="kn">from</span> <span class="nn">simtools.utils.names</span> <span class="kn">import</span> <span class="n">sanitize_name</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;fill_hdf5_table&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;read_hdf5&quot;</span><span class="p">,</span>
-<span class="p">]</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="fill_hdf5_table">
-<a class="viewcode-back" href="../../api-reference/io_operations.html#io_operations.hdf5_handler.fill_hdf5_table">[docs]</a>
-<span class="k">def</span> <span class="nf">fill_hdf5_table</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">x_bin_edges</span><span class="p">,</span> <span class="n">y_bin_edges</span><span class="p">,</span> <span class="n">x_label</span><span class="p">,</span> <span class="n">y_label</span><span class="p">,</span> <span class="n">meta_data</span><span class="p">):</span>
+<div class="viewcode-block" id="generate_submission_script">
+<a class="viewcode-back" href="../../api-reference/job_execution.html#job_execution.htcondor_script_generator.generate_submission_script">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_submission_script</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create and fill an hdf5 table with the histogram information.</span>
-
-<span class="sd">    It works for both 1D and 2D distributions.</span>
+<span class="sd">    Generate the HT Condor submission script.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    hist: numpy.ndarray</span>
-<span class="sd">        The counts of the histograms.</span>
-<span class="sd">    x_bin_edges: numpy.array</span>
-<span class="sd">        The x bin edges of the histograms.</span>
-<span class="sd">    y_bin_edges: numpy.array</span>
-<span class="sd">        The y bin edges of the histograms.</span>
-<span class="sd">        Use None for 1D histograms.</span>
-<span class="sd">    x_label: str</span>
-<span class="sd">        X bin edges label.</span>
-<span class="sd">    y_label: str</span>
-<span class="sd">        Y bin edges label.</span>
-<span class="sd">        Use None for 1D histograms.</span>
-<span class="sd">    meta_data: dict</span>
-<span class="sd">        Dictionary with the histogram metadata.</span>
+<span class="sd">    args_dict: dict</span>
+<span class="sd">        Arguments dictionary.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Complement metadata</span>
-    <span class="k">if</span> <span class="n">x_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;x_bin_edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
-    <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;x_bin_edges_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">x_bin_edges</span><span class="o">.</span><span class="n">unit</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_bin_edges</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
-    <span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating HT Condor submission scripts &quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">y_bin_edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">y_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;y_bin_edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">y_label</span><span class="p">)</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta_data</span><span class="p">[</span><span class="s1">&#39;y_bin_edges&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
-            <span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta_data</span><span class="p">[</span><span class="s1">&#39;Title&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
-            <span class="p">]</span>
-        <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;y_bin_edges_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">y_bin_edges</span><span class="o">.</span><span class="n">unit</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_bin_edges</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
+    <span class="n">work_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">])</span>
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">&quot;logs&quot;</span>
+    <span class="n">work_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">log_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">submit_file_name</span> <span class="o">=</span> <span class="s2">&quot;simulate_prod.submit&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">work_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">submit_file_name</span><span class="si">}</span><span class="s2">.condor&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">submit_file_handle</span><span class="p">:</span>
+        <span class="n">submit_file_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">_get_submit_file</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">submit_file_name</span><span class="si">}</span><span class="s2">.sh&quot;</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;apptainer_image&quot;</span><span class="p">],</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;priority&quot;</span><span class="p">],</span>
+                <span class="o">+</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))],</span>
-            <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
-            <span class="n">meta</span><span class="o">=</span><span class="n">meta_data</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">work_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">submit_file_name</span><span class="si">}</span><span class="s2">.sh&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">submit_script_handle</span><span class="p">:</span>
+        <span class="n">submit_script_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">_get_submit_script</span><span class="p">(</span><span class="n">args_dict</span><span class="p">))</span>
 
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">x_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;x_bin_edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;x_bin_edges&quot;</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">names</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span>
-        <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="n">x_bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">hist</span><span class="p">,</span>
-            <span class="p">],</span>
-            <span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="s2">&quot;Values&quot;</span><span class="p">)),</span>
-            <span class="n">meta</span><span class="o">=</span><span class="n">meta_data</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="n">table</span></div>
+    <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">submit_file_name</span><span class="si">}</span><span class="s2">.sh&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o755</span><span class="p">)</span></div>
 
 
 
-<div class="viewcode-block" id="read_hdf5">
-<a class="viewcode-back" href="../../api-reference/io_operations.html#io_operations.hdf5_handler.read_hdf5">[docs]</a>
-<span class="k">def</span> <span class="nf">read_hdf5</span><span class="p">(</span><span class="n">hdf5_file_name</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_submit_file</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="n">apptainer_image</span><span class="p">,</span> <span class="n">priority</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read a hdf5 output file.</span>
+<span class="sd">    Return HT Condor submit file.</span>
+
+<span class="sd">    Database access variables are passed through the environment file.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    hdf5_file_name: str or Path</span>
-<span class="sd">        Name or Path of the hdf5 file to read from.</span>
+<span class="sd">    executable: str</span>
+<span class="sd">        Name of the executable script.</span>
+<span class="sd">    apptainer_image: str</span>
+<span class="sd">        Path to the Apptainer image.</span>
+<span class="sd">    priority: int</span>
+<span class="sd">        Priority of the job.</span>
+<span class="sd">    n_jobs: int</span>
+<span class="sd">        Number of jobs to queue.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    list</span>
-<span class="sd">        The list with the astropy.Table instances for the various 1D and 2D histograms saved</span>
-<span class="sd">        in the hdf5 file.</span>
+<span class="sd">    str</span>
+<span class="sd">        HT Condor submit file content.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdf5_file_name</span><span class="p">,</span> <span class="n">PosixPath</span><span class="p">):</span>
-        <span class="n">hdf5_file_name</span> <span class="o">=</span> <span class="n">hdf5_file_name</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;universe = container</span>
+<span class="s2">container_image = </span><span class="si">{</span><span class="n">apptainer_image</span><span class="si">}</span>
+<span class="s2">transfer_container = false</span>
 
-    <span class="n">tables_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="s2">executable = </span><span class="si">{</span><span class="n">executable</span><span class="si">}</span>
+<span class="s2">error      = logs/err.$(cluster)_$(process)</span>
+<span class="s2">output     = logs/out.$(cluster)_$(process)</span>
+<span class="s2">log        = logs/log.$(cluster)_$(process)</span>
 
-    <span class="k">with</span> <span class="n">tables</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">hdf5_file_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">walk_nodes</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;Table&quot;</span><span class="p">):</span>
-            <span class="n">table_path</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_v_pathname</span>  <span class="c1"># pylint: disable=protected-access</span>
-            <span class="n">table</span> <span class="o">=</span> <span class="n">read_table</span><span class="p">(</span><span class="n">hdf5_file_name</span><span class="p">,</span> <span class="n">table_path</span><span class="p">)</span>
-            <span class="n">tables_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">tables_list</span></div>
+<span class="s2">priority = </span><span class="si">{</span><span class="n">priority</span><span class="si">}</span>
+<span class="s2">arguments = &quot;$(process) env.txt&quot;</span>
 
+<span class="s2">queue </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_get_submit_script</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return HT Condor submit script.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict: dict</span>
+<span class="sd">        Arguments dictionary.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        HT Condor submit script content.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">azimuth_angle_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;azimuth_angle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">zenith_angle_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;zenith_angle&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">energy_range</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;energy_range&quot;</span><span class="p">]</span>
+    <span class="n">energy_range_string</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">energy_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1"> GeV </span><span class="si">{</span><span class="n">energy_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1"> GeV&quot;&#39;</span>
+    <span class="p">)</span>
+    <span class="n">core_scatter</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;core_scatter&quot;</span><span class="p">]</span>
+    <span class="n">core_scatter_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">core_scatter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">core_scatter</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1"> m&quot;&#39;</span>
+
+    <span class="n">label</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;simulate-prod&quot;</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;#!/usr/bin/env bash</span>
+
+<span class="s2"># Process ID used to generate run number</span>
+<span class="s2">process_id=&quot;$1&quot;</span>
+<span class="s2"># Load environment variables (for DB access)</span>
+<span class="s2">set -a; source &quot;$2&quot;</span>
+
+<span class="s2">simtools-simulate-prod </span><span class="se">\\</span>
+<span class="s2">    --simulation_software </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --label </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --model_version </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --site </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --array_layout_name </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --primary </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;primary&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --azimuth_angle </span><span class="si">{</span><span class="n">azimuth_angle_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --zenith_angle </span><span class="si">{</span><span class="n">zenith_angle_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --nshow </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;nshow&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --energy_range </span><span class="si">{</span><span class="n">energy_range_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --core_scatter </span><span class="si">{</span><span class="n">core_scatter_string</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --run_number_start $((process_id + </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;run_number_start&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2">)) </span><span class="se">\\</span>
+<span class="s2">    --number_of_runs 1 </span><span class="se">\\</span>
+<span class="s2">    --submit_engine </span><span class="se">\&quot;</span><span class="s2">local</span><span class="se">\&quot;</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --data_directory /tmp/simtools-data </span><span class="se">\\</span>
+<span class="s2">    --output_path /tmp/simtools-output </span><span class="se">\\</span>
+<span class="s2">    --log_level </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="se">\\</span>
+<span class="s2">    --pack_for_grid_register simtools-output</span>
+<span class="s2">&quot;&quot;&quot;</span>
 </pre></div>
 
                 </article>

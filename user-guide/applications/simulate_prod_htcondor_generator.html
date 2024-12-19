@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>db_add_value_from_json_to_db &#8212; simtools v0.1.dev1+g1fb6a24 Manual</title>
+    <title>simulate_prod_htcondor_generator &#8212; simtools v0.1.dev1+g1fb6a24 Manual</title>
   
   
   
@@ -43,11 +43,11 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/db_add_value_from_json_to_db';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simulate_prod_htcondor_generator';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="db_get_array_layouts_from_db" href="db_get_array_layouts_from_db.html" />
-    <link rel="prev" title="db_add_model_parameters_from_repository_to_db" href="db_add_model_parameters_from_repository_to_db.html" />
+    <link rel="next" title="submit_data_from_external" href="submit_data_from_external.html" />
+    <link rel="prev" title="simulate_prod" href="simulate_prod.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g1fb6a24" />
@@ -184,7 +184,7 @@
 <li class="toctree-l3"><a class="reference internal" href="convert_model_parameter_from_simtel.html">convert_model_parameter_from_simtel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="db_add_file_to_db.html">db_add_file_to_db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="db_add_model_parameters_from_repository_to_db.html">db_add_model_parameters_from_repository_to_db</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">db_add_value_from_json_to_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="db_add_value_from_json_to_db.html">db_add_value_from_json_to_db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="db_get_array_layouts_from_db.html">db_get_array_layouts_from_db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="db_get_file_from_db.html">db_get_file_from_db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="db_get_parameter_from_db.html">db_get_parameter_from_db</a></li>
@@ -201,7 +201,7 @@
 <li class="toctree-l3"><a class="reference internal" href="production_generate_simulation_config.html">production_generate_simulation_config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulate_light_emission.html">simulate_light_emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulate_prod.html">simulate_prod</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulate_prod_htcondor_generator.html">simulate_prod_htcondor_generator</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simulate_prod_htcondor_generator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="submit_data_from_external.html">submit_data_from_external</a></li>
 <li class="toctree-l3"><a class="reference internal" href="submit_model_parameter_from_external.html">submit_model_parameter_from_external</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validate_camera_efficiency.html">validate_camera_efficiency</a></li>
@@ -309,7 +309,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/db_add_value_from_json_to_db.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simulate_prod_htcondor_generator.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -326,7 +326,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/db_add_value_from_json_to_db.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simulate_prod_htcondor_generator.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -356,7 +356,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/db_add_value_from_json_to_db.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simulate_prod_htcondor_generator.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -432,7 +432,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>db_add_value_from_json_to_db</h1>
+    <h1>simulate_prod_htcondor_generator</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -443,7 +443,6 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
             </nav>
         </div>
@@ -455,27 +454,40 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="db-add-value-from-json-to-db">
-<span id="id1"></span><h1>db_add_value_from_json_to_db<a class="headerlink" href="#db-add-value-from-json-to-db" title="Link to this heading">#</a></h1>
-<p id="module-db_add_value_from_json_to_db">Add a new parameter / value to a collection in the DB using a json file as input.</p>
+  <section id="module-simulate_prod_htcondor_generator">
+<span id="simulate-prod-htcondor-generator"></span><h1>simulate_prod_htcondor_generator<a class="headerlink" href="#module-simulate_prod_htcondor_generator" title="Link to this heading">#</a></h1>
+<p>Generate a run script and submit file for HT Condor job submission of a simulation production.</p>
+<p>This tool facilitates the submission of multiple simulations to the HT Condor batch system,
+enabling:</p>
+<ul class="simple">
+<li><p>Execution of simulations using the “simtools-simulate-prod” application.</p></li>
+<li><p>‘number_of_runs’ jobs are submitted to the HT Condor batch system.</p></li>
+<li><p>Utilization of an Apptainer image containing the SimPipe simulation software and tools.</p></li>
+<li><p>Packaging of data and histogram files, and writing them to a specified directory.</p></li>
+</ul>
+<p>This tool is intended for use in an HT Condor environment. Jobs run in a container universe
+using the Apptainer image specified in the command line (’–apptainer_image’). Output is written
+to the ‘output_path’ directory, with ‘simtools-output’ and ‘logs’ subdirectories.</p>
+<p>Requirements for the ‘simtools-simulate-prod-htcondor-generator’ application:</p>
+<ul class="simple">
+<li><p>Availability of an Apptainer image ‘simtools-prod’ (obtainable from the package registry on
+GitHub, e.g., via ‘apptainer pull –force docker://ghcr.io/gammasim/simtools-prod:latest’).</p></li>
+<li><p>Environment parameters required to run CORSIKA and sim_telarray, as well as DB access
+credentials.  These should be listed similarly to a ‘.env’ file and copied to
+‘output_path/env.txt’.  Ensure that the path to the simulation software is correctly set to
+‘SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray’.</p></li>
+</ul>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>file_name (str, required)</dt><dd><p>Name of the file to upload including the full path.</p>
+<dt>output_path (str, required)</dt><dd><p>Directory where the output and the simulation data files will be written.</p>
 </dd>
-<dt>db_collection (str, required)</dt><dd><p>The DB collection to which to add the file.</p>
+<dt>apptainer_image (str, optional)</dt><dd><p>Apptainer image to use for the simulation (full path).</p>
 </dd>
-<dt>db (str)</dt><dd><p>The DB to insert the files to. The choices are either the default CTA simulation DB or a sandbox for testing.</p>
+<dt>priority (int, optional)</dt><dd><p>Job priority (default: 1).</p>
 </dd>
 </dl>
-</section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Upload a file to sites collection:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-add-value-from-json-to-db \\</span>
-<span class="go">    --file_name new_value.json --db_collection sites</span>
-</pre></div>
-</div>
+<p>(all other command line arguments are identical to those of <a class="reference internal" href="simulate_prod.html#simulate-prod"><span class="std std-ref">simulate_prod</span></a>).</p>
 </section>
 </section>
 
@@ -491,20 +503,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="db_add_model_parameters_from_repository_to_db.html"
+       href="simulate_prod.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">db_add_model_parameters_from_repository_to_db</p>
+        <p class="prev-next-title">simulate_prod</p>
       </div>
     </a>
     <a class="right-next"
-       href="db_get_array_layouts_from_db.html"
+       href="submit_data_from_external.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">db_get_array_layouts_from_db</p>
+        <p class="prev-next-title">submit_data_from_external</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -526,7 +538,6 @@
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
   </nav></div>
 
