@@ -5,7 +5,7 @@
 
     Run scripts are generated
 
-    - to execute simulations using the `simtools-simulate-prod` application
+    - to execute simulations using the "simtools-simulate-prod" application
     - use an apptainer image containing the SimPipe simulation software and tools
     - pack data nad histogram files write them in a specified directory
 
