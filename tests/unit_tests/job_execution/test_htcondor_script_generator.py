@@ -13,7 +13,7 @@ from simtools.job_execution.htcondor_script_generator import (
 @pytest.fixture
 def args_dict():
     return {
-        "output_path": "/tmp/test_output",
+        "output_path": "/test_output",
         "apptainer_image": "/path/to/apptainer_image.sif",
         "priority": 5,
         "number_of_runs": 10,
