@@ -62,8 +62,7 @@ def _get_submit_file(executable, apptainer_image, priority, n_jobs):
     str
         HT Condor submit file content.
     """
-    return f"""
-universe = container
+    return f"""universe = container
 container_image = {apptainer_image}
 transfer_container = false
 
@@ -102,17 +101,18 @@ def _get_submit_script(args_dict):
     core_scatter = args_dict["core_scatter"]
     core_scatter_string = f'"{core_scatter[0]} {core_scatter[1].to(u.m).value} m"'
 
-    return f"""
-#!/usr/bin/env bash
+    label = args_dict["label"] if args_dict["label"] else "simulate-prod"
+
+    return f"""#!/usr/bin/env bash
 
 # Process ID used to generate run number
-process_id=$1
+process_id="$1"
 # Load environment variables (for DB access)
-set -a; source $2
+set -a; source "$2"
 
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
-    --label {args_dict["label"]} \\
+    --label {label} \\
     --model_version {args_dict["model_version"]} \\
     --site {args_dict["site"]} \\
     --array_layout_name {args_dict["array_layout_name"]} \\
