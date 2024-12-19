@@ -4,6 +4,7 @@ import copy
 import getpass
 import json
 import logging
+import time
 import uuid
 from importlib.resources import files
 from pathlib import Path
@@ -69,6 +70,26 @@ def test_get_data_model_schema_dict(args_dict_site):
 
     metadata.schema_file_name = "this_file_does_not_exist"
     assert metadata.get_data_model_schema_dict() == {}
+
+
+def test_get_top_level_metadata(args_dict_site):
+
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    assert (
+        collector.top_level_meta["cta"]["activity"]["end"]
+        == collector.top_level_meta["cta"]["activity"]["start"]
+    )
+
+    # no update when activity cannot be found in the metadata
+    time.sleep(1)
+    collector.observatory = "not_cta"
+    top_level_meta = collector.get_top_level_metadata()
+    assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
+
+    time.sleep(1)
+    collector.observatory = "cta"  # back to default
+    top_level_meta = collector.get_top_level_metadata()
+    assert top_level_meta["cta"]["activity"]["end"] > top_level_meta["cta"]["activity"]["start"]
 
 
 def test_fill_contact_meta(args_dict_site):
