@@ -37,13 +37,6 @@ def _parse(description=None):
     """
     config = configurator.Configurator(description=description)
     config.parser.add_argument(
-        "--working_directory",
-        help="Working directory for the simulation production (for submit scripts and data).",
-        type=str,
-        required=False,
-        default="./simtools-working/",
-    )
-    config.parser.add_argument(
         "--apptainer_image",
         help="Apptainer image to use for the simulation (full path).",
         type=str,

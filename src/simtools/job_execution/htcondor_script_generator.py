@@ -19,25 +19,26 @@ def generate_submission_script(args_dict):
     """
     _logger.info("Generating HT Condor submission scripts ")
 
-    work_dir = Path(args_dict.get("working_directory"))
-    work_dir.mkdir(parents=True, exist_ok=True)
+    work_dir = Path(args_dict["output_path"])
     log_dir = work_dir / "logs"
+    work_dir.mkdir(parents=True, exist_ok=True)
     log_dir.mkdir(parents=True, exist_ok=True)
     submit_file_name = "simulate_prod.submit"
 
-    submit_file = _get_submit_file(
-        f"{submit_file_name}.sh",
-        args_dict["apptainer_image"],
-        args_dict["priority"],
-        +args_dict["number_of_runs"],
-    )
     with open(work_dir / f"{submit_file_name}.condor", "w", encoding="utf-8") as submit_file_handle:
-        submit_file_handle.write(submit_file)
+        submit_file_handle.write(
+            _get_submit_file(
+                f"{submit_file_name}.sh",
+                args_dict["apptainer_image"],
+                args_dict["priority"],
+                +args_dict["number_of_runs"],
+            )
+        )
 
-    submit_script = _get_submit_script(args_dict)
     with open(work_dir / f"{submit_file_name}.sh", "w", encoding="utf-8") as submit_script_handle:
-        submit_script_handle.write(submit_script)
-    (work_dir / f"{submit_file_name}.sh").chmod(0o755)
+        submit_script_handle.write(_get_submit_script(args_dict))
+
+    Path(work_dir / f"{submit_file_name}.sh").chmod(0o755)
 
 
 def _get_submit_file(executable, apptainer_image, priority, n_jobs):
