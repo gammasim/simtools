@@ -2,7 +2,6 @@
 
 import logging
 import re
-import time
 from pathlib import Path
 from threading import Lock
 
@@ -387,8 +386,6 @@ class DatabaseHandler:
         collection = self.get_collection(db_name, collection_name)
         _parameters = {}
 
-        start_query_time = time.perf_counter()
-
         query = {
             "instrument": array_element_name,
             "version": self.model_version(model_version, db_name),
@@ -411,7 +408,6 @@ class DatabaseHandler:
                 file = self._get_file_mongo_db(db_name, _parameters[par_now]["value"])
                 self._write_file_from_mongo_to_disk(db_name, run_location, file)
 
-        self._logger.debug(f"Query time: {time.perf_counter() - start_query_time}")
         return _parameters
 
     def get_site_parameters(
