@@ -146,16 +146,12 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    json_type = args_dict.get("input", "").endswith(".json")
-    # simplified metadata treatment for model parameter json files
-    if json_type:
+    if args_dict.get("input", "").endswith(".json"):
         site = args_dict.get("site", None)
-        top_level_meta = None
-        validate_schema_file = None
+        metadata, validate_schema_file = None, None
     else:
         metadata = MetadataCollector(args_dict=args_dict, data_model_name=data_model_name)
         site = metadata.get_site(from_input_meta=True)
-        top_level_meta = metadata.top_level_meta
         validate_schema_file = metadata.get_data_model_schema_file_name()
 
     layout = array_layout.ArrayLayout(
@@ -172,12 +168,12 @@ def main():
     if args_dict["export"] is not None:
         product_data = (
             layout.export_one_telescope_as_json(crs_name=args_dict["export"])
-            if json_type
+            if args_dict.get("input", "").endswith(".json")
             else layout.export_telescope_list_table(crs_name=args_dict["export"])
         )
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
-            metadata=top_level_meta,
+            metadata=metadata.get_top_level_metadata() if metadata else None,
             product_data=product_data,
             validate_schema_file=validate_schema_file,
         )
