@@ -91,6 +91,7 @@ scripts.simtools-production-generate-simulation-config = "simtools.applications.
 scripts.simtools-production-scale-events = "simtools.applications.production_scale_events:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
+scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
 scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"
 scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
