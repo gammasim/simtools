@@ -11,3 +11,10 @@ This is mostly used for small productions during the validation or verification 
 .. automodule:: job_execution.job_manager
    :members:
 ```
+
+(htcondor-submission)=
+
+```{eval-rst}
+.. automodule:: job_execution.htcondor_script_generator
+   :members:
+```
