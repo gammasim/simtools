@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runners.corsika_runner &#8212; simtools v0.1.dev1+g378a8e7 Manual</title>
+    <title>runners.corsika_runner &#8212; simtools v0.1.dev1+g7c76152 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=20c3686d"></script>
+    <script src="../../_static/documentation_options.js?v=e1980dad"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g378a8e7" />
+  <meta name="docsearch:version" content="0.1.dev1+g7c76152" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g378a8e7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7c76152 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -472,6 +472,15 @@
             <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;config_tmp&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">run_number</span>
         <span class="p">)</span>
         <span class="n">corsika_input_tmp_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directory</span><span class="p">[</span><span class="s2">&quot;inputs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">corsika_input_tmp_name</span><span class="p">)</span>
+        <span class="c1"># CORSIKA log file naming (temporary and final)</span>
+        <span class="n">corsika_log_tmp_file</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_directory</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">run_number</span><span class="si">:</span><span class="s2">06</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">run_number</span><span class="si">}</span><span class="s2">.log&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">corsika_log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
+            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">run_number</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">use_pfp</span><span class="p">:</span>
             <span class="n">pfp_command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pfp_command</span><span class="p">(</span><span class="n">corsika_input_tmp_file</span><span class="p">,</span> <span class="n">corsika_input_file</span><span class="p">)</span>
@@ -511,6 +520,9 @@
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cp </span><span class="si">{</span><span class="n">corsika_input_file</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">corsika_input_tmp_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"># Running corsika_autoinputs</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">autoinputs_command</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"># Moving log files to the corsika log directory</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;gzip </span><span class="si">{</span><span class="n">corsika_log_tmp_file</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mv -v </span><span class="si">{</span><span class="n">corsika_log_tmp_file</span><span class="si">}</span><span class="s2">.gz </span><span class="si">{</span><span class="n">corsika_log_file</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">echo &quot;RUNTIME: $SECONDS&quot;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
