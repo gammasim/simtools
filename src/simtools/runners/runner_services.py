@@ -163,6 +163,7 @@ class RunnerServices:
         log_suffixes = {
             "log": ".log.gz",
             "histogram": ".hdata.zst",
+            "corsika_log": ".corsika.log.gz",
         }
         return self.directory["logs"].joinpath(f"{file_name}{log_suffixes[file_type]}")
 
@@ -187,7 +188,6 @@ class RunnerServices:
         data_suffixes = {
             "output": ".zst",
             "corsika_output": ".zst",
-            "corsika_log": ".log",
             "simtel_output": ".simtel.zst",
         }
         run_dir = self._get_run_number_string(run_number)
@@ -245,10 +245,10 @@ class RunnerServices:
         """
         file_name = self._get_file_basename(run_number)
 
-        if file_type in ["log", "histogram"]:
+        if file_type in ["log", "histogram", "corsika_log"]:
             return self._get_log_file_path(file_type, file_name)
 
-        if file_type in ["output", "corsika_output", "corsika_log", "simtel_output"]:
+        if file_type in ["output", "corsika_output", "simtel_output"]:
             return self._get_data_file_path(file_type, file_name, run_number)
 
         if file_type in ("sub_log", "sub_script"):
