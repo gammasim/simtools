@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>job_execution.job_manager &#8212; simtools v0.1.dev1+g699b93e Manual</title>
+    <title>job_execution.job_manager &#8212; simtools v0.1.dev1+g378a8e7 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=e06d5754"></script>
+    <script src="../../_static/documentation_options.js?v=20c3686d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g699b93e" />
+  <meta name="docsearch:version" content="0.1.dev1+g378a8e7" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g699b93e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g378a8e7 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -486,10 +486,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Job error stream </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39;.err&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Job log stream </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39;.job&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+        <span class="n">submit_result</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span> <span class="o">==</span> <span class="s2">&quot;local&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_submit_local</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
+            <span class="n">submit_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_submit_local</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;_submit_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)()</span></div>
+            <span class="n">submit_result</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;_submit_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)()</span>
+
+        <span class="k">if</span> <span class="n">submit_result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">JobExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Job submission failed with return code </span><span class="si">{</span><span class="n">submit_result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_submit_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_file</span><span class="p">):</span>
@@ -501,19 +505,25 @@
 <span class="sd">        log_file: str or Path</span>
 <span class="sd">            The log file of the actual simulator (CORSIKA or sim_telarray).</span>
 <span class="sd">            Provided in order to print the log excerpt in case of run time error.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Return code of the executed script</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running script locally&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Testing (local)&quot;</span><span class="p">)</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="mi">0</span>
 
+        <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="p">(</span>
                 <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span><span class="si">}</span><span class="s2">.out&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stdout</span><span class="p">,</span>
                 <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span><span class="si">}</span><span class="s2">.err&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stderr</span><span class="p">,</span>
             <span class="p">):</span>
-                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_script</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -526,6 +536,8 @@
             <span class="k">if</span> <span class="n">log_file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">gen</span><span class="o">.</span><span class="n">get_file_age</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_excerpt</span><span class="p">(</span><span class="n">log_file</span><span class="p">))</span>
             <span class="k">raise</span> <span class="n">JobExecutionError</span><span class="p">(</span><span class="s2">&quot;See excerpt from log file above</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="k">if</span> <span class="n">result</span> <span class="k">else</span> <span class="mi">0</span>
 
     <span class="k">def</span> <span class="nf">_submit_htcondor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Submit a job described by a shell script to HTcondor.&quot;&quot;&quot;</span>
@@ -546,7 +558,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed creating condor submission file </span><span class="si">{</span><span class="n">_condor_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">JobExecutionError</span> <span class="kn">from</span> <span class="nn">exc</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">engines</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span><span class="p">],</span> <span class="n">_condor_file</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">engines</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span><span class="p">],</span> <span class="n">_condor_file</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_submit_gridengine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Submit a job described by a shell script to gridengine.&quot;&quot;&quot;</span>
@@ -558,7 +570,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">run_out_file</span> <span class="o">+</span> <span class="s2">&quot;.err&quot;</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run_script</span><span class="p">,</span>
         <span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span><span class="p">,</span> <span class="n">this_sub_cmd</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submit_engine</span><span class="p">,</span> <span class="n">this_sub_cmd</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">shell_command</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -573,10 +585,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Submitting script to </span><span class="si">{</span><span class="n">engine</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">shell_command</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">:</span>
-            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shell_command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shell_command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Testing (</span><span class="si">{</span><span class="n">engine</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">shell_command</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Testing (</span><span class="si">{</span><span class="n">engine</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">shell_command</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="k">if</span> <span class="n">result</span> <span class="k">else</span> <span class="mi">0</span></div>
 
 </pre></div>
 
