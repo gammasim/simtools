@@ -34,7 +34,9 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     """
 
     tmp_config = copy.deepcopy(config)
-    helpers.skip_camera_efficiency(tmp_config)
+    skip_message = helpers.skip_camera_efficiency(tmp_config)
+    if skip_message:
+        pytest.skip(skip_message)
 
     # The db_add_file_to_db.py application requires a user confirmation.
     # With this line we mock the user confirmation to be y for the test
@@ -44,9 +46,12 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {request.config.getoption('--model_version')}")
     logger.info(f"Application configuration: {tmp_config}")
-    cmd, config_file_model_version = configuration.configure(
-        tmp_config, tmp_test_directory, request
-    )
+    try:
+        cmd, config_file_model_version = configuration.configure(
+            tmp_config, tmp_test_directory, request
+        )
+    except configuration.VersionError as exc:
+        pytest.skip(str(exc))
 
     logger.info(f"Running application: {cmd}")
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
