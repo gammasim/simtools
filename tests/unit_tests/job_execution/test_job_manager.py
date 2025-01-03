@@ -1,5 +1,4 @@
 import logging
-import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, call, mock_open, patch
 
@@ -285,46 +284,6 @@ def test_submit_local_success(
     with patch(builtins_open, mock_open(read_data="")):
         with pytest.raises(JobExecutionError, match="Job submission failed with return code 42"):
             job_submitter_real.submit(script_file, output_log, logfile_log)
-
-
-@patch("simtools.utils.general")
-def test_submit_local_failure(
-    mock_gen,
-    job_submitter_real,
-    mocker,
-    output_log,
-    logfile_log,
-    script_file,
-    job_messages,
-    builtins_open,
-    subprocess_run,
-):
-    mock_subprocess_run = mocker.patch(
-        subprocess_run, side_effect=subprocess.CalledProcessError(1, "cmd")
-    )
-    mock_gen.get_log_excerpt.return_value = job_messages["log_excerpt"]
-    mocker.patch(PATHLIB_PATH_EXISTS, return_value=True)
-    mock_gen.get_file_age.return_value = 4
-
-    with patch(builtins_open, mock_open(read_data="")):
-        with pytest.raises(JobExecutionError):
-            job_submitter_real.submit(script_file, output_log, logfile_log)
-
-    job_submitter_real._logger.info.assert_any_call(job_messages["script_message"])
-    job_submitter_real._logger.info.assert_any_call(job_messages["job_output"])
-    job_submitter_real._logger.info.assert_any_call(job_messages["job_error_stream"])
-    job_submitter_real._logger.info.assert_any_call(job_messages["job_log_stream"])
-    job_submitter_real._logger.info.assert_any_call(job_messages["running_locally"])
-    job_submitter_real._logger.error.assert_any_call(job_messages["log_excerpt"])
-    job_submitter_real._logger.error.assert_any_call(job_messages["log_excerpt"])
-    mock_subprocess_run.assert_called_with(
-        f"{script_file}",
-        shell=True,
-        check=True,
-        text=True,
-        stdout=mocker.ANY,
-        stderr=mocker.ANY,
-    )
 
 
 @patch("simtools.utils.general")
