@@ -313,7 +313,7 @@ class DatabaseHandler:
         Parameters
         ----------
         parameters: dict
-            Dict of model parameters
+            Dict of model parameters.
         dest: str or Path
             Location where to write the files to.
 
