@@ -65,11 +65,9 @@ class JobManager:
         ValueError
             if invalid submit engine.
         """
-        if value is None:
-            value = "local"
-        if value not in self.engines:
-            raise ValueError(f"Invalid submit command: {value}")
-        self._submit_engine = value
+        self._submit_engine = value or "local"
+        if self._submit_engine not in self.engines:
+            raise ValueError(f"Invalid submit command: {self._submit_engine}")
 
     def check_submission_system(self):
         """
@@ -77,14 +75,17 @@ class JobManager:
 
         Raises
         ------
-        MissingWorkloadManagerError
+        JobExecutionError
             if workflow manager is not found.
         """
-        if self.submit_engine is None or self.submit_engine == "local":
-            return
-
-        if gen.program_is_executable(self.engines[self.submit_engine]):
-            return
+        try:
+            if self.submit_engine in (None, "local") or gen.program_is_executable(
+                self.engines[self.submit_engine]
+            ):
+                return
+        except KeyError:
+            pass
+        raise JobExecutionError(f"Submit engine {self.submit_engine} not found")
 
     def submit(self, run_script=None, run_out_file=None, log_file=None):
         """
@@ -109,12 +110,14 @@ class JobManager:
         self._logger.info(f"Job error stream {self.run_out_file + '.err'}")
         self._logger.info(f"Job log stream {self.run_out_file + '.job'}")
 
-        if self.submit_engine == "gridengine":
-            self._submit_gridengine()
-        elif self.submit_engine == "htcondor":
-            self._submit_htcondor()
-        elif self.submit_engine == "local":
-            self._submit_local(log_file)
+        submit_result = 0
+        if self.submit_engine == "local":
+            submit_result = self._submit_local(log_file)
+        else:
+            submit_result = getattr(self, f"_submit_{self.submit_engine}")()
+
+        if submit_result != 0:
+            raise JobExecutionError(f"Job submission failed with return code {submit_result}")
 
     def _submit_local(self, log_file):
         """
@@ -125,19 +128,25 @@ class JobManager:
         log_file: str or Path
             The log file of the actual simulator (CORSIKA or sim_telarray).
             Provided in order to print the log excerpt in case of run time error.
+
+        Returns
+        -------
+        int
+            Return code of the executed script
         """
         self._logger.info("Running script locally")
 
         if self.test:
             self._logger.info("Testing (local)")
-            return
+            return 0
 
+        result = None
         try:
             with (
                 open(f"{self.run_out_file}.out", "w", encoding="utf-8") as stdout,
                 open(f"{self.run_out_file}.err", "w", encoding="utf-8") as stderr,
             ):
-                subprocess.run(
+                result = subprocess.run(
                     f"{self.run_script}",
                     shell=True,
                     check=True,
@@ -150,6 +159,8 @@ class JobManager:
             if log_file.exists() and gen.get_file_age(log_file) < 5:
                 self._logger.error(gen.get_log_excerpt(log_file))
             raise JobExecutionError("See excerpt from log file above\n") from exc
+
+        return result.returncode if result else 0
 
     def _submit_htcondor(self):
         """Submit a job described by a shell script to HTcondor."""
@@ -170,7 +181,7 @@ class JobManager:
             self._logger.error(f"Failed creating condor submission file {_condor_file}")
             raise JobExecutionError from exc
 
-        self._execute(self.submit_engine, [self.engines[self.submit_engine], _condor_file])
+        return self._execute(self.submit_engine, [self.engines[self.submit_engine], _condor_file])
 
     def _submit_gridengine(self):
         """Submit a job described by a shell script to gridengine."""
@@ -182,7 +193,7 @@ class JobManager:
             self.run_out_file + ".err",
             self.run_script,
         ]
-        self._execute(self.submit_engine, this_sub_cmd)
+        return self._execute(self.submit_engine, this_sub_cmd)
 
     def _execute(self, engine, shell_command):
         """
@@ -197,7 +208,10 @@ class JobManager:
         """
         self._logger.info(f"Submitting script to {engine}")
         self._logger.debug(shell_command)
+        result = None
         if not self.test:
-            subprocess.run(shell_command, shell=True, check=True)
+            result = subprocess.run(shell_command, shell=True, check=True)
         else:
             self._logger.info(f"Testing ({engine}: {shell_command})")
+
+        return result.returncode if result else 0

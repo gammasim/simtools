@@ -161,13 +161,14 @@ def _prepare_test_options(config, output_path, model_version=None):
 
     tmp_config_file = output_path / "tmp_config.yml"
     config_file_model_version = config.get("MODEL_VERSION")
-    if model_version is not None and "MODEL_VERSION" in config:
+    if model_version and "MODEL_VERSION" in config:
         config.update({"MODEL_VERSION": model_version})
-    if "OUTPUT_PATH" in config:
-        config.update({"OUTPUT_PATH": str(Path(output_path).joinpath(config["OUTPUT_PATH"]))})
-        config.update({"USE_PLAIN_OUTPUT_PATH": True})
-    if "DATA_DIRECTORY" in config:
-        config.update({"DATA_DIRECTORY": str(Path(output_path).joinpath(config["DATA_DIRECTORY"]))})
+
+    for key in ["OUTPUT_PATH", "DATA_DIRECTORY", "PACK_FOR_GRID_REGISTER"]:
+        if key in config:
+            config[key] = str(Path(output_path).joinpath(config[key]))
+            if key == "OUTPUT_PATH":
+                config["USE_PLAIN_OUTPUT_PATH"] = True
 
     _logger.info(f"Writing config file: {tmp_config_file}")
     with open(tmp_config_file, "w", encoding="utf-8") as file:
