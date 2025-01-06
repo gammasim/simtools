@@ -3,24 +3,23 @@
 import os
 from pathlib import Path
 
-import pytest
-
 
 def skip_camera_efficiency(config):
     """Skip camera efficiency tests if the old version of testeff is used."""
     if "camera-efficiency" in config["APPLICATION"]:
         if not _new_testeff_version():
-            pytest.skip(
+            return (
                 "Any applications calling the old version of testeff are skipped "
                 "due to a limitation of the old testeff not allowing to specify "
                 "the include directory. Please update your sim_telarray tarball."
             )
         full_test_name = f"{config['APPLICATION']}_{config['TEST_NAME']}"
         if "simtools-validate-camera-efficiency_SSTS" == full_test_name:
-            pytest.skip(
+            return (
                 "The test simtools-validate-camera-efficiency_SSTS is skipped "
                 "since the fake SST mirrors are not yet implemented (#1155)"
             )
+    return None
 
 
 def _new_testeff_version():
