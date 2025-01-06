@@ -9,9 +9,8 @@ r"""
 
     Three output files are written to the output directory:
 
-    - `output_file`.ecsv: Single photon electron spectrum in ecsv format.
+    - `output_file`.ecsv: Single photon electron spectrum in ecsv format (data and metadata).
     - `output_file`.dat: Single photon electron spectrum in sim_telarray format.
-    - `output_file`.meta: Metadata file with information about the derivation.
 
     Example
     -------
@@ -80,15 +79,14 @@ def _parse(label):
 
 
 def main():  # noqa: D103
-    label = Path(__file__).stem
-    args_dict, _ = _parse(label)
+    args_dict, _ = _parse(Path(__file__).stem)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    single_pe = SinglePhotonElectronSpectrum(label, args_dict)
-    single_pe.derive_spectrum()
-    single_pe.write_spectrum()
+    single_pe = SinglePhotonElectronSpectrum(args_dict)
+    single_pe.derive_single_pe_spectrum()
+    single_pe.write_single_pe_spectrum()
 
 
 if __name__ == "__main__":
