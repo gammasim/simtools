@@ -103,6 +103,19 @@ jobs:
           bash -c "cd /workdir/external && simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml"
         shell: /usr/bin/bash -e {0}
 
+      - name: Test Command Line Tools
+        if: matrix.type == 'prod'
+        run: |
+          set -e
+          echo "Reading scripts defined in pyproject.toml"
+          ls -l pyproject.toml
+          scripts=$(grep 'scripts.simtools-' pyproject.toml | sed -e 's/^scripts\.//' -e 's/ =.*$//')
+          for script in $scripts; do
+            echo "Testing command: $script --help"
+            docker run --rm ${{ env.TEST_TAG }} $script --help
+          done
+        shell: /usr/bin/bash -e {0}
+
       - name: Push Docker image
         uses: docker/build-push-action@v6
         with:

@@ -6,7 +6,7 @@ repos:
         args: ["--line-length=100"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.8.3
+    rev: v0.8.6
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -40,7 +40,7 @@ repos:
         args: ["--verbose", "2", "--fail-under", "70.", "src/simtools"]
   # Github action
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.4
+    rev: v1.7.6
     hooks:
       - id: actionlint
   # https://pyproject-fmt.readthedocs.io/en/latest/
