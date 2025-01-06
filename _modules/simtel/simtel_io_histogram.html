@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_io_histogram &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>simtel.simtel_io_histogram &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -370,18 +370,18 @@
 <span class="sd">Files can be zst compressed.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
-<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">QTable</span>
-<span class="kn">from</span> <span class="nn">ctao_cr_spectra.definitions</span> <span class="kn">import</span> <span class="n">IRFDOC_PROTON_SPECTRUM</span>
-<span class="kn">from</span> <span class="nn">ctao_cr_spectra.spectral</span> <span class="kn">import</span> <span class="n">cone_solid_angle</span>
-<span class="kn">from</span> <span class="nn">eventio</span> <span class="kn">import</span> <span class="n">EventIOFile</span><span class="p">,</span> <span class="n">Histograms</span>
-<span class="kn">from</span> <span class="nn">eventio.search_utils</span> <span class="kn">import</span> <span class="n">yield_toplevel_of_type</span>
-<span class="kn">from</span> <span class="nn">eventio.simtel</span> <span class="kn">import</span> <span class="n">MCRunHeader</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctao_cr_spectra.definitions</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRFDOC_PROTON_SPECTRUM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ctao_cr_spectra.spectral</span><span class="w"> </span><span class="kn">import</span> <span class="n">cone_solid_angle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span><span class="p">,</span> <span class="n">Histograms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.search_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">yield_toplevel_of_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCRunHeader</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;HistogramIdNotFoundError&quot;</span><span class="p">,</span>
@@ -392,21 +392,21 @@
 
 <div class="viewcode-block" id="InconsistentHistogramFormatError">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.InconsistentHistogramFormatError">[docs]</a>
-<span class="k">class</span> <span class="nc">InconsistentHistogramFormatError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InconsistentHistogramFormatError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for bad histogram format.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="HistogramIdNotFoundError">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.HistogramIdNotFoundError">[docs]</a>
-<span class="k">class</span> <span class="nc">HistogramIdNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HistogramIdNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for histogram ID not found.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="SimtelIOHistogram">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram">[docs]</a>
-<span class="k">class</span> <span class="nc">SimtelIOHistogram</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimtelIOHistogram</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads and generates histograms from sim_telarray output.</span>
 
@@ -441,7 +441,7 @@
 <span class="sd">        view cone cannot be retrieved directly from the file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">histogram_file</span><span class="p">,</span> <span class="n">area_from_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">energy_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">view_cone</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelIOHistogram class.&quot;&quot;&quot;</span>
@@ -469,7 +469,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_view_cone</span><span class="p">(</span><span class="n">view_cone</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_energy_range</span><span class="p">(</span><span class="n">energy_range</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize lists of histograms and files.</span>
 
@@ -483,13 +483,13 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">histogram</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">number_of_histogram_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">number_of_histogram_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return number of histograms.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">histogram</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SimtelIOHistogram.get_histogram_type_title">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.get_histogram_type_title">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_histogram_type_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_index</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_histogram_type_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram_index</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the title of the histogram with index histogram_index.</span>
 
@@ -507,7 +507,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return information about the input parameters for the simulation.</span>
 
@@ -527,7 +527,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">total_num_simulated_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_num_simulated_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the total number of simulated events the histograms.</span>
 
@@ -543,7 +543,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_num_simulated_events</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">total_num_triggered_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_num_triggered_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the total number of triggered events.</span>
 
@@ -564,7 +564,7 @@
 
 <div class="viewcode-block" id="SimtelIOHistogram.fill_event_histogram_dicts">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.fill_event_histogram_dicts">[docs]</a>
-    <span class="k">def</span> <span class="nf">fill_event_histogram_dicts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill_event_histogram_dicts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get data from the total simulated event and the triggered event histograms.</span>
 
@@ -601,7 +601,7 @@
         <span class="k">raise</span> <span class="n">HistogramIdNotFoundError</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_set_view_cone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view_cone</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_view_cone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view_cone</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        View cone used in the simulation.</span>
 
@@ -625,7 +625,7 @@
                     <span class="s2">&quot;view cone radius in deg).&quot;</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">view_cone</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span> <span class="o">=</span> <span class="n">view_cone</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
@@ -633,7 +633,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">view_cone</span> <span class="o">=</span> <span class="n">view_cone</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">solid_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solid_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Solid angle corresponding to the view cone.</span>
 
@@ -649,7 +649,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solid_angle</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">total_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Total area covered by the simulated events (original CORSIKA CSCAT), i.e., area thrown.</span>
 
@@ -677,7 +677,7 @@
                 <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_area</span>
 
-    <span class="k">def</span> <span class="nf">_set_energy_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_range</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_energy_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_range</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set energy range to be used in the simulations.</span>
 
@@ -704,7 +704,7 @@
                     <span class="s2">&quot; energies in TeV).&quot;</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">energy_range</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span> <span class="o">=</span> <span class="n">energy_range</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span>
@@ -712,7 +712,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">energy_range</span> <span class="o">=</span> <span class="n">energy_range</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_produce_triggered_to_sim_fraction_hist</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_produce_triggered_to_sim_fraction_hist</span><span class="p">(</span><span class="n">events_histogram</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce a new histogram with the fraction of triggered events over the simulated events.</span>
 
@@ -747,7 +747,7 @@
 
 <div class="viewcode-block" id="SimtelIOHistogram.compute_system_trigger_rate">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_system_trigger_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events_histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_system_trigger_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events_histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">triggered_events_histogram</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the system trigger rate and its uncertainty, which are saved as class attributes.</span>
 
@@ -810,7 +810,7 @@
 
 <div class="viewcode-block" id="SimtelIOHistogram.trigger_info_in_table">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table">[docs]</a>
-    <span class="k">def</span> <span class="nf">trigger_info_in_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trigger_info_in_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provide the trigger rate per energy bin in tabulated form.</span>
 
@@ -829,7 +829,7 @@
 
 <div class="viewcode-block" id="SimtelIOHistogram.produce_trigger_meta_data">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data">[docs]</a>
-    <span class="k">def</span> <span class="nf">produce_trigger_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">produce_trigger_meta_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce the meta data to include in the tabulated form of the trigger rate per energy bin.</span>
 
@@ -849,7 +849,7 @@
         <span class="p">}</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_integrate_in_energy_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_distribution_function</span><span class="p">,</span> <span class="n">energy_axis</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_integrate_in_energy_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_distribution_function</span><span class="p">,</span> <span class="n">energy_axis</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Integrate the particle distribution.</span>
 
@@ -880,7 +880,7 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">flux_per_energy_bin</span><span class="p">)</span> <span class="o">*</span> <span class="n">unit</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_histogram_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events_histogram</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_histogram_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events_histogram</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the two axes of a histogram.</span>
 
@@ -908,7 +908,7 @@
 
 <div class="viewcode-block" id="SimtelIOHistogram.get_particle_distribution_function">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_particle_distribution_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reference&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_particle_distribution_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reference&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the particle distribution function.</span>
 
@@ -941,7 +941,7 @@
         <span class="k">return</span> <span class="n">particle_distribution_function</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_simulation_spectral_distribution_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_simulation_spectral_distribution_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the simulation particle energy distribution according to its configuration.</span>
 
@@ -964,12 +964,12 @@
                 <span class="s2">&quot;Consider using a .simtel file instead.&quot;</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="k">return</span> <span class="n">spectral_distribution</span>
 
 <div class="viewcode-block" id="SimtelIOHistogram.estimate_observation_time">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_observation_time">[docs]</a>
-    <span class="k">def</span> <span class="nf">estimate_observation_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stacked_num_simulated_events</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate_observation_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stacked_num_simulated_events</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimates the observation time corresponding to the simulated number of events.</span>
 
@@ -1003,7 +1003,7 @@
 
 <div class="viewcode-block" id="SimtelIOHistogram.estimate_trigger_rate_uncertainty">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_trigger_rate_uncertainty">[docs]</a>
-    <span class="k">def</span> <span class="nf">estimate_trigger_rate_uncertainty</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate_trigger_rate_uncertainty</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">trigger_rate_estimate</span><span class="p">,</span> <span class="n">num_simulated_events</span><span class="p">,</span> <span class="n">num_triggered_events</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1039,7 +1039,7 @@
 
 <div class="viewcode-block" id="SimtelIOHistogram.print_info">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.print_info">[docs]</a>
-    <span class="k">def</span> <span class="nf">print_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Print information on the geometry and input parameters.</span>
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ray_tracing.mirror_panel_psf &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>ray_tracing.mirror_panel_psf &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,22 +366,22 @@
   <h1>Source code for ray_tracing.mirror_panel_psf</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Mirror panel PSF calculation.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">QTable</span><span class="p">,</span> <span class="n">Table</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span><span class="p">,</span> <span class="n">Table</span>
 
-<span class="kn">import</span> <span class="nn">simtools.data_model.model_data_writer</span> <span class="k">as</span> <span class="nn">writer</span>
-<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
-<span class="kn">from</span> <span class="nn">simtools.data_model.metadata_collector</span> <span class="kn">import</span> <span class="n">MetadataCollector</span>
-<span class="kn">from</span> <span class="nn">simtools.model.telescope_model</span> <span class="kn">import</span> <span class="n">TelescopeModel</span>
-<span class="kn">from</span> <span class="nn">simtools.ray_tracing.ray_tracing</span> <span class="kn">import</span> <span class="n">RayTracing</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">writer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.telescope_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelescopeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
 
 
 <div class="viewcode-block" id="MirrorPanelPSF">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF">[docs]</a>
-<span class="k">class</span> <span class="nc">MirrorPanelPSF</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MirrorPanelPSF</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mirror panel PSF and random reflection angle calculation.</span>
 
@@ -400,7 +400,7 @@
 <span class="sd">        Dictionary with database configuration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the MirrorPanelPSF class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initializing MirrorPanelPSF&quot;</span><span class="p">)</span>
@@ -424,7 +424,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">results_mean</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">results_sig</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">_define_telescope_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_define_telescope_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Define telescope model.</span>
 
@@ -463,7 +463,7 @@
 
         <span class="k">return</span> <span class="n">tel</span>
 
-    <span class="k">def</span> <span class="nf">_get_psf_containment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_psf_containment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read measured single-mirror point-spread function from file and return mean and sigma.&quot;&quot;&quot;</span>
         <span class="c1"># If this is a test, read just the first few lines since we only simulate those mirrors</span>
         <span class="n">data_end</span> <span class="o">=</span> <span class="p">(</span>
@@ -482,7 +482,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Missing column psf measurement (psf_opt) in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;psf_measurement&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Determined PSF containment to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;psf_measurement_containment_mean&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -491,7 +491,7 @@
 
 <div class="viewcode-block" id="MirrorPanelPSF.derive_random_reflection_angle">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.derive_random_reflection_angle">[docs]</a>
-    <span class="k">def</span> <span class="nf">derive_random_reflection_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_figures</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">derive_random_reflection_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_figures</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Minimize the difference between measured and simulated PSF for reflection angle.</span>
 
@@ -509,7 +509,7 @@
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_optimize_reflection_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_iteration</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_optimize_reflection_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_iteration</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Optimize the random reflection angle to minimize the difference in D80 containment.</span>
 
@@ -533,7 +533,7 @@
             <span class="sa">f</span><span class="s2">&quot;step size = </span><span class="si">{</span><span class="n">step_size</span><span class="si">}</span><span class="s2">, max iteration = </span><span class="si">{</span><span class="n">max_iteration</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">collect_results</span><span class="p">(</span><span class="n">rnda</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">sig</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">collect_results</span><span class="p">(</span><span class="n">rnda</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">sig</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">results_rnda</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rnda</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">results_mean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">results_sig</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
@@ -567,7 +567,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">rnda_opt</span> <span class="o">=</span> <span class="n">rnda</span>
 
-    <span class="k">def</span> <span class="nf">_get_starting_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_starting_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get optimization starting value from command line or previous model.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;rnda&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">rnda_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;rnda&quot;</span><span class="p">]</span>
@@ -581,7 +581,7 @@
 
 <div class="viewcode-block" id="MirrorPanelPSF.run_simulations_and_analysis">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis">[docs]</a>
-    <span class="k">def</span> <span class="nf">run_simulations_and_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rnda</span><span class="p">,</span> <span class="n">save_figures</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_simulations_and_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rnda</span><span class="p">,</span> <span class="n">save_figures</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run ray tracing simulations and analysis for one given value of rnda.</span>
 
@@ -624,7 +624,7 @@
 
 <div class="viewcode-block" id="MirrorPanelPSF.print_results">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.print_results">[docs]</a>
-    <span class="k">def</span> <span class="nf">print_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print results to stdout.&quot;&quot;&quot;</span>
         <span class="n">containment_fraction_percent</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;containment_fraction&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
 
@@ -645,7 +645,7 @@
 
 <div class="viewcode-block" id="MirrorPanelPSF.write_optimization_data">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">[docs]</a>
-    <span class="k">def</span> <span class="nf">write_optimization_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_optimization_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write optimization results to an astropy table (ecsv file).</span>
 

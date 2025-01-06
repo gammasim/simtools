@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.camera &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>model.camera &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,22 +366,22 @@
   <h1>Source code for model.camera</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Definition and modeling of camera.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">cKDTree</span> <span class="k">as</span> <span class="n">KDTree</span>
-<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">cKDTree</span> <span class="k">as</span> <span class="n">KDTree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">distance</span>
 
-<span class="kn">from</span> <span class="nn">simtools.utils.geometry</span> <span class="kn">import</span> <span class="n">rotate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">rotate</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Camera&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="Camera">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera">[docs]</a>
-<span class="k">class</span> <span class="nc">Camera</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Camera class, defining pixel layout.</span>
 
@@ -403,7 +403,7 @@
     <span class="n">SIPM_NEIGHBOR_RADIUS_FACTOR</span> <span class="o">=</span> <span class="mf">1.4</span>
     <span class="n">SIPM_ROW_COLUMN_DIST_FACTOR</span> <span class="o">=</span> <span class="mf">0.2</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">:</span> <span class="nb">float</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -431,7 +431,7 @@
 <div class="viewcode-block" id="Camera.read_pixel_list">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.read_pixel_list">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">read_pixel_list</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_pixel_list</span><span class="p">(</span><span class="n">camera_config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read the pixel layout from the camera config file, assumed to be in a sim_telarray format.</span>
 
@@ -466,7 +466,7 @@
 <div class="viewcode-block" id="Camera.initialize_pixel_dict">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.initialize_pixel_dict">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">initialize_pixel_dict</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_pixel_dict</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the pixel dictionary with default values.</span>
 
@@ -492,7 +492,7 @@
 <div class="viewcode-block" id="Camera.process_line">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.process_line">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">process_line</span><span class="p">(</span><span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_line</span><span class="p">(</span><span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process a line from the camera config file and update the pixels dictionary.</span>
 
@@ -532,7 +532,7 @@
 <div class="viewcode-block" id="Camera.validate_pixels">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.validate_pixels">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">validate_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_pixels</span><span class="p">(</span><span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">camera_config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Validate the pixel dictionary to ensure all required fields are present.</span>
 
@@ -557,7 +557,7 @@
             <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_rotate_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rotate_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rotate the pixels according to the rotation angle given in pixels[&#39;rotate_angle&#39;].</span>
 
@@ -604,7 +604,7 @@
 
 <div class="viewcode-block" id="Camera.get_number_of_pixels">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_number_of_pixels">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_number_of_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_number_of_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of pixels in the camera (all pixels, including those defined as &quot;off&quot;).</span>
 
@@ -618,7 +618,7 @@
 
 <div class="viewcode-block" id="Camera.get_pixel_diameter">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_pixel_diameter">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_pixel_diameter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pixel_diameter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get pixel diameter contained in _pixels.</span>
 
@@ -632,7 +632,7 @@
 
 <div class="viewcode-block" id="Camera.get_pixel_active_solid_angle">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_pixel_active_solid_angle">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_pixel_active_solid_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pixel_active_solid_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the active solid angle of a pixel in sr.</span>
 
@@ -650,7 +650,7 @@
 
 <div class="viewcode-block" id="Camera.get_pixel_shape">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_pixel_shape">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_pixel_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pixel_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get pixel shape code 1, 2 or 3.</span>
 
@@ -667,7 +667,7 @@
 
 <div class="viewcode-block" id="Camera.get_lightguide_efficiency_angle_file_name">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_lightguide_efficiency_angle_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_lightguide_efficiency_angle_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the file name of the light guide efficiency as a function of incidence angle.</span>
 
@@ -681,7 +681,7 @@
 
 <div class="viewcode-block" id="Camera.get_lightguide_efficiency_wavelength_file_name">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_lightguide_efficiency_wavelength_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_lightguide_efficiency_wavelength_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the file name of the light guide efficiency as a function of wavelength.</span>
 
@@ -695,7 +695,7 @@
 
 <div class="viewcode-block" id="Camera.get_camera_fill_factor">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_camera_fill_factor">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_camera_fill_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_camera_fill_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the fill factor of the camera, defined as (pixel_diameter/pixel_spacing)**2.</span>
 
@@ -717,7 +717,7 @@
 
 <div class="viewcode-block" id="Camera.calc_fov">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.calc_fov">[docs]</a>
-    <span class="k">def</span> <span class="nf">calc_fov</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_fov</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the FOV of the camera in degrees, taking into account the focal length.</span>
 
@@ -741,7 +741,7 @@
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_calc_fov</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_fov</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x_pixel</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
         <span class="n">y_pixel</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
@@ -786,7 +786,7 @@
         <span class="k">return</span> <span class="n">fov</span><span class="p">,</span> <span class="n">average_edge_distance</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_find_neighbors</span><span class="p">(</span><span class="n">x_pos</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_find_neighbors</span><span class="p">(</span><span class="n">x_pos</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Use a KD-Tree to quickly find nearest neighbors.</span>
 
@@ -811,7 +811,7 @@
         <span class="n">neighbors</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query_ball_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="n">neigh</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">neigh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)]</span>
 
-    <span class="k">def</span> <span class="nf">_find_adjacent_neighbor_pixels</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_find_adjacent_neighbor_pixels</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">row_column_dist</span><span class="p">:</span> <span class="nb">float</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -849,7 +849,7 @@
 
         <span class="k">return</span> <span class="n">neighbors</span>
 
-    <span class="k">def</span> <span class="nf">_add_additional_neighbors</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_additional_neighbors</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">i_pix</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">nn</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
@@ -893,7 +893,7 @@
                 <span class="p">)</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="mf">1.2</span> <span class="o">*</span> <span class="n">radius</span><span class="p">:</span>
                     <span class="n">nn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j_pix</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_calc_neighbor_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_neighbor_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Find adjacent neighbor pixels in cameras with hexagonal or square pixels.</span>
 
@@ -933,7 +933,7 @@
 
 <div class="viewcode-block" id="Camera.get_neighbor_pixels">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_neighbor_pixels">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_neighbor_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_neighbor_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a list of neighbor pixels by calling calc_neighbor_pixels() when necessary.</span>
 
@@ -958,7 +958,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_calc_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_edge_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Find the edge pixels of the camera.</span>
 
@@ -977,7 +977,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Searching for edge pixels&quot;</span><span class="p">)</span>
         <span class="n">edge_pixel_indices</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">def</span> <span class="nf">is_edge_pixel</span><span class="p">(</span><span class="n">i_pix</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">is_edge_pixel</span><span class="p">(</span><span class="n">i_pix</span><span class="p">):</span>
             <span class="n">pixel_shape</span> <span class="o">=</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pixel_shape&quot;</span><span class="p">]</span>
             <span class="n">pix_on</span> <span class="o">=</span> <span class="n">pixels</span><span class="p">[</span><span class="s2">&quot;pix_on&quot;</span><span class="p">][</span><span class="n">i_pix</span><span class="p">]</span>
             <span class="n">num_neighbors</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i_pix</span><span class="p">])</span>
@@ -995,7 +995,7 @@
 
 <div class="viewcode-block" id="Camera.get_edge_pixels">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.camera.Camera.get_edge_pixels">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_edge_pixels</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_edge_pixels</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">pixels</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

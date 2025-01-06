@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -367,31 +367,31 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 <span class="sd">&quot;&quot;&quot;Base class for simulation model parameters.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 
-<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
-<span class="kn">from</span> <span class="nn">simtools.db</span> <span class="kn">import</span> <span class="n">db_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.simtel.simtel_config_writer</span> <span class="kn">import</span> <span class="n">SimtelConfigWriter</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_config_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelConfigWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InvalidModelParameterError&quot;</span><span class="p">,</span> <span class="s2">&quot;ModelParameter&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="InvalidModelParameterError">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.InvalidModelParameterError">[docs]</a>
-<span class="k">class</span> <span class="nc">InvalidModelParameterError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InvalidModelParameterError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid model parameter.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="ModelParameter">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter">[docs]</a>
-<span class="k">class</span> <span class="nc">ModelParameter</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelParameter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for simulation model parameters.</span>
 
@@ -417,7 +417,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">mongo_db_config</span><span class="p">,</span>
         <span class="n">model_version</span><span class="p">,</span>
@@ -455,7 +455,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_get_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get model parameter dictionary as stored in the DB.</span>
 
@@ -487,11 +487,11 @@
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not found in the model&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidModelParameterError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">raise</span> <span class="n">InvalidModelParameterError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
 <div class="viewcode-block" id="ModelParameter.get_parameter_value">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_parameter_value">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_parameter_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">parameter_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_parameter_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">parameter_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the value of a model parameter.</span>
 
@@ -535,7 +535,7 @@
 
 <div class="viewcode-block" id="ModelParameter.get_parameter_value_with_unit">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_parameter_value_with_unit">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_parameter_value_with_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_parameter_value_with_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the value of an existing parameter of the model as an Astropy Quantity with its unit.</span>
 
@@ -574,7 +574,7 @@
 
 <div class="viewcode-block" id="ModelParameter.get_parameter_type">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_parameter_type">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_parameter_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_parameter_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the type of existing parameter of the model (value of &#39;type&#39; field of DB entry).</span>
 
@@ -599,7 +599,7 @@
 
 <div class="viewcode-block" id="ModelParameter.get_parameter_file_flag">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_parameter_file_flag">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_parameter_file_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_parameter_file_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get value of parameter file flag of this database entry (boolean &#39;file&#39; field of DB entry).</span>
 
@@ -623,14 +623,14 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">derived</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">derived</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the derived values and export them if the class instance hasn&#39;t done it yet.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derived</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_derived_values</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_export_derived_files</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derived</span>
 
-    <span class="k">def</span> <span class="nf">_load_derived_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_derived_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load derived values from the DB.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reading derived values from DB&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_derived</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_derived_values</span><span class="p">(</span>
@@ -639,7 +639,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_export_derived_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_export_derived_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write to disk a file from the derived values DB.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">par_now</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">derived</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">par_now</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;File&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">par_now</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">):</span>
@@ -651,13 +651,13 @@
 
 <div class="viewcode-block" id="ModelParameter.print_parameters">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.print_parameters">[docs]</a>
-    <span class="k">def</span> <span class="nf">print_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print parameters and their values for debugging purposes.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">par</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_set_config_file_directory_and_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_config_file_directory_and_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set and create the directory and the name of the config file.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
@@ -681,7 +681,7 @@
 
 <div class="viewcode-block" id="ModelParameter.get_simulation_software_parameters">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_simulation_software_parameters">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_simulation_software_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_software</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_simulation_software_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_software</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get simulation software parameters.</span>
 
@@ -698,7 +698,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">simulation_software</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_load_simulation_software_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_simulation_software_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read simulation software parameters from DB.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">simulation_software</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -716,7 +716,7 @@
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (model version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">).&quot;</span>
                 <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_load_parameters_from_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_parameters_from_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read parameters from DB and store them in _parameters.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
@@ -736,7 +736,7 @@
 
 <div class="viewcode-block" id="ModelParameter.set_extra_label">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.set_extra_label">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_label</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_label</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set an extra label for the name of the config file.</span>
 
@@ -756,13 +756,13 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the extra label if defined, if not return &#39;&#39;.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 
 <div class="viewcode-block" id="ModelParameter.get_simtel_parameters">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_simtel_parameters">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_simtel_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">telescope_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">site_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_simtel_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">telescope_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">site_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get simtel parameters as name and value pairs.</span>
 
@@ -799,7 +799,7 @@
 
 <div class="viewcode-block" id="ModelParameter.change_parameter">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.change_parameter">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change the value of an existing parameter.</span>
 
@@ -851,7 +851,7 @@
 
 <div class="viewcode-block" id="ModelParameter.change_multiple_parameters_from_file">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.change_multiple_parameters_from_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_multiple_parameters_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_multiple_parameters_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change values of multiple existing parameters in the model from a file.</span>
 
@@ -873,7 +873,7 @@
 
 <div class="viewcode-block" id="ModelParameter.change_multiple_parameters">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.change_multiple_parameters">[docs]</a>
-    <span class="k">def</span> <span class="nf">change_multiple_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">change_multiple_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Change the value of multiple existing parameters in the model.</span>
 
@@ -894,7 +894,7 @@
 
 <div class="viewcode-block" id="ModelParameter.export_parameter_file">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.export_parameter_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">export_parameter_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_parameter_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export a file to the config file directory.</span>
 
@@ -913,7 +913,7 @@
 
 <div class="viewcode-block" id="ModelParameter.export_model_files">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.export_model_files">[docs]</a>
-    <span class="k">def</span> <span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the model files into the config file directory.&quot;&quot;&quot;</span>
         <span class="c1"># Removing parameter files added manually (which are not in DB)</span>
         <span class="n">pars_from_db</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">)</span>
@@ -927,7 +927,7 @@
 
 <div class="viewcode-block" id="ModelParameter.export_config_file">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.export_config_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">export_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the config file used by sim_telarray.&quot;&quot;&quot;</span>
         <span class="c1"># Exporting model file</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span><span class="p">:</span>
@@ -945,14 +945,14 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">config_file_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">config_file_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Directory for configure files. Configure, if necessary.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">config_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">config_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Path of the config file. Configure, if necessary.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span>
@@ -960,7 +960,7 @@
 
 <div class="viewcode-block" id="ModelParameter.get_config_file">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_config_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_export</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_export</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the path of the config file for sim_telarray.</span>
 
@@ -981,7 +981,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_load_simtel_config_writer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_simtel_config_writer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the SimtelConfigWriter object.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span> <span class="o">=</span> <span class="n">SimtelConfigWriter</span><span class="p">(</span>
@@ -993,7 +993,7 @@
 
 <div class="viewcode-block" id="ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">export_nsb_spectrum_to_telescope_altitude_correction_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_directory</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_nsb_spectrum_to_telescope_altitude_correction_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_directory</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export the NSB spectrum to the telescope altitude correction file.</span>
 

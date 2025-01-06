@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -447,25 +447,25 @@
 <span class="sd">        mirror_align_random_vertical = [0.005, 28.0, 0.0, 0.0]</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_pdf</span> <span class="kn">import</span> <span class="n">PdfPages</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.backends.backend_pdf</span><span class="w"> </span><span class="kn">import</span> <span class="n">PdfPages</span>
 
-<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
-<span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.model.telescope_model</span> <span class="kn">import</span> <span class="n">TelescopeModel</span>
-<span class="kn">from</span> <span class="nn">simtools.ray_tracing.ray_tracing</span> <span class="kn">import</span> <span class="n">RayTracing</span>
-<span class="kn">from</span> <span class="nn">simtools.visualization</span> <span class="kn">import</span> <span class="n">visualize</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.telescope_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelescopeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
 
 
 <div class="viewcode-block" id="load_data">
 <a class="viewcode-back" href="../user-guide/applications/derive_psf_parameters.html#derive_psf_parameters.load_data">[docs]</a>
-<span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="n">data_file</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_data</span><span class="p">(</span><span class="n">data_file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load data from a text file containing cumulative PSF measurements.</span>
 
@@ -489,7 +489,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_parse</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">():</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">&quot;Derive mirror_reflection_random_angle, mirror_align_random_horizontal &quot;</span>
@@ -524,7 +524,7 @@
 
 <div class="viewcode-block" id="add_parameters">
 <a class="viewcode-back" href="../user-guide/applications/derive_psf_parameters.html#derive_psf_parameters.add_parameters">[docs]</a>
-<span class="k">def</span> <span class="nf">add_parameters</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_parameters</span><span class="p">(</span>
     <span class="n">all_parameters</span><span class="p">,</span>
     <span class="n">mirror_reflection</span><span class="p">,</span>
     <span class="n">mirror_align</span><span class="p">,</span>
@@ -576,7 +576,7 @@
 
 <div class="viewcode-block" id="get_previous_values">
 <a class="viewcode-back" href="../user-guide/applications/derive_psf_parameters.html#derive_psf_parameters.get_previous_values">[docs]</a>
-<span class="k">def</span> <span class="nf">get_previous_values</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_previous_values</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Retrieve previous parameter values from the telescope model.</span>
 
@@ -612,7 +612,7 @@
 
 <div class="viewcode-block" id="generate_random_parameters">
 <a class="viewcode-back" href="../user-guide/applications/derive_psf_parameters.html#derive_psf_parameters.generate_random_parameters">[docs]</a>
-<span class="k">def</span> <span class="nf">generate_random_parameters</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_random_parameters</span><span class="p">(</span>
     <span class="n">all_parameters</span><span class="p">,</span> <span class="n">n_runs</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">mrra_0</span><span class="p">,</span> <span class="n">mfr_0</span><span class="p">,</span> <span class="n">mrra2_0</span><span class="p">,</span> <span class="n">mar_0</span><span class="p">,</span> <span class="n">logger</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -658,7 +658,7 @@
 
 <div class="viewcode-block" id="load_and_process_data">
 <a class="viewcode-back" href="../user-guide/applications/derive_psf_parameters.html#derive_psf_parameters.load_and_process_data">[docs]</a>
-<span class="k">def</span> <span class="nf">load_and_process_data</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_and_process_data</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load and process data if specified in the command-line arguments.</span>
 
@@ -681,7 +681,7 @@
 
 <div class="viewcode-block" id="calculate_rmsd">
 <a class="viewcode-back" href="../user-guide/applications/derive_psf_parameters.html#derive_psf_parameters.calculate_rmsd">[docs]</a>
-<span class="k">def</span> <span class="nf">calculate_rmsd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sim</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_rmsd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sim</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate Root Mean Squared Deviation to be used as metric to find the best parameters.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">data</span> <span class="o">-</span> <span class="n">sim</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span></div>
 
@@ -689,7 +689,7 @@
 
 <div class="viewcode-block" id="run_pars">
 <a class="viewcode-back" href="../user-guide/applications/derive_psf_parameters.html#derive_psf_parameters.run_pars">[docs]</a>
-<span class="k">def</span> <span class="nf">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.</span>
 
@@ -758,7 +758,7 @@
 
 <div class="viewcode-block" id="find_best_parameters">
 <a class="viewcode-back" href="../user-guide/applications/derive_psf_parameters.html#derive_psf_parameters.find_best_parameters">[docs]</a>
-<span class="k">def</span> <span class="nf">find_best_parameters</span><span class="p">(</span><span class="n">all_parameters</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_best_parameters</span><span class="p">(</span><span class="n">all_parameters</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Find the best parameters from all parameter sets.</span>
 
@@ -779,7 +779,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>  <span class="c1"># noqa: D103</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>  <span class="c1"># noqa: D103</span>
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">()</span>
 
     <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;tune_psf&quot;</span>

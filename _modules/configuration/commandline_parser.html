@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,15 +366,15 @@
   <h1>Source code for configuration.commandline_parser</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Command line parser for applications.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">argparse</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 
-<span class="kn">import</span> <span class="nn">simtools.version</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;CommandLineParser&quot;</span><span class="p">,</span>
@@ -383,7 +383,7 @@
 
 <div class="viewcode-block" id="CommandLineParser">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser">[docs]</a>
-<span class="k">class</span> <span class="nc">CommandLineParser</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CommandLineParser</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Command line parser for applications.</span>
 
@@ -400,7 +400,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_default_arguments">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_default_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_default_arguments</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_default_arguments</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">paths</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -444,7 +444,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_config_files">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_config_files">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_config_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize configuration files.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;configuration&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -465,7 +465,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_path_arguments">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_path_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_path_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_path_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize paths.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;paths&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -505,7 +505,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_output_arguments">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_output_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_output_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_output_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize application output files(s).&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -532,7 +532,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_application_execution_arguments">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_application_execution_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_application_execution_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_application_execution_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize application execution arguments.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;execution&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -560,7 +560,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_db_config_arguments">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_db_config_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_db_config_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_db_config_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize DB configuration parameters.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;database configuration&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--db_api_user&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;database user&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -594,7 +594,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_job_submission_arguments">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_job_submission_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_job_submission_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize job submission arguments for simulator.&quot;&quot;&quot;</span>
         <span class="n">_job_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;job submission&quot;</span><span class="p">)</span>
         <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -619,7 +619,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_simulation_model_arguments">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_simulation_model_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_simulation_model_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_simulation_model_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize default arguments for simulation model definition.</span>
 
@@ -672,7 +672,7 @@
 
 <div class="viewcode-block" id="CommandLineParser.initialize_simulation_configuration_arguments">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_simulation_configuration_arguments">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_simulation_configuration_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_configuration</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_simulation_configuration_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_configuration</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize default arguments for simulation configuration and simulation software.</span>
 
@@ -699,7 +699,7 @@
             <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_initialize_simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_simulation_software</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize simulation software arguments.&quot;&quot;&quot;</span>
         <span class="n">_software_group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;simulation software&quot;</span><span class="p">)</span>
         <span class="n">_software_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -712,9 +712,9 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_dictionary_with_corsika_configuration</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dictionary_with_corsika_configuration</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with CORSIKA configuration parameters.&quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">simtools.corsika.primary_particle</span> <span class="kn">import</span> <span class="n">PrimaryParticle</span>  <span class="c1"># pylint: disable=C0415</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.primary_particle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrimaryParticle</span>  <span class="c1"># pylint: disable=C0415</span>
 
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -780,7 +780,7 @@
         <span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_dictionary_with_shower_configuration</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dictionary_with_shower_configuration</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dictionary with shower configuration parameters.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;eslope&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -814,7 +814,7 @@
             <span class="p">},</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_simulation_configuration</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_simulation_configuration</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">group_name</span><span class="p">,</span> <span class="n">selected_parameters</span><span class="p">,</span> <span class="n">available_parameters</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -841,7 +841,7 @@
                 <span class="k">pass</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_add_model_option_layout</span><span class="p">(</span><span class="n">job_group</span><span class="p">,</span> <span class="n">add_layout_file</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_model_option_layout</span><span class="p">(</span><span class="n">job_group</span><span class="p">,</span> <span class="n">add_layout_file</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add layout option to the job group.</span>
 
@@ -882,7 +882,7 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">job_group</span>
 
-    <span class="k">def</span> <span class="nf">_add_model_option_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_group</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_model_option_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_group</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add site option to the job group.</span>
 
@@ -903,7 +903,7 @@
 <div class="viewcode-block" id="CommandLineParser.site">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.site">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">site</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">site</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that a valid site name is given.</span>
 
@@ -929,7 +929,7 @@
 <div class="viewcode-block" id="CommandLineParser.telescope">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.telescope">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">telescope</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">telescope</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that a valid telescope name is given.</span>
 
@@ -955,7 +955,7 @@
 <div class="viewcode-block" id="CommandLineParser.efficiency_interval">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.efficiency_interval">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">efficiency_interval</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">efficiency_interval</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that value is an efficiency in the interval [0,1].</span>
 
@@ -984,7 +984,7 @@
 <div class="viewcode-block" id="CommandLineParser.zenith_angle">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.zenith_angle">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">zenith_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">zenith_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that the zenith angle provided is in the interval [0, 180].</span>
 
@@ -1030,7 +1030,7 @@
 <div class="viewcode-block" id="CommandLineParser.azimuth_angle">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.azimuth_angle">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">azimuth_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">azimuth_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Argument parser type to check that the azimuth angle provided is in the interval [0, 360].</span>
 
@@ -1095,7 +1095,7 @@
 <div class="viewcode-block" id="CommandLineParser.parse_quantity_pair">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.parse_quantity_pair">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">parse_quantity_pair</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_quantity_pair</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parse a string representing a pair of astropy quantities separated by a space.</span>
 
@@ -1124,7 +1124,7 @@
 <div class="viewcode-block" id="CommandLineParser.parse_integer_and_quantity">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.parse_integer_and_quantity">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">parse_integer_and_quantity</span><span class="p">(</span><span class="n">input_string</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_integer_and_quantity</span><span class="p">(</span><span class="n">input_string</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parse a string representing an integer and a quantity with units.</span>
 

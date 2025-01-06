@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.geo_coordinates &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>layout.geo_coordinates &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,16 +366,16 @@
   <h1>Source code for layout.geo_coordinates</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Definition of geospatial coordinate systems.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pyproj</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyproj</span>
 
 
 <div class="viewcode-block" id="GeoCoordinates">
 <a class="viewcode-back" href="../../api-reference/array_layout.html#layout.geo_coordinates.GeoCoordinates">[docs]</a>
-<span class="k">class</span> <span class="nc">GeoCoordinates</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeoCoordinates</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Geospatial Coordinate systems.</span>
 
@@ -383,13 +383,13 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize GeoCoordinates.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GeoCoordinates.crs_utm">
 <a class="viewcode-back" href="../../api-reference/array_layout.html#layout.geo_coordinates.GeoCoordinates.crs_utm">[docs]</a>
-    <span class="k">def</span> <span class="nf">crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epsg</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">crs_utm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epsg</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        UTM coordinate system definition.</span>
 
@@ -415,7 +415,7 @@
 <div class="viewcode-block" id="GeoCoordinates.crs_wgs84">
 <a class="viewcode-back" href="../../api-reference/array_layout.html#layout.geo_coordinates.GeoCoordinates.crs_wgs84">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">crs_wgs84</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">crs_wgs84</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        WGS84 coordinate system definition.</span>
 
@@ -430,7 +430,7 @@
 
 <div class="viewcode-block" id="GeoCoordinates.crs_local">
 <a class="viewcode-back" href="../../api-reference/array_layout.html#layout.geo_coordinates.GeoCoordinates.crs_local">[docs]</a>
-    <span class="k">def</span> <span class="nf">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_point</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">crs_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_point</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Local coordinate system definition.</span>
 
@@ -467,7 +467,7 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_valid_reference_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_point</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_valid_reference_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_point</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if reference point has valid long/lat coordinates (including altitude).</span>
 
@@ -499,7 +499,7 @@
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_coordinate_scale_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_point</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_coordinate_scale_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_point</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Derive coordinate scale factor for transformation into local coordinate system.</span>
 
@@ -537,7 +537,7 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">_local_geo_radius</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">_centre_altitude</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">/</span> <span class="n">_local_geo_radius</span><span class="o">.</span><span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">_geocentric_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">semi_major_axis</span><span class="p">,</span> <span class="n">semi_minor_axis</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_geocentric_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">semi_major_axis</span><span class="p">,</span> <span class="n">semi_minor_axis</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate geocentric radius from WGS84 ellipsoid parameters.</span>
 

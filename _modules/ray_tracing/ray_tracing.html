@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ray_tracing.ray_tracing &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>ray_tracing.ray_tracing &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,25 +366,25 @@
   <h1>Source code for ray_tracing.ray_tracing</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Ray tracing simulations and analysis.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">gzip</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
-<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">tan</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">tan</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">astropy.io.ascii</span>
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">QTable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.io.ascii</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTable</span>
 
-<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.model.model_utils</span> <span class="kn">import</span> <span class="n">compute_telescope_transmission</span>
-<span class="kn">from</span> <span class="nn">simtools.ray_tracing.psf_analysis</span> <span class="kn">import</span> <span class="n">PSFImage</span>
-<span class="kn">from</span> <span class="nn">simtools.simtel.simulator_ray_tracing</span> <span class="kn">import</span> <span class="n">SimulatorRayTracing</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
-<span class="kn">from</span> <span class="nn">simtools.visualization</span> <span class="kn">import</span> <span class="n">visualize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_telescope_transmission</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.psf_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">PSFImage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorRayTracing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;RayTracing&quot;</span><span class="p">]</span>
 
@@ -393,7 +393,7 @@
 
 <div class="viewcode-block" id="RayTracing">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing">[docs]</a>
-<span class="k">class</span> <span class="nc">RayTracing</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RayTracing</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ray tracing simulations and analysis.</span>
 
@@ -426,7 +426,7 @@
         <span class="s2">&quot;eff_flen&quot;</span><span class="p">:</span> <span class="s2">&quot;Eff. focal length&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">telescope_model</span><span class="p">,</span>
         <span class="n">simtel_path</span><span class="p">,</span>
@@ -463,11 +463,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation of RayTracing class.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;RayTracing(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_mirror_configuration</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_mirror_configuration</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source_distance</span><span class="p">,</span>
         <span class="n">mirror_numbers</span><span class="p">,</span>
@@ -503,7 +503,7 @@
             <span class="p">}</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_single_mirror_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_numbers</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_single_mirror_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mirror_numbers</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize single mirror mode.</span>
 
@@ -539,7 +539,7 @@
 
         <span class="k">return</span> <span class="n">mirrors</span>
 
-    <span class="k">def</span> <span class="nf">_get_mirror_panel_focal_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_mirror_panel_focal_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return mirror panel focal length with possible random addition.</span>
 
@@ -562,7 +562,7 @@
 
 <div class="viewcode-block" id="RayTracing.simulate">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.simulate">[docs]</a>
-    <span class="k">def</span> <span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Simulate RayTracing using SimulatorRayTracing.</span>
 
@@ -614,7 +614,7 @@
 
 <div class="viewcode-block" id="RayTracing.analyze">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.analyze">[docs]</a>
-    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -665,7 +665,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">export_results</span><span class="p">()</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_process_off_axis_and_mirror</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_off_axis_and_mirror</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tel_transmission_pars</span><span class="p">,</span>
         <span class="n">do_analyze</span><span class="p">,</span>
@@ -734,7 +734,7 @@
 
         <span class="k">return</span> <span class="n">_rows</span>
 
-    <span class="k">def</span> <span class="nf">_get_telescope_transmission_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_tel_transmission</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_telescope_transmission_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_tel_transmission</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get telescope transmission parameters.</span>
 
@@ -754,7 +754,7 @@
             <span class="k">else</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_create_psf_image</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_psf_image</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">photons_file</span><span class="p">,</span> <span class="n">focal_length</span><span class="p">,</span> <span class="n">this_off_axis</span><span class="p">,</span> <span class="n">containment_fraction</span><span class="p">,</span> <span class="n">use_rx</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -787,7 +787,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_psf_images</span><span class="p">[</span><span class="n">this_off_axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">image</span>
 
-    <span class="k">def</span> <span class="nf">_analyze_image</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_analyze_image</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">image</span><span class="p">,</span>
         <span class="n">this_off_axis</span><span class="p">,</span>
@@ -825,7 +825,7 @@
             <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">this_off_axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">image</span><span class="o">.</span><span class="n">centroid_x</span> <span class="o">/</span> <span class="n">tan</span><span class="p">(</span><span class="n">this_off_axis</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_store_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_rows</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_store_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_rows</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Store analysis results.</span>
 
@@ -842,7 +842,7 @@
 
 <div class="viewcode-block" id="RayTracing.export_results">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.export_results">[docs]</a>
-    <span class="k">def</span> <span class="nf">export_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export results to a csv file.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting results to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -851,13 +851,13 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No results to export&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_read_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read existing results file and store it in _results.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">ascii</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_results</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ecsv&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RayTracing.plot">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.plot">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">d80</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">d80</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot key vs off-axis angle and save the figure in pdf.</span>
 
@@ -884,7 +884,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="s2">&quot;Off-axis angle&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">YLABEL</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">no_legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
         <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
             <span class="n">plot_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_file_name</span><span class="p">(</span>
@@ -923,7 +923,7 @@
 
 <div class="viewcode-block" id="RayTracing.plot_histogram">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.plot_histogram">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot histogram of key.</span>
 
@@ -943,12 +943,12 @@
             <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
 <div class="viewcode-block" id="RayTracing.get_mean">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.get_mean">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get mean value of key.</span>
 
@@ -970,12 +970,12 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
 <div class="viewcode-block" id="RayTracing.get_std_dev">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.get_std_dev">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_std_dev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_std_dev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get std dev of key.</span>
 
@@ -997,12 +997,12 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">INVALID_KEY_TO_PLOT</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
 <div class="viewcode-block" id="RayTracing.images">
 <a class="viewcode-back" href="../../api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.images">[docs]</a>
-    <span class="k">def</span> <span class="nf">images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get list of PSFImages.</span>
 
@@ -1020,7 +1020,7 @@
         <span class="k">return</span> <span class="n">images</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_generate_file_name</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_file_name</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">off_axis_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mirror_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_label</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate file name for output files.&quot;&quot;&quot;</span>

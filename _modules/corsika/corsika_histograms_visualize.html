@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>corsika.corsika_histograms_visualize &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>corsika.corsika_histograms_visualize &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,19 +366,19 @@
   <h1>Source code for corsika.corsika_histograms_visualize</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Visualize Cherenkov photon distributions from CORSIKA.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">colors</span>
-<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_pdf</span> <span class="kn">import</span> <span class="n">PdfPages</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">colors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.backends.backend_pdf</span><span class="w"> </span><span class="kn">import</span> <span class="n">PdfPages</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_kernel_plot_2d_photons</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_kernel_plot_2d_photons</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Provide helper functions for plotting Cherenkov photon distributions saved in CorsikaHistograms.</span>
 
@@ -483,7 +483,7 @@
 
 <div class="viewcode-block" id="plot_2d_counts">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_2d_counts">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_2d_counts</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_2d_counts</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the 2D histogram of the photon positions on the ground.</span>
 
@@ -505,7 +505,7 @@
 
 <div class="viewcode-block" id="plot_2d_density">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_2d_density">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_2d_density</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_2d_density</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the 2D histogram of the photon density distribution on the ground.</span>
 
@@ -528,7 +528,7 @@
 
 <div class="viewcode-block" id="plot_2d_direction">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_2d_direction">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_2d_direction</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_2d_direction</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the 2D histogram of the incoming direction of photons.</span>
 
@@ -551,7 +551,7 @@
 
 <div class="viewcode-block" id="plot_2d_time_altitude">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_2d_time_altitude">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_2d_time_altitude</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_2d_time_altitude</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the 2D histogram of the time and altitude where the photon was produced.</span>
 
@@ -574,7 +574,7 @@
 
 <div class="viewcode-block" id="plot_2d_num_photons_per_telescope">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_2d_num_photons_per_telescope">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_2d_num_photons_per_telescope</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_2d_num_photons_per_telescope</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_z</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the 2D histogram of the number of photons per event and per telescope.</span>
 
@@ -595,7 +595,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_kernel_plot_1d_photons</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_kernel_plot_1d_photons</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create the figure of a 1D plot. The parameter property indicate which plot.</span>
 
@@ -681,7 +681,7 @@
 
 <div class="viewcode-block" id="plot_wavelength_distr">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_wavelength_distr">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_wavelength_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_wavelength_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the 1D distribution of the photon wavelengths.</span>
 
@@ -703,7 +703,7 @@
 
 <div class="viewcode-block" id="plot_counts_distr">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_counts_distr">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_counts_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_counts_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the 1D distribution, i.e. the radial distribution, of the photons on the ground.</span>
 
@@ -725,7 +725,7 @@
 
 <div class="viewcode-block" id="plot_density_distr">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_density_distr">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_density_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_density_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the photon density distribution on the ground.</span>
 
@@ -747,7 +747,7 @@
 
 <div class="viewcode-block" id="plot_time_distr">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_time_distr">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_time_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_time_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the distribution times in which the photons were generated in ns.</span>
 
@@ -769,7 +769,7 @@
 
 <div class="viewcode-block" id="plot_altitude_distr">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_altitude_distr">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_altitude_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_altitude_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the distribution of altitude in which the photons were generated in km.</span>
 
@@ -791,7 +791,7 @@
 
 <div class="viewcode-block" id="plot_photon_per_event_distr">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_photon_per_event_distr">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_photon_per_event_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_photon_per_event_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the distribution of the number of Cherenkov photons per event.</span>
 
@@ -814,7 +814,7 @@
 
 <div class="viewcode-block" id="plot_photon_per_telescope_distr">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_photon_per_telescope_distr">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_photon_per_telescope_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_photon_per_telescope_distr</span><span class="p">(</span><span class="n">histograms_instance</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plot the distribution of the number of Cherenkov photons per telescope.</span>
 
@@ -837,7 +837,7 @@
 
 <div class="viewcode-block" id="plot_1d_event_header_distribution">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_1d_event_header_distribution">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_1d_event_header_distribution</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_1d_event_header_distribution</span><span class="p">(</span>
     <span class="n">histograms_instance</span><span class="p">,</span> <span class="n">event_header_element</span><span class="p">,</span> <span class="n">log_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">hist_range</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -893,7 +893,7 @@
 
 <div class="viewcode-block" id="plot_2d_event_header_distribution">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_2d_event_header_distribution">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_2d_event_header_distribution</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_2d_event_header_distribution</span><span class="p">(</span>
     <span class="n">histograms_instance</span><span class="p">,</span>
     <span class="n">event_header_element_1</span><span class="p">,</span>
     <span class="n">event_header_element_2</span><span class="p">,</span>
@@ -965,7 +965,7 @@
 
 <div class="viewcode-block" id="save_figs_to_pdf">
 <a class="viewcode-back" href="../../api-reference/corsika.html#corsika.corsika_histograms_visualize.save_figs_to_pdf">[docs]</a>
-<span class="k">def</span> <span class="nf">save_figs_to_pdf</span><span class="p">(</span><span class="n">figs</span><span class="p">,</span> <span class="n">pdf_file_name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_figs_to_pdf</span><span class="p">(</span><span class="n">figs</span><span class="p">,</span> <span class="n">pdf_file_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Save figures from corsika histograms to an output pdf file.</span>
 

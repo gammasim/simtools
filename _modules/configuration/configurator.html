@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.configurator &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>configuration.configurator &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,19 +366,19 @@
   <h1>Source code for configuration.configurator</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Application configuration.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">argparse</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
 
-<span class="kn">import</span> <span class="nn">simtools.configuration.commandline_parser</span> <span class="k">as</span> <span class="nn">argparser</span>
-<span class="kn">from</span> <span class="nn">simtools.db.db_handler</span> <span class="kn">import</span> <span class="n">jsonschema_db_dict</span>
-<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">general</span> <span class="k">as</span> <span class="n">gen</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.configuration.commandline_parser</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">argparser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db.db_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">jsonschema_db_dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span> <span class="k">as</span> <span class="n">gen</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;Configurator&quot;</span><span class="p">,</span>
@@ -388,14 +388,14 @@
 
 <div class="viewcode-block" id="InvalidConfigurationParameterError">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.configurator.InvalidConfigurationParameterError">[docs]</a>
-<span class="k">class</span> <span class="nc">InvalidConfigurationParameterError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InvalidConfigurationParameterError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for Invalid configuration parameter.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="Configurator">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.configurator.Configurator">[docs]</a>
-<span class="k">class</span> <span class="nc">Configurator</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Configurator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Application configuration.</span>
 
@@ -424,7 +424,7 @@
 <span class="sd">        Text display after all arguments.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">usage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epilog</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">usage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epilog</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Configurator.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init Configuration&quot;</span><span class="p">)</span>
@@ -442,7 +442,7 @@
 
 <div class="viewcode-block" id="Configurator.default_config">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.configurator.Configurator.default_config">[docs]</a>
-    <span class="k">def</span> <span class="nf">default_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return dictionary of default configuration.</span>
 
@@ -474,7 +474,7 @@
 
 <div class="viewcode-block" id="Configurator.initialize">
 <a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.configurator.Configurator.initialize">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">require_command_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">paths</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -548,7 +548,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">_db_dict</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_fill_from_command_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">require_command_line</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_from_command_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">require_command_line</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fill configuration parameters from command line arguments.</span>
 
@@ -575,7 +575,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_config</span><span class="p">(</span><span class="n">arg_list</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_reset_required_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reset_required_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset required parser arguments (i.e., arguments added with &quot;required=True&quot;).</span>
 
@@ -588,7 +588,7 @@
         <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">_actions</span><span class="p">:</span>  <span class="c1"># pylint: disable=protected-access</span>
             <span class="n">action</span><span class="o">.</span><span class="n">required</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_fill_from_config_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_from_config_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fill configuration parameters from dictionary.</span>
 
@@ -613,7 +613,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_config</span><span class="p">(</span><span class="n">_tmp_config</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_parameter_configuration_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_parameter_configuration_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if a parameter is already configured and not still set to the default value.</span>
 
@@ -642,7 +642,7 @@
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">InvalidConfigurationParameterError</span>
 
-    <span class="k">def</span> <span class="nf">_fill_from_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_from_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read and fill configuration parameters from yaml file.</span>
 
@@ -685,7 +685,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Configuration file not found: </span><span class="si">{</span><span class="n">config_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">raise</span>
 
-    <span class="k">def</span> <span class="nf">_fill_from_environmental_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_from_environmental_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fill any configuration parameters from environmental variables or from file (e.g., &quot;.env&quot;).</span>
 
@@ -708,7 +708,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_fill_from_config_dict</span><span class="p">(</span><span class="n">_env_dict</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_io_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_io_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize IOHandler with input and output paths.&quot;&quot;&quot;</span>
         <span class="n">_io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="n">_io_handler</span><span class="o">.</span><span class="n">set_paths</span><span class="p">(</span>
@@ -718,7 +718,7 @@
             <span class="n">model_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_initialize_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize default output file names (in case output_file is not configured).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;output_file_from_default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
@@ -734,7 +734,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">label</span><span class="si">}{</span><span class="n">extension</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_arglist_from_config</span><span class="p">(</span><span class="n">input_var</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_arglist_from_config</span><span class="p">(</span><span class="n">input_var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert input list of strings as needed by argparse.</span>
 
@@ -779,7 +779,7 @@
             <span class="k">return</span> <span class="p">[]</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_convert_string_none_to_none</span><span class="p">(</span><span class="n">input_dict</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_string_none_to_none</span><span class="p">(</span><span class="n">input_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert string type &#39;None&#39; to type None (argparse returns None as str).</span>
 
@@ -794,7 +794,7 @@
 
         <span class="k">return</span> <span class="n">input_dict</span>
 
-    <span class="k">def</span> <span class="nf">_fill_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_container</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fill_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_container</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fill configuration dictionary.</span>
 
@@ -812,7 +812,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_db_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_db_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return parameters for DB configuration.</span>
 

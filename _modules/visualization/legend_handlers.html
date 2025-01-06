@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>visualization.legend_handlers &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>visualization.legend_handlers &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,9 +366,9 @@
   <h1>Source code for visualization.legend_handlers</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Helper functions for legend handlers used for plotting.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
-<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">mpatches</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpatches</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;EdgePixelObject&quot;</span><span class="p">,</span>
@@ -404,7 +404,7 @@
 <span class="n">veritas</span> <span class="o">=</span> <span class="s2">&quot;VERITAS&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">width_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">height_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="n">width_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">height_factor</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the center of the handlebox based on given factors.</span>
 
@@ -429,14 +429,14 @@
 
 <div class="viewcode-block" id="TelescopeHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.TelescopeHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">TelescopeHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TelescopeHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Telescope handler that centralizes the telescope information.</span>
 
 <span class="sd">    Individual telescopes handlers inherit from this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">colors_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;LSTN&quot;</span><span class="p">:</span> <span class="s2">&quot;darkorange&quot;</span><span class="p">,</span>
             <span class="s2">&quot;MSTN&quot;</span><span class="p">:</span> <span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span>
@@ -466,79 +466,79 @@
 
 <div class="viewcode-block" id="PixelObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.PixelObject">[docs]</a>
-<span class="k">class</span> <span class="nc">PixelObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PixelObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pixel Object.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="EdgePixelObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.EdgePixelObject">[docs]</a>
-<span class="k">class</span> <span class="nc">EdgePixelObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EdgePixelObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Edge-Pixel Object.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="OffPixelObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.OffPixelObject">[docs]</a>
-<span class="k">class</span> <span class="nc">OffPixelObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OffPixelObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Off-Pixel Object.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="LSTObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.LSTObject">[docs]</a>
-<span class="k">class</span> <span class="nc">LSTObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LSTObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;LST Object.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="MSTObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.MSTObject">[docs]</a>
-<span class="k">class</span> <span class="nc">MSTObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MSTObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;MST Object.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="SCTObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SCTObject">[docs]</a>
-<span class="k">class</span> <span class="nc">SCTObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SCTObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;SCT Object.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="SSTObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SSTObject">[docs]</a>
-<span class="k">class</span> <span class="nc">SSTObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSTObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;SST Object.&quot;&quot;&quot;</span></div>
 
 
 
-<span class="k">class</span> <span class="nc">HESSObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HESSObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;HESS Object.&quot;&quot;&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">MAGICObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MAGICObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;MAGIC Object.&quot;&quot;&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">VERITASObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VERITASObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;VERITAS Object.&quot;&quot;&quot;</span>
 
 
 <div class="viewcode-block" id="MeanRadiusOuterEdgeObject">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.MeanRadiusOuterEdgeObject">[docs]</a>
-<span class="k">class</span> <span class="nc">MeanRadiusOuterEdgeObject</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanRadiusOuterEdgeObject</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Object for Mean radius outer edge.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="HexPixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexPixelHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">HexPixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HexPixelHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;on&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -556,11 +556,11 @@
 
 <div class="viewcode-block" id="HexEdgePixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexEdgePixelHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">HexEdgePixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HexEdgePixelHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;edge&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -578,11 +578,11 @@
 
 <div class="viewcode-block" id="HexOffPixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.HexOffPixelHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">HexOffPixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HexOffPixelHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a hexagonal &quot;off&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
             <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
@@ -600,11 +600,11 @@
 
 <div class="viewcode-block" id="SquarePixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquarePixelHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">SquarePixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquarePixelHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;on&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -622,11 +622,11 @@
 
 <div class="viewcode-block" id="SquareEdgePixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquareEdgePixelHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">SquareEdgePixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareEdgePixelHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;edge&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -644,11 +644,11 @@
 
 <div class="viewcode-block" id="SquareOffPixelHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SquareOffPixelHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">SquareOffPixelHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareOffPixelHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a square &quot;off&quot; pixel.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">xdescent</span><span class="p">,</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">ydescent</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -666,10 +666,10 @@
 
 <div class="viewcode-block" id="LSTHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.LSTHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">LSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an LST in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
@@ -686,10 +686,10 @@
 
 <div class="viewcode-block" id="MSTHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.MSTHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">MSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an MST in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
@@ -706,10 +706,10 @@
 
 <div class="viewcode-block" id="SSTHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SSTHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">SSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an SST in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
@@ -726,10 +726,10 @@
 
 <div class="viewcode-block" id="SCTHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.SCTHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">SCTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SCTHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an SCT in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="n">height</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
@@ -745,10 +745,10 @@
 
 
 
-<span class="k">class</span> <span class="nc">HESSHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HESSHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an HESS in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
@@ -764,10 +764,10 @@
         <span class="k">return</span> <span class="n">patch</span>
 
 
-<span class="k">class</span> <span class="nc">MAGICHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MAGICHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an MAGIC in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
@@ -783,10 +783,10 @@
         <span class="k">return</span> <span class="n">patch</span>
 
 
-<span class="k">class</span> <span class="nc">VERITASHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VERITASHandler</span><span class="p">(</span><span class="n">TelescopeHandler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a representation of an VERITAS in an array layout.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">RegularPolygon</span><span class="p">(</span>
@@ -804,11 +804,11 @@
 
 <div class="viewcode-block" id="MeanRadiusOuterEdgeHandler">
 <a class="viewcode-back" href="../../api-reference/visualization.html#visualization.legend_handlers.MeanRadiusOuterEdgeHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">MeanRadiusOuterEdgeHandler</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanRadiusOuterEdgeHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Legend handler class to plot a the mean radius outer edge of the dish.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">legend_artist</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="n">___</span><span class="p">,</span> <span class="n">handlebox</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
         <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">calculate_center</span><span class="p">(</span><span class="n">handlebox</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
         <span class="n">radius</span> <span class="o">=</span> <span class="n">handlebox</span><span class="o">.</span><span class="n">height</span>
         <span class="n">patch</span> <span class="o">=</span> <span class="n">mpatches</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>

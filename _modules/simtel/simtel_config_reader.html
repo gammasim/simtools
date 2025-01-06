@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -367,19 +367,19 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 <span class="sd">&quot;&quot;&quot;Read model parameters and configuration from sim_telarray configuration files.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimtelConfigReader&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="SimtelConfigReader">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">[docs]</a>
-<span class="k">class</span> <span class="nc">SimtelConfigReader</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimtelConfigReader</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads model parameters from configuration files and converts to the simtools representation.</span>
 
@@ -410,7 +410,7 @@
 <span class="sd">        Number of camera pixels</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">schema_file</span><span class="p">,</span>
         <span class="n">simtel_config_file</span><span class="p">,</span>
@@ -436,11 +436,11 @@
             <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_should_skip_limits_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_should_skip_limits_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if limits should be skipped.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;limits&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_get_schema_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_schema_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check schema values for limits and defaults.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;limits&quot;</span><span class="p">:</span>
@@ -456,7 +456,7 @@
             <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_values_match</span><span class="p">(</span><span class="n">_from_simtel</span><span class="p">,</span> <span class="n">_from_schema</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_values_match</span><span class="p">(</span><span class="n">_from_simtel</span><span class="p">,</span> <span class="n">_from_schema</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if values match (are close for floats).&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_from_simtel</span> <span class="o">==</span> <span class="n">_from_schema</span><span class="p">:</span>
@@ -472,7 +472,7 @@
 
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_log_mismatch_warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">_from_simtel</span><span class="p">,</span> <span class="n">_from_schema</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_mismatch_warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">_from_simtel</span><span class="p">,</span> <span class="n">_from_schema</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Log mismatch warning.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Values for </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2"> do not match:&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
@@ -484,7 +484,7 @@
 
 <div class="viewcode-block" id="SimtelConfigReader.compare_simtel_config_with_schema">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">[docs]</a>
-    <span class="k">def</span> <span class="nf">compare_simtel_config_with_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compare_simtel_config_with_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compare limits and defaults reported by simtel_array with schema.</span>
 
@@ -508,7 +508,7 @@
 
 <div class="viewcode-block" id="SimtelConfigReader.read_simtel_config_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">read_simtel_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_simtel_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read sim_telarray configuration file and return a dictionary with the parameter values.</span>
 
@@ -565,7 +565,7 @@
         <span class="k">return</span> <span class="n">_para_dict</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_resolve_all_in_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_all_in_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resolve &#39;all&#39; entries in a column.</span>
 
@@ -607,7 +607,7 @@
 
         <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="n">except_from_all</span>
 
-    <span class="k">def</span> <span class="nf">_add_value_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_value_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract value(s) from simtel configuration file columns.</span>
 
@@ -653,7 +653,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_column</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_process_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Process and return column prepared in _add_value_from_simtel_cfg.</span>
 
@@ -674,7 +674,7 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="k">if</span> <span class="n">dtype</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">_get_type_and_dimension_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_type_and_dimension_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return type and dimension from simtel configuration column.</span>
 
@@ -700,7 +700,7 @@
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())),</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())),</span> <span class="nb">int</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">_get_simtel_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_simtel_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return parameter name as used in sim_telarray.</span>
 

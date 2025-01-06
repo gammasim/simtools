@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -416,21 +416,21 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">simtools.data_model.model_data_writer</span> <span class="k">as</span> <span class="nn">writer</span>
-<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
-<span class="kn">from</span> <span class="nn">simtools.configuration</span> <span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span> <span class="nn">simtools.constants</span> <span class="kn">import</span> <span class="n">MODEL_PARAMETER_SCHEMA_PATH</span>
-<span class="kn">from</span> <span class="nn">simtools.io_operations.io_handler</span> <span class="kn">import</span> <span class="n">IOHandler</span>
-<span class="kn">from</span> <span class="nn">simtools.simtel.simtel_config_reader</span> <span class="kn">import</span> <span class="n">SimtelConfigReader</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">writer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">MODEL_PARAMETER_SCHEMA_PATH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations.io_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">IOHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_config_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelConfigReader</span>
 
 
-<span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parse command line configuration.</span>
 
@@ -474,7 +474,7 @@
 
 <div class="viewcode-block" id="get_list_of_parameters_and_schema_files">
 <a class="viewcode-back" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.get_list_of_parameters_and_schema_files">[docs]</a>
-<span class="k">def</span> <span class="nf">get_list_of_parameters_and_schema_files</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_parameters_and_schema_files</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return list of parameters and schema files located in schema file directory.</span>
 
@@ -497,7 +497,7 @@
 
 <div class="viewcode-block" id="get_list_of_simtel_parameters">
 <a class="viewcode-back" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.get_list_of_simtel_parameters">[docs]</a>
-<span class="k">def</span> <span class="nf">get_list_of_simtel_parameters</span><span class="p">(</span><span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_simtel_parameters</span><span class="p">(</span><span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return list of simtel parameters found in simtel configuration file.</span>
 
@@ -526,7 +526,7 @@
 
 <div class="viewcode-block" id="read_simtel_config_file">
 <a class="viewcode-back" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.read_simtel_config_file">[docs]</a>
-<span class="k">def</span> <span class="nf">read_simtel_config_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">schema_file</span><span class="p">,</span> <span class="n">camera_pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_simtel_config_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">schema_file</span><span class="p">,</span> <span class="n">camera_pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read the simtel configuration file.</span>
 
@@ -558,7 +558,7 @@
 
 <div class="viewcode-block" id="get_number_of_camera_pixel">
 <a class="viewcode-back" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.get_number_of_camera_pixel">[docs]</a>
-<span class="k">def</span> <span class="nf">get_number_of_camera_pixel</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_number_of_camera_pixel</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the number of camera pixels from the simtel configuration file.</span>
 
@@ -595,7 +595,7 @@
 
 <div class="viewcode-block" id="read_and_export_parameters">
 <a class="viewcode-back" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.read_and_export_parameters">[docs]</a>
-<span class="k">def</span> <span class="nf">read_and_export_parameters</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_and_export_parameters</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read and export parameters from simtel configuration file to json files.</span>
 
@@ -664,7 +664,7 @@
 
 <div class="viewcode-block" id="print_parameters_not_found">
 <a class="viewcode-back" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.print_parameters_not_found">[docs]</a>
-<span class="k">def</span> <span class="nf">print_parameters_not_found</span><span class="p">(</span><span class="n">_parameters_not_in_simtel</span><span class="p">,</span> <span class="n">_simtel_parameters</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_parameters_not_found</span><span class="p">(</span><span class="n">_parameters_not_in_simtel</span><span class="p">,</span> <span class="n">_simtel_parameters</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print simtel/simtools parameter not found in schema and ocnfiguration files.</span>
 
@@ -720,7 +720,7 @@
 
 <div class="viewcode-block" id="print_list_of_files">
 <a class="viewcode-back" href="../user-guide/applications/convert_all_model_parameters_from_simtel.html#convert_all_model_parameters_from_simtel.print_list_of_files">[docs]</a>
-<span class="k">def</span> <span class="nf">print_list_of_files</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_list_of_files</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print model parameters which describe a file name.</span>
 
@@ -742,7 +742,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>  <span class="c1"># noqa: D103</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>  <span class="c1"># noqa: D103</span>
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
         <span class="n">label</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Convert simulation model parameters from sim_telarray to simtools format.&quot;</span><span class="p">,</span>

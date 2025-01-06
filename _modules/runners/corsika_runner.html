@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runners.corsika_runner &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>runners.corsika_runner &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,26 +366,26 @@
   <h1>Source code for runners.corsika_runner</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Generate run scripts and directories for CORSIKA simulations.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">stat</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">stat</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.runners.runner_services</span> <span class="kn">import</span> <span class="n">RunnerServices</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.runner_services</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunnerServices</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CorsikaRunner&quot;</span><span class="p">,</span> <span class="s2">&quot;MissingRequiredEntryInCorsikaConfigError&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="MissingRequiredEntryInCorsikaConfigError">
 <a class="viewcode-back" href="../../api-reference/runners.html#runners.corsika_runner.MissingRequiredEntryInCorsikaConfigError">[docs]</a>
-<span class="k">class</span> <span class="nc">MissingRequiredEntryInCorsikaConfigError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MissingRequiredEntryInCorsikaConfigError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for missing required entry in corsika config.&quot;&quot;&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="CorsikaRunner">
 <a class="viewcode-back" href="../../api-reference/runners.html#runners.corsika_runner.CorsikaRunner">[docs]</a>
-<span class="k">class</span> <span class="nc">CorsikaRunner</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CorsikaRunner</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate run scripts and directories for CORSIKA simulations. Run simulations if requested.</span>
 
@@ -409,7 +409,7 @@
 <span class="sd">        Use multipipe to run CORSIKA and sim_telarray.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">corsika_config</span><span class="p">,</span>
         <span class="n">simtel_path</span><span class="p">,</span>
@@ -434,7 +434,7 @@
 
 <div class="viewcode-block" id="CorsikaRunner.prepare_run_script">
 <a class="viewcode-back" href="../../api-reference/runners.html#runners.corsika_runner.CorsikaRunner.prepare_run_script">[docs]</a>
-    <span class="k">def</span> <span class="nf">prepare_run_script</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_run_script</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_commands</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_pfp</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -532,12 +532,12 @@
 
 <div class="viewcode-block" id="CorsikaRunner.get_resources">
 <a class="viewcode-back" href="../../api-reference/runners.html#runners.corsika_runner.CorsikaRunner.get_resources">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return computing resources used.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">runner_service</span><span class="o">.</span><span class="n">get_resources</span><span class="p">(</span><span class="n">run_number</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_pfp_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tmp_file</span><span class="p">,</span> <span class="n">corsika_input_file</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_pfp_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tmp_file</span><span class="p">,</span> <span class="n">corsika_input_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get pfp pre-processor command.</span>
 
@@ -558,7 +558,7 @@
         <span class="n">cmd</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="n">input_tmp_file</span><span class="si">}</span><span class="s2"> || exit</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="k">return</span> <span class="n">cmd</span>
 
-    <span class="k">def</span> <span class="nf">_get_autoinputs_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">,</span> <span class="n">input_tmp_file</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_autoinputs_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="p">,</span> <span class="n">input_tmp_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get autoinputs command.</span>
 
@@ -599,7 +599,7 @@
 
 <div class="viewcode-block" id="CorsikaRunner.get_file_name">
 <a class="viewcode-back" href="../../api-reference/runners.html#runners.corsika_runner.CorsikaRunner.get_file_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_file_name</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_light_emission &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>simtel.simulator_light_emission &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,22 +366,22 @@
   <h1>Source code for simtel.simulator_light_emission</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Simulation using the light emission package for calibration.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">stat</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">stat</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">simtools.io_operations</span> <span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span> <span class="nn">simtools.runners.simtel_runner</span> <span class="kn">import</span> <span class="n">SimtelRunner</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelRunner</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorLightEmission&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="SimulatorLightEmission">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission">[docs]</a>
-<span class="k">class</span> <span class="nc">SimulatorLightEmission</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimulatorLightEmission</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Interface with sim_telarray to perform light emission package simulations.</span>
 
@@ -417,7 +417,7 @@
 <span class="sd">        Test flag.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">telescope_model</span><span class="p">,</span>
         <span class="n">calibration_model</span><span class="p">,</span>
@@ -462,7 +462,7 @@
 <div class="viewcode-block" id="SimulatorLightEmission.light_emission_default_configuration">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">light_emission_default_configuration</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">light_emission_default_configuration</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get default light emission configuration.</span>
 
@@ -508,7 +508,7 @@
 
 <div class="viewcode-block" id="SimulatorLightEmission.calibration_pointing_direction">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction">[docs]</a>
-    <span class="k">def</span> <span class="nf">calibration_pointing_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calibration_pointing_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the pointing of the calibration device towards the telescope.</span>
 
@@ -554,7 +554,7 @@
 
 <div class="viewcode-block" id="SimulatorLightEmission.telescope_calibration_device_distance">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.telescope_calibration_device_distance">[docs]</a>
-    <span class="k">def</span> <span class="nf">telescope_calibration_device_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">telescope_calibration_device_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the distance between the telescope and the calibration device.</span>
 
@@ -585,7 +585,7 @@
         <span class="k">return</span> <span class="n">distance</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_make_light_emission_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_light_emission_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create the light emission script to run the light emission package.</span>
 
@@ -676,7 +676,7 @@
 
         <span class="k">return</span> <span class="n">command</span>
 
-    <span class="k">def</span> <span class="nf">_make_simtel_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_simtel_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the command to run simtel_array using the output from the previous step.</span>
 
@@ -739,7 +739,7 @@
 
         <span class="k">return</span> <span class="n">command</span>
 
-    <span class="k">def</span> <span class="nf">_remove_line_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">line_prefix</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_line_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">line_prefix</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove lines starting with a specific prefix from the config.</span>
 
@@ -759,7 +759,7 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">line_prefix</span><span class="p">):</span>
                     <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_create_postscript</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_postscript</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write out post-script file using read_cta in hessioxxx/bin/read_cta.</span>
 
@@ -808,7 +808,7 @@
 
 <div class="viewcode-block" id="SimulatorLightEmission.prepare_script">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script">[docs]</a>
-    <span class="k">def</span> <span class="nf">prepare_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generate_postscript</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generate_postscript</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build and return bash run script containing the light-emission command.</span>
 

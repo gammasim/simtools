@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_writer &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>simtel.simtel_config_writer &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -367,22 +367,22 @@
 <span></span><span class="ch">#!/usr/bin/python3</span>
 <span class="sd">&quot;&quot;&quot;Configuration file writer for sim_telarray.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">simtools.utils.general</span> <span class="k">as</span> <span class="nn">gen</span>
-<span class="kn">import</span> <span class="nn">simtools.version</span>
-<span class="kn">from</span> <span class="nn">simtools.utils</span> <span class="kn">import</span> <span class="n">names</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimtelConfigWriter&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="SimtelConfigWriter">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter">[docs]</a>
-<span class="k">class</span> <span class="nc">SimtelConfigWriter</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimtelConfigWriter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    SimtelConfigWriter writes sim_telarray configuration files.</span>
 
@@ -404,7 +404,7 @@
 
     <span class="n">TAB</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">layout_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">telescope_model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimtelConfigWriter.&quot;&quot;&quot;</span>
@@ -419,7 +419,7 @@
 
 <div class="viewcode-block" id="SimtelConfigWriter.write_telescope_config_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">write_telescope_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">config_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_telescope_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">config_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write the sim_telarray config file for a single telescope.</span>
 
@@ -457,7 +457,7 @@
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_value_string_for_simtel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_value_string_for_simtel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a value string for simtel.</span>
 
@@ -478,7 +478,7 @@
             <span class="n">value</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">shorten_list</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">_get_simtel_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_simtel_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return simtel metadata.</span>
 
@@ -518,7 +518,7 @@
 
 <div class="viewcode-block" id="SimtelConfigWriter.write_array_config_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">write_array_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_array_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write the sim_telarray config file for an array of telescopes.</span>
 
@@ -571,7 +571,7 @@
 
 <div class="viewcode-block" id="SimtelConfigWriter.write_single_mirror_list_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_single_mirror_list_file">[docs]</a>
-    <span class="k">def</span> <span class="nf">write_single_mirror_list_file</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_single_mirror_list_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">mirror_number</span><span class="p">,</span> <span class="n">mirrors</span><span class="p">,</span> <span class="n">single_mirror_list_file</span><span class="p">,</span> <span class="n">set_focal_length_to_zero</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -620,7 +620,7 @@
             <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_write_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">comment_char</span><span class="o">=</span><span class="s2">&quot;%&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">comment_char</span><span class="o">=</span><span class="s2">&quot;%&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write a generic header.</span>
 
@@ -652,7 +652,7 @@
         <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_write_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write site parameters.</span>
 
@@ -686,7 +686,7 @@
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">simtel_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -719,7 +719,7 @@
             <span class="k">pass</span>
         <span class="k">return</span> <span class="n">simtel_name</span><span class="p">,</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">_write_array_triggers_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_array_triggers_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write array trigger definition file in simtel format.</span>
 
@@ -759,7 +759,7 @@
 
         <span class="k">return</span> <span class="n">array_triggers_file</span>
 
-    <span class="k">def</span> <span class="nf">_get_array_triggers_for_telescope_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">telescope_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_array_triggers_for_telescope_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_triggers</span><span class="p">,</span> <span class="n">telescope_type</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get array trigger for a specific telescope type.</span>
 

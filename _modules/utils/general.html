@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g9c67c4e Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+ge4a7667 Manual</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=9ee0ad11"></script>
+    <script src="../../_static/documentation_options.js?v=6bb4b601"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9c67c4e" />
+  <meta name="docsearch:version" content="0.1.dev1+ge4a7667" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9c67c4e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge4a7667 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -366,19 +366,19 @@
   <h1>Source code for utils.general</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;General functions useful across different parts of the code.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">tempfile</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">import</span> <span class="nn">urllib.error</span>
-<span class="kn">import</span> <span class="nn">urllib.request</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.error</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;InvalidConfigDataError&quot;</span><span class="p">,</span>
@@ -398,12 +398,12 @@
 
 <div class="viewcode-block" id="InvalidConfigDataError">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.InvalidConfigDataError">[docs]</a>
-<span class="k">class</span> <span class="nc">InvalidConfigDataError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InvalidConfigDataError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception for invalid configuration data.&quot;&quot;&quot;</span></div>
 
 
 
-<span class="k">def</span> <span class="nf">join_url_or_path</span><span class="p">(</span><span class="n">url_or_path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">join_url_or_path</span><span class="p">(</span><span class="n">url_or_path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Join URL or path with additional subdirectories and file.</span>
 
@@ -428,7 +428,7 @@
     <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">url_or_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">is_url</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_url</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check if a string is a valid URL.</span>
 
@@ -450,7 +450,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
 
-<span class="k">def</span> <span class="nf">collect_data_from_http</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">collect_data_from_http</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Download yaml or json file from url and return it contents as dict.</span>
 
@@ -494,11 +494,11 @@
     <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid url </span><span class="si">{url}</span><span class="s2">&quot;</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
     <span class="k">except</span> <span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Failed to download file from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
     <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloaded file from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span>
@@ -506,7 +506,7 @@
 
 <div class="viewcode-block" id="collect_data_from_file">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.collect_data_from_file">[docs]</a>
-<span class="k">def</span> <span class="nf">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect data from file based on its extension.</span>
 
@@ -540,7 +540,7 @@
 
 <div class="viewcode-block" id="collect_kwargs">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.collect_kwargs">[docs]</a>
-<span class="k">def</span> <span class="nf">collect_kwargs</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">in_kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">collect_kwargs</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">in_kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect kwargs of the type label_* and return them as a dict.</span>
 
@@ -566,7 +566,7 @@
 
 <div class="viewcode-block" id="set_default_kwargs">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.set_default_kwargs">[docs]</a>
-<span class="k">def</span> <span class="nf">set_default_kwargs</span><span class="p">(</span><span class="n">in_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_default_kwargs</span><span class="p">(</span><span class="n">in_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fill in a dict with a set of default kwargs and return it.</span>
 
@@ -591,7 +591,7 @@
 
 <div class="viewcode-block" id="collect_final_lines">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.collect_final_lines">[docs]</a>
-<span class="k">def</span> <span class="nf">collect_final_lines</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">collect_final_lines</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect final lines.</span>
 
@@ -610,7 +610,7 @@
     <span class="n">list_of_lines</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.gz&quot;</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">gzip</span>  <span class="c1"># pylint: disable=import-outside-toplevel</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>  <span class="c1"># pylint: disable=import-outside-toplevel</span>
 
         <span class="n">file_open_function</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span>
     <span class="k">else</span><span class="p">:</span>
@@ -652,7 +652,7 @@
 
 <div class="viewcode-block" id="get_log_level_from_user">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.get_log_level_from_user">[docs]</a>
-<span class="k">def</span> <span class="nf">get_log_level_from_user</span><span class="p">(</span><span class="n">log_level</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_log_level_from_user</span><span class="p">(</span><span class="n">log_level</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Map between logging level from the user to logging levels of the logging module.</span>
 
@@ -688,7 +688,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">copy_as_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">copy_as_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Copy value and, if it is not a list, turn it into a list with a single entry.</span>
 
@@ -710,7 +710,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">program_is_executable</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">program_is_executable</span><span class="p">(</span><span class="n">program</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check if program exists and is executable.</span>
 
@@ -719,7 +719,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">program</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">program</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">is_exe</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_exe</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">fpath</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span>
 
     <span class="n">fpath</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">program</span><span class="p">)</span>
@@ -739,7 +739,7 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
-<span class="k">def</span> <span class="nf">_search_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">rec</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_search_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">rec</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Directory </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2"> does not exist&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -758,7 +758,7 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
-<span class="k">def</span> <span class="nf">find_file</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">loc</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_file</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">loc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Search for files inside of given directories, recursively, and return its full path.</span>
 
@@ -799,7 +799,7 @@
 
 <div class="viewcode-block" id="get_log_excerpt">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.get_log_excerpt">[docs]</a>
-<span class="k">def</span> <span class="nf">get_log_excerpt</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">n_last_lines</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_log_excerpt</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">n_last_lines</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get an excerpt from a log file, namely the n_last_lines of the file.</span>
 
@@ -825,7 +825,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">get_file_age</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_file_age</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the age of a file in seconds since the last modification.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&#39; does not exist or is not a file.&quot;</span><span class="p">)</span>
@@ -837,7 +837,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">current_time</span> <span class="o">-</span> <span class="n">modification_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
 
 
-<span class="k">def</span> <span class="nf">_process_dict_keys</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="n">case_func</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_dict_keys</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="n">case_func</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Process dictionary keys recursively.</span>
 
@@ -871,7 +871,7 @@
 
 <div class="viewcode-block" id="change_dict_keys_case">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.change_dict_keys_case">[docs]</a>
-<span class="k">def</span> <span class="nf">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">change_dict_keys_case</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">lower_case</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Change keys of a dictionary to lower or upper case recursively.</span>
 
@@ -894,13 +894,13 @@
         <span class="k">return</span> <span class="n">_process_dict_keys</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">case_func</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input is not a proper dictionary: </span><span class="si">{</span><span class="n">data_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">AttributeError</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+        <span class="k">raise</span> <span class="ne">AttributeError</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
 
 <div class="viewcode-block" id="remove_substring_recursively_from_dict">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.remove_substring_recursively_from_dict">[docs]</a>
-<span class="k">def</span> <span class="nf">remove_substring_recursively_from_dict</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">substring</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_substring_recursively_from_dict</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">substring</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Remove substrings from all strings in a dictionary.</span>
 
@@ -946,7 +946,7 @@
 
 <div class="viewcode-block" id="sort_arrays">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.sort_arrays">[docs]</a>
-<span class="k">def</span> <span class="nf">sort_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sort_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort arrays.</span>
 
 <span class="sd">    Parameters</span>
@@ -970,7 +970,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">user_confirm</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">user_confirm</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ask the user to enter y or n (case-insensitive) on the command line.</span>
 
@@ -989,7 +989,7 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
-<span class="k">def</span> <span class="nf">_get_value_dtype</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_value_dtype</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the data type of the given value.</span>
 
@@ -1009,7 +1009,7 @@
     <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">validate_data_type</span><span class="p">(</span><span class="n">reference_dtype</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_subtypes</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_data_type</span><span class="p">(</span><span class="n">reference_dtype</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_subtypes</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate data type of value or type object against a reference data type.</span>
 
@@ -1064,7 +1064,7 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
-<span class="k">def</span> <span class="nf">convert_list_to_string</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">comma_separated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shorten_list</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collapse_list</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_list_to_string</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">comma_separated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shorten_list</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collapse_list</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert arrays to string (if required).</span>
 
@@ -1098,7 +1098,7 @@
     <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">convert_string_to_list</span><span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="n">is_float</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_string_to_list</span><span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="n">is_float</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert string (as used e.g. in sim_telarray) to list.</span>
 
@@ -1130,7 +1130,7 @@
     <span class="k">return</span> <span class="n">data_string</span>
 
 
-<span class="k">def</span> <span class="nf">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load a yaml file using astropy&#39;s yaml loader.</span>
 
@@ -1145,13 +1145,13 @@
 <span class="sd">        Dictionary containing the file content.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=import-outside-toplevel</span>
-    <span class="kn">import</span> <span class="nn">astropy.io.misc.yaml</span> <span class="k">as</span> <span class="nn">astropy_yaml</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.io.misc.yaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">astropy_yaml</span>
 
     <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">astropy_yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">read_file_encoded_in_utf_or_latin</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_file_encoded_in_utf_or_latin</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read a file encoded in UTF-8 or Latin-1.</span>
 
@@ -1179,7 +1179,7 @@
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
                 <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">UnicodeDecodeError</span><span class="p">(</span><span class="s2">&quot;Unable to decode file using UTF-8 or Latin-1.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">UnicodeDecodeError</span><span class="p">(</span><span class="s2">&quot;Unable to decode file using UTF-8 or Latin-1.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
     <span class="k">return</span> <span class="n">lines</span>
 </pre></div>
