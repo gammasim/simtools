@@ -132,4 +132,4 @@ class SinglePhotonElectronSpectrum:
         input_data = ""
         with open(self.args_dict["input_spectrum"], encoding="utf-8") as f:
             input_data = f.read()
-        return re.sub(r",", " ", input_data)
+        return input_data.replace(",", " ")
