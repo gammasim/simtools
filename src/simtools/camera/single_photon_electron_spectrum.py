@@ -3,6 +3,7 @@
 import logging
 import re
 import subprocess
+import tempfile
 from io import BytesIO
 from pathlib import Path
 
@@ -76,7 +77,7 @@ class SinglePhotonElectronSpectrum:
             args_dict=self.args_dict,
             metadata=self.metadata.top_level_meta,
             product_data=table,
-            validate_schema_file=None,  # TODO missing output schema
+            validate_schema_file=None,
         )
 
     def _derive_spectrum_norm_spe(self):
@@ -93,11 +94,15 @@ class SinglePhotonElectronSpectrum:
         subprocess.CalledProcessError
             If the command execution fails.
         """
+        with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as tmpfile:
+            tmpfile.write(self._get_input_data())
+            tmpfile_path = tmpfile.name
+
         command = [
             f"{self.args_dict['simtel_path']}/sim_telarray/bin/norm_spe",
             "-r",
             f"{self.args_dict['step_size']},{self.args_dict['max_amplitude']}",
-            f"{self.args_dict['input_spectrum']}",
+            tmpfile_path,
         ]
         if self.args_dict["afterpulse_spectrum"] is not None:
             command.insert(1, "-a")
@@ -108,7 +113,23 @@ class SinglePhotonElectronSpectrum:
             result = subprocess.run(command, capture_output=True, text=True, check=True)
         except subprocess.CalledProcessError as exc:
             self._logger.error(f"Error running norm_spe: {exc}")
+            self._logger.error(f"stderr: {exc.stderr}")
             raise exc
+        finally:
+            tmpfile_path = Path(tmpfile.name)
+            if tmpfile_path.exists():
+                tmpfile_path.unlink()
 
         self.data = result.stdout
         return result.returncode
+
+    def _get_input_data(self):
+        """
+        Return input data for norm_spe command.
+
+        Input data need to be space separated values of the amplitude spectrum.
+        """
+        input_data = ""
+        with open(self.args_dict["input_spectrum"], encoding="utf-8") as f:
+            input_data = f.read()
+        return re.sub(r",", " ", input_data)
