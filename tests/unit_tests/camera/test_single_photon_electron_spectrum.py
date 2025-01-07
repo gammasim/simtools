@@ -23,6 +23,11 @@ def spe_spectrum():
     return SinglePhotonElectronSpectrum(args_dict)
 
 
+@pytest.fixture
+def spe_data():
+    return "0.0 0.4694\n0.02 0.46378\n0.04 0.45267\n0.06 0.44172"
+
+
 @patch("simtools.io_operations.io_handler.IOHandler")
 @patch("simtools.camera.single_photon_electron_spectrum.MetadataCollector")
 def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
@@ -85,9 +90,9 @@ def test_write_single_pe_spectrum(mock_open, mock_dump, mock_get_output_director
 @patch(
     "simtools.camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum._get_input_data"
 )
-def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_spectrum):
-    mock_get_input_data.return_value = "0.0 0.4694\n0.02 0.46378\n0.04 0.45267\n0.06 0.44172"
-    mock_subprocess_run.return_value.stdout = "0.0 0.4694\n0.02 0.46378\n0.04 0.45267\n0.06 0.44172"
+def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_spectrum, spe_data):
+    mock_get_input_data.return_value = spe_data
+    mock_subprocess_run.return_value.stdout = spe_data
     mock_subprocess_run.return_value.returncode = 0
 
     return_code = spe_spectrum._derive_spectrum_norm_spe()
@@ -100,11 +105,11 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
         check=True,
     )
     assert return_code == 0
-    assert spe_spectrum.data == "0.0 0.4694\n0.02 0.46378\n0.04 0.45267\n0.06 0.44172"
+    assert spe_spectrum.data == spe_data
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
     tmp_spe_spectrum.args_dict["afterpulse_spectrum"] = "afterpulse_spectrum"
-    return_code = tmp_spe_spectrum._derive_spectrum_norm_spe()
+    tmp_spe_spectrum._derive_spectrum_norm_spe()
     mock_subprocess_run.assert_called_with(
         [
             "/path/to/simtel/sim_telarray/bin/norm_spe",
@@ -127,7 +132,7 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
 
 
 @patch("builtins.open", new_callable=MagicMock)
-def test_get_input_data(mock_open, spe_spectrum):
+def test_get_input_data(mock_open, spe_spectrum, spe_data):
 
     mock_open.return_value.__enter__.return_value.read.return_value = (
         "0.0,0.4694\n0.02,0.46378\n0.04,0.45267\n0.06,0.44172"
@@ -135,10 +140,8 @@ def test_get_input_data(mock_open, spe_spectrum):
     input_data = spe_spectrum._get_input_data()
 
     mock_open.assert_called_once_with("input_spectrum", encoding="utf-8")
-    assert input_data == "0.0 0.4694\n0.02 0.46378\n0.04 0.45267\n0.06 0.44172"
+    assert input_data == spe_data
 
-    mock_open.return_value.__enter__.return_value.read.return_value = (
-        "0.0 0.4694\n0.02 0.46378\n0.04 0.45267\n0.06 0.44172"
-    )
+    mock_open.return_value.__enter__.return_value.read.return_value = spe_data
     input_data = spe_spectrum._get_input_data()
-    assert input_data == "0.0 0.4694\n0.02 0.46378\n0.04 0.45267\n0.06 0.44172"
+    assert input_data == spe_data
