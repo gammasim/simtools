@@ -1,6 +1,6 @@
 
-validate_cumulative_psf
-=======================
+simtools-validate-cumulative-psf
+================================
 
 .. automodule:: validate_cumulative_psf
    :members:
