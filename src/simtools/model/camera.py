@@ -5,8 +5,6 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-from scipy.spatial import cKDTree as KDTree
-from scipy.spatial import distance
 
 from simtools.utils.geometry import rotate
 
@@ -304,6 +302,8 @@ class Camera:
         float
             The camera fill factor.
         """
+        from scipy.spatial import distance  # pylint: disable=import-outside-toplevel
+
         if self.pixels["pixel_spacing"] == 9999:
             points = np.array([self.pixels["x"], self.pixels["y"]]).T
             pixel_distances = distance.cdist(points, points, "euclidean")
@@ -403,6 +403,8 @@ class Camera:
         list of lists
             Array of neighbor indices in a list for each pixel
         """
+        from scipy.spatial import cKDTree as KDTree  # pylint: disable=import-outside-toplevel
+
         tree = KDTree(np.column_stack([x_pos, y_pos]))
         neighbors = tree.query_ball_tree(tree, radius)
         return [list(np.setdiff1d(neigh, [i])) for i, neigh in enumerate(neighbors)]
