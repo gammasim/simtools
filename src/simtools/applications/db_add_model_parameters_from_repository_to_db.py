@@ -23,9 +23,9 @@ r"""
 
     .. code-block:: console
 
-        simtools-db-add_model-parameters-from-repository-to-db \\
-            --input_path /path/to/repository \\
-            --db_name new_db_name \\
+        simtools-db-add_model-parameters-from-repository-to-db \
+            --input_path /path/to/repository \
+            --db_name new_db_name \
             --type model_parameters
 """
 
