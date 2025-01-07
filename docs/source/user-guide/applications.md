@@ -3,31 +3,19 @@
 # simtools Applications
 
 Applications are python scripts built on the {ref}`Library` that execute a well defined task.
-Application scripts can be found in `simtools/applications`.
-They are the the building blocks of [Simulation System Workflows](https://github.com/gammasim/workflows).
+Application are the the building blocks of simtools.
 
 Important: depending on the installation type, applications are named differently:
 
-- developers (see [installation for developers](../developer-guide/getting_started.md#devinstallationfordevelopers)) call applications as described throughout this documentation: `python applications/<application name> ....`
 - users (see {ref}`InstallationForUsers`) call applications directly as command-line tool. Applications names `simtools-<application name` (with all `_` replaced by `-`)
+- developers (see [installation for developers](../developer-guide/getting_started.md#devinstallationfordevelopers)) call applications as described throughout this documentation: `python src/simtools/applications/<application name> ....`
 
 Each application is configured as described in {ref}`Configuration`.
-The available arguments can be access by calling the `python applications/<application name> --help`.
+The available arguments can be access by calling the `<application name> --help`.
 
 Some applications require one or multiple filenames as input from the command-line options. The system will
 first search on main simtools directory for these files, and in case it is not found, it will
 search into the directories given by the config parameter *model_path*.
-
-Output files of applications are written to `$output_path/$label`, where
-*output_path* is a config parameter and *label* is the name of the application. The plots
-produced directly by the application are stored in the sub-directory *application-plots*.
-High-level data produced intermediately (e.g PSF tables) can be found in the sub-directories relative to
-the specific type of application (e.g *ray-tracing* for optics related applications,
-*camera-efficiency* for camera efficiency applications etc). All files related to the simulation model (e.g,
-sim_telarray config files) are stored in the sub-directory *model*.
-
-Applications found in the *simtools/application/db_development_tools* directory are not intended for
-end users, but for developers working on the database schema.
 
 ## List of applications
 
@@ -35,35 +23,35 @@ end users, but for developers working on the database schema.
 :glob: true
 :maxdepth: 1
 
-calculate_trigger_rate <applications/calculate_trigger_rate>
-convert_all_model_parameters_from_simtel <applications/convert_all_model_parameters_from_simtel>
-convert_geo_coordinates_of_array_elements <applications/convert_geo_coordinates_of_array_elements>
-convert_model_parameter_from_simtel <applications/convert_model_parameter_from_simtel>
-db_add_file_to_db <applications/db_add_file_to_db>
-db_add_model_parameters_from_repository_to_db <applications/db_add_model_parameters_from_repository_to_db>
-db_add_value_from_json_to_db <applications/db_add_value_from_json_to_db>
-db_get_array_layouts_from_db <applications/db_get_array_layouts_from_db>
-db_get_file_from_db <applications/db_get_file_from_db>
-db_get_parameter_from_db <applications/db_get_parameter_from_db>
-db_inspect_databases <applications/db_inspect_databases>
-derive_mirror_rnda <applications/derive_mirror_rnda>
-derive_psf_parameters <applications/derive_psf_parameters>
-generate_array_config <applications/generate_array_config>
-generate_corsika_histograms <applications/generate_corsika_histograms>
-generate_default_metadata <applications/generate_default_metadata>
-generate_simtel_array_histograms <applications/generate_simtel_array_histograms>
-generate_regular_arrays <applications/generate_regular_arrays>
-plot_array_layout <applications/plot_array_layout>
-production_scale_events <applications/production_scale_events>
-production_generate_simulation_config <applications/production_generate_simulation_config>
-simulate_light_emission <applications/simulate_light_emission>
-simulate_prod <applications/simulate_prod>
-simulate_prod_htcondor_generator <applications/simulate_prod_htcondor_generator>
-submit_data_from_external <applications/submit_data_from_external>
-submit_model_parameter_from_external <applications/submit_model_parameter_from_external>
-validate_camera_efficiency <applications/validate_camera_efficiency>
-validate_camera_fov <applications/validate_camera_fov>
-validate_cumulative_psf <applications/validate_cumulative_psf>
-validate_file_using_schema <applications/validate_file_using_schema>
-validate_optics <applications/validate_optics>
+simtools-calculate-trigger-rate <applications/simtools-calculate-trigger-rate>
+simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert-all-model-parameters-from-simtel>
+simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
+simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
+simtools-db-add-file-to-db <applications/simtools-db-add-file-to-db>
+simtools-db-add-model-parameters-from-repository-to-db <applications/simtools-db-add-model-parameters-from-repository-to-db>
+simtools-db-add-value-from-json-to-db <applications/simtools-db-add-value-from-json-to-db>
+simtools-db-get-array-layouts-from-db <applications/simtools-db-get-array-layouts-from-db>
+simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
+simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-db>
+simtools-db-inspect-databases  <applications/simtools-db-inspect-databases>
+simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
+simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
+simtools-generate-array-config <applications/simtools-generate-array-config>
+simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
+simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
+simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
+simtools-generate-simtel-array-histograms <applications/simtools-generate-simtel-array-histograms>
+simtools-plot-array-layout <applications/simtools-plot-array-layout>
+simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
+simtools-production-scale-events <applications/simtools-production-scale-events>
+simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
+simtools-simulate-prod <applications/simtools-simulate-prod>
+simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
+simtools-submit-data-from-external <applications/simtools-submit-data-from-external>
+simtools-submit-model-parameter-from-external <applications/simtools-submit-model-parameter-from-external>
+simtools-validate-camera-efficiency <applications/simtools-validate-camera-efficiency>
+simtools-validate-camera-fov <applications/simtools-validate-camera-fov>
+simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
+simtools-validate-file-using-schema  <applications/simtools-validate-file-using-schema>
+simtools-validate-optics <applications/simtools-validate-optics>
 ```

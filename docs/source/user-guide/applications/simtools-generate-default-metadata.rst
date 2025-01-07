@@ -1,6 +1,6 @@
 
-generate_default_metadata
-=========================
+simtools-generate-default-metadata
+==================================
 
 .. automodule:: generate_default_metadata
    :members:

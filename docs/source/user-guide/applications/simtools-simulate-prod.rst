@@ -1,8 +1,8 @@
 
 .. _simulate_prod:
 
-simulate_prod
-=============
+simtools-simulate-prod
+======================
 
 .. automodule:: simulate_prod
    :members:
