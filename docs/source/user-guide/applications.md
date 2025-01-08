@@ -3,7 +3,7 @@
 # simtools Applications
 
 Applications are python scripts built on the {ref}`Library` that execute a well defined task.
-Application are the the building blocks of simtools.
+Application are the building blocks of simtools.
 
 Important: depending on the installation type, applications are named differently:
 
@@ -11,7 +11,7 @@ Important: depending on the installation type, applications are named differentl
 - developers (see [installation for developers](../developer-guide/getting_started.md#devinstallationfordevelopers)) call applications as described throughout this documentation: `python src/simtools/applications/<application name> ....`
 
 Each application is configured as described in {ref}`Configuration`.
-The available arguments can be access by calling the `<application name> --help`.
+The available arguments can be accessed by calling the `<application name> --help`.
 
 Some applications require one or multiple filenames as input from the command-line options. The system will
 first search on main simtools directory for these files, and in case it is not found, it will
