@@ -9,8 +9,8 @@ r"""
 
     Three output files are written to the output directory:
 
-    - `output_file`.ecsv: Single photon electron spectrum in ecsv format (data and metadata).
-    - `output_file`.dat: Single photon electron spectrum in sim_telarray format.
+    - 'output_file'.ecsv: Single photon electron spectrum in ecsv format (data and metadata).
+    - 'output_file'.dat: Single photon electron spectrum in sim_telarray format.
 
     Example
     -------
