@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""
+r"""
     Add parameters found in a model parameter repository to a new database.
 
     Generates a new database with all required collections.

@@ -277,15 +277,14 @@ def test_skip_test_for_model_version_no_model_version_requested(mocker_pytest_sk
     pytest.skip.assert_not_called()
 
 
-def test_skip_test_for_model_version_skip(mocker_pytest_skip):
+def test_skip_test_for_model_version_skip():
     config = {"CONFIGURATION": {"MODEL_VERSION": "v1.0"}, "MODEL_VERSION_USE_CURRENT": True}
     model_version_requested = "v2.0"
-    configuration._skip_test_for_model_version(config, model_version_requested)
-    pytest.skip.assert_called_once_with("Model version requested v2.0 not supported for this test")
+    with pytest.raises(
+        configuration.VersionError, match="Model version requested v2.0 not supported for this test"
+    ):
+        configuration._skip_test_for_model_version(config, model_version_requested)
 
-
-def test_skip_test_for_model_version_no_skip(mocker_pytest_skip):
     config = {"CONFIGURATION": {"MODEL_VERSION": "v1.0"}, "MODEL_VERSION_USE_CURRENT": True}
     model_version_requested = "v1.0"
     configuration._skip_test_for_model_version(config, model_version_requested)
-    pytest.skip.assert_not_called()
