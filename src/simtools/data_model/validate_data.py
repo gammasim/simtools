@@ -191,7 +191,10 @@ class DataValidator:
         conversion_factor = [
             1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
         ]
-        return [v * c for v, c in zip(value, conversion_factor)], target_unit
+        try:
+            return [v * c for v, c in zip(value, conversion_factor)], target_unit
+        except TypeError:
+            return [None], target_unit
 
     def _validate_data_dict_using_json_schema(self, data, json_schema):
         """

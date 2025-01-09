@@ -830,6 +830,12 @@ def test_get_value_and_units_as_lists():
     assert values == [100, 0.2]
     assert units == ["m", "km"]
 
+    # Test with None value
+    data_validator.data_dict = {"value": None, "unit": None}
+    values, units = data_validator._get_value_and_units_as_lists()
+    assert values == [None]
+    assert units == [None]
+
 
 def test_validate_value_and_unit_for_dict(reference_columns):
     data_validator = validate_data.DataValidator()
