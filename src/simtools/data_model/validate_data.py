@@ -731,6 +731,8 @@ class DataValidator:
                 )
             )
         except IndexError as exc:
+            if len(self._data_description) == 1:  # all columns are described by the same schema
+                return self._data_description[0]
             self._logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
             )
