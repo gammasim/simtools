@@ -24,6 +24,9 @@ class SinglePhotonElectronSpectrum:
         Dictionary with input arguments.
     """
 
+    prompt_column = "frequency (prompt)"
+    afterpulse_column = "frequency (afterpulsing)"
+
     def __init__(self, args_dict):
         """Initialize SinglePhotonElectronSpectrum class."""
         self._logger = logging.getLogger(__name__)
@@ -70,7 +73,7 @@ class SinglePhotonElectronSpectrum:
         )
         table.rename_columns(
             ["col1", "col2", "col3"],
-            ["amplitude", "frequency (prompt)", "frequency (prompt+afterpulsing)"],
+            ["amplitude", self.prompt_column, self.afterpulse_column],
         )
 
         writer.ModelDataWriter.dump(
@@ -96,11 +99,11 @@ class SinglePhotonElectronSpectrum:
         """
         tmp_input_file = self._get_input_data(
             input_file=self.args_dict["input_spectrum"],
-            frequency_column="frequency (prompt)",
+            frequency_column=self.prompt_column,
         )
         tmp_ap_file = self._get_input_data(
             input_file=self.args_dict.get("afterpulse_spectrum"),
-            frequency_column="frequency (afterpulsing)",
+            frequency_column=self.afterpulse_column,
         )
 
         command = [
@@ -148,7 +151,7 @@ class SinglePhotonElectronSpectrum:
             with open(input_file, encoding="utf-8") as f:
                 input_data = (
                     f.read().replace(",", " ")
-                    if frequency_column == "frequency (prompt)"
+                    if frequency_column == self.prompt_column
                     else f.read()
                 )
 
