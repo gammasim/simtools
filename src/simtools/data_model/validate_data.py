@@ -192,7 +192,9 @@ class DataValidator:
             1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
         ]
         try:
-            return [v * c for v, c in zip(value, conversion_factor)], target_unit
+            return [
+                v * c if not isinstance(v, bool) else v for v, c in zip(value, conversion_factor)
+            ], target_unit
         except TypeError:
             return [None], target_unit
 
