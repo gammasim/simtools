@@ -142,16 +142,16 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
 
 @patch("builtins.open", new_callable=MagicMock)
 def test_get_input_data(mock_open, spe_spectrum, spe_data):
-    assert spe_spectrum._get_input_data(None, "frequency (prompt)") is None
+    assert spe_spectrum._get_input_data(None, spe_spectrum.prompt_column) is None
 
     mock_open.return_value.__enter__.return_value.read.return_value = spe_data.replace(" ", ",")
-    input_data = spe_spectrum._get_input_data("input_spectrum", "frequency (prompt)")
+    input_data = spe_spectrum._get_input_data("input_spectrum", spe_spectrum.prompt_column)
     mock_open.assert_called_once_with(Path("input_spectrum"), encoding="utf-8")
     assert input_data is not None
     with open(input_data.name, encoding="utf-8") as f:
         assert f.read() == spe_data
 
-    input_data = spe_spectrum._get_input_data("input_spectrum", "frequency (afterpulsing)")
+    input_data = spe_spectrum._get_input_data("input_spectrum", spe_spectrum.afterpulse_column)
     assert input_data is not None
     with open(input_data.name, encoding="utf-8") as f:
         assert f.read() == spe_data.replace(" ", ",")
@@ -162,7 +162,7 @@ def test_get_input_data(mock_open, spe_spectrum, spe_data):
         mock_table["frequency (prompt)"] = [0.4694, 0.46378, 0.45267, 0.44172]
         mock_table_read.return_value = mock_table
 
-        ecsv_data = spe_spectrum._get_input_data("input_spectrum.ecsv", "frequency (prompt)")
+        ecsv_data = spe_spectrum._get_input_data("input_spectrum.ecsv", spe_spectrum.prompt_column)
         assert ecsv_data is not None
         with open(ecsv_data.name, encoding="utf-8") as f:
             table_data = f.read()
