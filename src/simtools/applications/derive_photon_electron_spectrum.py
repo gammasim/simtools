@@ -7,6 +7,8 @@ r"""
     as required by sim_telarray. Allows to fold in afterpulse distribution
     to prompt spectrum.
 
+    Input files can be in ecsv format (preferred) or in sim_telarray legacy format.
+
     Three output files are written to the output directory:
 
     - 'output_file'.ecsv: Single photon electron spectrum in ecsv format (data and metadata).

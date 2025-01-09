@@ -94,19 +94,24 @@ class SinglePhotonElectronSpectrum:
         subprocess.CalledProcessError
             If the command execution fails.
         """
-        with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as tmpfile:
-            tmpfile.write(self._get_input_data())
-            tmpfile_path = tmpfile.name
+        tmp_input_file = self._get_input_data(
+            input_file=self.args_dict["input_spectrum"],
+            frequency_column="frequency (prompt)",
+        )
+        tmp_ap_file = self._get_input_data(
+            input_file=self.args_dict.get("afterpulse_spectrum"),
+            frequency_column="frequency (afterpulsing)",
+        )
 
         command = [
             f"{self.args_dict['simtel_path']}/sim_telarray/bin/norm_spe",
             "-r",
             f"{self.args_dict['step_size']},{self.args_dict['max_amplitude']}",
-            tmpfile_path,
+            tmp_input_file.name,
         ]
-        if self.args_dict["afterpulse_spectrum"] is not None:
+        if tmp_ap_file:
             command.insert(1, "-a")
-            command.insert(2, f"{self.args_dict['afterpulse_spectrum']}")
+            command.insert(2, f"{tmp_ap_file.name}")
 
         self._logger.debug(f"Running norm_spe command: {' '.join(command)}")
         try:
@@ -116,20 +121,37 @@ class SinglePhotonElectronSpectrum:
             self._logger.error(f"stderr: {exc.stderr}")
             raise exc
         finally:
-            tmpfile_path = Path(tmpfile.name)
-            if tmpfile_path.exists():
-                tmpfile_path.unlink()
+            for tmp_file in [tmp_input_file, tmp_ap_file]:
+                try:
+                    Path(tmp_file.name).unlink()
+                except (AttributeError, FileNotFoundError):
+                    pass
 
         self.data = result.stdout
         return result.returncode
 
-    def _get_input_data(self):
+    def _get_input_data(self, input_file, frequency_column):
         """
         Return input data for norm_spe command.
 
         Input data need to be space separated values of the amplitude spectrum.
         """
         input_data = ""
-        with open(self.args_dict["input_spectrum"], encoding="utf-8") as f:
-            input_data = f.read()
-        return input_data.replace(",", " ")
+        if not input_file:
+            return None
+        input_file = Path(input_file)
+
+        if input_file.suffix == ".ecsv":
+            table = Table.read(input_file)
+            input_data = "\n".join(f"{row['amplitude']} {row[frequency_column]}" for row in table)
+        else:
+            with open(input_file, encoding="utf-8") as f:
+                input_data = (
+                    f.read().replace(",", " ")
+                    if frequency_column == "frequency (prompt)"
+                    else f.read()
+                )
+
+        with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as tmpfile:
+            tmpfile.write(input_data)
+        return tmpfile

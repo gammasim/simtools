@@ -2,10 +2,12 @@
 
 import copy
 import subprocess
+import tempfile
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
+from astropy.table import Table
 
 from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectronSpectrum
 
@@ -25,7 +27,7 @@ def spe_spectrum():
 
 @pytest.fixture
 def spe_data():
-    return "0.0 0.4694\n0.02 0.46378\n0.04 0.45267\n0.06 0.44172"
+    return "0.0,0.4694\n0.02,0.46378\n0.04,0.45267\n0.06,0.44172"
 
 
 @patch("simtools.io_operations.io_handler.IOHandler")
@@ -91,13 +93,16 @@ def test_write_single_pe_spectrum(mock_open, mock_dump, mock_get_output_director
     "simtools.camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum._get_input_data"
 )
 def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_spectrum, spe_data):
-    mock_get_input_data.return_value = spe_data
+    with tempfile.NamedTemporaryFile(delete=False, mode="w", encoding="utf-8") as tmpfile:
+        tmpfile.write(spe_data)
+    # first call to _get_input_data returns tmpfile, second call None
+    mock_get_input_data.side_effect = [tmpfile, None]
     mock_subprocess_run.return_value.stdout = spe_data
     mock_subprocess_run.return_value.returncode = 0
 
     return_code = spe_spectrum._derive_spectrum_norm_spe()
 
-    mock_get_input_data.assert_called_once()
+    mock_get_input_data.call_count == 2
     mock_subprocess_run.assert_called_once_with(
         ["/path/to/simtel/sim_telarray/bin/norm_spe", "-r", "0.1,1.0", ANY],
         capture_output=True,
@@ -109,12 +114,13 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
     tmp_spe_spectrum.args_dict["afterpulse_spectrum"] = "afterpulse_spectrum"
+    mock_get_input_data.side_effect = [tmpfile, tmpfile]
     tmp_spe_spectrum._derive_spectrum_norm_spe()
     mock_subprocess_run.assert_called_with(
         [
             "/path/to/simtel/sim_telarray/bin/norm_spe",
             "-a",
-            "afterpulse_spectrum",
+            ANY,
             "-r",
             "0.1,1.0",
             ANY,
@@ -123,25 +129,41 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
         text=True,
         check=True,
     )
+
+    # test error handling
+    spe_spectrum = copy.deepcopy(spe_spectrum)
+    mock_get_input_data.side_effect = [tmpfile, None]
     mock_subprocess_run.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd="norm_spe", output="Error", stderr="Error message"
     )
-
     with pytest.raises(subprocess.CalledProcessError):
         spe_spectrum._derive_spectrum_norm_spe()
 
 
 @patch("builtins.open", new_callable=MagicMock)
 def test_get_input_data(mock_open, spe_spectrum, spe_data):
+    assert spe_spectrum._get_input_data(None, "frequency (prompt)") is None
 
-    mock_open.return_value.__enter__.return_value.read.return_value = (
-        "0.0,0.4694\n0.02,0.46378\n0.04,0.45267\n0.06,0.44172"
-    )
-    input_data = spe_spectrum._get_input_data()
+    mock_open.return_value.__enter__.return_value.read.return_value = spe_data.replace(" ", ",")
+    input_data = spe_spectrum._get_input_data("input_spectrum", "frequency (prompt)")
+    mock_open.assert_called_once_with(Path("input_spectrum"), encoding="utf-8")
+    assert input_data is not None
+    with open(input_data.name, encoding="utf-8") as f:
+        assert f.read() == spe_data
 
-    mock_open.assert_called_once_with("input_spectrum", encoding="utf-8")
-    assert input_data == spe_data
+    input_data = spe_spectrum._get_input_data("input_spectrum", "frequency (afterpulsing)")
+    assert input_data is not None
+    with open(input_data.name, encoding="utf-8") as f:
+        assert f.read() == spe_data.replace(" ", ",")
 
-    mock_open.return_value.__enter__.return_value.read.return_value = spe_data
-    input_data = spe_spectrum._get_input_data()
-    assert input_data == spe_data
+    with patch("astropy.table.Table.read") as mock_table_read:
+        mock_table = Table()
+        mock_table["amplitude"] = [0.0, 0.02, 0.04, 0.06]
+        mock_table["frequency (prompt)"] = [0.4694, 0.46378, 0.45267, 0.44172]
+        mock_table_read.return_value = mock_table
+
+        ecsv_data = spe_spectrum._get_input_data("input_spectrum.ecsv", "frequency (prompt)")
+        assert ecsv_data is not None
+        with open(ecsv_data.name, encoding="utf-8") as f:
+            table_data = f.read()
+            assert table_data.splitlines()[0] == "0.0,0.4694"
