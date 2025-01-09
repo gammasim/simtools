@@ -42,7 +42,7 @@ data:
       min: 0.0
       max: 10000.0
   - description: |-
-      Effective length for incidence directions in mirror/camera x−z plane
+      Effective length for incidence directions in mirror/camera x-z plane
       (if non-zero).
     type: double
     unit: cm
@@ -51,7 +51,7 @@ data:
       min: 0.0
       max: 10000.0
   - description: |-
-      Effective length for incidence directions in mirror/camera y−z plane
+      Effective length for incidence directions in mirror/camera y-z plane
       (if non-zero).
     type: double
     unit: cm
