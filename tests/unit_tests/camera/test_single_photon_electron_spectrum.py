@@ -102,7 +102,7 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
 
     return_code = spe_spectrum._derive_spectrum_norm_spe()
 
-    mock_get_input_data.call_count == 2
+    assert mock_get_input_data.call_count == 2
     mock_subprocess_run.assert_called_once_with(
         ["/path/to/simtel/sim_telarray/bin/norm_spe", "-r", "0.1,1.0", ANY],
         capture_output=True,
