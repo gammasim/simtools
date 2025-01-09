@@ -191,7 +191,12 @@ class DataValidator:
         conversion_factor = [
             1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
         ]
-        return [v * c for v, c in zip(value, conversion_factor)], target_unit
+        try:
+            return [
+                v * c if not isinstance(v, bool) else v for v, c in zip(value, conversion_factor)
+            ], target_unit
+        except TypeError:
+            return [None], target_unit
 
     def _validate_data_dict_using_json_schema(self, data, json_schema):
         """
@@ -726,6 +731,8 @@ class DataValidator:
                 )
             )
         except IndexError as exc:
+            if len(self._data_description) == 1:  # all columns are described by the same schema
+                return self._data_description[0]
             self._logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
             )
