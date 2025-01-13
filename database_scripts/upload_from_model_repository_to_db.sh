@@ -47,9 +47,16 @@ fi
 # upload files to DB
 model_directory="./simulation-models/model_parameters/"
 simtools-db-add-model-parameters-from-repository-to-db \
---input_path "${model_directory}" \
---db_name "$DB_SIMULATION_MODEL" \
---type "model_parameters"
+  --input_path "${model_directory}" \
+  --db_name "$DB_SIMULATION_MODEL" \
+  --type "model_parameters"
+
+# upload production tables to DB
+production_directory="./simulation-models/productions"
+simtools-db-add-model-parameters-from-repository-to-db \
+  --input_path "${production_directory}" \
+  --db_name "$DB_SIMULATION_MODEL" \
+  --type "production_tables"
 
 cd "$CURRENT_DIR" || exit
 
