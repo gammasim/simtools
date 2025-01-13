@@ -150,18 +150,15 @@ def test_get_log_file_path(runner_service, corsika_runner_mock_array_model, file
     assert runner_service._get_log_file_path(
         "histogram", file_base_name
     ) == corsika_runner_mock_array_model._directory["logs"].joinpath(f"{file_base_name}.hdata.zst")
+    # corsika log
+    assert runner_service._get_log_file_path(
+        "corsika_log", file_base_name
+    ) == corsika_runner_mock_array_model._directory["logs"].joinpath(
+        f"{file_base_name}.corsika.log.gz"
+    )
 
 
 def test_get_data_file_path(runner_service, corsika_runner_mock_array_model, file_base_name):
-    # corsika log
-    assert runner_service._get_data_file_path(
-        file_type="corsika_log", file_name=file_base_name, run_number=1
-    ) == corsika_runner_mock_array_model._directory["data"].joinpath(
-        runner_service._get_run_number_string(1)
-    ).joinpath(
-        f"{file_base_name}.log"
-    )
-
     # corsika output
     assert runner_service._get_data_file_path(
         file_type="corsika_output", file_name=file_base_name, run_number=1

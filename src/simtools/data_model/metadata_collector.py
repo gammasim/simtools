@@ -86,6 +86,24 @@ class MetadataCollector:
             except AttributeError:
                 self._logger.debug(f"Method _fill_{meta_type}_meta not implemented")
 
+    def get_top_level_metadata(self):
+        """
+        Return top level metadata dictionary (with updated activity end time).
+
+        Returns
+        -------
+        dict
+            Top level metadata dictionary.
+
+        """
+        try:
+            self.top_level_meta[self.observatory]["activity"][
+                "end"
+            ] = datetime.datetime.now().isoformat(timespec="seconds")
+        except KeyError:
+            pass
+        return self.top_level_meta
+
     def get_data_model_schema_file_name(self):
         """
         Return data model schema file name.

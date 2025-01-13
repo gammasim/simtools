@@ -33,12 +33,42 @@ short_description: |-
   Effective focal length.
   Only to be used for image analysis, has no effect on the simulation.
 data:
-  - type: double
+  - description: |-
+      Mean effective length for all directions of incidence.
+    type: double
     unit: cm
     default: 0.0
     allowed_range:
       min: 0.0
       max: 10000.0
+  - description: |-
+      Effective length for incidence directions in mirror/camera x-z plane
+      (if non-zero).
+    type: double
+    unit: cm
+    default: 0.0
+    allowed_range:
+      min: 0.0
+      max: 10000.0
+  - description: |-
+      Effective length for incidence directions in mirror/camera y-z plane
+      (if non-zero).
+    type: double
+    unit: cm
+    default: 0.0
+    allowed_range:
+      min: 0.0
+      max: 10000.0
+  - description: |-
+      Any displacement along x in the focal plane from asymmetric PSF behavior.
+    type: double
+    unit: cm
+    default: 0.0
+  - description: |-
+      Any displacement along y in the focal plane from asymmetric PSF behavior.
+    type: double
+    unit: cm
+    default: 0.0
 instrument:
   class: Structure
   type:

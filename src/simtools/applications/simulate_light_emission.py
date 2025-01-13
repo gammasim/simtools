@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""
+r"""
     Simulate calibration devices using the light emission package.
 
     Run the application in the command line.
