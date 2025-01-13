@@ -75,7 +75,7 @@ The following applications are important:
 
 * update or define a single model parameter from a json file (as defined in the model parameter repository): [db_add_value_from_json_to_db.py](db_add_value_from_json_to_db)
 * upload a model parameter file: [db_add_file_to_db.py](db_add_file_to_db)
-* upload all model parameters and files from the model parameter repository: [db_add_model_parameters_from_repository_to_db.py](db_add_model_parameters_from_repository_to_db)
+* upload all model parameters and files from the model parameter repository: [db_add_simulation_model_from_repository_to_db.py](db_add_simulation_model_from_repository_to_db)
 
 ## Configure and use a local copy of the model parameter database
 
