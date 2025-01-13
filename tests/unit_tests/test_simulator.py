@@ -263,7 +263,7 @@ def test_fill_results(array_simulator, shower_simulator, shower_array_simulator,
 
     shower_simulator._fill_results(input_file_list[1], run_number=5)
     assert len(shower_simulator.get_file_list("output")) == 1
-    assert len(shower_simulator.get_file_list("log")) == 1
+    assert len(shower_simulator.get_file_list("corsika_log")) == 1
     assert shower_simulator.get_file_list("hist")[0] is None
 
 
@@ -353,6 +353,7 @@ def test_pack_for_register(array_simulator, mocker, caplog):
             ["output_file1", "output_file2"],
             ["log_file1", "log_file2"],
             ["hist_file1", "hist_file2"],
+            ["corsika_log_file1", "corsika_log_file2"],
         ],
     )
     mocker.patch("shutil.move")

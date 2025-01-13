@@ -295,6 +295,6 @@ class MirrorPanelPSF:
         )
         writer.ModelDataWriter.dump(
             args_dict=self.args_dict,
-            metadata=MetadataCollector(args_dict=self.args_dict).top_level_meta,
+            metadata=MetadataCollector(args_dict=self.args_dict).get_top_level_metadata(),
             product_data=result_table,
         )

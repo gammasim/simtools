@@ -99,6 +99,15 @@ class CorsikaRunner:
             file_type="config_tmp", run_number=self.corsika_config.run_number
         )
         corsika_input_tmp_file = self._directory["inputs"].joinpath(corsika_input_tmp_name)
+        # CORSIKA log file naming (temporary and final)
+        corsika_log_tmp_file = (
+            self._directory["data"]
+            .joinpath(f"run{self.corsika_config.run_number:06}")
+            .joinpath(f"run{self.corsika_config.run_number}.log")
+        )
+        corsika_log_file = self.get_file_name(
+            file_type="corsika_log", run_number=self.corsika_config.run_number
+        )
 
         if use_pfp:
             pfp_command = self._get_pfp_command(corsika_input_tmp_file, corsika_input_file)
@@ -138,6 +147,9 @@ class CorsikaRunner:
                 file.write(f"cp {corsika_input_file} {corsika_input_tmp_file}")
             file.write("\n# Running corsika_autoinputs\n")
             file.write(autoinputs_command)
+            file.write("\n# Moving log files to the corsika log directory\n")
+            file.write(f"gzip {corsika_log_tmp_file}\n")
+            file.write(f"mv -v {corsika_log_tmp_file}.gz {corsika_log_file}\n")
 
             file.write('\necho "RUNTIME: $SECONDS"\n')
 
