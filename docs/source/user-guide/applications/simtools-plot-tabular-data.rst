@@ -1,6 +1,6 @@
 
-plot_tabular_data
-=================
+simtools-plot-tabular-data
+==========================
 
 .. automodule:: plot_tabular_data
    :members:
