@@ -76,9 +76,7 @@ def _parse(label=None, description=None):
         choices=["model_parameters"],
     )
 
-    args_dict, db_config = config.initialize(
-        output=True, require_command_line=True, db_config=True, simulation_model="version"
-    )
+    args_dict, db_config = config.initialize(output=True, require_command_line=True, db_config=True)
     db_config["db_simulation_model"] = args_dict["db_name"]  # overwrite explicitly DB configuration
     return args_dict, db_config
 
@@ -138,6 +136,7 @@ def _add_model_parameters_to_db(args_dict, db, logger):
 
     """
     input_path = Path(args_dict["input_path"])
+    logger.info(f"Reading model parameters from repository path {input_path}")
     array_elements = [d for d in input_path.iterdir() if d.is_dir()]
     for element in array_elements:
         try:
@@ -148,7 +147,7 @@ def _add_model_parameters_to_db(args_dict, db, logger):
             elif element.name in {"configuration_sim_telarray", "configuration_corsika"}:
                 collection = element.name
             elif element.name == "Files":
-                logger.info("Files are uploaded with the corresponding model parameters")
+                logger.info("Files (tables) are uploaded with the corresponding model parameters")
                 continue
         logger.info(f"Reading model parameters for {element.name} into collection {collection}")
         files_to_insert = list(Path(element).rglob("*json"))
