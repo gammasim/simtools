@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+g67761d3 Manual</title>
+    <title>Database support &#8212; simtools v0.1.dev1+gd20d0fb Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=70871292"></script>
+    <script src="../_static/documentation_options.js?v=908f5a00"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Data Model" href="data_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g67761d3" />
+  <meta name="docsearch:version" content="0.1.dev1+gd20d0fb" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g67761d3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd20d0fb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -470,10 +470,6 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_element_list_for_db_query"><code class="docutils literal notranslate"><span class="pre">get_array_element_list_for_db_query()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements"><code class="docutils literal notranslate"><span class="pre">get_array_elements()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">get_array_elements_of_type()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-from-repo-handler">db_from_repo_handler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_from_repo_handler.update_model_parameters_from_repo"><code class="docutils literal notranslate"><span class="pre">update_model_parameters_from_repo()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1127,42 +1123,6 @@ i.e. telescopes, calibration_devices</p>
 </dd></dl>
 
 </section>
-<section id="db-from-repo-handler">
-<h2>db_from_repo_handler<a class="headerlink" href="#db-from-repo-handler" title="Link to this heading">#</a></h2>
-<p id="module-db.db_from_repo_handler"><span id="id2"></span>Module to mimic DB interaction for simulation model DB development.</p>
-<p>Read simulation model values from files in simulation model repository.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="db.db_from_repo_handler.update_model_parameters_from_repo">
-<span class="sig-prename descclassname"><span class="pre">db.db_from_repo_handler.</span></span><span class="sig-name descname"><span class="pre">update_model_parameters_from_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_simulation_model_url</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_from_repo_handler.html#update_model_parameters_from_repo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_from_repo_handler.update_model_parameters_from_repo" title="Link to this definition">#</a></dt>
-<dd><p>Update model parameters with values from a repository.</p>
-<p>Existing entries will be updated, new entries will be added.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>parameters: dict</strong></dt><dd><p>Existing dictionary with parameters to be updated.</p>
-</dd>
-<dt><strong>site: str</strong></dt><dd><p>Observatory site (e.g., South or North)</p>
-</dd>
-<dt><strong>array_element_name: str</strong></dt><dd><p>Array element name (e.g., MSTN-01, MSTN-design)</p>
-</dd>
-<dt><strong>parameter_collection: str</strong></dt><dd><p>Collection of parameters to be queried (e.g., telescope or site)</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Model version to use.</p>
-</dd>
-<dt><strong>db_simulation_model_url: str</strong></dt><dd><p>URL to the simulation model repository.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Updated dictionary with parameters.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 </section>
 
 
@@ -1239,10 +1199,6 @@ i.e. telescopes, calibration_devices</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_element_list_for_db_query"><code class="docutils literal notranslate"><span class="pre">get_array_element_list_for_db_query()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements"><code class="docutils literal notranslate"><span class="pre">get_array_elements()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">get_array_elements_of_type()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-from-repo-handler">db_from_repo_handler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_from_repo_handler.update_model_parameters_from_repo"><code class="docutils literal notranslate"><span class="pre">update_model_parameters_from_repo()</span></code></a></li>
 </ul>
 </li>
 </ul>

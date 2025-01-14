@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+g67761d3 Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+gd20d0fb Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=70871292"></script>
+    <script src="../../_static/documentation_options.js?v=908f5a00"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g67761d3" />
+  <meta name="docsearch:version" content="0.1.dev1+gd20d0fb" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g67761d3 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd20d0fb Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -378,7 +378,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pymongo</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASCENDING</span><span class="p">,</span> <span class="n">MongoClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pymongo.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">BulkWriteError</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_array_elements</span><span class="p">,</span> <span class="n">db_from_repo_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_array_elements</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span><span class="p">,</span> <span class="n">value_conversion</span>
 
@@ -414,11 +414,6 @@
         <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Name of simulation model database&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;null&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;uri&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;URL to the simulation model repository (optional)&quot;</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">},</span>
     <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;db_server&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_port&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_user&quot;</span><span class="p">,</span> <span class="s2">&quot;db_api_pw&quot;</span><span class="p">,</span> <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">],</span>
@@ -612,15 +607,6 @@
                         <span class="n">only_applicable</span><span class="o">=</span><span class="n">only_applicable</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">pars</span> <span class="o">=</span> <span class="n">db_from_repo_handler</span><span class="o">.</span><span class="n">update_model_parameters_from_repo</span><span class="p">(</span>
-                        <span class="n">parameters</span><span class="o">=</span><span class="n">pars</span><span class="p">,</span>
-                        <span class="n">site</span><span class="o">=</span><span class="n">_site</span><span class="p">,</span>
-                        <span class="n">parameter_collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
-                        <span class="n">array_element_name</span><span class="o">=</span><span class="n">array_element</span><span class="p">,</span>
-                        <span class="n">model_version</span><span class="o">=</span><span class="n">_model_version</span><span class="p">,</span>
-                        <span class="n">db_simulation_model_url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">),</span>
-                    <span class="p">)</span>
             <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">[</span><span class="n">_array_elements_cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pars</span>
 
         <span class="k">return</span> <span class="n">pars</span></div>
@@ -709,11 +695,7 @@
                 <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                     <span class="k">continue</span>
                 <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_mongo_db</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_write_file_from_mongo_to_disk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Exporting model files from simulation model repository not yet implemented&quot;</span>
-            <span class="p">)</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_write_file_from_mongo_to_disk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span> <span class="n">dest</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span></div>
 
 
     <span class="nd">@staticmethod</span>
@@ -826,24 +808,14 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">pass</span>
 
-        <span class="n">_pars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_site_parameters_mongo_db</span><span class="p">(</span>
-            <span class="n">_db_name</span><span class="p">,</span>
-            <span class="n">_site</span><span class="p">,</span>
-            <span class="n">_model_version</span><span class="p">,</span>
-            <span class="n">only_applicable</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="c1"># update simulation model using repository</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">_pars</span> <span class="o">=</span> <span class="n">db_from_repo_handler</span><span class="o">.</span><span class="n">update_model_parameters_from_repo</span><span class="p">(</span>
-                <span class="n">parameters</span><span class="o">=</span><span class="n">_pars</span><span class="p">,</span>
-                <span class="n">site</span><span class="o">=</span><span class="n">_site</span><span class="p">,</span>
-                <span class="n">array_element_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">parameter_collection</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">,</span>
-                <span class="n">model_version</span><span class="o">=</span><span class="n">_model_version</span><span class="p">,</span>
-                <span class="n">db_simulation_model_url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_simulation_model_url&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">site_parameters_cached</span><span class="p">[</span><span class="n">_site_cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_site_parameters_mongo_db</span><span class="p">(</span>
+                <span class="n">_db_name</span><span class="p">,</span>
+                <span class="n">_site</span><span class="p">,</span>
+                <span class="n">_model_version</span><span class="p">,</span>
+                <span class="n">only_applicable</span><span class="p">,</span>
             <span class="p">)</span>
-
-        <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">site_parameters_cached</span><span class="p">[</span><span class="n">_site_cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_pars</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">site_parameters_cached</span><span class="p">[</span><span class="n">_site_cache_key</span><span class="p">]</span></div>
 
 
