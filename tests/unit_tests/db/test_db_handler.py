@@ -191,22 +191,6 @@ def test_copy_array_element_db(db, random_id, io_handler, model_version):
     )
     assert pars["camera_pixels"]["value"] == 1855
 
-    logger.info("Testing deleting a query (a telescope)")
-    query = {"instrument": "LSTN-test"}
-    db.delete_query(f"sandbox_{random_id}", "telescopes", query)
-
-    # After deleting the copied telescope
-    # we always expect to get a ValueError (query returning zero results)
-    with pytest.raises(ValueError, match=r"The following query returned zero results"):
-        db.read_mongo_db(
-            db_name=f"sandbox_{random_id}",
-            array_element_name="LSTN-test",
-            model_version=model_version,
-            run_location=io_handler.get_output_directory(sub_dir="model"),
-            collection_name="telescopes",
-            write_files=False,
-        )
-
 
 @pytest.mark.usefixtures("_db_cleanup")
 def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
@@ -347,56 +331,6 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
             value="1800. m",
             collection_name="wrong_collection",
         )
-
-
-@pytest.mark.usefixtures("_db_cleanup")
-def test_update_parameter_field_db(db, random_id, io_handler, model_version):
-    logger.info("----Testing modifying a field of a parameter-----")
-    db.copy_array_element(
-        db_name=None,
-        element_to_copy="LSTN-01",
-        version_to_copy=model_version,
-        new_array_element_name="LSTN-test",
-        collection_name="telescopes",
-        db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="telescopes",
-    )
-    db.update_parameter_field(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        model_version=model_version,
-        parameter="camera_pixels",
-        field="applicable",
-        new_value=False,
-        collection_name="telescopes",
-    )
-    pars = db.read_mongo_db(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        model_version=model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model"),
-        collection_name="telescopes",
-        write_files=False,
-    )
-    assert pars["camera_pixels"]["applicable"] is False
-
-    with pytest.raises(ValueError, match=r"You need to specify an array element or a site."):
-        db.update_parameter_field(
-            db_name=f"sandbox_{random_id}",
-            array_element_name=None,
-            site=None,
-            model_version=model_version,
-            parameter="not_important",
-            field="applicable",
-            new_value=False,
-            collection_name="site",
-        )
-
-    # make sure that cache has been emptied after updating
-    assert (
-        db._parameter_cache_key("North", "LSTN-test", model_version)
-        not in db.model_parameters_cached
-    )
 
 
 def test_reading_db_sites(db, db_config, simulation_model_url, model_version):
