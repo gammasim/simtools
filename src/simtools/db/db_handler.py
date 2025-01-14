@@ -979,11 +979,6 @@ class DatabaseHandler:
         )
         par_dict["unit"] = _base_unit if _base_unit else None
 
-        self._logger.info(
-            f"Adding a new entry to DB {db_name} and collection {db_name}:\n{par_dict}"
-        )
-        collection.insert_one(par_dict)
-
         files_to_add_to_db = set()
         if par_dict["file"] and par_dict["value"]:
             if file_prefix is None:
@@ -993,6 +988,11 @@ class DatabaseHandler:
                 )
             file_path = Path(file_prefix).joinpath(par_dict["value"])
             files_to_add_to_db.add(f"{file_path}")
+
+        self._logger.info(
+            f"Adding a new entry to DB {db_name} and collection {db_name}:\n{par_dict}"
+        )
+        collection.insert_one(par_dict)
 
         for file_to_insert_now in files_to_add_to_db:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
