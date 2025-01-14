@@ -5,10 +5,6 @@
     The applications generates the sim_telarray configuration files for a given array, site,
     and model_version using the model parameters stored in the database.
 
-    To change model parameters, clone the model parameters repository and apply the changes.
-    Forward the path to the repository to the application using the ``--db_simulation_model_url``
-    argument.
-
     Command line arguments
     ----------------------
     site : str

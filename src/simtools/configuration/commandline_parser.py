@@ -198,13 +198,6 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
             default=None,
         )
-        _job_group.add_argument(
-            "--db_simulation_model_url",
-            help="simulation model repository URL",
-            type=str,
-            required=False,
-            default=None,
-        )
 
     def initialize_job_submission_arguments(self):
         """Initialize job submission arguments for simulator."""
