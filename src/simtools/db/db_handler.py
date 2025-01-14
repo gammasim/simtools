@@ -2,6 +2,7 @@
 
 import logging
 import re
+from importlib.resources import files
 from pathlib import Path
 from threading import Lock
 
@@ -12,6 +13,7 @@ from packaging.version import Version
 from pymongo import ASCENDING, MongoClient
 from pymongo.errors import BulkWriteError
 
+from simtools.data_model import validate_data
 from simtools.db import db_array_elements, db_from_repo_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names, value_conversion
@@ -940,103 +942,63 @@ class DatabaseHandler:
     def add_new_parameter(
         self,
         db_name,
-        version,
-        parameter,
-        value,
-        array_element_name=None,
-        site=None,
+        par_dict,
         collection_name="telescopes",
         file_prefix=None,
-        **kwargs,
     ):
         """
-        Add a parameter value for a specific array element.
+        Add a parameter dictionary for a specific array element to the DB.
 
-        A new document will be added to the DB,
-        with all fields taken from the input parameters.
+        A new document will be added to the DB, with all fields taken from the input parameters.
+        Parameter dictionaries are validated before submission using the corresponding schema.
 
         Parameters
         ----------
         db_name: str
             the name of the DB
-        version: str
-            The version of the new parameter value
-        parameter: str
-            Which parameter to add
-        value: can be any type, preferably given in kwargs
-            The value to set for the new parameter
-        array_element_name: str
-            The name of the array element to add a parameter to
-            (only used if collection_name is not "sites").
-        site: str
-            Site name; ignored if collection_name is "telescopes".
+        par_dict: dict
+            dictionary with parameter data
         collection_name: str
             The name of the collection to add a parameter to.
         file_prefix: str or Path
             where to find files to upload to the DB
-        kwargs: dict
-            Any additional fields to add to the parameter
-
-        Raises
-        ------
-        ValueError
-            If key to collection_name is not valid.
-
         """
+        data_validator = validate_data.DataValidator(
+            schema_file=files("simtools")
+            / f"schemas/model_parameters/{par_dict['parameter']}.schema.yml",
+            data_dict=par_dict,
+            check_exact_data_type=False,
+        )
+        par_dict = data_validator.validate_and_transform(is_model_parameter=True)
+
         db_name = self._get_db_name(db_name)
         collection = self.get_collection(db_name, collection_name)
 
-        db_entry = {}
-        if any(
-            key in collection_name
-            for key in ["telescopes", "calibration_devices", "configuration_sim_telarray"]
-        ):
-            db_entry["instrument"] = names.validate_array_element_name(array_element_name)
-        elif "sites" in collection_name:
-            db_entry["instrument"] = names.validate_site_name(site)
-        elif "configuration_corsika" in collection_name:
-            db_entry["instrument"] = None
-        else:
-            raise ValueError(f"Cannot add parameter to collection {collection_name}")
-
-        db_entry["version"] = version
-        db_entry["parameter"] = parameter
-        if site is not None:
-            db_entry["site"] = names.validate_site_name(site)
-
-        _base_value, _base_unit, _base_type = value_conversion.get_value_unit_type(
-            value=value, unit_str=kwargs.get("unit", None)
+        par_dict["value"], _base_unit, _ = value_conversion.get_value_unit_type(
+            value=par_dict["value"], unit_str=par_dict.get("unit", None)
         )
-        db_entry["value"] = _base_value
-        if _base_unit is not None:
-            db_entry["unit"] = _base_unit
-        db_entry["type"] = kwargs["type"] if "type" in kwargs else _base_type
+        par_dict["unit"] = _base_unit if _base_unit else None
+
+        self._logger.info(
+            f"Adding a new entry to DB {db_name} and collection {db_name}:\n{par_dict}"
+        )
+        collection.insert_one(par_dict)
 
         files_to_add_to_db = set()
-        db_entry["file"] = False
-        if self._is_file(value):
-            db_entry["file"] = True
+        if par_dict["file"] and par_dict["value"]:
             if file_prefix is None:
                 raise FileNotFoundError(
                     "The location of the file to upload, "
-                    f"corresponding to the {parameter} parameter, must be provided."
+                    f"corresponding to the {par_dict['parameter']} parameter, must be provided."
                 )
-            file_path = Path(file_prefix).joinpath(value)
+            file_path = Path(file_prefix).joinpath(par_dict["value"])
             files_to_add_to_db.add(f"{file_path}")
 
-        kwargs.pop("type", None)
-        db_entry.update(kwargs)
-
-        self._logger.info(
-            f"Will add the following entry to DB {db_name} and collection {db_name}:\n{db_entry}"
-        )
-
-        collection.insert_one(db_entry)
         for file_to_insert_now in files_to_add_to_db:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
 
-        self._reset_parameter_cache(site, array_element_name, version)
+        self._reset_parameter_cache(par_dict["site"], par_dict["instrument"], par_dict["version"])
 
     def _get_db_name(self, db_name=None):
         """
