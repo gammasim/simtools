@@ -96,22 +96,19 @@ def main():  # noqa: D103
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    if args_dict["db_collection"] == "configuration_sim_telarray":
+    if args_dict["telescope"] is not None:
         pars = db.get_model_parameters(
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
-            collection="configuration_sim_telarray",
+            collection=(
+                "configuration_sim_telarray"
+                if args_dict["db_collection"] == "configuration_sim_telarray"
+                else "telescopes"
+            ),
         )
     elif args_dict["db_collection"] == "configuration_corsika":
         pars = db.get_corsika_configuration_parameters(model_version=args_dict["model_version"])
-    elif args_dict["telescope"] is not None:
-        pars = db.get_model_parameters(
-            site=args_dict["site"],
-            array_element_name=args_dict["telescope"],
-            model_version=args_dict["model_version"],
-            collection="telescopes",
-        )
     else:
         pars = db.get_site_parameters(
             site=args_dict["site"], model_version=args_dict["model_version"]
