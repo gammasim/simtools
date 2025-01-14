@@ -336,7 +336,7 @@ class ModelParameter:
 
         if self.name is not None:
             self._parameters = self.db.get_model_parameters(
-                self.site, self.name, self.model_version, self.collection, only_applicable=True
+                self.site, self.name, self.model_version, self.collection
             )
 
         if self.site is not None:
