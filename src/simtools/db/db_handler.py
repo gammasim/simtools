@@ -12,7 +12,7 @@ from packaging.version import Version
 from pymongo import ASCENDING, MongoClient
 from pymongo.errors import BulkWriteError
 
-from simtools.db import db_array_elements, db_from_repo_handler
+from simtools.db import db_array_elements
 from simtools.io_operations import io_handler
 from simtools.utils import names, value_conversion
 
@@ -242,15 +242,6 @@ class DatabaseHandler:
                         only_applicable=only_applicable,
                     )
                 )
-                if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-                    pars = db_from_repo_handler.update_model_parameters_from_repo(
-                        parameters=pars,
-                        site=_site,
-                        parameter_collection=collection,
-                        array_element_name=array_element,
-                        model_version=_model_version,
-                        db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url"),
-                    )
             DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = pars
 
         return pars
@@ -441,24 +432,12 @@ class DatabaseHandler:
         except KeyError:
             pass
 
-        _pars = self._get_site_parameters_mongo_db(
+        DatabaseHandler.site_parameters_cached[_site_cache_key] = self._get_site_parameters_mongo_db(
             _db_name,
             _site,
             _model_version,
             only_applicable,
         )
-        # update simulation model using repository
-        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            _pars = db_from_repo_handler.update_model_parameters_from_repo(
-                parameters=_pars,
-                site=_site,
-                array_element_name=None,
-                parameter_collection="site",
-                model_version=_model_version,
-                db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
-            )
-
-        DatabaseHandler.site_parameters_cached[_site_cache_key] = _pars
         return DatabaseHandler.site_parameters_cached[_site_cache_key]
 
     def _get_site_parameters_mongo_db(self, db_name, site, model_version, only_applicable=False):
