@@ -293,7 +293,7 @@ def get_site_from_array_element_name(name):
     return array_elements()[get_array_element_type_from_name(name)]["site"]
 
 
-def get_collection_name_from_array_element_name(name):
+def get_collection_name_from_array_element_name(name, array_elements_only=True):
     """
     Get collection name (e.g., telescopes, calibration_devices, sites) of array element from name.
 
@@ -301,6 +301,8 @@ def get_collection_name_from_array_element_name(name):
     ----------
     name: str
         Array element name.
+    array_elements_only: bool
+        If True, only array elements are considered.
 
     Returns
     -------
@@ -315,7 +317,19 @@ def get_collection_name_from_array_element_name(name):
         validate_site_name(name)
         return "sites"
     except ValueError as exc:
-        raise ValueError(f"Invalid array element name {name}: {exc}") from exc
+        if array_elements_only:
+            raise ValueError(f"Invalid array element name {name}: {exc}") from exc
+    if name.startswith("OBS"):
+        return "sites"
+    if name in (
+        "configuration_sim_telarray",
+        "configuration_corsika",
+        "Files",
+        "Dummy-Telescope",
+    ):
+        return name
+
+    raise ValueError(f"Invalid array element name {name}")
 
 
 def get_simulation_software_name_from_parameter_name(
