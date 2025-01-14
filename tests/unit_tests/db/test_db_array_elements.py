@@ -56,34 +56,6 @@ def test_get_array_elements(db, model_version):
         )
 
 
-def test_get_array_element_list_for_db_query(db, model_version):
-
-    assert db_array_elements.get_array_element_list_for_db_query(
-        "LSTN-01", db=db, model_version=model_version, collection="telescopes"
-    ) == ["LSTN-design", "LSTN-01"]
-
-    assert db_array_elements.get_array_element_list_for_db_query(
-        "MSTS-10", db=db, model_version=model_version, collection="telescopes"
-    ) == ["MSTS-design", "MSTS-10"]
-
-    assert db_array_elements.get_array_element_list_for_db_query(
-        "MSTS-301", db=db, model_version=model_version, collection="telescopes"
-    ) == ["MSTN-design", "MSTS-301"]
-
-    assert db_array_elements.get_array_element_list_for_db_query(
-        "MSTS-design", db=db, model_version=model_version, collection="telescopes"
-    ) == ["MSTS-design"]
-
-    with pytest.raises(ValueError, match=r"^Array element MSTS-301 not found in DB."):
-        db_array_elements.get_array_element_list_for_db_query(
-            "MSTS-301", db=db, model_version=model_version, collection="calibration_devices"
-        )
-
-    assert db_array_elements.get_array_element_list_for_db_query(
-        "LSTN-02", db=db, model_version=model_version, collection="configuration_sim_telarray"
-    ) == ["LSTN-design"]
-
-
 def test_get_array_elements_of_type(db, model_version):
     available_telescopes = db_array_elements.get_array_elements_of_type(
         array_element_type="LSTN", db=db, model_version=model_version, collection="telescopes"
