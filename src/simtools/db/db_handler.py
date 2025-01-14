@@ -72,6 +72,7 @@ class DatabaseHandler:
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
     db_client = None
+    production_table_cached = {}
     site_parameters_cached = {}
     model_parameters_cached = {}
     model_versions_cached = {}
@@ -185,7 +186,6 @@ class DatabaseHandler:
         array_element_name,
         model_version,
         collection="telescope",
-        only_applicable=False,
     ):
         """
         Get parameters from MongoDB or simulation model repository for an array element.
@@ -211,33 +211,39 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
-
-        TODO - update with model_version and parameter_version
         """
-        _site, _array_element_name = self._validate_model_input(site, array_element_name)
-        _model_version = None
-        array_element_list = db_array_elements.get_array_element_list_for_db_query(
-            _array_element_name, self, _model_version, collection
-        )
+        _site, _ = self._validate_model_input(site, array_element_name)
+        _production_table = self.get_production_table_from_mongo_db(collection, model_version)
+        if "-design" in array_element_name:
+            array_element_list = [array_element_name]
+        else:
+            array_element_list = [
+                names.get_array_element_type_from_name(array_element_name) + "-design",
+                array_element_name,
+            ]
         pars = {}
-        for array_element in array_element_list:
-            _array_elements_cache_key = self._parameter_cache_key(
+        for array_element in array_element_list:  # design model must be read first
+            _array_elements_cache_key = self._cache_key(
                 _site, array_element, model_version, collection
             )
             try:
                 pars.update(DatabaseHandler.model_parameters_cached[_array_elements_cache_key])
             except KeyError:
+                pass
+            try:
                 pars.update(
                     self.read_mongo_db(
-                        self.mongo_db_config.get("db_simulation_model", None),
+                        db_name=self.mongo_db_config.get("db_simulation_model", None),
+                        parameter_version_table=_production_table["parameters"][array_element],
                         array_element_name=array_element,
-                        model_version=_model_version,
                         collection_name=collection,
                         run_location=None,
                         write_files=False,
-                        only_applicable=only_applicable,
                     )
                 )
+            except KeyError as exc:
+                self._logger.error(f"Could not read parameters for {array_element}: {exc}")
+                raise exc
             DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = pars
 
         return pars
@@ -327,12 +333,11 @@ class DatabaseHandler:
     def read_mongo_db(
         self,
         db_name,
+        parameter_version_table,
         array_element_name,
-        model_version,
-        run_location,
         collection_name,
+        run_location=None,
         write_files=True,
-        only_applicable=False,
     ):
         """
         Build and execute query to Read the MongoDB for a specific array element.
@@ -343,18 +348,16 @@ class DatabaseHandler:
         ----------
         db_name: str
             the name of the DB
+        parameter_version_table: dict
+            Dict with parameter names vs parameter versions.
         array_element_name: str
             Name of the array element model (e.g. MSTN-design ...)
-        model_version: str
-            Version of the model.
         run_location: Path or str
             The sim_telarray run location to write the tabulated data files into.
         collection_name: str
             The name of the collection to read from.
         write_files: bool
             If true, write the files to the run_location.
-        only_applicable: bool
-            If True, only applicable parameters will be read.
 
         Returns
         -------
@@ -363,21 +366,17 @@ class DatabaseHandler:
         Raises
         ------
         ValueError
-            if query returned zero results.
-
-        TODO - model_version vs parameter_version
-
+            if query returned no results or if the collection is not found in the production table.
         """
         collection = self.get_collection(db_name, collection_name)
         _parameters = {}
-
         query = {
             "instrument": array_element_name,
-            "version": self.model_version(model_version, db_name),
+            "$or": [
+                {"parameter": param, "parameter_version": version}
+                for param, version in parameter_version_table.items()
+            ],
         }
-
-        if only_applicable:
-            query["applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
@@ -387,7 +386,6 @@ class DatabaseHandler:
             par_now = post["parameter"]
             _parameters[par_now] = post
             _parameters[par_now].pop("parameter", None)
-            _parameters[par_now].pop("instrument", None)
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
             if _parameters[par_now]["file"] and write_files:
                 file = self._get_file_mongo_db(db_name, _parameters[par_now]["value"])
@@ -395,13 +393,9 @@ class DatabaseHandler:
 
         return _parameters
 
-    def get_site_parameters(
-        self,
-        site,
-        model_version,
-    ):
+    def get_site_parameters(self, site, model_version):
         """
-        Get parameters from either MongoDB or simulation model repository for a specific site.
+        Get site parameters from MongoDB.
 
         Parameters
         ----------
@@ -413,15 +407,11 @@ class DatabaseHandler:
         Returns
         -------
         dict containing the parameters
-
-        TODO - model_version vs parameter_version
         """
         _site, _ = self._validate_model_input(site, None)
         _production_table = self.get_production_table_from_mongo_db("sites", model_version)
         _db_name = self._get_db_name()
-        _site_cache_key = self._parameter_cache_key(
-            site, None, _production_table.get("model_version")
-        )
+        _site_cache_key = self._cache_key(site, None, _production_table.get("model_version"))
         try:
             return DatabaseHandler.site_parameters_cached[_site_cache_key]
         except KeyError:
@@ -496,12 +486,15 @@ class DatabaseHandler:
         model_version: str
             Version of the model.
         """
-        collection = self.get_collection(self._get_db_name(), "production_tables")
+        try:
+            return DatabaseHandler.production_table_cached[
+                self._cache_key(None, None, model_version, collection_name)
+            ]
+        except KeyError:
+            pass
 
-        query = {
-            "model_version": model_version,
-            "collection": collection_name,
-        }
+        query = {"model_version": model_version, "collection": collection_name}
+        collection = self.get_collection(self._get_db_name(), "production_tables")
         post = collection.find_one(query, sort=[("_id", DESCENDING)])
         try:
             return {
@@ -571,8 +564,6 @@ class DatabaseHandler:
         ------
         ValueError
             if simulation_software is not valid.
-
-        TODO - model_version vs parameter_version
         """
         if simulation_software == "corsika":
             return self.get_corsika_configuration_parameters(model_version)
@@ -597,19 +588,22 @@ class DatabaseHandler:
         -------
         dict
             Configuration parameters for CORSIKA
-
-        TODO - model_version vs parameter_version
         """
-        _corsika_cache_key = self._parameter_cache_key(None, None, model_version)
+        _production_table = self.get_production_table_from_mongo_db(
+            "configuration_corsika", model_version
+        )
+        _corsika_cache_key = self._cache_key(None, None, _production_table.get("model_version"))
+
         try:
             return DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key]
         except KeyError:
             pass
+
         DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key] = (
             self.read_mongo_db(
                 db_name=self._get_db_name(),
+                parameter_version_table=_production_table["parameters"]["configuration_corsika"],
                 array_element_name=None,
-                model_version=model_version,
                 run_location=None,
                 collection_name="configuration_corsika",
                 write_files=False,
@@ -625,6 +619,8 @@ class DatabaseHandler:
             Site name.
         array_element_name: str
             Name of the array element model (e.g. LSTN-01, MSTS-design)
+
+        TODO - really needed??
         """
         return (
             names.validate_site_name(site),
@@ -716,9 +712,6 @@ class DatabaseHandler:
         Raises
         ------
         BulkWriteError
-
-        TODO - copy uses 'version' - can this function be removed?
-
         """
         db_name = self._get_db_name(db_name)
         if db_to_copy_to is None:
@@ -768,7 +761,9 @@ class DatabaseHandler:
         collection = self.get_collection(db_name, "production_tables")
         self._logger.info(f"Adding production for {production_table.get('collection')} to to DB")
         collection.insert_one(production_table)
-        # TODO - reset some cache for production tables?
+        self._reset_production_table_cache(
+            production_table.get("collection"), production_table.get("model_version")
+        )
 
     def add_new_parameter(
         self,
@@ -1035,7 +1030,7 @@ class DatabaseHandler:
 
         return DatabaseHandler.model_versions_cached[_cache_key]
 
-    def _parameter_cache_key(self, site, array_element_name, model_version, collection=None):
+    def _cache_key(self, site=None, array_element_name=None, model_version=None, collection=None):
         """
         Create a cache key for the parameter cache dictionaries.
 
@@ -1054,18 +1049,25 @@ class DatabaseHandler:
         -------
         str
             Cache key.
-
-        # TODO - understand if model_version is correct here.
         """
-        parts = []
-        if site:
-            parts.append(site)
-        if array_element_name:
-            parts.append(array_element_name)
-        parts.append(model_version)
-        if collection:
-            parts.append(collection)
-        return "-".join(parts)
+        return "-".join(
+            part for part in [model_version, collection, site, array_element_name] if part
+        )
+
+    def _reset_production_table_cache(self, collection_name, model_version):
+        """
+        Reset the cache for the production tables.
+
+        Parameters
+        ----------
+        collection_name: str
+            Collection name.
+        model_version: str
+            Model version.
+        """
+        DatabaseHandler.production_table_cached.pop(
+            self._cache_key(model_version=model_version, collection=collection_name), None
+        )
 
     def _reset_parameter_cache(self, site, array_element_name, model_version):
         """
@@ -1080,10 +1082,9 @@ class DatabaseHandler:
         model_version: str
             Model version.
 
-        # TODO - understand if model_version is correct here.
         """
         self._logger.debug(f"Resetting cache for {site} {array_element_name} {model_version}")
-        _cache_key = self._parameter_cache_key(site, array_element_name, model_version)
+        _cache_key = self._cache_key(site, array_element_name, model_version)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
         db_array_elements.get_array_elements.cache_clear()
