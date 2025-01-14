@@ -276,10 +276,7 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     assert pars["new_test_parameter_quantity_str"]["unit"] == "cm"
 
     # make sure that cache has been emptied after updating
-    assert (
-        db._parameter_cache_key("North", "LSTN-test", test_model_version)
-        not in db.model_parameters_cached
-    )
+    assert db._cache_key("North", "LSTN-test", test_model_version) not in db.model_parameters_cached
 
     # site parameters
     db.add_new_parameter(
@@ -456,11 +453,11 @@ def test_get_all_versions(db, mocker, caplog):
     assert "No database name defined to determine" in caplog.text
 
 
-def test_parameter_cache_key(db, model_version_prod5):
+def test_cache_key(db, model_version_prod5):
 
-    assert db._parameter_cache_key("North", "LSTN-01", model_version_prod5) == "North-LSTN-01-5.0.0"
-    assert db._parameter_cache_key("North", None, model_version_prod5) == "North-5.0.0"
-    assert db._parameter_cache_key(None, None, model_version_prod5) == "5.0.0"
+    assert db._cache_key("North", "LSTN-01", model_version_prod5) == "North-LSTN-01-5.0.0"
+    assert db._cache_key("North", None, model_version_prod5) == "North-5.0.0"
+    assert db._cache_key(None, None, model_version_prod5) == "5.0.0"
 
 
 def test_model_version(db):
