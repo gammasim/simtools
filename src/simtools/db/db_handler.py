@@ -432,11 +432,13 @@ class DatabaseHandler:
         except KeyError:
             pass
 
-        DatabaseHandler.site_parameters_cached[_site_cache_key] = self._get_site_parameters_mongo_db(
-            _db_name,
-            _site,
-            _model_version,
-            only_applicable,
+        DatabaseHandler.site_parameters_cached[_site_cache_key] = (
+            self._get_site_parameters_mongo_db(
+                _db_name,
+                _site,
+                _model_version,
+                only_applicable,
+            )
         )
         return DatabaseHandler.site_parameters_cached[_site_cache_key]
 
