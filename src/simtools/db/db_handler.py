@@ -9,7 +9,7 @@ import gridfs
 import jsonschema
 from bson.objectid import ObjectId
 from packaging.version import Version
-from pymongo import ASCENDING, MongoClient
+from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.errors import BulkWriteError
 
 from simtools.db import db_array_elements, db_from_repo_handler
@@ -72,6 +72,7 @@ class DatabaseHandler:
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
     # DB collection with updates field names
     DB_DERIVED_VALUES = "Staging-CTA-Simulation-Model-Derived-Values"
+    DB_PRODUCTION_TABLES = "production_tables"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
@@ -216,17 +217,17 @@ class DatabaseHandler:
         -------
         dict containing the parameters
 
+        TODO - update with model_version and parameter_version
         """
-        _site, _array_element_name, _model_version = self._validate_model_input(
-            site, array_element_name, model_version
-        )
+        _site, _array_element_name = self._validate_model_input(site, array_element_name)
+        _model_version = None
         array_element_list = db_array_elements.get_array_element_list_for_db_query(
             _array_element_name, self, _model_version, collection
         )
         pars = {}
         for array_element in array_element_list:
             _array_elements_cache_key = self._parameter_cache_key(
-                site, array_element, model_version, collection
+                _site, array_element, model_version, collection
             )
             try:
                 pars.update(DatabaseHandler.model_parameters_cached[_array_elements_cache_key])
@@ -382,6 +383,8 @@ class DatabaseHandler:
         ValueError
             if query returned zero results.
 
+        TODO - model_version vs parameter_version
+
         """
         collection = self.get_collection(db_name, collection_name)
         _parameters = {}
@@ -414,7 +417,6 @@ class DatabaseHandler:
         self,
         site,
         model_version,
-        only_applicable=False,
     ):
         """
         Get parameters from either MongoDB or simulation model repository for a specific site.
@@ -425,17 +427,19 @@ class DatabaseHandler:
             Site name.
         model_version: str
             Version of the model.
-        only_applicable: bool
-            If True, only applicable parameters will be read.
 
         Returns
         -------
         dict containing the parameters
 
+        TODO - model_version vs parameter_version
         """
-        _site, _, _model_version = self._validate_model_input(site, None, model_version)
+        _site, _ = self._validate_model_input(site, None)
+        _production_table = self.get_production_table_from_mongo_db("sites", model_version)
         _db_name = self._get_db_name()
-        _site_cache_key = self._parameter_cache_key(site, None, model_version)
+        _site_cache_key = self._parameter_cache_key(
+            site, None, _production_table.get("model_version")
+        )
         try:
             return DatabaseHandler.site_parameters_cached[_site_cache_key]
         except KeyError:
@@ -444,8 +448,7 @@ class DatabaseHandler:
         _pars = self._get_site_parameters_mongo_db(
             _db_name,
             _site,
-            _model_version,
-            only_applicable,
+            _production_table,
         )
         # update simulation model using repository
         if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
@@ -454,14 +457,14 @@ class DatabaseHandler:
                 site=_site,
                 array_element_name=None,
                 parameter_collection="site",
-                model_version=_model_version,
+                model_version=model_version,
                 db_simulation_model_url=self.mongo_db_config.get("db_simulation_model_url", None),
             )
 
         DatabaseHandler.site_parameters_cached[_site_cache_key] = _pars
         return DatabaseHandler.site_parameters_cached[_site_cache_key]
 
-    def _get_site_parameters_mongo_db(self, db_name, site, model_version, only_applicable=False):
+    def _get_site_parameters_mongo_db(self, db_name, site, production_table):
         """
         Get parameters from MongoDB for a specific site.
 
@@ -471,10 +474,8 @@ class DatabaseHandler:
             The name of the DB.
         site: str
             Site name.
-        model_version: str
-            Version of the model.
-        only_applicable: bool
-            If True, only applicable parameters will be read.
+        production_table: dict
+            Table with parameter versions.
 
         Returns
         -------
@@ -484,22 +485,25 @@ class DatabaseHandler:
         ------
         ValueError
             if query returned zero results.
-
         """
         collection = self.get_collection(db_name, "sites")
-        _parameters = {}
-
+        try:
+            parameter_query = production_table["parameters"][f"OBS-{site}"]
+        except KeyError as exc:
+            raise ValueError(f"Site {site} not found in the production table") from exc
         query = {
             "site": site,
-            "version": model_version,
+            "$or": [
+                {"parameter": param, "parameter_version": version}
+                for param, version in parameter_query.items()
+            ],
         }
-        if only_applicable:
-            query["applicable"] = True
         if collection.count_documents(query) < 1:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
+        _parameters = {}
         for post in collection.find(query).sort("parameter", ASCENDING):
             par_now = post["parameter"]
             _parameters[par_now] = post
@@ -508,6 +512,37 @@ class DatabaseHandler:
             _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
 
         return _parameters
+
+    def get_production_table_from_mongo_db(self, collection_name, model_version):
+        """
+        Get production table from MongoDB.
+
+        Parameters
+        ----------
+        collection_name: str
+            Name of the collection.
+        model_version: str
+            Version of the model.
+        """
+        collection = self.get_collection(self._get_db_name(), "production_tables")
+
+        query = {
+            "model_version": model_version,
+            "collection": collection_name,
+        }
+        post = collection.find_one(query, sort=[("_id", DESCENDING)])
+        try:
+            return {
+                "collection": post["collection"],
+                "model_version": post["model_version"],
+                "parameters": post["parameters"],
+                "entry_date": ObjectId(post["_id"]).generation_time,
+            }
+        except TypeError as exc:
+            raise ValueError(
+                "The following query returned zero results:\n",
+                query,
+            ) from exc
 
     def get_derived_values(self, site, array_element_name, model_version):
         """
@@ -527,9 +562,8 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-        _, _array_element_name, _model_version = self._validate_model_input(
-            site, array_element_name, model_version
-        )
+        _, _array_element_name = self._validate_model_input(site, array_element_name)
+        _model_version = model_version
 
         return self.read_mongo_db(
             DatabaseHandler.DB_DERIVED_VALUES,
@@ -565,6 +599,8 @@ class DatabaseHandler:
         ------
         ValueError
             if simulation_software is not valid.
+
+        TODO - model_version vs parameter_version
         """
         if simulation_software == "corsika":
             return self.get_corsika_configuration_parameters(model_version)
@@ -589,6 +625,8 @@ class DatabaseHandler:
         -------
         dict
             Configuration parameters for CORSIKA
+
+        TODO - model_version vs parameter_version
         """
         _corsika_cache_key = self._parameter_cache_key(None, None, model_version)
         try:
@@ -607,7 +645,7 @@ class DatabaseHandler:
         )
         return DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key]
 
-    def _validate_model_input(self, site, array_element_name, model_version):
+    def _validate_model_input(self, site, array_element_name):
         """
         Validate input for model parameter queries.
 
@@ -615,14 +653,10 @@ class DatabaseHandler:
             Site name.
         array_element_name: str
             Name of the array element model (e.g. LSTN-01, MSTS-design)
-        model_version: str
-            Version of the model.
-
         """
         return (
             names.validate_site_name(site),
             names.validate_array_element_name(array_element_name) if array_element_name else None,
-            self.model_version(model_version),
         )
 
     @staticmethod
@@ -711,6 +745,8 @@ class DatabaseHandler:
         ------
         BulkWriteError
 
+        TODO - copy uses 'version' - can this function be removed?
+
         """
         db_name = self._get_db_name(db_name)
         if db_to_copy_to is None:
@@ -776,6 +812,8 @@ class DatabaseHandler:
         ------
         BulkWriteError
 
+        TODO - remove this function?
+
         """
         db_name = self._get_db_name(db_name)
 
@@ -820,6 +858,8 @@ class DatabaseHandler:
                     "instrument": "LSTN-01",
                     "version": "6.0.0",
                 }
+
+        TODO - remove this function?
 
         """
         _collection = self.get_collection(db_name, collection)
@@ -875,6 +915,8 @@ class DatabaseHandler:
         ------
         ValueError
             if field not in allowed fields
+
+        TODO - remove?
 
         """
         db_name = self._get_db_name(db_name)
@@ -937,10 +979,28 @@ class DatabaseHandler:
             model_version=_model_version,
         )
 
+    def add_production_table(self, db_name, production_table):
+        """
+        Add a production table for a given model version to the DB.
+
+        Parameters
+        ----------
+        db_name: str
+            the name of the DB.
+        production_table: dict
+            The production table to add to the DB.
+        """
+        db_name = self._get_db_name(db_name)
+        collection = self.get_collection(db_name, "production_tables")
+        self._logger.info(f"Adding production for {production_table.get('collection')} to to DB")
+        collection.insert_one(production_table)
+
+        # TODO - reset some cache for production tables?
+
     def add_new_parameter(
         self,
         db_name,
-        version,
+        parameter_version,
         parameter,
         value,
         array_element_name=None,
@@ -959,7 +1019,7 @@ class DatabaseHandler:
         ----------
         db_name: str
             the name of the DB
-        version: str
+        parameter_version: str
             The version of the new parameter value
         parameter: str
             Which parameter to add
@@ -999,7 +1059,7 @@ class DatabaseHandler:
         else:
             raise ValueError(f"Cannot add parameter to collection {collection_name}")
 
-        db_entry["version"] = version
+        db_entry["parameter_version"] = parameter_version
         db_entry["parameter"] = parameter
         if site is not None:
             db_entry["site"] = names.validate_site_name(site)
@@ -1024,9 +1084,6 @@ class DatabaseHandler:
             file_path = Path(file_prefix).joinpath(value)
             files_to_add_to_db.add(f"{file_path}")
 
-        kwargs.pop("type", None)
-        db_entry.update(kwargs)
-
         self._logger.info(
             f"Will add the following entry to DB {db_name} and collection {db_name}:\n{db_entry}"
         )
@@ -1036,7 +1093,7 @@ class DatabaseHandler:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
 
-        self._reset_parameter_cache(site, array_element_name, version)
+        self._reset_parameter_cache(site, array_element_name, parameter_version)
 
     def _get_db_name(self, db_name=None):
         """
@@ -1077,6 +1134,8 @@ class DatabaseHandler:
         ------
         ValueError
             if version not valid.
+
+        # TODO - needs to be adjusted?
 
         """
         _all_versions = self.get_all_versions(db_name=db_name)
@@ -1167,6 +1226,8 @@ class DatabaseHandler:
         ValueError
             If key to collection_name is not valid.
 
+        TODO - this should be model or parameter versions? Need to be adjusted.
+
         """
         db_name = self._get_db_name() if db_name is None else db_name
         if not db_name:
@@ -1220,6 +1281,8 @@ class DatabaseHandler:
         -------
         str
             Cache key.
+
+        # TODO - understand if model_version is correct here.
         """
         parts = []
         if site:
@@ -1243,6 +1306,8 @@ class DatabaseHandler:
             Array element name.
         model_version: str
             Model version.
+
+        # TODO - understand if model_version is correct here.
         """
         self._logger.debug(f"Resetting cache for {site} {array_element_name} {model_version}")
         _cache_key = self._parameter_cache_key(site, array_element_name, model_version)
