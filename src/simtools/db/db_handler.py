@@ -49,11 +49,6 @@ jsonschema_db_dict = {
             "type": "string",
             "description": "Name of simulation model database",
         },
-        "db_simulation_model_url": {
-            "type": ["string", "null"],
-            "format": "uri",
-            "description": "URL to the simulation model repository (optional)",
-        },
     },
     "required": ["db_server", "db_api_port", "db_api_user", "db_api_pw", "db_simulation_model"],
 }
@@ -322,10 +317,6 @@ class DatabaseHandler:
                     continue
                 file = self._get_file_mongo_db(self._get_db_name(), info["value"])
                 self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file)
-        if self.mongo_db_config.get("db_simulation_model_url", None) is not None:
-            self._logger.warning(
-                "Exporting model files from simulation model repository not yet implemented"
-            )
 
     @staticmethod
     def _is_file(value):
