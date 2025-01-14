@@ -44,6 +44,8 @@ class ModelParameter:
     label: str
         Instance label. Important for output file naming.
 
+    TODO - make sure that model_version is to correct version to be used here
+
     """
 
     def __init__(
