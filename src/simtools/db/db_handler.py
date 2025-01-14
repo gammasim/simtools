@@ -753,6 +753,23 @@ class DatabaseHandler:
         except BulkWriteError as exc:
             raise BulkWriteError(str(exc.details)) from exc
 
+    def add_production_table(self, db_name, production_table):
+        """
+        Add a production table for a given model version to the DB.
+
+        Parameters
+        ----------
+        db_name: str
+            the name of the DB.
+        production_table: dict
+            The production table to add to the DB.
+        """
+        db_name = self._get_db_name(db_name)
+        collection = self.get_collection(db_name, "production_tables")
+        self._logger.info(f"Adding production for {production_table.get('collection')} to to DB")
+        collection.insert_one(production_table)
+        # TODO - reset some cache for production tables?
+
     def add_new_parameter(
         self,
         db_name,
