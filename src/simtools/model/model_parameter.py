@@ -340,9 +340,7 @@ class ModelParameter:
             )
 
         if self.site is not None:
-            _site_pars = self.db.get_site_parameters(
-                self.site, self.model_version, only_applicable=True
-            )
+            _site_pars = self.db.get_site_parameters(self.site, self.model_version)
             self._parameters.update(_site_pars)
 
         self._load_simulation_software_parameter()
