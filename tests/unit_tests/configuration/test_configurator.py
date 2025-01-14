@@ -361,7 +361,6 @@ def test_get_db_parameters():
         "db_api_pw": "password",
         "db_api_port": 1234,
         "db_simulation_model": "Staging-CTA-Simulation-Model",
-        "db_simulation_model_url": None,
         "db_server": "localhost",
     }
 
@@ -372,7 +371,6 @@ def test_get_db_parameters():
         "db_api_port": 1234,
         "db_server": "localhost",
         "db_simulation_model": "Staging-CTA-Simulation-Model",
-        "db_simulation_model_url": None,
     }
 
     # empty config
