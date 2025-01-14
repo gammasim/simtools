@@ -115,9 +115,12 @@ def add_production_tables_to_db(args_dict, db):
             parameter_dict = gen.collect_data_from_file(file_name=file)
             logger.info(f"Reading production table for {array_element} (collection {collection})")
             try:
-                model_dict[collection]["parameters"][array_element] = parameter_dict["parameters"][
-                    array_element
-                ]
+                if array_element in ("configuration_corsika", "configuration_sim_telarray"):
+                    model_dict[collection]["parameters"] = parameter_dict["parameters"]
+                else:
+                    model_dict[collection]["parameters"][array_element] = parameter_dict[
+                        "parameters"
+                    ][array_element]
             except KeyError as exc:
                 logger.error(f"KeyError: {exc}")
                 raise
