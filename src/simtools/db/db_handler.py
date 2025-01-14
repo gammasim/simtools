@@ -150,12 +150,13 @@ class DatabaseHandler:
 
         """
         try:
-            if not self.mongo_db_config["db_simulation_model"].endswith("LATEST"):
+            db_simulation_model = self.mongo_db_config["db_simulation_model"]
+            if not db_simulation_model.endswith("LATEST"):
                 return
-        except TypeError:
+        except TypeError:  # if db_simulation_model is None
             return
 
-        prefix = self.mongo_db_config["db_simulation_model"].replace("LATEST", "")
+        prefix = db_simulation_model.replace("LATEST", "")
         list_of_db_names = self.db_client.list_database_names()
         filtered_list_of_db_names = [s for s in list_of_db_names if s.startswith(prefix)]
         versioned_strings = []
@@ -180,71 +181,60 @@ class DatabaseHandler:
         else:
             raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
 
-    def get_model_parameters(
-        self,
-        site,
-        array_element_name,
-        model_version,
-        collection="telescope",
-    ):
+    def get_model_parameters(self, site, array_element_name, model_version, collection):
         """
-        Get parameters from MongoDB or simulation model repository for an array element.
+        Get model parameters from MongoDB.
 
         An array element can be e.g., a telescope or a calibration device.
-        Read parameters for design and for the specified array element (if necessary). This allows
-        to overwrite design parameters with specific parameters without having to copy
-        all model parameters when changing only a few.
+        Always queries parameters for design and for the specified array element (if necessary).
 
         Parameters
         ----------
         site: str
             Site name.
         array_element_name: str
-            Name of the array element model (e.g. LSTN-01, MSTS-design)
+            Name of the array element model (e.g. LSTN-01, MSTS-design).
         model_version: str
             Version of the model.
         collection: str
-            collection of array element (e.g. telescopes, calibration_devices)
-        only_applicable: bool
-            If True, only applicable parameters will be read.
+            collection of array element (e.g. telescopes, calibration_devices).
 
         Returns
         -------
         dict containing the parameters
         """
-        _site, _ = self._validate_model_input(site, array_element_name)
-        _production_table = self.get_production_table_from_mongo_db(collection, model_version)
-        if "-design" in array_element_name:
-            array_element_list = [array_element_name]
-        else:
-            array_element_list = [
-                names.get_array_element_type_from_name(array_element_name) + "-design",
-                array_element_name,
-            ]
+        production_table = self.get_production_table_from_mongo_db(collection, model_version)
+        design_model = f"{names.get_array_element_type_from_name(array_element_name)}-design"
+        array_element_list = (
+            [array_element_name]
+            if "-design" in array_element_name
+            else [design_model, array_element_name]
+        )
+
         pars = {}
         for array_element in array_element_list:  # design model must be read first
-            _array_elements_cache_key = self._cache_key(
-                _site, array_element, model_version, collection
+            cache_key = self._cache_key(
+                names.validate_site_name(site), array_element, model_version, collection
             )
+            pars.update(DatabaseHandler.model_parameters_cached.get(cache_key, {}))
             try:
-                pars.update(DatabaseHandler.model_parameters_cached[_array_elements_cache_key])
-            except KeyError:
-                pass
-            try:
-                pars.update(
-                    self.read_mongo_db(
-                        db_name=self.mongo_db_config.get("db_simulation_model", None),
-                        parameter_version_table=_production_table["parameters"][array_element],
-                        array_element_name=array_element,
-                        collection_name=collection,
-                        run_location=None,
-                        write_files=False,
-                    )
-                )
+                parameter_version_table = production_table["parameters"][array_element]
             except KeyError as exc:
-                self._logger.error(f"Could not read parameters for {array_element}: {exc}")
-                raise exc
-            DatabaseHandler.model_parameters_cached[_array_elements_cache_key] = pars
+                if array_element == design_model:
+                    self._logger.error(f"Parameters for {array_element} could not be found.")
+                    raise exc
+                # non-design model not defined (e.g. in collection 'configuration_sim_telarray')
+                continue
+            pars.update(
+                self.read_mongo_db(
+                    db_name=self.mongo_db_config.get("db_simulation_model", None),
+                    parameter_version_table=parameter_version_table,
+                    array_element_name=array_element,
+                    collection_name=collection,
+                    write_files=False,
+                )
+            )
+            DatabaseHandler.model_parameters_cached[cache_key] = pars
 
         return pars
 
@@ -369,7 +359,6 @@ class DatabaseHandler:
             if query returned no results or if the collection is not found in the production table.
         """
         collection = self.get_collection(db_name, collection_name)
-        _parameters = {}
         query = {
             "instrument": array_element_name,
             "$or": [
@@ -377,21 +366,23 @@ class DatabaseHandler:
                 for param, version in parameter_version_table.items()
             ],
         }
-        if collection.count_documents(query) < 1:
+        posts = list(collection.find(query).sort("parameter", ASCENDING))
+        if not posts:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
-        for post in collection.find(query).sort("parameter", ASCENDING):
+        parameters = {}
+        for post in posts:
             par_now = post["parameter"]
-            _parameters[par_now] = post
-            _parameters[par_now].pop("parameter", None)
-            _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-            if _parameters[par_now]["file"] and write_files:
-                file = self._get_file_mongo_db(db_name, _parameters[par_now]["value"])
+            parameters[par_now] = post
+            parameters[par_now].pop("parameter", None)
+            parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
+            if parameters[par_now]["file"] and write_files:
+                file = self._get_file_mongo_db(db_name, parameters[par_now]["value"])
                 self._write_file_from_mongo_to_disk(db_name, run_location, file)
 
-        return _parameters
+        return parameters
 
     def get_site_parameters(self, site, model_version):
         """
@@ -408,23 +399,19 @@ class DatabaseHandler:
         -------
         dict containing the parameters
         """
-        _site, _ = self._validate_model_input(site, None)
-        _production_table = self.get_production_table_from_mongo_db("sites", model_version)
-        _db_name = self._get_db_name()
-        _site_cache_key = self._cache_key(site, None, _production_table.get("model_version"))
+        site = names.validate_site_name(site)
+        production_table = self.get_production_table_from_mongo_db("sites", model_version)
+        cache_key = self._cache_key(site, None, production_table.get("model_version"))
         try:
-            return DatabaseHandler.site_parameters_cached[_site_cache_key]
+            return DatabaseHandler.site_parameters_cached[cache_key]
         except KeyError:
             pass
 
-        DatabaseHandler.site_parameters_cached[_site_cache_key] = (
-            self._get_site_parameters_mongo_db(
-                _db_name,
-                _site,
-                _production_table,
-            )
+        db_name = self._get_db_name()
+        DatabaseHandler.site_parameters_cached[cache_key] = self._get_site_parameters_mongo_db(
+            db_name, site, production_table
         )
-        return DatabaseHandler.site_parameters_cached[_site_cache_key]
+        return DatabaseHandler.site_parameters_cached[cache_key]
 
     def _get_site_parameters_mongo_db(self, db_name, site, production_table):
         """
@@ -460,13 +447,14 @@ class DatabaseHandler:
                 for param, version in parameter_query.items()
             ],
         }
-        if collection.count_documents(query) < 1:
+        posts = list(collection.find(query).sort("parameter", ASCENDING))
+        if not posts:
             raise ValueError(
                 "The following query returned zero results! Check the input data and rerun.\n",
                 query,
             )
         _parameters = {}
-        for post in collection.find(query).sort("parameter", ASCENDING):
+        for post in posts:
             par_now = post["parameter"]
             _parameters[par_now] = post
             _parameters[par_now].pop("parameter", None)
@@ -496,27 +484,22 @@ class DatabaseHandler:
         query = {"model_version": model_version, "collection": collection_name}
         collection = self.get_collection(self._get_db_name(), "production_tables")
         post = collection.find_one(query, sort=[("_id", DESCENDING)])
-        try:
-            return {
-                "collection": post["collection"],
-                "model_version": post["model_version"],
-                "parameters": post["parameters"],
-                "entry_date": ObjectId(post["_id"]).generation_time,
-            }
-        except TypeError as exc:
-            raise ValueError(
-                "The following query returned zero results:\n",
-                query,
-            ) from exc
+        if not post:
+            raise ValueError(f"The following query returned zero results: {query}")
 
-    def get_derived_values(self, site, array_element_name, model_version):
+        return {
+            "collection": post["collection"],
+            "model_version": post["model_version"],
+            "parameters": post["parameters"],
+            "entry_date": ObjectId(post["_id"]).generation_time,
+        }
+
+    def get_derived_values(self, array_element_name, model_version):
         """
         Get all derived values from the DB for a specific array element.
 
         Parameters
         ----------
-        site: str
-            Site name.
         array_element_name: str
             Name of the array element model (e.g. MSTN, SSTS).
         model_version: str
@@ -527,13 +510,14 @@ class DatabaseHandler:
         dict containing the parameters
 
         """
-        _, _array_element_name = self._validate_model_input(site, array_element_name)
-        _model_version = model_version
+        array_element_name = (
+            names.validate_array_element_name(array_element_name) if array_element_name else None
+        )
 
         return self.read_mongo_db(
             DatabaseHandler.DB_DERIVED_VALUES,
-            _array_element_name,
-            _model_version,
+            array_element_name,
+            model_version,
             run_location=None,
             collection_name="derived_values",
             write_files=False,
@@ -568,11 +552,13 @@ class DatabaseHandler:
         if simulation_software == "corsika":
             return self.get_corsika_configuration_parameters(model_version)
         if simulation_software == "simtel":
-            if site and array_element_name:
-                return self.get_model_parameters(
+            return (
+                self.get_model_parameters(
                     site, array_element_name, model_version, collection="configuration_sim_telarray"
                 )
-            return {}
+                if site and array_element_name
+                else {}
+            )
         raise ValueError(f"Unknown simulation software: {simulation_software}")
 
     def get_corsika_configuration_parameters(self, model_version):
@@ -592,40 +578,21 @@ class DatabaseHandler:
         _production_table = self.get_production_table_from_mongo_db(
             "configuration_corsika", model_version
         )
-        _corsika_cache_key = self._cache_key(None, None, _production_table.get("model_version"))
+        cache_key = self._cache_key(None, None, _production_table.get("model_version"))
 
         try:
-            return DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key]
+            return DatabaseHandler.corsika_configuration_parameters_cached[cache_key]
         except KeyError:
             pass
 
-        DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key] = (
-            self.read_mongo_db(
-                db_name=self._get_db_name(),
-                parameter_version_table=_production_table["parameters"]["configuration_corsika"],
-                array_element_name=None,
-                run_location=None,
-                collection_name="configuration_corsika",
-                write_files=False,
-            )
+        DatabaseHandler.corsika_configuration_parameters_cached[cache_key] = self.read_mongo_db(
+            db_name=self._get_db_name(),
+            parameter_version_table=_production_table["parameters"],
+            array_element_name=None,
+            collection_name="configuration_corsika",
+            write_files=False,
         )
-        return DatabaseHandler.corsika_configuration_parameters_cached[_corsika_cache_key]
-
-    def _validate_model_input(self, site, array_element_name):
-        """
-        Validate input for model parameter queries.
-
-        site: str
-            Site name.
-        array_element_name: str
-            Name of the array element model (e.g. LSTN-01, MSTS-design)
-
-        TODO - really needed??
-        """
-        return (
-            names.validate_site_name(site),
-            names.validate_array_element_name(array_element_name) if array_element_name else None,
-        )
+        return DatabaseHandler.corsika_configuration_parameters_cached[cache_key]
 
     @staticmethod
     def _get_file_mongo_db(db_name, file_name):
@@ -728,11 +695,9 @@ class DatabaseHandler:
         collection = self.get_collection(db_name, collection_name)
         db_entries = []
 
-        _version_to_copy = self.model_version(version_to_copy)
-
         query = {
             "instrument": element_to_copy,
-            "version": _version_to_copy,
+            "version": version_to_copy,
         }
         for post in collection.find(query):
             post["instrument"] = new_array_element_name
@@ -879,44 +844,6 @@ class DatabaseHandler:
         """
         return self.mongo_db_config["db_simulation_model"] if db_name is None else db_name
 
-    def model_version(self, version, db_name=None):
-        """
-        Return model version and check that it is valid.
-
-        Queries the database for all available model versions and check if the
-        requested version is valid.
-
-        Parameters
-        ----------
-        version : str
-            Model version.
-        db_name : str
-            Database name.
-
-        Returns
-        -------
-        str
-            Model version.
-
-        Raises
-        ------
-        ValueError
-            if version not valid.
-
-        # TODO - needs to be adjusted?
-
-        """
-        _all_versions = self.get_all_versions(db_name=db_name)
-        if version in _all_versions:
-            return version
-        if len(_all_versions) == 0:
-            return None
-
-        raise ValueError(
-            f"Invalid model version {version} in DB {self._get_db_name(db_name)} "
-            f"(allowed are {_all_versions})"
-        )
-
     def insert_file_to_db(self, file_name, db_name=None, **kwargs):
         """
         Insert a file to the DB.
@@ -940,15 +867,11 @@ class DatabaseHandler:
 
         """
         db_name = self._get_db_name(db_name)
-
         db = DatabaseHandler.db_client[db_name]
         file_system = gridfs.GridFS(db)
 
-        if "content_type" not in kwargs:
-            kwargs["content_type"] = "ascii/dat"
-
-        if "filename" not in kwargs:
-            kwargs["filename"] = Path(file_name).name
+        kwargs.setdefault("content_type", "ascii/dat")
+        kwargs.setdefault("filename", Path(file_name).name)
 
         if file_system.exists({"filename": kwargs["filename"]}):
             self._logger.warning(
@@ -959,76 +882,6 @@ class DatabaseHandler:
             )._id
         with open(file_name, "rb") as data_file:
             return file_system.put(data_file, **kwargs)
-
-    def get_all_versions(
-        self,
-        parameter=None,
-        array_element_name=None,
-        site=None,
-        db_name=None,
-        collection=None,
-    ):
-        """
-        Get all version entries in the DB of collection and/or a specific parameter.
-
-        Parameters
-        ----------
-        parameter: str
-            Which parameter to get the versions of
-        array_element_name: str
-            Which array element to get the versions of (in case "collection_name" is not "sites")
-        site: str
-            Site name.
-        db_name: str
-            Database name.
-        collection_name: str
-            The name of the collection in which to update the parameter.
-
-        Returns
-        -------
-        all_versions: list
-            List of all versions found
-
-        Raises
-        ------
-        ValueError
-            If key to collection_name is not valid.
-
-        TODO - this should be model or parameter versions? Need to be adjusted.
-
-        """
-        db_name = self._get_db_name() if db_name is None else db_name
-        if not db_name:
-            self._logger.warning("No database name defined to determine list of model versions")
-            return []
-        _cache_key = f"model_versions_{db_name}-{collection}"
-
-        query = {}
-        if parameter is not None:
-            query["parameter"] = parameter
-            _cache_key = f"{_cache_key}-{parameter}"
-        if collection in ["telescopes", "calibration_devices"] and array_element_name is not None:
-            query["instrument"] = names.validate_array_element_name(array_element_name)
-            _cache_key = f"{_cache_key}-{query['instrument']}"
-        elif collection == "sites" and site is not None:
-            query["site"] = names.validate_site_name(site)
-            _cache_key = f"{_cache_key}-{query['site']}"
-
-        if _cache_key not in DatabaseHandler.model_versions_cached:
-            all_versions = set()
-            collections_to_query = (
-                [collection] if collection else self.get_collections(db_name, True)
-            )
-            for collection_name in collections_to_query:
-                db_collection = self.get_collection(db_name, collection_name)
-                sorted_posts = db_collection.find(query).sort("version", ASCENDING)
-                all_versions.update(post["version"] for post in sorted_posts)
-            DatabaseHandler.model_versions_cached[_cache_key] = list(all_versions)
-
-        if len(DatabaseHandler.model_versions_cached[_cache_key]) == 0:
-            self._logger.warning(f"The query {query} did not return any results. No versions found")
-
-        return DatabaseHandler.model_versions_cached[_cache_key]
 
     def _cache_key(self, site=None, array_element_name=None, model_version=None, collection=None):
         """
@@ -1106,15 +959,16 @@ class DatabaseHandler:
             If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
 
         """
-        db_name = self._get_db_name() if db_name is None else db_name
+        db_name = db_name or self._get_db_name()
         if db_name not in self.list_of_collections:
             self.list_of_collections[db_name] = DatabaseHandler.db_client[
                 db_name
             ].list_collection_names()
+        collections = self.list_of_collections[db_name]
         if model_collections_only:
             return [
                 collection
-                for collection in self.list_of_collections[db_name]
+                for collection in collections
                 if not collection.startswith("fs.") and collection != "metadata"
             ]
-        return self.list_of_collections[db_name]
+        return collections
