@@ -83,7 +83,7 @@ def _parse():
         required=False,
     )
 
-    return config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(db_config=True, simulation_model=["telescope", "parameter_version"])
 
 
 def main():  # noqa: D103
@@ -92,26 +92,30 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
+    # TODO read parameter_version
+
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     if args_dict["db_collection"] == "configuration_sim_telarray":
         pars = db.get_model_parameters(
-            args_dict["site"],
-            args_dict["telescope"],
-            args_dict["model_version"],
+            site=args_dict["site"],
+            array_element_name=args_dict["telescope"],
+            model_version=args_dict["model_version"],
             collection="configuration_sim_telarray",
         )
     elif args_dict["db_collection"] == "configuration_corsika":
-        pars = db.get_corsika_configuration_parameters(args_dict["model_version"])
+        pars = db.get_corsika_configuration_parameters(model_version=args_dict["model_version"])
     elif args_dict["telescope"] is not None:
         pars = db.get_model_parameters(
-            args_dict["site"],
-            args_dict["telescope"],
-            args_dict["model_version"],
+            site=args_dict["site"],
+            array_element_name=args_dict["telescope"],
+            model_version=args_dict["model_version"],
             collection="telescopes",
         )
     else:
-        pars = db.get_site_parameters(args_dict["site"], args_dict["model_version"])
+        pars = db.get_site_parameters(
+            site=args_dict["site"], model_version=args_dict["model_version"]
+        )
     if args_dict["parameter"] not in pars:
         raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
     if args_dict["output_file"] is not None:
