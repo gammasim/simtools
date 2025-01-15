@@ -14,7 +14,6 @@ from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.errors import BulkWriteError
 
 from simtools.data_model import validate_data
-from simtools.db import db_array_elements
 from simtools.io_operations import io_handler
 from simtools.utils import names, value_conversion
 
@@ -496,6 +495,35 @@ class DatabaseHandler:
             "entry_date": ObjectId(post["_id"]).generation_time,
         }
 
+    def get_array_elements_of_type(self, array_element_type, model_version, collection):
+        """
+        Get all array elements of a certain type (e.g. 'LSTN') from a collection in the DB.
+
+        Parameters
+        ----------
+        array_element_type: str
+            Type of the array element (e.g. LSTN, MSTS).
+        model_version: str
+            Version of the model.
+        collection: str
+            Which collection to get the array elements from:
+            i.e. telescopes, calibration_devices.
+
+        Returns
+        -------
+        list
+            Sorted list of all array element names found in collection
+        """
+        production_table = self.get_production_table_from_mongo_db(collection, model_version)
+        all_array_elements = production_table["parameters"]
+        return sorted(
+            [
+                entry
+                for entry in all_array_elements
+                if entry.startswith(array_element_type) and "-design" not in entry
+            ]
+        )
+
     def get_derived_values(self, array_element_name, model_version):
         """
         Get all derived values from the DB for a specific array element.
@@ -905,7 +933,6 @@ class DatabaseHandler:
         _cache_key = self._cache_key(site, array_element_name, model_version)
         DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
         DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
-        db_array_elements.get_array_elements.cache_clear()
 
     def get_collections(self, db_name=None, model_collections_only=False):
         """
