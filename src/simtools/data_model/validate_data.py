@@ -108,7 +108,7 @@ class DataValidator:
 
     def validate_parameter_and_file_name(self):
         """Validate that file name and key 'parameter_name' in data dict are the same."""
-        if self.data_dict.get("parameter") != Path(self.data_file_name).stem:
+        if not str(Path(self.data_file_name).stem).startswith(self.data_dict.get("parameter")):
             raise ValueError(
                 f"Parameter name in data dict {self.data_dict.get('parameter')} and "
                 f"file name {Path(self.data_file_name).stem} do not match."
