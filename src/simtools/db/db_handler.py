@@ -819,7 +819,7 @@ class DatabaseHandler:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
 
-        self._reset_parameter_cache(par_dict["site"], par_dict["instrument"], par_dict["version"])
+        self._reset_parameter_cache(par_dict["site"], par_dict["instrument"], None)
 
     def _get_db_name(self, db_name=None):
         """
@@ -919,6 +919,8 @@ class DatabaseHandler:
         """
         Reset the cache for the parameters.
 
+        A value of 'None' for any of the parameters will reset the entire cache.
+
         Parameters
         ----------
         site: str
@@ -930,9 +932,13 @@ class DatabaseHandler:
 
         """
         self._logger.debug(f"Resetting cache for {site} {array_element_name} {model_version}")
-        _cache_key = self._cache_key(site, array_element_name, model_version)
-        DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
-        DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
+        if None in [site, array_element_name, model_version]:
+            DatabaseHandler.site_parameters_cached.clear()
+            DatabaseHandler.model_parameters_cached.clear()
+        else:
+            _cache_key = self._cache_key(site, array_element_name, model_version)
+            DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
+            DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
 
     def get_collections(self, db_name=None, model_collections_only=False):
         """
