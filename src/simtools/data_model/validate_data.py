@@ -193,7 +193,8 @@ class DataValidator:
         ]
         try:
             return [
-                v * c if not isinstance(v, bool) else v for v, c in zip(value, conversion_factor)
+                v * c if not isinstance(v, bool) and not isinstance(v, dict) else v
+                for v, c in zip(value, conversion_factor)
             ], target_unit
         except TypeError:
             return [None], target_unit

@@ -29,8 +29,10 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_prefix):
     par_dict = gen.collect_data_from_file(file_name=file)
     logger.info(
         f"Adding the following parameter to the DB: {par_dict['parameter']} "
+        f"version {par_dict['parameter_version']} "
         f"(collection {collection} in database {db_name})"
     )
+
     db.add_new_parameter(
         db_name=db_name,
         par_dict=par_dict,
