@@ -92,11 +92,13 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # TODO read parameter_version
+    # TODO: Implement parameter version
+    if args_dict["parameter_version"] is not None:
+        raise NotImplementedError("Parameter version is not yet implemented.")
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    if args_dict["telescope"] is not None:
+    if args_dict["telescope"]:
         pars = db.get_model_parameters(
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
@@ -113,19 +115,19 @@ def main():  # noqa: D103
         pars = db.get_site_parameters(
             site=args_dict["site"], model_version=args_dict["model_version"]
         )
-    if args_dict["parameter"] not in pars:
+    param = args_dict["parameter"]
+    if param not in pars:
         raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
     if args_dict["output_file"] is not None:
-        _io_handler = io_handler.IOHandler()
-        pars[args_dict["parameter"]].pop("_id")
-        pars[args_dict["parameter"]].pop("entry_date")
-        _output_file = Path(_io_handler.get_output_directory()) / args_dict["output_file"]
+        _output_file = (
+            Path(io_handler.IOHandler().get_output_directory()) / args_dict["output_file"]
+        )
+        pars[param].pop("_id")
+        pars[param].pop("entry_date")
         with open(_output_file, "w", encoding="utf-8") as json_file:
-            json.dump(pars[args_dict["parameter"]], json_file, indent=4)
+            json.dump(param, json_file, indent=4)
     else:
-        print()
-        pprint(pars[args_dict["parameter"]])
-        print()
+        pprint(pars[param])
 
 
 if __name__ == "__main__":

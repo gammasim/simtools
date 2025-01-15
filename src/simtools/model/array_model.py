@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools.data_model import data_reader
-from simtools.db import db_array_elements, db_handler
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -367,9 +367,8 @@ class ArrayModel:
         dict
             Dict with array elements.
         """
-        all_elements = db_array_elements.get_array_elements_of_type(
+        all_elements = self.db.get_array_elements_of_type(
             array_element_type=array_element_type,
-            db=self.db,
             model_version=self.model_version,
             collection="telescopes",
         )
