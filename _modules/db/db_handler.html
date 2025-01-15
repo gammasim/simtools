@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+g997be61 Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+ga132ee3 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0133ad91"></script>
+    <script src="../../_static/documentation_options.js?v=4aab0aba"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g997be61" />
+  <meta name="docsearch:version" content="0.1.dev1+ga132ee3" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g997be61 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga132ee3 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -368,6 +368,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib.resources</span><span class="w"> </span><span class="kn">import</span> <span class="n">files</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Lock</span>
 
@@ -378,6 +379,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pymongo</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASCENDING</span><span class="p">,</span> <span class="n">MongoClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pymongo.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">BulkWriteError</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_data</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_array_elements</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span><span class="p">,</span> <span class="n">value_conversion</span>
@@ -1120,103 +1122,63 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">add_new_parameter</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">db_name</span><span class="p">,</span>
-        <span class="n">version</span><span class="p">,</span>
-        <span class="n">parameter</span><span class="p">,</span>
-        <span class="n">value</span><span class="p">,</span>
-        <span class="n">array_element_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">par_dict</span><span class="p">,</span>
         <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span>
         <span class="n">file_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a parameter value for a specific array element.</span>
+<span class="sd">        Add a parameter dictionary for a specific array element to the DB.</span>
 
-<span class="sd">        A new document will be added to the DB,</span>
-<span class="sd">        with all fields taken from the input parameters.</span>
+<span class="sd">        A new document will be added to the DB, with all fields taken from the input parameters.</span>
+<span class="sd">        Parameter dictionaries are validated before submission using the corresponding schema.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        db_name: str</span>
 <span class="sd">            the name of the DB</span>
-<span class="sd">        version: str</span>
-<span class="sd">            The version of the new parameter value</span>
-<span class="sd">        parameter: str</span>
-<span class="sd">            Which parameter to add</span>
-<span class="sd">        value: can be any type, preferably given in kwargs</span>
-<span class="sd">            The value to set for the new parameter</span>
-<span class="sd">        array_element_name: str</span>
-<span class="sd">            The name of the array element to add a parameter to</span>
-<span class="sd">            (only used if collection_name is not &quot;sites&quot;).</span>
-<span class="sd">        site: str</span>
-<span class="sd">            Site name; ignored if collection_name is &quot;telescopes&quot;.</span>
+<span class="sd">        par_dict: dict</span>
+<span class="sd">            dictionary with parameter data</span>
 <span class="sd">        collection_name: str</span>
 <span class="sd">            The name of the collection to add a parameter to.</span>
 <span class="sd">        file_prefix: str or Path</span>
 <span class="sd">            where to find files to upload to the DB</span>
-<span class="sd">        kwargs: dict</span>
-<span class="sd">            Any additional fields to add to the parameter</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If key to collection_name is not valid.</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_validator</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
+            <span class="n">schema_file</span><span class="o">=</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;simtools&quot;</span><span class="p">)</span>
+            <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;schemas/model_parameters/</span><span class="si">{</span><span class="n">par_dict</span><span class="p">[</span><span class="s1">&#39;parameter&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.schema.yml&quot;</span><span class="p">,</span>
+            <span class="n">data_dict</span><span class="o">=</span><span class="n">par_dict</span><span class="p">,</span>
+            <span class="n">check_exact_data_type</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">par_dict</span> <span class="o">=</span> <span class="n">data_validator</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">(</span><span class="n">is_model_parameter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="n">db_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
         <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">)</span>
 
-        <span class="n">db_entry</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
-            <span class="n">key</span> <span class="ow">in</span> <span class="n">collection_name</span>
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="s2">&quot;calibration_devices&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">]</span>
-        <span class="p">):</span>
-            <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="s2">&quot;sites&quot;</span> <span class="ow">in</span> <span class="n">collection_name</span><span class="p">:</span>
-            <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="s2">&quot;configuration_corsika&quot;</span> <span class="ow">in</span> <span class="n">collection_name</span><span class="p">:</span>
-            <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot add parameter to collection </span><span class="si">{</span><span class="n">collection_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
-        <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
-        <span class="k">if</span> <span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
-
-        <span class="n">_base_value</span><span class="p">,</span> <span class="n">_base_unit</span><span class="p">,</span> <span class="n">_base_type</span> <span class="o">=</span> <span class="n">value_conversion</span><span class="o">.</span><span class="n">get_value_unit_type</span><span class="p">(</span>
-            <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">unit_str</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">_base_unit</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">value_conversion</span><span class="o">.</span><span class="n">get_value_unit_type</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">unit_str</span><span class="o">=</span><span class="n">par_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_base_value</span>
-        <span class="k">if</span> <span class="n">_base_unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_base_unit</span>
-        <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;type&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="n">_base_type</span>
+        <span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_base_unit</span> <span class="k">if</span> <span class="n">_base_unit</span> <span class="k">else</span> <span class="kc">None</span>
 
         <span class="n">files_to_add_to_db</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_file</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-            <span class="n">db_entry</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="n">file_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
                     <span class="s2">&quot;The location of the file to upload, &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;corresponding to the </span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2"> parameter, must be provided.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;corresponding to the </span><span class="si">{</span><span class="n">par_dict</span><span class="p">[</span><span class="s1">&#39;parameter&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> parameter, must be provided.&quot;</span>
                 <span class="p">)</span>
-            <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_prefix</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_prefix</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
             <span class="n">files_to_add_to_db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">db_entry</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Will add the following entry to DB </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2"> and collection </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">db_entry</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Adding a new entry to DB </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2"> and collection </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">par_dict</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
+        <span class="n">collection</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">par_dict</span><span class="p">)</span>
 
-        <span class="n">collection</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">db_entry</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">file_to_insert_now</span> <span class="ow">in</span> <span class="n">files_to_add_to_db</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Will also add the file </span><span class="si">{</span><span class="n">file_to_insert_now</span><span class="si">}</span><span class="s2"> to the DB&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">insert_file_to_db</span><span class="p">(</span><span class="n">file_to_insert_now</span><span class="p">,</span> <span class="n">db_name</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_reset_parameter_cache</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">array_element_name</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset_parameter_cache</span><span class="p">(</span><span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">],</span> <span class="n">par_dict</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">])</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_db_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
