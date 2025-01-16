@@ -29,25 +29,18 @@ def test_load_schema():
     with pytest.raises(FileNotFoundError):
         metadata_model._load_schema(schema_file="not_existing_file")
 
+    schema_file = files("simtools") / "schemas" / "model_parameter.metaschema.yml"
     # schema versions
     with pytest.raises(ValueError, match=r"^Schema version not given in"):
-        metadata_model._load_schema(
-            files("simtools") / "schemas" / "model_parameter.metaschema.yml"
-        )
+        metadata_model._load_schema(schema_file)
 
-    _schema_1, _ = metadata_model._load_schema(
-        files("simtools") / "schemas" / "model_parameter.metaschema.yml", "0.1.0"
-    )
+    _schema_1, _ = metadata_model._load_schema(schema_file, "0.1.0")
     assert _schema_1["version"] == "0.1.0"
-    _schema_2, _ = metadata_model._load_schema(
-        files("simtools") / "schemas" / "model_parameter.metaschema.yml", "0.2.0"
-    )
+    _schema_2, _ = metadata_model._load_schema(schema_file, "0.2.0")
     assert _schema_2["version"] == "0.2.0"
 
     with pytest.raises(ValueError, match=r"^Schema version 0.2 not found in"):
-        metadata_model._load_schema(
-            files("simtools") / "schemas" / "model_parameter.metaschema.yml", "0.2"
-        )
+        metadata_model._load_schema(schema_file, "0.2")
 
 
 def test_validate_schema(tmp_test_directory):
