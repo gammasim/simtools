@@ -8,6 +8,7 @@ CTA_SIMPIPE:
     MODEL_VERSION: 6.0.0
     OUTPUT_FILE: test.json
     OUTPUT_PATH: simtools-output
+    LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - REFERENCE_OUTPUT_FILE: |
         ./tests/resources/array_element_position_ground.json
