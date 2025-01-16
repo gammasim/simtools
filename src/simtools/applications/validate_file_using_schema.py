@@ -33,6 +33,7 @@ r"""
 """
 
 import logging
+import re
 from importlib.resources import files
 from pathlib import Path
 
@@ -116,19 +117,24 @@ def _get_schema_file_name(args_dict, data_dict=None):
 
 def validate_schema(args_dict, logger):
     """
-    Validate a schema file given in yaml or json format.
+    Validate a schema file (or several files) given in yaml or json format.
 
     Schema is either given as command line argument, read from the meta_schema_url or from
     the metadata section of the data dictionary.
 
     """
-    try:
-        data = gen.collect_data_from_file(file_name=args_dict["file_name"])
-    except FileNotFoundError as exc:
-        logger.error(f"Error reading schema file from {args_dict['file_name']}")
-        raise exc
-    metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
-    logger.info(f"Successful validation of schema file {args_dict['file_name']}")
+    if args_dict.get("model_parameters_directory") is not None:
+        file_list = list(Path(args_dict["model_parameters_directory"]).rglob("*.json"))
+    else:
+        file_list = [args_dict["file_name"]]
+    for file_name in file_list:
+        try:
+            data = gen.collect_data_from_file(file_name=file_name)
+        except FileNotFoundError as exc:
+            logger.error(f"Error reading schema file from {file_name}")
+            raise exc
+        metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
+        logger.info(f"Successful validation of schema file {file_name}")
 
 
 def validate_data_files(args_dict, logger):
@@ -138,8 +144,9 @@ def validate_data_files(args_dict, logger):
         tmp_args_dict = {}
         for file_name in Path(model_parameters_directory).rglob("*.json"):
             tmp_args_dict["file_name"] = file_name
+            parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
             schema_file = (
-                files("simtools") / "schemas/model_parameters" / f"{file_name.stem}.schema.yml"
+                files("simtools") / "schemas/model_parameters" / f"{parameter_name}.schema.yml"
             )
             tmp_args_dict["schema"] = schema_file
             tmp_args_dict["data_type"] = "model_parameter"
