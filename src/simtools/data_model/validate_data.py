@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+from importlib.resources import files
 from pathlib import Path
 
 import jsonschema
@@ -111,6 +112,29 @@ class DataValidator:
                 f"Parameter name in data dict {self.data_dict.get('parameter')} and "
                 f"file name {Path(self.data_file_name).stem} do not match."
             )
+
+    @staticmethod
+    def validate_model_parameter(par_dict):
+        """
+        Validate a simulation model parameter (static method).
+
+        Parameters
+        ----------
+        par_dict: dict
+            Data dictionary
+
+        Returns
+        -------
+        dict
+            Validated data dictionary
+        """
+        data_validator = DataValidator(
+            schema_file=files("simtools")
+            / f"schemas/model_parameters/{par_dict['parameter']}.schema.yml",
+            data_dict=par_dict,
+            check_exact_data_type=False,
+        )
+        return data_validator.validate_and_transform(is_model_parameter=True)
 
     def _validate_data_dict(self, is_model_parameter=False, lists_as_strings=False):
         """
