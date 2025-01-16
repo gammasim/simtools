@@ -790,9 +790,7 @@ class DatabaseHandler:
             data_dict=par_dict,
             check_exact_data_type=False,
         )
-        par_dict = data_validator.validate_and_transform(
-            is_model_parameter=True, lists_as_strings=True
-        )
+        par_dict = data_validator.validate_and_transform(is_model_parameter=True)
 
         db_name = self._get_db_name(db_name)
         collection = self.get_collection(db_name, collection_name)
