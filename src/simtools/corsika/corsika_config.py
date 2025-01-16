@@ -111,8 +111,6 @@ class CorsikaConfig:
         if args_dict is None:
             return {}
 
-        self._logger.debug("Setting CORSIKA parameters ")
-
         self._is_file_updated = False
         self.azimuth_angle = int(args_dict["azimuth_angle"].to("deg").value)
         self.zenith_angle = args_dict["zenith_angle"].to("deg").value
