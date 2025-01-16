@@ -1,9 +1,16 @@
 {
-    "version": "6.0.0",
+    "schema_version": "0.1.0",
+    "instrument": "MSTN-09",
     "site": "North",
-    "value": "221.68 -355.66 49.0",
+    "parameter_version": "2.0.0",
+    "unique_id": null,
+    "value": [
+        221.68,
+        -355.66,
+        49.0
+    ],
     "unit": "m",
     "type": "float64",
-    "file": false,
-    "applicable": true
+    "applicable": true,
+    "file": false
 }
