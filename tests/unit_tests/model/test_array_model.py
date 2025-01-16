@@ -110,14 +110,15 @@ def test_get_telescope_position_parameter(array_model, io_handler):
     assert am._get_telescope_position_parameter(
         "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m
     ) == {
+        "schema_version": "0.1.0",
         "parameter": "array_element_position_ground",
         "instrument": "LSTN-01",
         "site": "North",
-        "version": "6.0.0",
+        "parameter_version": "2.0.0",
+        "unique_id": None,
         "value": "10.0 2.0 30.0",
         "unit": "m",
         "type": "float64",
-        "applicable": True,
         "file": False,
     }
 
