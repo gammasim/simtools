@@ -67,7 +67,6 @@ class ModelParameter:
 
         self._parameters = {}
         self._simulation_config_parameters = {"corsika": {}, "simtel": {}}
-        self._derived = None
         self.collection = collection
         self.label = label
         self.model_version = model_version
@@ -111,10 +110,6 @@ class ModelParameter:
         """
         try:
             return self._parameters[par_name]
-        except KeyError:
-            pass
-        try:
-            return self.derived[par_name]
         except (KeyError, ValueError) as e:
             msg = f"Parameter {par_name} was not found in the model"
             self._logger.error(msg)
@@ -240,33 +235,6 @@ class ModelParameter:
         except KeyError:
             self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
         return False
-
-    @property
-    def derived(self):
-        """Load the derived values and export them if the class instance hasn't done it yet."""
-        if self._derived is None:
-            self._load_derived_values()
-            self._export_derived_files()
-        return self._derived
-
-    def _load_derived_values(self):
-        """Load derived values from the DB."""
-        self._logger.debug("Reading derived values from DB")
-        self._derived = self.db.get_derived_values(
-            self.site,
-            self.name,
-            self.model_version,
-        )
-
-    def _export_derived_files(self):
-        """Write to disk a file from the derived values DB."""
-        for par_now in self.derived.values():
-            if par_now.get("File") or par_now.get("file"):
-                self.db.export_file_db(
-                    db_name=self.db.DB_DERIVED_VALUES,
-                    dest=self.config_file_directory,
-                    file_name=(par_now.get("value") or par_now.get("Value")),
-                )
 
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
