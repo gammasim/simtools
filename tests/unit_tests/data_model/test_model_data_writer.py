@@ -208,14 +208,14 @@ def test_json_numpy_encoder():
 
 def test_dump_model_parameter(tmp_test_directory):
 
-    model_version = "6.0.0"
+    parameter_version = "1.1.0"
     instrument = "LSTN-01"
     # single value, no unit
     num_gains_dict = writer.ModelDataWriter.dump_model_parameter(
         parameter_name="num_gains",
         value=2,
         instrument=instrument,
-        model_version=model_version,
+        model_version=parameter_version,
         output_file="num_gains.json",
         output_path=tmp_test_directory,
         use_plain_output_path=True,
@@ -230,7 +230,7 @@ def test_dump_model_parameter(tmp_test_directory):
         parameter_name="array_element_position_utm",
         value=[217.6596 * u.km, 3184.9951 * u.km, 218500.0 * u.cm],
         instrument=instrument,
-        model_version=model_version,
+        model_version=parameter_version,
         output_file="array_element_position_utm.json",
         output_path=tmp_test_directory,
         use_plain_output_path=True,
@@ -248,7 +248,7 @@ def test_dump_model_parameter(tmp_test_directory):
         parameter_name="focus_offset",
         value=[6.55 * u.cm, 0.0 * u.deg, 0.0, 0.0],
         instrument="LSTN-01",
-        model_version="6.0.0",
+        model_version=parameter_version,
         output_file="focus_offset.json",
         output_path=tmp_test_directory,
         use_plain_output_path=True,
@@ -264,16 +264,17 @@ def test_get_validated_parameter_dict():
 
     w1 = writer.ModelDataWriter()
     assert w1.get_validated_parameter_dict(
-        parameter_name="num_gains", value=2, instrument="MSTN-01", model_version="0.0.1"
+        parameter_name="num_gains", value=2, instrument="MSTN-01", parameter_version="0.0.1"
     ) == {
+        "schema_version": "0.1.0",
         "parameter": "num_gains",
         "instrument": "MSTN-01",
         "site": "North",
-        "version": "0.0.1",
+        "parameter_version": "0.0.1",
+        "unique_id": None,
         "value": 2,
         "unit": u.Unit(""),
         "type": "int",
-        "applicable": True,
         "file": False,
     }
 
@@ -281,16 +282,17 @@ def test_get_validated_parameter_dict():
         parameter_name="transit_time_error",
         value=5.0 * u.ns,
         instrument="LSTN-01",
-        model_version="0.0.1",
+        parameter_version="0.0.1",
     ) == {
+        "schema_version": "0.1.0",
         "parameter": "transit_time_error",
         "instrument": "LSTN-01",
         "site": "North",
-        "version": "0.0.1",
+        "parameter_version": "0.0.1",
+        "unique_id": None,
         "value": 5,
         "unit": u.Unit("ns"),
         "type": "double",
-        "applicable": True,
         "file": False,
     }
 
@@ -298,38 +300,19 @@ def test_get_validated_parameter_dict():
         parameter_name="reference_point_altitude",
         value=2.7 * u.km,
         instrument="North",
-        model_version="0.0.1",
+        parameter_version="0.0.1",
     ) == {
+        "schema_version": "0.1.0",
         "parameter": "reference_point_altitude",
         "instrument": "North",
         "site": "North",
-        "version": "0.0.1",
+        "parameter_version": "0.0.1",
+        "unique_id": None,
         "value": 2700.0,
         "unit": u.Unit("m"),
         "type": "double",
-        "applicable": True,
         "file": False,
     }
-
-
-def test_get_parameter_applicability(num_gains_schema):
-
-    w1 = writer.ModelDataWriter()
-    w1.schema_dict = num_gains_schema
-
-    assert w1._get_parameter_applicability("LSTN-01")
-
-    # illuminator does not have gains
-    assert not w1._get_parameter_applicability("ILLN-01")
-
-    # change schema dict
-    w1.schema_dict["instrument"]["type"].append("LSTN-55")
-    assert w1._get_parameter_applicability("LSTN-55")
-
-    # change schema dict
-    w1.schema_dict["instrument"].pop("type")
-    with pytest.raises(KeyError):
-        w1._get_parameter_applicability("LSTN-01")
 
 
 def test_prepare_data_dict_for_writing():

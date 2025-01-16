@@ -189,14 +189,15 @@ A typical model parameter file looks like:
 
 ```json
 {
+    "schema_version": "0.1.0",
     "parameter": "num_gains",
     "instrument": "LSTN-01",
     "site": "North",
-    "version": "6.0.0",
+    "parameter_version": "6.0.0",
+    "unique_id": null,
     "value": 2,
     "unit": null,
     "type": "int64",
-    "applicable": true,
     "file": false
 }
 ```
