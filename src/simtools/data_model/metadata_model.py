@@ -98,16 +98,16 @@ def _load_schema(schema_file=None, schema_version=None):
     except FileNotFoundError:
         schema_file = files("simtools").joinpath("schemas") / schema_file
         schema = gen.collect_data_from_file(file_name=schema_file)
+
     if isinstance(schema, list):  # schema file with several schemas defined
-        if schema_version is not None:
-            for doc in schema:
-                if doc.get("version") == schema_version:
-                    schema = doc
-                    break
-        else:
+        if schema_version is None:
             raise ValueError(f"Schema version not given in {schema_file}.")
+        schema = next((doc for doc in schema if doc.get("version") == schema_version), None)
+        if schema is None:
+            raise ValueError(f"Schema version {schema_version} not found in {schema_file}.")
     elif schema_version is not None and schema_version != schema.get("version"):
         _logger.warning(f"Schema version {schema_version} does not match {schema.get('version')}")
+
     _logger.debug(f"Loading schema from {schema_file}")
     _add_array_elements("InstrumentTypeElement", schema)
 
