@@ -125,7 +125,7 @@ def main():  # noqa: D103
         pars[param].pop("_id")
         pars[param].pop("entry_date")
         with open(_output_file, "w", encoding="utf-8") as json_file:
-            json.dump(param, json_file, indent=4)
+            json.dump(pars[param], json_file, indent=4)
     else:
         pprint(pars[param])
 
