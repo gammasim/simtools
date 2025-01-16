@@ -168,9 +168,13 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     if data1 == data2:
         return True
 
+    value_list_1 = data1 if isinstance(data1, list) else None
+    value_list_2 = data2 if isinstance(data2, list) else None
     if "value" in data1 and isinstance(data1["value"], str):
         value_list_1 = gen.convert_string_to_list(data1.pop("value"))
+    if "value" in data2 and isinstance(data2["value"], str):
         value_list_2 = gen.convert_string_to_list(data2.pop("value"))
+    if value_list_1 is not None and value_list_2 is not None:
         return np.allclose(value_list_1, value_list_2, rtol=tolerance)
     return data1 == data2
 
