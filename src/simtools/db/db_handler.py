@@ -182,7 +182,14 @@ class DatabaseHandler:
         else:
             raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
 
-    def get_model_parameters(self, site, array_element_name, model_version, collection):
+    def get_model_parameters(
+        self,
+        site,
+        array_element_name,
+        model_version,
+        collection,
+        allow_missing_array_elements=False,
+    ):
         """
         Get model parameters from MongoDB.
 
@@ -199,6 +206,8 @@ class DatabaseHandler:
             Version of the model.
         collection: str
             collection of array element (e.g. telescopes, calibration_devices).
+        allow_missing_array_elements: bool
+            Allow missing array elements in the DB without raising an error.
 
         Returns
         -------
@@ -221,7 +230,7 @@ class DatabaseHandler:
             try:
                 parameter_version_table = production_table["parameters"][array_element]
             except KeyError as exc:
-                if array_element == design_model:
+                if array_element == design_model and not allow_missing_array_elements:
                     self._logger.error(f"Parameters for {array_element} could not be found.")
                     raise exc
                 # non-design model not defined (e.g. in collection 'configuration_sim_telarray')
@@ -583,8 +592,13 @@ class DatabaseHandler:
             return self.get_corsika_configuration_parameters(model_version)
         if simulation_software == "simtel":
             return (
+                # not all array elements are present in the DB (allow for missing elements)
                 self.get_model_parameters(
-                    site, array_element_name, model_version, collection="configuration_sim_telarray"
+                    site,
+                    array_element_name,
+                    model_version,
+                    collection="configuration_sim_telarray",
+                    allow_missing_array_elements=True,
                 )
                 if site and array_element_name
                 else {}
