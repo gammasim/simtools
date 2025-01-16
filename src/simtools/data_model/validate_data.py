@@ -57,7 +57,7 @@ class DataValidator:
         self.data_table = data_table
         self.check_exact_data_type = check_exact_data_type
 
-    def validate_and_transform(self, is_model_parameter=False):
+    def validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
         """
         Validate data and data file.
 
@@ -65,6 +65,8 @@ class DataValidator:
         ----------
         is_model_parameter: bool
             This is a model parameter (add some data preparation)
+        lists_as_strings: bool
+            Convert lists to strings (as needed for model parameters)
 
         Returns
         -------
@@ -80,13 +82,9 @@ class DataValidator:
         if self.data_file_name:
             self.validate_data_file()
         if isinstance(self.data_dict, dict):
-            if is_model_parameter:
-                self._prepare_model_parameter()
-            self._validate_data_dict()
-            return self.data_dict
+            return self._validate_data_dict(is_model_parameter, lists_as_strings)
         if isinstance(self.data_table, Table):
-            self._validate_data_table()
-            return self.data_table
+            return self._validate_data_table()
         self._logger.error("No data or data table to validate")
         raise TypeError
 
@@ -114,12 +112,19 @@ class DataValidator:
                 f"file name {Path(self.data_file_name).stem} do not match."
             )
 
-    def _validate_data_dict(self):
+    def _validate_data_dict(self, is_model_parameter=False, lists_as_strings=False):
         """
         Validate values in a dictionary.
 
         Handles different types of naming in data dicts (using 'name' or 'parameter'
         keys for name fields).
+
+        Parameters
+        ----------
+        is_model_parameter: bool
+            This is a model parameter (add some data preparation)
+        lists_as_strings: bool
+            Convert lists to strings (as needed for model parameters)
 
         Raises
         ------
@@ -127,6 +132,9 @@ class DataValidator:
             if data dict does not contain a 'name' or 'parameter' key.
 
         """
+        if is_model_parameter:
+            self._prepare_model_parameter()
+
         if not (_name := self.data_dict.get("name") or self.data_dict.get("parameter")):
             raise KeyError("Data dict does not contain a 'name' or 'parameter' key.")
         self._data_description = self._read_validation_schema(self.schema_file_name, _name)
@@ -144,6 +152,11 @@ class DataValidator:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 
         self._check_version_string(self.data_dict.get("version"))
+
+        if lists_as_strings:
+            self._convert_results_to_model_format()
+
+        return self.data_dict
 
     def _validate_value_and_unit(self, value, unit, index):
         """
@@ -234,6 +247,7 @@ class DataValidator:
             self._validate_data_columns()
             self._check_data_for_duplicates()
             self._sort_data()
+        return self.data_table
 
     def _validate_data_columns(self):
         """
@@ -778,6 +792,18 @@ class DataValidator:
 
         if self.data_dict["unit"] is not None:
             self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
+
+    def _convert_results_to_model_format(self):
+        """
+        Convert results to model format.
+
+        Convert lists to strings (as needed for model parameters).
+        """
+        value = self.data_dict["value"]
+        if isinstance(value, list):
+            self.data_dict["value"] = gen.convert_list_to_string(value)
+        if isinstance(self.data_dict["unit"], list):
+            self.data_dict["unit"] = gen.convert_list_to_string(self.data_dict["unit"])
 
     def _check_version_string(self, version):
         """
