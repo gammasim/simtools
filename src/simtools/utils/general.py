@@ -164,6 +164,9 @@ def collect_data_from_file(file_name):
             return yaml.safe_load(file)
         except yaml.constructor.ConstructorError:
             return _load_yaml_using_astropy(file)
+        except yaml.composer.ComposerError:
+            file.seek(0)
+            return list(yaml.safe_load_all(file))
 
 
 def collect_kwargs(label, in_kwargs):

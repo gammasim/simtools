@@ -38,7 +38,7 @@ def validate_schema(data, schema_file):
         if validation fails
 
     """
-    schema, schema_file = _load_schema(schema_file)
+    schema, schema_file = _load_schema(schema_file, data.get("schema_version", "0.1.0"))
 
     try:
         jsonschema.validate(data, schema=schema, format_checker=format_checkers.format_checker)
@@ -72,17 +72,17 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
     return _fill_defaults(schema["definitions"], observatory)
 
 
-def _load_schema(schema_file=None):
+def _load_schema(schema_file=None, schema_version=None):
     """
     Load parameter schema from file from simpipe metadata schema.
 
     Returns
     -------
-    schema_file dict
-        Schema used for validation.
-    schema_file str
+    schema_file: str
         File name schema is loaded from. If schema_file is not given,
         the default schema file name is returned.
+    schema_version: str
+        Schema version.
 
     Raises
     ------
@@ -98,6 +98,16 @@ def _load_schema(schema_file=None):
     except FileNotFoundError:
         schema_file = files("simtools").joinpath("schemas") / schema_file
         schema = gen.collect_data_from_file(file_name=schema_file)
+    if isinstance(schema, list):  # schema file with several schemas defined
+        if schema_version is not None:
+            for doc in schema:
+                if doc.get("version") == schema_version:
+                    schema = doc
+                    break
+        else:
+            raise ValueError(f"Schema version not given in {schema_file}.")
+    elif schema_version is not None and schema_version != schema.get("version"):
+        _logger.warning(f"Schema version {schema_version} does not match {schema.get('version')}")
     _logger.debug(f"Loading schema from {schema_file}")
     _add_array_elements("InstrumentTypeElement", schema)
 
