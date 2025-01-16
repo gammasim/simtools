@@ -2,7 +2,6 @@
 
 import logging
 import re
-from importlib.resources import files
 from pathlib import Path
 from threading import Lock
 
@@ -68,7 +67,6 @@ class DatabaseHandler:
     DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
     # DB collection with updates field names
     DB_DERIVED_VALUES = "Staging-CTA-Simulation-Model-Derived-Values"
-    DB_PRODUCTION_TABLES = "production_tables"
 
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
@@ -182,6 +180,49 @@ class DatabaseHandler:
         else:
             raise ValueError("Found LATEST in the DB name but no matching versions found in DB.")
 
+    def get_model_parameter(
+        self,
+        parameter,
+        parameter_version,
+        site,
+        array_element_name,
+        collection,
+    ):
+        """
+        Get a single model parameter (using the parameter version).
+
+        Parameters
+        ----------
+        parameter: str
+            Name of the parameter.
+        parameter_version: str
+            Version of the parameter.
+        site: str
+            Site name.
+        array_element_name: str
+            Name of the array element model (e.g. MSTN, SSTS).
+        collection: str
+            Collection of array element (e.g. telescopes, calibration_devices).
+
+        Returns
+        -------
+        dict containing the parameter
+
+        """
+        query = {
+            "parameter_version": parameter_version,
+            "parameter": parameter,
+        }
+        if array_element_name is not None:
+            query["instrument"] = array_element_name
+        if site is not None:
+            query["site"] = site
+        return self.read_mongo_db(
+            query=query,
+            collection_name=collection,
+            write_files=False,
+        )
+
     def get_model_parameters(
         self,
         site,
@@ -237,9 +278,9 @@ class DatabaseHandler:
                 continue
             pars.update(
                 self.read_mongo_db(
-                    db_name=self.mongo_db_config.get("db_simulation_model", None),
-                    parameter_version_table=parameter_version_table,
-                    array_element_name=array_element,
+                    query=self._get_query_from_parameter_version_table(
+                        parameter_version_table, array_element
+                    ),
                     collection_name=collection,
                     write_files=False,
                 )
@@ -330,11 +371,19 @@ class DatabaseHandler:
         """Verify if a parameter value is a file name."""
         return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
+    def _get_query_from_parameter_version_table(self, parameter_version_table, array_element_name):
+        """Return query based on parameter version table."""
+        return {
+            "instrument": array_element_name,
+            "$or": [
+                {"parameter": param, "parameter_version": version}
+                for param, version in parameter_version_table.items()
+            ],
+        }
+
     def read_mongo_db(
         self,
-        db_name,
-        parameter_version_table,
-        array_element_name,
+        query,
         collection_name,
         run_location=None,
         write_files=True,
@@ -346,12 +395,8 @@ class DatabaseHandler:
 
         Parameters
         ----------
-        db_name: str
-            the name of the DB
-        parameter_version_table: dict
-            Dict with parameter names vs parameter versions.
-        array_element_name: str
-            Name of the array element model (e.g. MSTN-design ...)
+        query: dict
+            Dictionary describing the query to execute.
         run_location: Path or str
             The sim_telarray run location to write the tabulated data files into.
         collection_name: str
@@ -368,14 +413,8 @@ class DatabaseHandler:
         ValueError
             if query returned no results or if the collection is not found in the production table.
         """
+        db_name = self._get_db_name()
         collection = self.get_collection(db_name, collection_name)
-        query = {
-            "instrument": array_element_name,
-            "$or": [
-                {"parameter": param, "parameter_version": version}
-                for param, version in parameter_version_table.items()
-            ],
-        }
         posts = list(collection.find(query).sort("parameter", ASCENDING))
         if not posts:
             raise ValueError(
@@ -417,35 +456,6 @@ class DatabaseHandler:
         except KeyError:
             pass
 
-        db_name = self._get_db_name()
-        DatabaseHandler.site_parameters_cached[cache_key] = self._get_site_parameters_mongo_db(
-            db_name, site, production_table
-        )
-        return DatabaseHandler.site_parameters_cached[cache_key]
-
-    def _get_site_parameters_mongo_db(self, db_name, site, production_table):
-        """
-        Get parameters from MongoDB for a specific site.
-
-        Parameters
-        ----------
-        db_name: str
-            The name of the DB.
-        site: str
-            Site name.
-        production_table: dict
-            Table with parameter versions.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        Raises
-        ------
-        ValueError
-            if query returned zero results.
-        """
-        collection = self.get_collection(db_name, "sites")
         try:
             parameter_query = production_table["parameters"][f"OBS-{site}"]
         except KeyError as exc:
@@ -457,21 +467,10 @@ class DatabaseHandler:
                 for param, version in parameter_query.items()
             ],
         }
-        posts = list(collection.find(query).sort("parameter", ASCENDING))
-        if not posts:
-            raise ValueError(
-                "The following query returned zero results! Check the input data and rerun.\n",
-                query,
-            )
-        _parameters = {}
-        for post in posts:
-            par_now = post["parameter"]
-            _parameters[par_now] = post
-            _parameters[par_now].pop("parameter", None)
-            _parameters[par_now].pop("site", None)
-            _parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-
-        return _parameters
+        DatabaseHandler.site_parameters_cached[cache_key] = self.read_mongo_db(
+            query=query, collection_name="sites", write_files=False
+        )
+        return DatabaseHandler.site_parameters_cached[cache_key]
 
     def get_production_table_from_mongo_db(self, collection_name, model_version):
         """
@@ -630,9 +629,9 @@ class DatabaseHandler:
             pass
 
         DatabaseHandler.corsika_configuration_parameters_cached[cache_key] = self.read_mongo_db(
-            db_name=self._get_db_name(),
-            parameter_version_table=_production_table["parameters"],
-            array_element_name=None,
+            query=self._get_query_from_parameter_version_table(
+                _production_table["parameters"], None
+            ),
             collection_name="configuration_corsika",
             write_files=False,
         )
@@ -798,13 +797,7 @@ class DatabaseHandler:
         file_prefix: str or Path
             where to find files to upload to the DB
         """
-        data_validator = validate_data.DataValidator(
-            schema_file=files("simtools")
-            / f"schemas/model_parameters/{par_dict['parameter']}.schema.yml",
-            data_dict=par_dict,
-            check_exact_data_type=False,
-        )
-        par_dict = data_validator.validate_and_transform(is_model_parameter=True)
+        par_dict = validate_data.DataValidator.validate_model_parameter(par_dict)
 
         db_name = self._get_db_name(db_name)
         collection = self.get_collection(db_name, collection_name)
