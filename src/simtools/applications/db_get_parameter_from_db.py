@@ -92,13 +92,18 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # TODO: Implement parameter version
-    if args_dict["parameter_version"] is not None:
-        raise NotImplementedError("Parameter version is not yet implemented.")
-
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    if args_dict["telescope"]:
+    if args_dict["parameter_version"] is not None:
+        pars = db.get_model_parameter(
+            parameter=args_dict["parameter"],
+            parameter_version=args_dict["parameter_version"],
+            site=args_dict["site"],
+            array_element_name=args_dict["telescope"],
+            collection=(args_dict["db_collection"] if args_dict["db_collection"] else "telescopes"),
+        )
+
+    elif args_dict["telescope"]:
         pars = db.get_model_parameters(
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
