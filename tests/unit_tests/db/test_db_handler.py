@@ -139,23 +139,6 @@ def test_reading_db_sst(db, model_version):
         assert pars["camera_pixels"] == 2048
 
 
-@pytest.mark.xfail(reason="Test requires Derived-Values Database")
-def test_get_derived_values(db, model_version_prod5):
-    logger.info("----Testing reading derived values-----")
-    try:
-        pars = db.get_derived_values("North", "LSTN-01", model_version_prod5)
-        assert (
-            pars["ray_tracing"]["value"]
-            == "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
-        )
-    except ValueError:
-        logger.error("Derived DB not updated for new telescope names. Expect failure")
-        raise AssertionError
-
-    with pytest.raises(ValueError, match=r"^abc"):
-        pars = db.get_derived_values("North", None, model_version_prod5)
-
-
 def test_get_sim_telarray_configuration_parameters(db, model_version):
 
     _pars = db.get_model_parameters(

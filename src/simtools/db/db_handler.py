@@ -64,10 +64,6 @@ class DatabaseHandler:
         Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).
     """
 
-    DB_CTA_SIMULATION_MODEL_DESCRIPTIONS = "CTA-Simulation-Model-Descriptions"
-    # DB collection with updates field names
-    DB_DERIVED_VALUES = "Staging-CTA-Simulation-Model-Derived-Values"
-
     ALLOWED_FILE_EXTENSIONS = [".dat", ".txt", ".lis", ".cfg", ".yml", ".yaml", ".ecsv"]
 
     db_client = None
@@ -530,35 +526,6 @@ class DatabaseHandler:
                 for entry in all_array_elements
                 if entry.startswith(array_element_type) and "-design" not in entry
             ]
-        )
-
-    def get_derived_values(self, array_element_name, model_version):
-        """
-        Get all derived values from the DB for a specific array element.
-
-        Parameters
-        ----------
-        array_element_name: str
-            Name of the array element model (e.g. MSTN, SSTS).
-        model_version: str
-            Version of the model.
-
-        Returns
-        -------
-        dict containing the parameters
-
-        """
-        array_element_name = (
-            names.validate_array_element_name(array_element_name) if array_element_name else None
-        )
-
-        return self.read_mongo_db(
-            DatabaseHandler.DB_DERIVED_VALUES,
-            array_element_name,
-            model_version,
-            run_location=None,
-            collection_name="derived_values",
-            write_files=False,
         )
 
     def get_simulation_configuration_parameters(

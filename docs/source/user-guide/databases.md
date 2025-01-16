@@ -1,6 +1,6 @@
 # Databases
 
-The simtools package uses a prototype MongoDB database to store the simulation model parameters and derived data products.
+The simtools package uses a prototype MongoDB database to store the simulation model parameters.
 Access to the DB is handled via a dedicated API module ([db_handler](#dbhandler)).
 
 Simulation model parameters are stored in databases (see the [Simulation Model](model_parameters.md#simulation-model) section) and synced with the [CTAO model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters).
@@ -26,15 +26,6 @@ Collections:
 * `configuration_sim_telarray` with default configuration parameters for the sim_telarray simulation
 * `metadata` containing tables describing the model versions
 * `fs.files` with all file type entries for the model parameters (e.g., the quantum-efficiency tables)
-
-### Derived values DB
-
-Database with derived values DB (e.g., `Staging-CTA-Simulation-Model-Derived-Values` defined in `db_handler.DB_DERIVED_VALUES`).
-
-Collections are:
-
-* `derived_values` with the derived values for each telescope or site
-* `fs.files` with file type derived results
 
 ### Other databases
 
