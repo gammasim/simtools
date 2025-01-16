@@ -38,7 +38,10 @@ def validate_schema(data, schema_file):
         if validation fails
 
     """
-    schema, schema_file = _load_schema(schema_file, data.get("schema_version", "0.1.0"))
+    schema, schema_file = _load_schema(
+        schema_file,
+        data.get("schema_version", "0.1.0"),  # default version to ensure backward compatibility
+    )
 
     try:
         jsonschema.validate(data, schema=schema, format_checker=format_checkers.format_checker)
