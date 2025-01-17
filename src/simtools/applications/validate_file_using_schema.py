@@ -63,13 +63,12 @@ def _parse(label, description):
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--file_name", help="File to be validated")
     group.add_argument(
-        "--model_parameters_directory",
+        "--file_directory",
         help=(
-            "Directory with json files with model parameters to be validated."
-            "All *.json files in the directory will be validated."
-            "Schema files will be taken from simtools/schemas/model_parameters/."
-            "Note that in this case the data_type argument is ignored"
-            "and data_type=model_parameter is always used."
+            "Directory with json files to be validated. "
+            "If no schema file is provided, the assumption is that model "
+            "parameters are validated and the schema files are taken from "
+            "simtools/schemas/model_parameters/."
         ),
     )
     config.parser.add_argument("--schema", help="Json schema file", required=False)
@@ -123,8 +122,8 @@ def validate_schema(args_dict, logger):
     the metadata section of the data dictionary.
 
     """
-    if args_dict.get("model_parameters_directory") is not None:
-        file_list = list(Path(args_dict["model_parameters_directory"]).rglob("*.json"))
+    if args_dict.get("file_directory") is not None:
+        file_list = list(Path(args_dict["file_directory"]).rglob("*.json"))
     else:
         file_list = [args_dict["file_name"]]
     for file_name in file_list:
@@ -139,10 +138,10 @@ def validate_schema(args_dict, logger):
 
 def validate_data_files(args_dict, logger):
     """Validate data files."""
-    model_parameters_directory = args_dict.get("model_parameters_directory")
-    if model_parameters_directory is not None:
+    file_directory = args_dict.get("file_directory")
+    if file_directory is not None:
         tmp_args_dict = {}
-        for file_name in Path(model_parameters_directory).rglob("*.json"):
+        for file_name in Path(file_directory).rglob("*.json"):
             tmp_args_dict["file_name"] = file_name
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
             schema_file = (
