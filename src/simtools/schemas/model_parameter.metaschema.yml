@@ -17,10 +17,10 @@ definitions:
     properties:
       _id:
         type: string
-        description: "DB unique identifier"
+        description: "DB unique identifier."
       entry_date:
         type: string
-        description: "Value entry data"
+        description: "Value entry date."
       file:
         type: boolean
         description: "This parameter is a file."
@@ -62,12 +62,10 @@ definitions:
       parameter_version:
         anyOf:
           - type: string
-          - type: "null"
         description: "Parameter version."
       schema_version:
         anyOf:
           - type: string
-          - type: "null"
         description: "Metaschema version."
       unique_id:
         anyOf:
