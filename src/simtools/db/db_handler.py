@@ -597,7 +597,8 @@ class DatabaseHandler:
 
         DatabaseHandler.corsika_configuration_parameters_cached[cache_key] = self.read_mongo_db(
             query=self._get_query_from_parameter_version_table(
-                _production_table["parameters"], None
+                _production_table["parameters"]["xSTx-design"],  # design model for all telescopes
+                None,
             ),
             collection_name="configuration_corsika",
             write_files=False,
