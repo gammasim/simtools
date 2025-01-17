@@ -41,6 +41,12 @@ def test_collect_dict_data(io_handler, caplog) -> None:
     assert isinstance(_dict, dict)
     assert len(_dict) > 0
 
+    # file with several documents
+    _file = "src/simtools/schemas/model_parameter.metaschema.yml"
+    _list = gen.collect_data_from_file(_file)
+    assert isinstance(_list, list)
+    assert len(_list) > 0
+
 
 def test_collect_dict_from_url(io_handler) -> None:
     _file = "tests/resources/num_gains.schema.yml"
