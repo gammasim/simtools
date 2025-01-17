@@ -236,12 +236,13 @@ class CommandLineParser(argparse.ArgumentParser):
             return
 
         _job_group = self.add_argument_group("simulation model")
-        _job_group.add_argument(
-            "--model_version",
-            help="production model version",
-            type=str,
-            default=None,
-        )
+        if "model_version" in model_options:
+            _job_group.add_argument(
+                "--model_version",
+                help="production model version",
+                type=str,
+                default=None,
+            )
         if "parameter_version" in model_options:
             _job_group.add_argument(
                 "--parameter_version",

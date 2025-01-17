@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     VALUE: "2.177 km"
     INSTRUMENT: North
     SITE: North
-    MODEL_VERSION: 6.0.0
+    PARAMETER_VERSION: 0.1.0
     INPUT_META: null
     OUTPUT_PATH: simtools-output
     USE_PLAIN_OUTPUT_PATH: true

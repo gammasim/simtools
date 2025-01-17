@@ -207,7 +207,9 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    return config.initialize(db_config=True, output=True, simulation_model="telescope")
+    return config.initialize(
+        db_config=True, output=True, simulation_model=["telescope", "model_version"]
+    )
 
 
 def main():  # noqa: D103
