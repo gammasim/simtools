@@ -26,13 +26,21 @@ r"""
 
     Example
     -------
-    Get the mirror_list parameter from the DB.
+    Get the mirror_list parameter used for a given model_version from the DB.
 
     .. code-block:: console
 
         simtools-db-get-parameter-from-db --parameter mirror_list \\
                 --site North --telescope LSTN-01 \\
                 --model_version 5.0.0
+
+    Get the mirror_list parameter using the parameter_version from the DB.
+
+    .. code-block:: console
+
+        simtools-db-get-parameter-from-db --parameter mirror_list \\
+                --site North --telescope LSTN-01 \\
+                --parameter_version 5.0.0
 
 """
 
