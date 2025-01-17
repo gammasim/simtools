@@ -51,7 +51,9 @@ def _parse():
             f"  SST: {telescope_distance['SST']}\n"
         ),
     )
-    return config.initialize(db_config=False, simulation_model="site", output=True)
+    return config.initialize(
+        db_config=False, simulation_model=["site", "model_version"], output=True
+    )
 
 
 def main():

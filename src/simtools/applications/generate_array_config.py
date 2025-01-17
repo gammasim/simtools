@@ -50,7 +50,7 @@ def _parse(label, description):
         Command line parser object.
     """
     config = configurator.Configurator(label=label, description=description)
-    return config.initialize(db_config=True, simulation_model=["site", "layout"])
+    return config.initialize(db_config=True, simulation_model=["site", "layout", "model_version"])
 
 
 def main():

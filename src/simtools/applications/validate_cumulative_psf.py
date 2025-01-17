@@ -110,7 +110,7 @@ def _parse(label):
         help="Data file name with the measured PSF vs radius [cm]",
         type=str,
     )
-    return config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
 
 
 def load_data(datafile):
