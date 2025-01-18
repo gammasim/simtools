@@ -254,16 +254,25 @@ class DatabaseHandler:
         design_model = f"{names.get_array_element_type_from_name(array_element_name)}-design"
         array_element_list = (
             [array_element_name]
-            if "-design" in array_element_name
+            if "-design" in array_element_name  # design model must be first in list
             else [design_model, array_element_name]
         )
 
         pars = {}
-        for array_element in array_element_list:  # design model must be read first
-            cache_key = self._cache_key(
-                names.validate_site_name(site), array_element, model_version, collection
+        for array_element in array_element_list:
+            cache_key, cache_dict = self._fill_from_cache(
+                DatabaseHandler.model_parameters_cached,
+                names.validate_site_name(site),
+                array_element,
+                model_version,
+                collection,
             )
-            pars.update(DatabaseHandler.model_parameters_cached.get(cache_key, {}))
+            if cache_dict:
+                self._logger.debug(f"Found {array_element} in cache (key: {cache_key})")
+                pars.update(cache_dict)
+                continue
+            self._logger.debug(f"Did not find {array_element} in cache (key: {cache_key})")
+
             try:
                 parameter_version_table = production_table["parameters"][array_element]
             except KeyError as exc:
@@ -446,11 +455,12 @@ class DatabaseHandler:
         """
         site = names.validate_site_name(site)
         production_table = self.get_production_table_from_mongo_db("sites", model_version)
-        cache_key = self._cache_key(site, None, production_table.get("model_version"))
-        try:
-            return DatabaseHandler.site_parameters_cached[cache_key]
-        except KeyError:
-            pass
+        cache_key, cache_dict = self._fill_from_cache(
+            DatabaseHandler.site_parameters_cached,
+            self._cache_key(site, None, production_table.get("model_version")),
+        )
+        if cache_dict:
+            return cache_dict
 
         try:
             parameter_query = production_table["parameters"][f"OBS-{site}"]
@@ -588,12 +598,14 @@ class DatabaseHandler:
         _production_table = self.get_production_table_from_mongo_db(
             "configuration_corsika", model_version
         )
-        cache_key = self._cache_key(None, None, _production_table.get("model_version"))
-
-        try:
-            return DatabaseHandler.corsika_configuration_parameters_cached[cache_key]
-        except KeyError:
-            pass
+        cache_key, cache_dict = self._fill_from_cache(
+            DatabaseHandler.corsika_configuration_parameters_cached,
+            None,
+            None,
+            _production_table.get("model_version"),
+        )
+        if cache_dict:
+            return cache_dict
 
         DatabaseHandler.corsika_configuration_parameters_cached[cache_key] = self.read_mongo_db(
             query=self._get_query_from_parameter_version_table(
@@ -874,6 +886,36 @@ class DatabaseHandler:
         return "-".join(
             part for part in [model_version, collection, site, array_element_name] if part
         )
+
+    def _fill_from_cache(
+        self, cache_dict, site=None, array_element_name=None, model_version=None, collection=None
+    ):
+        """
+        Fill a parameter dict from cache.
+
+        Parameters
+        ----------
+        cache_dict: dict
+            Cache dictionary.
+        site: str
+            Site name.
+        array_element_name: str
+            Array element name.
+        model_version: str
+            Model version.
+        collection: str
+            DB collection name.
+
+        Returns
+        -------
+        str
+            Cache key.
+        """
+        cache_key = self._cache_key(site, array_element_name, model_version, collection)
+        try:
+            return cache_key, cache_dict[cache_key]
+        except KeyError:
+            return cache_key, None
 
     def _reset_production_table_cache(self, collection_name, model_version):
         """
