@@ -2,8 +2,8 @@ CTA_SIMPIPE:
   APPLICATION: simtools-db-get-parameter-from-db
   TEST_NAME: telescope_parameter_array_element_position_ground
   CONFIGURATION:
-    SITE: South
-    TELESCOPE: SSTS-09
+    SITE: North
+    TELESCOPE: MSTN-09
     PARAMETER: array_element_position_ground
     MODEL_VERSION: 6.0.0
     OUTPUT_FILE: test.json
