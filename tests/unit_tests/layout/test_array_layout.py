@@ -455,7 +455,7 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
 
     ground_dict = layout.export_one_telescope_as_json(crs_name="ground")
     assert isinstance(ground_dict, dict)
-    assert ground_dict["instrument"] == "SSTS-09"
+    assert ground_dict["instrument"] == "MSTN-09"
     assert ground_dict["parameter"] == "array_element_position_ground"
 
     utm_dict = layout.export_one_telescope_as_json(crs_name="utm")

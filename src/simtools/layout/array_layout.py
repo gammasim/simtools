@@ -386,7 +386,7 @@ class ArrayLayout:
         with Path(file_name).open("r", encoding="utf-8") as file:
             data = json.load(file)
 
-        position = gen.convert_string_to_list(data["value"])
+        position = data["value"]
         self.site = data.get("site", None)
 
         table = QTable()
