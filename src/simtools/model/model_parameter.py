@@ -173,7 +173,10 @@ class ModelParameter:
         _value = self.get_parameter_value(par_name, _parameter)
 
         try:
-            _unit = [item.strip() for item in _parameter.get("unit").split(",")]
+            if isinstance(_parameter.get("unit"), str):  # TODO - check if still needed
+                _unit = [item.strip() for item in _parameter.get("unit").split(",")]
+            else:
+                _unit = _parameter.get("unit")
 
             # if there is only one value or the values share one unit
             if (isinstance(_value, (int | float))) or (len(_value) > len(_unit)):
