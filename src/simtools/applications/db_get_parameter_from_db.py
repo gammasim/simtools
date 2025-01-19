@@ -91,15 +91,16 @@ def main():  # noqa: D103
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
+    # get parameter using 'parameter_version'
     if args_dict["parameter_version"] is not None:
         pars = db.get_model_parameter(
             parameter=args_dict["parameter"],
             parameter_version=args_dict["parameter_version"],
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
-            collection=(args_dict["db_collection"] if args_dict["db_collection"] else "telescopes"),
+            collection=args_dict.get("db_collection", "telescopes"),
         )
-
+    # get parameter using 'model_version'
     elif args_dict["telescope"]:
         pars = db.get_model_parameters(
             site=args_dict["site"],
@@ -111,11 +112,12 @@ def main():  # noqa: D103
                 else "telescopes"
             ),
         )
-    elif args_dict["db_collection"] == "configuration_corsika":
-        pars = db.get_corsika_configuration_parameters(model_version=args_dict["model_version"])
     else:
-        pars = db.get_site_parameters(
-            site=args_dict["site"], model_version=args_dict["model_version"]
+        pars = db.get_model_parameters(
+            site=args_dict.get("site"),
+            model_version=args_dict["model_version"],
+            collection=args_dict["db_collection"],
+            array_element_name=None,
         )
     param = args_dict["parameter"]
     if param not in pars:

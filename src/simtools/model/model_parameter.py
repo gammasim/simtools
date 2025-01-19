@@ -309,9 +309,14 @@ class ModelParameter:
             )
 
         if self.site is not None:
-            _site_pars = self.db.get_site_parameters(self.site, self.model_version)
-            self._parameters.update(_site_pars)
-
+            self._parameters.update(
+                self.db.get_model_parameters(
+                    self.site,
+                    None,
+                    self.model_version,
+                    "sites",
+                )
+            )
         self._load_simulation_software_parameter()
 
     def set_extra_label(self, extra_label):
