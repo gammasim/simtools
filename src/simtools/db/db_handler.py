@@ -226,7 +226,7 @@ class DatabaseHandler:
         Get model parameters from MongoDB.
 
         An array element can be e.g., a telescope or a calibration device.
-        Always queries parameters for design and for the specified array element (if necessary).
+        Queries parameters for design and for the specified array element (if necessary).
 
         Parameters
         ----------
@@ -244,13 +244,15 @@ class DatabaseHandler:
         dict containing the parameters
         """
         production_table = self.get_production_table_from_mongo_db(collection, model_version)
-        array_element_list = self._get_array_element_list(array_element_name, production_table)
+        array_element_list = self._get_array_element_list(
+            array_element_name, site, production_table, collection
+        )
 
         pars = {}
         for array_element in array_element_list:
             cache_key, cache_dict = self._read_cache(
                 DatabaseHandler.model_parameters_cached,
-                names.validate_site_name(site),
+                names.validate_site_name(site) if site else None,
                 array_element,
                 model_version,
                 collection,
@@ -265,15 +267,13 @@ class DatabaseHandler:
                 parameter_version_table = production_table["parameters"][array_element]
             except KeyError:
                 continue
-            pars.update(
-                self.read_mongo_db(
-                    query=self._get_query_from_parameter_version_table(
-                        parameter_version_table, array_element
-                    ),
-                    collection_name=collection,
-                )
+            DatabaseHandler.model_parameters_cached[cache_key] = self.read_mongo_db(
+                query=self._get_query_from_parameter_version_table(
+                    parameter_version_table, array_element, site
+                ),
+                collection_name=collection,
             )
-            DatabaseHandler.model_parameters_cached[cache_key] = pars
+            pars.update(DatabaseHandler.model_parameters_cached[cache_key])
 
         return pars
 
@@ -346,15 +346,21 @@ class DatabaseHandler:
                 instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
         return instance_ids
 
-    def _get_query_from_parameter_version_table(self, parameter_version_table, array_element_name):
+    def _get_query_from_parameter_version_table(
+        self, parameter_version_table, array_element_name, site
+    ):
         """Return query based on parameter version table."""
-        return {
-            "instrument": array_element_name,
+        query_dict = {
             "$or": [
                 {"parameter": param, "parameter_version": version}
                 for param, version in parameter_version_table.items()
             ],
         }
+        if array_element_name not in {"xSTx-design"} and not array_element_name.startswith("OBS-"):
+            query_dict["instrument"] = array_element_name
+        if site:
+            query_dict["site"] = site
+        return query_dict
 
     def read_mongo_db(self, query, collection_name):
         """
@@ -391,46 +397,6 @@ class DatabaseHandler:
             parameters[par_now].pop("parameter", None)
             parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
         return parameters
-
-    def get_site_parameters(self, site, model_version):
-        """
-        Get site parameters from MongoDB.
-
-        Parameters
-        ----------
-        site: str
-            Site name.
-        model_version: str
-            Version of the model.
-
-        Returns
-        -------
-        dict containing the parameters
-        """
-        site = names.validate_site_name(site)
-        production_table = self.get_production_table_from_mongo_db("sites", model_version)
-        cache_key, cache_dict = self._read_cache(
-            DatabaseHandler.site_parameters_cached,
-            self._cache_key(site, None, production_table.get("model_version")),
-        )
-        if cache_dict:
-            return cache_dict
-
-        try:
-            parameter_query = production_table["parameters"][f"OBS-{site}"]
-        except KeyError as exc:
-            raise ValueError(f"Site {site} not found in the production table") from exc
-        query = {
-            "site": site,
-            "$or": [
-                {"parameter": param, "parameter_version": version}
-                for param, version in parameter_query.items()
-            ],
-        }
-        DatabaseHandler.site_parameters_cached[cache_key] = self.read_mongo_db(
-            query=query, collection_name="sites"
-        )
-        return DatabaseHandler.site_parameters_cached[cache_key]
 
     def get_production_table_from_mongo_db(self, collection_name, model_version):
         """
@@ -520,7 +486,12 @@ class DatabaseHandler:
             if simulation_software is not valid.
         """
         if simulation_software == "corsika":
-            return self.get_corsika_configuration_parameters(model_version)
+            return self.get_model_parameters(
+                site,
+                array_element_name,
+                model_version,
+                collection="configuration_corsika",
+            )
         if simulation_software == "simtel":
             return (
                 self.get_model_parameters(
@@ -533,41 +504,6 @@ class DatabaseHandler:
                 else {}
             )
         raise ValueError(f"Unknown simulation software: {simulation_software}")
-
-    def get_corsika_configuration_parameters(self, model_version):
-        """
-        Get CORSIKA configuration parameters from the DB.
-
-        Parameters
-        ----------
-        model_version : str
-            Version of the model.
-
-        Returns
-        -------
-        dict
-            Configuration parameters for CORSIKA
-        """
-        _production_table = self.get_production_table_from_mongo_db(
-            "configuration_corsika", model_version
-        )
-        cache_key, cache_dict = self._read_cache(
-            DatabaseHandler.corsika_configuration_parameters_cached,
-            None,
-            None,
-            _production_table.get("model_version"),
-        )
-        if cache_dict:
-            return cache_dict
-
-        DatabaseHandler.corsika_configuration_parameters_cached[cache_key] = self.read_mongo_db(
-            query=self._get_query_from_parameter_version_table(
-                _production_table["parameters"]["xSTx-design"],  # design model for all telescopes
-                None,
-            ),
-            collection_name="configuration_corsika",
-        )
-        return DatabaseHandler.corsika_configuration_parameters_cached[cache_key]
 
     @staticmethod
     def _get_file_mongo_db(db_name, file_name):
@@ -701,9 +637,7 @@ class DatabaseHandler:
         collection = self.get_collection(db_name, "production_tables")
         self._logger.info(f"Adding production for {production_table.get('collection')} to to DB")
         collection.insert_one(production_table)
-        self._reset_production_table_cache(
-            production_table.get("collection"), production_table.get("model_version")
-        )
+        DatabaseHandler.production_table_cached.clear()
 
     def add_new_parameter(
         self,
@@ -869,21 +803,6 @@ class DatabaseHandler:
         except KeyError:
             return cache_key, None
 
-    def _reset_production_table_cache(self, collection_name, model_version):
-        """
-        Reset the cache for the production tables.
-
-        Parameters
-        ----------
-        collection_name: str
-            Collection name.
-        model_version: str
-            Model version.
-        """
-        DatabaseHandler.production_table_cached.pop(
-            self._cache_key(model_version=model_version, collection=collection_name), None
-        )
-
     def _reset_parameter_cache(self):
         """Reset the cache for the parameters."""
         DatabaseHandler.site_parameters_cached.clear()
@@ -920,7 +839,7 @@ class DatabaseHandler:
             ]
         return collections
 
-    def _get_array_element_list(self, array_element_name, production_table):
+    def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """
         Return list of array elements (add design model if needed).
 
@@ -930,14 +849,22 @@ class DatabaseHandler:
         ----------
         array_element_name: str
             Name of the array element.
+        site: str
+            Site name.
         production_table: dict
             Production table.
+        collection: str
+            collection of array element (e.g. telescopes, calibration_devices).
 
         Returns
         -------
         list
             List of array elements
         """
+        if collection == "configuration_corsika":
+            return ["xSTx-design"]  # placeholder for any telescope design
+        if collection == "sites":
+            return [f"OBS-{site}"]
         if "-design" in array_element_name:
             return [array_element_name]
         try:
