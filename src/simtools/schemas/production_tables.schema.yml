@@ -19,7 +19,7 @@ definitions:
         pattern: '^\d+\.\d+\.\d+$'
       parameters:
         type: object
-        description: Model parameters
+        description: Model parameters.
         additionalProperties:
           type: object
           description: Model parameter.
@@ -30,6 +30,12 @@ definitions:
         propertyNames:
           description: Allowed parameter name patterns.
           pattern: '^([A-Za-z](ST|LL)[N,S,x]-\d{2,3}|[A-Za-z](ST|LL)[N,S,x]-design|OBS-(North|South)|Dummy-Telescope)$'
+      design_model:
+        type: object
+        description: Design models.
+        additionalProperties:
+          type: string
+          description: Design model of a telescope
     required:
       - model_version
       - parameters
