@@ -213,11 +213,7 @@ class DatabaseHandler:
             query["instrument"] = array_element_name
         if site is not None:
             query["site"] = site
-        return self.read_mongo_db(
-            query=query,
-            collection_name=collection,
-            write_files=False,
-        )
+        return self.read_mongo_db(query=query, collection_name=collection)
 
     def get_model_parameters(
         self,
@@ -225,7 +221,6 @@ class DatabaseHandler:
         array_element_name,
         model_version,
         collection,
-        allow_missing_array_elements=False,
     ):
         """
         Get model parameters from MongoDB.
@@ -243,24 +238,17 @@ class DatabaseHandler:
             Version of the model.
         collection: str
             collection of array element (e.g. telescopes, calibration_devices).
-        allow_missing_array_elements: bool
-            Allow missing array elements in the DB without raising an error.
 
         Returns
         -------
         dict containing the parameters
         """
         production_table = self.get_production_table_from_mongo_db(collection, model_version)
-        design_model = f"{names.get_array_element_type_from_name(array_element_name)}-design"
-        array_element_list = (
-            [array_element_name]
-            if "-design" in array_element_name  # design model must be first in list
-            else [design_model, array_element_name]
-        )
+        array_element_list = self._get_array_element_list(array_element_name, production_table)
 
         pars = {}
         for array_element in array_element_list:
-            cache_key, cache_dict = self._fill_from_cache(
+            cache_key, cache_dict = self._read_cache(
                 DatabaseHandler.model_parameters_cached,
                 names.validate_site_name(site),
                 array_element,
@@ -275,11 +263,7 @@ class DatabaseHandler:
 
             try:
                 parameter_version_table = production_table["parameters"][array_element]
-            except KeyError as exc:
-                if array_element == design_model and not allow_missing_array_elements:
-                    self._logger.error(f"Parameters for {array_element} could not be found.")
-                    raise exc
-                # non-design model not defined (e.g. in collection 'configuration_sim_telarray')
+            except KeyError:
                 continue
             pars.update(
                 self.read_mongo_db(
@@ -287,7 +271,6 @@ class DatabaseHandler:
                         parameter_version_table, array_element
                     ),
                     collection_name=collection,
-                    write_files=False,
                 )
             )
             DatabaseHandler.model_parameters_cached[cache_key] = pars
@@ -314,47 +297,26 @@ class DatabaseHandler:
         db_name = self._get_db_name(db_name)
         return DatabaseHandler.db_client[db_name][collection_name]
 
-    def export_file_db(self, db_name, dest, file_name):
+    def export_model_files(self, parameters=None, file_names=None, dest=None, db_name=None):
         """
-        Get file from the DB and write to disk.
+        Export files from the DB to the model directory.
 
-        Parameters
-        ----------
-        db_name: str
-            Name of the DB to search in.
-        dest: str or Path
-            Location where to write the file to.
-        file_name: str
-            Name of the file to get.
-
-        Returns
-        -------
-        file_id: GridOut._id
-            the database ID the file was assigned when it was inserted to the DB.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the desired file is not found.
-
-        """
-        db_name = self._get_db_name(db_name)
-
-        self._logger.debug(f"Getting {file_name} from {db_name} and writing it to {dest}")
-        file_path_instance = self._get_file_mongo_db(db_name, file_name)
-        self._write_file_from_mongo_to_disk(db_name, dest, file_path_instance)
-        return file_path_instance._id  # pylint: disable=protected-access;
-
-    def export_model_files(self, parameters, dest):
-        """
-        Export all the files in a model from the DB and write them to disk.
+        The files to be exported can be specified by file_name or retrieved from the database
+        using the parameters dictionary.
 
         Parameters
         ----------
         parameters: dict
             Dict of model parameters
+        file_names: list, str
+            List (or string) of file names to export
         dest: str or Path
             Location where to write the files to.
+
+        Returns
+        -------
+        file_id: dict of GridOut._id
+            Dict of database IDs of files.
 
         Raises
         ------
@@ -362,14 +324,27 @@ class DatabaseHandler:
             if a file in parameters.values is not found
 
         """
-        if self.mongo_db_config:
-            for info in parameters.values():
-                if not info or not info.get("file") or info["value"] is None:
-                    continue
-                if Path(dest).joinpath(info["value"]).exists():
-                    continue
-                file = self._get_file_mongo_db(self._get_db_name(), info["value"])
-                self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file)
+        db_name = self._get_db_name(db_name)
+
+        if file_names:
+            file_names = [file_names] if not isinstance(file_names, list) else file_names
+        elif parameters:
+            file_names = [
+                info["value"]
+                for info in parameters.values()
+                if info and info.get("file") and info["value"] is not None
+            ]
+            file_names = []
+
+        instance_ids = {}
+        for file_name in file_names:
+            if Path(dest).joinpath(file_name).exists():
+                instance_ids[file_name] = "file exits"
+            else:
+                file_path_instance = self._get_file_mongo_db(self._get_db_name(), file_name)
+                self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file_path_instance)
+                instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
+        return instance_ids
 
     @staticmethod
     def _is_file(value):
@@ -390,8 +365,6 @@ class DatabaseHandler:
         self,
         query,
         collection_name,
-        run_location=None,
-        write_files=True,
     ):
         """
         Build and execute query to Read the MongoDB for a specific array element.
@@ -402,12 +375,8 @@ class DatabaseHandler:
         ----------
         query: dict
             Dictionary describing the query to execute.
-        run_location: Path or str
-            The sim_telarray run location to write the tabulated data files into.
         collection_name: str
             The name of the collection to read from.
-        write_files: bool
-            If true, write the files to the run_location.
 
         Returns
         -------
@@ -432,9 +401,6 @@ class DatabaseHandler:
             parameters[par_now] = post
             parameters[par_now].pop("parameter", None)
             parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-            if parameters[par_now]["file"] and write_files:
-                file = self._get_file_mongo_db(db_name, parameters[par_now]["value"])
-                self._write_file_from_mongo_to_disk(db_name, run_location, file)
 
         return parameters
 
@@ -455,7 +421,7 @@ class DatabaseHandler:
         """
         site = names.validate_site_name(site)
         production_table = self.get_production_table_from_mongo_db("sites", model_version)
-        cache_key, cache_dict = self._fill_from_cache(
+        cache_key, cache_dict = self._read_cache(
             DatabaseHandler.site_parameters_cached,
             self._cache_key(site, None, production_table.get("model_version")),
         )
@@ -474,7 +440,7 @@ class DatabaseHandler:
             ],
         }
         DatabaseHandler.site_parameters_cached[cache_key] = self.read_mongo_db(
-            query=query, collection_name="sites", write_files=False
+            query=query, collection_name="sites"
         )
         return DatabaseHandler.site_parameters_cached[cache_key]
 
@@ -506,6 +472,7 @@ class DatabaseHandler:
             "collection": post["collection"],
             "model_version": post["model_version"],
             "parameters": post["parameters"],
+            "design_model": post.get("design_model", {}),
             "entry_date": ObjectId(post["_id"]).generation_time,
         }
 
@@ -568,13 +535,11 @@ class DatabaseHandler:
             return self.get_corsika_configuration_parameters(model_version)
         if simulation_software == "simtel":
             return (
-                # not all array elements are present in the DB (allow for missing elements)
                 self.get_model_parameters(
                     site,
                     array_element_name,
                     model_version,
                     collection="configuration_sim_telarray",
-                    allow_missing_array_elements=True,
                 )
                 if site and array_element_name
                 else {}
@@ -598,7 +563,7 @@ class DatabaseHandler:
         _production_table = self.get_production_table_from_mongo_db(
             "configuration_corsika", model_version
         )
-        cache_key, cache_dict = self._fill_from_cache(
+        cache_key, cache_dict = self._read_cache(
             DatabaseHandler.corsika_configuration_parameters_cached,
             None,
             None,
@@ -613,7 +578,6 @@ class DatabaseHandler:
                 None,
             ),
             collection_name="configuration_corsika",
-            write_files=False,
         )
         return DatabaseHandler.corsika_configuration_parameters_cached[cache_key]
 
@@ -806,7 +770,7 @@ class DatabaseHandler:
             self._logger.info(f"Will also add the file {file_to_insert_now} to the DB")
             self.insert_file_to_db(file_to_insert_now, db_name)
 
-        self._reset_parameter_cache(par_dict["site"], par_dict["instrument"], None)
+        self._reset_parameter_cache()
 
     def _get_db_name(self, db_name=None):
         """
@@ -887,11 +851,11 @@ class DatabaseHandler:
             part for part in [model_version, collection, site, array_element_name] if part
         )
 
-    def _fill_from_cache(
+    def _read_cache(
         self, cache_dict, site=None, array_element_name=None, model_version=None, collection=None
     ):
         """
-        Fill a parameter dict from cache.
+        Read parameters from cache.
 
         Parameters
         ----------
@@ -932,30 +896,10 @@ class DatabaseHandler:
             self._cache_key(model_version=model_version, collection=collection_name), None
         )
 
-    def _reset_parameter_cache(self, site, array_element_name, model_version):
-        """
-        Reset the cache for the parameters.
-
-        A value of 'None' for any of the parameters will reset the entire cache.
-
-        Parameters
-        ----------
-        site: str
-            Site name.
-        array_element_name: str
-            Array element name.
-        model_version: str
-            Model version.
-
-        """
-        self._logger.debug(f"Resetting cache for {site} {array_element_name} {model_version}")
-        if None in [site, array_element_name, model_version]:
-            DatabaseHandler.site_parameters_cached.clear()
-            DatabaseHandler.model_parameters_cached.clear()
-        else:
-            _cache_key = self._cache_key(site, array_element_name, model_version)
-            DatabaseHandler.site_parameters_cached.pop(_cache_key, None)
-            DatabaseHandler.model_parameters_cached.pop(_cache_key, None)
+    def _reset_parameter_cache(self):
+        """Reset the cache for the parameters."""
+        DatabaseHandler.site_parameters_cached.clear()
+        DatabaseHandler.model_parameters_cached.clear()
 
     def get_collections(self, db_name=None, model_collections_only=False):
         """
@@ -987,3 +931,34 @@ class DatabaseHandler:
                 if not collection.startswith("fs.") and collection != "metadata"
             ]
         return collections
+
+    def _get_array_element_list(self, array_element_name, production_table):
+        """
+        Return list of array elements (add design model if needed).
+
+        Design model is added if found in the production table.
+
+        Parameters
+        ----------
+        array_element_name: str
+            Name of the array element.
+        production_table: dict
+            Production table.
+
+        Returns
+        -------
+        list
+            List of array elements
+        """
+        if "-design" in array_element_name:
+            return [array_element_name]
+        try:
+            return [
+                production_table["design_model"][array_element_name],
+                array_element_name,
+            ]
+        except KeyError:
+            return [
+                f"{names.get_array_element_type_from_name(array_element_name)}-design",
+                array_element_name,
+            ]

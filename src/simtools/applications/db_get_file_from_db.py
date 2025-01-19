@@ -68,11 +68,13 @@ def main():  # noqa: D103
         db_config["db_simulation_model"],
         "sandbox",
     ]
-    file_id = None
+    file_id = {}
     for db_name in available_dbs:
         try:
-            file_id = db.export_file_db(
-                db_name, _io_handler.get_output_directory(), args_dict["file_name"]
+            file_id = db.export_model_files(
+                db_name=db_name,
+                dest=_io_handler.get_output_directory(),
+                file_names=args_dict["file_name"],
             )
             logger.info(
                 f"Got file {args_dict['file_name']} from DB {db_name} "
@@ -82,7 +84,7 @@ def main():  # noqa: D103
         except FileNotFoundError:
             continue
 
-    if file_id is None:
+    if file_id.get(args_dict["file_name"]) is None:
         logger.error(
             f"The file {args_dict['file_name']} was not found in any of the available DBs."
         )

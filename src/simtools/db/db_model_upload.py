@@ -119,10 +119,12 @@ def add_production_tables_to_db(args_dict, db):
             except KeyError as exc:
                 logger.error(f"KeyError: {exc}")
                 raise
-            if "design_model" in parameter_dict:
+            try:
                 model_dict[collection]["design_model"][array_element] = parameter_dict[
                     "design_model"
-                ]
+                ][array_element]
+            except KeyError:
+                pass
 
         for collection, data in model_dict.items():
             if not data["parameters"]:
