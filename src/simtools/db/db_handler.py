@@ -356,15 +356,9 @@ class DatabaseHandler:
             ],
         }
 
-    def read_mongo_db(
-        self,
-        query,
-        collection_name,
-    ):
+    def read_mongo_db(self, query, collection_name):
         """
-        Build and execute query to Read the MongoDB for a specific array element.
-
-        Also writes the files listed in the parameter values into the sim_telarray run location
+        Build and execute query to read the MongoDB for a collection.
 
         Parameters
         ----------
@@ -380,7 +374,7 @@ class DatabaseHandler:
         Raises
         ------
         ValueError
-            if query returned no results or if the collection is not found in the production table.
+            if query returned no results.
         """
         db_name = self._get_db_name()
         collection = self.get_collection(db_name, collection_name)
@@ -396,7 +390,6 @@ class DatabaseHandler:
             parameters[par_now] = post
             parameters[par_now].pop("parameter", None)
             parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-
         return parameters
 
     def get_site_parameters(self, site, model_version):
