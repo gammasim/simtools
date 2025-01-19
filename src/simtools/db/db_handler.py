@@ -334,9 +334,9 @@ class DatabaseHandler:
                 for info in parameters.values()
                 if info and info.get("file") and info["value"] is not None
             ]
-            file_names = []
 
         instance_ids = {}
+        self._logger.info(f"Exporting the following files: {file_names}")
         for file_name in file_names:
             if Path(dest).joinpath(file_name).exists():
                 instance_ids[file_name] = "file exits"
@@ -345,11 +345,6 @@ class DatabaseHandler:
                 self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file_path_instance)
                 instance_ids[file_name] = file_path_instance._id  # pylint: disable=protected-access
         return instance_ids
-
-    @staticmethod
-    def _is_file(value):
-        """Verify if a parameter value is a file name."""
-        return any(ext in str(value) for ext in DatabaseHandler.ALLOWED_FILE_EXTENSIONS)
 
     def _get_query_from_parameter_version_table(self, parameter_version_table, array_element_name):
         """Return query based on parameter version table."""
