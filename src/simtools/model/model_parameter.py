@@ -481,7 +481,7 @@ class ModelParameter:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
-        self.db.export_model_files(pars_from_db, self.config_file_directory)
+        self.db.export_model_files(parameters=pars_from_db, dest=self.config_file_directory)
         self._is_exported_model_files_up_to_date = True
 
     def export_config_file(self):
@@ -559,7 +559,7 @@ class ModelParameter:
             Model directory to export the file to.
         """
         self.db.export_model_files(
-            {
+            parameters={
                 "nsb_spectrum_at_2200m": {
                     "value": self._simulation_config_parameters["simtel"][
                         "correct_nsb_spectrum_to_telescope_altitude"
@@ -567,5 +567,5 @@ class ModelParameter:
                     "file": True,
                 }
             },
-            model_directory,
+            dest=model_directory,
         )
