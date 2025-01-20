@@ -26,10 +26,10 @@ def test_plot_1d(db, io_handler):
     title = "Test 1D plot"
 
     test_file_name = "ref_LST1_2022_04_01.dat"
-    db.export_file_db(
+    db.export_model_files(
         db_name=None,
         dest=io_handler.get_output_directory(sub_dir="model"),
-        file_name=test_file_name,
+        file_names=test_file_name,
     )
     test_data_file = gen.find_file(
         test_file_name,
