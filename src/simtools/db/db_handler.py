@@ -10,7 +10,6 @@ import jsonschema
 from bson.objectid import ObjectId
 from packaging.version import Version
 from pymongo import ASCENDING, DESCENDING, MongoClient
-from pymongo.errors import BulkWriteError
 
 from simtools.data_model import validate_data
 from simtools.io_operations import io_handler
@@ -551,74 +550,6 @@ class DatabaseHandler:
         fs_output = gridfs.GridFSBucket(db)
         with open(Path(path).joinpath(file.filename), "wb") as output_file:
             fs_output.download_to_stream_by_name(file.filename, output_file)
-
-    def copy_array_element(
-        self,
-        db_name,
-        element_to_copy,
-        version_to_copy,
-        new_array_element_name,
-        collection_name="telescopes",
-        db_to_copy_to=None,
-        collection_to_copy_to=None,
-    ):
-        """
-        Copy a full array element configuration to a new array element name.
-
-        Only a specific version is copied.
-        This function should be rarely used and is intended to simplify unit tests.
-
-        Parameters
-        ----------
-        db_name: str
-            the name of the DB to copy from
-        element_to_copy: str
-            The array element to copy
-        version_to_copy: str
-            The version of the configuration to copy
-        new_array_element_name: str
-            The name of the new array element
-        collection_name: str
-            The name of the collection to copy from.
-        db_to_copy_to: str
-            The name of the DB to copy to.
-        collection_to_copy_to: str
-            The name of the collection to copy to.
-
-        Raises
-        ------
-        BulkWriteError
-        """
-        db_name = self._get_db_name(db_name)
-        if db_to_copy_to is None:
-            db_to_copy_to = db_name
-
-        if collection_to_copy_to is None:
-            collection_to_copy_to = collection_name
-
-        self._logger.info(
-            f"Copying version {version_to_copy} of {element_to_copy} "
-            f"to the new array element {new_array_element_name} in the {db_to_copy_to} DB"
-        )
-
-        collection = self.get_collection(db_name, collection_name)
-        db_entries = []
-
-        query = {
-            "instrument": element_to_copy,
-            "version": version_to_copy,
-        }
-        for post in collection.find(query):
-            post["instrument"] = new_array_element_name
-            post.pop("_id", None)
-            db_entries.append(post)
-
-        self._logger.info(f"Creating new array element {new_array_element_name}")
-        collection = self.get_collection(db_to_copy_to, collection_to_copy_to)
-        try:
-            collection.insert_many(db_entries)
-        except BulkWriteError as exc:
-            raise BulkWriteError(str(exc.details)) from exc
 
     def add_production_table(self, db_name, production_table):
         """
