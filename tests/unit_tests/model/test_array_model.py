@@ -107,7 +107,7 @@ def test_load_array_element_positions_from_file(array_model, io_handler, telesco
 def test_get_telescope_position_parameter(array_model, io_handler):
     am = array_model
     assert am._get_telescope_position_parameter(
-        "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m
+        "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m, "2.0.0"
     ) == {
         "schema_version": "0.1.0",
         "parameter": "array_element_position_ground",
