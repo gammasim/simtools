@@ -629,10 +629,10 @@ class ArrayLayout:
             "instrument": table["telescope_name"][0],
             "site": self.site,
             "version": self.model_version,
+            "unique_id": None,
             "value": value_string,
             "unit": "m",
             "type": "float64",
-            "applicable": True,
             "file": False,
         }
 
