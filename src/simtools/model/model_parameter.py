@@ -292,10 +292,11 @@ class ModelParameter:
                         simulation_software=simulation_software,
                     )
                 )
-            except ValueError:
+            except ValueError as exc:
                 self._logger.warning(
                     f"No {simulation_software} parameters found for "
-                    f"{self.site}, {self.name} (model version {self.model_version})."
+                    f"{self.site}, {self.name} (model version {self.model_version}). "
+                    f" (Query {exc})"
                 )
 
     def _load_parameters_from_db(self):
