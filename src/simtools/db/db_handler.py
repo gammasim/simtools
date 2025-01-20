@@ -336,7 +336,6 @@ class DatabaseHandler:
             ]
 
         instance_ids = {}
-        self._logger.info(f"Exporting the following files: {file_names}")
         for file_name in file_names:
             if Path(dest).joinpath(file_name).exists():
                 instance_ids[file_name] = "file exits"
@@ -356,7 +355,7 @@ class DatabaseHandler:
                 for param, version in parameter_version_table.items()
             ],
         }
-        if array_element_name:
+        if array_element_name and array_element_name != "xSTx-design":
             query_dict["instrument"] = array_element_name
         if site:
             query_dict["site"] = site
@@ -387,8 +386,7 @@ class DatabaseHandler:
         posts = list(collection.find(query).sort("parameter", ASCENDING))
         if not posts:
             raise ValueError(
-                "The following query returned zero results! Check the input data and rerun.\n",
-                query,
+                f"The following query for {collection_name} returned zero results: {query} "
             )
         parameters = {}
         for post in posts:
@@ -862,7 +860,7 @@ class DatabaseHandler:
             List of array elements
         """
         if collection == "configuration_corsika":
-            return ["xSTx-design"]  # placeholder for any telescope design
+            return ["xSTx-design"]  # placeholder to ignore 'instrument' field in query.
         if collection == "sites":
             return [f"OBS-{site}"]
         if "-design" in array_element_name:
