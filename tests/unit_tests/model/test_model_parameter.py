@@ -161,11 +161,11 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 2
+    assert mock_db.call_count == 4
 
     telescope_copy.db = None
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 2
+    assert mock_db.call_count == 4
 
 
 def test_extra_labels(telescope_model_lst):
@@ -354,11 +354,11 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
     telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(model_directory)
 
     mock_db_export.assert_called_once_with(
-        {
+        parameters={
             "nsb_spectrum_at_2200m": {
                 "value": "test_value",
                 "file": True,
             }
         },
-        model_directory,
+        dest=model_directory,
     )
