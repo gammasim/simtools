@@ -356,7 +356,7 @@ class DatabaseHandler:
                 for param, version in parameter_version_table.items()
             ],
         }
-        if array_element_name not in {"xSTx-design"} and not array_element_name.startswith("OBS-"):
+        if array_element_name:
             query_dict["instrument"] = array_element_name
         if site:
             query_dict["site"] = site
@@ -487,8 +487,8 @@ class DatabaseHandler:
         """
         if simulation_software == "corsika":
             return self.get_model_parameters(
-                site,
-                array_element_name,
+                None,
+                None,
                 model_version,
                 collection="configuration_corsika",
             )
