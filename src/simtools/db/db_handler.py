@@ -9,7 +9,7 @@ import gridfs
 import jsonschema
 from bson.objectid import ObjectId
 from packaging.version import Version
-from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo import MongoClient
 
 from simtools.data_model import validate_data
 from simtools.io_operations import io_handler
@@ -212,7 +212,7 @@ class DatabaseHandler:
             query["instrument"] = array_element_name
         if site is not None:
             query["site"] = site
-        return self.read_mongo_db(query=query, collection_name=collection)
+        return self._read_mongo_db(query=query, collection_name=collection)
 
     def get_model_parameters(
         self,
@@ -266,7 +266,7 @@ class DatabaseHandler:
                 parameter_version_table = production_table["parameters"][array_element]
             except KeyError:
                 continue
-            DatabaseHandler.model_parameters_cached[cache_key] = self.read_mongo_db(
+            DatabaseHandler.model_parameters_cached[cache_key] = self._read_mongo_db(
                 query=self._get_query_from_parameter_version_table(
                     parameter_version_table, array_element, site
                 ),
@@ -295,6 +295,37 @@ class DatabaseHandler:
         """
         db_name = self._get_db_name(db_name)
         return DatabaseHandler.db_client[db_name][collection_name]
+
+    def get_collections(self, db_name=None, model_collections_only=False):
+        """
+        List of collections in the DB.
+
+        Parameters
+        ----------
+        db_name: str
+            Database name.
+
+        Returns
+        -------
+        list
+            List of collection names
+        model_collections_only: bool
+            If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
+
+        """
+        db_name = db_name or self._get_db_name()
+        if db_name not in self.list_of_collections:
+            self.list_of_collections[db_name] = DatabaseHandler.db_client[
+                db_name
+            ].list_collection_names()
+        collections = self.list_of_collections[db_name]
+        if model_collections_only:
+            return [
+                collection
+                for collection in collections
+                if not collection.startswith("fs.") and collection != "metadata"
+            ]
+        return collections
 
     def export_model_files(self, parameters=None, file_names=None, dest=None, db_name=None):
         """
@@ -360,7 +391,7 @@ class DatabaseHandler:
             query_dict["site"] = site
         return query_dict
 
-    def read_mongo_db(self, query, collection_name):
+    def _read_mongo_db(self, query, collection_name):
         """
         Build and execute query to read the MongoDB for a collection.
 
@@ -382,7 +413,7 @@ class DatabaseHandler:
         """
         db_name = self._get_db_name()
         collection = self.get_collection(db_name, collection_name)
-        posts = list(collection.find(query).sort("parameter", ASCENDING))
+        posts = list(collection.find(query))
         if not posts:
             raise ValueError(
                 f"The following query for {collection_name} returned zero results: {query} "
@@ -393,7 +424,7 @@ class DatabaseHandler:
             parameters[par_now] = post
             parameters[par_now].pop("parameter", None)
             parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
-        return parameters
+        return {k: parameters[k] for k in sorted(parameters)}
 
     def get_production_table_from_mongo_db(self, collection_name, model_version):
         """
@@ -415,7 +446,7 @@ class DatabaseHandler:
 
         query = {"model_version": model_version, "collection": collection_name}
         collection = self.get_collection(self._get_db_name(), "production_tables")
-        post = collection.find_one(query, sort=[("_id", DESCENDING)])
+        post = collection.find_one(query)
         if not post:
             raise ValueError(f"The following query returned zero results: {query}")
 
@@ -736,37 +767,6 @@ class DatabaseHandler:
         """Reset the cache for the parameters."""
         DatabaseHandler.site_parameters_cached.clear()
         DatabaseHandler.model_parameters_cached.clear()
-
-    def get_collections(self, db_name=None, model_collections_only=False):
-        """
-        List of collections in the DB.
-
-        Parameters
-        ----------
-        db_name: str
-            Database name.
-
-        Returns
-        -------
-        list
-            List of collection names
-        model_collections_only: bool
-            If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
-
-        """
-        db_name = db_name or self._get_db_name()
-        if db_name not in self.list_of_collections:
-            self.list_of_collections[db_name] = DatabaseHandler.db_client[
-                db_name
-            ].list_collection_names()
-        collections = self.list_of_collections[db_name]
-        if model_collections_only:
-            return [
-                collection
-                for collection in collections
-                if not collection.startswith("fs.") and collection != "metadata"
-            ]
-        return collections
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """
