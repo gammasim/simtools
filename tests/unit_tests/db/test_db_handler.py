@@ -55,7 +55,6 @@ def fs_files():
     return "fs.files"
 
 
-# TODO remove?
 @pytest.fixture
 def _db_cleanup_file_sandbox(db_no_config_file, random_id, fs_files):
     yield
@@ -380,7 +379,7 @@ def test_get_collections(db, db_config, fs_files):
     assert "metadata" not in collections_no_model
 
 
-def test_export_model_files_with_file_names(db, mocker):
+def test_export_model_files_with_file_names(db, mocker, tmp_test_directory):
     """Test export_model_files method with file names."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_get_file_mongo_db = mocker.patch.object(
@@ -389,9 +388,8 @@ def test_export_model_files_with_file_names(db, mocker):
     mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
 
     file_names = ["file1.dat", "file2.dat"]
-    dest = "/tmp"
 
-    result = db.export_model_files(file_names=file_names, dest=dest)
+    result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
     mock_get_file_mongo_db.assert_has_calls(
@@ -399,14 +397,14 @@ def test_export_model_files_with_file_names(db, mocker):
     )
     mock_write_file_from_mongo_to_disk.assert_has_calls(
         [
-            call("test_db", dest, mock_get_file_mongo_db.return_value),
-            call("test_db", dest, mock_get_file_mongo_db.return_value),
+            call("test_db", tmp_test_directory, mock_get_file_mongo_db.return_value),
+            call("test_db", tmp_test_directory, mock_get_file_mongo_db.return_value),
         ]
     )
     assert result == {"file1.dat": "file_id", "file2.dat": "file_id"}
 
 
-def test_export_model_files_with_parameters(db, mocker):
+def test_export_model_files_with_parameters(db, mocker, tmp_test_directory):
     """Test export_model_files method with parameters."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_get_file_mongo_db = mocker.patch.object(
@@ -418,9 +416,8 @@ def test_export_model_files_with_parameters(db, mocker):
         "param1": {"file": True, "value": "file1.dat"},
         "param2": {"file": True, "value": "file2.dat"},
     }
-    dest = "/tmp"
 
-    result = db.export_model_files(parameters=parameters, dest=dest)
+    result = db.export_model_files(parameters=parameters, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
     mock_get_file_mongo_db.assert_has_calls(
@@ -428,14 +425,14 @@ def test_export_model_files_with_parameters(db, mocker):
     )
     mock_write_file_from_mongo_to_disk.assert_has_calls(
         [
-            call("test_db", dest, mock_get_file_mongo_db.return_value),
-            call("test_db", dest, mock_get_file_mongo_db.return_value),
+            call("test_db", tmp_test_directory, mock_get_file_mongo_db.return_value),
+            call("test_db", tmp_test_directory, mock_get_file_mongo_db.return_value),
         ]
     )
     assert result == {"file1.dat": "file_id", "file2.dat": "file_id"}
 
 
-def test_export_model_files_file_exists(db, mocker):
+def test_export_model_files_file_exists(db, mocker, tmp_test_directory):
     """Test export_model_files method when file already exists."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_get_file_mongo_db = mocker.patch.object(db, "_get_file_mongo_db")
@@ -443,9 +440,8 @@ def test_export_model_files_file_exists(db, mocker):
     mock_path_exists = mocker.patch("pathlib.Path.exists", return_value=True)
 
     file_names = ["file1.dat"]
-    dest = "/tmp"
 
-    result = db.export_model_files(file_names=file_names, dest=dest)
+    result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
     mock_get_file_mongo_db.assert_not_called()
@@ -454,7 +450,7 @@ def test_export_model_files_file_exists(db, mocker):
     assert result == {"file1.dat": "file exits"}
 
 
-def test_export_model_files_file_not_found(db, mocker):
+def test_export_model_files_file_not_found(db, mocker, tmp_test_directory):
     """Test export_model_files method when file is not found in parameters."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_get_file_mongo_db = mocker.patch.object(
@@ -465,10 +461,9 @@ def test_export_model_files_file_not_found(db, mocker):
     parameters = {
         "param1": {"file": True, "value": "file1.dat"},
     }
-    dest = "/tmp"
 
     with pytest.raises(FileNotFoundError):
-        db.export_model_files(parameters=parameters, dest=dest)
+        db.export_model_files(parameters=parameters, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
     mock_get_file_mongo_db.assert_called_once_with("test_db", "file1.dat")
@@ -594,7 +589,7 @@ def test_read_mongo_db(db, mocker):
         },
     }
 
-    mock_find = mocker.patch.object(db.get_collection.return_value, "find", return_value=[])
+    mocker.patch.object(db.get_collection.return_value, "find", return_value=[])
     with pytest.raises(
         ValueError,
         match=r"The following query for test_collection returned zero results: {'parameter_version': '1.0.0'}",
@@ -652,9 +647,7 @@ def test__read_production_table_from_mongo_db_with_cache(db, mocker):
     }
 
     # test with no results
-    mock_find_one = mocker.patch.object(
-        db.get_collection.return_value, "find_one", return_value=None
-    )
+    mocker.patch.object(db.get_collection.return_value, "find_one", return_value=None)
     with pytest.raises(
         ValueError,
         match=r"The following query returned zero results: {'model_version': '1.0.0', 'collection': 'telescopes'}",
@@ -719,9 +712,9 @@ def test_get_simulation_configuration_parameters(db, mocker):
         == return_value
     )
     assert mock_get_model_parameters.call_count == 2
-    db.get_simulation_configuration_parameters("simtel", "North", None, "6.0.0") == {}
+    assert db.get_simulation_configuration_parameters("simtel", "North", None, "6.0.0") == {}
     assert mock_get_model_parameters.call_count == 2
-    db.get_simulation_configuration_parameters("simtel", None, "LSTN-design", "6.0.0") == {}
+    assert db.get_simulation_configuration_parameters("simtel", None, "LSTN-design", "6.0.0") == {}
     assert mock_get_model_parameters.call_count == 2
     assert db.get_simulation_configuration_parameters("simtel", None, None, "6.0.0") == {}
     assert mock_get_model_parameters.call_count == 2
@@ -758,7 +751,7 @@ def test_get_file_mongo_db_file(db, mocker):
         db._get_file_mongo_db(db_name, file_name)
 
 
-def test_write_file_from_mongo_to_disk(db, mocker):
+def test_write_file_from_mongo_to_disk(db, mocker, tmp_test_directory):
     """Test _write_file_from_mongo_to_disk method."""
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
@@ -768,14 +761,13 @@ def test_write_file_from_mongo_to_disk(db, mocker):
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
 
     db_name = "test_db"
-    path = "/tmp"
     file = mocker.Mock()
     file.filename = "test_file.dat"
 
-    db._write_file_from_mongo_to_disk(db_name, path, file)
+    db._write_file_from_mongo_to_disk(db_name, tmp_test_directory, file)
 
     mock_gridfs_bucket.assert_called_once_with(mock_db_client[db_name])
-    mock_open.assert_called_once_with(Path(path).joinpath(file.filename), "wb")
+    mock_open.assert_called_once_with(Path(tmp_test_directory).joinpath(file.filename), "wb")
     mock_fs_output.download_to_stream_by_name.assert_called_once_with(file.filename, mock_open())
 
 
@@ -831,7 +823,7 @@ def test_add_new_parameter(db, mocker):
     mock_reset_parameter_cache.assert_called_once()
 
 
-def test_add_new_parameter_with_file(db, mocker):
+def test_add_new_parameter_with_file(db, mocker, tmp_test_directory):
     """Test add_new_parameter method with file."""
     mock_validate_model_parameter = mocker.patch(
         "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter",
@@ -850,9 +842,8 @@ def test_add_new_parameter_with_file(db, mocker):
     db_name = "test_db"
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
-    file_prefix = "/tmp"
 
-    db.add_new_parameter(db_name, par_dict, collection_name, file_prefix)
+    db.add_new_parameter(db_name, par_dict, collection_name, tmp_test_directory)
 
     mock_validate_model_parameter.assert_called_once_with(par_dict)
     mock_get_db_name.assert_called_once_with(db_name)
@@ -861,7 +852,7 @@ def test_add_new_parameter_with_file(db, mocker):
     mock_insert_one.assert_called_once_with(
         {"parameter": "param1", "value": "value1", "file": True, "unit": "unit1"}
     )
-    mock_insert_file_to_db.assert_called_once_with("/tmp/value1", "test_db")
+    mock_insert_file_to_db.assert_called_once_with(f"{tmp_test_directory!s}/value1", "test_db")
     mock_reset_parameter_cache.assert_called_once()
 
 
