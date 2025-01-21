@@ -101,24 +101,27 @@ def main():  # noqa: D103
             collection=args_dict.get("db_collection", "telescopes"),
         )
     # get parameter using 'model_version'
-    elif args_dict["telescope"]:
-        pars = db.get_model_parameters(
-            site=args_dict["site"],
-            array_element_name=args_dict["telescope"],
-            model_version=args_dict["model_version"],
-            collection=(
-                "configuration_sim_telarray"
-                if args_dict["db_collection"] == "configuration_sim_telarray"
-                else "telescopes"
-            ),
-        )
+    elif args_dict["model_version"] is not None:
+        if args_dict["telescope"]:
+            pars = db.get_model_parameters(
+                site=args_dict["site"],
+                array_element_name=args_dict["telescope"],
+                model_version=args_dict["model_version"],
+                collection=(
+                    "configuration_sim_telarray"
+                    if args_dict["db_collection"] == "configuration_sim_telarray"
+                    else "telescopes"
+                ),
+            )
+        else:
+            pars = db.get_model_parameters(
+                site=args_dict.get("site"),
+                model_version=args_dict["model_version"],
+                collection=args_dict["db_collection"],
+                array_element_name=None,
+            )
     else:
-        pars = db.get_model_parameters(
-            site=args_dict.get("site"),
-            model_version=args_dict["model_version"],
-            collection=args_dict["db_collection"],
-            array_element_name=None,
-        )
+        raise ValueError("Either 'parameter_version' or 'model_version' must be provided.")
     param = args_dict["parameter"]
     if param not in pars:
         raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
