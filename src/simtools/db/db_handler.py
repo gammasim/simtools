@@ -67,10 +67,7 @@ class DatabaseHandler:
 
     db_client = None
     production_table_cached = {}
-    site_parameters_cached = {}
     model_parameters_cached = {}
-    model_versions_cached = {}
-    corsika_configuration_parameters_cached = {}
 
     def __init__(self, mongo_db_config=None):
         """Initialize the DatabaseHandler class."""
@@ -147,7 +144,7 @@ class DatabaseHandler:
             db_simulation_model = self.mongo_db_config["db_simulation_model"]
             if not db_simulation_model.endswith("LATEST"):
                 return
-        except TypeError:  # if db_simulation_model is None
+        except TypeError:  # db_simulation_model is None
             return
 
         prefix = db_simulation_model.replace("LATEST", "")
@@ -184,7 +181,7 @@ class DatabaseHandler:
         collection,
     ):
         """
-        Get a single model parameter (using the parameter version).
+        Get a model parameter using the parameter version.
 
         Parameters
         ----------
@@ -222,9 +219,8 @@ class DatabaseHandler:
         collection,
     ):
         """
-        Get model parameters from MongoDB.
+        Get model parameters using the model version.
 
-        An array element can be e.g., a telescope or a calibration device.
         Queries parameters for design and for the specified array element (if necessary).
 
         Parameters
@@ -232,17 +228,17 @@ class DatabaseHandler:
         site: str
             Site name.
         array_element_name: str
-            Name of the array element model (e.g. LSTN-01, MSTS-design).
+            Name of the array element model (e.g. LSTN-01, MSTS-design, ILLN-01).
         model_version: str
             Version of the model.
         collection: str
-            collection of array element (e.g. telescopes, calibration_devices).
+            Collection of array element (e.g. telescopes, calibration_devices).
 
         Returns
         -------
         dict containing the parameters
         """
-        production_table = self.get_production_table_from_mongo_db(collection, model_version)
+        production_table = self._read_production_table_from_mongo_db(collection, model_version)
         array_element_list = self._get_array_element_list(
             array_element_name, site, production_table, collection
         )
@@ -264,7 +260,7 @@ class DatabaseHandler:
 
             try:
                 parameter_version_table = production_table["parameters"][array_element]
-            except KeyError:
+            except KeyError:  # allow missing array elements (parameter dict is checked later)
                 continue
             DatabaseHandler.model_parameters_cached[cache_key] = self._read_mongo_db(
                 query=self._get_query_from_parameter_version_table(
@@ -304,13 +300,13 @@ class DatabaseHandler:
         ----------
         db_name: str
             Database name.
+        model_collections_only: bool
+            If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
 
         Returns
         -------
         list
             List of collection names
-        model_collections_only: bool
-            If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
 
         """
         db_name = db_name or self._get_db_name()
@@ -347,12 +343,6 @@ class DatabaseHandler:
         -------
         file_id: dict of GridOut._id
             Dict of database IDs of files.
-
-        Raises
-        ------
-        FileNotFoundError
-            if a file in parameters.values is not found
-
         """
         db_name = self._get_db_name(db_name)
 
@@ -393,14 +383,14 @@ class DatabaseHandler:
 
     def _read_mongo_db(self, query, collection_name):
         """
-        Build and execute query to read the MongoDB for a collection.
+        Query MongoDB.
 
         Parameters
         ----------
         query: dict
-            Dictionary describing the query to execute.
+            Query to execute.
         collection_name: str
-            The name of the collection to read from.
+            Collection name.
 
         Returns
         -------
@@ -426,9 +416,9 @@ class DatabaseHandler:
             parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
         return {k: parameters[k] for k in sorted(parameters)}
 
-    def get_production_table_from_mongo_db(self, collection_name, model_version):
+    def _read_production_table_from_mongo_db(self, collection_name, model_version):
         """
-        Get production table from MongoDB.
+        Read production table from MongoDB.
 
         Parameters
         ----------
@@ -436,6 +426,11 @@ class DatabaseHandler:
             Name of the collection.
         model_version: str
             Version of the model.
+
+        Raises
+        ------
+        ValueError
+            if query returned no results.
         """
         try:
             return DatabaseHandler.production_table_cached[
@@ -460,7 +455,7 @@ class DatabaseHandler:
 
     def get_array_elements_of_type(self, array_element_type, model_version, collection):
         """
-        Get all array elements of a certain type (e.g. 'LSTN') from a collection in the DB.
+        Get array elements of a certain type (e.g. 'LSTN') for a DB collection.
 
         Parameters
         ----------
@@ -477,7 +472,7 @@ class DatabaseHandler:
         list
             Sorted list of all array element names found in collection
         """
-        production_table = self.get_production_table_from_mongo_db(collection, model_version)
+        production_table = self._read_production_table_from_mongo_db(collection, model_version)
         all_array_elements = production_table["parameters"]
         return sorted(
             [
@@ -584,7 +579,7 @@ class DatabaseHandler:
 
     def add_production_table(self, db_name, production_table):
         """
-        Add a production table for a given model version to the DB.
+        Add a production table to the DB.
 
         Parameters
         ----------
@@ -607,7 +602,7 @@ class DatabaseHandler:
         file_prefix=None,
     ):
         """
-        Add a parameter dictionary for a specific array element to the DB.
+        Add a new parameter dictionary to the DB.
 
         A new document will be added to the DB, with all fields taken from the input parameters.
         Parameter dictionaries are validated before submission using the corresponding schema.
@@ -765,12 +760,11 @@ class DatabaseHandler:
 
     def _reset_parameter_cache(self):
         """Reset the cache for the parameters."""
-        DatabaseHandler.site_parameters_cached.clear()
         DatabaseHandler.model_parameters_cached.clear()
 
     def _get_array_element_list(self, array_element_name, site, production_table, collection):
         """
-        Return list of array elements (add design model if needed).
+        Return list of array elements for DB queries (add design model if needed).
 
         Design model is added if found in the production table.
 
