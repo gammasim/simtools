@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-validate-optics &#8212; simtools v0.1.dev1+g6f4e969 Manual</title>
+    <title>simtools-plot-tabular-data &#8212; simtools v0.1.dev1+g6f4e969 Manual</title>
   
   
   
@@ -43,11 +43,11 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-validate-optics';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-plot-tabular-data';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Configuration" href="../configuration.html" />
-    <link rel="prev" title="simtools-validate-file-using-schema" href="simtools-validate-file-using-schema.html" />
+    <link rel="next" title="simtools-simulate-prod" href="simtools-simulate-prod.html" />
+    <link rel="prev" title="simtools-simulate-light-emission" href="simtools-simulate-light-emission.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g6f4e969" />
@@ -200,7 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
@@ -209,7 +209,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-validate-optics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-validate-optics.html">simtools-validate-optics</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuration</a></li>
@@ -310,7 +310,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-validate-optics.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-plot-tabular-data.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -327,7 +327,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-validate-optics.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-plot-tabular-data.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -357,7 +357,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/simtools-validate-optics.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simtools-plot-tabular-data.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -433,7 +433,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>simtools-validate-optics</h1>
+    <h1>simtools-plot-tabular-data</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -444,7 +444,7 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot_tabular_data.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -456,57 +456,24 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-validate_optics">
-<span id="simtools-validate-optics"></span><h1>simtools-validate-optics<a class="headerlink" href="#module-validate_optics" title="Link to this heading">#</a></h1>
-<p>Validate the optical model parameters through ray tracing simulations of the whole telescope.</p>
-<p>A point-like light source is assumed. The output includes PSF (D80), effective mirror area and effective focal length as a function of the off-axis angle. </p>
-<p>The telescope zenith angle and the source distance can be set by command line arguments.</p>
-<p>Examples of the plots generated by this application are shown below. On the top, the D80 vs off-axis is shown in cm (left) and deg (right). On the bottom, the effective mirror area (left) and the effective focal length (right) vs off-axis angle are shown.</p>
-<a class="reference internal image-reference" href="../../_images/validate_optics_North-LST-1_d80_cm.png" id="validate-optics-plot"><img alt="../../_images/validate_optics_North-LST-1_d80_cm.png" id="validate-optics-plot" src="../../_images/validate_optics_North-LST-1_d80_cm.png" style="width: 49%;" />
-</a>
-<a class="reference internal image-reference" href="../../_images/validate_optics_North-LST-1_d80_deg.png"><img alt="../../_images/validate_optics_North-LST-1_d80_deg.png" src="../../_images/validate_optics_North-LST-1_d80_deg.png" style="width: 49%;" />
-</a>
-<a class="reference internal image-reference" href="../../_images/validate_optics_North-LST-1_eff_area.png"><img alt="../../_images/validate_optics_North-LST-1_eff_area.png" src="../../_images/validate_optics_North-LST-1_eff_area.png" style="width: 49%;" />
-</a>
-<a class="reference internal image-reference" href="../../_images/validate_optics_North-LST-1_eff_flen.png"><img alt="../../_images/validate_optics_North-LST-1_eff_flen.png" src="../../_images/validate_optics_North-LST-1_eff_flen.png" style="width: 49%;" />
-</a>
+  <section id="module-plot_tabular_data">
+<span id="simtools-plot-tabular-data"></span><h1>simtools-plot-tabular-data<a class="headerlink" href="#module-plot_tabular_data" title="Link to this heading">#</a></h1>
+<p>Plot tabular data read from file or from model parameter database.</p>
+<p>Uses a configuration file to define the data to be plotted and all
+plotting details.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>site (str, required)</dt><dd><p>North or South.</p>
-</dd>
-<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LST-1, SST-D, …).</p>
-</dd>
-<dt>model_version (str, optional)</dt><dd><p>Model version.</p>
-</dd>
-<dt>src_distance (float, optional)</dt><dd><p>Source distance in km.</p>
-</dd>
-<dt>zenith (float, optional)</dt><dd><p>Zenith angle in deg.</p>
-</dd>
-<dt>max_offset (float, optional)</dt><dd><p>Maximum offset angle in deg.</p>
-</dd>
-<dt>offset_steps (float, optional)</dt><dd><p>Offset angle step size.</p>
-</dd>
-<dt>plot_images (activation mode, optional)</dt><dd><p>Produce a multiple pages pdf file with the image plots.</p>
-</dd>
-<dt>test (activation mode, optional)</dt><dd><p>If activated, application will be faster by simulating fewer photons.</p>
+<dt>config_file (str, required)</dt><dd><p>Configuration file name for plotting.</p>
 </dd>
 </dl>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>LST-1 5.0.0</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-validate-optics --site North --telescope LST-1 --max_offset 1.0 \\</span>
-<span class="go">--zenith 20 --src_distance 10 --test</span>
-</pre></div>
-</div>
-<p>The output is saved in simtools-output/validate_optics</p>
-<p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::ray_tracing(l434)::plot::Plotting eff_area vs off-axis angle</span>
-<span class="go">INFO::ray_tracing(l434)::plot::Plotting eff_flen vs off-axis angle</span>
-</pre></div>
-</div>
-</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="plot_tabular_data.main">
+<span class="sig-prename descclassname"><span class="pre">plot_tabular_data.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/plot_tabular_data.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plot_tabular_data.main" title="Link to this definition">#</a></dt>
+<dd><p>Plot tabular data.</p>
+</dd></dl>
+
 </section>
 
 
@@ -521,20 +488,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-validate-file-using-schema.html"
+       href="simtools-simulate-light-emission.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-validate-file-using-schema</p>
+        <p class="prev-next-title">simtools-simulate-light-emission</p>
       </div>
     </a>
     <a class="right-next"
-       href="../configuration.html"
+       href="simtools-simulate-prod.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Configuration</p>
+        <p class="prev-next-title">simtools-simulate-prod</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -556,7 +523,7 @@
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot_tabular_data.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 

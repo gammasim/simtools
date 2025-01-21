@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Visualization &#8212; simtools v0.1.dev1+ga82a825 Manual</title>
+    <title>Visualization &#8212; simtools v0.1.dev1+g6f4e969 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=e7ddbe40"></script>
+    <script src="../_static/documentation_options.js?v=e70ea935"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ga82a825" />
+  <meta name="docsearch:version" content="0.1.dev1+g6f4e969" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ga82a825 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6f4e969 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -200,6 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
@@ -451,6 +452,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_array"><code class="docutils literal notranslate"><span class="pre">plot_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_hist_2d"><code class="docutils literal notranslate"><span class="pre">plot_hist_2d()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_table"><code class="docutils literal notranslate"><span class="pre">plot_table()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.save_figure"><code class="docutils literal notranslate"><span class="pre">save_figure()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.set_style"><code class="docutils literal notranslate"><span class="pre">set_style()</span></code></a></li>
 </ul>
 </li>
@@ -751,6 +753,26 @@ Add a difference plot at the bottom. The first entry in the data dictionary is u
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="visualization.visualize.save_figure">
+<span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">save_figure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figure_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#save_figure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.save_figure" title="Link to this definition">#</a></dt>
+<dd><p>Save figure to output file(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fig: plt.figure</strong></dt><dd><p>Figure to save.</p>
+</dd>
+<dt><strong>output_file: Path, str</strong></dt><dd><p>Path to save the figure (without suffix).</p>
+</dd>
+<dt><strong>figure_format: list</strong></dt><dd><p>List of formats to save the figure.</p>
+</dd>
+<dt><strong>title: str</strong></dt><dd><p>Title of the figure to be added to the log message.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="visualization.visualize.set_style">
 <span class="sig-prename descclassname"><span class="pre">visualization.visualize.</span></span><span class="sig-name descname"><span class="pre">set_style</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">big_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/visualize.html#set_style"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.visualize.set_style" title="Link to this definition">#</a></dt>
 <dd><p>Set the plotting style to homogenize plot style across the framework.</p>
@@ -994,6 +1016,7 @@ coordinate systems, FOV, focal length and the average edge radius.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_array"><code class="docutils literal notranslate"><span class="pre">plot_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_hist_2d"><code class="docutils literal notranslate"><span class="pre">plot_hist_2d()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.plot_table"><code class="docutils literal notranslate"><span class="pre">plot_table()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.save_figure"><code class="docutils literal notranslate"><span class="pre">save_figure()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.visualize.set_style"><code class="docutils literal notranslate"><span class="pre">set_style()</span></code></a></li>
 </ul>
 </li>

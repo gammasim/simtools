@@ -6,9 +6,8 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>Job execution and submission &#8212; simtools v0.1.dev1+g6f4e969 Manual</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>plot_tabular_data &#8212; simtools v0.1.dev1+g6f4e969 Manual</title>
   
   
   
@@ -43,11 +42,9 @@
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/job_execution';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/plot_tabular_data';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Layout" href="array_layout.html" />
-    <link rel="prev" title="I/O" href="io_operations.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g6f4e969" />
@@ -101,6 +98,8 @@
     <div class="bd-container__inner bd-page-width">
       
       
+      
+        
       
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
@@ -174,7 +173,7 @@
                 </a>
             </li>
         </ul>
-        <ul class="current nav bd-sidenav">
+        <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../user-guide/index.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../user-guide/getting_started.html">Getting Started</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../user-guide/applications.html">simtools Applications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -221,23 +220,23 @@
 <li class="toctree-l2"><a class="reference internal" href="../user-guide/docker_files.html">Containers (docker files)</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">API Docs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="io_operations.html">I/O</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Job execution and submission</a></li>
-<li class="toctree-l2"><a class="reference internal" href="array_layout.html">Layout</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runners.html">Runners for simulation software.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulators.html">Simulator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api-reference/index.html">API Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/configuration_module.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/corsika.html">CORSIKA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/db_handler.html">Database support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/io_operations.html">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/job_execution.html">Job execution and submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/array_layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/ray_tracing.html">Ray Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/runners.html">Runners for simulation software.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/sim_telarray.html">sim_telarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/simulators.html">Simulator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/visualization.html">Visualization</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../developer-guide/index.html">Developer Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -299,98 +298,18 @@
 <div class="article-header-buttons">
 
 
-
-
-
-<div class="dropdown dropdown-source-buttons">
-  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
-    <i class="fab fa-github"></i>
-  </button>
-  <ul class="dropdown-menu">
-      
-      
-      
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/api-reference/job_execution.md?plain=1" target="_blank"
-   class="btn btn-sm btn-source-file-button dropdown-item"
-   title="Show source"
-   data-bs-placement="left" data-bs-toggle="tooltip"
->
-  
-
-<span class="btn__icon-container">
-  <i class="fas fa-code"></i>
-  </span>
-<span class="btn__text-container">Show source</span>
-</a>
-</li>
-      
-      
-      
-      
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fapi-reference/job_execution.html&body=Your%20issue%20content%20here." target="_blank"
-   class="btn btn-sm btn-source-issues-button dropdown-item"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/plot_tabular_data.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
-   data-bs-placement="left" data-bs-toggle="tooltip"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
 >
   
 
 <span class="btn__icon-container">
   <i class="fas fa-lightbulb"></i>
   </span>
-<span class="btn__text-container">Open issue</span>
+
 </a>
-</li>
-      
-  </ul>
-</div>
-
-
-
-
-
-
-<div class="dropdown dropdown-download-buttons">
-  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
-    <i class="fas fa-download"></i>
-  </button>
-  <ul class="dropdown-menu">
-      
-      
-      
-      <li><a href="../_sources/api-reference/job_execution.md" target="_blank"
-   class="btn btn-sm btn-download-source-button dropdown-item"
-   title="Download source file"
-   data-bs-placement="left" data-bs-toggle="tooltip"
->
-  
-
-<span class="btn__icon-container">
-  <i class="fas fa-file"></i>
-  </span>
-<span class="btn__text-container">.md</span>
-</a>
-</li>
-      
-      
-      
-      
-      <li>
-<button onclick="window.print()"
-  class="btn btn-sm btn-download-pdf-button dropdown-item"
-  title="Print to PDF"
-  data-bs-placement="left" data-bs-toggle="tooltip"
->
-  
-
-<span class="btn__icon-container">
-  <i class="fas fa-file-pdf"></i>
-  </span>
-<span class="btn__text-container">.pdf</span>
-</button>
-</li>
-      
-  </ul>
-</div>
 
 
 
@@ -420,9 +339,7 @@
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
 </button>
-<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="fa-solid fa-list"></span>
-</button>
+
 </div></div>
       
     </div>
@@ -433,26 +350,11 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Job execution and submission</h1>
+    <h1></h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
-            <div>
-                <h2> Contents </h2>
-            </div>
-            <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobExecutionError"><code class="docutils literal notranslate"><span class="pre">JobExecutionError</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager"><code class="docutils literal notranslate"><span class="pre">JobManager</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.check_submission_system"><code class="docutils literal notranslate"><span class="pre">JobManager.check_submission_system()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.submit"><code class="docutils literal notranslate"><span class="pre">JobManager.submit()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.submit_engine"><code class="docutils literal notranslate"><span class="pre">JobManager.submit_engine</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.htcondor_script_generator.generate_submission_script"><code class="docutils literal notranslate"><span class="pre">generate_submission_script()</span></code></a></li>
-</ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -462,90 +364,95 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="job-execution-and-submission">
-<span id="jobexecution"></span><h1>Job execution and submission<a class="headerlink" href="#job-execution-and-submission" title="Link to this heading">#</a></h1>
-<p>Modules managing the execution and submission of jobs to computing clusters.
-This is mostly used for small productions during the validation or verification phase.</p>
-<p id="module-job_execution.job_manager"><span id="job-manager"></span>Interface to workload managers like gridengine or HTCondor.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="job_execution.job_manager.JobExecutionError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">job_execution.job_manager.</span></span><span class="sig-name descname"><span class="pre">JobExecutionError</span></span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobExecutionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobExecutionError" title="Link to this definition">#</a></dt>
-<dd><p>Job execution error.</p>
-</dd></dl>
+  <h1>Source code for plot_tabular_data</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Plot tabular data read from file or from model parameter database.</span>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="job_execution.job_manager.JobManager">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">job_execution.job_manager.</span></span><span class="sig-name descname"><span class="pre">JobManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">submit_engine</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobManager" title="Link to this definition">#</a></dt>
-<dd><p>Interface to workload managers like gridengine or HTCondor.</p>
-<p>Expects that jobs are described by shell scripts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>submit_engine</strong><span class="classifier">str</span></dt><dd><p>Job submission system. Default is local.</p>
-</dd>
-<dt><strong>test</strong><span class="classifier">bool</span></dt><dd><p>Testing mode without sub submission.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="job_execution.job_manager.JobManager.check_submission_system">
-<span class="sig-name descname"><span class="pre">check_submission_system</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobManager.check_submission_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobManager.check_submission_system" title="Link to this definition">#</a></dt>
-<dd><p>Check that the requested workload manager exist on the system.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>JobExecutionError</dt><dd><p>if workflow manager is not found.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
+<span class="sd">Uses a configuration file to define the data to be plotted and all</span>
+<span class="sd">plotting details.</span>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="job_execution.job_manager.JobManager.submit">
-<span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_script</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_out_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/job_manager.html#JobManager.submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.job_manager.JobManager.submit" title="Link to this definition">#</a></dt>
-<dd><p>Submit a job described by a shell script.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>run_script: str</strong></dt><dd><p>Shell script describing the job to be submitted.</p>
-</dd>
-<dt><strong>run_out_file: str or Path</strong></dt><dd><p>Redirect output/error/job stream to this file (out,err,job suffix).</p>
-</dd>
-<dt><strong>log_file: str or Path</strong></dt><dd><p>The log file of the actual simulator (CORSIKA or sim_telarray).
-Provided in order to print the log excerpt in case of run time error.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
+<span class="sd">Command line arguments</span>
+<span class="sd">----------------------</span>
+<span class="sd">config_file (str, required)</span>
+<span class="sd">    Configuration file name for plotting.</span>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="job_execution.job_manager.JobManager.submit_engine">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">submit_engine</span></span><a class="headerlink" href="#job_execution.job_manager.JobManager.submit_engine" title="Link to this definition">#</a></dt>
-<dd><p>Get the submit command.</p>
-</dd></dl>
+<span class="sd">&quot;&quot;&quot;</span>
 
-</dd></dl>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<p id="module-job_execution.htcondor_script_generator"><span id="htcondor-submission"></span>HT Condor script generator for simulation production.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="job_execution.htcondor_script_generator.generate_submission_script">
-<span class="sig-prename descclassname"><span class="pre">job_execution.htcondor_script_generator.</span></span><span class="sig-name descname"><span class="pre">generate_submission_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/job_execution/htcondor_script_generator.html#generate_submission_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#job_execution.htcondor_script_generator.generate_submission_script" title="Link to this definition">#</a></dt>
-<dd><p>Generate the HT Condor submission script.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>args_dict: dict</strong></dt><dd><p>Arguments dictionary.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_tables</span>
 
-</section>
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">usage</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse command line configuration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Label describing the application.</span>
+<span class="sd">    description : str</span>
+<span class="sd">        Description of the application.</span>
+<span class="sd">    usage : str</span>
+<span class="sd">        Example on how to use the application.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CommandLineParser</span>
+<span class="sd">        Command line parser object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configurator</span><span class="o">.</span><span class="n">Configurator</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">)</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--plot_config&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Plotting configuration file name.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--output_file&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file name (without suffix)&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../user-guide/applications/simtools-plot-tabular-data.html#plot_tabular_data.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot tabular data.&quot;&quot;&quot;</span>
+    <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config_</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Plots tabular data.&quot;</span><span class="p">,</span>
+        <span class="n">usage</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;simtools-plot-tabular-data --plot_config config_file_name &quot;</span>
+<span class="s2">                 --output_file output_file_name&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log_level&quot;</span><span class="p">,</span> <span class="s2">&quot;INFO&quot;</span><span class="p">)))</span>
+    <span class="n">io_handler_instance</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
+
+    <span class="n">plot_config</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_keys_in_dict_to_lowercase</span><span class="p">(</span>
+        <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;plot_config&quot;</span><span class="p">])</span>
+    <span class="p">)</span>
+
+    <span class="n">plot_tables</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">plot_config</span><span class="p">[</span><span class="s2">&quot;cta_simpipe&quot;</span><span class="p">][</span><span class="s2">&quot;plot&quot;</span><span class="p">],</span>
+        <span class="n">output_file</span><span class="o">=</span><span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]),</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="n">db_config_</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
 
                 </article>
               
@@ -557,53 +464,12 @@ Provided in order to print the log excerpt in case of run time error.</p>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="io_operations.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">I/O</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="array_layout.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Layout</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               
             </div>
             
             
-              
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> Contents
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobExecutionError"><code class="docutils literal notranslate"><span class="pre">JobExecutionError</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager"><code class="docutils literal notranslate"><span class="pre">JobManager</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.check_submission_system"><code class="docutils literal notranslate"><span class="pre">JobManager.check_submission_system()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.submit"><code class="docutils literal notranslate"><span class="pre">JobManager.submit()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.job_manager.JobManager.submit_engine"><code class="docutils literal notranslate"><span class="pre">JobManager.submit_engine</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job_execution.htcondor_script_generator.generate_submission_script"><code class="docutils literal notranslate"><span class="pre">generate_submission_script()</span></code></a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>

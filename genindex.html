@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+ga82a825 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g6f4e969 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=e7ddbe40"></script>
+    <script src="_static/documentation_options.js?v=e70ea935"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ga82a825" />
+  <meta name="docsearch:version" content="0.1.dev1+g6f4e969" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ga82a825 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6f4e969 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -199,6 +199,7 @@
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
@@ -1068,6 +1069,8 @@
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.get_mean">get_mean() (ray_tracing.ray_tracing.RayTracing method)</a>
 </li>
+      <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.get_model_file_as_table">get_model_file_as_table() (model.model_parameter.ModelParameter method)</a>
+</li>
       <li><a href="api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_model_parameters">get_model_parameters() (db.db_handler.DatabaseHandler method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.get_neighbor_pixels">get_neighbor_pixels() (model.camera.Camera method)</a>
@@ -1380,6 +1383,8 @@
 </li>
         <li><a href="user-guide/applications/simtools-plot-array-layout.html#plot_array_layout.main">(in module plot_array_layout)</a>
 </li>
+        <li><a href="user-guide/applications/simtools-plot-tabular-data.html#plot_tabular_data.main">(in module plot_tabular_data)</a>
+</li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#production_generate_simulation_config.main">(in module production_generate_simulation_config)</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-scale-events.html#production_scale_events.main">(in module production_scale_events)</a>
@@ -1566,6 +1571,8 @@
         <li><a href="api-reference/mc_model.html#module-model.telescope_model">model.telescope_model</a>
 </li>
         <li><a href="user-guide/applications/simtools-plot-array-layout.html#module-plot_array_layout">plot_array_layout</a>
+</li>
+        <li><a href="user-guide/applications/simtools-plot-tabular-data.html#module-plot_tabular_data">plot_tabular_data</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#module-production_generate_simulation_config">production_generate_simulation_config</a>
 </li>
@@ -1761,12 +1768,19 @@
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_photon_per_telescope_distr">plot_photon_per_telescope_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/visualization.html#visualization.plot_camera.plot_pixel_layout">plot_pixel_layout() (in module visualization.plot_camera)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/visualization.html#visualization.visualize.plot_table">plot_table() (in module visualization.visualize)</a>
 </li>
+      <li>
+    plot_tabular_data
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-plot-tabular-data.html#module-plot_tabular_data">module</a>
+</li>
+      </ul></li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_time_distr">plot_time_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_wavelength_distr">plot_wavelength_distr() (in module corsika.corsika_histograms_visualize)</a>
@@ -1949,6 +1963,8 @@
       <li><a href="api-reference/utils.html#utils.names.sanitize_name">sanitize_name() (in module utils.names)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.save_figs_to_pdf">save_figs_to_pdf() (in module corsika.corsika_histograms_visualize)</a>
+</li>
+      <li><a href="api-reference/visualization.html#visualization.visualize.save_figure">save_figure() (in module visualization.visualize)</a>
 </li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.save_file_lists">save_file_lists() (simulator.Simulator method)</a>
 </li>
