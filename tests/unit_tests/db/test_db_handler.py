@@ -51,8 +51,38 @@ def _db_cleanup(db, random_id):
 
 
 @pytest.fixture
+def test_db():
+    return "test_db"
+
+
+@pytest.fixture
+def test_file():
+    return "test_file.dat"
+
+
+@pytest.fixture
+def test_file2():
+    return "test_file2.dat"
+
+
+@pytest.fixture
 def fs_files():
     return "fs.files"
+
+
+@pytest.fixture
+def value_unit_type():
+    return "simtools.db.db_handler.value_conversion.get_value_unit_type"
+
+
+@pytest.fixture
+def mock_open(mocker):
+    return mocker.patch("builtins.open", mocker.mock_open(read_data=b"file_content"))
+
+
+@pytest.fixture
+def validate_model_parameter():
+    return "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter"
 
 
 @pytest.fixture
@@ -346,19 +376,17 @@ def test_get_model_parameters_no_parameters(db, mocker):
     assert result == {}
 
 
-def test_get_collection(db, mocker):
+def test_get_collection(db, mocker, test_db):
     """Test get_collection method."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mocker.patch.object(
-        db_handler.DatabaseHandler, "db_client", {"test_db": {"test_collection": "mock_collection"}}
+        db_handler.DatabaseHandler, "db_client", {test_db: {"test_collection": "mock_collection"}}
     )
-
-    db_name = "test_db"
     collection_name = "test_collection"
 
-    result = db.get_collection(db_name, collection_name)
+    result = db.get_collection(test_db, collection_name)
 
-    mock_get_db_name.assert_called_once_with(db_name)
+    mock_get_db_name.assert_called_once_with(test_db)
     assert result == "mock_collection"
 
 
@@ -379,67 +407,67 @@ def test_get_collections(db, db_config, fs_files):
     assert "metadata" not in collections_no_model
 
 
-def test_export_model_files_with_file_names(db, mocker, tmp_test_directory):
+def test_export_model_files_with_file_names(
+    db, mocker, tmp_test_directory, test_db, test_file, test_file2
+):
     """Test export_model_files method with file names."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_get_file_mongo_db = mocker.patch.object(
         db, "_get_file_mongo_db", return_value=mocker.Mock(_id="file_id")
     )
     mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
 
-    file_names = ["file1.dat", "file2.dat"]
+    file_names = [test_file, test_file2]
 
     result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
-    mock_get_file_mongo_db.assert_has_calls(
-        [call("test_db", "file1.dat"), call("test_db", "file2.dat")]
-    )
+    mock_get_file_mongo_db.assert_has_calls([call(test_db, test_file), call(test_db, test_file2)])
     mock_write_file_from_mongo_to_disk.assert_has_calls(
         [
-            call("test_db", tmp_test_directory, mock_get_file_mongo_db.return_value),
-            call("test_db", tmp_test_directory, mock_get_file_mongo_db.return_value),
+            call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
+            call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
         ]
     )
-    assert result == {"file1.dat": "file_id", "file2.dat": "file_id"}
+    assert result == {test_file: "file_id", test_file2: "file_id"}
 
 
-def test_export_model_files_with_parameters(db, mocker, tmp_test_directory):
+def test_export_model_files_with_parameters(
+    db, mocker, tmp_test_directory, test_db, test_file, test_file2
+):
     """Test export_model_files method with parameters."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_get_file_mongo_db = mocker.patch.object(
         db, "_get_file_mongo_db", return_value=mocker.Mock(_id="file_id")
     )
     mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
 
     parameters = {
-        "param1": {"file": True, "value": "file1.dat"},
-        "param2": {"file": True, "value": "file2.dat"},
+        "param1": {"file": True, "value": test_file},
+        "param2": {"file": True, "value": test_file2},
     }
 
     result = db.export_model_files(parameters=parameters, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
-    mock_get_file_mongo_db.assert_has_calls(
-        [call("test_db", "file1.dat"), call("test_db", "file2.dat")]
-    )
+    mock_get_file_mongo_db.assert_has_calls([call(test_db, test_file), call(test_db, test_file2)])
     mock_write_file_from_mongo_to_disk.assert_has_calls(
         [
-            call("test_db", tmp_test_directory, mock_get_file_mongo_db.return_value),
-            call("test_db", tmp_test_directory, mock_get_file_mongo_db.return_value),
+            call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
+            call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
         ]
     )
-    assert result == {"file1.dat": "file_id", "file2.dat": "file_id"}
+    assert result == {test_file: "file_id", test_file2: "file_id"}
 
 
-def test_export_model_files_file_exists(db, mocker, tmp_test_directory):
+def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db, test_file):
     """Test export_model_files method when file already exists."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_get_file_mongo_db = mocker.patch.object(db, "_get_file_mongo_db")
     mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
     mock_path_exists = mocker.patch("pathlib.Path.exists", return_value=True)
 
-    file_names = ["file1.dat"]
+    file_names = [test_file]
 
     result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
 
@@ -447,26 +475,26 @@ def test_export_model_files_file_exists(db, mocker, tmp_test_directory):
     mock_get_file_mongo_db.assert_not_called()
     mock_write_file_from_mongo_to_disk.assert_not_called()
     mock_path_exists.assert_called_once()
-    assert result == {"file1.dat": "file exits"}
+    assert result == {test_file: "file exits"}
 
 
-def test_export_model_files_file_not_found(db, mocker, tmp_test_directory):
+def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_db, test_file):
     """Test export_model_files method when file is not found in parameters."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_get_file_mongo_db = mocker.patch.object(
         db, "_get_file_mongo_db", side_effect=FileNotFoundError
     )
     mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
 
     parameters = {
-        "param1": {"file": True, "value": "file1.dat"},
+        "param1": {"file": True, "value": test_file},
     }
 
     with pytest.raises(FileNotFoundError):
         db.export_model_files(parameters=parameters, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
-    mock_get_file_mongo_db.assert_called_once_with("test_db", "file1.dat")
+    mock_get_file_mongo_db.assert_called_once_with(test_db, test_file)
     mock_write_file_from_mongo_to_disk.assert_not_called()
 
 
@@ -555,9 +583,9 @@ def test_get_query_from_parameter_version_table(db):
     assert result == expected_query
 
 
-def test_read_mongo_db(db, mocker):
+def test_read_mongo_db(db, mocker, test_db):
     """Test read_mongo_db method."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
     mock_find = mocker.patch.object(
         db.get_collection.return_value,
@@ -574,7 +602,7 @@ def test_read_mongo_db(db, mocker):
     result = db._read_mongo_db(query, collection_name)
 
     mock_get_db_name.assert_called_once_with()
-    mock_get_collection.assert_called_once_with("test_db", collection_name)
+    mock_get_collection.assert_called_once_with(test_db, collection_name)
     mock_find.assert_called_once_with(query)
     assert result == {
         "param1": {
@@ -597,7 +625,7 @@ def test_read_mongo_db(db, mocker):
         db._read_mongo_db(query, collection_name)
 
 
-def test__read_production_table_from_mongo_db_with_cache(db, mocker):
+def test__read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
     """Test _read_production_table_from_mongo_db method with cache."""
     collection_name = "telescopes"
     model_version = "1.0.0"
@@ -618,7 +646,7 @@ def test__read_production_table_from_mongo_db_with_cache(db, mocker):
 
     mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="no_cache_key")
     mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
-    mocker.patch.object(db, "_get_db_name", return_value="test_db")
+    mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_find_one = mocker.patch.object(
         db.get_collection.return_value,
         "find_one",
@@ -634,7 +662,7 @@ def test__read_production_table_from_mongo_db_with_cache(db, mocker):
     result = db._read_production_table_from_mongo_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
-    mock_get_collection.assert_called_once_with("test_db", "production_tables")
+    mock_get_collection.assert_called_once_with(test_db, "production_tables")
     mock_find_one.assert_called_once_with(
         {"model_version": model_version, "collection": collection_name}
     )
@@ -723,10 +751,10 @@ def test_get_simulation_configuration_parameters(db, mocker):
         db.get_simulation_configuration_parameters("wrong", "North", "LSTN-design", "6.0.0")
 
 
-def test_get_file_mongo_db_file(db, mocker):
+def test_get_file_mongo_db_file(db, mocker, test_db, test_file):
     """Test _get_file_mongo_db method when file exists."""
     mock_db_client = mocker.patch.object(
-        db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
+        db_handler.DatabaseHandler, "db_client", {test_db: mocker.Mock()}
     )
     mock_gridfs = mocker.patch("simtools.db.db_handler.gridfs.GridFS")
     mock_file_system = mock_gridfs.return_value
@@ -734,87 +762,82 @@ def test_get_file_mongo_db_file(db, mocker):
     mock_file_instance = mocker.Mock()
     mock_file_system.find_one.return_value = mock_file_instance
 
-    db_name = "test_db"
-    file_name = "test_file.dat"
+    result = db._get_file_mongo_db(test_db, test_file)
 
-    result = db._get_file_mongo_db(db_name, file_name)
-
-    mock_gridfs.assert_called_once_with(mock_db_client[db_name])
-    mock_file_system.exists.assert_called_once_with({"filename": file_name})
-    mock_file_system.find_one.assert_called_once_with({"filename": file_name})
+    mock_gridfs.assert_called_once_with(mock_db_client[test_db])
+    mock_file_system.exists.assert_called_once_with({"filename": test_file})
+    mock_file_system.find_one.assert_called_once_with({"filename": test_file})
     assert result == mock_file_instance
 
     mock_file_system.exists.return_value = False
     with pytest.raises(
-        FileNotFoundError, match=f"The file {file_name} does not exist in the database {db_name}"
+        FileNotFoundError, match=f"The file {test_file} does not exist in the database {test_db}"
     ):
-        db._get_file_mongo_db(db_name, file_name)
+        db._get_file_mongo_db(test_db, test_file)
 
 
-def test_write_file_from_mongo_to_disk(db, mocker, tmp_test_directory):
+def test_write_file_from_mongo_to_disk(
+    db, mocker, tmp_test_directory, mock_open, test_db, test_file
+):
     """Test _write_file_from_mongo_to_disk method."""
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
     )
     mock_gridfs_bucket = mocker.patch("simtools.db.db_handler.gridfs.GridFSBucket")
     mock_fs_output = mock_gridfs_bucket.return_value
-    mock_open = mocker.patch("builtins.open", mocker.mock_open())
 
-    db_name = "test_db"
     file = mocker.Mock()
-    file.filename = "test_file.dat"
+    file.filename = test_file
 
-    db._write_file_from_mongo_to_disk(db_name, tmp_test_directory, file)
+    db._write_file_from_mongo_to_disk(test_db, tmp_test_directory, file)
 
-    mock_gridfs_bucket.assert_called_once_with(mock_db_client[db_name])
+    mock_gridfs_bucket.assert_called_once_with(mock_db_client[test_db])
     mock_open.assert_called_once_with(Path(tmp_test_directory).joinpath(file.filename), "wb")
     mock_fs_output.download_to_stream_by_name.assert_called_once_with(file.filename, mock_open())
 
 
-def test_add_production_table(db, mocker):
+def test_add_production_table(db, mocker, test_db):
     """Test add_production_table method."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
     mock_insert_one = mocker.patch.object(db.get_collection.return_value, "insert_one")
 
-    db_name = "test_db"
     production_table = {
         "collection": "telescopes",
         "model_version": "1.0.0",
         "parameters": {"param1": "value1"},
     }
 
-    db.add_production_table(db_name, production_table)
+    db.add_production_table(test_db, production_table)
 
-    mock_get_db_name.assert_called_once_with(db_name)
+    mock_get_db_name.assert_called_once_with(test_db)
     mock_get_collection.assert_called_once_with("test_db", "production_tables")
     mock_insert_one.assert_called_once_with(production_table)
 
 
-def test_add_new_parameter(db, mocker):
+def test_add_new_parameter(db, mocker, value_unit_type, validate_model_parameter, test_db):
     """Test add_new_parameter method."""
     mock_validate_model_parameter = mocker.patch(
-        "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter",
+        validate_model_parameter,
         return_value={"parameter": "param1", "value": "value1", "file": False},
     )
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
     mock_insert_one = mocker.patch.object(db.get_collection.return_value, "insert_one")
     mock_get_value_unit_type = mocker.patch(
-        "simtools.db.db_handler.value_conversion.get_value_unit_type",
+        value_unit_type,
         return_value=("value1", "unit1", None),
     )
     mock_reset_parameter_cache = mocker.patch.object(db, "_reset_parameter_cache")
 
-    db_name = "test_db"
     par_dict = {"parameter": "param1", "value": "value1", "file": False}
     collection_name = "telescopes"
     file_prefix = None
 
-    db.add_new_parameter(db_name, par_dict, collection_name, file_prefix)
+    db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
 
     mock_validate_model_parameter.assert_called_once_with(par_dict)
-    mock_get_db_name.assert_called_once_with(db_name)
+    mock_get_db_name.assert_called_once_with(test_db)
     mock_get_collection.assert_called_once_with("test_db", collection_name)
     mock_get_value_unit_type.assert_called_once_with(value="value1", unit_str=None)
     mock_insert_one.assert_called_once_with(
@@ -823,30 +846,31 @@ def test_add_new_parameter(db, mocker):
     mock_reset_parameter_cache.assert_called_once()
 
 
-def test_add_new_parameter_with_file(db, mocker, tmp_test_directory):
+def test_add_new_parameter_with_file(
+    db, mocker, tmp_test_directory, value_unit_type, validate_model_parameter, test_db
+):
     """Test add_new_parameter method with file."""
     mock_validate_model_parameter = mocker.patch(
-        "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter",
+        validate_model_parameter,
         return_value={"parameter": "param1", "value": "value1", "file": True},
     )
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
     mock_insert_one = mocker.patch.object(db.get_collection.return_value, "insert_one")
     mock_get_value_unit_type = mocker.patch(
-        "simtools.db.db_handler.value_conversion.get_value_unit_type",
+        value_unit_type,
         return_value=("value1", "unit1", None),
     )
     mock_insert_file_to_db = mocker.patch.object(db, "insert_file_to_db")
     mock_reset_parameter_cache = mocker.patch.object(db, "_reset_parameter_cache")
 
-    db_name = "test_db"
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
 
-    db.add_new_parameter(db_name, par_dict, collection_name, tmp_test_directory)
+    db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
 
     mock_validate_model_parameter.assert_called_once_with(par_dict)
-    mock_get_db_name.assert_called_once_with(db_name)
+    mock_get_db_name.assert_called_once_with(test_db)
     mock_get_collection.assert_called_once_with("test_db", collection_name)
     mock_get_value_unit_type.assert_called_once_with(value="value1", unit_str=None)
     mock_insert_one.assert_called_once_with(
@@ -856,21 +880,22 @@ def test_add_new_parameter_with_file(db, mocker, tmp_test_directory):
     mock_reset_parameter_cache.assert_called_once()
 
 
-def test_add_new_parameter_with_file_no_prefix(db, mocker):
+def test_add_new_parameter_with_file_no_prefix(
+    db, mocker, value_unit_type, validate_model_parameter, test_db
+):
     """Test add_new_parameter method with file but no file_prefix."""
     mock_validate_model_parameter = mocker.patch(
-        "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter",
+        validate_model_parameter,
         return_value={"parameter": "param1", "value": "value1", "file": True},
     )
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
     mock_get_value_unit_type = mocker.patch(
-        "simtools.db.db_handler.value_conversion.get_value_unit_type",
+        value_unit_type,
         return_value=("value1", "unit1", None),
     )
     mock_reset_parameter_cache = mocker.patch.object(db, "_reset_parameter_cache")
 
-    db_name = "test_db"
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
     file_prefix = None
@@ -879,16 +904,16 @@ def test_add_new_parameter_with_file_no_prefix(db, mocker):
         FileNotFoundError,
         match=r"The location of the file to upload, corresponding to the param1 parameter, must be provided.",
     ):
-        db.add_new_parameter(db_name, par_dict, collection_name, file_prefix)
+        db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
 
     mock_validate_model_parameter.assert_called_once_with(par_dict)
-    mock_get_db_name.assert_called_once_with(db_name)
+    mock_get_db_name.assert_called_once_with(test_db)
     mock_get_collection.assert_called_once_with("test_db", collection_name)
     mock_get_value_unit_type.assert_called_once_with(value="value1", unit_str=None)
     mock_reset_parameter_cache.assert_not_called()
 
 
-def test_insert_file_to_db_file_exists(db, mocker):
+def test_insert_file_to_db_file_exists(db, mocker, test_db, test_file):
     """Test insert_file_to_db method when file already exists in the DB."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_db_client = mocker.patch.object(
@@ -900,19 +925,16 @@ def test_insert_file_to_db_file_exists(db, mocker):
     mock_file_instance = mocker.Mock()
     mock_file_system.find_one.return_value = mock_file_instance
 
-    file_name = "test_file.dat"
-    db_name = "test_db"
+    result = db.insert_file_to_db(test_file, test_db)
 
-    result = db.insert_file_to_db(file_name, db_name)
-
-    mock_get_db_name.assert_called_once_with(db_name)
-    mock_gridfs.assert_called_once_with(mock_db_client[db_name])
-    mock_file_system.exists.assert_called_once_with({"filename": file_name})
-    mock_file_system.find_one.assert_called_once_with({"filename": file_name})
+    mock_get_db_name.assert_called_once_with(test_db)
+    mock_gridfs.assert_called_once_with(mock_db_client[test_db])
+    mock_file_system.exists.assert_called_once_with({"filename": test_file})
+    mock_file_system.find_one.assert_called_once_with({"filename": test_file})
     assert result == mock_file_instance._id
 
 
-def test_insert_file_to_db_new_file(db, mocker):
+def test_insert_file_to_db_new_file(db, mocker, mock_open, test_db, test_file):
     """Test insert_file_to_db method when file does not exist in the DB."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_db_client = mocker.patch.object(
@@ -922,24 +944,20 @@ def test_insert_file_to_db_new_file(db, mocker):
     mock_file_system = mock_gridfs.return_value
     mock_file_system.exists.return_value = False
     mock_file_system.put.return_value = "new_file_id"
-    mock_open = mocker.patch("builtins.open", mocker.mock_open(read_data=b"file_content"))
 
-    file_name = "test_file.dat"
-    db_name = "test_db"
+    result = db.insert_file_to_db(test_file, test_db)
 
-    result = db.insert_file_to_db(file_name, db_name)
-
-    mock_get_db_name.assert_called_once_with(db_name)
-    mock_gridfs.assert_called_once_with(mock_db_client[db_name])
-    mock_file_system.exists.assert_called_once_with({"filename": file_name})
-    mock_open.assert_called_once_with(file_name, "rb")
+    mock_get_db_name.assert_called_once_with(test_db)
+    mock_gridfs.assert_called_once_with(mock_db_client[test_db])
+    mock_file_system.exists.assert_called_once_with({"filename": test_file})
+    mock_open.assert_called_once_with(test_file, "rb")
     mock_file_system.put.assert_called_once_with(
-        mock_open(), content_type="ascii/dat", filename=file_name
+        mock_open(), content_type="ascii/dat", filename=test_file
     )
     assert result == "new_file_id"
 
 
-def test_insert_file_to_db_with_kwargs(db, mocker):
+def test_insert_file_to_db_with_kwargs(db, mocker, mock_open, test_db, test_file):
     """Test insert_file_to_db method with additional kwargs."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_db_client = mocker.patch.object(
@@ -949,22 +967,19 @@ def test_insert_file_to_db_with_kwargs(db, mocker):
     mock_file_system = mock_gridfs.return_value
     mock_file_system.exists.return_value = False
     mock_file_system.put.return_value = "new_file_id"
-    mock_open = mocker.patch("builtins.open", mocker.mock_open(read_data=b"file_content"))
 
-    file_name = "test_file.dat"
-    db_name = "test_db"
     kwargs = {"content_type": "application/octet-stream", "metadata": {"key": "value"}}
 
-    result = db.insert_file_to_db(file_name, db_name, **kwargs)
+    result = db.insert_file_to_db(test_file, test_db, **kwargs)
 
-    mock_get_db_name.assert_called_once_with(db_name)
-    mock_gridfs.assert_called_once_with(mock_db_client[db_name])
-    mock_file_system.exists.assert_called_once_with({"filename": file_name})
-    mock_open.assert_called_once_with(file_name, "rb")
+    mock_get_db_name.assert_called_once_with(test_db)
+    mock_gridfs.assert_called_once_with(mock_db_client[test_db])
+    mock_file_system.exists.assert_called_once_with({"filename": test_file})
+    mock_open.assert_called_once_with(test_file, "rb")
     mock_file_system.put.assert_called_once_with(
         mock_open(),
         content_type="application/octet-stream",
-        filename=file_name,
+        filename=test_file,
         metadata={"key": "value"},
     )
     assert result == "new_file_id"
@@ -1031,9 +1046,12 @@ def test_cache_key(db):
     assert result == ""
 
 
-def test_read_cache_with_cache_hit(db):
-    """Test _read_cache method when cache hit occurs."""
-    cache_dict = {"1.0.0-telescopes-North-LSTN-01": {"param1": "value1"}}
+def test_read_cache(db):
+    test_key = "1.0.0-telescopes-North-LSTN-01"
+    test_param1 = {"param1": "value1"}
+    cache_dict = {test_key: test_param1}
+
+    # Test _read_cache method when cache hit occurs.
     site = "North"
     array_element_name = "LSTN-01"
     model_version = "1.0.0"
@@ -1042,73 +1060,30 @@ def test_read_cache_with_cache_hit(db):
     cache_key, result = db._read_cache(
         cache_dict, site, array_element_name, model_version, collection
     )
+    assert cache_key == test_key
+    assert result == test_param1
 
-    assert cache_key == "1.0.0-telescopes-North-LSTN-01"
-    assert result == {"param1": "value1"}
-
-
-def test_read_cache_with_cache_miss(db):
-    """Test _read_cache method when cache miss occurs."""
-    cache_dict = {"1.0.0-telescopes-North-LSTN-01": {"param1": "value1"}}
-    site = "North"
-    array_element_name = "LSTN-02"
-    model_version = "1.0.0"
-    collection = "telescopes"
-
-    cache_key, result = db._read_cache(
-        cache_dict, site, array_element_name, model_version, collection
-    )
-
+    # Test _read_cache method when cache miss occurs.
+    cache_key, result = db._read_cache(cache_dict, site, "LSTN-02", model_version, collection)
     assert cache_key == "1.0.0-telescopes-North-LSTN-02"
     assert result is None
 
-
-def test_read_cache_with_empty_cache(db):
-    """Test _read_cache method with empty cache."""
-    cache_dict = {}
-    site = "North"
-    array_element_name = "LSTN-01"
-    model_version = "1.0.0"
-    collection = "telescopes"
-
-    cache_key, result = db._read_cache(
-        cache_dict, site, array_element_name, model_version, collection
-    )
-
+    # Test _read_cache method with empty cache.
+    cache_key, result = db._read_cache({}, site, array_element_name, model_version, collection)
     assert cache_key == "1.0.0-telescopes-North-LSTN-01"
     assert result is None
 
-
-def test_read_cache_with_partial_parameters(db):
-    """Test _read_cache method with partial parameters."""
-    cache_dict = {"1.0.0-telescopes-North": {"param1": "value1"}}
-    site = "North"
-    array_element_name = None
-    model_version = "1.0.0"
-    collection = "telescopes"
-
-    cache_key, result = db._read_cache(
-        cache_dict, site, array_element_name, model_version, collection
-    )
-
+    # Test _read_cache method with partial parameters.
+    cache_dict = {"1.0.0-telescopes-North": test_param1}
+    cache_key, result = db._read_cache(cache_dict, site, None, model_version, collection)
     assert cache_key == "1.0.0-telescopes-North"
-    assert result == {"param1": "value1"}
+    assert result == test_param1
 
-
-def test_read_cache_with_no_parameters(db):
-    """Test _read_cache method with no parameters."""
-    cache_dict = {"": {"param1": "value1"}}
-    site = None
-    array_element_name = None
-    model_version = None
-    collection = None
-
-    cache_key, result = db._read_cache(
-        cache_dict, site, array_element_name, model_version, collection
-    )
-
+    # Test _read_cache method with no parameters.
+    cache_dict = {"": test_param1}
+    cache_key, result = db._read_cache(cache_dict, None, None, None, None)
     assert cache_key == ""
-    assert result == {"param1": "value1"}
+    assert result == test_param1
 
 
 def test_reset_parameter_cache(db):
