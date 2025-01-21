@@ -313,14 +313,14 @@ def get_collection_name_from_array_element_name(name, array_elements_only=True):
         return array_elements()[get_array_element_type_from_name(name)]["collection"]
     except ValueError:
         pass
+    if name.startswith("OBS"):
+        return "sites"
     try:
         validate_site_name(name)
         return "sites"
     except ValueError as exc:
         if array_elements_only:
-            raise ValueError(f"Invalid array element name {name}: {exc}") from exc
-    if name.startswith("OBS"):
-        return "sites"
+            raise ValueError(f"Invalid array element name {name}") from exc
     if name in (
         "configuration_sim_telarray",
         "configuration_corsika",
