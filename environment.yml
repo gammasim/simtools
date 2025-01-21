@@ -12,7 +12,7 @@ dependencies:
   - jsonschema
   - matplotlib-base
   - myst-parser
-  - numpy
+  - numpy~=2.1.0
   - numpydoc
   - particle
   - pip
