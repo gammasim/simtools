@@ -8,6 +8,16 @@ import pytest
 import simtools.db.db_model_upload as db_model_upload
 
 
+@pytest.fixture
+def iter_dir():
+    return "simtools.db.db_model_upload.Path.iterdir"
+
+
+@pytest.fixture
+def is_dir():
+    return "simtools.db.db_model_upload.Path.is_dir"
+
+
 @patch("simtools.db.db_model_upload.gen.collect_data_from_file")
 def test_add_values_from_json_to_db(mock_collect_data_from_file):
     mock_collect_data_from_file.return_value = {
@@ -61,7 +71,9 @@ def test_read_production_table(mock_collect_data_from_file):
 
 
 @patch("simtools.db.db_model_upload._read_production_table")
-def test_add_production_tables_to_db(mock_read_production_table, tmp_test_directory, caplog):
+def test_add_production_tables_to_db(
+    mock_read_production_table, tmp_test_directory, caplog, iter_dir, is_dir
+):
     mock_db = Mock()
     args_dict = {"input_path": tmp_test_directory, "db_name": "test_db"}
     input_path = Path(args_dict["input_path"])
@@ -79,8 +91,8 @@ def test_add_production_tables_to_db(mock_read_production_table, tmp_test_direct
         }
     )
 
-    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[model_dir]):
-        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
+    with patch(iter_dir, return_value=[model_dir]):
+        with patch(is_dir, return_value=True):
             db_model_upload.add_production_tables_to_db(args_dict, mock_db)
 
     assert mock_read_production_table.call_count == 2
@@ -101,7 +113,9 @@ def test_add_production_tables_to_db(mock_read_production_table, tmp_test_direct
 
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")
-def test_add_model_parameters_to_db(mock_add_values_from_json_to_db, tmp_test_directory):
+def test_add_model_parameters_to_db(
+    mock_add_values_from_json_to_db, tmp_test_directory, iter_dir, is_dir
+):
     mock_db = Mock()
     args_dict = {"input_path": tmp_test_directory, "db_name": "test_db"}
     input_path = Path(args_dict["input_path"])
@@ -110,8 +124,8 @@ def test_add_model_parameters_to_db(mock_add_values_from_json_to_db, tmp_test_di
     (array_element_dir / "num_gains-0.1.0.json").touch()
     (array_element_dir / "mirror_list-0.2.1.json").touch()
 
-    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[array_element_dir]):
-        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
+    with patch(iter_dir, return_value=[array_element_dir]):
+        with patch(is_dir, return_value=True):
             db_model_upload.add_model_parameters_to_db(args_dict, mock_db)
 
     mock_add_values_from_json_to_db.assert_any_call(
@@ -133,7 +147,7 @@ def test_add_model_parameters_to_db(mock_add_values_from_json_to_db, tmp_test_di
 
 @patch("simtools.db.db_model_upload.add_values_from_json_to_db")
 def test_add_model_parameters_to_db_skip_files_collection(
-    mock_add_values_from_json_to_db, tmp_test_directory
+    mock_add_values_from_json_to_db, tmp_test_directory, iter_dir, is_dir
 ):
     mock_db = Mock()
     args_dict = {"input_path": tmp_test_directory, "db_name": "test_db"}
@@ -142,8 +156,8 @@ def test_add_model_parameters_to_db_skip_files_collection(
     files_dir.mkdir(parents=True, exist_ok=True)
     (files_dir / "file1.json").touch()
 
-    with patch("simtools.db.db_model_upload.Path.iterdir", return_value=[files_dir]):
-        with patch("simtools.db.db_model_upload.Path.is_dir", return_value=True):
+    with patch(iter_dir, return_value=[files_dir]):
+        with patch(is_dir, return_value=True):
             db_model_upload.add_model_parameters_to_db(args_dict, mock_db)
 
     mock_add_values_from_json_to_db.assert_not_called()

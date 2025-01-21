@@ -917,13 +917,12 @@ def test_add_new_parameter_with_file_no_prefix(
     mock_reset_parameter_cache.assert_not_called()
 
 
-def test_insert_file_to_db_file_exists(db, mocker, test_db, test_file):
+def test_insert_file_to_db_file_exists(db, mocker, test_db, test_file, mock_gridfs):
     """Test insert_file_to_db method when file already exists in the DB."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
     )
-    mock_gridfs = mocker.patch("simtools.db.db_handler.gridfs.GridFS")
     mock_file_system = mock_gridfs.return_value
     mock_file_system.exists.return_value = True
     mock_file_instance = mocker.Mock()
@@ -938,13 +937,12 @@ def test_insert_file_to_db_file_exists(db, mocker, test_db, test_file):
     assert result == mock_file_instance._id
 
 
-def test_insert_file_to_db_new_file(db, mocker, mock_open, test_db, test_file):
+def test_insert_file_to_db_new_file(db, mocker, mock_open, test_db, test_file, mock_gridfs):
     """Test insert_file_to_db method when file does not exist in the DB."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
     )
-    mock_gridfs = mocker.patch("simtools.db.db_handler.gridfs.GridFS")
     mock_file_system = mock_gridfs.return_value
     mock_file_system.exists.return_value = False
     mock_file_system.put.return_value = "new_file_id"
