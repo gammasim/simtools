@@ -175,7 +175,7 @@ class ModelParameter:
         _value = self.get_parameter_value(par_name, _parameter)
 
         try:
-            if isinstance(_parameter.get("unit"), str):  # TODO - check if still needed
+            if isinstance(_parameter.get("unit"), str):
                 _unit = [item.strip() for item in _parameter.get("unit").split(",")]
             else:
                 _unit = _parameter.get("unit")

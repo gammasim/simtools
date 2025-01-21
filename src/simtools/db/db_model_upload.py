@@ -1,4 +1,4 @@
-"""Module for uploading a simulation model (parameters and production tables) to the database."""
+"""Upload a simulation model (parameters and production tables) to the database."""
 
 import logging
 from pathlib import Path
