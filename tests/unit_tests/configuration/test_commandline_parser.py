@@ -179,25 +179,30 @@ def test_simulation_model():
             assert all(action.dest != "site" for action in group._group_actions)
             assert all(action.dest != "telescope" for action in group._group_actions)
 
-    # Site model can exist without a telescope model
+    # Site model can exist without a telescope model, model and parameter version
     _parser_s = parser.CommandLineParser()
-    _parser_s.initialize_default_arguments(simulation_model=["site", "model_version"])
+    _parser_s.initialize_default_arguments(
+        simulation_model=["site", "model_version", "parameter_version"]
+    )
     job_groups = _parser_s._action_groups
     assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
         if str(group.title) == SIMULATION_MODEL_STRING:
             assert any(action.dest == "model_version" for action in group._group_actions)
+            assert any(action.dest == "parameter_version" for action in group._group_actions)
             assert any(action.dest == "site" for action in group._group_actions)
             assert all(action.dest != "telescope" for action in group._group_actions)
 
-    # No telescope model without site model
+    # No telescope model without site model; parameter_version only
     _parser_t = parser.CommandLineParser()
-    _parser_t.initialize_default_arguments(simulation_model=["telescope", "site", "model_version"])
+    _parser_t.initialize_default_arguments(
+        simulation_model=["telescope", "site", "parameter_version"]
+    )
     job_groups = _parser_t._action_groups
     assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
         if str(group.title) == SIMULATION_MODEL_STRING:
-            assert any(action.dest == "model_version" for action in group._group_actions)
+            assert any(action.dest == "parameter_version" for action in group._group_actions)
             assert any(action.dest == "site" for action in group._group_actions)
             assert any(action.dest == "telescope" for action in group._group_actions)
 
