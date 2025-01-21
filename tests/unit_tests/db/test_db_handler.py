@@ -86,6 +86,11 @@ def validate_model_parameter():
 
 
 @pytest.fixture
+def mock_gridfs(mocker):
+    return mocker.patch("simtools.db.db_handler.gridfs.GridFS")
+
+
+@pytest.fixture
 def _db_cleanup_file_sandbox(db_no_config_file, random_id, fs_files):
     yield
     # Cleanup
@@ -751,12 +756,11 @@ def test_get_simulation_configuration_parameters(db, mocker):
         db.get_simulation_configuration_parameters("wrong", "North", "LSTN-design", "6.0.0")
 
 
-def test_get_file_mongo_db_file(db, mocker, test_db, test_file):
+def test_get_file_mongo_db_file(db, mocker, test_db, test_file, mock_gridfs):
     """Test _get_file_mongo_db method when file exists."""
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {test_db: mocker.Mock()}
     )
-    mock_gridfs = mocker.patch("simtools.db.db_handler.gridfs.GridFS")
     mock_file_system = mock_gridfs.return_value
     mock_file_system.exists.return_value = True
     mock_file_instance = mocker.Mock()
@@ -957,13 +961,12 @@ def test_insert_file_to_db_new_file(db, mocker, mock_open, test_db, test_file):
     assert result == "new_file_id"
 
 
-def test_insert_file_to_db_with_kwargs(db, mocker, mock_open, test_db, test_file):
+def test_insert_file_to_db_with_kwargs(db, mocker, mock_open, test_db, test_file, mock_gridfs):
     """Test insert_file_to_db method with additional kwargs."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
     mock_db_client = mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {"test_db": mocker.Mock()}
     )
-    mock_gridfs = mocker.patch("simtools.db.db_handler.gridfs.GridFS")
     mock_file_system = mock_gridfs.return_value
     mock_file_system.exists.return_value = False
     mock_file_system.put.return_value = "new_file_id"
@@ -1070,13 +1073,14 @@ def test_read_cache(db):
 
     # Test _read_cache method with empty cache.
     cache_key, result = db._read_cache({}, site, array_element_name, model_version, collection)
-    assert cache_key == "1.0.0-telescopes-North-LSTN-01"
+    assert cache_key == test_key
     assert result is None
 
     # Test _read_cache method with partial parameters.
-    cache_dict = {"1.0.0-telescopes-North": test_param1}
+    test_key = "1.0.0-telescopes-North"
+    cache_dict = {test_key: test_param1}
     cache_key, result = db._read_cache(cache_dict, site, None, model_version, collection)
-    assert cache_key == "1.0.0-telescopes-North"
+    assert cache_key == test_key
     assert result == test_param1
 
     # Test _read_cache method with no parameters.

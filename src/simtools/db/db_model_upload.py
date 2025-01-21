@@ -63,16 +63,13 @@ def add_model_parameters_to_db(args_dict, db):
         logger.info(f"Reading model parameters for {element.name} into collection {collection}")
         files_to_insert = list(Path(element).rglob("*json"))
         for file in files_to_insert:
-            if collection == "files":
-                logger.info("Not yet implemented files")
-            else:
-                add_values_from_json_to_db(
-                    file=file,
-                    collection=collection,
-                    db=db,
-                    db_name=args_dict["db_name"],
-                    file_prefix=input_path / "Files",
-                )
+            add_values_from_json_to_db(
+                file=file,
+                collection=collection,
+                db=db,
+                db_name=args_dict["db_name"],
+                file_prefix=input_path / "Files",
+            )
 
 
 def add_production_tables_to_db(args_dict, db):
