@@ -230,7 +230,7 @@ def test_get_model_parameters(db, mocker):
     """Test get_model_parameters method."""
     mock_get_production_table = mocker.patch.object(
         db,
-        "get_production_table_from_mongo_db",
+        "_read_production_table_from_mongo_db",
         return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
     )
     mock_get_array_element_list = mocker.patch.object(
@@ -285,7 +285,7 @@ def test_get_model_parameters_with_cache(db, mocker):
     """Test get_model_parameters method with cache."""
     mock_get_production_table = mocker.patch.object(
         db,
-        "get_production_table_from_mongo_db",
+        "_read_production_table_from_mongo_db",
         return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
     )
     mock_get_array_element_list = mocker.patch.object(
@@ -319,7 +319,7 @@ def test_get_model_parameters_with_cache(db, mocker):
 def test_get_model_parameters_no_parameters(db, mocker):
     """Test get_model_parameters method with no parameters."""
     mock_get_production_table = mocker.patch.object(
-        db, "get_production_table_from_mongo_db", return_value={"parameters": {}}
+        db, "_read_production_table_from_mongo_db", return_value={"parameters": {}}
     )
     mock_get_array_element_list = mocker.patch.object(
         db, "_get_array_element_list", return_value=["LSTN-01"]
@@ -602,8 +602,8 @@ def test_read_mongo_db(db, mocker):
         db._read_mongo_db(query, collection_name)
 
 
-def test_get_production_table_from_mongo_db_with_cache(db, mocker):
-    """Test get_production_table_from_mongo_db method with cache."""
+def test__read_production_table_from_mongo_db_with_cache(db, mocker):
+    """Test _read_production_table_from_mongo_db method with cache."""
     collection_name = "telescopes"
     model_version = "1.0.0"
     param = {"param1": "value1"}
@@ -616,7 +616,7 @@ def test_get_production_table_from_mongo_db_with_cache(db, mocker):
         "entry_date": ObjectId().generation_time,
     }
 
-    result = db.get_production_table_from_mongo_db(collection_name, model_version)
+    result = db._read_production_table_from_mongo_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
     assert result == db_handler.DatabaseHandler.production_table_cached["cache_key"]
@@ -636,7 +636,7 @@ def test_get_production_table_from_mongo_db_with_cache(db, mocker):
         },
     )
 
-    result = db.get_production_table_from_mongo_db(collection_name, model_version)
+    result = db._read_production_table_from_mongo_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
     mock_get_collection.assert_called_once_with("test_db", "production_tables")
@@ -659,14 +659,14 @@ def test_get_production_table_from_mongo_db_with_cache(db, mocker):
         ValueError,
         match=r"The following query returned zero results: {'model_version': '1.0.0', 'collection': 'telescopes'}",
     ):
-        db.get_production_table_from_mongo_db(collection_name, model_version)
+        db._read_production_table_from_mongo_db(collection_name, model_version)
 
 
 def test_get_array_elements_of_type(db, mocker):
     """Test get_array_elements_of_type method."""
     mock_get_production_table = mocker.patch.object(
         db,
-        "get_production_table_from_mongo_db",
+        "_read_production_table_from_mongo_db",
         return_value={
             "parameters": {"LSTN-01": "value1", "LSTN-02": "value2", "MSTS-01": "value3"}
         },
@@ -1123,18 +1123,15 @@ def test_read_cache_with_no_parameters(db):
 def test_reset_parameter_cache(db):
     """Test _reset_parameter_cache method."""
     # Populate the cache dictionaries
-    db_handler.DatabaseHandler.site_parameters_cached = {"key1": "value1"}
     db_handler.DatabaseHandler.model_parameters_cached = {"key2": "value2"}
 
     # Ensure the caches are populated
-    assert db_handler.DatabaseHandler.site_parameters_cached
     assert db_handler.DatabaseHandler.model_parameters_cached
 
     # Call the method to reset the caches
     db._reset_parameter_cache()
 
     # Check that the caches are cleared
-    assert not db_handler.DatabaseHandler.site_parameters_cached
     assert not db_handler.DatabaseHandler.model_parameters_cached
 
 
