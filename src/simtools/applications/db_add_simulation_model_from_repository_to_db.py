@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 r"""
-    Add parameters and production tables found in a model parameter repository to a new database.
+    Add parameters and production tables from a simulation model repository to a new database.
 
     Generates a new database with all required collections.
-    Follows the structure of the CTAO gitlab model parameters repository.
+    Follows the structure of the CTAO gitlab simulation model repository.
 
     This is an application for experts and should not be used by the general user.
 
@@ -26,6 +26,16 @@ r"""
             --input_path /path/to/repository \
             --db_name new_db_name \
             --type model_parameters
+
+    Upload production tables to the DB:
+
+    .. code-block:: console
+
+        simtools-db-simulation-model-from-repository-to-db \
+            --input_path /path/to/repository \
+            --db_name new_db_name \
+            --type production_tables
+
 """
 
 import logging
@@ -55,13 +65,13 @@ def _parse(label=None, description=None):
     config = configurator.Configurator(label=label, description=description)
     config.parser.add_argument(
         "--input_path",
-        help="Path to model parameter repository.",
+        help="Path to simulation model repository.",
         type=Path,
         required=True,
     )
     config.parser.add_argument(
         "--db_name",
-        help="Name of the new model parameter database to be created.",
+        help="Name of the new simulation model database to be created.",
         type=str.strip,
         required=True,
     )

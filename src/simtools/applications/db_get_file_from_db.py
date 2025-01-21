@@ -49,8 +49,9 @@ def _parse():
 
     config.parser.add_argument(
         "--file_name",
-        help="The name of the file to be downloaded.",
+        help="The name of the file(s) to be downloaded (single file or space-separated list).",
         type=str,
+        nargs="+",
         required=True,
     )
     return config.initialize(db_config=True, output=True)
@@ -84,11 +85,10 @@ def main():  # noqa: D103
         except FileNotFoundError:
             continue
 
-    if file_id.get(args_dict["file_name"]) is None:
-        logger.error(
-            f"The file {args_dict['file_name']} was not found in any of the available DBs."
-        )
-        raise FileNotFoundError
+    for key, value in file_id.items():
+        if value is None:
+            logger.error(f"The file {key} was not found in any of the available DBs.")
+            raise FileNotFoundError
 
 
 if __name__ == "__main__":
