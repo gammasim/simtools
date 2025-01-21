@@ -129,20 +129,22 @@ def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
         db_copy._find_latest_simulation_model_db()
 
     db_names = [
-        "CTAO-Simulation-Model-v0-3-0",
-        "CTAO-Simulation-Model-v0-2-0",
-        "CTAO-Simulation-Model-v0-1-19",
-        "CTAO-Simulation-Model-v0-3-9",
-        "CTAO-Simulation-Model-v0-3-19",
-        "CTAO-Simulation-Model-v0-3-0",
-        "CTAO-Simulation-Model-v0-3-0-alpha-2",
-        "CTAO-Simulation-Model-v0-4-19-alpha-1",
-        "CTAO-Simulation-Model-v0-4-19-dev1",
+        "CTAO-Simulation-ModelParameters-v0-3-0",
+        "CTAO-Simulation-ModelParameters-v0-2-0",
+        "CTAO-Simulation-ModelParameters-v0-1-19",
+        "CTAO-Simulation-ModelParameters-v0-3-9",
+        "CTAO-Simulation-ModelParameters-v0-3-19",
+        "CTAO-Simulation-ModelParameters-v0-3-0",
+        "CTAO-Simulation-ModelParameters-v0-3-0-alpha-2",
+        "CTAO-Simulation-ModelParameters-v0-4-19-alpha-1",
+        "CTAO-Simulation-ModelParameters-v0-4-19-dev1",
     ]
     mocker.patch.object(db_copy.db_client, "list_database_names", return_value=db_names)
-    db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-Model-LATEST"
+    db_copy.mongo_db_config["db_simulation_model"] = "CTAO-Simulation-ModelParameters-LATEST"
     db_copy._find_latest_simulation_model_db()
-    assert db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-Model-v0-3-19"
+    assert (
+        db_copy.mongo_db_config["db_simulation_model"] == "CTAO-Simulation-ModelParameters-v0-3-19"
+    )
 
 
 def test_get_model_parameter(db, mocker):
