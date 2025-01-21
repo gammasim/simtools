@@ -96,35 +96,7 @@ def add_production_tables_to_db(args_dict, db):
         logger.info(f"Reading production tables for model version {model.name}")
         model_dict = {}
         for file in sorted(model.rglob("*json")):
-            array_element = file.stem
-            collection = names.get_collection_name_from_array_element_name(array_element, False)
-            model_dict.setdefault(
-                collection,
-                {
-                    "collection": collection,
-                    "model_version": model.name,
-                    "parameters": {},
-                    "design_model": {},
-                },
-            )
-            parameter_dict = gen.collect_data_from_file(file_name=file)
-            logger.info(f"Reading production table for {array_element} (collection {collection})")
-            try:
-                if array_element in ("configuration_corsika", "configuration_sim_telarray"):
-                    model_dict[collection]["parameters"] = parameter_dict["parameters"]
-                else:
-                    model_dict[collection]["parameters"][array_element] = parameter_dict[
-                        "parameters"
-                    ][array_element]
-            except KeyError as exc:
-                logger.error(f"KeyError: {exc}")
-                raise
-            try:
-                model_dict[collection]["design_model"][array_element] = parameter_dict[
-                    "design_model"
-                ][array_element]
-            except KeyError:
-                pass
+            _read_production_table(model_dict, file, model.name)
 
         for collection, data in model_dict.items():
             if not data["parameters"]:
@@ -135,3 +107,36 @@ def add_production_tables_to_db(args_dict, db):
                 db_name=args_dict["db_name"],
                 production_table=data,
             )
+
+
+def _read_production_table(model_dict, file, model_name):
+    """Read a single production table from file."""
+    array_element = file.stem
+    collection = names.get_collection_name_from_array_element_name(array_element, False)
+    model_dict.setdefault(
+        collection,
+        {
+            "collection": collection,
+            "model_version": model_name,
+            "parameters": {},
+            "design_model": {},
+        },
+    )
+    parameter_dict = gen.collect_data_from_file(file_name=file)
+    logger.info(f"Reading production table for {array_element} (collection {collection})")
+    try:
+        if array_element in ("configuration_corsika", "configuration_sim_telarray"):
+            model_dict[collection]["parameters"] = parameter_dict["parameters"]
+        else:
+            model_dict[collection]["parameters"][array_element] = parameter_dict["parameters"][
+                array_element
+            ]
+    except KeyError as exc:
+        logger.error(f"KeyError: {exc}")
+        raise
+    try:
+        model_dict[collection]["design_model"][array_element] = parameter_dict["design_model"][
+            array_element
+        ]
+    except KeyError:
+        pass
