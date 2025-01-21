@@ -177,6 +177,14 @@ def test_input_config_io_buff(corsika_config_mock_array_model):
         corsika_config_mock_array_model._input_config_io_buff({"value": 800, "unit": "MB"})
         == "800MB"
     )
+    assert (
+        corsika_config_mock_array_model._input_config_io_buff({"value": 8.5, "unit": "MB"})
+        == "8500000"
+    )
+    assert (
+        corsika_config_mock_array_model._input_config_io_buff({"value": 800, "unit": "kB"})
+        == "800000"
+    )
 
 
 def test_corsika_configuration_debugging_parameters(corsika_config_mock_array_model):

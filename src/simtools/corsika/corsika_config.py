@@ -315,10 +315,12 @@ class CorsikaConfig:
         }
 
     def _input_config_io_buff(self, entry):
-        """Return IO_BUFFER parameter CORSIKA format."""
-        unit_map = {"Mbyte": "MB", "kbyte": "kB", "Gbyte": "GB"}
-        unit = unit_map.get(str(u.Unit(entry["unit"])), entry["unit"])
-        return f"{entry['value']}{unit}"
+        """Return IO_BUFFER parameter CORSIKA format (Byte or MB required)."""
+        value = entry["value"] * u.Unit(entry["unit"]).to("Mbyte")
+        # check if value is integer-like
+        if value.is_integer():
+            return f"{int(value)}MB"
+        return f"{int(entry['value'] * u.Unit(entry['unit']).to('byte'))}"
 
     def _rotate_azimuth_by_180deg(self, az, correct_for_geomagnetic_field_alignment=True):
         """
