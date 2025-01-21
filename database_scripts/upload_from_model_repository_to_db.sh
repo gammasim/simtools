@@ -44,7 +44,7 @@ if [[ $SIMTOOLS_DB_SERVER =~ $regex ]]; then
   fi
 fi
 
-# upload files to DB
+# upload model parameters to DB
 model_directory="./simulation-models/model_parameters/"
 simtools-db-add-simulation-model-from-repository-to-db \
   --input_path "${model_directory}" \
