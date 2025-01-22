@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     LABEL: check_output
     MODEL_VERSION: 6.0.0
     SITE: South
-    ARRAY_LAYOUT_NAME: alpha
+    ARRAY_LAYOUT_NAME: beta
     PRIMARY: gamma
     RUN_NUMBER_START: 1
     NUMBER_OF_RUNS: 1
@@ -24,9 +24,9 @@ CTA_SIMPIPE:
   INTEGRATION_TESTS:
     - TEST_OUTPUT_FILES:
         - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-          FILE: run000001_gamma_za40deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
+          FILE: run000001_gamma_za40deg_azm180deg_South_beta_check_output.log_hist.tar.gz
         - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-          FILE: run000001_gamma_za40deg_azm180deg_South_alpha_check_output.zst
+          FILE: run000001_gamma_za40deg_azm180deg_South_beta_check_output.zst
           EXPECTED_OUTPUT:
             # The mean trigger time for all telescopes should be
             # between 0 and 50 ns (very loose requirement)
@@ -37,3 +37,11 @@ CTA_SIMPIPE:
             # The mean number of photons per telescope after atmospheric absorption and QE
             # should be between 90 and 1000 (very loose requirement)
             photons: [90, 1000]
+    - TEST_SIMTEL_CFG_FILES: |
+          tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-6.0.0_test.cfg
+    - TEST_SIMTEL_CFG_FILES: |
+          tests/resources/sim_telarray_configurations/CTA-South-MSTS-01-6.0.0_test.cfg
+    - TEST_SIMTEL_CFG_FILES: |
+          tests/resources/sim_telarray_configurations/CTA-South-SSTS-01-6.0.0_test.cfg
+    - TEST_SIMTEL_CFG_FILES: |
+          tests/resources/sim_telarray_configurations/CTA-beta-South-6.0.0_test.cfg
