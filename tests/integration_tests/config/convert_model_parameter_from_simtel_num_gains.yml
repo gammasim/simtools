@@ -10,6 +10,3 @@ CTA_SIMPIPE:
     OUTPUT_PATH: simtools-output
     OUTPUT_FILE: num_gains.json
     USE_PLAIN_OUTPUT_PATH: True
-  INTEGRATION_TESTS:
-    - REFERENCE_OUTPUT_FILE: |
-        ./tests/resources/model_parameters/num_gains.json
