@@ -34,13 +34,13 @@ r"""
 
 import logging
 import re
-from importlib.resources import files
 from pathlib import Path
 
 import jsonschema
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, metadata_model, validate_data
 
 
@@ -70,7 +70,7 @@ def _parse(label, description):
             "Directory with json files to be validated. "
             "If no schema file is provided, the assumption is that model "
             "parameters are validated and the schema files are taken from "
-            "simtools/schemas/model_parameters/."
+            f"{MODEL_PARAMETER_SCHEMA_PATH}."
         ),
     )
     config.parser.add_argument("--schema", help="Json schema file", required=False)
@@ -150,9 +150,7 @@ def validate_data_files(args_dict, logger):
         for file_name in Path(file_directory).rglob("*.json"):
             tmp_args_dict["file_name"] = file_name
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
-            schema_file = (
-                files("simtools") / "schemas/model_parameters" / f"{parameter_name}.schema.yml"
-            )
+            schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{parameter_name}.schema.yml"
             tmp_args_dict["schema"] = schema_file
             tmp_args_dict["data_type"] = "model_parameter"
             tmp_args_dict["require_exact_data_type"] = args_dict["require_exact_data_type"]
