@@ -103,7 +103,7 @@ def _parse(label=None, description=None):
         type=str,
         required=True,
     )
-    return config.initialize(simulation_model="telescope")
+    return config.initialize(simulation_model=["telescope", "model_version"])
 
 
 def get_list_of_parameters_and_schema_files(schema_directory):
