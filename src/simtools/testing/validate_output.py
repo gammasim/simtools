@@ -167,20 +167,16 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
 
     if data1 == data2:
         return True
-
     if data1.keys() != data2.keys():
         return False
-
-    is_equal = True
-    for key in data1.keys():
-        if key == "value":
-            is_equal = is_equal and _compare_value_from_parameter_dict(
-                data1["value"], data2["value"], tolerance
-            )
-        else:
-            is_equal = is_equal and (data1[key] == data2[key])
-
-    return is_equal
+    return all(
+        (
+            _compare_value_from_parameter_dict(data1[k], data2[k], tolerance)
+            if k == "value"
+            else data1[k] == data2[k]
+        )
+        for k in data1
+    )
 
 
 def _compare_value_from_parameter_dict(data1, data2, tolerance):
