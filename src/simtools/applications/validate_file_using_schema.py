@@ -34,7 +34,6 @@ r"""
 
 import logging
 import re
-from importlib.resources import files
 from pathlib import Path
 
 import jsonschema
@@ -151,9 +150,7 @@ def validate_data_files(args_dict, logger):
         for file_name in Path(file_directory).rglob("*.json"):
             tmp_args_dict["file_name"] = file_name
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
-            schema_file = (
-                files("simtools") / "schemas/model_parameters" / f"{parameter_name}.schema.yml"
-            )
+            schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{parameter_name}.schema.yml"
             tmp_args_dict["schema"] = schema_file
             tmp_args_dict["data_type"] = "model_parameter"
             tmp_args_dict["require_exact_data_type"] = args_dict["require_exact_data_type"]
