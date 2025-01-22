@@ -5,7 +5,6 @@ import re
 import shutil
 import sys
 from importlib.resources import files
-from pathlib import Path
 
 import jsonschema
 import numpy as np
@@ -899,7 +898,6 @@ def test_validate_value_and_unit_for_dict(reference_columns):
 
 
 def test_validate_model_parameter(mocker):
-    mocker.patch("simtools.data_model.validate_data.files", return_value=Path("tests/resources"))
     mocker.patch(
         "simtools.data_model.validate_data.DataValidator._read_validation_schema",
         return_value=[{"name": "parameter", "type": "float", "unit": "km"}],
