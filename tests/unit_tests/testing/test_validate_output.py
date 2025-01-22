@@ -100,6 +100,18 @@ def test_compare_json_files_float_strings(create_json_file, file_name):
     assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
 
+def test_compare_json_files_equal_dicts(create_json_file, file_name):
+    content1 = {"key": 1, "value": 5}
+    file1 = create_json_file(file_name(1, "json"), content1)
+    content2 = {"key": 1, "value": 5, "extra": "extra"}
+    file2 = create_json_file(file_name(2, "json"), content2)
+    assert not validate_output.compare_json_or_yaml_files(file1, file2)
+
+    content3 = {"different_key": 1, "value": 5}
+    file3 = create_json_file(file_name(2, "json"), content3)
+    assert not validate_output.compare_json_or_yaml_files(file1, file3)
+
+
 def test_compare_json_files_equal_integers(create_json_file, file_name):
     content = {"key": 1, "value": 5}
     file1 = create_json_file(file_name(1, "json"), content)
@@ -112,6 +124,36 @@ def test_compare_json_files_equal_integers(create_json_file, file_name):
     assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
 
+def test_compare_json_files_equal_floats(create_json_file, file_name):
+    content = {"key": 1, "value": 5.5}
+    file1 = create_json_file(file_name(1, "json"), content)
+    file2 = create_json_file(file_name(2, "json"), content)
+
+    assert validate_output.compare_json_or_yaml_files(file1, file2)
+
+    content3 = {"key": 1, "value": 5.75}
+    file3 = create_json_file(file_name(3, "json"), content3)
+    assert not validate_output.compare_json_or_yaml_files(file1, file3)
+
+    assert validate_output.compare_json_or_yaml_files(file1, file3, tolerance=0.5)
+
+
+def test_compare_json_files_list_of_floats(create_json_file, file_name):
+    content = {"key": 1, "value": [5.5, 10.5]}
+    file1 = create_json_file(file_name(1, "json"), content)
+    file2 = create_json_file(file_name(2, "json"), content)
+
+    assert validate_output.compare_json_or_yaml_files(file1, file2)
+
+    content3 = {"key": 1, "value": 5.75}
+    file3 = create_json_file(file_name(3, "json"), content3)
+    assert not validate_output.compare_json_or_yaml_files(file1, file3)
+
+    content4 = {"key": 1, "value": [5.75, 10.75]}
+    file4 = create_json_file(file_name(3, "json"), content4)
+    assert validate_output.compare_json_or_yaml_files(file1, file4, tolerance=0.5)
+
+
 def test_compare_yaml_files_float_strings(create_yaml_file, file_name):
     content = {"key": 1, "value": "1.23 4.56 7.89"}
     file1 = create_yaml_file(file_name(1, "yaml"), content)
@@ -119,9 +161,11 @@ def test_compare_yaml_files_float_strings(create_yaml_file, file_name):
 
     assert validate_output.compare_json_or_yaml_files(file1, file2)
 
-    content3 = {"key": 2, "value": "1.23 4.56 7.80"}
+    content3 = {"key": 1, "value": "1.23 4.56 7.80"}
     file3 = create_yaml_file(file_name(3, "yaml"), content3)
     assert not validate_output.compare_json_or_yaml_files(file1, file3)
+
+    assert validate_output.compare_json_or_yaml_files(file1, file3, tolerance=0.5)
 
 
 def test_compare_yaml_files_equal_integers(create_yaml_file, file_name):
