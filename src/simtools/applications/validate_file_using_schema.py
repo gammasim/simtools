@@ -33,10 +33,11 @@ r"""
 """
 
 import logging
-import jsonschema
 import re
 from importlib.resources import files
 from pathlib import Path
+
+import jsonschema
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
