@@ -111,7 +111,7 @@ class ModelParameter:
         try:
             return self._parameters[par_name]
         except (KeyError, ValueError) as e:
-            msg = f"Parameter {par_name} was not found in the model"
+            msg = f"Parameter {par_name} was not found in the model {self.name}, {self.site}."
             self._logger.error(msg)
             raise InvalidModelParameterError(msg) from e
 
