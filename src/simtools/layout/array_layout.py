@@ -387,6 +387,8 @@ class ArrayLayout:
             data = json.load(file)
 
         position = data["value"]
+        if isinstance(position, str):
+            position = gen.convert_string_to_list(position)
         self.site = data.get("site", None)
 
         table = QTable()
@@ -579,7 +581,9 @@ class ArrayLayout:
 
         return table
 
-    def export_one_telescope_as_json(self, crs_name):
+    def export_one_telescope_as_json(
+        self, crs_name, parameter_version=None, schema_version="0.2.0"
+    ):
         """
         Return a list containing a single telescope in simtools-DB-style json.
 
@@ -587,6 +591,8 @@ class ArrayLayout:
         ----------
         crs_name: str
             Name of coordinate system to be used for export.
+        schema_version: str
+            Version of the schema.
 
         Returns
         -------
@@ -625,10 +631,11 @@ class ArrayLayout:
                 ]
             )
         return {
+            "schema_version": schema_version,
             "parameter": parameter_name,
             "instrument": table["telescope_name"][0],
             "site": self.site,
-            "version": self.model_version,
+            "parameter_version": parameter_version,
             "unique_id": None,
             "value": value_string,
             "unit": "m",

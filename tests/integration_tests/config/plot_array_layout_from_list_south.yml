@@ -6,6 +6,7 @@ CTA_SIMPIPE:
     MODEL_VERSION: 6.0.0
     OUTPUT_PATH: simtools-output
     AXES_RANGE: 1200.
+    LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: array_layout_list_South_ground_0deg.png
     - OUTPUT_FILE: array_layout_list_South_ground_0deg.pdf
