@@ -130,7 +130,10 @@ def _parse(label=None, description=None):
         action="store_true",
     )
     return config.initialize(
-        output=True, require_command_line=True, db_config=True, simulation_model=["version", "site"]
+        output=True,
+        require_command_line=True,
+        db_config=True,
+        simulation_model=["model_version", "site"],
     )
 
 

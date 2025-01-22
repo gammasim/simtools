@@ -94,7 +94,9 @@ def _parse(label, description):
         default="ground",
         choices=["ground", "utm"],
     )
-    return config.initialize(db_config=True, simulation_model=["site", "layout"], output=True)
+    return config.initialize(
+        db_config=True, simulation_model=["site", "layout", "model_version"], output=True
+    )
 
 
 def _layout_from_db(args_dict, db_config):

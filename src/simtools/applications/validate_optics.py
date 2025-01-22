@@ -115,7 +115,7 @@ def _parse(label):
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     )
-    return config.initialize(db_config=True, simulation_model=["telescope"])
+    return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
 
 
 def main():  # noqa: D103

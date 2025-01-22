@@ -146,7 +146,9 @@ def _parse(label, description, usage):
         required=False,
         default=None,
     )
-    return config.initialize(db_config=True, simulation_model=["site", "layout", "layout_file"])
+    return config.initialize(
+        db_config=True, simulation_model=["site", "model_version", "layout", "layout_file"]
+    )
 
 
 def _get_site_from_telescope_list_name(telescope_list_file):
