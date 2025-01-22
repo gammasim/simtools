@@ -3,7 +3,6 @@
 import logging
 import os
 import re
-from importlib.resources import files
 from pathlib import Path
 
 import jsonschema
@@ -13,6 +12,7 @@ from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import format_checkers
 from simtools.utils import value_conversion
 
@@ -129,8 +129,7 @@ class DataValidator:
             Validated data dictionary
         """
         data_validator = DataValidator(
-            schema_file=files("simtools")
-            / f"schemas/model_parameters/{par_dict['parameter']}.schema.yml",
+            schema_file=MODEL_PARAMETER_SCHEMA_PATH / "f{par_dict['parameter']}.schema.yml",
             data_dict=par_dict,
             check_exact_data_type=False,
         )
