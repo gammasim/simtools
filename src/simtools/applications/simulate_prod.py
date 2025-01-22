@@ -134,7 +134,7 @@ def _parse(description=None):
     return config.initialize(
         db_config=True,
         job_submission=True,
-        simulation_model=["site", "layout", "telescope"],
+        simulation_model=["site", "layout", "telescope", "model_version"],
         simulation_configuration={"software": None, "corsika_configuration": ["all"]},
     )
 

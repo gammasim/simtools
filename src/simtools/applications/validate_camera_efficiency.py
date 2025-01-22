@@ -86,7 +86,7 @@ def _parse(label):
     )
     _args_dict, _db_config = config.initialize(
         db_config=True,
-        simulation_model="telescope",
+        simulation_model=["telescope", "model_version"],
         simulation_configuration={"corsika_configuration": ["zenith_angle", "azimuth_angle"]},
     )
     if _args_dict["site"] is None or _args_dict["telescope"] is None:
