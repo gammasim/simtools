@@ -41,6 +41,7 @@ import jsonschema
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, metadata_model, validate_data
 
 
@@ -70,7 +71,7 @@ def _parse(label, description):
             "Directory with json files to be validated. "
             "If no schema file is provided, the assumption is that model "
             "parameters are validated and the schema files are taken from "
-            "simtools/schemas/model_parameters/."
+            f"{MODEL_PARAMETER_SCHEMA_PATH}."
         ),
     )
     config.parser.add_argument("--schema", help="Json schema file", required=False)
