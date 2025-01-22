@@ -58,6 +58,8 @@ definitions:
           - type: boolean
           - type: number
           - type: string
+          - type: "null"
+          - type: array
         description: "Value of the parameter."
       parameter_version:
         anyOf:

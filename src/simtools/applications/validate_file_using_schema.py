@@ -33,6 +33,8 @@ r"""
 """
 
 import logging
+import jsonschema
+import re
 from importlib.resources import files
 from pathlib import Path
 
@@ -62,13 +64,12 @@ def _parse(label, description):
     group = config.parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--file_name", help="File to be validated")
     group.add_argument(
-        "--model_parameters_directory",
+        "--file_directory",
         help=(
-            "Directory with json files with model parameters to be validated."
-            "All *.json files in the directory will be validated."
-            "Schema files will be taken from simtools/schemas/model_parameters/."
-            "Note that in this case the data_type argument is ignored"
-            "and data_type=model_parameter is always used."
+            "Directory with json files to be validated. "
+            "If no schema file is provided, the assumption is that model "
+            "parameters are validated and the schema files are taken from "
+            "simtools/schemas/model_parameters/."
         ),
     )
     config.parser.add_argument("--schema", help="Json schema file", required=False)
@@ -116,30 +117,40 @@ def _get_schema_file_name(args_dict, data_dict=None):
 
 def validate_schema(args_dict, logger):
     """
-    Validate a schema file given in yaml or json format.
+    Validate a schema file (or several files) given in yaml or json format.
 
     Schema is either given as command line argument, read from the meta_schema_url or from
     the metadata section of the data dictionary.
 
     """
-    try:
-        data = gen.collect_data_from_file(file_name=args_dict["file_name"])
-    except FileNotFoundError as exc:
-        logger.error(f"Error reading schema file from {args_dict['file_name']}")
-        raise exc
-    metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
-    logger.info(f"Successful validation of schema file {args_dict['file_name']}")
+    if args_dict.get("file_directory") is not None:
+        file_list = list(Path(args_dict["file_directory"]).rglob("*.json"))
+    else:
+        file_list = [args_dict["file_name"]]
+    for file_name in file_list:
+        try:
+            data = gen.collect_data_from_file(file_name=file_name)
+        except FileNotFoundError as exc:
+            logger.error(f"Error reading schema file from {file_name}")
+            raise exc
+        try:
+            metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
+        except jsonschema.exceptions.ValidationError as exc:
+            logger.error(f"Failed validation of file {file_name}")
+            raise exc
+        logger.info(f"Successful validation of file {file_name}")
 
 
 def validate_data_files(args_dict, logger):
     """Validate data files."""
-    model_parameters_directory = args_dict.get("model_parameters_directory")
-    if model_parameters_directory is not None:
+    file_directory = args_dict.get("file_directory")
+    if file_directory is not None:
         tmp_args_dict = {}
-        for file_name in Path(model_parameters_directory).rglob("*.json"):
+        for file_name in Path(file_directory).rglob("*.json"):
             tmp_args_dict["file_name"] = file_name
+            parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
             schema_file = (
-                files("simtools") / "schemas/model_parameters" / f"{file_name.stem}.schema.yml"
+                files("simtools") / "schemas/model_parameters" / f"{parameter_name}.schema.yml"
             )
             tmp_args_dict["schema"] = schema_file
             tmp_args_dict["data_type"] = "model_parameter"
