@@ -68,7 +68,6 @@ def _parse():
     config.parser.add_argument(
         "--db_collection",
         help="DB collection to which to add the file",
-        default="telescopes",
         required=False,
     )
     config.parser.add_argument(
@@ -98,7 +97,9 @@ def main():  # noqa: D103
             parameter_version=args_dict["parameter_version"],
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
-            collection=args_dict.get("db_collection", "telescopes"),
+            collection=(
+                args_dict.get("db_collection") if args_dict.get("db_collection") else "telescopes"
+            ),
         )
     # get parameter using 'model_version'
     elif args_dict["model_version"] is not None:
@@ -109,7 +110,7 @@ def main():  # noqa: D103
                 model_version=args_dict["model_version"],
                 collection=(
                     "configuration_sim_telarray"
-                    if args_dict["db_collection"] == "configuration_sim_telarray"
+                    if args_dict.get("db_collection") == "configuration_sim_telarray"
                     else "telescopes"
                 ),
             )
@@ -117,7 +118,9 @@ def main():  # noqa: D103
             pars = db.get_model_parameters(
                 site=args_dict.get("site"),
                 model_version=args_dict["model_version"],
-                collection=args_dict["db_collection"],
+                collection=(
+                    args_dict["db_collection"] if args_dict.get("db_collection") else "sites"
+                ),
                 array_element_name=None,
             )
     else:

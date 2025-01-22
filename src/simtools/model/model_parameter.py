@@ -510,7 +510,7 @@ class ModelParameter:
             _par_entry[par_name] = self._parameters[par_name]
         except KeyError as exc:
             raise ValueError(f"Parameter {par_name} not found in the model.") from exc
-        self.db.export_model_files(_par_entry, self.config_file_directory)
+        self.db.export_model_files(parameters=_par_entry, dest=self.config_file_directory)
         if _par_entry[par_name]["value"].endswith("ecsv"):
             return Table.read(
                 self.config_file_directory.joinpath(_par_entry[par_name]["value"]),
