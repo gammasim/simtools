@@ -3,12 +3,15 @@
 import logging
 from pathlib import Path
 
-import pytest
 import yaml
 
 import simtools.utils.general as gen
 
 _logger = logging.getLogger(__name__)
+
+
+class VersionError(Exception):
+    """Raise if model version requested is not supported."""
 
 
 def get_list_of_test_configurations(config_files):
@@ -121,7 +124,7 @@ def _skip_test_for_model_version(config, model_version_requested):
         return
     model_version_config = config["CONFIGURATION"]["MODEL_VERSION"]
     if model_version_requested != model_version_config:
-        pytest.skip(
+        raise VersionError(
             f"Model version requested {model_version_requested} not supported for this test"
         )
 
@@ -158,13 +161,14 @@ def _prepare_test_options(config, output_path, model_version=None):
 
     tmp_config_file = output_path / "tmp_config.yml"
     config_file_model_version = config.get("MODEL_VERSION")
-    if model_version is not None and "MODEL_VERSION" in config:
+    if model_version and "MODEL_VERSION" in config:
         config.update({"MODEL_VERSION": model_version})
-    if "OUTPUT_PATH" in config:
-        config.update({"OUTPUT_PATH": str(Path(output_path).joinpath(config["OUTPUT_PATH"]))})
-        config.update({"USE_PLAIN_OUTPUT_PATH": True})
-    if "DATA_DIRECTORY" in config:
-        config.update({"DATA_DIRECTORY": str(Path(output_path).joinpath(config["DATA_DIRECTORY"]))})
+
+    for key in ["OUTPUT_PATH", "DATA_DIRECTORY", "PACK_FOR_GRID_REGISTER"]:
+        if key in config:
+            config[key] = str(Path(output_path).joinpath(config[key]))
+            if key == "OUTPUT_PATH":
+                config["USE_PLAIN_OUTPUT_PATH"] = True
 
     _logger.info(f"Writing config file: {tmp_config_file}")
     with open(tmp_config_file, "w", encoding="utf-8") as file:

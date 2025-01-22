@@ -1,7 +1,7 @@
 """Simulation using the light emission package for calibration."""
 
 import logging
-import os
+import stat
 from pathlib import Path
 
 import astropy.units as u
@@ -469,5 +469,5 @@ class SimulatorLightEmission(SimtelRunner):
                 file.write(f"{command_plot}\n\n")
                 file.write("# End\n\n")
 
-        os.system(f"chmod ug+x {_script_file}")
+        _script_file.chmod(_script_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return _script_file

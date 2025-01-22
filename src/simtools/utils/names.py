@@ -1,10 +1,10 @@
 """Validation of names."""
 
-import glob
 import logging
 import re
 from functools import cache
 from importlib.resources import files
+from pathlib import Path
 
 import yaml
 
@@ -59,7 +59,7 @@ def site_names():
 @cache
 def load_model_parameters(class_key_list):
     model_parameters = {}
-    schema_files = glob.glob(str(files("simtools") / "schemas/model_parameters") + "/*.yml")
+    schema_files = list(Path(files("simtools") / "schemas/model_parameters").rglob("*.yml"))
     for schema_file in schema_files:
         with open(schema_file, encoding="utf-8") as f:
             data = yaml.safe_load(f)

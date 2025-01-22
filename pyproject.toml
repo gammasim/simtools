@@ -39,7 +39,6 @@ dependencies = [
   "particle",
   "pymongo",
   "pyproj",
-  "pytest",
   "python-dotenv",
   "pyyaml",
   "scipy",
@@ -58,6 +57,7 @@ optional-dependencies."doc" = [
   "towncrier",
 ]
 optional-dependencies."tests" = [
+  "pytest",
   "pytest-cov",
   "pytest-mock",
   "pytest-profiling",
@@ -89,10 +89,12 @@ scripts.simtools-generate-default-metadata = "simtools.applications.generate_def
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
+scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:main"
 scripts.simtools-production-generate-simulation-config = "simtools.applications.production_generate_simulation_config:main"
 scripts.simtools-production-scale-events = "simtools.applications.production_scale_events:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
+scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
 scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"
 scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
@@ -141,6 +143,7 @@ lint.extend-select = [
   "N",   # pep8 naming
   "NPY", # numpy
   "PT",  # pytest
+  "PTH", # use pathlib
   "RET", # return statements
   "RUF", # ruff
   "UP",  # pyupgrade
@@ -152,6 +155,7 @@ lint.ignore = [
   "D215",   # section-underline-not-over-indented
   "G004",   # Logging statement uses f-string
   "ISC001", # incompatible with ruff format
+  "PTH123", # open("foo") should be replaced by Path("foo").open()
   "RUF012", #  Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [
