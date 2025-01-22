@@ -602,34 +602,29 @@ class ArrayLayout:
         table = self.export_telescope_list_table(crs_name)
         if len(table) != 1:
             raise ValueError("Only one telescope can be exported to json")
-        parameter_name = value_string = None
+        parameter_name = value = None
         if crs_name == "ground":
             parameter_name = "array_element_position_ground"
-            value_string = gen.convert_list_to_string(
-                [
-                    table["position_x"][0].value,
-                    table["position_y"][0].value,
-                    table["position_z"][0].value,
-                ]
-            )
+            value = [
+                table["position_x"][0].value,
+                table["position_y"][0].value,
+                table["position_z"][0].value,
+            ]
         elif crs_name == "utm":
             parameter_name = "array_element_position_utm"
-            value_string = gen.convert_list_to_string(
-                [
-                    table["utm_east"][0].value,
-                    table["utm_north"][0].value,
-                    table["altitude"][0].value,
-                ]
-            )
+            value = [
+                table["utm_east"][0].value,
+                table["utm_north"][0].value,
+                table["altitude"][0].value,
+            ]
         elif crs_name == "mercator":
             parameter_name = "array_element_position_mercator"
-            value_string = gen.convert_list_to_string(
-                [
-                    table["latitude"][0].value,
-                    table["longitude"][0].value,
-                    table["altitude"][0].value,
-                ]
-            )
+            value = [
+                table["latitude"][0].value,
+                table["longitude"][0].value,
+                table["altitude"][0].value,
+            ]
+
         return {
             "schema_version": schema_version,
             "parameter": parameter_name,
@@ -637,7 +632,7 @@ class ArrayLayout:
             "site": self.site,
             "parameter_version": parameter_version,
             "unique_id": None,
-            "value": value_string,
+            "value": value,
             "unit": "m",
             "type": "float64",
             "file": False,
