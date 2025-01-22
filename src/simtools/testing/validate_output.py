@@ -189,9 +189,7 @@ def _compare_value_from_parameter_dict(data1, data2, tolerance):
             return value
         return [value]
 
-    value_list_1 = _as_list(data1)
-    value_list_2 = _as_list(data2)
-    return np.allclose(value_list_1, value_list_2, rtol=tolerance)
+    return np.allclose(_as_list(data1), _as_list(data2), rtol=tolerance)
 
 
 def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
