@@ -133,7 +133,7 @@ def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     if _file1_suffix == ".ecsv":
         return compare_ecsv_files(file1, file2, tolerance, test_columns)
     if _file1_suffix in (".json", ".yaml", ".yml"):
-        return compare_json_or_yaml_files(file1, file2)
+        return compare_json_or_yaml_files(file1, file2, tolerance)
 
     _logger.warning(f"Unknown file type for files: {file1} and {file2}")
     return False
@@ -167,12 +167,29 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
 
     if data1 == data2:
         return True
+    if data1.keys() != data2.keys():
+        return False
+    return all(
+        (
+            _compare_value_from_parameter_dict(data1[k], data2[k], tolerance)
+            if k == "value"
+            else data1[k] == data2[k]
+        )
+        for k in data1
+    )
 
-    if "value" in data1 and isinstance(data1["value"], str):
-        value_list_1 = gen.convert_string_to_list(data1.pop("value"))
-        value_list_2 = gen.convert_string_to_list(data2.pop("value"))
-        return np.allclose(value_list_1, value_list_2, rtol=tolerance)
-    return data1 == data2
+
+def _compare_value_from_parameter_dict(data1, data2, tolerance):
+    """Compare value fields given in different formats."""
+
+    def _as_list(value):
+        if isinstance(value, str):
+            return gen.convert_string_to_list(value)
+        if isinstance(value, list | np.ndarray):
+            return value
+        return [value]
+
+    return np.allclose(_as_list(data1), _as_list(data2), rtol=tolerance)
 
 
 def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
