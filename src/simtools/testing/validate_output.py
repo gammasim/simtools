@@ -55,6 +55,9 @@ def validate_application_output(config):
         if "REFERENCE_OUTPUT_FILE" in integration_test:
             _validate_reference_output_file(config, integration_test)
 
+        if "TEST_SIMTEL_CFG_FILES" in integration_test:
+            _validate_simtel_cfg_files(config, integration_test["TEST_SIMTEL_CFG_FILES"])
+
         if "TEST_OUTPUT_FILES" in integration_test:
             _validate_output_path_and_file(config, integration_test["TEST_OUTPUT_FILES"])
         if "OUTPUT_FILE" in integration_test:
@@ -236,5 +239,68 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
             if not np.allclose(table1_masked[col_name], table2_masked[col_name], rtol=tolerance):
                 _logger.warning(f"Column {col_name} outside of relative tolerance {tolerance}")
                 return False
+
+    return True
+
+
+def _validate_simtel_cfg_files(config, simtel_cfg_file):
+    """
+    Check sim_telarray configuration files and compare with reference file.
+
+    Note the finetuned naming of configuration files by simtools.
+
+    """
+    reference_file = Path(simtel_cfg_file)
+    test_file = Path(config["CONFIGURATION"]["OUTPUT_PATH"]) / reference_file.name.replace(
+        "_test", f"_{config['CONFIGURATION']['LABEL']}"
+    )
+    _logger.info(
+        f"Comparing simtel cfg files: {reference_file} and {test_file} "
+        f"for model version {config['CONFIGURATION']['MODEL_VERSION']}"
+    )
+    return _compare_simtel_cfg_files(reference_file, test_file)
+
+
+def _compare_simtel_cfg_files(reference_file, test_file):
+    """
+    Compare two sim_telarray configuration files.
+
+    Line-by-line string comparison. Requires similar sequence of
+    parameters in the files. Ignore lines containing 'config_release'
+    (as it contains the simtools package version).
+
+    Parameters
+    ----------
+    reference_file: Path
+        Reference sim_telarray configuration file.
+    test_file: Path
+        Test sim_telarray configuration file.
+
+    Returns
+    -------
+    bool
+        True if the files are equal.
+
+    """
+    with open(reference_file, encoding="utf-8") as f1, open(test_file, encoding="utf-8") as f2:
+        reference_cfg = [line.rstrip() for line in f1 if line.strip()]
+        test_cfg = [line.rstrip() for line in f2 if line.strip()]
+
+    if len(reference_cfg) != len(test_cfg):
+        _logger.error(
+            f"Line counts differ: {reference_file} ({len(reference_cfg)} lines), "
+            f"{test_file} ({len(test_cfg)} lines)."
+        )
+        return False
+
+    for ref_line, test_line in zip(reference_cfg, test_cfg):
+        if any(ignore in ref_line for ignore in ("config_release", "Label")):
+            continue
+        if ref_line != test_line:
+            _logger.error(
+                f"Configuration files {reference_file} and {test_file} do not match: "
+                f"'{ref_line}' and '{test_line}'"
+            )
+            return False
 
     return True

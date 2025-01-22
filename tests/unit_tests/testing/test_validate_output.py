@@ -79,6 +79,11 @@ def mock_validate_reference_output_file(mocker):
 
 
 @pytest.fixture
+def mock_validate_simtel_cfg_files(mocker):
+    return mocker.patch("simtools.testing.validate_output._validate_simtel_cfg_files")
+
+
+@pytest.fixture
 def mock_validate_output_path_and_file(mocker):
     return mocker.patch("simtools.testing.validate_output._validate_output_path_and_file")
 
@@ -342,10 +347,14 @@ def test_validate_application_output_with_reference_output_file(
     mock_assert_file_type,
     mock_validate_output_path_and_file,
     mock_validate_reference_output_file,
+    mock_validate_simtel_cfg_files,
 ):
     config = {
         "CONFIGURATION": {"OUTPUT_PATH": output_path},
-        "INTEGRATION_TESTS": [{"REFERENCE_OUTPUT_FILE": "/path/to/reference/file"}],
+        "INTEGRATION_TESTS": [
+            {"REFERENCE_OUTPUT_FILE": "/path/to/reference/file"},
+            {"TEST_SIMTEL_CFG_FILES": "/path/to/reference/file"},
+        ],
     }
 
     validate_output.validate_application_output(config)
@@ -355,6 +364,7 @@ def test_validate_application_output_with_reference_output_file(
     )
     mock_validate_output_path_and_file.assert_not_called()
     mock_assert_file_type.assert_not_called()
+    mock_validate_simtel_cfg_files.assert_called_once()
 
 
 def test_validate_application_output_with_file_type(
@@ -381,3 +391,40 @@ def test_validate_application_output_with_file_type(
             config["CONFIGURATION"]["OUTPUT_FILE"]
         ),
     )
+
+
+def test_compare_simtel_cfg_files(tmp_test_directory):
+
+    file1 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0.0_test.cfg")
+    file2 = Path("tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0.0_test.cfg")
+
+    assert validate_output._compare_simtel_cfg_files(file1, file2)
+
+    with open(file1) as f1:
+        lines1 = f1.readlines()
+
+    # additional line in file
+    file3 = tmp_test_directory / "file3.cfg"
+    with open(file3, "a") as f3:
+        f3.write("".join(lines1))
+        f3.write("Additional line\n")
+    assert not validate_output._compare_simtel_cfg_files(file1, file3)
+
+    # change of values
+    file4 = tmp_test_directory / "file4.cfg"
+    with open(file4, "a") as f3:
+        f3.write("".join(lines1).replace("1", "2"))
+    assert not validate_output._compare_simtel_cfg_files(file1, file4)
+
+
+def test_validate_simtel_cfg_files(mocker):
+    mocker.patch("simtools.testing.validate_output._compare_simtel_cfg_files", return_value=True)
+    config = {
+        "CONFIGURATION": {
+            "OUTPUT_PATH": "/path/to/output",
+            "MODEL_VERSION": "3.4.5",
+            "LABEL": "label",
+        },
+        "INTEGRATION_TESTS": [{"TEST_SIMTEL_CFG_FILES": "/path/to/reference/file"}],
+    }
+    validate_output._validate_simtel_cfg_files(config, "/path/to/reference/file")
