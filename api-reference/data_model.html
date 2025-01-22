@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g6f4e969 Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+g541961f Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=e70ea935"></script>
+    <script src="../_static/documentation_options.js?v=ec69f07d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="CORSIKA" href="corsika.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g6f4e969" />
+  <meta name="docsearch:version" content="0.1.dev1+g541961f" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6f4e969 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g541961f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -491,6 +491,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator"><code class="docutils literal notranslate"><span class="pre">DataValidator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_and_transform"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_and_transform()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_data_file"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_data_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_model_parameter"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_model_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_parameter_and_file_name"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_parameter_and_file_name()</span></code></a></li>
 </ul>
 </li>
@@ -1050,12 +1051,14 @@ Replace “None” with “null” for unit field.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_and_transform">
-<span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_model_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/validate_data.html#DataValidator.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_and_transform" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">validate_and_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_model_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lists_as_strings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/validate_data.html#DataValidator.validate_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_and_transform" title="Link to this definition">#</a></dt>
 <dd><p>Validate data and data file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>is_model_parameter: bool</strong></dt><dd><p>This is a model parameter (add some data preparation)</p>
+</dd>
+<dt><strong>lists_as_strings: bool</strong></dt><dd><p>Convert lists to strings (as needed for model parameters)</p>
 </dd>
 </dl>
 </dd>
@@ -1079,6 +1082,26 @@ Replace “None” with “null” for unit field.</p>
 <span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/validate_data.html#DataValidator.validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_data_file" title="Link to this definition">#</a></dt>
 <dd><p>Open data file and read data from file.</p>
 <p>Doing this successfully is understood as file validation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_model_parameter">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/validate_data.html#DataValidator.validate_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_model_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Validate a simulation model parameter (static method).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>par_dict: dict</strong></dt><dd><p>Data dictionary</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Validated data dictionary</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1186,6 +1209,7 @@ Replace “None” with “null” for unit field.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator"><code class="docutils literal notranslate"><span class="pre">DataValidator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_and_transform"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_and_transform()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_data_file"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_data_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_model_parameter"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_model_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.validate_data.DataValidator.validate_parameter_and_file_name"><code class="docutils literal notranslate"><span class="pre">DataValidator.validate_parameter_and_file_name()</span></code></a></li>
 </ul>
 </li>
