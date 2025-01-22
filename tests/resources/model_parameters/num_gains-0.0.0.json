@@ -1,12 +1,11 @@
 {
-    "schema_version": "0.1.0",
     "parameter": "num_gains",
     "instrument": "LSTN-01",
     "site": "North",
-    "parameter_version": "0.1.0",
-    "unique_id": null,
+    "version": "6.0.0",
     "value": 2,
     "unit": null,
     "type": "int",
+    "applicable": true,
     "file": false
 }
