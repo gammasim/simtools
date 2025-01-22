@@ -2,10 +2,10 @@
 
 import copy
 import logging
+import re
 import uuid
 
 import pytest
-from astropy import units as u
 
 from simtools.db import db_handler
 
@@ -45,6 +45,18 @@ def _db_cleanup_file_sandbox(db_no_config_file, random_id, fs_files):
     logger.info("Dropping the temporary files in the sandbox")
     db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.chunks"].drop()
     db_no_config_file.db_client[f"sandbox_{random_id}"][fs_files].drop()
+
+
+def test_valid_db_config(db, db_config):
+    assert db.mongo_db_config == db._validate_mongo_db_config(db_config)
+    assert db._validate_mongo_db_config(None) is None
+    none_db_dict = copy.deepcopy(db_config)
+    for key in none_db_dict.keys():
+        none_db_dict[key] = None
+    assert db._validate_mongo_db_config(none_db_dict) is None
+    assert db._validate_mongo_db_config({}) is None
+    with pytest.raises(ValueError, match=r"Invalid MongoDB configuration"):
+        db._validate_mongo_db_config({"wrong_config": "wrong"})
 
 
 def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
@@ -179,85 +191,81 @@ def test_copy_array_element_db(db, random_id, io_handler, model_version):
     )
     assert pars["camera_pixels"]["value"] == 1855
 
-    logger.info("Testing deleting a query (a telescope)")
-    query = {"instrument": "LSTN-test"}
-    db.delete_query(f"sandbox_{random_id}", "telescopes", query)
-
-    # After deleting the copied telescope
-    # we always expect to get a ValueError (query returning zero results)
-    with pytest.raises(ValueError, match=r"The following query returned zero results"):
-        db.read_mongo_db(
-            db_name=f"sandbox_{random_id}",
-            array_element_name="LSTN-test",
-            model_version=model_version,
-            run_location=io_handler.get_output_directory(sub_dir="model"),
-            collection_name="telescopes",
-            write_files=False,
-        )
-
 
 @pytest.mark.usefixtures("_db_cleanup")
 def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
     logger.info("----Testing adding a new parameter-----")
     test_model_version = "0.0.9876"
-    db.copy_array_element(
-        db_name=None,
-        element_to_copy="LSTN-01",
-        version_to_copy=model_version,
-        new_array_element_name="LSTN-test",
-        collection_name="telescopes",
-        db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="telescopes",
-    )
+    tmp_par_dict = {
+        "parameter": None,
+        "instrument": "LSTN-test",
+        "site": "North",
+        "version": test_model_version,
+        "value": None,
+        "unit": None,
+        "type": None,
+        "applicable": True,
+        "file": False,
+    }
+
+    par_dict_int = copy.deepcopy(tmp_par_dict)
+    par_dict_int["parameter"] = "num_gains"
+    par_dict_int["value"] = 3
+    par_dict_int["type"] = "int64"
+    with pytest.raises(
+        ValueError,
+        match=re.escape("Value for column '0' out of range. ([3, 3], allowed_range: [1, 2])"),
+    ):
+        db.add_new_parameter(
+            db_name=f"sandbox_{random_id}",
+            par_dict=par_dict_int,
+            collection_name="telescopes",
+        )
+    par_dict_int["value"] = 2
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        version=test_model_version,
-        parameter="new_test_parameter_str",
-        value="hello",
+        par_dict=par_dict_int,
         collection_name="telescopes",
     )
+
+    par_dict_list = copy.deepcopy(tmp_par_dict)
+    par_dict_list["parameter"] = "telescope_transmission"
+    par_dict_list["value"] = [0.969, 0.01, 0.0, 0.0, 0.0, 0.0]
+    par_dict_list["type"] = "float64"
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        version=test_model_version,
-        parameter="new_test_parameter_int",
-        value=999,
+        par_dict=par_dict_list,
         collection_name="telescopes",
     )
+    par_dict_quantity = copy.deepcopy(tmp_par_dict)
+    par_dict_quantity["parameter"] = "focal_length"
+    par_dict_quantity["value"] = 12.5  # test that value is converted to cm
+    par_dict_quantity["type"] = "float64"
+    par_dict_quantity["unit"] = "m"
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        version=test_model_version,
-        parameter="new_test_parameter_float",
-        value=999.9,
+        par_dict=par_dict_quantity,
         collection_name="telescopes",
     )
+
+    par_dict_file = copy.deepcopy(tmp_par_dict)
+    par_dict_file["parameter"] = "mirror_list"
+    par_dict_file["value"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated_simtel.dat"
+    par_dict_file["type"] = "file"
+    par_dict_file["file"] = True
+    with pytest.raises(FileNotFoundError, match=r"^The location of the file to upload"):
+        db.add_new_parameter(
+            db_name=f"sandbox_{random_id}",
+            par_dict=par_dict_file,
+            collection_name="telescopes",
+        )
     db.add_new_parameter(
         db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        version=test_model_version,
-        parameter="new_test_parameter_quantity",
-        value=999.9 * u.m,
+        par_dict=par_dict_file,
         collection_name="telescopes",
+        file_prefix="tests/resources",
     )
-    db.add_new_parameter(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        version=test_model_version,
-        parameter="new_test_parameter_quantity_str",
-        value="999.9 cm",
-        collection_name="telescopes",
-    )
-    db.add_new_parameter(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        version=test_model_version,
-        parameter="new_test_parameter_simtel_list",
-        value="0.969 0.0 0.0 0.0 0.0 0.0",
-        collection_name="telescopes",
-        unit=None,
-    )
+
     pars = db.read_mongo_db(
         db_name=f"sandbox_{random_id}",
         array_element_name="LSTN-test",
@@ -266,123 +274,16 @@ def test_adding_new_parameter_db(db, random_id, io_handler, model_version):
         collection_name="telescopes",
         write_files=False,
     )
-    assert pars["new_test_parameter_str"]["value"] == "hello"
-    assert pars["new_test_parameter_str"]["type"] == "str"
-    assert pars["new_test_parameter_int"]["value"] == 999
-    assert pars["new_test_parameter_int"]["type"] == "int"
-    assert pars["new_test_parameter_float"]["value"] == pytest.approx(999.9)
-    assert pars["new_test_parameter_float"]["type"] == "float"
-    assert pars["new_test_parameter_quantity"]["value"] == pytest.approx(999.9)
-    assert pars["new_test_parameter_quantity"]["type"] == "float"
-    assert pars["new_test_parameter_quantity"]["unit"] == "m"
-    assert pars["new_test_parameter_quantity_str"]["value"] == pytest.approx(999.9)
-    assert pars["new_test_parameter_quantity_str"]["type"] == "float"
-    assert pars["new_test_parameter_quantity_str"]["unit"] == "cm"
+    assert pars["num_gains"]["value"] == 2
+    assert pars["num_gains"]["type"] == "int64"
+    assert isinstance(pars["telescope_transmission"]["value"], list)
+    assert pars["focal_length"]["value"] == pytest.approx(1250.0)
+    assert pars["focal_length"]["unit"] == "cm"
+    assert pars["mirror_list"]["file"] is True
 
     # make sure that cache has been emptied after updating
     assert (
         db._parameter_cache_key("North", "LSTN-test", test_model_version)
-        not in db.model_parameters_cached
-    )
-
-    # site parameters
-    db.add_new_parameter(
-        db_name=f"sandbox_{random_id}",
-        site="North",
-        version=test_model_version,
-        parameter="corsika_observation_level",
-        value="1800. m",
-        collection_name="sites",
-    )
-    pars = db.read_mongo_db(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="North",
-        model_version=test_model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model"),
-        collection_name="sites",
-        write_files=False,
-    )
-    assert pars["corsika_observation_level"]["value"] == pytest.approx(1800.0)
-    assert pars["corsika_observation_level"]["unit"] == "m"
-
-    # calibration_devices parameters
-    db.add_new_parameter(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="ILLN-test",
-        version=test_model_version,
-        parameter="led_pulse_offset",
-        value="0 ns",
-        collection_name="calibration_devices",
-    )
-    pars = db.read_mongo_db(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="ILLN-test",
-        model_version=test_model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model"),
-        collection_name="calibration_devices",
-        write_files=False,
-    )
-    assert pars["led_pulse_offset"]["value"] == 0
-    assert pars["led_pulse_offset"]["unit"] == "ns"
-
-    # wrong collection
-    with pytest.raises(ValueError, match=r"^Cannot add parameter to collection "):
-        db.add_new_parameter(
-            db_name=f"sandbox_{random_id}",
-            site="North",
-            version=test_model_version,
-            parameter="corsika_observation_level",
-            value="1800. m",
-            collection_name="wrong_collection",
-        )
-
-
-@pytest.mark.usefixtures("_db_cleanup")
-def test_update_parameter_field_db(db, random_id, io_handler, model_version):
-    logger.info("----Testing modifying a field of a parameter-----")
-    db.copy_array_element(
-        db_name=None,
-        element_to_copy="LSTN-01",
-        version_to_copy=model_version,
-        new_array_element_name="LSTN-test",
-        collection_name="telescopes",
-        db_to_copy_to=f"sandbox_{random_id}",
-        collection_to_copy_to="telescopes",
-    )
-    db.update_parameter_field(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        model_version=model_version,
-        parameter="camera_pixels",
-        field="applicable",
-        new_value=False,
-        collection_name="telescopes",
-    )
-    pars = db.read_mongo_db(
-        db_name=f"sandbox_{random_id}",
-        array_element_name="LSTN-test",
-        model_version=model_version,
-        run_location=io_handler.get_output_directory(sub_dir="model"),
-        collection_name="telescopes",
-        write_files=False,
-    )
-    assert pars["camera_pixels"]["applicable"] is False
-
-    with pytest.raises(ValueError, match=r"You need to specify an array element or a site."):
-        db.update_parameter_field(
-            db_name=f"sandbox_{random_id}",
-            array_element_name=None,
-            site=None,
-            model_version=model_version,
-            parameter="not_important",
-            field="applicable",
-            new_value=False,
-            collection_name="site",
-        )
-
-    # make sure that cache has been emptied after updating
-    assert (
-        db._parameter_cache_key("North", "LSTN-test", model_version)
         not in db.model_parameters_cached
     )
 

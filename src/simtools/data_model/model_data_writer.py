@@ -170,7 +170,7 @@ class ModelDataWriter:
             metadata_input_dict["output_file"] = output_file
             metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
             writer.write_metadata_to_yml(
-                metadata=MetadataCollector(args_dict=metadata_input_dict).top_level_meta,
+                metadata=MetadataCollector(args_dict=metadata_input_dict).get_top_level_metadata(),
                 yml_file=output_path / f"{Path(output_file).stem}",
             )
         return _json_dict

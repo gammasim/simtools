@@ -55,8 +55,13 @@ def validate_application_output(config):
         if "REFERENCE_OUTPUT_FILE" in integration_test:
             _validate_reference_output_file(config, integration_test)
 
+        if "TEST_OUTPUT_FILES" in integration_test:
+            _validate_output_path_and_file(config, integration_test["TEST_OUTPUT_FILES"])
         if "OUTPUT_FILE" in integration_test:
-            _validate_output_path_and_file(config, integration_test)
+            _validate_output_path_and_file(
+                config,
+                [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": integration_test["OUTPUT_FILE"]}],
+            )
 
         if "FILE_TYPE" in integration_test:
             assert assertions.assert_file_type(
@@ -79,31 +84,25 @@ def _validate_reference_output_file(config, integration_test):
     )
 
 
-def _validate_output_path_and_file(config, integration_test):
-    """Check if output path and file exist."""
-    _logger.info(f"PATH {config['CONFIGURATION']['OUTPUT_PATH']}")
-    _logger.info(f"File {integration_test['OUTPUT_FILE']}")
+def _validate_output_path_and_file(config, integration_file_tests):
+    """Check if output paths and files exist."""
+    for file_test in integration_file_tests:
+        try:
+            output_path = config["CONFIGURATION"][file_test["PATH_DESCRIPTOR"]]
+        except KeyError as exc:
+            raise KeyError(
+                f"Path {file_test['PATH_DESCRIPTOR']} not found in integration test configuration."
+            ) from exc
 
-    data_path = config["CONFIGURATION"].get(
-        "DATA_DIRECTORY", config["CONFIGURATION"]["OUTPUT_PATH"]
-    )
-    output_file_path = Path(data_path) / integration_test["OUTPUT_FILE"]
+        output_file_path = Path(output_path) / file_test["FILE"]
+        _logger.info(f"Checking path: {output_file_path}")
+        assert output_file_path.exists()
 
-    _logger.info(f"Checking path: {output_file_path}")
-    assert output_file_path.exists()
-
-    expected_output = [
-        d["EXPECTED_OUTPUT"] for d in config["INTEGRATION_TESTS"] if "EXPECTED_OUTPUT" in d
-    ]
-    if expected_output and "log_hist" not in integration_test["OUTPUT_FILE"]:
-        # Get the expected output from the configuration file
-        expected_output = expected_output[0]
-        _logger.info(
-            f"Checking the output of {integration_test['OUTPUT_FILE']} "
-            "complies with the expected output: "
-            f"{expected_output}"
-        )
-        assert assertions.check_output_from_sim_telarray(output_file_path, expected_output)
+        if "EXPECTED_OUTPUT" in file_test:
+            assert assertions.check_output_from_sim_telarray(
+                output_file_path,
+                file_test["EXPECTED_OUTPUT"],
+            )
 
 
 def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
@@ -235,6 +234,7 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
 
         if np.issubdtype(table1_masked[col_name].dtype, np.floating):
             if not np.allclose(table1_masked[col_name], table2_masked[col_name], rtol=tolerance):
+                _logger.warning(f"Column {col_name} outside of relative tolerance {tolerance}")
                 return False
 
     return True

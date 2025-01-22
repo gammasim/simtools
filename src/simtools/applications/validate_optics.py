@@ -78,6 +78,7 @@ from simtools.configuration import configurator
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.ray_tracing.ray_tracing import RayTracing
+from simtools.visualization import visualize
 
 
 def _parse(label):
@@ -114,7 +115,7 @@ def _parse(label):
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     )
-    return config.initialize(db_config=True, simulation_model=["telescope"])
+    return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
 
 
 def main():  # noqa: D103
@@ -171,9 +172,7 @@ def main():  # noqa: D103
 
         plot_file_name = "_".join((label, tel_model.name, key))
         plot_file = output_dir.joinpath(plot_file_name)
-        plt.savefig(str(plot_file) + ".pdf", format="pdf", bbox_inches="tight")
-        plt.savefig(str(plot_file) + ".png", format="png", bbox_inches="tight")
-        plt.clf()
+        visualize.save_figure(plt, plot_file)
 
     # Plotting images
     if args_dict["plot_images"]:

@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""
+r"""
     Add parameters found in a model parameter repository to a new database.
 
     Generates a new database with all required collections.
@@ -109,16 +109,8 @@ def add_values_from_json_to_db(file, collection, db, db_name, file_prefix, logge
     )
     db.add_new_parameter(
         db_name=db_name,
-        array_element_name=par_dict["instrument"],
-        parameter=par_dict["parameter"],
-        version=par_dict["version"],
-        value=par_dict["value"],
-        site=par_dict["site"],
-        type=par_dict["type"],
+        par_dict=par_dict,
         collection_name=collection,
-        applicable=par_dict["applicable"],
-        file=par_dict["file"],
-        unit=par_dict.get("unit", None),
         file_prefix=file_prefix,
     )
 

@@ -179,6 +179,13 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
+        "--rtol_psf_containment",
+        help="Relative tolerance for the containment diameter (default is 0.1).",
+        type=float,
+        required=False,
+        default=0.1,
+    )
+    config.parser.add_argument(
         "--use_random_focal_length",
         help=("Use random focal lengths."),
         action="store_true",
@@ -200,7 +207,9 @@ def _parse(label):
         action="store_true",
         required=False,
     )
-    return config.initialize(db_config=True, output=True, simulation_model="telescope")
+    return config.initialize(
+        db_config=True, output=True, simulation_model=["telescope", "model_version"]
+    )
 
 
 def main():  # noqa: D103

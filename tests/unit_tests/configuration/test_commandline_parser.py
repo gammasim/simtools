@@ -169,7 +169,7 @@ def test_simulation_model():
 
     # Model version only, no site or telescope
     _parser_v = parser.CommandLineParser()
-    _parser_v.initialize_default_arguments(simulation_model=["version"])
+    _parser_v.initialize_default_arguments(simulation_model=["model_version"])
     job_groups = _parser_v._action_groups
 
     assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
@@ -181,7 +181,7 @@ def test_simulation_model():
 
     # Site model can exist without a telescope model
     _parser_s = parser.CommandLineParser()
-    _parser_s.initialize_default_arguments(simulation_model=["site"])
+    _parser_s.initialize_default_arguments(simulation_model=["site", "model_version"])
     job_groups = _parser_s._action_groups
     assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:
@@ -192,7 +192,7 @@ def test_simulation_model():
 
     # No telescope model without site model
     _parser_t = parser.CommandLineParser()
-    _parser_t.initialize_default_arguments(simulation_model=["telescope", "site"])
+    _parser_t.initialize_default_arguments(simulation_model=["telescope", "site", "model_version"])
     job_groups = _parser_t._action_groups
     assert SIMULATION_MODEL_STRING in [str(group.title) for group in job_groups]
     for group in job_groups:

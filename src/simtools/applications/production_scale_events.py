@@ -36,7 +36,6 @@ The output will display the scaled events for the specified grid point.
 
 import json
 import logging
-import os
 from pathlib import Path
 
 import astropy.units as u
@@ -129,7 +128,7 @@ def main():
                 # Build file path based on base_path, zenith, and offset
                 file_name = f"prod6_LaPalma-{int(zenith.value)}deg_"
                 file_name += "gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
-                file_path = os.path.join(args_dict["base_path"], file_name)
+                file_path = Path(args_dict["base_path"]).joinpath(file_name)
 
                 evaluator = StatisticalErrorEvaluator(
                     file_path,
