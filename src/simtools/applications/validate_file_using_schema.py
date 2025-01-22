@@ -37,6 +37,8 @@ import re
 from importlib.resources import files
 from pathlib import Path
 
+import jsonschema
+
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import metadata_collector, metadata_model, validate_data
@@ -132,8 +134,12 @@ def validate_schema(args_dict, logger):
         except FileNotFoundError as exc:
             logger.error(f"Error reading schema file from {file_name}")
             raise exc
-        metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
-        logger.info(f"Successful validation of schema file {file_name}")
+        try:
+            metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
+        except jsonschema.exceptions.ValidationError as exc:
+            logger.error(f"Failed validation of file {file_name}")
+            raise exc
+        logger.info(f"Successful validation of file {file_name}")
 
 
 def validate_data_files(args_dict, logger):
