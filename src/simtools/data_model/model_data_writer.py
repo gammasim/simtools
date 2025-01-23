@@ -10,7 +10,7 @@ import yaml
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
@@ -176,7 +176,7 @@ class ModelDataWriter:
         return _json_dict
 
     def get_validated_parameter_dict(
-        self, parameter_name, value, instrument, parameter_version, schema_version="0.1.0"
+        self, parameter_name, value, instrument, parameter_version, schema_version=None
     ):
         """
         Get validated parameter dictionary.
@@ -208,6 +208,11 @@ class ModelDataWriter:
             site = names.get_site_from_array_element_name(instrument)
 
         value, unit = value_conversion.split_value_and_unit(value)
+
+        if schema_version is None:
+            schema_version = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 0).get(
+                "version", "0.0.0"
+            )
 
         data_dict = {
             "schema_version": schema_version,
