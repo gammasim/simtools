@@ -135,7 +135,7 @@ def collect_data_from_http(url):
     return data
 
 
-def collect_data_from_file(file_name):
+def collect_data_from_file(file_name, yaml_document=None):
     """
     Collect data from file based on its extension.
 
@@ -143,6 +143,8 @@ def collect_data_from_file(file_name):
     ----------
     file_name: str
         Name of the yaml/json/ascii file.
+    yaml_document: None, int
+        Return list of yaml documents or a single document (for yaml files with several documents).
 
     Returns
     -------
@@ -152,21 +154,31 @@ def collect_data_from_file(file_name):
     if is_url(file_name):
         return collect_data_from_http(file_name)
 
+    data = None
+    suffix = Path(file_name).suffix.lower()
     with open(file_name, encoding="utf-8") as file:
-        if Path(file_name).suffix.lower() == ".json":
-            return json.load(file)
-
-        if Path(file_name).suffix.lower() == ".list":
+        if suffix == ".json":
+            data = json.load(file)
+        elif suffix == ".list":
             lines = file.readlines()
-            return [line.strip() for line in lines]
+            data = [line.strip() for line in lines]
+        elif suffix in [".yml", ".yaml"]:
+            try:
+                data = yaml.safe_load(file)
+            except yaml.constructor.ConstructorError:
+                data = _load_yaml_using_astropy(file)
+            except yaml.composer.ComposerError:
+                file.seek(0)
+                if yaml_document is None:
+                    data = list(yaml.safe_load_all(file))
+                try:
+                    data = list(yaml.safe_load_all(file))[yaml_document]
+                except IndexError as exc:
+                    raise InvalidConfigDataError(
+                        f"YAML file {file_name} does not contain {yaml_document} documents."
+                    ) from exc
 
-        try:
-            return yaml.safe_load(file)
-        except yaml.constructor.ConstructorError:
-            return _load_yaml_using_astropy(file)
-        except yaml.composer.ComposerError:
-            file.seek(0)
-            return list(yaml.safe_load_all(file))
+    return data
 
 
 def collect_kwargs(label, in_kwargs):
