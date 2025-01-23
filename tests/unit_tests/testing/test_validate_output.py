@@ -54,6 +54,11 @@ def file_name():
 
 
 @pytest.fixture
+def test_path():
+    return "/path/to/reference/file"
+
+
+@pytest.fixture
 def output_path():
     return "/path/to/output"
 
@@ -283,10 +288,10 @@ def test_validate_all_tests_non_matching_model_version(mocker, mock_validate_app
     mock_validate_application_output.assert_not_called()
 
 
-def test_validate_reference_output_file(mocker, output_path):
+def test_validate_reference_output_file(mocker, output_path, test_path):
     config = {"CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"}}
     integration_test = {
-        "REFERENCE_OUTPUT_FILE": "/path/to/reference/file",
+        "REFERENCE_OUTPUT_FILE": test_path,
         "TOLERANCE": 1.0e-5,
         "TEST_COLUMNS": None,
     }
@@ -344,6 +349,7 @@ def test_validate_application_output_no_integration_tests(mocker, output_path):
 
 def test_validate_application_output_with_reference_output_file(
     output_path,
+    test_path,
     mock_assert_file_type,
     mock_validate_output_path_and_file,
     mock_validate_reference_output_file,
@@ -352,8 +358,8 @@ def test_validate_application_output_with_reference_output_file(
     config = {
         "CONFIGURATION": {"OUTPUT_PATH": output_path},
         "INTEGRATION_TESTS": [
-            {"REFERENCE_OUTPUT_FILE": "/path/to/reference/file"},
-            {"TEST_SIMTEL_CFG_FILES": "/path/to/reference/file"},
+            {"REFERENCE_OUTPUT_FILE": test_path},
+            {"TEST_SIMTEL_CFG_FILES": test_path},
         ],
     }
 
@@ -417,7 +423,7 @@ def test_compare_simtel_cfg_files(tmp_test_directory):
     assert not validate_output._compare_simtel_cfg_files(file1, file4)
 
 
-def test_validate_simtel_cfg_files(mocker):
+def test_validate_simtel_cfg_files(mocker, test_path):
     mocker.patch("simtools.testing.validate_output._compare_simtel_cfg_files", return_value=True)
     config = {
         "CONFIGURATION": {
@@ -425,6 +431,6 @@ def test_validate_simtel_cfg_files(mocker):
             "MODEL_VERSION": "3.4.5",
             "LABEL": "label",
         },
-        "INTEGRATION_TESTS": [{"TEST_SIMTEL_CFG_FILES": "/path/to/reference/file"}],
+        "INTEGRATION_TESTS": [{"TEST_SIMTEL_CFG_FILES": test_path}],
     }
-    validate_output._validate_simtel_cfg_files(config, "/path/to/reference/file")
+    validate_output._validate_simtel_cfg_files(config, test_path)
