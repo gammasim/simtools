@@ -82,6 +82,10 @@ definitions:
         description: |
           "Reference file used for comparison."
         type: string
+      TEST_SIMTEL_CFG_FILES:
+        description: |
+          "Reference file used for comparison of sim_telarray configuration files."
+        type: string
       TOLERANCE:
         description: "Allowed tolerance for floating point comparison."
         type: number
