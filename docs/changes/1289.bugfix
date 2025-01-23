@@ -1,1 +1,0 @@
-Add correct handling of return codes from simulation software to prevent reports of success even though a job failed (`simulate_prod`)
