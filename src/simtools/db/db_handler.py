@@ -375,6 +375,7 @@ class DatabaseHandler:
                 for param, version in parameter_version_table.items()
             ],
         }
+        # 'xSTX-design' is a placeholder to ignore 'instrument' field in query.
         if array_element_name and array_element_name != "xSTx-design":
             query_dict["instrument"] = array_element_name
         if site:
