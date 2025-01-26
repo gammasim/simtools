@@ -301,7 +301,7 @@ class DatabaseHandler:
         db_name: str
             Database name.
         model_collections_only: bool
-            If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)
+            If True, only return model collections (i.e. exclude fs.files, fs.chunks)
 
         Returns
         -------
@@ -316,11 +316,7 @@ class DatabaseHandler:
             ].list_collection_names()
         collections = self.list_of_collections[db_name]
         if model_collections_only:
-            return [
-                collection
-                for collection in collections
-                if not collection.startswith("fs.") and collection != "metadata"
-            ]
+            return [collection for collection in collections if not collection.startswith("fs.")]
         return collections
 
     def export_model_files(self, parameters=None, file_names=None, dest=None, db_name=None):
@@ -358,7 +354,7 @@ class DatabaseHandler:
         instance_ids = {}
         for file_name in file_names:
             if Path(dest).joinpath(file_name).exists():
-                instance_ids[file_name] = "file exits"
+                instance_ids[file_name] = "file exists"
             else:
                 file_path_instance = self._get_file_mongo_db(self._get_db_name(), file_name)
                 self._write_file_from_mongo_to_disk(self._get_db_name(), dest, file_path_instance)
@@ -457,6 +453,8 @@ class DatabaseHandler:
     def get_array_elements_of_type(self, array_element_type, model_version, collection):
         """
         Get array elements of a certain type (e.g. 'LSTN') for a DB collection.
+
+        Does not return 'design' models.
 
         Parameters
         ----------
