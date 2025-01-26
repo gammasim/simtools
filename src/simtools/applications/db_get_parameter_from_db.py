@@ -40,7 +40,7 @@ r"""
 
         simtools-db-get-parameter-from-db --parameter mirror_list \\
                 --site North --telescope LSTN-01 \\
-                --parameter_version 5.0.0
+                --parameter_version 1.0.0
 
 """
 
@@ -97,9 +97,7 @@ def main():  # noqa: D103
             parameter_version=args_dict["parameter_version"],
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
-            collection=(
-                args_dict.get("db_collection") if args_dict.get("db_collection") else "telescopes"
-            ),
+            collection=args_dict.get("db_collection", "telescopes"),
         )
     # get parameter using 'model_version'
     elif args_dict["model_version"] is not None:

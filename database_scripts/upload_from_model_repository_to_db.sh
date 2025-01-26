@@ -5,7 +5,7 @@
 # Cover 'source .env': the script ensure that this file exists:
 # shellcheck disable=SC1091
 
-DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models"
+DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
 DB_SIMULATION_MODEL_BRANCH="v1.0.0-parameters"
 
 # Check that this script is not sourced but executed

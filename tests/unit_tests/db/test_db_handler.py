@@ -625,7 +625,8 @@ def test_read_mongo_db(db, mocker, test_db):
     mocker.patch.object(db.get_collection.return_value, "find", return_value=[])
     with pytest.raises(
         ValueError,
-        match=r"The following query for test_collection returned zero results: {'parameter_version': '1.0.0'}",
+        match=r"The following query for test_collection returned zero results: "
+        r"{'parameter_version': '1.0.0'}",
     ):
         db._read_mongo_db(query, collection_name)
 
@@ -683,7 +684,8 @@ def test__read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
     mocker.patch.object(db.get_collection.return_value, "find_one", return_value=None)
     with pytest.raises(
         ValueError,
-        match=r"The following query returned zero results: {'model_version': '1.0.0', 'collection': 'telescopes'}",
+        match=r"The following query returned zero results: "
+        r"{'model_version': '1.0.0', 'collection': 'telescopes'}",
     ):
         db._read_production_table_from_mongo_db(collection_name, model_version)
 
@@ -906,7 +908,8 @@ def test_add_new_parameter_with_file_no_prefix(
 
     with pytest.raises(
         FileNotFoundError,
-        match=r"The location of the file to upload, corresponding to the param1 parameter, must be provided.",
+        match=r"The location of the file to upload, corresponding to the param1 parameter, "
+        r"must be provided.",
     ):
         db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
 
