@@ -269,23 +269,12 @@ def test_validate_all_tests_no_model_version(mocker, mock_validate_application_o
 def test_validate_all_tests_matching_model_version(mocker, mock_validate_application_output):
     config = {"key": "value"}
     request = mocker.Mock()
-    request.config.getoption.return_value = "1.0"
-    config_file_model_version = "1.0"
+    request.config.getoption.return_value = "5.0"
+    config_file_model_version = "6.0"
 
     validate_output.validate_all_tests(config, request, config_file_model_version)
 
-    mock_validate_application_output.assert_called_once_with(config)
-
-
-def test_validate_all_tests_non_matching_model_version(mocker, mock_validate_application_output):
-    config = {"key": "value"}
-    request = mocker.Mock()
-    request.config.getoption.return_value = "1.0"
-    config_file_model_version = "2.0"
-
-    validate_output.validate_all_tests(config, request, config_file_model_version)
-
-    mock_validate_application_output.assert_not_called()
+    mock_validate_application_output.assert_called_once_with(config, "5.0", "6.0")
 
 
 def test_validate_reference_output_file(mocker, output_path, test_path):
@@ -359,7 +348,7 @@ def test_validate_application_output_with_reference_output_file(
         "CONFIGURATION": {"OUTPUT_PATH": output_path},
         "INTEGRATION_TESTS": [
             {"REFERENCE_OUTPUT_FILE": test_path},
-            {"TEST_SIMTEL_CFG_FILES": test_path},
+            {"TEST_SIMTEL_CFG_FILES": {"6.0.0": test_path}},
         ],
     }
 
@@ -370,6 +359,9 @@ def test_validate_application_output_with_reference_output_file(
     )
     mock_validate_output_path_and_file.assert_not_called()
     mock_assert_file_type.assert_not_called()
+    mock_validate_simtel_cfg_files.assert_not_called()
+
+    validate_output.validate_application_output(config, "6.0.0")
     mock_validate_simtel_cfg_files.assert_called_once()
 
 
