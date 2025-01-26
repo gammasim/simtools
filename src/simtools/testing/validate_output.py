@@ -31,11 +31,10 @@ def validate_all_tests(config, request, config_file_model_version):
     elif config_file_model_version is not None:
         _from_command_line = request.config.getoption("--model_version")
         _from_config_file = config_file_model_version
-        if _from_command_line == _from_config_file:
-            validate_application_output(config)
+        validate_application_output(config, _from_command_line, _from_config_file)
 
 
-def validate_application_output(config):
+def validate_application_output(config, from_command_line=None, from_config_file=None):
     """
     Validate application output against expected output.
 
@@ -45,6 +44,10 @@ def validate_application_output(config):
     ----------
     config: dict
         dictionary with the configuration for the application test.
+    from_command_line: str
+        Model version from the command line.
+    from_config_file: str
+        Model version from the configuration file.
 
     """
     if "INTEGRATION_TESTS" not in config:
@@ -52,27 +55,39 @@ def validate_application_output(config):
 
     for integration_test in config["INTEGRATION_TESTS"]:
         _logger.info(f"Testing application output: {integration_test}")
-        if "REFERENCE_OUTPUT_FILE" in integration_test:
-            _validate_reference_output_file(config, integration_test)
+
+        if from_command_line == from_config_file:
+            if "REFERENCE_OUTPUT_FILE" in integration_test:
+                _validate_reference_output_file(config, integration_test)
+
+            if "TEST_OUTPUT_FILES" in integration_test:
+                _validate_output_path_and_file(config, integration_test["TEST_OUTPUT_FILES"])
+
+            if "OUTPUT_FILE" in integration_test:
+                _validate_output_path_and_file(
+                    config,
+                    [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": integration_test["OUTPUT_FILE"]}],
+                )
+
+            if "FILE_TYPE" in integration_test:
+                assert assertions.assert_file_type(
+                    integration_test["FILE_TYPE"],
+                    Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
+                        config["CONFIGURATION"]["OUTPUT_FILE"]
+                    ),
+                )
 
         if "TEST_SIMTEL_CFG_FILES" in integration_test:
-            _validate_simtel_cfg_files(config, integration_test["TEST_SIMTEL_CFG_FILES"])
-
-        if "TEST_OUTPUT_FILES" in integration_test:
-            _validate_output_path_and_file(config, integration_test["TEST_OUTPUT_FILES"])
-        if "OUTPUT_FILE" in integration_test:
-            _validate_output_path_and_file(
-                config,
-                [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": integration_test["OUTPUT_FILE"]}],
-            )
-
-        if "FILE_TYPE" in integration_test:
-            assert assertions.assert_file_type(
-                integration_test["FILE_TYPE"],
-                Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
-                    config["CONFIGURATION"]["OUTPUT_FILE"]
-                ),
-            )
+            if from_command_line:
+                test_simtel_cfg_file = integration_test["TEST_SIMTEL_CFG_FILES"].get(
+                    from_command_line
+                )
+            else:
+                test_simtel_cfg_file = integration_test["TEST_SIMTEL_CFG_FILES"].get(
+                    from_config_file
+                )
+            if test_simtel_cfg_file:
+                _validate_simtel_cfg_files(config, test_simtel_cfg_file)
 
 
 def _validate_reference_output_file(config, integration_test):
