@@ -480,7 +480,7 @@ def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db,
     mock_get_file_mongo_db.assert_not_called()
     mock_write_file_from_mongo_to_disk.assert_not_called()
     mock_path_exists.assert_called_once()
-    assert result == {test_file: "file exits"}
+    assert result == {test_file: "file exists"}
 
 
 def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_db, test_file):
