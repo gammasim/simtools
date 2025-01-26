@@ -37,11 +37,15 @@ CTA_SIMPIPE:
             # The mean number of photons per telescope after atmospheric absorption and QE
             # should be between 90 and 1000 (very loose requirement)
             photons: [90, 1000]
-    - TEST_SIMTEL_CFG_FILES: |
-          tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-6.0.0_test.cfg
-    - TEST_SIMTEL_CFG_FILES: |
-          tests/resources/sim_telarray_configurations/CTA-South-MSTS-01-6.0.0_test.cfg
-    - TEST_SIMTEL_CFG_FILES: |
-          tests/resources/sim_telarray_configurations/CTA-South-SSTS-01-6.0.0_test.cfg
-    - TEST_SIMTEL_CFG_FILES: |
-          tests/resources/sim_telarray_configurations/CTA-beta-South-6.0.0_test.cfg
+    - TEST_SIMTEL_CFG_FILES:
+          5.0.0: tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-5.0.0_test.cfg
+          6.0.0: tests/resources/sim_telarray_configurations/CTA-South-LSTS-01-6.0.0_test.cfg
+    - TEST_SIMTEL_CFG_FILES:
+          5.0.0: tests/resources/sim_telarray_configurations/CTA-South-MSTS-01-5.0.0_test.cfg
+          6.0.0: tests/resources/sim_telarray_configurations/CTA-South-MSTS-01-6.0.0_test.cfg
+    - TEST_SIMTEL_CFG_FILES:
+          5.0.0: tests/resources/sim_telarray_configurations/CTA-South-SSTS-01-5.0.0_test.cfg
+          6.0.0: tests/resources/sim_telarray_configurations/CTA-South-SSTS-01-6.0.0_test.cfg
+    - TEST_SIMTEL_CFG_FILES:
+          5.0.0: tests/resources/sim_telarray_configurations/CTA-beta-South-5.0.0_test.cfg
+          6.0.0: tests/resources/sim_telarray_configurations/CTA-beta-South-6.0.0_test.cfg
