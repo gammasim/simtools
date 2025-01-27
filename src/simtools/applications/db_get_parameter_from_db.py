@@ -97,7 +97,9 @@ def main():  # noqa: D103
             parameter_version=args_dict["parameter_version"],
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
-            collection=args_dict.get("db_collection", "telescopes"),
+            collection=(
+                args_dict["db_collection"] if args_dict.get("db_collection") else "telescopes"
+            ),
         )
     # get parameter using 'model_version'
     elif args_dict["model_version"] is not None:
