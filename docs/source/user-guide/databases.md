@@ -1,6 +1,6 @@
 # Databases
 
-The simtools package uses a prototype MongoDB database to store the simulation model parameters and derived data products.
+The simtools package uses a prototype MongoDB database to store the simulation model parameters.
 Access to the DB is handled via a dedicated API module ([db_handler](#dbhandler)).
 
 Simulation model parameters are stored in databases (see the [Simulation Model](model_parameters.md#simulation-model) section) and synced with the [CTAO model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters).
@@ -16,7 +16,7 @@ This documentation is therefore incomplete.
 
 ### Model parameters DB
 
-The name of the model parameter database needs to be indicated by `$SIMTOOLS_DB_SIMULATION_MODEL` environmental variable and defined e.g., in the `.env` file. Use `CTAO-Simulation-Model-LATEST` to use the latest version of the CTAO simulation model database (simtools will replace `LATEST` with the latest version number).
+The name of the model parameter database needs to be indicated by `$SIMTOOLS_DB_SIMULATION_MODEL` environmental variable and defined e.g., in the `.env` file. Use `CTAO-Simulation-ModelParameters-LATEST` to use the latest version of the CTAO simulation model database (simtools will replace `LATEST` with the latest version number).
 
 Collections:
 
@@ -26,15 +26,6 @@ Collections:
 * `configuration_sim_telarray` with default configuration parameters for the sim_telarray simulation
 * `metadata` containing tables describing the model versions
 * `fs.files` with all file type entries for the model parameters (e.g., the quantum-efficiency tables)
-
-### Derived values DB
-
-Database with derived values DB (e.g., `Staging-CTA-Simulation-Model-Derived-Values` defined in `db_handler.DB_DERIVED_VALUES`).
-
-Collections are:
-
-* `derived_values` with the derived values for each telescope or site
-* `fs.files` with file type derived results
 
 ### Other databases
 
@@ -52,8 +43,7 @@ SIMTOOLS_DB_SERVER='cta-simpipe-protodb.zeuthen.desy.de' # MongoDB server
 SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person
 SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for MongoDB: ask the responsible person
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-LATEST'
-# SIMTOOLS_DB_SIMULATION_MODEL_URL=''
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-LATEST'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```
 
@@ -75,7 +65,7 @@ The following applications are important:
 
 * update or define a single model parameter from a json file (as defined in the model parameter repository): [db_add_value_from_json_to_db.py](db_add_value_from_json_to_db)
 * upload a model parameter file: [db_add_file_to_db.py](db_add_file_to_db)
-* upload all model parameters and files from the model parameter repository: [db_add_model_parameters_from_repository_to_db.py](db_add_model_parameters_from_repository_to_db)
+* upload all model parameters and files from the model parameter repository: [db_add_simulation_model_from_repository_to_db.py](db_add_simulation_model_from_repository_to_db)
 
 ## Configure and use a local copy of the model parameter database
 
@@ -138,7 +128,7 @@ SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
 SIMTOOLS_DB_SIMULATION_MODEL='STAGING-CTA-Simulation-Model-LATEST'
 ```
 
-`SIMTOOLS_DB_SIMULATION_MODEL` is set as an example here to `STAGING-CTAO-Simulation-Model-LATEST` and should be changed accordingly.
+`SIMTOOLS_DB_SIMULATION_MODEL` is set as an example here to `STAGING-CTAO-Simulation-ModelParameters-LATEST` and should be changed accordingly.
 
 For using simtools inside a container:
 
@@ -158,6 +148,6 @@ SIMTOOLS_DB_SERVER='simtools-mongodb'
 SIMTOOLS_DB_API_USER='api' # username for MongoDB
 SIMTOOLS_DB_API_PW='password' # Password for MongoDB
 SIMTOOLS_DB_API_AUTHENTICATION_DATABASE='admin'
-SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-Model-LATEST'
+SIMTOOLS_DB_SIMULATION_MODEL='CTAO-Simulation-ModelParameters-LATEST'
 SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'
 ```

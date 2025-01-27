@@ -16,8 +16,8 @@ r"""
         instrument name.
     site (str)
         site location.
-    model_version (str)
-        Model version.
+    parameter_version (str)
+        Parameter version.
     input_meta (str, optional)
         input meta data file (yml format)
 
@@ -33,7 +33,7 @@ r"""
             --value 2 \\
             --instrument LSTN-design \\
             --site North \\
-            --model_version 6.0.0 \\
+            --parameter_version 0.1.0 \\
             --input_meta num_gains.metadata.yml
 
 """
@@ -70,7 +70,9 @@ def _parse(label, description):
     )
     config.parser.add_argument("--instrument", type=str, required=True, help="Instrument name")
     config.parser.add_argument("--site", type=str, required=True, help="Site location")
-    config.parser.add_argument("--model_version", type=str, required=True, help="Model version")
+    config.parser.add_argument(
+        "--parameter_version", type=str, required=True, help="Parameter version"
+    )
 
     config.parser.add_argument(
         "--value",
@@ -102,7 +104,7 @@ def main():  # noqa: D103
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     output_path = (
-        Path(args_dict["output_path"]) / args_dict["model_version"] / args_dict["instrument"]
+        Path(args_dict["output_path"]) / args_dict["parameter_version"] / args_dict["instrument"]
         if args_dict.get("output_path")
         else None
     )
@@ -110,7 +112,7 @@ def main():  # noqa: D103
         parameter_name=args_dict["parameter"],
         value=args_dict["value"],
         instrument=args_dict["instrument"],
-        model_version=args_dict["model_version"],
+        parameter_version=args_dict["parameter_version"],
         output_file=Path(args_dict["parameter"]).with_suffix(".json"),
         output_path=output_path,
         use_plain_output_path=args_dict.get("use_plain_output_path"),

@@ -67,7 +67,6 @@ class ModelParameter:
 
         self._parameters = {}
         self._simulation_config_parameters = {"corsika": {}, "simtel": {}}
-        self._derived = None
         self.collection = collection
         self.label = label
         self.model_version = model_version
@@ -111,12 +110,8 @@ class ModelParameter:
         """
         try:
             return self._parameters[par_name]
-        except KeyError:
-            pass
-        try:
-            return self.derived[par_name]
         except (KeyError, ValueError) as e:
-            msg = f"Parameter {par_name} was not found in the model"
+            msg = f"Parameter {par_name} was not found in the model {self.name}, {self.site}."
             self._logger.error(msg)
             raise InvalidModelParameterError(msg) from e
 
@@ -180,7 +175,10 @@ class ModelParameter:
         _value = self.get_parameter_value(par_name, _parameter)
 
         try:
-            _unit = [item.strip() for item in _parameter.get("unit").split(",")]
+            if isinstance(_parameter.get("unit"), str):
+                _unit = [item.strip() for item in _parameter.get("unit").split(",")]
+            else:
+                _unit = _parameter.get("unit")
 
             # if there is only one value or the values share one unit
             if (isinstance(_value, (int | float))) or (len(_value) > len(_unit)):
@@ -241,33 +239,6 @@ class ModelParameter:
             self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
         return False
 
-    @property
-    def derived(self):
-        """Load the derived values and export them if the class instance hasn't done it yet."""
-        if self._derived is None:
-            self._load_derived_values()
-            self._export_derived_files()
-        return self._derived
-
-    def _load_derived_values(self):
-        """Load derived values from the DB."""
-        self._logger.debug("Reading derived values from DB")
-        self._derived = self.db.get_derived_values(
-            self.site,
-            self.name,
-            self.model_version,
-        )
-
-    def _export_derived_files(self):
-        """Write to disk a file from the derived values DB."""
-        for par_now in self.derived.values():
-            if par_now.get("File") or par_now.get("file"):
-                self.db.export_file_db(
-                    db_name=self.db.DB_DERIVED_VALUES,
-                    dest=self.config_file_directory,
-                    file_name=(par_now.get("value") or par_now.get("Value")),
-                )
-
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
         for par in self._parameters:
@@ -322,10 +293,11 @@ class ModelParameter:
                         simulation_software=simulation_software,
                     )
                 )
-            except ValueError:
+            except ValueError as exc:
                 self._logger.warning(
                     f"No {simulation_software} parameters found for "
-                    f"{self.site}, {self.name} (model version {self.model_version})."
+                    f"{self.site}, {self.name} (model version {self.model_version}). "
+                    f" (Query {exc})"
                 )
 
     def _load_parameters_from_db(self):
@@ -335,15 +307,18 @@ class ModelParameter:
 
         if self.name is not None:
             self._parameters = self.db.get_model_parameters(
-                self.site, self.name, self.model_version, self.collection, only_applicable=True
+                self.site, self.name, self.model_version, self.collection
             )
 
         if self.site is not None:
-            _site_pars = self.db.get_site_parameters(
-                self.site, self.model_version, only_applicable=True
+            self._parameters.update(
+                self.db.get_model_parameters(
+                    self.site,
+                    None,
+                    self.model_version,
+                    "sites",
+                )
             )
-            self._parameters.update(_site_pars)
-
         self._load_simulation_software_parameter()
 
     def set_extra_label(self, extra_label):
@@ -513,7 +488,7 @@ class ModelParameter:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
-        self.db.export_model_files(pars_from_db, self.config_file_directory)
+        self.db.export_model_files(parameters=pars_from_db, dest=self.config_file_directory)
         self._is_exported_model_files_up_to_date = True
 
     def get_model_file_as_table(self, par_name):
@@ -535,7 +510,7 @@ class ModelParameter:
             _par_entry[par_name] = self._parameters[par_name]
         except KeyError as exc:
             raise ValueError(f"Parameter {par_name} not found in the model.") from exc
-        self.db.export_model_files(_par_entry, self.config_file_directory)
+        self.db.export_model_files(parameters=_par_entry, dest=self.config_file_directory)
         if _par_entry[par_name]["value"].endswith("ecsv"):
             return Table.read(
                 self.config_file_directory.joinpath(_par_entry[par_name]["value"]),
@@ -620,7 +595,7 @@ class ModelParameter:
             Model directory to export the file to.
         """
         self.db.export_model_files(
-            {
+            parameters={
                 "nsb_spectrum_at_2200m": {
                     "value": self._simulation_config_parameters["simtel"][
                         "correct_nsb_spectrum_to_telescope_altitude"
@@ -628,5 +603,5 @@ class ModelParameter:
                     "file": True,
                 }
             },
-            model_directory,
+            dest=model_directory,
         )

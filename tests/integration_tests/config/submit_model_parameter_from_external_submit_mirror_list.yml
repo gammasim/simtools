@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     VALUE: mirror_CTA-100_1.20-86-0.04.dat
     INSTRUMENT: MSTS-design
     SITE: South
-    MODEL_VERSION: 6.0.0
+    PARAMETER_VERSION: 0.1.0
     INPUT_META: null
     OUTPUT_PATH: simtools-output
     USE_PLAIN_OUTPUT_PATH: true

@@ -129,7 +129,7 @@ class DataValidator:
             Validated data dictionary
         """
         data_validator = DataValidator(
-            schema_file=MODEL_PARAMETER_SCHEMA_PATH / "f{par_dict['parameter']}.schema.yml",
+            schema_file=MODEL_PARAMETER_SCHEMA_PATH / f"{par_dict['parameter']}.schema.yml",
             data_dict=par_dict,
             check_exact_data_type=False,
         )

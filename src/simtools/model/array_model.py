@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.table import QTable
 
 from simtools.data_model import data_reader
-from simtools.db import db_array_elements, db_handler
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -290,7 +290,13 @@ class ArrayModel:
         }
 
     def _get_telescope_position_parameter(
-        self, telescope_name: str, site: str, x: u.Quantity, y: u.Quantity, z: u.Quantity
+        self,
+        telescope_name: str,
+        site: str,
+        x: u.Quantity,
+        y: u.Quantity,
+        z: u.Quantity,
+        parameter_version: str | None = None,
     ) -> dict:
         """
         Return dictionary with telescope position parameters (following DB model database format).
@@ -314,16 +320,17 @@ class ArrayModel:
             Dict with telescope position parameters.
         """
         return {
+            "schema_version": "0.1.0",
             "parameter": "array_element_position_ground",
             "instrument": telescope_name,
             "site": site,
-            "version": self.model_version,
+            "parameter_version": parameter_version,
+            "unique_id": None,
             "value": general.convert_list_to_string(
                 [x.to("m").value, y.to("m").value, z.to("m").value]
             ),
             "unit": "m",
             "type": "float64",
-            "applicable": True,
             "file": False,
         }
 
@@ -367,9 +374,8 @@ class ArrayModel:
         dict
             Dict with array elements.
         """
-        all_elements = db_array_elements.get_array_elements_of_type(
+        all_elements = self.db.get_array_elements_of_type(
             array_element_type=array_element_type,
-            db=self.db,
             model_version=self.model_version,
             collection="telescopes",
         )

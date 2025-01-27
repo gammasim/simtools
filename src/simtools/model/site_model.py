@@ -151,11 +151,11 @@ class SiteModel(ModelParameter):
             Model directory to export the file to.
         """
         self.db.export_model_files(
-            {
+            parameters={
                 "atmospheric_transmission_file": {
                     "value": self.get_parameter_value("atmospheric_profile"),
                     "file": True,
                 }
             },
-            model_directory,
+            dest=model_directory,
         )

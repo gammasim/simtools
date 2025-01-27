@@ -28,7 +28,7 @@ simtools-convert-all-model-parameters-from-simtel <applications/simtools-convert
 simtools-convert-geo-coordinates-of-array-elements <applications/simtools-convert-geo-coordinates-of-array-elements>
 simtools-convert-model-parameter-from-simtel <applications/simtools-convert-model-parameter-from-simtel>
 simtools-db-add-file-to-db <applications/simtools-db-add-file-to-db>
-simtools-db-add-model-parameters-from-repository-to-db <applications/simtools-db-add-model-parameters-from-repository-to-db>
+simtools-db-add-simulation-model-from-repository-to-db <applications/simtools-db-add-simulation-model-from-repository-to-db>
 simtools-db-add-value-from-json-to-db <applications/simtools-db-add-value-from-json-to-db>
 simtools-db-get-array-layouts-from-db <applications/simtools-db-get-array-layouts-from-db>
 simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>

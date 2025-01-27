@@ -283,9 +283,9 @@ def test_converting_center_coordinates_south(array_layout_south_four_lst_instanc
 def test_altitude_from_corsika_z(
     array_layout_north_four_lst_instance, array_layout_south_four_lst_instance
 ):
-    def test_one_site(instance, result1, result2):
+    def test_one_site(instance, telescope_name, result1, result2):
         instance.add_telescope(
-            telescope_name="LSTN-01",
+            telescope_name=telescope_name,
             crs_name="ground",
             xx=57.5 * u.m,
             yy=57.5 * u.m,
@@ -302,8 +302,8 @@ def test_altitude_from_corsika_z(
             instance._altitude_from_corsika_z(5.0, None, telescope_axis_height=16.0 * u.m)
         assert np.isnan(instance._altitude_from_corsika_z(None, None, None))
 
-    test_one_site(array_layout_north_four_lst_instance, 2185.0, 45.0)
-    test_one_site(array_layout_south_four_lst_instance, 2176.0, 45.0)
+    test_one_site(array_layout_north_four_lst_instance, "LSTN-01", 2185.0, 45.0)
+    test_one_site(array_layout_south_four_lst_instance, "LSTS-01", 2176.0, 45.0)
 
 
 def test_try_set_altitude(
@@ -455,7 +455,7 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
 
     ground_dict = layout.export_one_telescope_as_json(crs_name="ground")
     assert isinstance(ground_dict, dict)
-    assert ground_dict["instrument"] == "SSTS-09"
+    assert ground_dict["instrument"] == "MSTN-09"
     assert ground_dict["parameter"] == "array_element_position_ground"
 
     utm_dict = layout.export_one_telescope_as_json(crs_name="utm")

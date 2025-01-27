@@ -144,7 +144,6 @@ def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
     )  # Value for Prod5 LST-1
 
 
-@pytest.mark.xfail(reason="Missing ray_tracing for prod6 in Derived-DB")
 def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()

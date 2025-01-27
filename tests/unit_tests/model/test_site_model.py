@@ -95,11 +95,11 @@ def test_export_atmospheric_transmission_file(db_config, model_version, tmp_path
     _south.export_atmospheric_transmission_file(model_directory)
 
     _south.db.export_model_files.assert_called_once_with(
-        {
+        parameters={
             "atmospheric_transmission_file": {
                 "value": "test_atmospheric_profile",
                 "file": True,
             }
         },
-        model_directory,
+        dest=model_directory,
     )
