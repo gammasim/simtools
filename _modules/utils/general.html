@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g0aecdf0 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+gbb54697 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=55df0292"></script>
+    <script src="../../_static/documentation_options.js?v=c7f5da74"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g0aecdf0" />
+  <meta name="docsearch:version" content="0.1.dev1+gbb54697" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0aecdf0 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gbb54697 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -384,6 +384,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;InvalidConfigDataError&quot;</span><span class="p">,</span>
     <span class="s2">&quot;change_dict_keys_case&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;clear_default_sim_telarray_cfg_directories&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collect_data_from_file&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collect_final_lines&quot;</span><span class="p">,</span>
     <span class="s2">&quot;collect_kwargs&quot;</span><span class="p">,</span>
@@ -1229,6 +1230,26 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">convert_keys_in_dict_to_lowercase</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">data</span>
+
+
+<div class="viewcode-block" id="clear_default_sim_telarray_cfg_directories">
+<a class="viewcode-back" href="../../api-reference/utils.html#utils.general.clear_default_sim_telarray_cfg_directories">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_default_sim_telarray_cfg_directories</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prefix the command to clear default sim_telarray configuration directories.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    command: str</span>
+<span class="sd">        Command to be prefixed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Prefixed command.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SIM_TELARRAY_CONFIG_PATH=&#39;&#39; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
 </pre></div>
 
                 </article>
