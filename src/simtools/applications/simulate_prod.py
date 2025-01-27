@@ -31,7 +31,7 @@ r"""
         Zenith angle in degrees.
     nshow (int, optional)
         Number of showers to simulate.
-        The Number of simulated events depends on the number of times a shower is re-used in the
+        The Number of simulated events depends on the number of times a shower is reused in the
         telescope simulation. The number provided here is before any reuse factors.
     start_run (int, required)
         Start run number such that the actual run number will be 'start_run' + 'run'.
