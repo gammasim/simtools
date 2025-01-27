@@ -41,8 +41,8 @@ CTA_SIMPIPE:
           5.0.0: tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-5.0.0_test.cfg
           6.0.0: tests/resources/sim_telarray_configurations/CTA-North-LSTN-01-6.0.0_test.cfg
     - TEST_SIMTEL_CFG_FILES:
-          5.0.0:: tests/resources/sim_telarray_configurations/CTA-North-LSTN-02-5.0.0_test.cfg
-          6.0.0:: tests/resources/sim_telarray_configurations/CTA-North-LSTN-02-6.0.0_test.cfg
+          5.0.0: tests/resources/sim_telarray_configurations/CTA-North-LSTN-02-5.0.0_test.cfg
+          6.0.0: tests/resources/sim_telarray_configurations/CTA-North-LSTN-02-6.0.0_test.cfg
     - TEST_SIMTEL_CFG_FILES:
           5.0.0: tests/resources/sim_telarray_configurations/CTA-North-MSTN-01-5.0.0_test.cfg
           6.0.0: tests/resources/sim_telarray_configurations/CTA-North-MSTN-01-6.0.0_test.cfg
