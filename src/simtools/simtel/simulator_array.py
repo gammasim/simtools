@@ -4,6 +4,7 @@ import logging
 
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import InvalidOutputFileError, SimtelRunner
+from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 
 __all__ = ["SimulatorArray"]
 
@@ -88,7 +89,7 @@ class SimulatorArray(SimtelRunner):
         command += f" {input_file}"
         command += f" > {self._log_file} 2>&1 || exit"
 
-        return command
+        return clear_default_sim_telarray_cfg_directories(command)
 
     def _check_run_result(self, run_number=None):
         """
