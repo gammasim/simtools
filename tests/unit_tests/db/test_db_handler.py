@@ -16,13 +16,19 @@ logger = logging.getLogger()
 
 
 @pytest.fixture(autouse=True)
-def reset_db_client():
+def reset_db_client(random_id):
     """Reset db_client before each test."""
     # If using the class-level db_client:
     db_handler.DatabaseHandler.db_client = None
     db_handler.production_table_cached = {}
     db_handler.model_parameters_cached = {}
     yield  # allows the test to run
+    logger.info(f"dropping sandbox_{random_id} collections")
+    if db_handler.DatabaseHandler.db_client is not None:
+        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["telescopes"].drop()
+        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["calibration_devices"].drop()
+        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["sites"].drop()
+
     # After the test, reset any side-effects (if necessary):
     db_handler.DatabaseHandler.db_client = None
     db_handler.production_table_cached.clear()
@@ -38,16 +44,6 @@ def random_id():
 def db_no_config_file():
     """Database object (without configuration)."""
     return db_handler.DatabaseHandler(mongo_db_config=None)
-
-
-@pytest.fixture
-def _db_cleanup(db, random_id):
-    yield
-    # Cleanup
-    logger.info(f"dropping sandbox_{random_id} collections")
-    db.db_client[f"sandbox_{random_id}"]["telescopes"].drop()
-    db.db_client[f"sandbox_{random_id}"]["calibration_devices"].drop()
-    db.db_client[f"sandbox_{random_id}"]["sites"].drop()
 
 
 @pytest.fixture
