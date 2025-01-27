@@ -714,3 +714,29 @@ def test_convert_keys_in_dict_to_lowercase():
     input_data = {"Key1": 123, "Key2": [1, 2, 3], "Key3": {"NestedKey1": "value1"}}
     expected_output = {"key1": 123, "key2": [1, 2, 3], "key3": {"nestedkey1": "value1"}}
     assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+
+def test_clear_default_sim_telarray_cfg_directories():
+    """
+    Test the clear_default_sim_telarray_cfg_directories function.
+    """
+
+    # Test with a simple command.
+    command = "run_simulation"
+    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation"
+    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
+
+    # Test with a command containing spaces.
+    command = "run_simulation --config config_file"
+    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation --config config_file"
+    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
+
+    # Test with an empty command.
+    command = ""
+    expected_output = "SIM_TELARRAY_CONFIG_PATH='' "
+    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
+
+    # Test with a command containing special characters.
+    command = "run_simulation && echo 'done'"
+    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation && echo 'done'"
+    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output

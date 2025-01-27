@@ -6,7 +6,7 @@ repos:
         args: ["--line-length=100"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.9.2
+    rev: v0.9.3
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -50,12 +50,12 @@ repos:
       - id: pyproject-fmt
   # codespell
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.0
     hooks:
       - id: codespell
   # markdownlint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.43.0
+    rev: v0.44.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD041"]
