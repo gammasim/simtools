@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Testing &#8212; simtools v0.1.dev1+gbb54697 Manual</title>
+    <title>Testing &#8212; simtools v0.1.dev1+g02412a5 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c7f5da74"></script>
+    <script src="../_static/documentation_options.js?v=ba9f7a05"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Simulator" href="simulators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gbb54697" />
+  <meta name="docsearch:version" content="0.1.dev1+g02412a5" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gbb54697 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g02412a5 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -764,13 +764,17 @@ key-value pairs:
 
 <dl class="py function">
 <dt class="sig sig-object py" id="testing.validate_output.validate_application_output">
-<span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">validate_application_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#validate_application_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.validate_application_output" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">validate_application_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_command_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#validate_application_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.validate_application_output" title="Link to this definition">#</a></dt>
 <dd><p>Validate application output against expected output.</p>
 <p>Expected output is defined in configuration file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>config: dict</strong></dt><dd><p>dictionary with the configuration for the application test.</p>
+</dd>
+<dt><strong>from_command_line: str</strong></dt><dd><p>Model version from the command line.</p>
+</dd>
+<dt><strong>from_config_file: str</strong></dt><dd><p>Model version from the configuration file.</p>
 </dd>
 </dl>
 </dd>
