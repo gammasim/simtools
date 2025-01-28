@@ -678,7 +678,7 @@ class CorsikaHistograms:
         ----------
         new_individual_telescopes: bool
             if False, the histograms are supposed to be filled for all telescopes.
-            if True, one histogram is set for each telescope sepparately.
+            if True, one histogram is set for each telescope separately.
         """
         if new_individual_telescopes is None:
             self._individual_telescopes = False
