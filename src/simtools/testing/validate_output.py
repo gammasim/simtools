@@ -146,6 +146,7 @@ def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     """
     _file1_suffix = Path(file1).suffix
     _file2_suffix = Path(file2).suffix
+    _logger.info("Comparing files: %s and %s", file1, file2)
     if _file1_suffix != _file2_suffix:
         raise ValueError(f"File suffixes do not match: {file1} and {file2}")
     if _file1_suffix == ".ecsv":
@@ -185,9 +186,11 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
 
     if data1 == data2:
         return True
+
     if data1.keys() != data2.keys():
+        _logger.error(f"Keys do not match: {data1.keys()} and {data2.keys()}")
         return False
-    return all(
+    _comparison = all(
         (
             _compare_value_from_parameter_dict(data1[k], data2[k], tolerance)
             if k == "value"
@@ -195,6 +198,9 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
         )
         for k in data1
     )
+    if not _comparison:
+        _logger.error(f"Values do not match: {data1} and {data2} (tolerance: {tolerance})")
+    return _comparison
 
 
 def _compare_value_from_parameter_dict(data1, data2, tolerance):
@@ -206,6 +212,8 @@ def _compare_value_from_parameter_dict(data1, data2, tolerance):
         if isinstance(value, list | np.ndarray):
             return value
         return [value]
+
+    _logger.info(f"Comparing values: {data1} and {data2} (tolerance: {tolerance})")
 
     return np.allclose(_as_list(data1), _as_list(data2), rtol=tolerance)
 
