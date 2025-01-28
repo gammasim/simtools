@@ -31,10 +31,11 @@ def _parse(label):
     config.parser.add_argument(
         "--parameter",
         action="store_true",
-        help="Compare all parameters across model versions for one telescope.",
+        help="Compare all parameters across model versions for one telescope."
     )
 
-    return config.initialize(db_config=True, simulation_model=["telescope"])
+    return config.initialize(db_config=True,
+        simulation_model=["site", "telescope","model_version"])
 
 
 def generate_markdown_report(output_path, args_dict, data):
@@ -49,7 +50,7 @@ def generate_markdown_report(output_path, args_dict, data):
         Configuration arguments including model version and telescope name.
     data : list
         Parameter data in the format:
-        [class, parameter_name, value, short_description]
+        [class, parameter_name, value, description, short_description]
     """
     # Sort data by class to prepare for grouping
     data.sort(key=itemgetter(0, 1))  # Sort by class and alphabetically
@@ -69,8 +70,9 @@ def generate_markdown_report(output_path, args_dict, data):
 
             # Write table rows
             column_widths = [25, 25, 80]
-            for _, parameter_name, value, _, short_description in group:
-                wrapped_text = textwrap.fill(str(short_description), column_widths[2]).split("\n")
+            for _, parameter_name, value, description, short_description in group:
+                text = short_description if short_description else description
+                wrapped_text = textwrap.fill(str(text), column_widths[2]).split("\n")
                 wrapped_text = " ".join(wrapped_text)
                 file.write(
                     f"| {parameter_name:{column_widths[0]}} |"
@@ -82,8 +84,9 @@ def generate_markdown_report(output_path, args_dict, data):
 
 def main():  # noqa: D103
     label_name = Path(__file__).stem
+    print('label : ', label_name)
     args, db_config = _parse(label_name)
-
+    print('args: ', args, db_config)
     io_handler_instance = io_handler.IOHandler()
     output_path = io_handler_instance.get_output_directory(
         label=label_name, sub_dir=f"{args['model_version']}"

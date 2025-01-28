@@ -5,7 +5,7 @@ r"""Class to read and manage relevant model parameters for a given telescope mod
 import logging
 import os
 from pathlib import Path
-
+from importlib.resources import files
 from simtools.utils import names
 
 
@@ -90,6 +90,7 @@ class ReadParameters:
         for parameter in parameter_descriptions[0]:
             if not self.telescope_model.has_parameter(parameter):
                 continue
+
             value = self.telescope_model.get_parameter_value_with_unit(parameter)
             if self.telescope_model.get_parameter_file_flag(parameter) and value:
                 try:
@@ -128,6 +129,9 @@ class ReadParameters:
         """
         all_versions = ["5.0.0", "6.0.0"]  # TODO: remove hard coding of version list
         comparison_data = []
+        value = self.telescope_model.get_parameter_value_with_unit(parameter_name)
+        if isinstance(value, str) and value.endswith('.dat'):
+            self.plot_parameter(parameter_name, telescope_model)
 
         for version in all_versions:
             telescope_model.model_version = version
@@ -143,5 +147,35 @@ class ReadParameters:
                         }
                     )
                     break
-
         return comparison_data
+
+
+    def plot_parameter(self, parameter_name, telescope_model):
+        config_file_path = Path(files("simtools") / "reporting/plot_configuration_files")
+        config_template = config_file_path / f"plot_{parameter_name}_parameter.yml"
+        config_file = self.output_path / f"plot_{telescope_model.name}_{parameter_name}.yml"
+
+        try:
+            with open(config_template, "r") as of:
+                old_content = of.read()
+
+            targets = ['site', 'telescope']
+            replacements = [telescope_model.site,
+                            telescope_model.name
+                            ]
+
+            for (k, v) in zip(targets, replacements):
+                old_content = old_content.replace("{%s}" % k, str(v))
+
+            with open(config_file, "w") as of:
+                of.write(old_content)
+
+
+            os.system(
+            "python3 src/simtools/applications/plot_tabular_data.py "
+            f"--plot_config {config_file} "
+            f"--output_file {telescope_model.name}_{parameter_name}"
+            )
+        except FileNotFoundError:
+            #self._logger.error('FileNotFoundError: ', parameter_name)
+            pass
