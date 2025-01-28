@@ -18,7 +18,6 @@ instrument:
   type:
     - MSTN
     - MSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal

@@ -15,7 +15,7 @@ short_description: |-
 data:
   - type: double
     unit: ns
-    default: 100.
+    default: 1000.
 instrument:
   class: Camera
   type:
