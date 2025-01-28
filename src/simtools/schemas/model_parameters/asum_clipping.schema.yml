@@ -22,9 +22,6 @@ instrument:
   type:
     - LSTN
     - LSTS
-    - MSTN
-    - MSTS
-    - SCTS
 activity:
   setting:
     - SetParameterFromExternal
