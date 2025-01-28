@@ -239,7 +239,14 @@ class CommandLineParser(argparse.ArgumentParser):
         if "model_version" in model_options:
             _job_group.add_argument(
                 "--model_version",
-                help="model version",
+                help="production model version",
+                type=str,
+                default=None,
+            )
+        if "parameter_version" in model_options:
+            _job_group.add_argument(
+                "--parameter_version",
+                help="model parameter version",
                 type=str,
                 default=None,
             )

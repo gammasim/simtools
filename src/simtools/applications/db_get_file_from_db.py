@@ -49,8 +49,9 @@ def _parse():
 
     config.parser.add_argument(
         "--file_name",
-        help="The name of the file to be downloaded.",
+        help="The name of the file(s) to be downloaded (single file or space-separated list).",
         type=str,
+        nargs="+",
         required=True,
     )
     return config.initialize(db_config=True, output=True)
@@ -66,15 +67,15 @@ def main():  # noqa: D103
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     available_dbs = [
         db_config["db_simulation_model"],
-        db.DB_CTA_SIMULATION_MODEL_DESCRIPTIONS,
-        db.DB_DERIVED_VALUES,
         "sandbox",
     ]
-    file_id = None
+    file_id = {}
     for db_name in available_dbs:
         try:
-            file_id = db.export_file_db(
-                db_name, _io_handler.get_output_directory(), args_dict["file_name"]
+            file_id = db.export_model_files(
+                db_name=db_name,
+                dest=_io_handler.get_output_directory(),
+                file_names=args_dict["file_name"],
             )
             logger.info(
                 f"Got file {args_dict['file_name']} from DB {db_name} "
@@ -84,11 +85,10 @@ def main():  # noqa: D103
         except FileNotFoundError:
             continue
 
-    if file_id is None:
-        logger.error(
-            f"The file {args_dict['file_name']} was not found in any of the available DBs."
-        )
-        raise FileNotFoundError
+    for key, value in file_id.items():
+        if value is None:
+            logger.error(f"The file {key} was not found in any of the available DBs.")
+            raise FileNotFoundError
 
 
 if __name__ == "__main__":
