@@ -32,6 +32,6 @@ activity:
     - ValidateParameterByExpert
     - ValidateTriggerPerformance
 source:
-  - Observation execution
+  - Initial instrument setup
 simulation_software:
   - name: sim_telarray
