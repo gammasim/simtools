@@ -25,7 +25,6 @@ instrument:
   type:
     - MSTN
     - MSTS
-    - SSTS
     - SCTS
 activity:
   setting:
