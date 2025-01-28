@@ -6,7 +6,7 @@ CTA_SIMPIPE:
     VALUE: 2
     INSTRUMENT: LSTN-design
     SITE: North
-    MODEL_VERSION: 6.0.0
+    PARAMETER_VERSION: 0.1.0
     INPUT_META: ./tests/resources/num_gains.meta.yml
     OUTPUT_PATH: simtools-output
     USE_PLAIN_OUTPUT_PATH: true

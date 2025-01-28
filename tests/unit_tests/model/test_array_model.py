@@ -94,7 +94,6 @@ def test_exporting_config_files(db_config, io_handler, model_version):
     ]
 
     for model_file in list_of_export_files:
-
         logger.info("Checking file: %s", model_file)
         assert Path(am.get_config_directory()).joinpath(model_file).exists()
 
@@ -108,16 +107,17 @@ def test_load_array_element_positions_from_file(array_model, io_handler, telesco
 def test_get_telescope_position_parameter(array_model, io_handler):
     am = array_model
     assert am._get_telescope_position_parameter(
-        "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m
+        "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m, "2.0.0"
     ) == {
+        "schema_version": "0.1.0",
         "parameter": "array_element_position_ground",
         "instrument": "LSTN-01",
         "site": "North",
-        "version": "6.0.0",
+        "parameter_version": "2.0.0",
+        "unique_id": None,
         "value": "10.0 2.0 30.0",
         "unit": "m",
         "type": "float64",
-        "applicable": True,
         "file": False,
     }
 

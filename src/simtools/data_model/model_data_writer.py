@@ -122,7 +122,7 @@ class ModelDataWriter:
         parameter_name,
         value,
         instrument,
-        model_version,
+        parameter_version,
         output_file,
         output_path=None,
         use_plain_output_path=False,
@@ -139,8 +139,8 @@ class ModelDataWriter:
             Value of the parameter.
         instrument: str
             Name of the instrument.
-        model_version: str
-            Version of the model.
+        parameter_version: str
+            Version of the parameter.
         output_file: str
             Name of output file.
         output_path: str or Path
@@ -163,7 +163,7 @@ class ModelDataWriter:
             use_plain_output_path=use_plain_output_path,
         )
         _json_dict = writer.get_validated_parameter_dict(
-            parameter_name, value, instrument, model_version
+            parameter_name, value, instrument, parameter_version
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         if metadata_input_dict is not None:
@@ -175,7 +175,9 @@ class ModelDataWriter:
             )
         return _json_dict
 
-    def get_validated_parameter_dict(self, parameter_name, value, instrument, model_version):
+    def get_validated_parameter_dict(
+        self, parameter_name, value, instrument, parameter_version, schema_version="0.1.0"
+    ):
         """
         Get validated parameter dictionary.
 
@@ -187,8 +189,10 @@ class ModelDataWriter:
             Value of the parameter.
         instrument: str
             Name of the instrument.
-        model_version: str
-            Version of the model.
+        parameter_version: str
+            Version of the parameter.
+        schema_version: str
+            Version of the schema.
 
         Returns
         -------
@@ -203,22 +207,18 @@ class ModelDataWriter:
         except ValueError:  # e.g. instrument is 'LSTN-01'
             site = names.get_site_from_array_element_name(instrument)
 
-        try:
-            applicable = self._get_parameter_applicability(instrument)
-        except ValueError:
-            applicable = True  # Default to True (expect that this field goes in future)
-
         value, unit = value_conversion.split_value_and_unit(value)
 
         data_dict = {
+            "schema_version": schema_version,
             "parameter": parameter_name,
             "instrument": instrument,
             "site": site,
-            "version": model_version,
+            "parameter_version": parameter_version,
+            "unique_id": None,
             "value": value,
             "unit": unit,
             "type": self._get_parameter_type(),
-            "applicable": applicable,
             "file": self._parameter_is_a_file(),
         }
         return self.validate_and_transform(
@@ -272,36 +272,6 @@ class ModelDataWriter:
         except (KeyError, IndexError):
             pass
         return False
-
-    def _get_parameter_applicability(self, telescope_name):
-        """
-        Check if a parameter is applicable for a given telescope using schema files.
-
-        First check for exact telescope name (e.g., LSTN-01), if not listed in the schema
-        use telescope type (LSTN).
-
-        Parameters
-        ----------
-        telescope_name: str
-            Telescope name (e.g., LSTN-01)
-
-        Returns
-        -------
-        bool
-            True if parameter is applicable to telescope.
-
-        """
-        try:
-            if telescope_name in self.schema_dict["instrument"]["type"]:
-                return True
-        except KeyError as exc:
-            self._logger.error("Schema file does not contain 'instrument:type' key.")
-            raise exc
-
-        return (
-            names.get_array_element_type_from_name(telescope_name)
-            in self.schema_dict["instrument"]["type"]
-        )
 
     def _get_unit_from_schema(self):
         """

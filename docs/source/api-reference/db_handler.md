@@ -13,11 +13,11 @@ Modules for database access. See the databases sections for details.
    :members:
 ```
 
-## db_array_elements
+## db_model_upload
 
-(db-array-elements)=
+(db-module-upload)=
 
 ```{eval-rst}
-.. automodule:: db.db_array_elements
+.. automodule:: db.db_model_upload
    :members:
 ```

@@ -1,11 +1,12 @@
 #!/bin/bash
 # Upload model parameter from repository to a local or remote mongoDB.
 #
+# Execute this scripts from the ./database_scripts directory.
 # Cover 'source .env': the script ensure that this file exists:
 # shellcheck disable=SC1091
 
-DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git"
-DB_SIMULATION_MODEL_BRANCH="main"
+DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
+DB_SIMULATION_MODEL_BRANCH="v1.0.0-parameters"
 
 # Check that this script is not sourced but executed
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
@@ -27,9 +28,9 @@ echo "Cloning model parameters from $DB_SIMULATION_MODEL_URL"
 rm -rf ./tmp_model_parameters
 git clone --depth=1 -b $DB_SIMULATION_MODEL_BRANCH $DB_SIMULATION_MODEL_URL ./tmp_model_parameters
 
-CURRENTDIR=$(pwd)
+CURRENT_DIR=$(pwd)
 cd ./tmp_model_parameters/ || exit
-cp -f "$CURRENTDIR"/../.env .env
+cp -f "$CURRENT_DIR"/../.env .env
 
 # ask for confirmation before uploading to remote DB
 source .env
@@ -43,16 +44,20 @@ if [[ $SIMTOOLS_DB_SERVER =~ $regex ]]; then
   fi
 fi
 
-# upload files to DB
-model_directory="./model_versions/"
-for dir in "${model_directory}"*/; do
-  simtools-db-add-model-parameters-from-repository-to-db \
-  --model_version "$(basename "${dir}")" \
-  --input_path "${dir}" \
+# upload model parameters to DB
+model_directory="./simulation-models/model_parameters/"
+simtools-db-add-simulation-model-from-repository-to-db \
+  --input_path "${model_directory}" \
   --db_name "$DB_SIMULATION_MODEL" \
   --type "model_parameters"
-done
 
-cd "$CURRENTDIR" || exit
+# upload production tables to DB
+production_directory="./simulation-models/productions"
+simtools-db-add-simulation-model-from-repository-to-db \
+  --input_path "${production_directory}" \
+  --db_name "$DB_SIMULATION_MODEL" \
+  --type "production_tables"
+
+cd "$CURRENT_DIR" || exit
 
 rm -rf ./tmp_model_parameters
