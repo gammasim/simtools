@@ -355,6 +355,7 @@ def test_make_simtel_script(mock_simulator):
         mock_simulator.output_directory = "/directory"
 
         expected_command = (
+            "SIM_TELARRAY_CONFIG_PATH='' "
             "/path/to/sim_telarray/bin/sim_telarray/ "
             "-I -I/path/to/config/ "
             "-c /path/to/config/config.cfg "
