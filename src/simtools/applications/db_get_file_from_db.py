@@ -67,7 +67,6 @@ def main():  # noqa: D103
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
     available_dbs = [
         db_config["db_simulation_model"],
-        "sandbox",
     ]
     file_id = {}
     for db_name in available_dbs:
