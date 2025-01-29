@@ -31,11 +31,12 @@ def _parse(label):
     config.parser.add_argument(
         "--parameter",
         action="store_true",
-        help="Compare all parameters across model versions for one telescope."
+        help="Compare all parameters across model versions for one telescope.",
     )
 
-    return config.initialize(db_config=True,
-        simulation_model=["site", "telescope","model_version"])
+    return config.initialize(
+        db_config=True, simulation_model=["site", "telescope", "model_version"]
+    )
 
 
 def generate_markdown_report(output_path, args_dict, data):
@@ -84,9 +85,7 @@ def generate_markdown_report(output_path, args_dict, data):
 
 def main():  # noqa: D103
     label_name = Path(__file__).stem
-    print('label : ', label_name)
     args, db_config = _parse(label_name)
-    print('args: ', args, db_config)
     io_handler_instance = io_handler.IOHandler()
     output_path = io_handler_instance.get_output_directory(
         label=label_name, sub_dir=f"{args['model_version']}"
@@ -103,24 +102,26 @@ def main():  # noqa: D103
         mongo_db_config=db_config,
     )
 
-    if not args["parameter"]:
+    parameter_data = ReadParameters(
+        telescope_model,
+        output_path,
+    ).get_telescope_parameter_data()
 
-        parameter_data = ReadParameters(
-            telescope_model,
-            output_path,
-        ).get_telescope_parameter_data()
+    generate_markdown_report(output_path, args, parameter_data)
 
-        generate_markdown_report(output_path, args, parameter_data)
+    logger.info(
+        f"Markdown report generated for {args['site']}"
+        f" Telescope {args['telescope']} (v{args['model_version']})"
+    )
 
-        logger.info(
-            f"Markdown report generated for {args['site']}"
-            f" Telescope {args['telescope']} (v{args['model_version']})"
-        )
-
-    else:
+    if args["parameter"]:
         logger.info(
             f"Comparing parameters across model versions for Telescope: {args['telescope']}"
             f"and Site: {args['site']}."
+        )
+
+        output_path = io_handler_instance.get_output_directory(
+            label=label_name, sub_dir="Parameters"
         )
 
         read_params = ReadParameters(telescope_model, output_path)
@@ -133,13 +134,7 @@ def main():  # noqa: D103
                     parameter, telescope_model
                 )
                 if comparison_data:
-                    output_filename = (
-                        io_handler_instance.get_output_directory(
-                            label=label_name, sub_dir=f"{args['telescope']}"
-                        )
-                        / f"{parameter}.md"
-                    )
-
+                    output_filename = output_path / f"{parameter}.md"
                     with output_filename.open("w", encoding="utf-8") as file:
                         # Write header
                         file.write(f"# {parameter}\n\n")
@@ -152,9 +147,20 @@ def main():  # noqa: D103
                         file.write("|--------------------|----------------------|\n")
 
                         # Write table rows
-                        for entry in comparison_data:
-                            file.write(f"| {entry['model_version']} | {entry['value']} |\n")
+                        for item in comparison_data:
+                            file.write(f"| {item['model_version']} | {item['value']} |\n")
+
                         file.write("\n")
+                        if isinstance(comparison_data[0]["value"], str) and comparison_data[0][
+                            "value"
+                        ].endswith(".md)"):
+                            if Path(
+                                f"{output_path}/images/{args['telescope']}_{parameter}.png"
+                            ).is_file():
+                                file.write(
+                                    f"![Parameter value comparison.](images/"
+                                    f"{args['telescope']}_{parameter}.png)"
+                                )
 
 
 if __name__ == "__main__":
