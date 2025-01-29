@@ -335,8 +335,6 @@ def get_collection_name_from_array_element_name(name, array_elements_only=True):
 def get_simulation_software_name_from_parameter_name(
     par_name,
     simulation_software="sim_telarray",
-    search_telescope_parameters=True,
-    search_site_parameters=True,
 ):
     """
     Get the name used in the simulation software from the model parameter name.
@@ -350,21 +348,13 @@ def get_simulation_software_name_from_parameter_name(
         Model parameter name.
     simulation_software: str
         Simulation software name.
-    search_telescope_parameters: bool
-        If True, telescope model parameters are included.
-    search_site_parameters: bool
-        If True, site model parameters are included.
 
     Returns
     -------
     str
         Simtel parameter name.
     """
-    _parameter_names = {}
-    if search_telescope_parameters:
-        _parameter_names.update(telescope_parameters())
-    if search_site_parameters:
-        _parameter_names.update(site_parameters())
+    _parameter_names = {**telescope_parameters(), **site_parameters()}
 
     try:
         _parameter = _parameter_names[par_name]
