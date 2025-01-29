@@ -6,6 +6,7 @@ from pathlib import Path
 
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.simtel.simulator_array import SimulatorArray
+from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 
 __all__ = ["CorsikaSimtelRunner"]
 
@@ -197,7 +198,8 @@ class CorsikaSimtelRunner:
         )
         command += f" | gzip > {_log_file} 2>&1 || exit"
 
-        return command
+        # Remove the default sim_telarray configuration directories
+        return clear_default_sim_telarray_cfg_directories(command)
 
     def get_file_name(self, simulation_software=None, file_type=None, run_number=None, mode=None):
         """
