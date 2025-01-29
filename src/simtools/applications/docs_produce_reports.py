@@ -88,7 +88,7 @@ def main():  # noqa: D103
     args, db_config = _parse(label_name)
     io_handler_instance = io_handler.IOHandler()
     output_path = io_handler_instance.get_output_directory(
-        label=label_name, sub_dir=f"{args['model_version']}"
+        label=label_name, sub_dir=f"productions/{args['model_version']}"
     )
 
     logger = logging.getLogger()
@@ -121,7 +121,7 @@ def main():  # noqa: D103
         )
 
         output_path = io_handler_instance.get_output_directory(
-            label=label_name, sub_dir="Parameters"
+            label=label_name, sub_dir=f"parameters/{args['telescope']}"
         )
 
         read_params = ReadParameters(telescope_model, output_path)
