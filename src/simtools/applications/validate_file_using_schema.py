@@ -160,7 +160,7 @@ def validate_data_files(args_dict, logger):
         for file_name in _get_json_file_list(args_dict.get("file_directory")):
             tmp_args_dict["file_name"] = file_name
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", file_name.stem)
-            schema_file = (schema.model_parameter_schema_file(f"{parameter_name}"),)
+            schema_file = schema.model_parameter_schema_file(f"{parameter_name}")
             tmp_args_dict["schema"] = schema_file
             tmp_args_dict["data_type"] = "model_parameter"
             tmp_args_dict["require_exact_data_type"] = args_dict["require_exact_data_type"]
