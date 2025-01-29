@@ -106,7 +106,7 @@ def main():  # noqa: D103
     ce = CameraEfficiency(
         db_config=_db_config,
         simtel_path=args_dict["simtel_path"],
-        label=label,
+        label=args_dict.get("label", label),
         config_data=args_dict,
     )
     ce.simulate()
