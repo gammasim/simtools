@@ -154,13 +154,10 @@ def main():  # noqa: D103
                         if isinstance(comparison_data[0]["value"], str) and comparison_data[0][
                             "value"
                         ].endswith(".md)"):
-                            if Path(
-                                f"{output_path}/images/{args['telescope']}_{parameter}.png"
-                            ).is_file():
-                                file.write(
-                                    f"![Parameter value comparison.](images/"
-                                    f"{args['telescope']}_{parameter}.png)"
-                                )
+                            file.write(
+                                f"![Parameter value comparison.](images/"
+                                f"{args['telescope']}_{parameter}.png)"
+                            )
 
 
 if __name__ == "__main__":
