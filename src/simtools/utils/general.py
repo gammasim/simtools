@@ -155,32 +155,34 @@ def collect_data_from_file(file_name, yaml_document=None):
     if is_url(file_name):
         return collect_data_from_http(file_name)
 
-    data = None
     suffix = Path(file_name).suffix.lower()
     with open(file_name, encoding="utf-8") as file:
         if suffix == ".json":
-            data = json.load(file)
-        elif suffix == ".list":
-            lines = file.readlines()
-            data = [line.strip() for line in lines]
-        elif suffix in [".yml", ".yaml"]:
-            try:
-                data = yaml.safe_load(file)
-            except yaml.constructor.ConstructorError:
-                data = _load_yaml_using_astropy(file)
-            except yaml.composer.ComposerError:
-                file.seek(0)
-                if yaml_document is None:
-                    data = list(yaml.safe_load_all(file))
-                else:
-                    try:
-                        data = list(yaml.safe_load_all(file))[yaml_document]
-                    except IndexError as exc:
-                        raise InvalidConfigDataError(
-                            f"YAML file {file_name} does not contain {yaml_document} documents."
-                        ) from exc
+            return json.load(file)
+        if suffix == ".list":
+            return [line.strip() for line in file.readlines()]
+        if suffix in [".yml", ".yaml"]:
+            return _collect_data_from_yaml_file(file, file_name, yaml_document)
+    return None
 
-    return data
+
+def _collect_data_from_yaml_file(file, file_name, yaml_document):
+    """Collect data from a yaml file."""
+    try:
+        return yaml.safe_load(file)
+    except yaml.constructor.ConstructorError:
+        return _load_yaml_using_astropy(file)
+    except yaml.composer.ComposerError:
+        pass
+    file.seek(0)
+    if yaml_document is None:
+        return list(yaml.safe_load_all(file))
+    try:
+        return list(yaml.safe_load_all(file))[yaml_document]
+    except IndexError as exc:
+        raise InvalidConfigDataError(
+            f"YAML file {file_name} does not contain {yaml_document} documents."
+        ) from exc
 
 
 def collect_kwargs(label, in_kwargs):
