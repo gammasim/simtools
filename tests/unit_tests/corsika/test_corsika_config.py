@@ -29,7 +29,7 @@ def corsika_configuration_parameters(gcm2):
     return {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
         "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
-        "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 700.0], "unit": "nm"},
+        "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
         "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
         "corsika_particle_kinetic_energy_cutoff": {
             "value": [0.3, 0.1, 0.020, 0.020],
@@ -157,8 +157,8 @@ def test_corsika_configuration_cherenkov_parameters(
 
 def test_input_config_corsika_cherenkov_wavelength(corsika_config_mock_array_model):
     assert corsika_config_mock_array_model._input_config_corsika_cherenkov_wavelength(
-        {"value": [240.0, 700.0], "unit": "nm"}
-    ) == ["240.0", "700.0"]
+        {"value": [240.0, 1000.0], "unit": "nm"}
+    ) == ["240.0", "1000.0"]
 
 
 def test_corsika_configuration_iact_parameters(

@@ -294,10 +294,7 @@ class SimtelConfigWriter:
         _site_parameters = site_model.get_simtel_parameters()
         for par, value in _site_parameters.items():
             _simtel_name = names.get_simulation_software_name_from_parameter_name(
-                par,
-                simulation_software="sim_telarray",
-                search_telescope_parameters=False,
-                search_site_parameters=True,
+                par, simulation_software="sim_telarray"
             )
             _simtel_name, value = self._convert_model_parameters_to_simtel_format(
                 _simtel_name, value, model_path, telescope_model

@@ -6,7 +6,7 @@ r"""
     ready to be submitted to the model database. Prints out parameters which are not found
     in simtel configuration file and parameters which are not found in simtools schema files.
 
-    Note that all parameter are assigned the same parameter version.
+    Note that all parameters are assigned the same parameter version.
 
     Command line arguments
     ----------------------
@@ -32,7 +32,7 @@ r"""
           --simtel_cfg_file all_telescope_config_la_palma.cfg\\
           --simtel_telescope_name CT1\\
           --telescope LSTN-01\\
-          --parameter_version "0.0.1"
+          --parameter_version "1.0.0"
 
     The export of the model parameters from sim_telarray for 6.0.0 can be done e.g., as follows:
 

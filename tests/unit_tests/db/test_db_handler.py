@@ -16,17 +16,19 @@ logger = logging.getLogger()
 
 
 @pytest.fixture(autouse=True)
-def reset_db_client():
+def reset_db_client(random_id):
     """Reset db_client before each test."""
     # If using the class-level db_client:
     db_handler.DatabaseHandler.db_client = None
-    db_handler.production_table_cached = {}
-    db_handler.model_parameters_cached = {}
     yield  # allows the test to run
+    logger.info(f"dropping sandbox_{random_id} collections")
+    if db_handler.DatabaseHandler.db_client is not None:
+        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["telescopes"].drop()
+        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["calibration_devices"].drop()
+        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["sites"].drop()
+
     # After the test, reset any side-effects (if necessary):
     db_handler.DatabaseHandler.db_client = None
-    db_handler.production_table_cached.clear()
-    db_handler.model_parameters_cached.clear()
 
 
 @pytest.fixture
@@ -41,16 +43,6 @@ def db_no_config_file():
 
 
 @pytest.fixture
-def _db_cleanup(db, random_id):
-    yield
-    # Cleanup
-    logger.info(f"dropping sandbox_{random_id} collections")
-    db.db_client[f"sandbox_{random_id}"]["telescopes"].drop()
-    db.db_client[f"sandbox_{random_id}"]["calibration_devices"].drop()
-    db.db_client[f"sandbox_{random_id}"]["sites"].drop()
-
-
-@pytest.fixture
 def test_db():
     return "test_db"
 
@@ -61,8 +53,8 @@ def test_file():
 
 
 @pytest.fixture
-def test_file2():
-    return "test_file2.dat"
+def test_file_2():
+    return "test_file_2.dat"
 
 
 @pytest.fixture
@@ -413,7 +405,7 @@ def test_get_collections(db, db_config, fs_files):
 
 
 def test_export_model_files_with_file_names(
-    db, mocker, tmp_test_directory, test_db, test_file, test_file2
+    db, mocker, tmp_test_directory, test_db, test_file, test_file_2
 ):
     """Test export_model_files method with file names."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
@@ -422,23 +414,23 @@ def test_export_model_files_with_file_names(
     )
     mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
 
-    file_names = [test_file, test_file2]
+    file_names = [test_file, test_file_2]
 
     result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
-    mock_get_file_mongo_db.assert_has_calls([call(test_db, test_file), call(test_db, test_file2)])
+    mock_get_file_mongo_db.assert_has_calls([call(test_db, test_file), call(test_db, test_file_2)])
     mock_write_file_from_mongo_to_disk.assert_has_calls(
         [
             call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
             call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
         ]
     )
-    assert result == {test_file: "file_id", test_file2: "file_id"}
+    assert result == {test_file: "file_id", test_file_2: "file_id"}
 
 
 def test_export_model_files_with_parameters(
-    db, mocker, tmp_test_directory, test_db, test_file, test_file2
+    db, mocker, tmp_test_directory, test_db, test_file, test_file_2
 ):
     """Test export_model_files method with parameters."""
     mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
@@ -449,20 +441,20 @@ def test_export_model_files_with_parameters(
 
     parameters = {
         "param1": {"file": True, "value": test_file},
-        "param2": {"file": True, "value": test_file2},
+        "param2": {"file": True, "value": test_file_2},
     }
 
     result = db.export_model_files(parameters=parameters, dest=tmp_test_directory)
 
     mock_get_db_name.assert_called()
-    mock_get_file_mongo_db.assert_has_calls([call(test_db, test_file), call(test_db, test_file2)])
+    mock_get_file_mongo_db.assert_has_calls([call(test_db, test_file), call(test_db, test_file_2)])
     mock_write_file_from_mongo_to_disk.assert_has_calls(
         [
             call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
             call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
         ]
     )
-    assert result == {test_file: "file_id", test_file2: "file_id"}
+    assert result == {test_file: "file_id", test_file_2: "file_id"}
 
 
 def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db, test_file):
@@ -480,7 +472,7 @@ def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db,
     mock_get_file_mongo_db.assert_not_called()
     mock_write_file_from_mongo_to_disk.assert_not_called()
     mock_path_exists.assert_called_once()
-    assert result == {test_file: "file exits"}
+    assert result == {test_file: "file exists"}
 
 
 def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_db, test_file):
@@ -625,7 +617,8 @@ def test_read_mongo_db(db, mocker, test_db):
     mocker.patch.object(db.get_collection.return_value, "find", return_value=[])
     with pytest.raises(
         ValueError,
-        match=r"The following query for test_collection returned zero results: {'parameter_version': '1.0.0'}",
+        match=r"The following query for test_collection returned zero results: "
+        r"{'parameter_version': '1.0.0'}",
     ):
         db._read_mongo_db(query, collection_name)
 
@@ -683,7 +676,8 @@ def test__read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
     mocker.patch.object(db.get_collection.return_value, "find_one", return_value=None)
     with pytest.raises(
         ValueError,
-        match=r"The following query returned zero results: {'model_version': '1.0.0', 'collection': 'telescopes'}",
+        match=r"The following query returned zero results: "
+        r"{'model_version': '1.0.0', 'collection': 'telescopes'}",
     ):
         db._read_production_table_from_mongo_db(collection_name, model_version)
 
@@ -906,7 +900,8 @@ def test_add_new_parameter_with_file_no_prefix(
 
     with pytest.raises(
         FileNotFoundError,
-        match=r"The location of the file to upload, corresponding to the param1 parameter, must be provided.",
+        match=r"The location of the file to upload, corresponding to the param1 parameter, "
+        r"must be provided.",
     ):
         db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
 

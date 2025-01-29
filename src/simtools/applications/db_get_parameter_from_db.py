@@ -40,7 +40,7 @@ r"""
 
         simtools-db-get-parameter-from-db --parameter mirror_list \\
                 --site North --telescope LSTN-01 \\
-                --parameter_version 5.0.0
+                --parameter_version 1.0.0
 
 """
 
@@ -98,7 +98,7 @@ def main():  # noqa: D103
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
             collection=(
-                args_dict.get("db_collection") if args_dict.get("db_collection") else "telescopes"
+                args_dict["db_collection"] if args_dict.get("db_collection") else "telescopes"
             ),
         )
     # get parameter using 'model_version'
@@ -125,19 +125,18 @@ def main():  # noqa: D103
             )
     else:
         raise ValueError("Either 'parameter_version' or 'model_version' must be provided.")
-    param = args_dict["parameter"]
-    if param not in pars:
+    if args_dict["parameter"] not in pars:
         raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
     if args_dict["output_file"] is not None:
         _output_file = (
             Path(io_handler.IOHandler().get_output_directory()) / args_dict["output_file"]
         )
-        pars[param].pop("_id")
-        pars[param].pop("entry_date")
+        pars[args_dict["parameter"]].pop("_id")
+        pars[args_dict["parameter"]].pop("entry_date")
         with open(_output_file, "w", encoding="utf-8") as json_file:
-            json.dump(pars[param], json_file, indent=4)
+            json.dump(pars[args_dict["parameter"]], json_file, indent=4)
     else:
-        pprint(pars[param])
+        pprint(pars[args_dict["parameter"]])
 
 
 if __name__ == "__main__":
