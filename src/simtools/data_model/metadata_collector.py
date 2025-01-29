@@ -134,7 +134,7 @@ class MetadataCollector:
         # from data model name
         if self.data_model_name:
             self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
-            return schema.model_parameter_schema_file(self.data_model_name)
+            return str(schema.model_parameter_schema_file(self.data_model_name))
 
         # from input metadata
         try:
