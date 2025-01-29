@@ -1,27 +1,30 @@
 %YAML 1.2
 ---
-title: Schema for asum_clipping model parameter
+title: Schema for array_window model parameter
 version: 0.1.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
-name: asum_clipping
+name: array_window
 description: |-
-  The amplitude level at which the signal from each pixel
-  (after optional shaping) is clipped for its contribution
-  to the analog sum trigger.
+  Length of a coincidence window of the default stereo trigger,
+  after correction of fixed (cable length, focal length, etc.)
+  and variable (view direction) delays.
+short_description: |-
+  Length of a coincidence window of the default stereo trigger.
 data:
   - type: double
-    default: 0.0
-    unit: mV
-    allowed_range:
-      min: 0.0
-    condition: default_trigger==AnalogSum
+    unit: ns
+    default: 1000.
 instrument:
   class: Camera
   type:
     - LSTN
     - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
 activity:
   setting:
     - SetParameterFromExternal
@@ -29,6 +32,6 @@ activity:
     - ValidateParameterByExpert
     - ValidateTriggerPerformance
 source:
-  - Observation execution
+  - Initial instrument setup
 simulation_software:
   - name: sim_telarray
