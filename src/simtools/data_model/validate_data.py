@@ -12,8 +12,7 @@ from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
-from simtools.data_model import format_checkers
+from simtools.data_model import format_checkers, schema
 from simtools.utils import value_conversion
 
 __all__ = ["DataValidator"]
@@ -129,7 +128,7 @@ class DataValidator:
             Validated data dictionary
         """
         data_validator = DataValidator(
-            schema_file=MODEL_PARAMETER_SCHEMA_PATH / f"{par_dict['parameter']}.schema.yml",
+            schema_file=schema.model_parameter_schema_file(f"{par_dict['parameter']}"),
             data_dict=par_dict,
             check_exact_data_type=False,
         )
@@ -715,6 +714,8 @@ class DataValidator:
         ------
         KeyError
             if 'data' can not be read from dict in schema file
+
+        TODO - understand if parts of it can be replaced
 
         """
         try:

@@ -4,7 +4,6 @@ import logging
 import re
 import shutil
 import sys
-from importlib.resources import files
 
 import jsonschema
 import numpy as np
@@ -14,7 +13,7 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
-from simtools.data_model import validate_data
+from simtools.data_model import schema, validate_data
 
 logger = logging.getLogger()
 
@@ -624,11 +623,9 @@ def test_read_validation_schema(tmp_test_directory):
 # incomplete test
 def test_validate_data_dict():
 
-    schema_dir = files("simtools").joinpath("schemas/model_parameters/")
-
     # parameter with unit
     data_validator = validate_data.DataValidator(
-        schema_file=str(schema_dir) + "/reference_point_altitude.schema.yml"
+        schema_file=schema.model_parameter_schema_file("reference_point_altitude")
     )
     data_validator.data_dict = {
         "name": "reference_point_altitude",
@@ -639,7 +636,7 @@ def test_validate_data_dict():
 
     # parameter without unit
     data_validator_2 = validate_data.DataValidator(
-        schema_file=str(schema_dir) + "/num_gains.schema.yml"
+        schema_file=schema.model_parameter_schema_file("num_gains")
     )
     data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [""]}
     data_validator_2._validate_data_dict()
@@ -662,7 +659,7 @@ def test_validate_data_dict():
     data_validator_2._validate_data_dict()
 
     data_validator_3 = validate_data.DataValidator(
-        schema_file=str(schema_dir) + "/random_focal_length.schema.yml"
+        schema_file=schema.model_parameter_schema_file("random_focal_length")
     )
     data_validator_3.data_dict = {
         "name": "random_focal_length",
@@ -676,9 +673,8 @@ def test_validate_data_dict():
 
 
 def test_convert_results_to_model_format():
-    schema_dir = files("simtools").joinpath("schemas/model_parameters/")
     data_validator_3 = validate_data.DataValidator(
-        schema_file=str(schema_dir) + "/random_focal_length.schema.yml"
+        schema_file=schema.model_parameter_schema_file("random_focal_length")
     )
     data_validator_3.data_dict = {
         "name": "random_focal_length",

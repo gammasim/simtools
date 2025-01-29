@@ -10,8 +10,7 @@ import yaml
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
-from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
-from simtools.data_model import validate_data
+from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
 from simtools.utils import names, value_conversion
@@ -200,7 +199,8 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
-        schema_file = self._read_model_parameter_schema(parameter_name)
+        schema_file = schema.model_parameter_schema_file(parameter_name)
+        self.schema_dict = gen.collect_data_from_file(schema_file)
 
         try:  # e.g. instrument is 'North"
             site = names.validate_site_name(instrument)
@@ -209,13 +209,8 @@ class ModelDataWriter:
 
         value, unit = value_conversion.split_value_and_unit(value)
 
-        if schema_version is None:
-            schema_version = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 0).get(
-                "version", "0.0.0"
-            )
-
         data_dict = {
-            "schema_version": schema_version,
+            "schema_version": schema.model_parameter_schema_version(schema_version),
             "parameter": parameter_name,
             "instrument": instrument,
             "site": site,
@@ -231,22 +226,6 @@ class ModelDataWriter:
             validate_schema_file=schema_file,
             is_model_parameter=True,
         )
-
-    def _read_model_parameter_schema(self, parameter_name):
-        """
-        Read model parameter schema.
-
-        Parameters
-        ----------
-        parameter_name: str
-            Name of the parameter.
-        """
-        schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{parameter_name}.schema.yml"
-        try:
-            self.schema_dict = gen.collect_data_from_file(file_name=schema_file)
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Schema file not found: {schema_file}") from exc
-        return schema_file
 
     def _get_parameter_type(self):
         """

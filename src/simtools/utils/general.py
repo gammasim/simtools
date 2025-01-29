@@ -172,12 +172,13 @@ def collect_data_from_file(file_name, yaml_document=None):
                 file.seek(0)
                 if yaml_document is None:
                     data = list(yaml.safe_load_all(file))
-                try:
-                    data = list(yaml.safe_load_all(file))[yaml_document]
-                except IndexError as exc:
-                    raise InvalidConfigDataError(
-                        f"YAML file {file_name} does not contain {yaml_document} documents."
-                    ) from exc
+                else:
+                    try:
+                        data = list(yaml.safe_load_all(file))[yaml_document]
+                    except IndexError as exc:
+                        raise InvalidConfigDataError(
+                            f"YAML file {file_name} does not contain {yaml_document} documents."
+                        ) from exc
 
     return data
 
