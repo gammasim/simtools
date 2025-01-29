@@ -344,7 +344,7 @@ class ModelParameter:
         """Return the extra label if defined, if not return ''."""
         return self._extra_label if self._extra_label is not None else ""
 
-    def get_simtel_parameters(self, parameters=None, telescope_model=True, site_model=True):
+    def get_simtel_parameters(self, parameters=None):
         """
         Get simtel parameters as name and value pairs.
 
@@ -352,10 +352,6 @@ class ModelParameter:
         ----------
         parameters: dict
             Parameters (simtools) to be renamed (if necessary)
-        telescope_model: bool
-            If True, telescope model parameters are included.
-        site_model: bool
-            If True, site model parameters are included.
 
         Returns
         -------
@@ -369,10 +365,7 @@ class ModelParameter:
         _simtel_parameter_value = {}
         for key in parameters:
             _par_name = names.get_simulation_software_name_from_parameter_name(
-                key,
-                simulation_software="sim_telarray",
-                search_telescope_parameters=telescope_model,
-                search_site_parameters=site_model,
+                key, simulation_software="sim_telarray"
             )
             if _par_name is not None:
                 _simtel_parameter_value[_par_name] = parameters[key].get("value")
