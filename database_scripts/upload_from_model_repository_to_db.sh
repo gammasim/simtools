@@ -6,7 +6,7 @@
 # shellcheck disable=SC1091
 
 DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
-DB_SIMULATION_MODEL_BRANCH="prod5-prod6-corrections"
+DB_SIMULATION_MODEL_BRANCH="main"
 
 # Check that this script is not sourced but executed
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
