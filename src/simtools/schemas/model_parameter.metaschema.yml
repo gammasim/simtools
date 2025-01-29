@@ -25,14 +25,19 @@ definitions:
         type: boolean
         description: "This parameter is a file."
       instrument:
-        type: string
+        type:
+          - string
+          - "null"
         description: "Associated instrument."
       site:
-        type: string
+        type:
+          - string
+          - "null"
         description: "Associated CTAO site."
         enum:
           - North
           - South
+          - null
       type:
         type: string
         description: "Data type"
