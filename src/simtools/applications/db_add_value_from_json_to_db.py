@@ -10,8 +10,7 @@ r"""
     db_collection (str, required)
         The DB collection to which to add the file.
     db (str)
-        The DB to insert the files to. \
-        The choices are either the default CTA simulation DB or a sandbox for testing.
+        The DB to insert the files to.
 
     Example
     -------

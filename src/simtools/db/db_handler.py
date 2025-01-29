@@ -700,6 +700,7 @@ class DatabaseHandler:
             return file_system.find_one(  # pylint: disable=protected-access
                 {"filename": kwargs["filename"]}
             )._id
+        self._logger.debug(f"Writing file to DB: {file_name}")
         with open(file_name, "rb") as data_file:
             return file_system.put(data_file, **kwargs)
 

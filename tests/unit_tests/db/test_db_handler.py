@@ -2,7 +2,6 @@
 
 import copy
 import logging
-import uuid
 from pathlib import Path
 from unittest.mock import call
 
@@ -16,24 +15,13 @@ logger = logging.getLogger()
 
 
 @pytest.fixture(autouse=True)
-def reset_db_client(random_id):
+def reset_db_client():
     """Reset db_client before each test."""
     # If using the class-level db_client:
     db_handler.DatabaseHandler.db_client = None
     yield  # allows the test to run
-    logger.info(f"dropping sandbox_{random_id} collections")
-    if db_handler.DatabaseHandler.db_client is not None:
-        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["telescopes"].drop()
-        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["calibration_devices"].drop()
-        db_handler.DatabaseHandler.db_client[f"sandbox_{random_id}"]["sites"].drop()
-
     # After the test, reset any side-effects (if necessary):
     db_handler.DatabaseHandler.db_client = None
-
-
-@pytest.fixture
-def random_id():
-    return uuid.uuid4().hex
 
 
 @pytest.fixture
@@ -80,15 +68,6 @@ def validate_model_parameter():
 @pytest.fixture
 def mock_gridfs(mocker):
     return mocker.patch("simtools.db.db_handler.gridfs.GridFS")
-
-
-@pytest.fixture
-def _db_cleanup_file_sandbox(db_no_config_file, random_id, fs_files):
-    yield
-    # Cleanup
-    logger.info("Dropping the temporary files in the sandbox")
-    db_no_config_file.db_client[f"sandbox_{random_id}"]["fs.chunks"].drop()
-    db_no_config_file.db_client[f"sandbox_{random_id}"][fs_files].drop()
 
 
 def test_set_up_connection_no_config():
