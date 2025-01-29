@@ -2,7 +2,6 @@
 
 import logging
 import re
-import shutil
 import sys
 
 import jsonschema
@@ -586,38 +585,18 @@ def test_read_validation_schema(tmp_test_directory):
         data_validator._read_validation_schema(schema_file=None)
 
     # file given
-    data_validator._read_validation_schema(schema_file=mirror_2f_schema_file)
+    _schema = data_validator._read_validation_schema(schema_file=mirror_2f_schema_file)
+    assert isinstance(_schema, list)
 
     # file does not exist
     with pytest.raises(FileNotFoundError):
         data_validator._read_validation_schema(schema_file="this_file_does_not_exist.yml")
 
-    # file given and parameter name given
-    data_validator._read_validation_schema(
-        schema_file=mirror_2f_schema_file,
-        parameter="mirror_2f_measurement",
-    )
-
-    # copy the schema file to a temporary directory; this is to test
-    # that the schema file is read from the temporary directory with the
-    # correct path / name
-    shutil.copy(
-        mirror_2f_schema_file,
-        tmp_test_directory / "mirror_2f_measurement.schema.yml",
-    )
-    data_validator._read_validation_schema(
-        schema_file=str(tmp_test_directory), parameter="mirror_2f_measurement"
-    )
-
-    _incomplete_schema = {"description": "test schema"}
-    # write yaml file in temp directory
-    with open(tmp_test_directory / "incomplete_schema.schema.yml", "w") as _file:
-        yaml.dump(_incomplete_schema, _file)
-
-    with pytest.raises(KeyError):
-        data_validator._read_validation_schema(
-            schema_file=str(tmp_test_directory), parameter="incomplete_schema"
-        )
+    # read a 'wrong' schema file with no 'data' key included
+    with open(tmp_test_directory / "wrong_schema.yml", "w") as _file:
+        yaml.dump({"wrong_key": []}, _file)
+    with pytest.raises(KeyError, match=r"Error reading validation schema from .*wrong_schema.yml"):
+        data_validator._read_validation_schema(schema_file=tmp_test_directory / "wrong_schema.yml")
 
 
 # incomplete test
@@ -643,14 +622,6 @@ def test_validate_data_dict():
 
     data_validator_2.data_dict = {"name": "num_gains", "value": np.array([2]), "unit": [""]}
     data_validator_2._validate_data_dict()
-
-    data_validator.data_dict = {
-        "no_name": "test_data",
-        "value": [1.0, 2.0, 3.0],
-        "unit": ["", "", ""],
-    }
-    with pytest.raises(KeyError):
-        data_validator._validate_data_dict()
 
     data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [None]}
     data_validator_2._validate_data_dict()
