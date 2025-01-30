@@ -409,7 +409,6 @@ class DatabaseHandler:
         for post in posts:
             par_now = post["parameter"]
             parameters[par_now] = post
-            parameters[par_now].pop("parameter", None)
             parameters[par_now]["entry_date"] = ObjectId(post["_id"]).generation_time
         return {k: parameters[k] for k in sorted(parameters)}
 
