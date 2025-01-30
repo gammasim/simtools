@@ -169,7 +169,7 @@ class ReadParameters:
         config_file_path = Path(files("simtools") / "reporting/plot_configuration_files")
         config_template = config_file_path / f"plot_{parameter_name}_parameter.yml"
         config_file = self.output_path / f"plot_{telescope_model.name}_{parameter_name}.yml"
-        new_output_path = self.output_path / "images"
+        new_output_path = self.output_path / "_images"
         new_output_path.mkdir(parents=True, exist_ok=True)
         output_file = new_output_path / f"{telescope_model.name}_{parameter_name}"
         # customise config file
