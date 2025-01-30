@@ -146,12 +146,13 @@ def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     """
     _file1_suffix = Path(file1).suffix
     _file2_suffix = Path(file2).suffix
+    _logger.info("Comparing files: %s and %s", file1, file2)
     if _file1_suffix != _file2_suffix:
         raise ValueError(f"File suffixes do not match: {file1} and {file2}")
     if _file1_suffix == ".ecsv":
         return compare_ecsv_files(file1, file2, tolerance, test_columns)
     if _file1_suffix in (".json", ".yaml", ".yml"):
-        return compare_json_or_yaml_files(file1, file2)
+        return compare_json_or_yaml_files(file1, file2, tolerance)
 
     _logger.warning(f"Unknown file type for files: {file1} and {file2}")
     return False
@@ -186,15 +187,35 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     if data1 == data2:
         return True
 
-    value_list_1 = data1 if isinstance(data1, list) else None
-    value_list_2 = data2 if isinstance(data2, list) else None
-    if "value" in data1 and isinstance(data1["value"], str):
-        value_list_1 = gen.convert_string_to_list(data1.pop("value"))
-    if "value" in data2 and isinstance(data2["value"], str):
-        value_list_2 = gen.convert_string_to_list(data2.pop("value"))
-    if value_list_1 is not None and value_list_2 is not None:
-        return np.allclose(value_list_1, value_list_2, rtol=tolerance)
-    return data1 == data2
+    if data1.keys() != data2.keys():
+        _logger.error(f"Keys do not match: {data1.keys()} and {data2.keys()}")
+        return False
+    _comparison = all(
+        (
+            _compare_value_from_parameter_dict(data1[k], data2[k], tolerance)
+            if k == "value"
+            else data1[k] == data2[k]
+        )
+        for k in data1
+    )
+    if not _comparison:
+        _logger.error(f"Values do not match: {data1} and {data2} (tolerance: {tolerance})")
+    return _comparison
+
+
+def _compare_value_from_parameter_dict(data1, data2, tolerance):
+    """Compare value fields given in different formats."""
+
+    def _as_list(value):
+        if isinstance(value, str):
+            return gen.convert_string_to_list(value)
+        if isinstance(value, list | np.ndarray):
+            return value
+        return [value]
+
+    _logger.info(f"Comparing values: {data1} and {data2} (tolerance: {tolerance})")
+
+    return np.allclose(_as_list(data1), _as_list(data2), rtol=tolerance)
 
 
 def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
