@@ -604,11 +604,13 @@ def test_read_mongo_db(db, mocker, test_db):
     assert result == {
         "param1": {
             "_id": mock_find.return_value[0]["_id"],
+            "parameter": "param1",
             "value": "value1",
             "entry_date": mock_find.return_value[0]["_id"].generation_time,
         },
         "param2": {
             "_id": mock_find.return_value[1]["_id"],
+            "parameter": "param2",
             "value": "value2",
             "entry_date": mock_find.return_value[1]["_id"].generation_time,
         },
