@@ -155,7 +155,7 @@ def main():  # noqa: D103
                             "value"
                         ].endswith(".md)"):
                             file.write(
-                                f"![Parameter value comparison.](images/"
+                                f"![Parameter value comparison.](_images/"
                                 f"{args['telescope']}_{parameter}.png)"
                             )
 
