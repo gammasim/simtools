@@ -17,6 +17,7 @@ import yaml
 __all__ = [
     "InvalidConfigDataError",
     "change_dict_keys_case",
+    "clear_default_sim_telarray_cfg_directories",
     "collect_data_from_file",
     "collect_final_lines",
     "collect_kwargs",
@@ -164,6 +165,9 @@ def collect_data_from_file(file_name):
             return yaml.safe_load(file)
         except yaml.constructor.ConstructorError:
             return _load_yaml_using_astropy(file)
+        except yaml.composer.ComposerError:
+            file.seek(0)
+            return list(yaml.safe_load_all(file))
 
 
 def collect_kwargs(label, in_kwargs):
@@ -786,3 +790,63 @@ def read_file_encoded_in_utf_or_latin(file_name):
             raise UnicodeDecodeError("Unable to decode file using UTF-8 or Latin-1.") from exc
 
     return lines
+
+
+def get_structure_array_from_table(table, column_names):
+    """
+    Get a structured array from an astropy table for a selected list of columns.
+
+    Parameters
+    ----------
+    table: astropy.table.Table
+        Table to be converted.
+    column_names: list
+        List of column names to be included in the structured array.
+
+    Returns
+    -------
+    numpy.ndarray
+        Structured array containing the table data.
+    """
+    return np.array(
+        list(zip(*[np.array(table[col]) for col in column_names])),
+        dtype=[(col, np.array(table[col]).dtype) for col in column_names],
+    )
+
+
+def convert_keys_in_dict_to_lowercase(data):
+    """
+    Recursively convert all dictionary keys to lowercase.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary to be converted.
+
+    Returns
+    -------
+    dict
+        Dictionary with all keys converted to lowercase.
+    """
+    if isinstance(data, dict):
+        return {k.lower(): convert_keys_in_dict_to_lowercase(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [convert_keys_in_dict_to_lowercase(i) for i in data]
+    return data
+
+
+def clear_default_sim_telarray_cfg_directories(command):
+    """Prefix the command to clear default sim_telarray configuration directories.
+
+    Parameters
+    ----------
+    command: str
+        Command to be prefixed.
+
+    Returns
+    -------
+    str
+        Prefixed command.
+
+    """
+    return f"SIM_TELARRAY_CONFIG_PATH='' {command}"

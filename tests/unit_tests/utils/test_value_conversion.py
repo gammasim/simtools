@@ -155,3 +155,16 @@ def test_split_value_is_list():
         [100, 250, 300],
         [None, "cm", "m"],
     )
+
+
+def test_unit_as_string():
+
+    assert value_conversion._unit_as_string(None) is None
+    assert value_conversion._unit_as_string("m") == "m"
+    assert value_conversion._unit_as_string(["m"]) == "m"
+    assert value_conversion._unit_as_string(["m", "m"]) == "m"
+    assert value_conversion._unit_as_string(["m", "cm"]) == ["m", "cm"]
+
+    assert value_conversion._unit_as_string(u.Unit("m")) == "m"
+    assert value_conversion._unit_as_string([u.Unit("m")]) == "m"
+    assert value_conversion._unit_as_string([u.Unit("m"), u.Unit("cm")]) == ["m", "cm"]

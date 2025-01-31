@@ -144,7 +144,6 @@ def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
     )  # Value for Prod5 LST-1
 
 
-@pytest.mark.xfail(reason="Missing ray_tracing for prod6 in Derived-DB")
 def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
@@ -207,4 +206,4 @@ def test_save_plot(camera_efficiency_lst, mocker, caplog):
     fig_mock = mocker.MagicMock()
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst._save_plot(fig_mock, "test_plot")
-    assert "Plotted test_plot efficiency in" in caplog.text
+    assert "Saved plot test_plot efficiency to" in caplog.text

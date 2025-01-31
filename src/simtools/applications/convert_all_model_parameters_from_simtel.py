@@ -6,6 +6,8 @@ r"""
     ready to be submitted to the model database. Prints out parameters which are not found
     in simtel configuration file and parameters which are not found in simtools schema files.
 
+    Note that all parameters are assigned the same parameter version.
+
     Command line arguments
     ----------------------
     simtel_cfg_file (str)
@@ -30,7 +32,7 @@ r"""
           --simtel_cfg_file all_telescope_config_la_palma.cfg\\
           --simtel_telescope_name CT1\\
           --telescope LSTN-01\\
-          --model_version "2024-03-06"
+          --parameter_version "1.0.0"
 
     The export of the model parameters from sim_telarray for 6.0.0 can be done e.g., as follows:
 
@@ -103,7 +105,7 @@ def _parse(label=None, description=None):
         type=str,
         required=True,
     )
-    return config.initialize(simulation_model="telescope")
+    return config.initialize(simulation_model=["telescope", "parameter_version"])
 
 
 def get_list_of_parameters_and_schema_files(schema_directory):
@@ -219,7 +221,6 @@ def read_and_export_parameters(args_dict, logger):
     """
     Read and export parameters from simtel configuration file to json files.
 
-    Only applicable parameters are exported to json.
     Provide extensive logging information on the parameters found in the simtel
     configuration file.
 
@@ -266,7 +267,7 @@ def read_and_export_parameters(args_dict, logger):
             parameter_name=_parameter,
             value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
             instrument=args_dict["telescope"],
-            model_version=args_dict["model_version"],
+            parameter_version=args_dict["parameter_version"],
             output_file=io_handler.get_output_file(f"{_parameter}.json"),
         )
 

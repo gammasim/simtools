@@ -21,13 +21,35 @@ def test_get_default_metadata_dict():
     assert _top_meta["CTA"]["CONTACT"]["ORGANIZATION"] == "CTAO"
 
 
-def test_load_schema():
+def test_load_schema(caplog, tmp_test_directory):
     _metadata_schema, _ = metadata_model._load_schema()
     assert isinstance(_metadata_schema, dict)
     assert len(_metadata_schema) > 0
 
     with pytest.raises(FileNotFoundError):
         metadata_model._load_schema(schema_file="not_existing_file")
+
+    schema_file = files("simtools") / "schemas" / "model_parameter.metaschema.yml"
+    # schema versions
+    with pytest.raises(ValueError, match=r"^Schema version not given in"):
+        metadata_model._load_schema(schema_file)
+
+    _schema_1, _ = metadata_model._load_schema(schema_file, "0.1.0")
+    assert _schema_1["version"] == "0.1.0"
+    _schema_2, _ = metadata_model._load_schema(schema_file, "0.2.0")
+    assert _schema_2["version"] == "0.2.0"
+
+    with pytest.raises(ValueError, match=r"^Schema version 0.2 not found in"):
+        metadata_model._load_schema(schema_file, "0.2")
+
+    # test a single doc yaml file (write a temporary schema file; to make sure it is a single doc)
+    tmp_schema_file = Path(tmp_test_directory) / "schema.yml"
+    with open(tmp_schema_file, "w", encoding="utf-8") as f:
+        yaml.dump(_schema_2, f)
+
+    with caplog.at_level(logging.WARNING):
+        _schema_3, _ = metadata_model._load_schema(tmp_schema_file, "0.3.0")
+    assert "Schema version 0.3.0 does not match 0.2.0" in caplog.text
 
 
 def test_validate_schema(tmp_test_directory):

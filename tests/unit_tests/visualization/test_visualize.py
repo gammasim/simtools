@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
 
 import astropy.io.ascii
 import astropy.units as u
@@ -26,10 +27,10 @@ def test_plot_1d(db, io_handler):
     title = "Test 1D plot"
 
     test_file_name = "ref_LST1_2022_04_01.dat"
-    db.export_file_db(
+    db.export_model_files(
         db_name=None,
         dest=io_handler.get_output_directory(sub_dir="model"),
-        file_name=test_file_name,
+        file_names=test_file_name,
     )
     test_data_file = gen.find_file(
         test_file_name,
@@ -117,3 +118,21 @@ def test_plot_array(
     test_one_site(telescope_north_test_file)
     test_one_site(telescope_south_test_file)
     test_one_site(telescope_north_utm_test_file)
+
+
+def test_save_figure(tmp_test_directory, io_handler):
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    ax.set_title("Test Figure")
+
+    output_file = io_handler.get_output_file(file_name="test_save_figure", sub_dir="plots")
+    figure_formats = ["pdf", "png"]
+
+    visualize.save_figure(fig, output_file, figure_format=figure_formats, log_title="Test Figure")
+
+    for fmt in figure_formats:
+        file_path = Path(output_file).with_suffix(f".{fmt}")
+        assert file_path.exists()
+        logger.debug(f"Saved plot to {file_path}")
+
+    plt.close(fig)

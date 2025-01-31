@@ -293,7 +293,7 @@ def get_site_from_array_element_name(name):
     return array_elements()[get_array_element_type_from_name(name)]["site"]
 
 
-def get_collection_name_from_array_element_name(name):
+def get_collection_name_from_array_element_name(name, array_elements_only=True):
     """
     Get collection name (e.g., telescopes, calibration_devices, sites) of array element from name.
 
@@ -301,6 +301,8 @@ def get_collection_name_from_array_element_name(name):
     ----------
     name: str
         Array element name.
+    array_elements_only: bool
+        If True, only array elements are considered.
 
     Returns
     -------
@@ -311,18 +313,28 @@ def get_collection_name_from_array_element_name(name):
         return array_elements()[get_array_element_type_from_name(name)]["collection"]
     except ValueError:
         pass
+    if name.startswith("OBS"):
+        return "sites"
     try:
         validate_site_name(name)
         return "sites"
     except ValueError as exc:
-        raise ValueError(f"Invalid array element name {name}: {exc}") from exc
+        if array_elements_only:
+            raise ValueError(f"Invalid array element name {name}") from exc
+    if name in (
+        "configuration_sim_telarray",
+        "configuration_corsika",
+        "Files",
+        "Dummy-Telescope",
+    ):
+        return name
+
+    raise ValueError(f"Invalid array element name {name}")
 
 
 def get_simulation_software_name_from_parameter_name(
     par_name,
     simulation_software="sim_telarray",
-    search_telescope_parameters=True,
-    search_site_parameters=True,
 ):
     """
     Get the name used in the simulation software from the model parameter name.
@@ -336,21 +348,13 @@ def get_simulation_software_name_from_parameter_name(
         Model parameter name.
     simulation_software: str
         Simulation software name.
-    search_telescope_parameters: bool
-        If True, telescope model parameters are included.
-    search_site_parameters: bool
-        If True, site model parameters are included.
 
     Returns
     -------
     str
         Simtel parameter name.
     """
-    _parameter_names = {}
-    if search_telescope_parameters:
-        _parameter_names.update(telescope_parameters())
-    if search_site_parameters:
-        _parameter_names.update(site_parameters())
+    _parameter_names = {**telescope_parameters(), **site_parameters()}
 
     try:
         _parameter = _parameter_names[par_name]

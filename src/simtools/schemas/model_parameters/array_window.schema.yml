@@ -1,0 +1,37 @@
+%YAML 1.2
+---
+title: Schema for array_window model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: array_window
+description: |-
+  Length of a coincidence window of the default stereo trigger,
+  after correction of fixed (cable length, focal length, etc.)
+  and variable (view direction) delays.
+short_description: |-
+  Length of a coincidence window of the default stereo trigger.
+data:
+  - type: double
+    unit: ns
+    default: 1000.
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+    - ValidateTriggerPerformance
+source:
+  - Initial instrument setup
+simulation_software:
+  - name: sim_telarray

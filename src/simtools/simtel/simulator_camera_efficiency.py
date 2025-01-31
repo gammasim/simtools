@@ -155,6 +155,9 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" {self._telescope_model.get_parameter_value('atmospheric_profile')}"
         command += f" {self.zenith_angle}"
 
+        # Remove the default sim_telarray configuration directories
+        command = general.clear_default_sim_telarray_cfg_directories(command)
+
         return (
             f"cd {self._simtel_path.joinpath('sim_telarray')} && {command}",
             self._file_simtel,
