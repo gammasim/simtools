@@ -133,7 +133,7 @@ def _parse(label=None, description=None):
         output=True,
         require_command_line=True,
         db_config=True,
-        simulation_model=["model_version", "site"],
+        simulation_model=["model_version", "parameter_version", "site"],
     )
 
 
@@ -170,7 +170,9 @@ def main():
 
     if args_dict["export"] is not None:
         product_data = (
-            layout.export_one_telescope_as_json(crs_name=args_dict["export"])
+            layout.export_one_telescope_as_json(
+                crs_name=args_dict["export"], parameter_version=args_dict.get("parameter_version")
+            )
             if args_dict.get("input", "").endswith(".json")
             else layout.export_telescope_list_table(crs_name=args_dict["export"])
         )

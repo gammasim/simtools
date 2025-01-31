@@ -1,6 +1,6 @@
 CTA_SIMPIPE:
   APPLICATION: simtools-db-get-parameter-from-db
-  TEST_NAME: telescope_parameter
+  TEST_NAME: telescope_parameter_model_version
   CONFIGURATION:
     SITE: North
     TELESCOPE: LSTN-01
