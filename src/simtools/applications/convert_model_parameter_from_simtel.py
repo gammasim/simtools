@@ -78,7 +78,7 @@ def _parse(label=None, description=None):
         type=str,
         required=True,
     )
-    return config.initialize(simulation_model=["telescope", "model_version"], output=True)
+    return config.initialize(simulation_model=["telescope", "parameter_version"], output=True)
 
 
 def main():  # noqa: D103
@@ -107,7 +107,7 @@ def main():  # noqa: D103
         parameter_name=simtel_config_reader.parameter_name,
         value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
         instrument=args_dict["telescope"],
-        model_version=args_dict["model_version"],
+        parameter_version=args_dict["parameter_version"],
         output_file=args_dict["output_file"],
         output_path=args_dict.get("output_path"),
         use_plain_output_path=args_dict.get("use_plain_output_path"),

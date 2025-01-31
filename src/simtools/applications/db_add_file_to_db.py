@@ -18,8 +18,7 @@
         A directory with files to upload to the DB. \
         All files in the directory with a predefined list of extensions will be uploaded.
     db (str)
-        The DB to insert the files to. \
-        The choices are either the default CTA simulation DB or a sandbox for testing.
+        The DB to insert the files to.
 
     Example
     -------

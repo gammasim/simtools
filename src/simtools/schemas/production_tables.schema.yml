@@ -1,0 +1,41 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/ProductionModelTable'
+title: SimPipe DB Production Model Metaschema
+description: |
+  YAML representation of DB production model metaschema
+  (based on simulation model DB).
+version: 0.1.0
+name: production_table.metaschema
+type: object
+additionalProperties: false
+
+definitions:
+  ProductionModelTable:
+    properties:
+      model_version:
+        type: string
+        description: Model version.
+        pattern: '^\d+\.\d+\.\d+$'
+      parameters:
+        type: object
+        description: Model parameters.
+        additionalProperties:
+          type: object
+          description: Model parameter.
+          additionalProperties:
+            type: string
+            description: Parameter version (semantical versioning).
+            pattern: '^\d+\.\d+\.\d+$'
+        propertyNames:
+          description: Allowed parameter name patterns.
+          pattern: '^([A-Za-z](ST|LL)[N,S,x]-\d{2,3}|[A-Za-z](ST|LL)[N,S,x]-design|OBS-(North|South)|Dummy-Telescope)$'
+      design_model:
+        type: object
+        description: Design models.
+        additionalProperties:
+          type: string
+          description: Design model of a telescope
+    required:
+      - model_version
+      - parameters

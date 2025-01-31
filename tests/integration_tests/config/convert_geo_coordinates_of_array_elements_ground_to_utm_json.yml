@@ -3,9 +3,10 @@ CTA_SIMPIPE:
   TEST_NAME: ground_to_utm_json
   CONFIGURATION:
     INPUT: tests/resources/model_parameters/array_element_position_ground.json
-    SITE: South
+    SITE: North
     EXPORT: utm
     MODEL_VERSION: "6.0.0"
+    PARAMETER_VERSION: "2.0.0"
     OUTPUT_PATH: simtools-output
     OUTPUT_FILE: test.json
     LOG_LEVEL: DEBUG
