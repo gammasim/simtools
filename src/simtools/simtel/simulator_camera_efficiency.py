@@ -135,6 +135,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" {pixel_shape_cmd} {pixel_diameter}"
         if mirror_class == 0:
             command += f" -fmir {self._telescope_model.get_parameter_value('mirror_list')}"
+        if mirror_class == 2:
+            command += f" -fmir {self._telescope_model.get_parameter_value('fake_mirror_list')}"
         command += f" -fref {mirror_reflectivity}"
         if mirror_class == 2:
             command += " -m2"
