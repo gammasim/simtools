@@ -150,7 +150,7 @@ def _parse():
         help=("Keep the first entry of mirror_reflection_random_angle fixed."),
         action="store_true",
     )
-    return config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(db_config=True, simulation_model=["telescope", "model_version"])
 
 
 def add_parameters(

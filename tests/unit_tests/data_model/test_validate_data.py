@@ -110,7 +110,7 @@ def test_validate_and_transform(caplog, mocker):
         assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = "tests/resources/model_parameters/num_gains.json"
+    data_validator.data_file_name = "tests/resources/model_parameters/num_gains-0.2.0.json"
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
     mock_prepare_model_parameter = mocker.patch(
         "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
@@ -141,14 +141,14 @@ def test_validate_data_file(caplog):
 def test_validate_parameter_and_file_name():
 
     data_validator = validate_data.DataValidator()
-    data_validator.data_file_name = "tests/resources/model_parameters/num_gains.json"
+    data_validator.data_file_name = "tests/resources/model_parameters/num_gains-0.2.0.json"
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
     data_validator.validate_and_transform()
 
     data_validator.data_dict["parameter"] = "incorrect_name"
     with pytest.raises(
         ValueError,
-        match="Parameter name in data dict incorrect_name and file name num_gains do not match.",
+        match="Parameter name in data dict incorrect_name and file name num_gains-0.2.0 do not match.",
     ):
         data_validator.validate_parameter_and_file_name()
 
@@ -661,6 +661,34 @@ def test_validate_data_dict():
     data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": ["null"]}
     data_validator_2._validate_data_dict()
 
+    data_validator_3 = validate_data.DataValidator(
+        schema_file=str(schema_dir) + "/random_focal_length.schema.yml"
+    )
+    data_validator_3.data_dict = {
+        "name": "random_focal_length",
+        "value": [1.0, 2.0],
+        "unit": ["m", "m"],
+    }
+    result_3 = data_validator_3._validate_data_dict()
+    assert isinstance(result_3["value"], list)
+    result_3_str = data_validator_3._validate_data_dict(lists_as_strings=True)
+    assert isinstance(result_3_str["value"], str)
+
+
+def test_convert_results_to_model_format():
+    schema_dir = files("simtools").joinpath("schemas/model_parameters/")
+    data_validator_3 = validate_data.DataValidator(
+        schema_file=str(schema_dir) + "/random_focal_length.schema.yml"
+    )
+    data_validator_3.data_dict = {
+        "name": "random_focal_length",
+        "value": [1.0, 2.0],
+        "unit": ["m", "m"],
+    }
+    data_validator_3._convert_results_to_model_format()
+    assert data_validator_3.data_dict["value"] == "1.0 2.0"
+    assert data_validator_3.data_dict["unit"] == "m m"
+
 
 def test_prepare_model_parameter():
     data_validator = validate_data.DataValidator()
@@ -867,3 +895,16 @@ def test_validate_value_and_unit_for_dict(reference_columns):
     )
     assert value == {"key": "value"}
     assert unit == "null"
+
+
+def test_validate_model_parameter(mocker):
+    mocker.patch(
+        "simtools.data_model.validate_data.DataValidator._read_validation_schema",
+        return_value=[{"name": "parameter", "type": "float", "unit": "km"}],
+    )
+
+    par_dict = {"parameter": "reference_point_altitude", "value": 1000.0, "unit": "km"}
+
+    validated_data = validate_data.DataValidator.validate_model_parameter(par_dict)
+    assert validated_data["value"] == 1000.0
+    assert validated_data["unit"] == "km"

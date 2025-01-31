@@ -235,7 +235,7 @@ def _parse(label):
     )
     return config.initialize(
         db_config=True,
-        simulation_model="telescope",
+        simulation_model=["telescope", "model_version"],
         require_command_line=True,
     )
 

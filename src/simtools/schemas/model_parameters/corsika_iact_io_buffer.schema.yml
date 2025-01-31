@@ -10,8 +10,8 @@ description: |-
   Maximum size of data blocks written by the CORSIKA IACT module.
 data:
   - type: int
-    unit: byte
-    default: 100000000
+    unit: MB
+    default: 1000
 activity:
   setting:
     - SetParameterFromExternal

@@ -198,13 +198,6 @@ class CommandLineParser(argparse.ArgumentParser):
             required=False,
             default=None,
         )
-        _job_group.add_argument(
-            "--db_simulation_model_url",
-            help="simulation model repository URL",
-            type=str,
-            required=False,
-            default=None,
-        )
 
     def initialize_job_submission_arguments(self):
         """Initialize job submission arguments for simulator."""
@@ -243,12 +236,20 @@ class CommandLineParser(argparse.ArgumentParser):
             return
 
         _job_group = self.add_argument_group("simulation model")
-        _job_group.add_argument(
-            "--model_version",
-            help="model version",
-            type=str,
-            default=None,
-        )
+        if "model_version" in model_options:
+            _job_group.add_argument(
+                "--model_version",
+                help="production model version",
+                type=str,
+                default=None,
+            )
+        if "parameter_version" in model_options:
+            _job_group.add_argument(
+                "--parameter_version",
+                help="model parameter version",
+                type=str,
+                default=None,
+            )
         if any(
             option in model_options for option in ["site", "telescope", "layout", "layout_file"]
         ):

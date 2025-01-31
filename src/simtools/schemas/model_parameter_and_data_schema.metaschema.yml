@@ -322,6 +322,7 @@ definitions:
       - ValidateArrayElementCoordinates
       - ValidateAtmosphericModel
       - ValidateCameraChargeResponse
+      - ValidateCameraEfficiency
       - ValidateCameraGainsAndEfficiency
       - ValidateCameraGeometry
       - ValidateCameraLinearity

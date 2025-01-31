@@ -29,9 +29,12 @@ def corsika_configuration_parameters(gcm2):
     return {
         "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
         "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
-        "corsika_cherenkov_photon_wavelength_range": {"value": "240. 700.", "unit": "nm"},
+        "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
         "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
-        "corsika_particle_kinetic_energy_cutoff": {"value": "0.3 0.1 0.020 0.020", "unit": "GeV"},
+        "corsika_particle_kinetic_energy_cutoff": {
+            "value": [0.3, 0.1, 0.020, 0.020],
+            "unit": "GeV",
+        },
         "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
         "corsika_iact_split_auto": {"value": 15000000, "unit": None},
         "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
@@ -125,10 +128,10 @@ def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model,
 
 def test_input_config_corsika_particle_kinetic_energy_cutoff(corsika_config_mock_array_model):
     assert corsika_config_mock_array_model._input_config_corsika_particle_kinetic_energy_cutoff(
-        {"value": "0.3 0.1 0.020 0.020", "unit": "GeV"}
+        {"value": [0.3, 0.1, 0.020, 0.020], "unit": "GeV"}
     ) == ["0.3 0.1 0.02 0.02"]
     assert corsika_config_mock_array_model._input_config_corsika_particle_kinetic_energy_cutoff(
-        {"value": "0.3 0.1 0.020 0.020", "unit": "TeV"}
+        {"value": [0.3, 0.1, 0.020, 0.020], "unit": "TeV"}
     ) == ["300.0 100.0 20.0 20.0"]
 
 
@@ -154,8 +157,8 @@ def test_corsika_configuration_cherenkov_parameters(
 
 def test_input_config_corsika_cherenkov_wavelength(corsika_config_mock_array_model):
     assert corsika_config_mock_array_model._input_config_corsika_cherenkov_wavelength(
-        {"value": "240. 700.", "unit": "nm"}
-    ) == ["240.0", "700.0"]
+        {"value": [240.0, 1000.0], "unit": "nm"}
+    ) == ["240.0", "1000.0"]
 
 
 def test_corsika_configuration_iact_parameters(
@@ -173,6 +176,14 @@ def test_input_config_io_buff(corsika_config_mock_array_model):
     assert (
         corsika_config_mock_array_model._input_config_io_buff({"value": 800, "unit": "MB"})
         == "800MB"
+    )
+    assert (
+        corsika_config_mock_array_model._input_config_io_buff({"value": 8.5, "unit": "MB"})
+        == "8500000"
+    )
+    assert (
+        corsika_config_mock_array_model._input_config_io_buff({"value": 800, "unit": "kB"})
+        == "800000"
     )
 
 
