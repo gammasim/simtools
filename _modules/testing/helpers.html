@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.helpers &#8212; simtools v0.1.dev1+g096a270 Manual</title>
+    <title>testing.helpers &#8212; simtools v0.1.dev1+g542109e Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=c162fa5e"></script>
+    <script src="../../_static/documentation_options.js?v=4af07277"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g096a270" />
+  <meta name="docsearch:version" content="0.1.dev1+g542109e" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g096a270 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g542109e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -375,19 +375,12 @@
 <a class="viewcode-back" href="../../api-reference/testing.html#testing.helpers.skip_camera_efficiency">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">skip_camera_efficiency</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Skip camera efficiency tests if the old version of testeff is used.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;camera-efficiency&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;APPLICATION&quot;</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">_new_testeff_version</span><span class="p">():</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="s2">&quot;Any applications calling the old version of testeff are skipped &quot;</span>
-                <span class="s2">&quot;due to a limitation of the old testeff not allowing to specify &quot;</span>
-                <span class="s2">&quot;the include directory. Please update your sim_telarray tarball.&quot;</span>
-            <span class="p">)</span>
-        <span class="n">full_test_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;APPLICATION&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;TEST_NAME&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="s2">&quot;simtools-validate-camera-efficiency_SSTS&quot;</span> <span class="o">==</span> <span class="n">full_test_name</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="s2">&quot;The test simtools-validate-camera-efficiency_SSTS is skipped &quot;</span>
-                <span class="s2">&quot;since the fake SST mirrors are not yet implemented (#1155)&quot;</span>
-            <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;camera-efficiency&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;APPLICATION&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_new_testeff_version</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">&quot;Any applications calling the old version of testeff are skipped &quot;</span>
+            <span class="s2">&quot;due to a limitation of the old testeff not allowing to specify &quot;</span>
+            <span class="s2">&quot;the include directory. Please update your sim_telarray tarball.&quot;</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="kc">None</span></div>
 
 
