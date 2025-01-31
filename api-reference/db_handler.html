@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+g02412a5 Manual</title>
+    <title>Database support &#8212; simtools v0.1.dev1+g096a270 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=ba9f7a05"></script>
+    <script src="../_static/documentation_options.js?v=c162fa5e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Data Model" href="data_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g02412a5" />
+  <meta name="docsearch:version" content="0.1.dev1+g096a270" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g02412a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g096a270 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -183,7 +183,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-add-model-parameters-from-repository-to-db.html">simtools-db-add-model-parameters-from-repository-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
@@ -446,28 +446,23 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-handler">db_handler</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_array_element"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_array_element()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_file_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_file_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_production_table"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_production_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_versions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements_of_type()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collection()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collections"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collections()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_corsika_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_corsika_configuration_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_derived_values"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_derived_values()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_simulation_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_simulation_configuration_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_site_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_site_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.insert_file_to_db()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.model_version"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.model_version()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.read_mongo_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.read_mongo_db()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-array-elements">db_array_elements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_element_list_for_db_query"><code class="docutils literal notranslate"><span class="pre">get_array_element_list_for_db_query()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements"><code class="docutils literal notranslate"><span class="pre">get_array_elements()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">get_array_elements_of_type()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-model-upload">db_model_upload</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_model_parameters_to_db"><code class="docutils literal notranslate"><span class="pre">add_model_parameters_to_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_production_tables_to_db"><code class="docutils literal notranslate"><span class="pre">add_production_tables_to_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_values_from_json_to_db"><code class="docutils literal notranslate"><span class="pre">add_values_from_json_to_db()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -502,7 +497,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_new_parameter">
 <span class="sig-name descname"><span class="pre">add_new_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">par_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_new_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_new_parameter" title="Link to this definition">#</a></dt>
-<dd><p>Add a parameter dictionary for a specific array element to the DB.</p>
+<dd><p>Add a new parameter dictionary to the DB.</p>
 <p>A new document will be added to the DB, with all fields taken from the input parameters.
 Parameter dictionaries are validated before submission using the corresponding schema.</p>
 <dl class="field-list simple">
@@ -522,62 +517,15 @@ Parameter dictionaries are validated before submission using the corresponding s
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.copy_array_element">
-<span class="sig-name descname"><span class="pre">copy_array_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_to_copy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_to_copy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_to_copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.copy_array_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.copy_array_element" title="Link to this definition">#</a></dt>
-<dd><p>Copy a full array element configuration to a new array element name.</p>
-<p>Only a specific version is copied.
-This function should be rarely used and is intended to simplify unit tests.</p>
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.add_production_table">
+<span class="sig-name descname"><span class="pre">add_production_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">production_table</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.add_production_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.add_production_table" title="Link to this definition">#</a></dt>
+<dd><p>Add a production table to the DB.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB to copy from</p>
+<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB.</p>
 </dd>
-<dt><strong>element_to_copy: str</strong></dt><dd><p>The array element to copy</p>
-</dd>
-<dt><strong>version_to_copy: str</strong></dt><dd><p>The version of the configuration to copy</p>
-</dd>
-<dt><strong>new_array_element_name: str</strong></dt><dd><p>The name of the new array element</p>
-</dd>
-<dt><strong>collection_name: str</strong></dt><dd><p>The name of the collection to copy from.</p>
-</dd>
-<dt><strong>db_to_copy_to: str</strong></dt><dd><p>The name of the DB to copy to.</p>
-</dd>
-<dt><strong>collection_to_copy_to: str</strong></dt><dd><p>The name of the collection to copy to.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>BulkWriteError</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.export_file_db">
-<span class="sig-name descname"><span class="pre">export_file_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.export_file_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_file_db" title="Link to this definition">#</a></dt>
-<dd><p>Get file from the DB and write to disk.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>db_name: str</strong></dt><dd><p>Name of the DB to search in.</p>
-</dd>
-<dt><strong>dest: str or Path</strong></dt><dd><p>Location where to write the file to.</p>
-</dd>
-<dt><strong>file_name: str</strong></dt><dd><p>Name of the file to get.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>file_id: GridOut._id</dt><dd><p>the database ID the file was assigned when it was inserted to the DB.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>FileNotFoundError</dt><dd><p>If the desired file is not found.</p>
+<dt><strong>production_table: dict</strong></dt><dd><p>The production table to add to the DB.</p>
 </dd>
 </dl>
 </dd>
@@ -586,20 +534,24 @@ This function should be rarely used and is intended to simplify unit tests.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.export_model_files">
-<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_model_files" title="Link to this definition">#</a></dt>
-<dd><p>Export all the files in a model from the DB and write them to disk.</p>
+<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_model_files" title="Link to this definition">#</a></dt>
+<dd><p>Export files from the DB to the model directory.</p>
+<p>The files to be exported can be specified by file_name or retrieved from the database
+using the parameters dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>parameters: dict</strong></dt><dd><p>Dict of model parameters.</p>
+<dt><strong>parameters: dict</strong></dt><dd><p>Dict of model parameters</p>
+</dd>
+<dt><strong>file_names: list, str</strong></dt><dd><p>List (or string) of file names to export</p>
 </dd>
 <dt><strong>dest: str or Path</strong></dt><dd><p>Location where to write the files to.</p>
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>FileNotFoundError</dt><dd><p>if a file in parameters.values is not found</p>
+<dt>file_id: dict of GridOut._id</dt><dd><p>Dict of database IDs of files.</p>
 </dd>
 </dl>
 </dd>
@@ -607,33 +559,25 @@ This function should be rarely used and is intended to simplify unit tests.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_all_versions">
-<span class="sig-name descname"><span class="pre">get_all_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_all_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_all_versions" title="Link to this definition">#</a></dt>
-<dd><p>Get all version entries in the DB of collection and/or a specific parameter.</p>
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_array_elements_of_type">
+<span class="sig-name descname"><span class="pre">get_array_elements_of_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_array_elements_of_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type" title="Link to this definition">#</a></dt>
+<dd><p>Get array elements of a certain type (e.g. ‘LSTN’) for a DB collection.</p>
+<p>Does not return ‘design’ models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>parameter: str</strong></dt><dd><p>Which parameter to get the versions of</p>
+<dt><strong>array_element_type: str</strong></dt><dd><p>Type of the array element (e.g. LSTN, MSTS).</p>
 </dd>
-<dt><strong>array_element_name: str</strong></dt><dd><p>Which array element to get the versions of (in case “collection_name” is not “sites”)</p>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
 </dd>
-<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
-</dd>
-<dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
-</dd>
-<dt><strong>collection_name: str</strong></dt><dd><p>The name of the collection in which to update the parameter.</p>
+<dt><strong>collection: str</strong></dt><dd><p>Which collection to get the array elements from:
+i.e. telescopes, calibration_devices.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>all_versions: list</dt><dd><p>List of all versions found</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>If key to collection_name is not valid.</p>
+<dt>list</dt><dd><p>Sorted list of all array element names found in collection</p>
 </dd>
 </dl>
 </dd>
@@ -671,57 +615,41 @@ This function should be rarely used and is intended to simplify unit tests.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>db_name: str</strong></dt><dd><p>Database name.</p>
 </dd>
+<dt><strong>model_collections_only: bool</strong></dt><dd><p>If True, only return model collections (i.e. exclude fs.files, fs.chunks)</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>list</dt><dd><p>List of collection names</p>
 </dd>
-<dt>model_collections_only: bool</dt><dd><p>If True, only return model collections (i.e. exclude fs.files, fs.chunks, metadata)</p>
-</dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_corsika_configuration_parameters">
-<span class="sig-name descname"><span class="pre">get_corsika_configuration_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_corsika_configuration_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_corsika_configuration_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Get CORSIKA configuration parameters from the DB.</p>
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_parameter">
+<span class="sig-name descname"><span class="pre">get_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Get a model parameter using the parameter version.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>model_version</strong><span class="classifier">str</span></dt><dd><p>Version of the model.</p>
+<dt><strong>parameter: str</strong></dt><dd><p>Name of the parameter.</p>
 </dd>
-</dl>
+<dt><strong>parameter_version: str</strong></dt><dd><p>Version of the parameter.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Configuration parameters for CORSIKA</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_derived_values">
-<span class="sig-name descname"><span class="pre">get_derived_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_derived_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_derived_values" title="Link to this definition">#</a></dt>
-<dd><p>Get all derived values from the DB for a specific array element.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
 <dt><strong>site: str</strong></dt><dd><p>Site name.</p>
 </dd>
 <dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN, SSTS).</p>
 </dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+<dt><strong>collection: str</strong></dt><dd><p>Collection of array element (e.g. telescopes, calibration_devices).</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>dict containing the parameters</dt><dd></dd>
+<dt>dict containing the parameter</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -729,24 +657,19 @@ This function should be rarely used and is intended to simplify unit tests.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_parameters">
-<span class="sig-name descname"><span class="pre">get_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescope'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Get parameters from MongoDB or simulation model repository for an array element.</p>
-<p>An array element can be e.g., a telescope or a calibration device.
-Read parameters for design and for the specified array element (if necessary). This allows
-to overwrite design parameters with specific parameters without having to copy
-all model parameters when changing only a few.</p>
+<span class="sig-name descname"><span class="pre">get_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Get model parameters using the model version.</p>
+<p>Queries parameters for design and for the specified array element (if necessary).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>site: str</strong></dt><dd><p>Site name.</p>
 </dd>
-<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. LSTN-01, MSTS-design)</p>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. LSTN-01, MSTS-design, ILLN-01).</p>
 </dd>
 <dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
 </dd>
-<dt><strong>collection: str</strong></dt><dd><p>collection of array element (e.g. telescopes, calibration_devices)</p>
-</dd>
-<dt><strong>only_applicable: bool</strong></dt><dd><p>If True, only applicable parameters will be read.</p>
+<dt><strong>collection: str</strong></dt><dd><p>Collection of array element (e.g. telescopes, calibration_devices).</p>
 </dd>
 </dl>
 </dd>
@@ -790,29 +713,6 @@ all model parameters when changing only a few.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_site_parameters">
-<span class="sig-name descname"><span class="pre">get_site_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_site_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_site_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Get parameters from either MongoDB or simulation model repository for a specific site.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
-</dd>
-<dt><strong>only_applicable: bool</strong></dt><dd><p>If True, only applicable parameters will be read.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict containing the parameters</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.insert_file_to_db">
 <span class="sig-name descname"><span class="pre">insert_file_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.insert_file_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.insert_file_to_db" title="Link to this definition">#</a></dt>
 <dd><p>Insert a file to the DB.</p>
@@ -838,103 +738,22 @@ mostly these are unnecessary though.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.model_version">
-<span class="sig-name descname"><span class="pre">model_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.model_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.model_version" title="Link to this definition">#</a></dt>
-<dd><p>Return model version and check that it is valid.</p>
-<p>Queries the database for all available model versions and check if the
-requested version is valid.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>version</strong><span class="classifier">str</span></dt><dd><p>Model version.</p>
-</dd>
-<dt><strong>db_name</strong><span class="classifier">str</span></dt><dd><p>Database name.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Model version.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>if version not valid.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.read_mongo_db">
-<span class="sig-name descname"><span class="pre">read_mongo_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_applicable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.read_mongo_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.read_mongo_db" title="Link to this definition">#</a></dt>
-<dd><p>Build and execute query to Read the MongoDB for a specific array element.</p>
-<p>Also writes the files listed in the parameter values into the sim_telarray run location</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>db_name: str</strong></dt><dd><p>the name of the DB</p>
-</dd>
-<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN-design …)</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
-</dd>
-<dt><strong>run_location: Path or str</strong></dt><dd><p>The sim_telarray run location to write the tabulated data files into.</p>
-</dd>
-<dt><strong>collection_name: str</strong></dt><dd><p>The name of the collection to read from.</p>
-</dd>
-<dt><strong>write_files: bool</strong></dt><dd><p>If true, write the files to the run_location.</p>
-</dd>
-<dt><strong>only_applicable: bool</strong></dt><dd><p>If True, only applicable parameters will be read.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict containing the parameters</dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>if query returned zero results.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>
-<section id="db-array-elements">
-<h2>db_array_elements<a class="headerlink" href="#db-array-elements" title="Link to this heading">#</a></h2>
-<p id="module-db.db_array_elements"><span id="id1"></span>Retrieval of array elements from the database.</p>
+<section id="db-model-upload">
+<h2>db_model_upload<a class="headerlink" href="#db-model-upload" title="Link to this heading">#</a></h2>
+<p id="module-db.db_model_upload"><span id="db-module-upload"></span>Upload a simulation model (parameters and production tables) to the database.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="db.db_array_elements.get_array_element_list_for_db_query">
-<span class="sig-prename descclassname"><span class="pre">db.db_array_elements.</span></span><span class="sig-name descname"><span class="pre">get_array_element_list_for_db_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_array_elements.html#get_array_element_list_for_db_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_array_elements.get_array_element_list_for_db_query" title="Link to this definition">#</a></dt>
-<dd><p>Get array element name and design model for querying the database.</p>
-<p>Return a list of array element names to be used for querying the database for a given array
-element. This is in most cases the array element itself and its design model.
-In cases of no design model available, the design model of the array element is returned.</p>
+<dt class="sig sig-object py" id="db.db_model_upload.add_model_parameters_to_db">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_model_parameters_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_model_parameters_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_model_parameters_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Read model parameters from a directory and upload them to the database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN-01).</p>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Command line arguments.</p>
 </dd>
-<dt><strong>db: DBHandler</strong></dt><dd><p>Instance of the database handler</p>
-</dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
-</dd>
-<dt><strong>collection: str</strong></dt><dd><p>DB collection to get the array elements from (e.g., telescopes, calibration_devices)</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of array element model names as used in the DB.</p>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
 </dd>
 </dl>
 </dd>
@@ -942,31 +761,17 @@ In cases of no design model available, the design model of the array element is 
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="db.db_array_elements.get_array_elements">
-<span class="sig-prename descclassname"><span class="pre">db.db_array_elements.</span></span><span class="sig-name descname"><span class="pre">get_array_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_array_elements.html#get_array_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_array_elements.get_array_elements" title="Link to this definition">#</a></dt>
-<dd><p>Get all array element names and their design model for a given DB collection.</p>
-<p>Uses the ‘design_model’ parameter to determine the design model of the array element.
-Assumes that a design model is defined for every array element.</p>
+<dt class="sig sig-object py" id="db.db_model_upload.add_production_tables_to_db">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_production_tables_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_production_tables_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_production_tables_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Read production tables from a directory and upload them to the database.</p>
+<p>One dictionary per collection is prepared for each model version, containing
+tables of all array elements, sites, and configuration parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>db_collection:</strong></dt><dd><p>pymongo.collection.Collection</p>
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Command line arguments.</p>
 </dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Dict with array element names found and their design model</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>If query for collection name not implemented.</p>
-</dd>
-<dt>KeyError</dt><dd><p>If array element entry in the database is incomplete.</p>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
 </dd>
 </dl>
 </dd>
@@ -974,27 +779,21 @@ Assumes that a design model is defined for every array element.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="db.db_array_elements.get_array_elements_of_type">
-<span class="sig-prename descclassname"><span class="pre">db.db_array_elements.</span></span><span class="sig-name descname"><span class="pre">get_array_elements_of_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_element_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_array_elements.html#get_array_elements_of_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_array_elements.get_array_elements_of_type" title="Link to this definition">#</a></dt>
-<dd><p>Get all array elements of a certain type in the specified collection in the DB.</p>
-<p>Return e.g. for array_element_type=’MSTS’ all MSTS array elements found in the collection.</p>
+<dt class="sig sig-object py" id="db.db_model_upload.add_values_from_json_to_db">
+<span class="sig-prename descclassname"><span class="pre">db.db_model_upload.</span></span><span class="sig-name descname"><span class="pre">add_values_from_json_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_model_upload.html#add_values_from_json_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_model_upload.add_values_from_json_to_db" title="Link to this definition">#</a></dt>
+<dd><p>Upload new model parameter from json files to db.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>array_element_type</strong><span class="classifier">str</span></dt><dd><p>Type of the array element (e.g. LSTN, MSTS)</p>
+<dt><strong>file</strong><span class="classifier">list</span></dt><dd><p>Json file to be uploaded to the DB.</p>
 </dd>
-<dt><strong>model_version</strong><span class="classifier">str</span></dt><dd><p>Which version to get the array elements of</p>
+<dt><strong>collection</strong><span class="classifier">str</span></dt><dd><p>The DB collection to which to add the file.</p>
 </dd>
-<dt><strong>collection</strong><span class="classifier">str</span></dt><dd><p>Which collection to get the array elements from:
-i.e. telescopes, calibration_devices</p>
+<dt><strong>db</strong><span class="classifier">DatabaseHandler</span></dt><dd><p>Database handler object.</p>
 </dd>
-<dt><strong>db_name</strong><span class="classifier">str</span></dt><dd><p>Database name</p>
+<dt><strong>db_name</strong><span class="classifier">str</span></dt><dd><p>Name of the database to be created.</p>
 </dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>Sorted list of all array element names found in collection</p>
+<dt><strong>file_prefix</strong><span class="classifier">str</span></dt><dd><p>Path to location of all additional files to be uploaded.</p>
 </dd>
 </dl>
 </dd>
@@ -1053,28 +852,23 @@ i.e. telescopes, calibration_devices</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-handler">db_handler</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.copy_array_element"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.copy_array_element()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_file_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_file_db()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_production_table"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_production_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_all_versions"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_all_versions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements_of_type()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collection"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collection()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_collections"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_collections()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_corsika_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_corsika_configuration_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_derived_values"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_derived_values()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_model_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_model_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_simulation_configuration_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_simulation_configuration_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_site_parameters"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_site_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.insert_file_to_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.insert_file_to_db()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.model_version"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.model_version()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.read_mongo_db"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.read_mongo_db()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-array-elements">db_array_elements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_element_list_for_db_query"><code class="docutils literal notranslate"><span class="pre">get_array_element_list_for_db_query()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements"><code class="docutils literal notranslate"><span class="pre">get_array_elements()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_array_elements.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">get_array_elements_of_type()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db-model-upload">db_model_upload</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_model_parameters_to_db"><code class="docutils literal notranslate"><span class="pre">add_model_parameters_to_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_production_tables_to_db"><code class="docutils literal notranslate"><span class="pre">add_production_tables_to_db()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_model_upload.add_values_from_json_to_db"><code class="docutils literal notranslate"><span class="pre">add_values_from_json_to_db()</span></code></a></li>
 </ul>
 </li>
 </ul>

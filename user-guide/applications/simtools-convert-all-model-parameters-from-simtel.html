@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-convert-all-model-parameters-from-simtel &#8212; simtools v0.1.dev1+g02412a5 Manual</title>
+    <title>simtools-convert-all-model-parameters-from-simtel &#8212; simtools v0.1.dev1+g096a270 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=ba9f7a05"></script>
+    <script src="../../_static/documentation_options.js?v=c162fa5e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="simtools-calculate-trigger-rate" href="simtools-calculate-trigger-rate.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g02412a5" />
+  <meta name="docsearch:version" content="0.1.dev1+g096a270" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g02412a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g096a270 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -183,7 +183,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simtools-db-add-model-parameters-from-repository-to-db.html">simtools-db-add-model-parameters-from-repository-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
@@ -469,6 +469,7 @@
 <p>Check value, type, and range, convert units, and write json files
 ready to be submitted to the model database. Prints out parameters which are not found
 in simtel configuration file and parameters which are not found in simtools schema files.</p>
+<p>Note that all parameters are assigned the same parameter version.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -489,7 +490,7 @@ in simtel configuration file and parameters which are not found in simtools sche
 <span class="go">   --simtel_cfg_file all_telescope_config_la_palma.cfg\\</span>
 <span class="go">   --simtel_telescope_name CT1\\</span>
 <span class="go">   --telescope LSTN-01\\</span>
-<span class="go">   --model_version &quot;2024-03-06&quot;</span>
+<span class="go">   --parameter_version &quot;1.0.0&quot;</span>
 </pre></div>
 </div>
 <p>The export of the model parameters from sim_telarray for 6.0.0 can be done e.g., as follows:</p>
@@ -612,8 +613,7 @@ telescope is different from the default values.</p>
 <dt class="sig sig-object py" id="convert_all_model_parameters_from_simtel.read_and_export_parameters">
 <span class="sig-prename descclassname"><span class="pre">convert_all_model_parameters_from_simtel.</span></span><span class="sig-name descname"><span class="pre">read_and_export_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/convert_all_model_parameters_from_simtel.html#read_and_export_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#convert_all_model_parameters_from_simtel.read_and_export_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Read and export parameters from simtel configuration file to json files.</p>
-<p>Only applicable parameters are exported to json.
-Provide extensive logging information on the parameters found in the simtel
+<p>Provide extensive logging information on the parameters found in the simtel
 configuration file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

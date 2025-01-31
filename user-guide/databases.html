@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+g02412a5 Manual</title>
+    <title>Databases &#8212; simtools v0.1.dev1+g096a270 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=ba9f7a05"></script>
+    <script src="../_static/documentation_options.js?v=c162fa5e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Simulation Model" href="model_parameters.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g02412a5" />
+  <meta name="docsearch:version" content="0.1.dev1+g096a270" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g02412a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g096a270 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -183,7 +183,7 @@
 <li class="toctree-l3"><a class="reference internal" href="applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="applications/simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="applications/simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="applications/simtools-db-add-model-parameters-from-repository-to-db.html">simtools-db-add-model-parameters-from-repository-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="applications/simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="applications/simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="applications/simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
@@ -445,7 +445,6 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-structure">Database structure</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-parameters-db">Model parameters DB</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#derived-values-db">Derived values DB</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-databases">Other databases</a></li>
 </ul>
 </li>
@@ -476,7 +475,7 @@
                   
   <section id="databases">
 <h1>Databases<a class="headerlink" href="#databases" title="Link to this heading">#</a></h1>
-<p>The simtools package uses a prototype MongoDB database to store the simulation model parameters and derived data products.
+<p>The simtools package uses a prototype MongoDB database to store the simulation model parameters.
 Access to the DB is handled via a dedicated API module (<a class="reference internal" href="../api-reference/db_handler.html#dbhandler"><span class="std std-ref">db_handler</span></a>).</p>
 <p>Simulation model parameters are stored in databases (see the <a class="reference internal" href="model_parameters.html#simulation-model"><span class="std std-ref">Simulation Model</span></a> section) and synced with the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">CTAO model parameter repository</a>.</p>
 <section id="database-structure">
@@ -489,7 +488,7 @@ This documentation is therefore incomplete.</p>
 </div>
 <section id="model-parameters-db">
 <h3>Model parameters DB<a class="headerlink" href="#model-parameters-db" title="Link to this heading">#</a></h3>
-<p>The name of the model parameter database needs to be indicated by <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_DB_SIMULATION_MODEL</span></code> environmental variable and defined e.g., in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file. Use <code class="docutils literal notranslate"><span class="pre">CTAO-Simulation-Model-LATEST</span></code> to use the latest version of the CTAO simulation model database (simtools will replace <code class="docutils literal notranslate"><span class="pre">LATEST</span></code> with the latest version number).</p>
+<p>The name of the model parameter database needs to be indicated by <code class="docutils literal notranslate"><span class="pre">$SIMTOOLS_DB_SIMULATION_MODEL</span></code> environmental variable and defined e.g., in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file. Use <code class="docutils literal notranslate"><span class="pre">CTAO-Simulation-ModelParameters-LATEST</span></code> to use the latest version of the CTAO simulation model database (simtools will replace <code class="docutils literal notranslate"><span class="pre">LATEST</span></code> with the latest version number).</p>
 <p>Collections:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">telescopes</span></code> with the model parameters for each telescope plus the reference design model</p></li>
@@ -498,15 +497,6 @@ This documentation is therefore incomplete.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">configuration_sim_telarray</span></code> with default configuration parameters for the sim_telarray simulation</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code> containing tables describing the model versions</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fs.files</span></code> with all file type entries for the model parameters (e.g., the quantum-efficiency tables)</p></li>
-</ul>
-</section>
-<section id="derived-values-db">
-<h3>Derived values DB<a class="headerlink" href="#derived-values-db" title="Link to this heading">#</a></h3>
-<p>Database with derived values DB (e.g., <code class="docutils literal notranslate"><span class="pre">Staging-CTA-Simulation-Model-Derived-Values</span></code> defined in <code class="docutils literal notranslate"><span class="pre">db_handler.DB_DERIVED_VALUES</span></code>).</p>
-<p>Collections are:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">derived_values</span></code> with the derived values for each telescope or site</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fs.files</span></code> with file type derived results</p></li>
 </ul>
 </section>
 <section id="other-databases">
@@ -523,8 +513,7 @@ This documentation is therefore incomplete.</p>
 <span class="go">SIMTOOLS_DB_API_USER=YOUR_USERNAME # username for MongoDB: ask the responsible person</span>
 <span class="go">SIMTOOLS_DB_API_PW=YOUR_PASSWORD # Password for MongoDB: ask the responsible person</span>
 <span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
-<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-Model-LATEST&#39;</span>
-<span class="gp"># </span><span class="nv">SIMTOOLS_DB_SIMULATION_MODEL_URL</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-ModelParameters-LATEST&#39;</span>
 <span class="go">SIMTOOLS_SIMTEL_PATH=&#39;/workdir/sim_telarray&#39;</span>
 </pre></div>
 </div>
@@ -546,7 +535,7 @@ Best to define a new database when adding new values or files.</p>
 <ul class="simple">
 <li><p>update or define a single model parameter from a json file (as defined in the model parameter repository): <a class="reference internal" href="applications/simtools-db-add-value-from-json-to-db.html#db-add-value-from-json-to-db"><span class="std std-ref">db_add_value_from_json_to_db.py</span></a></p></li>
 <li><p>upload a model parameter file: <a class="reference internal" href="applications/simtools-db-add-file-to-db.html#db-add-file-to-db"><span class="std std-ref">db_add_file_to_db.py</span></a></p></li>
-<li><p>upload all model parameters and files from the model parameter repository: <a class="reference internal" href="applications/simtools-db-add-model-parameters-from-repository-to-db.html#module-db_add_model_parameters_from_repository_to_db" title="db_add_model_parameters_from_repository_to_db"><span class="xref myst py py-mod">db_add_model_parameters_from_repository_to_db.py</span></a></p></li>
+<li><p>upload all model parameters and files from the model parameter repository: <a class="reference internal" href="applications/simtools-db-add-simulation-model-from-repository-to-db.html#module-db_add_simulation_model_from_repository_to_db" title="db_add_simulation_model_from_repository_to_db"><span class="xref myst py py-mod">db_add_simulation_model_from_repository_to_db.py</span></a></p></li>
 </ul>
 </section>
 <section id="configure-and-use-a-local-copy-of-the-model-parameter-database">
@@ -603,7 +592,7 @@ uploads its contents to the local database instance.</p>
 <span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;STAGING-CTA-Simulation-Model-LATEST&#39;</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> is set as an example here to <code class="docutils literal notranslate"><span class="pre">STAGING-CTAO-Simulation-Model-LATEST</span></code> and should be changed accordingly.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SIMULATION_MODEL</span></code> is set as an example here to <code class="docutils literal notranslate"><span class="pre">STAGING-CTAO-Simulation-ModelParameters-LATEST</span></code> and should be changed accordingly.</p>
 <p>For using simtools inside a container:</p>
 <ul class="simple">
 <li><p>set the <code class="docutils literal notranslate"><span class="pre">SIMTOOLS_DB_SERVER</span></code> in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file to SIMTOOLS_DB_SERVER=’simtools-mongodb’.</p></li>
@@ -619,7 +608,7 @@ uploads its contents to the local database instance.</p>
 <span class="go">SIMTOOLS_DB_API_USER=&#39;api&#39; # username for MongoDB</span>
 <span class="go">SIMTOOLS_DB_API_PW=&#39;password&#39; # Password for MongoDB</span>
 <span class="go">SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=&#39;admin&#39;</span>
-<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-Model-LATEST&#39;</span>
+<span class="go">SIMTOOLS_DB_SIMULATION_MODEL=&#39;CTAO-Simulation-ModelParameters-LATEST&#39;</span>
 <span class="go">SIMTOOLS_SIMTEL_PATH=&#39;/workdir/sim_telarray&#39;</span>
 </pre></div>
 </div>
@@ -675,7 +664,6 @@ uploads its contents to the local database instance.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-structure">Database structure</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-parameters-db">Model parameters DB</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#derived-values-db">Derived values DB</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-databases">Other databases</a></li>
 </ul>
 </li>

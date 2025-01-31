@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_array_elements &#8212; simtools v0.1.dev1+g02412a5 Manual</title>
+    <title>db.db_model_upload &#8212; simtools v0.1.dev1+g096a270 Manual</title>
   
   
   
@@ -38,16 +38,16 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=ba9f7a05"></script>
+    <script src="../../_static/documentation_options.js?v=c162fa5e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/db/db_array_elements';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/db/db_model_upload';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g02412a5" />
+  <meta name="docsearch:version" content="0.1.dev1+g096a270" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g02412a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g096a270 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -182,7 +182,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-model-parameters-from-repository-to-db.html">simtools-db-add-model-parameters-from-repository-to-db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
@@ -298,7 +298,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/db/db_array_elements.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/db/db_model_upload.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -364,146 +364,155 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for db.db_array_elements</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Retrieval of array elements from the database.&quot;&quot;&quot;</span>
+  <h1>Source code for db.db_model_upload</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Upload a simulation model (parameters and production tables) to the database.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pymongo</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASCENDING</span>
-
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="get_array_elements">
-<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_array_elements.get_array_elements">[docs]</a>
-<span class="nd">@lru_cache</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_array_elements</span><span class="p">(</span><span class="n">db_collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+
+<div class="viewcode-block" id="add_values_from_json_to_db">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_model_upload.add_values_from_json_to_db">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_values_from_json_to_db</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">file_prefix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get all array element names and their design model for a given DB collection.</span>
-
-<span class="sd">    Uses the &#39;design_model&#39; parameter to determine the design model of the array element.</span>
-<span class="sd">    Assumes that a design model is defined for every array element.</span>
+<span class="sd">    Upload new model parameter from json files to db.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    db_collection:</span>
-<span class="sd">        pymongo.collection.Collection</span>
-<span class="sd">    model_version: str</span>
-<span class="sd">       Model version.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Dict with array element names found and their design model</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If query for collection name not implemented.</span>
-<span class="sd">    KeyError</span>
-<span class="sd">        If array element entry in the database is incomplete.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">}</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">db_collection</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
-        <span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="n">ASCENDING</span>
-    <span class="p">)</span>
-
-    <span class="n">_all_available_array_elements</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">doc</span><span class="p">[</span><span class="s2">&quot;parameter&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;design_model&quot;</span><span class="p">:</span>
-                <span class="n">_all_available_array_elements</span><span class="p">[</span><span class="n">doc</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">doc</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Incomplete array element entry in the database: </span><span class="si">{</span><span class="n">doc</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_all_available_array_elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No array elements found in DB collection </span><span class="si">{</span><span class="n">db_collection</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_all_available_array_elements</span></div>
-
-
-
-<div class="viewcode-block" id="get_array_element_list_for_db_query">
-<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_array_elements.get_array_element_list_for_db_query">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_list_for_db_query</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get array element name and design model for querying the database.</span>
-
-<span class="sd">    Return a list of array element names to be used for querying the database for a given array</span>
-<span class="sd">    element. This is in most cases the array element itself and its design model.</span>
-<span class="sd">    In cases of no design model available, the design model of the array element is returned.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    array_element_name: str</span>
-<span class="sd">        Name of the array element model (e.g. MSTN-01).</span>
-<span class="sd">    db: DBHandler</span>
-<span class="sd">        Instance of the database handler</span>
-<span class="sd">    model_version: str</span>
-<span class="sd">        Model version.</span>
-<span class="sd">    collection: str</span>
-<span class="sd">        DB collection to get the array elements from (e.g., telescopes, calibration_devices)</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    list</span>
-<span class="sd">        List of array element model names as used in the DB.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">_available_array_elements</span> <span class="o">=</span> <span class="n">get_array_elements</span><span class="p">(</span>
-            <span class="n">db</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">),</span>
-            <span class="n">db</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">),</span>
-        <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">names</span><span class="o">.</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-design&quot;</span><span class="p">]</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">_available_array_elements</span><span class="p">[</span><span class="n">array_element_name</span><span class="p">],</span> <span class="n">array_element_name</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">pass</span>
-
-    <span class="k">if</span> <span class="n">array_element_name</span> <span class="ow">in</span> <span class="n">_available_array_elements</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">array_element_name</span><span class="p">]</span>
-
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Array element </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2"> not found in DB.&quot;</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="get_array_elements_of_type">
-<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_array_elements.get_array_elements_of_type">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_array_elements_of_type</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get all array elements of a certain type in the specified collection in the DB.</span>
-
-<span class="sd">    Return e.g. for array_element_type=&#39;MSTS&#39; all MSTS array elements found in the collection.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    array_element_type : str</span>
-<span class="sd">        Type of the array element (e.g. LSTN, MSTS)</span>
-<span class="sd">    model_version : str</span>
-<span class="sd">        Which version to get the array elements of</span>
+<span class="sd">    file : list</span>
+<span class="sd">        Json file to be uploaded to the DB.</span>
 <span class="sd">    collection : str</span>
-<span class="sd">        Which collection to get the array elements from:</span>
-<span class="sd">        i.e. telescopes, calibration_devices</span>
+<span class="sd">        The DB collection to which to add the file.</span>
+<span class="sd">    db : DatabaseHandler</span>
+<span class="sd">        Database handler object.</span>
 <span class="sd">    db_name : str</span>
-<span class="sd">        Database name</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    list</span>
-<span class="sd">        Sorted list of all array element names found in collection</span>
-
+<span class="sd">        Name of the database to be created.</span>
+<span class="sd">    file_prefix : str</span>
+<span class="sd">        Path to location of all additional files to be uploaded.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_available_array_elements</span> <span class="o">=</span> <span class="n">get_array_elements</span><span class="p">(</span>
-        <span class="n">db</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">),</span>
-        <span class="n">db</span><span class="o">.</span><span class="n">model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">),</span>
+    <span class="n">par_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Adding the following parameter to the DB: </span><span class="si">{</span><span class="n">par_dict</span><span class="p">[</span><span class="s1">&#39;parameter&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;version </span><span class="si">{</span><span class="n">par_dict</span><span class="p">[</span><span class="s1">&#39;parameter_version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;(collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> in database </span><span class="si">{</span><span class="n">db_name</span><span class="si">}</span><span class="s2">)&quot;</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">_available_array_elements</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">)]</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add_new_parameter</span><span class="p">(</span>
+        <span class="n">db_name</span><span class="o">=</span><span class="n">db_name</span><span class="p">,</span>
+        <span class="n">par_dict</span><span class="o">=</span><span class="n">par_dict</span><span class="p">,</span>
+        <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
+        <span class="n">file_prefix</span><span class="o">=</span><span class="n">file_prefix</span><span class="p">,</span>
     <span class="p">)</span></div>
 
+
+
+<div class="viewcode-block" id="add_model_parameters_to_db">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_model_upload.add_model_parameters_to_db">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_model_parameters_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read model parameters from a directory and upload them to the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Command line arguments.</span>
+<span class="sd">    db : DatabaseHandler</span>
+<span class="sd">        Database handler object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading model parameters from repository path </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">array_elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">input_path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">:</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;Files&quot;</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Files (tables) are uploaded with the corresponding model parameters&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading model parameters for </span><span class="si">{</span><span class="n">element</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> into collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">files_to_insert</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">element</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*json&quot;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files_to_insert</span><span class="p">:</span>
+            <span class="n">add_values_from_json_to_db</span><span class="p">(</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+                <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
+                <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+                <span class="n">db_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">],</span>
+                <span class="n">file_prefix</span><span class="o">=</span><span class="n">input_path</span> <span class="o">/</span> <span class="s2">&quot;Files&quot;</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="add_production_tables_to_db">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_model_upload.add_production_tables_to_db">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_production_tables_to_db</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read production tables from a directory and upload them to the database.</span>
+
+<span class="sd">    One dictionary per collection is prepared for each model version, containing</span>
+<span class="sd">    tables of all array elements, sites, and configuration parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Command line arguments.</span>
+<span class="sd">    db : DatabaseHandler</span>
+<span class="sd">        Database handler object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_path&quot;</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading production tables from repository path </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">,</span> <span class="n">input_path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading production tables for model version </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">model_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*json&quot;</span><span class="p">)):</span>
+            <span class="n">_read_production_table</span><span class="p">(</span><span class="n">model_dict</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">collection</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">model_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No production table for </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> in model version </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding production table for </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> to the database&quot;</span><span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">add_production_table</span><span class="p">(</span>
+                <span class="n">db_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;db_name&quot;</span><span class="p">],</span>
+                <span class="n">production_table</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_production_table</span><span class="p">(</span><span class="n">model_dict</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">model_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a single production table from file.&quot;&quot;&quot;</span>
+    <span class="n">array_element</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">stem</span>
+    <span class="n">collection</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">array_element</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">model_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+        <span class="n">collection</span><span class="p">,</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+            <span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">model_name</span><span class="p">,</span>
+            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;design_model&quot;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">parameter_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading production table for </span><span class="si">{</span><span class="n">array_element</span><span class="si">}</span><span class="s2"> (collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">array_element</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">):</span>
+            <span class="n">model_dict</span><span class="p">[</span><span class="n">collection</span><span class="p">][</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_dict</span><span class="p">[</span><span class="n">collection</span><span class="p">][</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="n">array_element</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span>
+                <span class="n">array_element</span>
+            <span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;KeyError: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">model_dict</span><span class="p">[</span><span class="n">collection</span><span class="p">][</span><span class="s2">&quot;design_model&quot;</span><span class="p">][</span><span class="n">array_element</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_dict</span><span class="p">[</span><span class="s2">&quot;design_model&quot;</span><span class="p">][</span>
+            <span class="n">array_element</span>
+        <span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">pass</span>
 </pre></div>
 
                 </article>
