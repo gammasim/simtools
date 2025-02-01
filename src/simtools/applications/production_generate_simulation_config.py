@@ -1,11 +1,24 @@
 #!/usr/bin/python3
 
 r"""
-Configure a simulation based on command-line arguments.
+Derive simulation configuration parameters for a simulation production.
 
-This application configures and
-generates simulation parameters for a specific grid point in a statistical uncertainty
-evaluation setup.
+Derived simulation configuration parameters include:
+
+* energy range
+* shower core scatter radius
+* view cone radius
+* total number of events to be simulated
+
+Configuration parameters depend on characteristics of the observations, especially elevation,
+azimuth, and night sky background.
+
+The configuration parameters are derived according to the required precision. The metrics are:
+
+* statistical uncertainty on the determination of the effective area as function of primary energy
+* fraction of lost events to the selected core scatter and view cone radius (to be implemented)
+* statistical uncertainty of the energy migration matrix as function of primary energy (to be
+implemented)
 
 Command line arguments
 ----------------------
@@ -40,7 +53,7 @@ To run the simulation configuration, execute the script as follows:
         --file_type "point-like"    \
         --metrics_file tests/resources/production_simulation_config_metrics.yaml --site North
 
-The output will show the configured simulation parameters.
+The output will show the derived simulation parameters.
 """
 
 import json
@@ -60,7 +73,8 @@ from simtools.production_configuration.generate_simulation_config import (
 def _parse(label):
     """Parse command-line arguments."""
     config = configurator.Configurator(
-        label=label, description="Configure and run a simulation based on input parameters."
+        label=label,
+        description="Derive simulation configuration parameters for a simulation production.",
     )
     config.parser.add_argument(
         "--azimuth", type=float, required=True, help="Azimuth angle in degrees."
@@ -71,10 +85,10 @@ def _parse(label):
     config.parser.add_argument(
         "--nsb", type=float, required=True, help="Night sky background in units of 1/(sr*ns*cm**2)."
     )
-    config.parser.add_argument(
+    config.parser.add_argument(  # TODO understand what it is used for
         "--ctao_data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
     )
-    config.parser.add_argument(
+    config.parser.add_argument(  # TODO understand what it is used for
         "--science_case", type=str, required=True, help="Science case for the simulation."
     )
     config.parser.add_argument(
@@ -125,17 +139,13 @@ def main():
         "night_sky_background": args_dict["nsb"],
     }
 
-    metrics = (
-        gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
-    )
-
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,
         ctao_data_level=args_dict["ctao_data_level"],
         science_case=args_dict["science_case"],
         file_path=args_dict["file_path"],
         file_type=args_dict["file_type"],
-        metrics=metrics,
+        metrics=gen.collect_data_from_file(args_dict["metrics_file"]),
     )
 
     simulation_params = simulation_config.configure_simulation()
