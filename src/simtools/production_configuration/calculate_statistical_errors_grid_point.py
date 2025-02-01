@@ -15,8 +15,6 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 
-_logger = logging.getLogger(__name__)
-
 
 class StatisticalErrorEvaluator:
     """
@@ -52,15 +50,15 @@ class StatisticalErrorEvaluator:
             The type of the file ('point-like' or 'cone').
         metrics : dict, optional
             Dictionary specifying which metrics to compute and their reference values.
-        grid_point : tuple, optional
+        grid_point : tuple, optional   # TODO - discuss tuple of dictionary.
             Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
         """
-        self.file_path = file_path
+        self._logger = logging.getLogger(__name__)
         self.file_type = file_type
         self.metrics = metrics
         self.grid_point = grid_point
 
-        self.data = self.load_data_from_file()
+        self.data = self.load_data_from_file(file_path)
 
         self.uncertainty_effective_area = None
         self.energy_estimate = None
@@ -70,7 +68,59 @@ class StatisticalErrorEvaluator:
         self.metric_results = None
         self.energy_threshold = None
 
-    def load_data_from_file(self):
+    def _load_event_data(self, hdul, data_type):
+        """
+        Load data and units for the event and simulated data data.
+
+        Parameters
+        ----------
+        hdul : HDUList
+            The HDUList object.
+        data_type: str
+            The type of data to load ('EVENTS' or 'SIMULATED EVENTS').
+
+        Returns
+        -------
+        dict
+            Dictionary containing units for the event data.
+        """
+        _data = hdul[data_type].data  # pylint: disable=E1101
+        _header = hdul[data_type].header  # pylint: disable=E1101
+        _units = {}
+        for idx, col_name in enumerate(_data.columns.names, start=1):
+            unit_key = f"TUNIT{idx}"
+            if unit_key in _header:
+                _units[col_name] = u.Unit(_header[unit_key])
+            else:
+                _units[col_name] = None
+        return _data, _units
+
+    def _set_grid_point(self, events_data):
+        """Set azimuth/zenith angle of grid point."""
+        unique_azimuths = np.unique(events_data["PNT_AZ"]) * u.deg
+        unique_zeniths = 90 * u.deg - np.unique(events_data["PNT_ALT"]) * u.deg
+        if len(unique_azimuths) > 1 or len(unique_zeniths) > 1:
+            msg = (
+                f"Multiple values found for azimuth ({unique_azimuths}) "
+                f"zenith ({unique_zeniths})."
+            )
+            self._logger.error(msg)
+            raise ValueError(msg)
+        if self.grid_point is not None:
+            self._logger.warning(
+                f"Grid point already set to: {self.grid_point}. "
+                "Overwriting with new values from file."
+            )
+        self.grid_point = (  # TODO check grid point. why 1 TeV?, what are the zeros?
+            1 * u.TeV,
+            unique_azimuths[0],
+            unique_zeniths[0],
+            0,
+            0 * u.deg,
+        )
+        self._logger.info(f"Grid point values: {self.grid_point}")
+
+    def load_data_from_file(self, file_path):
         """
         Load data from the DL2 MC event file and return dictionaries with units.
 
@@ -81,91 +131,24 @@ class StatisticalErrorEvaluator:
         """
         data = {}
         try:
-            with fits.open(self.file_path) as hdul:
-                events_data = hdul["EVENTS"].data  # pylint: disable=E1101
-                sim_events_data = hdul["SIMULATED EVENTS"].data  # pylint: disable=E1101
-                event_units = {}
-                for idx, col_name in enumerate(events_data.columns.names, start=1):
-                    unit_key = f"TUNIT{idx}"
-                    if unit_key in hdul["EVENTS"].header:  # pylint: disable=E1101
-                        event_units[col_name] = u.Unit(
-                            hdul["EVENTS"].header[unit_key]  # pylint: disable=E1101
-                        )
-                    else:
-                        event_units[col_name] = None
-
-                sim_units = {}
-                for idx, col_name in enumerate(sim_events_data.columns.names, start=1):
-                    unit_key = f"TUNIT{idx}"
-                    if unit_key in hdul["SIMULATED EVENTS"].header:  # pylint: disable=E1101
-                        sim_units[col_name] = u.Unit(
-                            hdul["SIMULATED EVENTS"].header[unit_key]  # pylint: disable=E1101
-                        )
-                    else:
-                        sim_units[col_name] = None
-                # dl2 files are required to have units for these entries
-                event_energies_reco = events_data["ENERGY"] * event_units["ENERGY"]
-
-                event_energies_mc = events_data["MC_ENERGY"] * event_units["MC_ENERGY"]
-
-                bin_edges_low = sim_events_data["MC_ENERG_LO"] * sim_units["MC_ENERG_LO"]
-
-                bin_edges_high = sim_events_data["MC_ENERG_HI"] * sim_units["MC_ENERG_HI"]
-
-                simulated_event_histogram = sim_events_data["EVENTS"] * u.count
-
-                viewcone = hdul[3].data["viewcone"][0][1]  # pylint: disable=E1101
-                core_range = hdul[3].data["core_range"][0][1]  # pylint: disable=E1101
+            with fits.open(file_path) as hdul:
+                events_data, event_units = self._load_event_data(hdul, "EVENTS")
+                sim_events_data, sim_units = self._load_event_data(hdul, "SIMULATED EVENTS")
 
                 data = {
-                    "event_energies_reco": event_energies_reco,
-                    "event_energies_mc": event_energies_mc,
-                    "bin_edges_low": bin_edges_low,
-                    "bin_edges_high": bin_edges_high,
-                    "simulated_event_histogram": simulated_event_histogram,
-                    "viewcone": viewcone,
-                    "core_range": core_range,
+                    "event_energies_reco": events_data["ENERGY"] * event_units["ENERGY"],
+                    "event_energies_mc": events_data["MC_ENERGY"] * event_units["MC_ENERGY"],
+                    "bin_edges_low": sim_events_data["MC_ENERG_LO"] * sim_units["MC_ENERG_LO"],
+                    "bin_edges_high": sim_events_data["MC_ENERG_HI"] * sim_units["MC_ENERG_HI"],
+                    "simulated_event_histogram": sim_events_data["EVENTS"] * u.count,
+                    "viewcone": hdul[3].data["viewcone"][0][1],  # pylint: disable=E1101
+                    "core_range": hdul[3].data["core_range"][0][1],  # pylint: disable=E1101
                 }
-                unique_azimuths = np.unique(events_data["PNT_AZ"]) * u.deg
-                unique_zeniths = 90 * u.deg - np.unique(events_data["PNT_ALT"]) * u.deg
-                if self.grid_point is None:
-                    _logger.info(f"Unique azimuths: {unique_azimuths}")
-                    _logger.info(f"Unique zeniths: {unique_zeniths}")
-
-                    if len(unique_azimuths) == 1 and len(unique_zeniths) == 1:
-                        _logger.info(
-                            f"Setting initial grid point with azimuth: {unique_azimuths[0]}"
-                            f" zenith: {unique_zeniths[0]}"
-                        )
-                        self.grid_point = (
-                            1 * u.TeV,
-                            unique_azimuths[0],
-                            unique_zeniths[0],
-                            0,
-                            0 * u.deg,
-                        )  # Initialize grid point with azimuth and zenith
-                    else:
-                        msg = "Multiple unique values found for azimuth or zenith."
-                        _logger.error(msg)
-                        raise ValueError(msg)
-                else:
-                    _logger.warning(
-                        f"Grid point already set to: {self.grid_point}. "
-                        "Overwriting with new values from file."
-                    )
-
-                    self.grid_point = (
-                        1 * u.TeV,
-                        unique_azimuths[0],
-                        unique_zeniths[0],
-                        0,
-                        0 * u.deg,
-                    )
-                    _logger.info(f"New grid point values: {self.grid_point}")
+                self._set_grid_point(events_data)
 
         except FileNotFoundError as e:
-            error_message = f"Error loading file {self.file_path}: {e}"
-            _logger.error(error_message)
+            error_message = f"Error loading file {file_path}: {e}"
+            self._logger.error(error_message)
             raise FileNotFoundError(error_message) from e
         return data
 
@@ -187,6 +170,8 @@ class StatisticalErrorEvaluator:
         """
         Compute histogram for triggered events.
 
+        TODO: there are no triggered events in DL2 files
+
         Parameters
         ----------
         event_energies_reco : array
@@ -207,6 +192,8 @@ class StatisticalErrorEvaluator:
     def compute_efficiency_and_errors(self, triggered_event_counts, simulated_event_counts):
         """
         Compute trigger efficiency and its statistical error using the binomial distribution.
+
+        # No trigger efficiency from DL2 files.
 
         Parameters
         ----------
@@ -326,7 +313,10 @@ class StatisticalErrorEvaluator:
         event_energies_mc = self.data["event_energies_mc"]
 
         if len(event_energies_reco) != len(event_energies_mc):
-            raise ValueError(f"Mismatch in the number of energies for file {self.file_path}")
+            raise ValueError(
+                f"Mismatch in the number of energies: {len(event_energies_reco)} vs "
+                f"{len(event_energies_mc)}"
+            )
 
         energy_deviation = (event_energies_reco - event_energies_mc) / event_energies_mc
 
@@ -375,7 +365,7 @@ class StatisticalErrorEvaluator:
                 ref_value = self.metrics.get("uncertainty_effective_area", {}).get("target_error")[
                     "value"
                 ]
-                _logger.info(
+                self._logger.info(
                     f"Effective Area Error (max in validity range): "
                     f"{self.uncertainty_effective_area['max_error'].value:.6f}, "
                     f"Reference: {ref_value:.3f}"
@@ -386,7 +376,7 @@ class StatisticalErrorEvaluator:
                 self.calculate_energy_estimate()
             )
             ref_value = self.metrics.get("energy_estimate", {}).get("target_error")["value"]
-            _logger.info(
+            self._logger.info(
                 f"Energy Estimate Error: {self.energy_estimate:.3f}, Reference: {ref_value:.3f}"
             )
         else:
@@ -442,7 +432,7 @@ class StatisticalErrorEvaluator:
                 overall_max_errors[metric_name] = result
             else:
                 raise ValueError(f"Unsupported result type for {metric_name}: {type(result)}")
-        _logger.info(f"overall_max_errors {overall_max_errors}")
+        self._logger.info(f"overall_max_errors {overall_max_errors}")
         all_max_errors = list(overall_max_errors.values())
         if metric == "average":
             overall_metric = np.mean(all_max_errors)
