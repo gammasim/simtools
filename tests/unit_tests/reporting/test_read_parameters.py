@@ -1,7 +1,7 @@
 import astropy.units as u
 
 from simtools.reporting.docs_read_parameters import ReadParameters
-from simtools.io_operations import io_handler
+
 
 def test_get_all_parameter_descriptions(telescope_model_lst, io_handler):
 
@@ -35,9 +35,8 @@ def test_compare_parameters_across_versions(telescope_model_lst, io_handler):
     read_parameters = ReadParameters(telescope_model=telescope_model_lst, output_path=output_path)
 
     result = read_parameters.compare_parameter_across_versions(
-        parameter_name='focal_length',
-        telescope_model=telescope_model_lst
-        )
+        parameter_name="focal_length", telescope_model=telescope_model_lst
+    )
 
-    assert result[0]['model_version']=='5.0.0'
-    assert result[1]['model_version']=='6.0.0'
+    assert result[0]["model_version"] == "5.0.0"
+    assert result[1]["model_version"] == "6.0.0"
