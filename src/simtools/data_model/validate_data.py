@@ -688,7 +688,6 @@ class DataValidator:
         KeyError
             if 'data' can not be read from dict in schema file
         """
-        print("AAAAA", schema_file)
         try:
             return gen.collect_data_from_file(file_name=schema_file)["data"]
         except KeyError as exc:
