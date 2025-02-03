@@ -54,7 +54,7 @@ def test_get_model_parameter_schema_version():
         schema.get_model_parameter_schema_version("0.0.1")
 
 
-def test_validate_schema(tmp_test_directory):
+def test_validate_dict_using_schema(tmp_test_directory):
     sample_schema = {
         "type": "object",
         "properties": {"name": {"type": "string"}, "age": {"type": "number"}},
@@ -68,11 +68,11 @@ def test_validate_schema(tmp_test_directory):
     # sample data dictionary to be validated
     data = {"name": "John", "age": 30}
 
-    schema.validate_schema(data, schema_file)
+    schema.validate_dict_using_schema(data, schema_file)
 
     invalid_data = {"name": "Alice", "age": "Thirty"}
     with pytest.raises(jsonschema.exceptions.ValidationError):
-        schema.validate_schema(invalid_data, schema_file)
+        schema.validate_dict_using_schema(invalid_data, schema_file)
 
 
 def test_validate_schema_astropy_units(caplog):
@@ -80,43 +80,59 @@ def test_validate_schema_astropy_units(caplog):
 
     _dict_1 = gen.collect_data_from_file(file_name="tests/resources/num_gains.schema.yml")
     with caplog.at_level(logging.DEBUG):
-        schema.validate_schema(data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA)
+        schema.validate_dict_using_schema(
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+        )
     assert success_string in caplog.text
 
     # m and cm
     _dict_1["data"][0]["unit"] = "m"
     with caplog.at_level(logging.DEBUG):
-        schema.validate_schema(data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA)
+        schema.validate_dict_using_schema(
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+        )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = "cm"
     with caplog.at_level(logging.DEBUG):
-        schema.validate_schema(data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA)
+        schema.validate_dict_using_schema(
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+        )
     assert success_string in caplog.text
 
     # combined units
     _dict_1["data"][0]["unit"] = "cm/s"
     with caplog.at_level(logging.DEBUG):
-        schema.validate_schema(data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA)
+        schema.validate_dict_using_schema(
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+        )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = "km/ s"
     with caplog.at_level(logging.DEBUG):
-        schema.validate_schema(data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA)
+        schema.validate_dict_using_schema(
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+        )
     assert success_string in caplog.text
 
     # dimensionless
     _dict_1["data"][0]["unit"] = "dimensionless"
     with caplog.at_level(logging.DEBUG):
-        schema.validate_schema(data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA)
+        schema.validate_dict_using_schema(
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+        )
     assert success_string in caplog.text
     _dict_1["data"][0]["unit"] = ""
     with caplog.at_level(logging.DEBUG):
-        schema.validate_schema(data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA)
+        schema.validate_dict_using_schema(
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+        )
     assert success_string in caplog.text
 
     # not good
     _dict_1["data"][0]["unit"] = "not_a_unit"
     with pytest.raises(ValueError, match="'not_a_unit' is not a valid Unit"):
-        schema.validate_schema(data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA)
+        schema.validate_dict_using_schema(
+            data=_dict_1, schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA
+        )
 
 
 def test_load_schema(caplog, tmp_test_directory):

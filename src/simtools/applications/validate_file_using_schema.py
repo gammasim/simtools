@@ -129,7 +129,7 @@ def _get_json_file_list(file_directory=None, file_name=None):
     return file_list
 
 
-def validate_schema(args_dict, logger):
+def validate_dict_using_schema(args_dict, logger):
     """
     Validate a schema file (or several files) given in yaml or json format.
 
@@ -146,7 +146,7 @@ def validate_schema(args_dict, logger):
             logger.error(f"Error reading schema file from {file_name}")
             raise exc
         try:
-            schema.validate_schema(data, _get_schema_file_name(args_dict, data))
+            schema.validate_dict_using_schema(data, _get_schema_file_name(args_dict, data))
         except jsonschema.exceptions.ValidationError as exc:
             logger.error(f"Failed validation of file {file_name}")
             raise exc
@@ -202,7 +202,7 @@ def main():  # noqa: D103
     if args_dict["data_type"].lower() == "metadata":
         validate_metadata(args_dict, logger)
     elif args_dict["data_type"].lower() == "schema":
-        validate_schema(args_dict, logger)
+        validate_dict_using_schema(args_dict, logger)
     else:
         validate_data_files(args_dict, logger)
 
