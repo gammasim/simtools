@@ -155,7 +155,7 @@ class ReadParameters:
         """
         Produce plot of given parameter.
 
-        Customise the config file according to command line input for
+        Customize the config file according to command line input for
         producing reports and then use it to plot the tabular parameter data.
 
         Parameters
@@ -172,7 +172,6 @@ class ReadParameters:
         new_output_path = self.output_path / "images"
         new_output_path.mkdir(parents=True, exist_ok=True)
         output_file = new_output_path / f"{telescope_model.name}_{parameter_name}"
-        # customise config file
         try:
             with open(config_template, encoding="utf-8") as of:
                 old_content = of.read()

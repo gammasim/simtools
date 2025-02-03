@@ -55,7 +55,6 @@ def test_read_incidence_angle_distribution(telescope_model_sst):
 def test_calc_average_curve(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
-    _ = tel_model.derived
 
     two_dim_file = tel_model.get_parameter_value("camera_filter")
     two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
@@ -72,7 +71,6 @@ def test_calc_average_curve(telescope_model_sst_prod5):
 def test_export_table_to_model_directory(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
     tel_model.export_config_file()
-    _ = tel_model.derived
 
     two_dim_file = tel_model.get_parameter_value("camera_filter")
     two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)

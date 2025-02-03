@@ -41,7 +41,7 @@ def _parse(label):
 
 def generate_markdown_report(output_path, args_dict, data):
     """
-    Generate a markdown file to report the parameter values.
+    Generate a markdown report of all model parameters per array element.
 
     Parameters
     ----------
@@ -111,7 +111,8 @@ def main():  # noqa: D103
 
     logger.info(
         f"Markdown report generated for {args['site']}"
-        f" Telescope {args['telescope']} (v{args['model_version']})"
+        f" Telescope {args['telescope']} (v{args['model_version']}):"
+        f" {output_path}"
     )
 
     if args["parameter"]:
