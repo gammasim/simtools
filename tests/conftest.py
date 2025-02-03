@@ -62,10 +62,6 @@ def io_handler(tmp_test_directory, data_path):
 @pytest.fixture
 def _mock_settings_env_vars(tmp_test_directory):
     """Removes all environment variable from the test system and explicitly sets those needed."""
-    _url = (
-        "https://gitlab.cta-observatory.org/cta-science/simulations/"
-        "simulation-model/model_parameters/-/raw/main"
-    )
 
     with mock.patch.dict(
         os.environ,
@@ -76,7 +72,6 @@ def _mock_settings_env_vars(tmp_test_directory):
             "SIMTOOLS_DB_API_PORT": "42",
             "SIMTOOLS_DB_SERVER": "abc@def.de",
             "SIMTOOLS_DB_SIMULATION_MODEL": "sim_model",
-            "SIMTOOLS_DB_SIMULATION_MODEL_URL": _url,
         },
         clear=True,
     ):
@@ -149,7 +144,6 @@ def db_config():
         "db_api_port",
         "db_server",
         "db_simulation_model",
-        "db_simulation_model_url",
     )
     for _para in _db_para:
         if _para not in mongo_db_config:
@@ -157,20 +151,6 @@ def db_config():
     if mongo_db_config["db_api_port"] is not None:
         mongo_db_config["db_api_port"] = int(mongo_db_config["db_api_port"])
     return mongo_db_config
-
-
-@pytest.fixture
-def simulation_model_url(db_config):
-    """Simulation model URL from .env file or default."""
-    if (
-        db_config["db_simulation_model_url"] is None
-        or len(db_config["db_simulation_model_url"]) == 0
-    ):
-        db_config["db_simulation_model_url"] = (
-            "https://gitlab.cta-observatory.org/cta-science/simulations/"
-            "simulation-model/model_parameters/-/raw/main/"
-        )
-    return db_config["db_simulation_model_url"]
 
 
 @pytest.fixture

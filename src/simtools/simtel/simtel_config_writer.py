@@ -78,8 +78,10 @@ class SimtelConfigWriter:
             file.write("#endif\n\n")
 
             for _simtel_name, value in parameters.items():
-                if _simtel_name.startswith("array_trigger"):
-                    continue  # array trigger is a site parameter, not a telescope parameter
+                # array trigger is a site parameter, not a telescope parameter
+                # fake_mirror_list is not a sim_telarray parameter (used for testeff only)
+                if _simtel_name.startswith("array_trigger") or _simtel_name == "fake_mirror_list":
+                    continue
                 if _simtel_name:
                     file.write(f"{_simtel_name} = {self._get_value_string_for_simtel(value)}\n")
             _config_meta = self._get_simtel_metadata("telescope")
@@ -294,10 +296,7 @@ class SimtelConfigWriter:
         _site_parameters = site_model.get_simtel_parameters()
         for par, value in _site_parameters.items():
             _simtel_name = names.get_simulation_software_name_from_parameter_name(
-                par,
-                simulation_software="sim_telarray",
-                search_telescope_parameters=False,
-                search_site_parameters=True,
+                par, simulation_software="sim_telarray"
             )
             _simtel_name, value = self._convert_model_parameters_to_simtel_format(
                 _simtel_name, value, model_path, telescope_model

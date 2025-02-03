@@ -34,4 +34,3 @@ CTA_SIMPIPE:
         LABEL: '6.0.0 (low gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude (low gain)'
-

@@ -20,4 +20,3 @@ CTA_SIMPIPE:
         LABEL: '6.0.0'
         COLUMN_X: 'wavelength'
         COLUMN_Y: 'efficiency'
-
