@@ -344,12 +344,12 @@ class StatisticalErrorEvaluator:
 
             self.uncertainty_effective_area = self.calculate_uncertainty_effective_area()
             if self.uncertainty_effective_area:
-                validity_range = self.metrics.get("uncertainty_effective_area", {}).get(
-                    "valid_range"
+                energy_range = self.metrics.get("uncertainty_effective_area", {}).get(
+                    "energy_range"
                 )
-                min_energy, max_energy = validity_range["value"][0] * u.Unit(
-                    validity_range["unit"]
-                ), validity_range["value"][1] * u.Unit(validity_range["unit"])
+                min_energy, max_energy = energy_range["value"][0] * u.Unit(
+                    energy_range["unit"]
+                ), energy_range["value"][1] * u.Unit(energy_range["unit"])
 
                 valid_errors = [
                     error

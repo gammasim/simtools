@@ -6,7 +6,7 @@
 uncertainty_effective_area:
   target_error:
     value: 0.02
-  valid_range:
+  energy_range:
     value:
       - 0.04
       - 200
@@ -14,7 +14,7 @@ uncertainty_effective_area:
 energy_estimate:
   target_error:
     value: 0.05
-  valid_range:
+  energy_range:
     value:
       - 0.04
       - 200
