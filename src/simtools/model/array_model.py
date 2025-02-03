@@ -320,7 +320,7 @@ class ArrayModel:
             Dict with telescope position parameters.
         """
         return {
-            "schema_version": schema.model_parameter_schema_version(),
+            "schema_version": schema.get_model_parameter_schema_version(),
             "parameter": "array_element_position_ground",
             "instrument": telescope_name,
             "site": site,

@@ -104,7 +104,7 @@ def test_read_value_from_file_and_validate(
     with caplog.at_level("DEBUG"):
         data_reader.read_value_from_file(
             reference_point_altitude_file,
-            schema_file=schema.model_parameter_schema_file("reference_point_altitude"),
+            schema_file=schema.get_model_parameter_schema_file("reference_point_altitude"),
             validate=True,
         )
     assert "Successful validation of yaml/json file" in caplog.text

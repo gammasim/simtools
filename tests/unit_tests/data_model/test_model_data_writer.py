@@ -267,7 +267,7 @@ def test_get_validated_parameter_dict():
     assert w1.get_validated_parameter_dict(
         parameter_name="num_gains", value=2, instrument="MSTN-01", parameter_version="0.0.1"
     ) == {
-        "schema_version": schema.model_parameter_schema_version(),
+        "schema_version": schema.get_model_parameter_schema_version(),
         "parameter": "num_gains",
         "instrument": "MSTN-01",
         "site": "North",
@@ -285,7 +285,7 @@ def test_get_validated_parameter_dict():
         instrument="LSTN-01",
         parameter_version="0.0.1",
     ) == {
-        "schema_version": schema.model_parameter_schema_version(),
+        "schema_version": schema.get_model_parameter_schema_version(),
         "parameter": "transit_time_error",
         "instrument": "LSTN-01",
         "site": "North",
@@ -303,7 +303,7 @@ def test_get_validated_parameter_dict():
         instrument="North",
         parameter_version="0.0.1",
     ) == {
-        "schema_version": schema.model_parameter_schema_version(),
+        "schema_version": schema.get_model_parameter_schema_version(),
         "parameter": "reference_point_altitude",
         "instrument": "North",
         "site": "North",

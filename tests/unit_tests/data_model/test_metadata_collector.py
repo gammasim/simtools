@@ -49,7 +49,7 @@ def test_get_data_model_schema_file_name():
     # from data model_name
     _collector.data_model_name = "array_coordinates"
     schema_file = _collector.get_data_model_schema_file_name()
-    assert Path(schema_file) == (schema.model_parameter_schema_file(_collector.data_model_name))
+    assert Path(schema_file) == (schema.get_model_parameter_schema_file(_collector.data_model_name))
 
     # from input metadata
     _collector.input_metadata = {

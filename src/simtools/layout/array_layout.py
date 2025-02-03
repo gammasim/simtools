@@ -629,7 +629,7 @@ class ArrayLayout:
             ]
 
         return {
-            "schema_version": schema.model_parameter_schema_version(schema_version),
+            "schema_version": schema.get_model_parameter_schema_version(schema_version),
             "parameter": parameter_name,
             "instrument": table["telescope_name"][0],
             "site": self.site,

@@ -604,7 +604,7 @@ def test_validate_data_dict():
 
     # parameter with unit
     data_validator = validate_data.DataValidator(
-        schema_file=schema.model_parameter_schema_file("reference_point_altitude")
+        schema_file=schema.get_model_parameter_schema_file("reference_point_altitude")
     )
     data_validator.data_dict = {
         "name": "reference_point_altitude",
@@ -615,7 +615,7 @@ def test_validate_data_dict():
 
     # parameter without unit
     data_validator_2 = validate_data.DataValidator(
-        schema_file=schema.model_parameter_schema_file("num_gains")
+        schema_file=schema.get_model_parameter_schema_file("num_gains")
     )
     data_validator_2.data_dict = {"name": "num_gains", "value": [2], "unit": [""]}
     data_validator_2._validate_data_dict()
@@ -630,7 +630,7 @@ def test_validate_data_dict():
     data_validator_2._validate_data_dict()
 
     data_validator_3 = validate_data.DataValidator(
-        schema_file=schema.model_parameter_schema_file("random_focal_length")
+        schema_file=schema.get_model_parameter_schema_file("random_focal_length")
     )
     data_validator_3.data_dict = {
         "name": "random_focal_length",
@@ -645,7 +645,7 @@ def test_validate_data_dict():
 
 def test_convert_results_to_model_format():
     data_validator_3 = validate_data.DataValidator(
-        schema_file=schema.model_parameter_schema_file("random_focal_length")
+        schema_file=schema.get_model_parameter_schema_file("random_focal_length")
     )
     data_validator_3.data_dict = {
         "name": "random_focal_length",

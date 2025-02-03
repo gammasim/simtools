@@ -185,7 +185,7 @@ def get_number_of_camera_pixel(args_dict, logger):
     """
     try:
         simtel_config_reader = SimtelConfigReader(
-            schema_file=schema.model_parameter_schema_file("camera_pixels"),
+            schema_file=schema.get_model_parameter_schema_file("camera_pixels"),
             simtel_config_file=args_dict["simtel_cfg_file"],
             simtel_telescope_name=args_dict["simtel_telescope_name"],
         )
@@ -219,7 +219,7 @@ def read_and_export_parameters(args_dict, logger):
         List of simtools parameter not found in simtel configuration file.
 
     """
-    _parameters, _schema_files = schema.model_parameter_schema_files(
+    _parameters, _schema_files = schema.get_get_model_parameter_schema_files(
         args_dict.get("schema_directory")
     )
     _simtel_parameters = get_list_of_simtel_parameters(args_dict["simtel_cfg_file"], logger)

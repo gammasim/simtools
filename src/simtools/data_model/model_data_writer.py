@@ -199,7 +199,7 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
-        schema_file = schema.model_parameter_schema_file(parameter_name)
+        schema_file = schema.get_model_parameter_schema_file(parameter_name)
         self.schema_dict = gen.collect_data_from_file(schema_file)
 
         try:  # e.g. instrument is 'North"
@@ -210,7 +210,7 @@ class ModelDataWriter:
         value, unit = value_conversion.split_value_and_unit(value)
 
         data_dict = {
-            "schema_version": schema.model_parameter_schema_version(schema_version),
+            "schema_version": schema.get_model_parameter_schema_version(schema_version),
             "parameter": parameter_name,
             "instrument": instrument,
             "site": site,
