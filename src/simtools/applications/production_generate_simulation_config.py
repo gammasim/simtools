@@ -51,6 +51,7 @@ import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.data_model import schema
 from simtools.io_operations import io_handler
 from simtools.production_configuration.generate_simulation_config import (
     SimulationConfig,
@@ -127,6 +128,9 @@ def main():
 
     metrics = (
         gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    )
+    schema.validate_dict_using_schema(
+        data=metrics, schema_file="production_configuration_metrics.schema.yml"
     )
 
     simulation_config = SimulationConfig(
