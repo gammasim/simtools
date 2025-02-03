@@ -193,7 +193,7 @@ class StatisticalErrorEvaluator:
         """
         Compute trigger efficiency and its statistical error using the binomial distribution.
 
-        # No trigger efficiency from DL2 files.
+        TODO: No trigger efficiency from DL2 files.
 
         Parameters
         ----------
@@ -213,6 +213,9 @@ class StatisticalErrorEvaluator:
         triggered_event_counts = triggered_event_counts.to(u.ct)
         simulated_event_counts = simulated_event_counts.to(u.ct)
 
+        if np.any(triggered_event_counts > simulated_event_counts):
+            raise ValueError("Triggered event counts exceed simulated event counts.")
+
         # Compute efficiencies, ensuring the output is dimensionless
         efficiencies = np.divide(
             triggered_event_counts,
@@ -222,11 +225,7 @@ class StatisticalErrorEvaluator:
         ).to(u.dimensionless_unscaled)
 
         # Set up a mask for valid data with a unit-consistent threshold
-        if np.any(triggered_event_counts > simulated_event_counts):
-            raise ValueError(
-                "Triggered event counts exceed simulated event counts. Please check input data."
-            )
-        valid = (simulated_event_counts > 0 * u.ct) & (triggered_event_counts > 0 * u.ct)
+        valid = (simulated_event_counts > 0) & (triggered_event_counts > 0)
 
         uncertainties = np.zeros_like(triggered_event_counts.value) * u.dimensionless_unscaled
 

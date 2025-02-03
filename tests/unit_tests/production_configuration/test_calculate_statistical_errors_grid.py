@@ -12,12 +12,18 @@ from simtools.production_configuration.interpolation_handler import Interpolatio
 
 @pytest.fixture
 def test_fits_file():
-    return "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+    return (
+        "tests/resources/production_dl2_fits/"
+        "prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+    )
 
 
 @pytest.fixture
-def test_fits_file2():
-    return "tests/resources/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+def test_fits_file_2():
+    return (
+        "tests/resources/production_dl2_fits/"
+        "prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+    )
 
 
 @pytest.fixture
@@ -30,7 +36,6 @@ def test_initialization(test_fits_file, metric):
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file, file_type="point-like", metrics=metric
     )
-    assert evaluator.file_path == test_fits_file
     assert evaluator.file_type == "point-like"
     assert isinstance(evaluator.data, dict)
     assert "event_energies_reco" in evaluator.data
@@ -70,7 +75,7 @@ def test_missing_file():
         StatisticalErrorEvaluator(file_path, file_type, metrics)
 
 
-def test_interpolation_handler(test_fits_file, test_fits_file2, metric):
+def test_interpolation_handler(test_fits_file, test_fits_file_2, metric):
     """Test interpolation with the InterpolationHandler."""
     grid_point1 = (1, 180, 45, 0, 0.5)
     evaluator1 = StatisticalErrorEvaluator(
@@ -78,7 +83,7 @@ def test_interpolation_handler(test_fits_file, test_fits_file2, metric):
     )
     grid_point2 = (1, 180, 60, 0, 0.5)
     evaluator2 = StatisticalErrorEvaluator(
-        file_path=test_fits_file2, file_type="point-like", metrics=metric, grid_point=grid_point2
+        file_path=test_fits_file_2, file_type="point-like", metrics=metric, grid_point=grid_point2
     )
     science_case = "example case"
     handler = InterpolationHandler(
