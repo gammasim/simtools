@@ -1,4 +1,4 @@
-"""Module providing functionality to read and validate schema."""
+"""Module providing functionality to read and validate dictionaries using schema."""
 
 import logging
 from pathlib import Path
@@ -89,7 +89,7 @@ def get_model_parameter_schema_version(schema_version=None):
     raise ValueError(f"Schema version {schema_version} not found in {MODEL_PARAMETER_METASCHEMA}.")
 
 
-def validate_schema(data, schema_file=None, json_schema=None):
+def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     """
     Validate a data dictionary against a schema.
 

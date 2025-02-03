@@ -156,7 +156,6 @@ class DataValidator:
         if is_model_parameter:
             self._prepare_model_parameter()
 
-        print("FFF", self.schema_file_name)
         self._data_description = self._read_validation_schema(self.schema_file_name)
 
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
@@ -185,7 +184,7 @@ class DataValidator:
         Take into account different data types and allow to use json_schema for testing.
         """
         if self._get_data_description(index).get("type", None) == "dict":
-            schema.validate_schema(
+            schema.validate_dict_using_schema(
                 data=self.data_dict["value"],
                 json_schema=self._get_data_description(index).get("json_schema"),
             )
