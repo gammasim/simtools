@@ -17,8 +17,8 @@ The configuration parameters are derived according to the required precision. Th
 
 * statistical uncertainty on the determination of the effective area as function of primary energy
 * fraction of lost events to the selected core scatter and view cone radius (to be implemented)
-* statistical uncertainty of the energy migration matrix as function of primary energy (to be
-implemented)
+* statistical uncertainty of the energy migration matrix as function of primary energy
+  (to be implemented)
 
 Command line arguments
 ----------------------
