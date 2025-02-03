@@ -1,27 +1,27 @@
 #!/usr/bin/python3
 
 """
-    Make a regular array of telescopes and save it as astropy table.
+Make a regular array of telescopes and save it as astropy table.
 
-    The arrays consist of one telescope at the center of the array and or of 4 telescopes
-    in a square grid. These arrays are used for trigger rate simulations.
+The arrays consist of one telescope at the center of the array and or of 4 telescopes
+in a square grid. These arrays are used for trigger rate simulations.
 
-    The array layout files created will be available at the data/layout directory.
+The array layout files created will be available at the data/layout directory.
 
-    Command line arguments
-    ----------------------
-    site (str, required)
-        observatory site (e.g., North or South).
-    model_version (str, optional)
-        Model version to use (e.g., 6.0.0). If not provided, the latest version is used.
+Command line arguments
+----------------------
+site (str, required)
+    observatory site (e.g., North or South).
+model_version (str, optional)
+    Model version to use (e.g., 6.0.0). If not provided, the latest version is used.
 
-    Example
-    -------
-    Runtime < 10 s.
+Example
+-------
+Runtime < 10 s.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-generate-regular-arrays --site=North
+    simtools-generate-regular-arrays --site=North
 """
 
 import logging

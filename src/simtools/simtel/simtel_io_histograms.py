@@ -245,7 +245,7 @@ class SimtelIOHistograms:
         logging.info(
             f"System trigger event rate for stacked files: "
             # pylint: disable=E1101
-            f"{triggered_event_rate.value:.4e} \u00B1 "
+            f"{triggered_event_rate.value:.4e} \u00b1 "
             # pylint: disable=E1101
             f"{triggered_event_rate_uncertainty.value:.4e} Hz"
         )
@@ -310,7 +310,7 @@ class SimtelIOHistograms:
             logging.info(
                 f"System trigger event rate: "
                 # pylint: disable=E1101
-                f"{triggered_event_rate.value:.4e} \u00B1 "
+                f"{triggered_event_rate.value:.4e} \u00b1 "
                 # pylint: disable=E1101
                 f"{triggered_event_rate_uncertainty.value:.4e} Hz"
             )
