@@ -1,3 +1,6 @@
+import logging
+from unittest.mock import patch
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -249,6 +252,9 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
         relative_errors, expected_relative_errors, atol=1e-2
     ), f"Expected relative errors {expected_relative_errors}, but got {relative_errors}"
 
+    with pytest.raises(ValueError, match="Triggered event counts exceed simulated event counts."):
+        evaluator.compute_efficiency_and_errors(20.0, 10.0)
+
 
 def test_calculate_overall_metric_invalid_metric(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
@@ -259,3 +265,26 @@ def test_calculate_overall_metric_invalid_metric(test_fits_file):
 
     with pytest.raises(ValueError, match="Invalid metric specified"):
         evaluator.calculate_metrics()
+
+
+def test_set_grid_point_single_azimuth_zenith(caplog):
+    with patch.object(StatisticalErrorEvaluator, "load_data_from_file", return_value={}):
+        evaluator = StatisticalErrorEvaluator(file_path="", file_type="point-like", metrics={})
+        events_data = {"PNT_AZ": np.array([45.0]), "PNT_ALT": np.array([45.0])}
+        evaluator._set_grid_point(events_data)
+        assert evaluator.grid_point == (1 * u.TeV, 45 * u.deg, 45 * u.deg, 0, 0 * u.deg)
+
+        events_data = {"PNT_AZ": np.array([45.0, 90.0]), "PNT_ALT": np.array([45.0])}
+        with pytest.raises(ValueError, match=r"^Multiple values found for azimuth"):
+            evaluator._set_grid_point(events_data)
+
+        events_data = {"PNT_AZ": np.array([45.0]), "PNT_ALT": np.array([45.0, 60.0])}
+        with pytest.raises(ValueError, match=r"^Multiple values found for azimuth"):
+            evaluator._set_grid_point(events_data)
+
+        evaluator.grid_point = (1 * u.TeV, 45 * u.deg, 45 * u.deg, 0, 0 * u.deg)
+        events_data = {"PNT_AZ": np.array([90.0]), "PNT_ALT": np.array([30.0])}
+        with caplog.at_level(logging.WARNING):
+            evaluator._set_grid_point(events_data)
+            assert "Grid point already set to" in caplog.text
+        assert evaluator.grid_point == (1 * u.TeV, 90 * u.deg, 60 * u.deg, 0, 0 * u.deg)

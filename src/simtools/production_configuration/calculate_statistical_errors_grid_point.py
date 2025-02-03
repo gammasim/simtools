@@ -210,8 +210,16 @@ class StatisticalErrorEvaluator:
             Array of relative uncertainties.
         """
         # Ensure the inputs have compatible units
-        triggered_event_counts = triggered_event_counts.to(u.ct)
-        simulated_event_counts = simulated_event_counts.to(u.ct)
+        triggered_event_counts = (
+            triggered_event_counts.to(u.ct)
+            if isinstance(triggered_event_counts, u.Quantity)
+            else triggered_event_counts * u.ct
+        )
+        simulated_event_counts = (
+            simulated_event_counts.to(u.ct)
+            if isinstance(simulated_event_counts, u.Quantity)
+            else simulated_event_counts * u.ct
+        )
 
         if np.any(triggered_event_counts > simulated_event_counts):
             raise ValueError("Triggered event counts exceed simulated event counts.")
