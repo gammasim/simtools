@@ -28,7 +28,7 @@ def test_fits_file_2():
 
 @pytest.fixture
 def metric():
-    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yaml")
+    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yml")
 
 
 def test_initialization(test_fits_file, metric):

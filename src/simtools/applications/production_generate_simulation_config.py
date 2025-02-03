@@ -51,7 +51,7 @@ To run the simulation configuration, execute the script as follows:
         --nsb 0.3 --ctao_data_level "A" --science_case "high_precision" \
         --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \
         --file_type "point-like"    \
-        --metrics_file tests/resources/production_simulation_config_metrics.yaml --site North
+        --metrics_file tests/resources/production_simulation_config_metrics.yml --site North
 
 The output will show the derived simulation parameters.
 """

@@ -17,7 +17,7 @@ PATH_FITS = (
 
 @pytest.fixture
 def metric():
-    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yaml")
+    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yml")
 
 
 @pytest.fixture
