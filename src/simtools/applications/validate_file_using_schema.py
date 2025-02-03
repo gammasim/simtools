@@ -41,7 +41,7 @@ import jsonschema
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
-from simtools.data_model import metadata_collector, metadata_model, schema, validate_data
+from simtools.data_model import metadata_collector, schema, validate_data
 
 
 def _parse(label, description):
@@ -146,7 +146,7 @@ def validate_schema(args_dict, logger):
             logger.error(f"Error reading schema file from {file_name}")
             raise exc
         try:
-            metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
+            schema.validate_schema(data, _get_schema_file_name(args_dict, data))
         except jsonschema.exceptions.ValidationError as exc:
             logger.error(f"Failed validation of file {file_name}")
             raise exc
