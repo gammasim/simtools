@@ -11,8 +11,8 @@
         File containing a table of array element positions.
     repository_path : str
         Path of local copy of model parameter repository.
-    model_version : str
-        Model version.
+    parameter_version : str
+        Parameter version.
     site : str
         Observatory site.
     coordinate_system : str
@@ -27,7 +27,7 @@
         simtools-write-array-element-positions-to-repository \
             --input /path/to/positions.txt \
             --repository_path /path/to/repository \
-            --model_version 1.0.0 \
+            --parameter_version 0.1.0 \
             --coordinate_system ground \
             --site North
 
@@ -82,7 +82,7 @@ def _parse(label=None, description=None):
         choices=["ground", "utm"],
     )
 
-    return config.initialize(db_config=True, simulation_model="site")
+    return config.initialize(db_config=True, simulation_model=["site", "parameter_version"])
 
 
 def write_utm_array_elements_to_repository(args_dict, logger):
@@ -115,7 +115,7 @@ def write_utm_array_elements_to_repository(args_dict, logger):
             parameter_name="array_element_position_utm",
             instrument=instrument,
             value=f"{row['utm_east']} {row['utm_north']} {row['altitude']}",
-            model_version=args_dict["model_version"],
+            parameter_version=args_dict["parameter_version"],
             output_path=output_path,
             output_file="array_element_position_utm.json",
         )
@@ -137,7 +137,7 @@ def write_ground_array_elements_to_repository(args_dict, db_config, logger):
     """
     array_model = ArrayModel(
         mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
+        model_version=None,
         site=args_dict["site"],
         array_elements=args_dict["input"],
     )
