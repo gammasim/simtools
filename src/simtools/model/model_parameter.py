@@ -281,6 +281,21 @@ class ModelParameter:
         """
         return self._simulation_config_parameters.get(simulation_software)
 
+    def has_parameter(self, par_name):
+        """Check if a parameter exists in the model.
+
+        Parameters
+        ----------
+        par_name : str
+            Name of the parameter.
+
+        Returns
+        -------
+        bool
+            True if parameter exists in the model.
+        """
+        return par_name in self._parameters
+
     def _load_simulation_software_parameter(self):
         """Read simulation software parameters from DB."""
         for simulation_software in self._simulation_config_parameters:
