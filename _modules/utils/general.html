@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g9393148 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+g6ea2d5f Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=bee28a0a"></script>
+    <script src="../../_static/documentation_options.js?v=6cebb1e1"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g9393148" />
+  <meta name="docsearch:version" content="0.1.dev1+g6ea2d5f" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9393148 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g6ea2d5f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -508,7 +508,7 @@
 
 <div class="viewcode-block" id="collect_data_from_file">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.general.collect_data_from_file">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect data from file based on its extension.</span>
 
@@ -516,6 +516,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    file_name: str</span>
 <span class="sd">        Name of the yaml/json/ascii file.</span>
+<span class="sd">    yaml_document: None, int</span>
+<span class="sd">        Return list of yaml documents or a single document (for yaml files with several documents).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -525,22 +527,35 @@
     <span class="k">if</span> <span class="n">is_url</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">collect_data_from_http</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 
+    <span class="n">suffix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.list&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">_collect_data_from_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
 
-        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.list&quot;</span><span class="p">:</span>
-            <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">composer</span><span class="o">.</span><span class="n">ComposerError</span><span class="p">:</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_load_all</span><span class="p">(</span><span class="n">file</span><span class="p">))</span></div>
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_data_from_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect data from a yaml file.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">composer</span><span class="o">.</span><span class="n">ComposerError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">yaml_document</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_load_all</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_load_all</span><span class="p">(</span><span class="n">file</span><span class="p">))[</span><span class="n">yaml_document</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidConfigDataError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;YAML file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> does not contain </span><span class="si">{</span><span class="n">yaml_document</span><span class="si">}</span><span class="s2"> documents.&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
 
 <div class="viewcode-block" id="collect_kwargs">
