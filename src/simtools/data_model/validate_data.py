@@ -128,7 +128,7 @@ class DataValidator:
             Validated data dictionary
         """
         data_validator = DataValidator(
-            schema_file=schema.model_parameter_schema_file(f"{par_dict['parameter']}"),
+            schema_file=schema.get_model_parameter_schema_file(f"{par_dict['parameter']}"),
             data_dict=par_dict,
             check_exact_data_type=False,
         )

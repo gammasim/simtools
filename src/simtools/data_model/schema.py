@@ -6,7 +6,7 @@ import simtools.utils.general as gen
 from simtools.constants import MODEL_PARAMETER_METASCHEMA, MODEL_PARAMETER_SCHEMA_PATH
 
 
-def model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PATH):
+def get_get_model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PATH):
     """
     Return list of parameters and schema files located in schema file directory.
 
@@ -28,7 +28,7 @@ def model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PATH):
     return parameters, schema_files
 
 
-def model_parameter_schema_file(parameter):
+def get_model_parameter_schema_file(parameter):
     """
     Return schema file path for a given model parameter.
 
@@ -49,7 +49,7 @@ def model_parameter_schema_file(parameter):
     return schema_file
 
 
-def model_parameter_schema_version(schema_version=None):
+def get_model_parameter_schema_version(schema_version=None):
     """
     Validate  and return schema versions.
 
