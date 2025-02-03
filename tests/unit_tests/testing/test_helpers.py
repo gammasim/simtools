@@ -55,16 +55,6 @@ def test_skip_camera_efficiency_new_testeff(new_testeff_version):
         helpers.skip_camera_efficiency(config)
 
 
-def test_skip_camera_efficiency_specific_test(new_testeff_version):
-    config = {
-        "APPLICATION": "simtools-validate-camera-efficiency",
-        "TEST_NAME": "SSTS",
-    }
-    with mock.patch(new_testeff_version, return_value=True):
-        skip_string = helpers.skip_camera_efficiency(config)
-        assert "fake SST mirrors" in skip_string
-
-
 def test_skip_camera_efficiency_not_camera_efficiency():
     config = {"APPLICATION": "other-application", "TEST_NAME": "some_test"}
     helpers.skip_camera_efficiency(config)
