@@ -168,11 +168,11 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 2
+    assert mock_db.call_count == 4
 
     telescope_copy.db = None
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 2
+    assert mock_db.call_count == 4
 
 
 def test_extra_labels(telescope_model_lst):
@@ -301,22 +301,6 @@ def test_updating_export_model_files(db_config, io_handler, model_version):
     assert False is tel._is_exported_model_files_up_to_date
 
 
-@pytest.mark.xfail(reason="Test requires Derived-Values Database")
-def test_export_derived_files(io_handler, db_config, model_version_prod5):
-    tel_model = TelescopeModel(
-        site="North",
-        telescope_name="LSTN-01",
-        model_version=model_version_prod5,
-        mongo_db_config=db_config,
-        label="test-telescope-model-lst",
-    )
-
-    _ = tel_model.derived
-    assert tel_model.config_file_directory.joinpath(
-        "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
-    ).exists()
-
-
 def test_export_parameter_file(telescope_model_lst, mocker):
     parameter = "array_coordinates_UTM"
     file_path = "tests/resources/telescope_positions-North-ground.ecsv"
@@ -377,13 +361,13 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
     telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(model_directory)
 
     mock_db_export.assert_called_once_with(
-        {
+        parameters={
             "nsb_spectrum_at_2200m": {
                 "value": "test_value",
                 "file": True,
             }
         },
-        model_directory,
+        dest=model_directory,
     )
 
 

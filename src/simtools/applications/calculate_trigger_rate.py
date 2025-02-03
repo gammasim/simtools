@@ -192,7 +192,7 @@ def main():  # noqa: D103
     for i_hist, _ in enumerate(sim_event_rates):
         print(f"\nFile {histograms.histogram_files[i_hist]}\n")
         print(
-            f"System trigger rate (Hz): {triggered_event_rates[i_hist].value:.4e} \u00B1 "
+            f"System trigger rate (Hz): {triggered_event_rates[i_hist].value:.4e} \u00b1 "
             f"{triggered_event_rate_uncertainties[i_hist].value:.4e} Hz"
         )
     if config_parser["save_tables"]:

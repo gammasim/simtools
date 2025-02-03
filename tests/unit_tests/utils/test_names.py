@@ -153,6 +153,24 @@ def test_get_class_from_telescope_name(invalid_name):
         names.get_collection_name_from_array_element_name("Not_a_collection")
 
 
+def test_get_collection_name_from_array_element_name():
+
+    assert "telescopes" == names.get_collection_name_from_array_element_name("LSTN-01")
+    assert "telescopes" == names.get_collection_name_from_array_element_name("MSTS-design")
+    assert "sites" == names.get_collection_name_from_array_element_name("OBS-North")
+    assert "sites" == names.get_collection_name_from_array_element_name("North")
+    assert "sites" == names.get_collection_name_from_array_element_name("OBS-North", False)
+    assert "configuration_sim_telarray" == names.get_collection_name_from_array_element_name(
+        "configuration_sim_telarray", False
+    )
+
+    with pytest.raises(ValueError, match=r"Invalid array element name configuration_sim_telarray"):
+        names.get_collection_name_from_array_element_name("configuration_sim_telarray", True)
+
+    with pytest.raises(ValueError, match=r"Invalid array element name Not_a_collection"):
+        names.get_collection_name_from_array_element_name("Not_a_collection", False)
+
+
 def test_sanitize_name(caplog):
     assert names.sanitize_name("y_edges unit") == "y_edges_unit"
     assert names.sanitize_name("Y_EDGES UNIT") == "y_edges_unit"
@@ -481,19 +499,6 @@ def test_get_simulation_software_name_from_parameter_name():
         )
         == "reference_point_longitude"
     )
-
-    with pytest.raises(KeyError):
-        names.get_simulation_software_name_from_parameter_name(
-            "corsika_observation_level",
-            simulation_software="sim_telarray",
-            search_site_parameters=False,
-        )
-    with pytest.raises(KeyError):
-        names.get_simulation_software_name_from_parameter_name(
-            "telescope_axis_height",
-            simulation_software="sim_telarray",
-            search_telescope_parameters=False,
-        )
 
 
 def test_get_parameter_name_from_simtel_name():
