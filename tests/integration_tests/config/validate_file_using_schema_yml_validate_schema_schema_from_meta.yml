@@ -2,6 +2,6 @@ CTA_SIMPIPE:
   APPLICATION: simtools-validate-file-using-schema
   TEST_NAME: yml_validate_schema_schema_from_meta
   CONFIGURATION:
-    FILE_NAME: tests/resources/MST_mirror_2f_measurements.schema.yml
+    FILE_NAME: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
     DATA_TYPE: schema
     LOG_LEVEL: DEBUG
