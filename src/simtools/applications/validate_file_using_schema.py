@@ -36,8 +36,6 @@ import logging
 import re
 from pathlib import Path
 
-import jsonschema
-
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
@@ -145,11 +143,7 @@ def validate_dict_using_schema(args_dict, logger):
         except FileNotFoundError as exc:
             logger.error(f"Error reading schema file from {file_name}")
             raise exc
-        try:
-            schema.validate_dict_using_schema(data, _get_schema_file_name(args_dict, data))
-        except jsonschema.exceptions.ValidationError as exc:
-            logger.error(f"Failed validation of file {file_name}")
-            raise exc
+        schema.validate_dict_using_schema(data, _get_schema_file_name(args_dict, data))
         logger.info(f"Successful validation of file {file_name}")
 
 
