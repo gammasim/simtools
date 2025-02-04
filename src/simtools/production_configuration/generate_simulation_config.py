@@ -130,7 +130,7 @@ class SimulationConfig:
         float
             The area factor.
         """
-        azimuth = self.grid_point.get("azimuth", 0)  # TODO are defaults good values here?
+        azimuth = self.grid_point.get("azimuth", 0)
         elevation = self.grid_point.get("elevation", 0)
         night_sky_background = self.grid_point.get("night_sky_background", 0)
 

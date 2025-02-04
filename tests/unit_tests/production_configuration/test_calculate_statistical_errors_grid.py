@@ -235,11 +235,11 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
         file_path=test_fits_file, file_type="point-like", metrics=metric
     )
 
-    triggered_event_counts = np.array([10, 20, 5, 0]) * u.ct
+    reconstructed_event_counts = np.array([10, 20, 5, 0]) * u.ct
     simulated_event_counts = np.array([100, 200, 50, 0]) * u.ct
 
     efficiencies, relative_errors = evaluator.compute_efficiency_and_errors(
-        triggered_event_counts, simulated_event_counts
+        reconstructed_event_counts, simulated_event_counts
     )
 
     expected_efficiencies = np.array([0.1, 0.1, 0.1, 0.0]) * u.dimensionless_unscaled
@@ -252,7 +252,9 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
         relative_errors, expected_relative_errors, atol=1e-2
     ), f"Expected relative errors {expected_relative_errors}, but got {relative_errors}"
 
-    with pytest.raises(ValueError, match="Triggered event counts exceed simulated event counts."):
+    with pytest.raises(
+        ValueError, match="Reconstructed event counts exceed simulated event counts."
+    ):
         evaluator.compute_efficiency_and_errors(20.0, 10.0)
 
 

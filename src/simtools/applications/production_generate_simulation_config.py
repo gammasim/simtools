@@ -85,10 +85,10 @@ def _parse(label):
     config.parser.add_argument(
         "--nsb", type=float, required=True, help="Night sky background in units of 1/(sr*ns*cm**2)."
     )
-    config.parser.add_argument(  # TODO understand what it is used for
+    config.parser.add_argument(
         "--ctao_data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
     )
-    config.parser.add_argument(  # TODO understand what it is used for
+    config.parser.add_argument(
         "--science_case", type=str, required=True, help="Science case for the simulation."
     )
     config.parser.add_argument(
