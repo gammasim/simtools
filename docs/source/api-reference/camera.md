@@ -12,7 +12,7 @@ A {ref}`TelescopeModel <telescope-model>` and few more physical parameters (zeni
    :members:
 ```
 
-## Single photon electron spectral analysis
+## Single photon-electron spectral analysis
 
 ### single_photon_electron_spectrum
 
