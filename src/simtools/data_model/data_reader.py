@@ -112,9 +112,6 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
     _logger.info("Reading data from %s", file_name)
 
     if validate:
-        if schema_file is None and "meta_schema_url" in data:
-            schema_file = data["meta_schema_url"]
-            _logger.debug(f"Using schema from meta_schema_url: {schema_file}")
         if schema_file is None:
             _collector = MetadataCollector(None, metadata_file_name=file_name)
             schema_file = _collector.get_data_model_schema_file_name()
