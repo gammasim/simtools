@@ -5,11 +5,12 @@ r"""
 
     Normalizes singe-p.e. amplitude distribution to mean amplitude of 1.0,
     as required by sim_telarray. Allows to fold in afterpulse distribution
-    to prompt spectrum.
+    to prompt a spectrum. Uses the sim_telarray tool 'norm_spe' to normalize
+    the spectra.
 
-    Input files can be in ecsv format (preferred) or in sim_telarray legacy format.
+    Input files can be in ecsv format (preferred) or in the sim_telarray legacy format.
 
-    Three output files are written to the output directory:
+    Two output files with identical data are written to the output directory:
 
     - 'output_file'.ecsv: Single photon electron spectrum in ecsv format (data and metadata).
     - 'output_file'.dat: Single photon electron spectrum in sim_telarray format.

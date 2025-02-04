@@ -48,7 +48,8 @@ def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
 
 
 @patch(
-    "simtools.camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum._derive_spectrum_norm_spe"
+    "simtools.camera.single_photon_electron_spectrum."
+    "SinglePhotonElectronSpectrum._derive_spectrum_norm_spe"
 )
 def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
 
@@ -59,7 +60,9 @@ def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
     spe_spectrum.args_dict["use_norm_spe"] = False
     with pytest.raises(
         NotImplementedError,
-        match="Derivation of single photon electron spectrum using a simtool is not implemented.",
+        match=(
+            "Derivation of single photon electron spectrum using a simtool is not yet implemented."
+        ),
     ):
         spe_spectrum.derive_single_pe_spectrum()
 
