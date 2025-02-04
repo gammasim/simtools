@@ -238,7 +238,9 @@ class DatabaseHandler:
         -------
         dict containing the parameters
         """
-        model_versions = [model_version] or self.get_model_versions(collection)
+        model_versions = (
+            self.get_model_versions(collection) if model_version is None else [model_version]
+        )
 
         pars = {}
         for _model_version in model_versions:
