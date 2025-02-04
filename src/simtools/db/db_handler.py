@@ -449,6 +449,45 @@ class DatabaseHandler:
             "entry_date": ObjectId(post["_id"]).generation_time,
         }
 
+    def get_model_versions(self, collection_name="telescopes"):
+        """
+        Get list of model versions from the DB.
+
+        Parameters
+        ----------
+        collection_name: str
+            Name of the collection.
+
+        Returns
+        -------
+        list
+            List of model versions
+        """
+        collection = self.get_collection(self._get_db_name(), "production_tables")
+        return sorted(
+            [post["model_version"] for post in collection.find({"collection": collection_name})]
+        )
+
+    def get_array_elements(self, model_version, collection="telescopes"):
+        """
+        Get list array elements for a given model version and collection from the DB.
+
+        Parameters
+        ----------
+        model_version: str
+            Version of the model.
+        collection: str
+            Which collection to get the array elements from:
+            i.e. telescopes, calibration_devices.
+
+        Returns
+        -------
+        list
+            Sorted list of all array elements found in collection
+        """
+        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        return sorted([entry for entry in production_table["parameters"] if "-design" not in entry])
+
     def get_array_elements_of_type(self, array_element_type, model_version, collection):
         """
         Get array elements of a certain type (e.g. 'LSTN') for a DB collection.

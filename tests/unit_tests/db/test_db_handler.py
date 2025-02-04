@@ -1142,3 +1142,23 @@ def test_get_array_element_list_without_design_model_in_production_table(db, moc
 
     mock_get_array_element_type_from_name.assert_called_once_with(array_element_name)
     assert result == ["LSTN-design", "LSTN-01"]
+
+
+def test_get_model_versions(db):
+
+    model_versions = db.get_model_versions()
+    assert len(model_versions) > 0
+    assert "5.0.0" in model_versions
+    assert "6.0.0" in model_versions
+
+
+def test_get_array_elements(db):
+
+    prod5_elements = db.get_array_elements("5.0.0", "telescopes")
+    assert len(prod5_elements) > 0
+    assert "LSTN-01" in prod5_elements
+    assert "MSTN-101" not in prod5_elements
+    prod6_elements = db.get_array_elements("6.0.0", "telescopes")
+    assert "MSTN-101" in prod6_elements
+    prod6_calibration_devices = db.get_array_elements("6.0.0", "calibration_devices")
+    assert "ILLN-02" in prod6_calibration_devices
