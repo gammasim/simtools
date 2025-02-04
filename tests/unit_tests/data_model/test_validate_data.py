@@ -12,13 +12,14 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
+from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema, validate_data
 
 logger = logging.getLogger()
 
 
 mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
-mirror_2f_schema_file = "tests/resources/MST_mirror_2f_measurements.schema.yml"
+mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
 
 
 @pytest.fixture
