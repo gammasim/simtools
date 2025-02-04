@@ -24,7 +24,7 @@ r"""
         simtools-submit-data-from-external \\
             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \\
             --input ./tests/resources/MLTdata-preproduction.ecsv \\
-            --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \\
+            --schema src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml \\
             --output_file TEST-submit_data_from_external.ecsv
 
     Expected final print-out message:

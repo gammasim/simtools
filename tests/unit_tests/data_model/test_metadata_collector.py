@@ -174,7 +174,7 @@ def test_fill_product_meta(args_dict_site):
     assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] is None
 
     # read product metadata from schema file
-    metadata_1.args_dict["schema"] = "tests/resources/MST_mirror_2f_measurements.schema.yml"
+    metadata_1.args_dict["schema"] = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
     metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
 
     assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.1.0"
