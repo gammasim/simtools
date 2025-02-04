@@ -251,7 +251,7 @@ def test_get_model_parameters(db, mocker):
     model_version = "1.0.0"
     collection = "telescopes"
 
-    result = db.get_model_parameters(site, array_element_name, model_version, collection)
+    result = db.get_model_parameters(site, array_element_name, collection, model_version)
 
     mock_get_production_table.assert_called_once_with(collection, model_version)
     mock_get_array_element_list.assert_called_once_with(
@@ -305,7 +305,7 @@ def test_get_model_parameters_with_cache(db, mocker):
     model_version = "1.0.0"
     collection = "telescopes"
 
-    result = db.get_model_parameters(site, array_element_name, model_version, collection)
+    result = db.get_model_parameters(site, array_element_name, collection, model_version)
 
     mock_get_production_table.assert_called_once_with(collection, model_version)
     mock_get_array_element_list.assert_called_once_with(
@@ -336,7 +336,7 @@ def test_get_model_parameters_no_parameters(db, mocker):
     model_version = "1.0.0"
     collection = "telescopes"
 
-    result = db.get_model_parameters(site, array_element_name, model_version, collection)
+    result = db.get_model_parameters(site, array_element_name, collection, model_version)
 
     mock_get_production_table.assert_called_once_with(collection, model_version)
     mock_get_array_element_list.assert_called_once_with(
