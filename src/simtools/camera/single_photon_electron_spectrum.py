@@ -47,7 +47,7 @@ class SinglePhotonElectronSpectrum:
             return self._derive_spectrum_norm_spe()
 
         raise NotImplementedError(
-            "Derivation of single photon electron spectrum using a simtool is not implemented."
+            "Derivation of single photon electron spectrum using a simtool is not yet implemented."
         )
 
     def write_single_pe_spectrum(self):
