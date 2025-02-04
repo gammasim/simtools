@@ -25,6 +25,7 @@ class SinglePhotonElectronSpectrum:
     """
 
     prompt_column = "frequency (prompt)"
+    prompt_plus_afterpulse_column = "frequency (prompt+afterpulsing)"
     afterpulse_column = "frequency (afterpulsing)"
 
     def __init__(self, args_dict):
@@ -73,7 +74,7 @@ class SinglePhotonElectronSpectrum:
         )
         table.rename_columns(
             ["col1", "col2", "col3"],
-            ["amplitude", self.prompt_column, self.afterpulse_column],
+            ["amplitude", self.prompt_column, self.prompt_plus_afterpulse_column],
         )
 
         writer.ModelDataWriter.dump(

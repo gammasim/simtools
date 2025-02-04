@@ -61,15 +61,11 @@ def validate_application_output(config, from_command_line=None, from_config_file
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
     """Test simtel cfg files."""
-    if "TEST_SIMTEL_CFG_FILES" in integration_test:
-        if from_command_line:
-            test_simtel_cfg_file = integration_test["TEST_SIMTEL_CFG_FILES"].get(from_command_line)
-        elif from_config_file:
-            test_simtel_cfg_file = integration_test["TEST_SIMTEL_CFG_FILES"].get(from_config_file)
-        else:
-            return
-        if test_simtel_cfg_file:
-            _validate_simtel_cfg_files(config, test_simtel_cfg_file)
+    test_simtel_cfg_file = integration_test.get("TEST_SIMTEL_CFG_FILES", {}).get(
+        from_command_line or from_config_file
+    )
+    if test_simtel_cfg_file:
+        _validate_simtel_cfg_files(config, test_simtel_cfg_file)
 
 
 def _validate_reference_output_file(config, integration_test):
