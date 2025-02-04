@@ -50,7 +50,7 @@ class StatisticalErrorEvaluator:
             The type of the file ('point-like' or 'cone').
         metrics : dict, optional
             Dictionary specifying which metrics to compute and their reference values.
-        grid_point : tuple, optional   # TODO - discuss tuple of dictionary.
+        grid_point : tuple, optional
             Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
         """
         self._logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ class StatisticalErrorEvaluator:
                 f"Grid point already set to: {self.grid_point}. "
                 "Overwriting with new values from file."
             )
-        self.grid_point = (  # TODO check grid point. why 1 TeV?, what are the zeros?
+        self.grid_point = (
             1 * u.TeV,
             unique_azimuths[0],
             unique_zeniths[0],
@@ -166,11 +166,9 @@ class StatisticalErrorEvaluator:
         bin_edges = np.concatenate([bin_edges_low, [bin_edges_high[-1]]])
         return np.unique(bin_edges)
 
-    def compute_triggered_event_histogram(self, event_energies_reco, bin_edges):
+    def compute_reconstructed_event_histogram(self, event_energies_reco, bin_edges):
         """
-        Compute histogram for triggered events.
-
-        TODO: there are no triggered events in DL2 files
+        Compute histogram of events as function of reconstructed energy.
 
         Parameters
         ----------
@@ -181,26 +179,26 @@ class StatisticalErrorEvaluator:
 
         Returns
         -------
-        triggered_event_histogram : array
-            Histogram of triggered events.
+        reconstructed_event_histogram : array
+            Histogram of reconstructed events.
         """
         event_energies_reco = event_energies_reco.to(bin_edges.unit)
 
-        triggered_event_histogram, _ = np.histogram(event_energies_reco.value, bins=bin_edges.value)
-        return triggered_event_histogram * u.count
+        reconstructed_event_histogram, _ = np.histogram(
+            event_energies_reco.value, bins=bin_edges.value
+        )
+        return reconstructed_event_histogram * u.count
 
-    def compute_efficiency_and_errors(self, triggered_event_counts, simulated_event_counts):
+    def compute_efficiency_and_errors(self, reconstructed_event_counts, simulated_event_counts):
         """
-        Compute trigger efficiency and its statistical error using the binomial distribution.
-
-        TODO: No trigger efficiency from DL2 files.
+        Compute reconstructed event efficiency and its uncertainty assuming binomial distribution.
 
         Parameters
         ----------
-        triggered_event_counts : array with units
-            Histogram counts of the triggered events.
+        reconstructed_event_counts : array with units
+            Histogram counts of reconstructed events.
         simulated_event_counts : array with units
-            Histogram counts of the simulated events.
+            Histogram counts of simulated events.
 
         Returns
         -------
@@ -210,10 +208,10 @@ class StatisticalErrorEvaluator:
             Array of relative uncertainties.
         """
         # Ensure the inputs have compatible units
-        triggered_event_counts = (
-            triggered_event_counts.to(u.ct)
-            if isinstance(triggered_event_counts, u.Quantity)
-            else triggered_event_counts * u.ct
+        reconstructed_event_counts = (
+            reconstructed_event_counts.to(u.ct)
+            if isinstance(reconstructed_event_counts, u.Quantity)
+            else reconstructed_event_counts * u.ct
         )
         simulated_event_counts = (
             simulated_event_counts.to(u.ct)
@@ -221,28 +219,28 @@ class StatisticalErrorEvaluator:
             else simulated_event_counts * u.ct
         )
 
-        if np.any(triggered_event_counts > simulated_event_counts):
-            raise ValueError("Triggered event counts exceed simulated event counts.")
+        if np.any(reconstructed_event_counts > simulated_event_counts):
+            raise ValueError("Reconstructed event counts exceed simulated event counts.")
 
         # Compute efficiencies, ensuring the output is dimensionless
         efficiencies = np.divide(
-            triggered_event_counts,
+            reconstructed_event_counts,
             simulated_event_counts,
-            out=np.zeros_like(triggered_event_counts),
+            out=np.zeros_like(reconstructed_event_counts),
             where=simulated_event_counts > 0,
         ).to(u.dimensionless_unscaled)
 
         # Set up a mask for valid data with a unit-consistent threshold
-        valid = (simulated_event_counts > 0) & (triggered_event_counts > 0)
+        valid = (simulated_event_counts > 0) & (reconstructed_event_counts > 0)
 
-        uncertainties = np.zeros_like(triggered_event_counts.value) * u.dimensionless_unscaled
+        uncertainties = np.zeros_like(reconstructed_event_counts.value) * u.dimensionless_unscaled
 
         if np.any(valid):
             uncertainties[valid] = np.sqrt(
                 np.maximum(
                     simulated_event_counts[valid]
-                    / triggered_event_counts[valid]
-                    * (1 - triggered_event_counts[valid] / simulated_event_counts[valid]),
+                    / reconstructed_event_counts[valid]
+                    * (1 - reconstructed_event_counts[valid] / simulated_event_counts[valid]),
                     0,
                 )
             )
@@ -267,13 +265,13 @@ class StatisticalErrorEvaluator:
             Energy threshold value.
         """
         bin_edges = self.create_bin_edges()
-        triggered_event_histogram = self.compute_triggered_event_histogram(
+        reconstructed_event_histogram = self.compute_reconstructed_event_histogram(
             self.data["event_energies_mc"], bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
 
         efficiencies, _ = self.compute_efficiency_and_errors(
-            triggered_event_histogram, simulated_event_histogram
+            reconstructed_event_histogram, simulated_event_histogram
         )
 
         # Determine the effective area threshold (10% of max effective area)
@@ -296,12 +294,12 @@ class StatisticalErrorEvaluator:
             Dictionary with uncertainties for the file.
         """
         bin_edges = self.create_bin_edges()
-        triggered_event_histogram = self.compute_triggered_event_histogram(
+        reconstructed_event_histogram = self.compute_reconstructed_event_histogram(
             self.data["event_energies_mc"], bin_edges
         )
         simulated_event_histogram = self.data["simulated_event_histogram"]
         _, relative_errors = self.compute_efficiency_and_errors(
-            triggered_event_histogram, simulated_event_histogram
+            reconstructed_event_histogram, simulated_event_histogram
         )
         return {"relative_errors": relative_errors}
 

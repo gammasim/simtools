@@ -18,8 +18,6 @@ class EventScaler:
     """
     Scales the number of events based on statistical error metrics.
 
-    # TODO - suggest a better name for this class, it is sounds a bit like "scaling an event".
-
     Supports scaling both the entire dataset and specific grid points like energy values.
     """
 
@@ -47,9 +45,8 @@ class EventScaler:
         Parameters
         ----------
         return_sum : bool, optional
-            If `True`, returns the sum of scaled events for the entire dataset. If `False`,
+            If `True`, returns the sum of scaled events for the entire set of MC events. If `False`,
             returns the scaled events for each grid point along the energy axis. Default is `True`.
-            # TODO - what is a 'dataset' here?
 
         Returns
         -------
