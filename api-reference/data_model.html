@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g6ea2d5f Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+gbaeda12 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=6cebb1e1"></script>
+    <script src="../_static/documentation_options.js?v=0623ff92"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="CORSIKA" href="corsika.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g6ea2d5f" />
+  <meta name="docsearch:version" content="0.1.dev1+gbaeda12" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6ea2d5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gbaeda12 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -470,7 +470,6 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.metadata_model">metadata_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.metadata_model.get_default_metadata_dict"><code class="docutils literal notranslate"><span class="pre">get_default_metadata_dict()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.metadata_model.validate_schema"><code class="docutils literal notranslate"><span class="pre">validate_schema()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.model_data_writer">model_data_writer</a><ul class="nav section-nav flex-column">
@@ -491,6 +490,8 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_get_model_parameter_schema_files"><code class="docutils literal notranslate"><span class="pre">get_get_model_parameter_schema_files()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_model_parameter_schema_file"><code class="docutils literal notranslate"><span class="pre">get_model_parameter_schema_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_model_parameter_schema_version"><code class="docutils literal notranslate"><span class="pre">get_model_parameter_schema_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.load_schema"><code class="docutils literal notranslate"><span class="pre">load_schema()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.validate_dict_using_schema"><code class="docutils literal notranslate"><span class="pre">validate_dict_using_schema()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.validate_data">validate_data</a><ul class="nav section-nav flex-column">
@@ -779,28 +780,6 @@ metadata file.</p>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="data_model.metadata_model.validate_schema">
-<span class="sig-prename descclassname"><span class="pre">data_model.metadata_model.</span></span><span class="sig-name descname"><span class="pre">validate_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/metadata_model.html#validate_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.metadata_model.validate_schema" title="Link to this definition">#</a></dt>
-<dd><p>Validate dictionary against schema.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>data</strong></dt><dd><p>dictionary to be validated</p>
-</dd>
-<dt><strong>schema_file (dict)</strong></dt><dd><p>schema used for validation</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>jsonschema.exceptions.ValidationError</dt><dd><p>if validation fails</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="module-data_model.model_data_writer">
 <span id="model-data-writer"></span><span id="datamodelmodeldatawriter"></span><h2>model_data_writer<a class="headerlink" href="#module-data_model.model_data_writer" title="Link to this heading">#</a></h2>
@@ -1035,7 +1014,7 @@ Replace “None” with “null” for unit field.</p>
 </section>
 <section id="module-data_model.schema">
 <span id="schema"></span><span id="datamodelschema"></span><h2>schema<a class="headerlink" href="#module-data_model.schema" title="Link to this heading">#</a></h2>
-<p>Module providing functionality to read schema.</p>
+<p>Module providing functionality to read and validate dictionaries using schema.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="data_model.schema.get_get_model_parameter_schema_files">
 <span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">get_get_model_parameter_schema_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/simtools/schemas/model_parameters')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#get_get_model_parameter_schema_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.get_get_model_parameter_schema_files" title="Link to this definition">#</a></dt>
@@ -1087,6 +1066,56 @@ Replace “None” with “null” for unit field.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>str</dt><dd><p>Schema version.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_model.schema.load_schema">
+<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">load_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#load_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.load_schema" title="Link to this definition">#</a></dt>
+<dd><p>Load parameter schema from file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>schema_file: str</strong></dt><dd><p>Path to schema file.</p>
+</dd>
+<dt><strong>schema_version: str</strong></dt><dd><p>Schema version.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>schema: dict</dt><dd><p>Schema dictionary.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>if schema file is not found</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_model.schema.validate_dict_using_schema">
+<span class="sig-prename descclassname"><span class="pre">data_model.schema.</span></span><span class="sig-name descname"><span class="pre">validate_dict_using_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/schema.html#validate_dict_using_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.schema.validate_dict_using_schema" title="Link to this definition">#</a></dt>
+<dd><p>Validate a data dictionary against a schema.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data</strong></dt><dd><p>dictionary to be validated</p>
+</dd>
+<dt><strong>schema_file (dict)</strong></dt><dd><p>schema used for validation</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>jsonschema.exceptions.ValidationError</dt><dd><p>if validation fails</p>
 </dd>
 </dl>
 </dd>
@@ -1257,7 +1286,6 @@ Replace “None” with “null” for unit field.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.metadata_model">metadata_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.metadata_model.get_default_metadata_dict"><code class="docutils literal notranslate"><span class="pre">get_default_metadata_dict()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.metadata_model.validate_schema"><code class="docutils literal notranslate"><span class="pre">validate_schema()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.model_data_writer">model_data_writer</a><ul class="nav section-nav flex-column">
@@ -1278,6 +1306,8 @@ Replace “None” with “null” for unit field.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_get_model_parameter_schema_files"><code class="docutils literal notranslate"><span class="pre">get_get_model_parameter_schema_files()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_model_parameter_schema_file"><code class="docutils literal notranslate"><span class="pre">get_model_parameter_schema_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.get_model_parameter_schema_version"><code class="docutils literal notranslate"><span class="pre">get_model_parameter_schema_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.load_schema"><code class="docutils literal notranslate"><span class="pre">load_schema()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data_model.schema.validate_dict_using_schema"><code class="docutils literal notranslate"><span class="pre">validate_dict_using_schema()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-data_model.validate_data">validate_data</a><ul class="nav section-nav flex-column">

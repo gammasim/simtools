@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-validate-file-using-schema &#8212; simtools v0.1.dev1+g6ea2d5f Manual</title>
+    <title>simtools-validate-file-using-schema &#8212; simtools v0.1.dev1+gbaeda12 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=6cebb1e1"></script>
+    <script src="../../_static/documentation_options.js?v=0623ff92"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="simtools-validate-cumulative-psf" href="simtools-validate-cumulative-psf.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g6ea2d5f" />
+  <meta name="docsearch:version" content="0.1.dev1+gbaeda12" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g6ea2d5f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gbaeda12 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -448,8 +448,8 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_file"><code class="docutils literal notranslate"><span class="pre">validate_data_file()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_files"><code class="docutils literal notranslate"><span class="pre">validate_data_files()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_dict_using_schema"><code class="docutils literal notranslate"><span class="pre">validate_dict_using_schema()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_metadata"><code class="docutils literal notranslate"><span class="pre">validate_metadata()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_schema"><code class="docutils literal notranslate"><span class="pre">validate_schema()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -507,17 +507,17 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_metadata">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#validate_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_metadata" title="Link to this definition">#</a></dt>
-<dd><p>Validate metadata.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="validate_file_using_schema.validate_schema">
-<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#validate_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_schema" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="validate_file_using_schema.validate_dict_using_schema">
+<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_dict_using_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#validate_dict_using_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_dict_using_schema" title="Link to this definition">#</a></dt>
 <dd><p>Validate a schema file (or several files) given in yaml or json format.</p>
 <p>Schema is either given as command line argument, read from the meta_schema_url or from
 the metadata section of the data dictionary.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="validate_file_using_schema.validate_metadata">
+<span class="sig-prename descclassname"><span class="pre">validate_file_using_schema.</span></span><span class="sig-name descname"><span class="pre">validate_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/validate_file_using_schema.html#validate_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validate_file_using_schema.validate_metadata" title="Link to this definition">#</a></dt>
+<dd><p>Validate metadata.</p>
 </dd></dl>
 
 </section>
@@ -573,8 +573,8 @@ the metadata section of the data dictionary.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_file"><code class="docutils literal notranslate"><span class="pre">validate_data_file()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_data_files"><code class="docutils literal notranslate"><span class="pre">validate_data_files()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_dict_using_schema"><code class="docutils literal notranslate"><span class="pre">validate_dict_using_schema()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_metadata"><code class="docutils literal notranslate"><span class="pre">validate_metadata()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate_file_using_schema.validate_schema"><code class="docutils literal notranslate"><span class="pre">validate_schema()</span></code></a></li>
 </ul>
   </nav></div>
 
