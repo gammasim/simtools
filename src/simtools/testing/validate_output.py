@@ -12,33 +12,13 @@ from simtools.testing import assertions
 _logger = logging.getLogger(__name__)
 
 
-def validate_all_tests(config, request, config_file_model_version):
-    """
-    Validate test output for all integration tests.
-
-    Parameters
-    ----------
-    config: dict
-        Integration test configuration dictionary.
-    request: request
-        Request object.
-    config_file_model_version: str
-        Model version from the configuration file.
-
-    """
-    if request.config.getoption("--model_version") is None:
-        validate_application_output(config)
-    elif config_file_model_version is not None:
-        _from_command_line = request.config.getoption("--model_version")
-        _from_config_file = config_file_model_version
-        validate_application_output(config, _from_command_line, _from_config_file)
-
-
 def validate_application_output(config, from_command_line=None, from_config_file=None):
     """
     Validate application output against expected output.
 
     Expected output is defined in configuration file.
+    Some tests run only if the model version from the command line
+    equals the model version from the configuration file.
 
     Parameters
     ----------
@@ -84,8 +64,10 @@ def _test_simtel_cfg_files(config, integration_test, from_command_line, from_con
     if "TEST_SIMTEL_CFG_FILES" in integration_test:
         if from_command_line:
             test_simtel_cfg_file = integration_test["TEST_SIMTEL_CFG_FILES"].get(from_command_line)
-        else:
+        elif from_config_file:
             test_simtel_cfg_file = integration_test["TEST_SIMTEL_CFG_FILES"].get(from_config_file)
+        else:
+            return
         if test_simtel_cfg_file:
             _validate_simtel_cfg_files(config, test_simtel_cfg_file)
 
