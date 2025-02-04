@@ -57,4 +57,8 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     assert result.returncode == 0, f"Application failed: {cmd}"
 
-    validate_output.validate_all_tests(tmp_config, request, config_file_model_version)
+    validate_output.validate_application_output(
+        tmp_config,
+        request.config.getoption("--model_version"),
+        config_file_model_version or request.config.getoption("--model_version"),
+    )
