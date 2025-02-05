@@ -9,12 +9,15 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
 )
 from simtools.production_configuration.generate_simulation_config import SimulationConfig
 
-PATH_FITS = "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+PATH_FITS = (
+    "tests/resources/production_dl2_fits/"
+    "prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+)
 
 
 @pytest.fixture
 def metric():
-    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yaml")
+    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yml")
 
 
 @pytest.fixture
@@ -67,11 +70,11 @@ def test_configure_simulation(mock_statistical_error_evaluator):
     metrics = {
         "uncertainty_effective_area": {
             "target_error": {"value": 0.1, "unit": "dimensionless"},
-            "valid_range": {"value": [0.04, 200], "unit": "TeV"},
+            "energy_range": {"value": [0.04, 200], "unit": "TeV"},
         },
         "energy_estimate": {
             "target_error": {"value": 0.2, "unit": "dimensionless"},
-            "valid_range": {"value": [0.04, 200], "unit": "TeV"},
+            "energy_range": {"value": [0.04, 200], "unit": "TeV"},
         },
     }
     config = SimulationConfig(grid_point, "B", "medium_precision", PATH_FITS, "Off-source", metrics)
