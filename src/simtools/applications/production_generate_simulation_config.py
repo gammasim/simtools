@@ -1,11 +1,24 @@
 #!/usr/bin/python3
 
 r"""
-Configure a simulation based on command-line arguments.
+Derive simulation configuration parameters for a simulation production.
 
-This application configures and
-generates simulation parameters for a specific grid point in a statistical uncertainty
-evaluation setup.
+Derived simulation configuration parameters include:
+
+* energy range
+* shower core scatter radius
+* view cone radius
+* total number of events to be simulated
+
+Configuration parameters depend on characteristics of the observations, especially elevation,
+azimuth, and night sky background.
+
+The configuration parameters are derived according to the required precision. The metrics are:
+
+* statistical uncertainty on the determination of the effective area as function of primary energy
+* fraction of lost events to the selected core scatter and view cone radius (to be implemented)
+* statistical uncertainty of the energy migration matrix as function of primary energy
+  (to be implemented)
 
 Command line arguments
 ----------------------
@@ -38,9 +51,9 @@ To run the simulation configuration, execute the script as follows:
         --nsb 0.3 --ctao_data_level "A" --science_case "high_precision" \
         --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \
         --file_type "point-like"    \
-        --metrics_file tests/resources/production_simulation_config_metrics.yaml --site North
+        --metrics_file tests/resources/production_simulation_config_metrics.yml --site North
 
-The output will show the configured simulation parameters.
+The output will show the derived simulation parameters.
 """
 
 import json
@@ -61,7 +74,8 @@ from simtools.production_configuration.generate_simulation_config import (
 def _parse(label):
     """Parse command-line arguments."""
     config = configurator.Configurator(
-        label=label, description="Configure and run a simulation based on input parameters."
+        label=label,
+        description="Derive simulation configuration parameters for a simulation production.",
     )
     config.parser.add_argument(
         "--azimuth", type=float, required=True, help="Azimuth angle in degrees."
