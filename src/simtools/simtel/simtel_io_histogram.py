@@ -1,8 +1,4 @@
-"""
-Reads the content of either a single histogram (.hdata) or a single simtel_array output (.simtel).
-
-Files can be zst compressed.
-"""
+"""Reads the content of either a single histogram or simtel_array output file."""
 
 import copy
 import logging
@@ -81,9 +77,9 @@ class SimtelIOHistogram:
         self._config = None
         self._total_area = None
         self._solid_angle = None
+        self._histogram = None
         self._total_num_simulated_events = None
         self._total_num_triggered_events = None
-        self._histogram = None
         self._initialize_histogram()
         self.trigger_rate = None
         self.trigger_rate_uncertainty = None
@@ -134,56 +130,39 @@ class SimtelIOHistogram:
         """
         Return information about the input parameters for the simulation.
 
+        If the file is a .hdata or .hdata.zst, config will be None.
+
         Returns
         -------
         dict:
             dictionary with information about the simulation (pyeventio MCRunHeader object).
         """
         if self._config is None:
-            # If the file is a .hdata or .hdata.zst, config will continue to be None.
             with EventIOFile(self.histogram_file) as f:
-                # Try to find configuration from .simtel file. If .hdata, config will be None
-                for obj in f:
-                    if isinstance(obj, MCRunHeader):
-                        self._config = obj.parse()
-
+                self._config = next(
+                    (obj.parse() for obj in f if isinstance(obj, MCRunHeader)), None
+                )
         return self._config
 
     @property
-    def total_num_simulated_events(self):
+    def total_number_of_events(self):
         """
-        Return the total number of simulated events the histograms.
+        Return the total number of simulated and triggered events in the histograms.
 
         Returns
         -------
-        int:
-            total number of simulated events.
+        int, int:
+            total number of simulated and triggered events.
         """
-        if self._total_num_simulated_events is None:
-            events_histogram, _ = self.fill_event_histogram_dicts()
-            self._total_num_simulated_events = np.sum(events_histogram["data"])
-            logging.debug(f"Number of total simulated showers: {self._total_num_simulated_events}")
-        return self._total_num_simulated_events
-
-    @property
-    def total_num_triggered_events(self):
-        """
-        Returns the total number of triggered events.
-
-        Please note that this value is not supposed to match the trigger rate x estimated
-        observation time, as the simulation is optimized for computational time and the energy
-        distribution assumed is not necessarily the reference cosmic-ray spectra.
-
-        Returns
-        -------
-        int:
-            total number of simulated events.
-        """
-        if self._total_num_triggered_events is None:
-            _, trigger_histogram = self.fill_event_histogram_dicts()
+        if self._total_num_simulated_events is None or self._total_num_triggered_events is None:
+            simulated_histogram, trigger_histogram = self.fill_event_histogram_dicts()
+            self._total_num_simulated_events = np.sum(simulated_histogram["data"])
             self._total_num_triggered_events = np.sum(trigger_histogram["data"])
-            logging.debug(f"Number of total triggered showers: {self._total_num_triggered_events}")
-        return self._total_num_triggered_events
+            logging.debug(
+                "Number of total simulated / triggered events: "
+                f"{self._total_num_simulated_events} / {self._total_num_triggered_events}"
+            )
+        return self._total_num_simulated_events, self._total_num_triggered_events
 
     def fill_event_histogram_dicts(self):
         """
@@ -191,34 +170,18 @@ class SimtelIOHistogram:
 
         Returns
         -------
-        dict:
-            Information about the histograms with simulated events.
-        dict:
-            Information about the histograms with triggered events.
+        tuple(dict, dict):
+            Information about the histograms with simulated and triggered events.
 
         Raises
         ------
         HistogramIdNotFoundError:
             if histogram ids not found. Problem with the file.
         """
-        # Save the appropriate histograms to variables
-        found_simulated_events_hist = False
-        found_triggered_events_hist = False
-        events_histogram = None
-        triggered_events_histogram = None
-        for hist in self.histogram:
-            if hist["id"] == 1:
-                events_histogram = hist
-                found_simulated_events_hist = True
-            elif hist["id"] == 2:
-                triggered_events_histogram = hist
-                found_triggered_events_hist = True
-            if found_simulated_events_hist * found_triggered_events_hist:
-                if "triggered_events_histogram" in locals():
-                    return events_histogram, triggered_events_histogram
-        msg = "Histograms ids not found. Please check your files."
-
-        self._logger.error(msg)
+        histograms = {hist["id"]: hist for hist in self.histogram if hist["id"] in {1, 2}}
+        if 1 in histograms and 2 in histograms:
+            return histograms[1], histograms[2]
+        self._logger.error("Histograms ids not found. Please check your files.")
         raise HistogramIdNotFoundError
 
     def _set_view_cone(self, view_cone):
@@ -603,7 +566,8 @@ class SimtelIOHistogram:
             self.energy_range[1],
         )
         if stacked_num_simulated_events is None:
-            return (self.total_num_simulated_events / first_estimate) * u.s
+            _simulated_events, _ = self.total_number_of_events
+            return (_simulated_events / first_estimate) * u.s
         return (stacked_num_simulated_events / first_estimate) * u.s
 
     def estimate_trigger_rate_uncertainty(
@@ -648,13 +612,14 @@ class SimtelIOHistogram:
         dict:
             Dictionary with the information, e.g., view angle, energy range, etc.
         """
+        _simulated, _triggered = self.total_number_of_events
         info_dict = {
             "view_cone": self.view_cone,
             "solid_angle": self.solid_angle,
             "total_area": self.total_area,
             "energy_range": self.energy_range,
-            "total_num_simulated_events": self.total_num_simulated_events,
-            "total_num_triggered_events": self.total_num_triggered_events,
+            "total_num_simulated_events": _simulated,
+            "total_num_triggered_events": _triggered,
         }
         if mode != "silent":
             print(info_dict)
