@@ -36,12 +36,10 @@ import logging
 import re
 from pathlib import Path
 
-import jsonschema
-
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
-from simtools.data_model import metadata_collector, metadata_model, schema, validate_data
+from simtools.data_model import metadata_collector, schema, validate_data
 
 
 def _parse(label, description):
@@ -129,7 +127,7 @@ def _get_json_file_list(file_directory=None, file_name=None):
     return file_list
 
 
-def validate_schema(args_dict, logger):
+def validate_dict_using_schema(args_dict, logger):
     """
     Validate a schema file (or several files) given in yaml or json format.
 
@@ -145,11 +143,7 @@ def validate_schema(args_dict, logger):
         except FileNotFoundError as exc:
             logger.error(f"Error reading schema file from {file_name}")
             raise exc
-        try:
-            metadata_model.validate_schema(data, _get_schema_file_name(args_dict, data))
-        except jsonschema.exceptions.ValidationError as exc:
-            logger.error(f"Failed validation of file {file_name}")
-            raise exc
+        schema.validate_dict_using_schema(data, _get_schema_file_name(args_dict, data))
         logger.info(f"Successful validation of file {file_name}")
 
 
@@ -202,7 +196,7 @@ def main():  # noqa: D103
     if args_dict["data_type"].lower() == "metadata":
         validate_metadata(args_dict, logger)
     elif args_dict["data_type"].lower() == "schema":
-        validate_schema(args_dict, logger)
+        validate_dict_using_schema(args_dict, logger)
     else:
         validate_data_files(args_dict, logger)
 

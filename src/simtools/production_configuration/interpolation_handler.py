@@ -159,7 +159,7 @@ class InterpolationHandler:
 
     def plot_comparison(self, evaluator: "StatisticalErrorEvaluator"):
         """
-        Plot a comparison between the simulated, scaled, and triggered events.
+        Plot a comparison between the simulated, scaled, and reconstructed events.
 
         Parameters
         ----------
@@ -184,14 +184,14 @@ class InterpolationHandler:
 
         plt.plot(midpoints, evaluator.scaled_events, label="Scaled")
 
-        triggered_event_histogram, _ = np.histogram(
+        reconstructed_event_histogram, _ = np.histogram(
             evaluator.data["event_energies_reco"], bins=evaluator.data["bin_edges_low"]
         )
-        plt.plot(midpoints[:-1], triggered_event_histogram, label="Triggered")
+        plt.plot(midpoints[:-1], reconstructed_event_histogram, label="Reconstructed")
 
         plt.legend()
         plt.xscale("log")
         plt.xlabel("Energy (Midpoint of Bin Edges)")
         plt.ylabel("Event Count")
-        plt.title("Comparison of Simulated, Scaled, and Triggered Events")
+        plt.title("Comparison of Simulated, scaled, and reconstructed events")
         plt.show()
