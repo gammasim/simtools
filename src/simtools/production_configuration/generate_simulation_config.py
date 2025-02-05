@@ -1,10 +1,5 @@
 """
-Configures and generates simulation parameters for a specific grid point.
-
-Used to configure and generate simulation parameters for a specific grid point
-based on statistical uncertainties.
-The class considers parameters, such as azimuth, elevation, and night sky background,
-to compute core scatter area, viewcone, and the required number of simulated events.
+Derives simulation configuration parameters for a specific grid point based on several metrics.
 
 Key Components:
 ---------------
@@ -20,14 +15,10 @@ Key Components:
 
 """
 
-import logging
-
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.event_scaler import EventScaler
-
-_logger = logging.getLogger(__name__)
 
 
 class SimulationConfig:
@@ -80,16 +71,11 @@ class SimulationConfig:
             A dictionary with simulation parameters such as core scatter area,
               viewcone, and number of simulated events.
         """
-        core_scatter_area = self._calculate_core_scatter_area()
-        viewcone = self._calculate_viewcone()
-        number_of_events = self.calculate_required_events()
-
         self.simulation_params = {
-            "core_scatter_area": core_scatter_area,
-            "viewcone": viewcone,
-            "number_of_events": number_of_events,
+            "core_scatter_area": self._calculate_core_scatter_area(),
+            "viewcone": self._calculate_viewcone(),
+            "number_of_events": self.calculate_required_events(),
         }
-
         return self.simulation_params
 
     def calculate_required_events(self) -> int:

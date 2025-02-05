@@ -4,7 +4,6 @@ import logging
 import re
 import sys
 
-import jsonschema
 import numpy as np
 import pytest
 import yaml
@@ -750,35 +749,6 @@ def test_check_version_string(caplog):
             data_validator._check_version_string(version)
 
     assert data_validator._check_version_string(None) is None
-
-
-def test_validate_data_dict_using_json_schema(caplog):
-    data_validator = validate_data.DataValidator()
-
-    valid_json_schema = {
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "value": {"type": "number"},
-        },
-        "required": ["name", "value"],
-    }
-    valid_data = {"name": "test", "value": 123}
-
-    with caplog.at_level(logging.DEBUG):
-        data_validator._validate_data_dict_using_json_schema(valid_data, valid_json_schema)
-    assert "Validation of dict type using JSON schema" in caplog.text
-
-    invalid_data = {"name": "test", "value": "not_a_number"}
-
-    with caplog.at_level(logging.ERROR):
-        with pytest.raises(jsonschema.exceptions.ValidationError):
-            data_validator._validate_data_dict_using_json_schema(invalid_data, valid_json_schema)
-    assert "Validation error:" in caplog.text
-
-    with caplog.at_level(logging.DEBUG):
-        data_validator._validate_data_dict_using_json_schema(valid_data, None)
-    assert "Skipping validation of dict type" in caplog.text
 
 
 def test_get_value_and_units_as_lists():
