@@ -1,0 +1,22 @@
+# Definition of error metrics and validity ranges for statistical error evaluation
+
+uncertainty_effective_area:
+  description: |-
+    Relative uncertainty on the effective area
+  target_error:
+    value: 0.02
+  energy_range:
+    value:
+      - 0.04
+      - 200
+    unit: TeV
+energy_estimate:
+  description: |-
+    Error in energy estimation.
+  target_error:
+    value: 0.05
+  energy_range:
+    value:
+      - 0.04
+      - 200
+    unit: TeV

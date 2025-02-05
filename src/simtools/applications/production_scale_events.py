@@ -93,8 +93,8 @@ def _parse(label, description):
     config.parser.add_argument(
         "--metrics_file",
         type=str,
-        default="production_simulation_config_metrics.yaml",
-        help="Metrics definition file. (default: production_simulation_config_metrics.yaml)",
+        default="production_simulation_config_metrics.yml",
+        help="Metrics definition file. (default: production_simulation_config_metrics.yml)",
     )
     config.parser.add_argument(
         "--science_case", type=str, required=True, help="Science case for the simulation."
