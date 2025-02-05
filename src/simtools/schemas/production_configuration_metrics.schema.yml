@@ -1,0 +1,68 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/ErrorMetrics'
+title: Statistical Error Metrics Schema
+description: |
+  YAML representation of simulation production configuration
+  metrics.
+version: 0.1.0
+name: production_configuration_metrics.metaschema
+type: object
+additionalProperties: false
+
+definitions:
+  ErrorMetrics:
+    type: object
+    description: Definition of error metrics and validity ranges.
+    additionalProperties: false
+    properties:
+      uncertainty_effective_area:
+        $ref: '#/definitions/ErrorMetric'
+      energy_estimate:
+        $ref: '#/definitions/ErrorMetric'
+
+  ErrorMetric:
+    type: object
+    description: Error metric definition.
+    additionalProperties: false
+    properties:
+      description:
+        type: string
+        description: Description of the error metric.
+      target_error:
+        $ref: '#/definitions/TargetError'
+      energy_range:
+        $ref: '#/definitions/EnergyRange'
+    required:
+      - target_error
+      - energy_range
+
+  TargetError:
+    type: object
+    description: Target error specification.
+    additionalProperties: false
+    properties:
+      value:
+        type: number
+        description: Target error value.
+    required:
+      - value
+
+  EnergyRange:
+    type: object
+    description: Energy range specification.
+    additionalProperties: false
+    properties:
+      value:
+        type: array
+        description: Energy range values.
+        items:
+          type: number
+        minItems: 2
+        maxItems: 2
+      unit:
+        type: string
+        description: Energy unit.
+    required:
+      - value
+      - unit
