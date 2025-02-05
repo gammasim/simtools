@@ -872,7 +872,8 @@ def get_list_of_files_from_command_line(file_names, suffix_list):
     Get a list of files from the command line.
 
     Files can be given as a list of file names or as a text file containing the list of files.
-    The list of suffixes restrict the files to be returned.
+    The list of suffixes restrict the files types to be returned. Note that a file list must
+    have a different suffix than those in the suffix list.
 
     Parameters
     ----------
@@ -892,7 +893,7 @@ def get_list_of_files_from_command_line(file_names, suffix_list):
         try:
             if path.suffix in suffix_list:
                 _files.append(one_file)
-            else:
+            elif len(file_names) == 1:
                 with open(one_file, encoding="utf-8") as file:
                     _files.extend(line.strip() for line in file)
         except FileNotFoundError as exc:
