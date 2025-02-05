@@ -64,6 +64,7 @@ import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.data_model import schema
 from simtools.io_operations import io_handler
 from simtools.production_configuration.generate_simulation_config import (
     SimulationConfig,
@@ -139,13 +140,20 @@ def main():
         "night_sky_background": args_dict["nsb"],
     }
 
+    metrics = (
+        gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
+    )
+    schema.validate_dict_using_schema(
+        data=metrics, schema_file="production_configuration_metrics.schema.yml"
+    )
+
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,
         ctao_data_level=args_dict["ctao_data_level"],
         science_case=args_dict["science_case"],
         file_path=args_dict["file_path"],
         file_type=args_dict["file_type"],
-        metrics=gen.collect_data_from_file(args_dict["metrics_file"]),
+        metrics=metrics,
     )
 
     simulation_params = simulation_config.configure_simulation()
