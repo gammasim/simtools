@@ -484,11 +484,11 @@ class SimtelIOHistogram:
         """
         Get the particle distribution function.
 
-        This depends  on whether one wants the reference CR distribution or the distribution
+        This depends on whether one wants the reference CR distribution or the distribution
         used in the simulation. This is controlled by label.
         By using label="reference", one gets the distribution function according to a pre-defined CR
         distribution, while by using label="simulation", the spectral index of the distribution
-        function from the simulation is used. Naturally, label="simulation" only works when the
+        function from the simulation is used. The label="simulation" works only when the
         input file is a .simtel file and not a .hdata file.
 
         Parameters
