@@ -30,7 +30,7 @@ r"""
             --output_file spectrum_photon_electron_afterpulse.ecsv
 
     For an example of how to plot the single photon electron spectrum, see the
-    integration test `tests/integration_tests/config/plot_tabular_data_for_single_pe_data.yml`.
+    integration test 'tests/integration_tests/config/plot_tabular_data_for_single_pe_data.yml'.
 
 """
 
