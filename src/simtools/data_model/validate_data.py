@@ -5,14 +5,13 @@ import os
 import re
 from pathlib import Path
 
-import jsonschema
 import numpy as np
 from astropy import units as u
 from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
-from simtools.data_model import format_checkers, schema
+from simtools.data_model import schema
 from simtools.utils import value_conversion
 
 __all__ = ["DataValidator"]
@@ -185,8 +184,9 @@ class DataValidator:
         Take into account different data types and allow to use json_schema for testing.
         """
         if self._get_data_description(index).get("type", None) == "dict":
-            self._validate_data_dict_using_json_schema(
-                self.data_dict["value"], self._get_data_description(index).get("json_schema")
+            schema.validate_dict_using_schema(
+                data=self.data_dict["value"],
+                json_schema=self._get_data_description(index).get("json_schema"),
             )
         else:
             self._check_data_type(np.array(value).dtype, index)
@@ -231,27 +231,6 @@ class DataValidator:
             ], target_unit
         except TypeError:
             return [None], target_unit
-
-    def _validate_data_dict_using_json_schema(self, data, json_schema):
-        """
-        Validate a dictionary using a json schema.
-
-        Parameters
-        ----------
-        data: dict
-            Data dictionary
-        json_schema: dict
-            JSON schema
-        """
-        if json_schema is None:
-            self._logger.debug("Skipping validation of dict type")
-            return
-        self._logger.debug("Validation of dict type using JSON schema")
-        try:
-            jsonschema.validate(data, json_schema, format_checker=format_checkers.format_checker)
-        except jsonschema.exceptions.ValidationError as exc:
-            self._logger.error(f"Validation error: {exc}")
-            raise exc
 
     def _validate_data_table(self):
         """Validate tabulated data."""

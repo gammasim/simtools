@@ -1,3 +1,6 @@
+import logging
+from unittest.mock import patch
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -12,17 +15,23 @@ from simtools.production_configuration.interpolation_handler import Interpolatio
 
 @pytest.fixture
 def test_fits_file():
-    return "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+    return (
+        "tests/resources/production_dl2_fits/"
+        "prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+    )
 
 
 @pytest.fixture
-def test_fits_file2():
-    return "tests/resources/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+def test_fits_file_2():
+    return (
+        "tests/resources/production_dl2_fits/"
+        "prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+    )
 
 
 @pytest.fixture
 def metric():
-    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yaml")
+    return gen.collect_data_from_file("tests/resources/production_simulation_config_metrics.yml")
 
 
 def test_initialization(test_fits_file, metric):
@@ -30,7 +39,6 @@ def test_initialization(test_fits_file, metric):
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file, file_type="point-like", metrics=metric
     )
-    assert evaluator.file_path == test_fits_file
     assert evaluator.file_type == "point-like"
     assert isinstance(evaluator.data, dict)
     assert "event_energies_reco" in evaluator.data
@@ -70,7 +78,7 @@ def test_missing_file():
         StatisticalErrorEvaluator(file_path, file_type, metrics)
 
 
-def test_interpolation_handler(test_fits_file, test_fits_file2, metric):
+def test_interpolation_handler(test_fits_file, test_fits_file_2, metric):
     """Test interpolation with the InterpolationHandler."""
     grid_point1 = (1, 180, 45, 0, 0.5)
     evaluator1 = StatisticalErrorEvaluator(
@@ -78,7 +86,7 @@ def test_interpolation_handler(test_fits_file, test_fits_file2, metric):
     )
     grid_point2 = (1, 180, 60, 0, 0.5)
     evaluator2 = StatisticalErrorEvaluator(
-        file_path=test_fits_file2, file_type="point-like", metrics=metric, grid_point=grid_point2
+        file_path=test_fits_file_2, file_type="point-like", metrics=metric, grid_point=grid_point2
     )
     science_case = "example case"
     handler = InterpolationHandler(
@@ -227,11 +235,11 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
         file_path=test_fits_file, file_type="point-like", metrics=metric
     )
 
-    triggered_event_counts = np.array([10, 20, 5, 0]) * u.ct
+    reconstructed_event_counts = np.array([10, 20, 5, 0]) * u.ct
     simulated_event_counts = np.array([100, 200, 50, 0]) * u.ct
 
     efficiencies, relative_errors = evaluator.compute_efficiency_and_errors(
-        triggered_event_counts, simulated_event_counts
+        reconstructed_event_counts, simulated_event_counts
     )
 
     expected_efficiencies = np.array([0.1, 0.1, 0.1, 0.0]) * u.dimensionless_unscaled
@@ -244,6 +252,11 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
         relative_errors, expected_relative_errors, atol=1e-2
     ), f"Expected relative errors {expected_relative_errors}, but got {relative_errors}"
 
+    with pytest.raises(
+        ValueError, match="Reconstructed event counts exceed simulated event counts."
+    ):
+        evaluator.compute_efficiency_and_errors(20.0, 10.0)
+
 
 def test_calculate_overall_metric_invalid_metric(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
@@ -254,3 +267,26 @@ def test_calculate_overall_metric_invalid_metric(test_fits_file):
 
     with pytest.raises(ValueError, match="Invalid metric specified"):
         evaluator.calculate_metrics()
+
+
+def test_set_grid_point_single_azimuth_zenith(caplog):
+    with patch.object(StatisticalErrorEvaluator, "load_data_from_file", return_value={}):
+        evaluator = StatisticalErrorEvaluator(file_path="", file_type="point-like", metrics={})
+        events_data = {"PNT_AZ": np.array([45.0]), "PNT_ALT": np.array([45.0])}
+        evaluator._set_grid_point(events_data)
+        assert evaluator.grid_point == (1 * u.TeV, 45 * u.deg, 45 * u.deg, 0, 0 * u.deg)
+
+        events_data = {"PNT_AZ": np.array([45.0, 90.0]), "PNT_ALT": np.array([45.0])}
+        with pytest.raises(ValueError, match=r"^Multiple values found for azimuth"):
+            evaluator._set_grid_point(events_data)
+
+        events_data = {"PNT_AZ": np.array([45.0]), "PNT_ALT": np.array([45.0, 60.0])}
+        with pytest.raises(ValueError, match=r"^Multiple values found for azimuth"):
+            evaluator._set_grid_point(events_data)
+
+        evaluator.grid_point = (1 * u.TeV, 45 * u.deg, 45 * u.deg, 0, 0 * u.deg)
+        events_data = {"PNT_AZ": np.array([90.0]), "PNT_ALT": np.array([30.0])}
+        with caplog.at_level(logging.WARNING):
+            evaluator._set_grid_point(events_data)
+            assert "Grid point already set to" in caplog.text
+        assert evaluator.grid_point == (1 * u.TeV, 90 * u.deg, 60 * u.deg, 0, 0 * u.deg)

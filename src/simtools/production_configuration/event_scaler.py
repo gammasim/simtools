@@ -6,16 +6,12 @@ which scales the number of events for both the entire dataset and specific grid 
 Scaling factors are calculated using error metrics and the evaluator's results.
 """
 
-import logging
-
 import astropy.units as u
 import numpy as np
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
-
-_logger = logging.getLogger(__name__)
 
 
 class EventScaler:
@@ -46,14 +42,10 @@ class EventScaler:
         """
         Calculate the scaled number of events based on statistical error metrics.
 
-        If `return_sum` is `True`, the method returns the sum of scaled events for the entire
-        dataset. If `return_sum` is `False`, it returns the scaled number of events for each
-        grid point (e.g., along the energy axis).
-
         Parameters
         ----------
         return_sum : bool, optional
-            If `True`, returns the sum of scaled events for the entire dataset. If `False`,
+            If `True`, returns the sum of scaled events for the entire set of MC events. If `False`,
             returns the scaled events for each grid point along the energy axis. Default is `True`.
 
         Returns
