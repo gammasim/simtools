@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_generate_simulation_config &#8212; simtools v0.1.dev1+ge2ce248 Manual</title>
+    <title>production_generate_simulation_config &#8212; simtools v0.1.dev1+geb063f7 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=93dc27c9"></script>
+    <script src="../_static/documentation_options.js?v=ae06b72f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+ge2ce248" />
+  <meta name="docsearch:version" content="0.1.dev1+geb063f7" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ge2ce248 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+geb063f7 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -431,6 +431,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">schema</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.generate_simulation_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">SimulationConfig</span><span class="p">,</span>
@@ -508,13 +509,20 @@
         <span class="s2">&quot;night_sky_background&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;nsb&quot;</span><span class="p">],</span>
     <span class="p">}</span>
 
+    <span class="n">metrics</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;metrics_file&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="s2">&quot;metrics_file&quot;</span> <span class="ow">in</span> <span class="n">args_dict</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="p">)</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span> <span class="n">schema_file</span><span class="o">=</span><span class="s2">&quot;production_configuration_metrics.schema.yml&quot;</span>
+    <span class="p">)</span>
+
     <span class="n">simulation_config</span> <span class="o">=</span> <span class="n">SimulationConfig</span><span class="p">(</span>
         <span class="n">grid_point</span><span class="o">=</span><span class="n">grid_point_config</span><span class="p">,</span>
         <span class="n">ctao_data_level</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;ctao_data_level&quot;</span><span class="p">],</span>
         <span class="n">science_case</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;science_case&quot;</span><span class="p">],</span>
         <span class="n">file_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_path&quot;</span><span class="p">],</span>
         <span class="n">file_type</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_type&quot;</span><span class="p">],</span>
-        <span class="n">metrics</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;metrics_file&quot;</span><span class="p">]),</span>
+        <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">simulation_params</span> <span class="o">=</span> <span class="n">simulation_config</span><span class="o">.</span><span class="n">configure_simulation</span><span class="p">()</span>
