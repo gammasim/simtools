@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+geb063f7 Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+gceee4bd Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=ae06b72f"></script>
+    <script src="../../_static/documentation_options.js?v=112369ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+geb063f7" />
+  <meta name="docsearch:version" content="0.1.dev1+gceee4bd" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+geb063f7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gceee4bd Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -589,8 +589,8 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">site</span><span class="p">,</span>
         <span class="n">array_element_name</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="p">,</span>
         <span class="n">collection</span><span class="p">,</span>
+        <span class="n">model_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get model parameters using the model version.</span>
@@ -603,8 +603,8 @@
 <span class="sd">            Site name.</span>
 <span class="sd">        array_element_name: str</span>
 <span class="sd">            Name of the array element model (e.g. LSTN-01, MSTS-design, ILLN-01).</span>
-<span class="sd">        model_version: str</span>
-<span class="sd">            Version of the model.</span>
+<span class="sd">        model_version: str, list</span>
+<span class="sd">            Version(s) of the model.</span>
 <span class="sd">        collection: str</span>
 <span class="sd">            Collection of array element (e.g. telescopes, calibration_devices).</span>
 
@@ -612,40 +612,51 @@
 <span class="sd">        -------</span>
 <span class="sd">        dict containing the parameters</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
-        <span class="n">array_element_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_element_list</span><span class="p">(</span>
-            <span class="n">array_element_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">production_table</span><span class="p">,</span> <span class="n">collection</span>
+        <span class="n">model_versions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span> <span class="k">if</span> <span class="n">model_version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">model_version</span><span class="p">]</span>
         <span class="p">)</span>
 
         <span class="n">pars</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">array_element</span> <span class="ow">in</span> <span class="n">array_element_list</span><span class="p">:</span>
-            <span class="n">cache_key</span><span class="p">,</span> <span class="n">cache_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_cache</span><span class="p">(</span>
-                <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">,</span>
-                <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span> <span class="k">if</span> <span class="n">site</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="n">array_element</span><span class="p">,</span>
-                <span class="n">model_version</span><span class="p">,</span>
-                <span class="n">collection</span><span class="p">,</span>
+        <span class="k">for</span> <span class="n">_model_version</span> <span class="ow">in</span> <span class="n">model_versions</span><span class="p">:</span>
+            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">_model_version</span><span class="p">)</span>
+            <span class="n">array_element_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_element_list</span><span class="p">(</span>
+                <span class="n">array_element_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">production_table</span><span class="p">,</span> <span class="n">collection</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">cache_dict</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="n">array_element</span><span class="si">}</span><span class="s2"> in cache (key: </span><span class="si">{</span><span class="n">cache_key</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-                <span class="n">pars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cache_dict</span><span class="p">)</span>
-                <span class="k">continue</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Did not find </span><span class="si">{</span><span class="n">array_element</span><span class="si">}</span><span class="s2"> in cache (key: </span><span class="si">{</span><span class="n">cache_key</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">parameter_version_table</span> <span class="o">=</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="n">array_element</span><span class="p">]</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># allow missing array elements (parameter dict is checked later)</span>
-                <span class="k">continue</span>
-            <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_mongo_db</span><span class="p">(</span>
-                <span class="n">query</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_query_from_parameter_version_table</span><span class="p">(</span>
-                    <span class="n">parameter_version_table</span><span class="p">,</span> <span class="n">array_element</span><span class="p">,</span> <span class="n">site</span>
-                <span class="p">),</span>
-                <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">pars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">[</span><span class="n">cache_key</span><span class="p">])</span>
-
+            <span class="k">for</span> <span class="n">array_element</span> <span class="ow">in</span> <span class="n">array_element_list</span><span class="p">:</span>
+                <span class="n">pars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_for_model_version</span><span class="p">(</span>
+                        <span class="n">array_element</span><span class="p">,</span> <span class="n">_model_version</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">production_table</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
         <span class="k">return</span> <span class="n">pars</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_parameter_for_model_version</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">array_element</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">production_table</span>
+    <span class="p">):</span>
+        <span class="n">cache_key</span><span class="p">,</span> <span class="n">cache_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_cache</span><span class="p">(</span>
+            <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">,</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)</span> <span class="k">if</span> <span class="n">site</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">array_element</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="p">,</span>
+            <span class="n">collection</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">cache_dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="n">array_element</span><span class="si">}</span><span class="s2"> in cache (key: </span><span class="si">{</span><span class="n">cache_key</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">cache_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Did not find </span><span class="si">{</span><span class="n">array_element</span><span class="si">}</span><span class="s2"> in cache (key: </span><span class="si">{</span><span class="n">cache_key</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">parameter_version_table</span> <span class="o">=</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="n">array_element</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># allow missing array elements (parameter dict is checked later)</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_mongo_db</span><span class="p">(</span>
+            <span class="n">query</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_query_from_parameter_version_table</span><span class="p">(</span>
+                <span class="n">parameter_version_table</span><span class="p">,</span> <span class="n">array_element</span><span class="p">,</span> <span class="n">site</span>
+            <span class="p">),</span>
+            <span class="n">collection_name</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">DatabaseHandler</span><span class="o">.</span><span class="n">model_parameters_cached</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
 
 <div class="viewcode-block" id="DatabaseHandler.get_collection">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_collection">[docs]</a>
@@ -833,6 +844,51 @@
             <span class="s2">&quot;entry_date&quot;</span><span class="p">:</span> <span class="n">ObjectId</span><span class="p">(</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">generation_time</span><span class="p">,</span>
         <span class="p">}</span>
 
+<div class="viewcode-block" id="DatabaseHandler.get_model_versions">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_model_versions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get list of model versions from the DB.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        collection_name: str</span>
+<span class="sd">            Name of the collection.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of model versions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_db_name</span><span class="p">(),</span> <span class="s2">&quot;production_tables&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">collection</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection_name</span><span class="p">})]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatabaseHandler.get_array_elements">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_array_elements">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_array_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get list array elements for a given model version and collection from the DB.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model_version: str</span>
+<span class="sd">            Version of the model.</span>
+<span class="sd">        collection: str</span>
+<span class="sd">            Which collection to get the array elements from:</span>
+<span class="sd">            i.e. telescopes, calibration_devices.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Sorted list of all array elements found in collection</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;-design&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">])</span></div>
+
+
 <div class="viewcode-block" id="DatabaseHandler.get_array_elements_of_type">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_array_elements_of_type">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_array_elements_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_element_type</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
@@ -899,7 +955,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
                 <span class="kc">None</span><span class="p">,</span>
                 <span class="kc">None</span><span class="p">,</span>
-                <span class="n">model_version</span><span class="p">,</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
                 <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span>
@@ -907,7 +963,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
                     <span class="n">site</span><span class="p">,</span>
                     <span class="n">array_element_name</span><span class="p">,</span>
-                    <span class="n">model_version</span><span class="p">,</span>
+                    <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
                     <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">site</span> <span class="ow">and</span> <span class="n">array_element_name</span>
