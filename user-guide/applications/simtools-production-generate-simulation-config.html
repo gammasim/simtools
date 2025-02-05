@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-generate-simulation-config &#8212; simtools v0.1.dev1+gbaeda12 Manual</title>
+    <title>simtools-production-generate-simulation-config &#8212; simtools v0.1.dev1+ge2ce248 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=0623ff92"></script>
+    <script src="../../_static/documentation_options.js?v=93dc27c9"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="simtools-plot-array-layout" href="simtools-plot-array-layout.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gbaeda12" />
+  <meta name="docsearch:version" content="0.1.dev1+ge2ce248" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gbaeda12 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge2ce248 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -459,10 +459,23 @@
                   
   <section id="module-production_generate_simulation_config">
 <span id="simtools-production-generate-simulation-config"></span><h1>simtools-production-generate-simulation-config<a class="headerlink" href="#module-production_generate_simulation_config" title="Link to this heading">#</a></h1>
-<p>Configure a simulation based on command-line arguments.</p>
-<p>This application configures and
-generates simulation parameters for a specific grid point in a statistical uncertainty
-evaluation setup.</p>
+<p>Derive simulation configuration parameters for a simulation production.</p>
+<p>Derived simulation configuration parameters include:</p>
+<ul class="simple">
+<li><p>energy range</p></li>
+<li><p>shower core scatter radius</p></li>
+<li><p>view cone radius</p></li>
+<li><p>total number of events to be simulated</p></li>
+</ul>
+<p>Configuration parameters depend on characteristics of the observations, especially elevation,
+azimuth, and night sky background.</p>
+<p>The configuration parameters are derived according to the required precision. The metrics are:</p>
+<ul class="simple">
+<li><p>statistical uncertainty on the determination of the effective area as function of primary energy</p></li>
+<li><p>fraction of lost events to the selected core scatter and view cone radius (to be implemented)</p></li>
+<li><p>statistical uncertainty of the energy migration matrix as function of primary energy
+(to be implemented)</p></li>
+</ul>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -493,10 +506,10 @@ evaluation setup.</p>
 <span class="go">    --nsb 0.3 --ctao_data_level &quot;A&quot; --science_case &quot;high_precision&quot; \</span>
 <span class="go">    --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \</span>
 <span class="go">    --file_type &quot;point-like&quot;    \</span>
-<span class="go">    --metrics_file tests/resources/production_simulation_config_metrics.yaml --site North</span>
+<span class="go">    --metrics_file tests/resources/production_simulation_config_metrics.yml --site North</span>
 </pre></div>
 </div>
-<p>The output will show the configured simulation parameters.</p>
+<p>The output will show the derived simulation parameters.</p>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="production_generate_simulation_config.main">
