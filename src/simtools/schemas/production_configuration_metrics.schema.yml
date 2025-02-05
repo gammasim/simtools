@@ -31,11 +31,11 @@ definitions:
         description: Description of the error metric.
       target_error:
         $ref: '#/definitions/TargetError'
-      valid_range:
+      energy_range:
         $ref: '#/definitions/EnergyRange'
     required:
       - target_error
-      - valid_range
+      - energy_range
 
   TargetError:
     type: object
