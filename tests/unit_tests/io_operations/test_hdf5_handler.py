@@ -21,7 +21,7 @@ def test_fill_hdf5_table_1d(corsika_histograms_instance_set_histograms):
         corsika_histograms_instance_set_histograms._meta_dict,
     )
 
-    assert all(table[x_label] == x_bin_edges[:-1])
+    assert all(table.meta["x_bin_edges"] == x_bin_edges)
     assert all(table["values"] == hist)
 
 
@@ -42,3 +42,5 @@ def test_fill_hdf5_table_2d(corsika_histograms_instance_set_histograms):
     )
     assert all(table["test_y_label_0"] == np.array([1, 2]))
     assert all(table["test_y_label_1"] == np.array([3, 4]))
+    assert all(table.meta["x_bin_edges"] == x_bin_edges)
+    assert all(table.meta["y_bin_edges"] == y_bin_edges)
