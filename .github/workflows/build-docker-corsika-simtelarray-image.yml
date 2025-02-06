@@ -151,4 +151,4 @@ jobs:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true }}
           file: ./docker/Dockerfile-simtelarray-cerenkopt
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-optimized-${{ env.LABELS }}
+          labels: ${{ env.LABELS }}
