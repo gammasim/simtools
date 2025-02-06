@@ -99,8 +99,7 @@ jobs:
         avx_instruction: ['avx2']
 
     env:
-      LABELS: >
-        "${{ matrix.simtel_version }}-corsika-${{ matrix.corsika_version }}-bernlohr-${{ matrix.bernlohr_version }}-${{ matrix.production }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}"
+      LABELS: "${{ matrix.simtel_version }}-corsika-${{ matrix.corsika_version }}-bernlohr-${{ matrix.bernlohr_version }}-${{ matrix.production }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}"
 
     steps:
       - name: Checkout repository
