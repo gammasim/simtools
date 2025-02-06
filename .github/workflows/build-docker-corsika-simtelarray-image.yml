@@ -26,14 +26,13 @@ jobs:
       packages: write
     strategy:
       matrix:
-        production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
+#        production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
+        production: ['prod6-baseline']
         simtel_version: ['240927']
         hadronic_model: ['qgs2']
 
     env:
-      LABELS: >
-        "${{ matrix.simtel_version }}-${{ matrix.production }}-"
-        "${{ matrix.hadronic_model }}"
+      LABELS: "${{ matrix.simtel_version }}-${{ matrix.production }}-${{ matrix.hadronic_model }}"
 
     steps:
       - name: Checkout repository
@@ -94,14 +93,14 @@ jobs:
         corsika_version: ['77550']
         bernlohr_version: ['1.68']
         hadronic_model: ['qgs2']
-        production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
-        avx_instruction: ['avx2', 'avx512f', 'sse4', 'avx']
+#        production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
+#        avx_instruction: ['avx2', 'avx512f', 'sse4', 'avx']
+        production: ['prod6-baseline']
+        avx_instruction: ['avx2']
 
     env:
       LABELS: >
-        "${{ matrix.simtel_version }}-corsika-${{ matrix.corsika_version }}-"
-        "bernlohr-${{ matrix.bernlohr_version }}-${{ matrix.production }}-"
-        "${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}"
+        "${{ matrix.simtel_version }}-corsika-${{ matrix.corsika_version }}-bernlohr-${{ matrix.bernlohr_version }}-${{ matrix.production }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}"
 
     steps:
       - name: Checkout repository
