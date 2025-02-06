@@ -7,6 +7,7 @@ ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG CORSIKA_VERSION="77550"
 ARG BERNLOHR_VERSION="1.68"
+ARG SIMTOOLS_VERSION=""    # leave empty for latest version
 
 RUN yum update -y && yum install -y \
     autoconf \
@@ -71,18 +72,24 @@ COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
 RUN microdnf update -y && microdnf install -y \
     bc \
-    zstd \
+    findutils \
+    gcc-c++ \
     gsl-devel \
     gcc-fortran \
     libgfortran \
-    procps && \
+    procps \
+    python3.11-pip \
+#    python3.11-devel \
+    zstd && \
     microdnf clean all
 
-# create a symbolic link to the corsika executable
-RUN cprog=$(/bin/ls /workdir/sim_telarray/corsika-run/corsika*$(uname)_* 2>/dev/null | tail -1) && \
-    ln -sf $cprog /workdir/sim_telarray/corsika-run/corsika
+RUN python3.11 -m venv env && \
+    source env/bin/activate && \
+    pip install -U pip && \
+    pip install --no-cache-dir gammasimtools${SIMTOOLS_VERSION:+==$SIMTOOLS_VERSION}
 
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
-
+ENV PATH="/workdir/env/bin/:$PATH"
 SHELL ["/bin/bash", "-c"]
-WORKDIR /workdir/
+
+WORKDIR /workdir
