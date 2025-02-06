@@ -44,16 +44,12 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
     meta_data["x_bin_edges_unit"] = (
         x_bin_edges.unit if isinstance(x_bin_edges, u.Quantity) else u.dimensionless_unscaled
     )
-    meta_data["x_bin_edges"] = x_bin_edges
-
     if y_bin_edges is not None:
         meta_data["y_bin_edges"] = y_bin_edges
 
         if y_label is not None:
-            names = [
-                f"{meta_data['y_bin_edges'].split('__')[0]}_{i}"
-                for i in range(len(y_bin_edges[:-1]))
-            ]
+            sanitized_name = sanitize_name(y_label)
+            names = [f"{sanitized_name.split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))]
         else:
 
             names = [
