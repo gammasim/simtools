@@ -17,6 +17,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
+
 jobs:
 
   download-corsika:
@@ -44,6 +45,7 @@ jobs:
           path: |
             corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
             corsikaOptPatch.tar.gz
+          retention-days: 1
 
   build-corsika-simtelarray:
     runs-on: ubuntu-latest

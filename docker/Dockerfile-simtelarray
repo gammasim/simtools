@@ -36,8 +36,7 @@ RUN microdnf update -y && microdnf install -y \
     zstd \
     gsl-devel \
     gcc-fortran \
-    procps \
-    && \
+    procps && \
     microdnf clean all
 
 # create a symbolic link to the corsika executable
