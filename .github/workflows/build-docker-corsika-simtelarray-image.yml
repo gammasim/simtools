@@ -1,5 +1,6 @@
-# https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
+---
 name: docker-corsika-simtelarray
+# Build and push Docker image CORSIKA / sim_telarray
 
 on:
   workflow_dispatch:
@@ -9,11 +10,12 @@ on:
   release:
     types: [published]
   schedule:
-    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC (build only)
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
 
@@ -25,8 +27,13 @@ jobs:
     strategy:
       matrix:
         production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
-        version: ['240927']
+        simtel_version: ['240927']
         hadronic_model: ['qgs2']
+
+    env:
+      LABELS: >
+        "${{ matrix.simtel_version }}-${{ matrix.production }}-"
+        "${{ matrix.hadronic_model }}"
 
     steps:
       - name: Checkout repository
@@ -34,9 +41,9 @@ jobs:
 
       - name: download corsikasimtelpackage
         run: |
-          echo "CLOUD_SIMTEL_${{ matrix.version }}"
-          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.version)] }}/download
-          mv download corsika7.7_simtelarray.tar.gz
+          echo "CLOUD_SIMTEL_${{ matrix.simtel_version }}"
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download
+          mv download corsika_simtelarray.tar.gz
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -60,7 +67,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ matrix.hadronic_model }}-${{ matrix.production }}-${{ matrix.version }}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ env.LABELS }}
           flavor: latest=true
 
       - name: Build and push Docker image
@@ -68,9 +75,82 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          build-args: '{"BUILD_OPT": ${{ matrix.production }}, "HADRONIC_MODEL": "qgs2"}'
+          build-args: '{"BUILD_OPT": ${{ matrix.production }}, "HADRONIC_MODEL": "${{ matrix.hadronic_model }}"}'
           push:
-            ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+#            ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+            ${{ github.event_name == 'release' || github.event.pull_request.merged == true }}
           file: ./docker/Dockerfile-simtelarray
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ matrix.hadronic_model }}-${{ matrix.production }}-${{ matrix.version }}
+          labels: ${{ steps.meta.outputs.labels }}-corsika-sim-telarray-${{ env.LABELS }}
+
+  build-optimized-corsika-simtelarray:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        simtel_version: ['240927']
+        corsika_version: ['77550']
+        bernlohr_version: ['1.68']
+        hadronic_model: ['qgs2']
+        production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
+        avx_instruction: ['avx2', 'avx512f', 'sse4', 'avx']
+
+    env:
+      LABELS: >
+        "${{ matrix.simtel_version }}-corsika-${{ matrix.corsika_version }}-"
+        "bernlohr-${{ matrix.bernlohr_version }}-${{ matrix.production }}-"
+        "${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: download corsika-simtel-package
+        run: |
+          echo "CLOUD_SIMTEL_${{ matrix.simtel_version }}"
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download
+          mv download corsika_simtelarray.tar.gz
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_CORSIKA_OPT }}/download
+          mv download corsikaOptPatch.tar.gz
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          tags: |
+            type=ref,event=pr
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}
+            type=schedule,pattern={{date 'YYYYMMDD'}}
+            type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-optimized-${{ env.LABELS }}
+          flavor: latest=true
+
+      - name: Build and push optimized Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          build-args: |
+            BUILD_OPT=${{ matrix.production }}
+            HADRONIC_MODEL=${{ matrix.hadronic_model }}
+            AVX_FLAG=${{ matrix.avx_instruction }}
+            CORSIKA_VERSION=${{ matrix.corsika_version }}
+            BERNLOHR_VERSION=${{ matrix.bernlohr_version }}
+          push:
+#            ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+            ${{ github.event_name == 'release' || github.event.pull_request.merged == true }}
+          file: ./docker/Dockerfile-simtelarray-cerenkopt
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ env.LABELS }}

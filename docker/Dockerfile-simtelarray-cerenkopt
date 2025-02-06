@@ -5,7 +5,7 @@ ENV GCC_PATH="/usr/bin/"
 ARG BUILD_OPT="prod6-sc"
 ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
-ARG CORSIKA_VERSION="77500"
+ARG CORSIKA_VERSION="77550"
 ARG BERNLOHR_VERSION="1.68"
 
 RUN yum update -y && yum install -y \
@@ -21,8 +21,8 @@ RUN yum update -y && yum install -y \
     patch && \
     yum clean all
 
-ADD corsika7.7_simtelarray.tar.gz .
-ADD corsikaOptPatch-77500_2024-02-05.tar.gz ./corsika-$CORSIKA_VERSION
+ADD corsika_simtelarray.tar.gz .
+ADD corsikaOptPatch.tar.gz ./corsika-$CORSIKA_VERSION
 RUN tar -zxvf corsika-$CORSIKA_VERSION.tar.gz && \
     tar -zxvf bernlohr-$BERNLOHR_VERSION.tar.gz -C corsika-$CORSIKA_VERSION/bernlohr && \
     rm -f examples-with-data.tar.gz && \
