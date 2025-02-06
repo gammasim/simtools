@@ -18,7 +18,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
-
 jobs:
 
   download-corsika:
@@ -77,6 +76,15 @@ jobs:
       - name: Rename corsika-simtel-package files
         run: |
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
+
+      - name: Set build arguments (correct branch)
+        run: |
+          if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
+            echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
+          else
+            echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
+          fi
+          echo "BUILD BRANCH ${{ env.BUILD_BRANCH }}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -172,7 +180,7 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/simtools-prod-opt-${{ env.LABELS }}
           flavor: latest=true
 
-      - name: Build and push optimized Docker image
+      - name: Build and push optimized image
         uses: docker/build-push-action@v6
         with:
           context: .
