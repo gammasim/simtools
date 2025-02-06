@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>generate_simtel_array_histograms &#8212; simtools v0.1.dev1+gceee4bd Manual</title>
+    <title>generate_simtel_array_histograms &#8212; simtools v0.1.dev1+g91ace1a Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=112369ec"></script>
+    <script src="../_static/documentation_options.js?v=09ab4a44"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gceee4bd" />
+  <meta name="docsearch:version" content="0.1.dev1+g91ace1a" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gceee4bd Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g91ace1a Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -380,8 +380,6 @@
 <span class="sd">        Name of the histogram files to be plotted.</span>
 <span class="sd">        It can be given as the histogram file names (more than one option allowed) or as a text</span>
 <span class="sd">        file with the names of the histogram files in it.</span>
-<span class="sd">    figure_name (str, required)</span>
-<span class="sd">        File name for the pdf output (without extension).</span>
 <span class="sd">    pdf (bool, optional)</span>
 <span class="sd">        If set, histograms are saved into pdf files.</span>
 <span class="sd">        One pdf file contains all the histograms found in the file.</span>
@@ -396,6 +394,8 @@
 <span class="sd">        If the output output_file_name.hdf5 file already exists and hdf5 is set, the tables</span>
 <span class="sd">        associated to hdf5 will be overwritten. The remaining tables, if any, will stay</span>
 <span class="sd">        untouched.</span>
+<span class="sd">    test: bool</span>
+<span class="sd">        Test option. Generate only two histograms for testing purposes.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -475,41 +475,6 @@
     <span class="k">return</span> <span class="n">config_parser</span>
 
 
-<div class="viewcode-block" id="build_histogram_files">
-<a class="viewcode-back" href="../user-guide/applications/simtools-generate-simtel-array-histograms.html#generate_simtel_array_histograms.build_histogram_files">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">build_histogram_files</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Build a list of histogram files from command line arguments.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    config_parser: dict</span>
-<span class="sd">        Parsed command line arguments.</span>
-<span class="sd">    logger: logging.Logger</span>
-<span class="sd">        Logger object for logging messages.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    list</span>
-<span class="sd">        List of histogram file paths.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">histogram_files</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">one_file</span> <span class="ow">in</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hist_file_names&quot;</span><span class="p">]:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">one_file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.zst&quot;</span><span class="p">,</span> <span class="s2">&quot;.simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdata&quot;</span><span class="p">]:</span>
-                <span class="n">histogram_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">one_file</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">one_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
-                        <span class="n">histogram_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-        <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">one_file</span><span class="si">}</span><span class="s2"> is not a file.&quot;</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-    <span class="k">return</span> <span class="n">histogram_files</span></div>
-
-
-
 <div class="viewcode-block" id="check_and_log_overwrite">
 <a class="viewcode-back" href="../user-guide/applications/simtools-generate-simtel-array-histograms.html#generate_simtel_array_histograms.check_and_log_overwrite">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_and_log_overwrite</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -573,39 +538,31 @@
 
 
 
-<div class="viewcode-block" id="export_to_hdf5">
-<a class="viewcode-back" href="../user-guide/applications/simtools-generate-simtel-array-histograms.html#generate_simtel_array_histograms.export_to_hdf5">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">export_to_hdf5</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Export histograms to an HDF5 file.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">]:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wrote histograms to the hdf5 file </span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.hdf5&quot;</span><span class="p">)</span>
-        <span class="n">simtel_histograms</span><span class="o">.</span><span class="n">export_histograms</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.hdf5&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span></div>
-
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>  <span class="c1"># noqa: D103</span>
     <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
-    <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;Display the simtel_array histograms.&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;Display simtel_array histograms and/or write them into hdf5 format.&quot;</span>
     <span class="n">io_handler_instance</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
     <span class="n">config_parser</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
     <span class="n">output_path</span> <span class="o">=</span> <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;application-plots&quot;</span><span class="p">)</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting the application.&quot;</span><span class="p">)</span>
 
-    <span class="n">histogram_files</span> <span class="o">=</span> <span class="n">build_histogram_files</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">histogram_files</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">get_list_of_files_from_command_line</span><span class="p">(</span>
+        <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hist_file_names&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;.zst&quot;</span><span class="p">,</span> <span class="s2">&quot;.simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdata&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
 
     <span class="c1"># If no output name is passed, the tool gets the name of the first histogram of the list</span>
     <span class="k">if</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;output_file_name&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;output_file_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">histogram_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
     <span class="n">output_file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_parser</span><span class="p">[</span><span class="s1">&#39;output_file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="c1"># If the hdf5 output file already exists, it is overwritten</span>
-    <span class="n">overwrite</span> <span class="o">=</span> <span class="n">check_and_log_overwrite</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-
     <span class="n">simtel_histograms</span> <span class="o">=</span> <span class="n">SimtelIOHistograms</span><span class="p">(</span><span class="n">histogram_files</span><span class="p">)</span>
     <span class="n">create_pdf</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">,</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-    <span class="n">export_to_hdf5</span><span class="p">(</span><span class="n">simtel_histograms</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config_parser</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">]:</span>
+        <span class="n">simtel_histograms</span><span class="o">.</span><span class="n">export_histograms</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">.hdf5&quot;</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">check_and_log_overwrite</span><span class="p">(</span><span class="n">config_parser</span><span class="p">,</span> <span class="n">logger</span><span class="p">),</span>
+        <span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

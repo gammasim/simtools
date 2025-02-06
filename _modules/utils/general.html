@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+gceee4bd Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+g91ace1a Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=112369ec"></script>
+    <script src="../../_static/documentation_options.js?v=09ab4a44"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gceee4bd" />
+  <meta name="docsearch:version" content="0.1.dev1+g91ace1a" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gceee4bd Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g91ace1a Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1265,6 +1265,41 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SIM_TELARRAY_CONFIG_PATH=&#39;&#39; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_files_from_command_line</span><span class="p">(</span><span class="n">file_names</span><span class="p">,</span> <span class="n">suffix_list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a list of files from the command line.</span>
+
+<span class="sd">    Files can be given as a list of file names or as a text file containing the list of files.</span>
+<span class="sd">    The list of suffixes restrict the files types to be returned. Note that a file list must</span>
+<span class="sd">    have a different suffix than those in the suffix list.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_names: list</span>
+<span class="sd">        List of file names to be checked.</span>
+<span class="sd">    suffix_list: list</span>
+<span class="sd">        List of suffixes to be checked.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of files with the given suffixes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">one_file</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">one_file</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="n">suffix_list</span><span class="p">:</span>
+                <span class="n">_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">one_file</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">one_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="n">_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">one_file</span><span class="si">}</span><span class="s2"> is not a file.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">return</span> <span class="n">_files</span>
 </pre></div>
 
                 </article>

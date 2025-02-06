@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+gceee4bd Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g91ace1a Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=112369ec"></script>
+    <script src="../_static/documentation_options.js?v=09ab4a44"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Runners for simulation software." href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gceee4bd" />
+  <meta name="docsearch:version" content="0.1.dev1+g91ace1a" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gceee4bd Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g91ace1a Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -489,8 +489,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.produce_trigger_meta_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.solid_angle"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.solid_angle</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_area"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_area</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_num_simulated_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_num_simulated_events</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_num_triggered_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_num_triggered_events</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_number_of_events</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.trigger_info_in_table()</span></code></a></li>
 </ul>
 </li>
@@ -827,8 +826,7 @@ This calculation assumes the simulated spectrum is given by a single power law.<
 </section>
 <section id="simtel-io-histogram">
 <h2>simtel_io_histogram<a class="headerlink" href="#simtel-io-histogram" title="Link to this heading">#</a></h2>
-<p id="module-simtel.simtel_io_histogram"><span id="simtel-io-histogram-1"></span>Reads the content of either a single histogram (.hdata) or a single simtel_array output (.simtel).</p>
-<p>Files can be zst compressed.</p>
+<p id="module-simtel.simtel_io_histogram"><span id="simtel-io-histogram-1"></span>Reads the content of either a single histogram or simtel_array output file.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="simtel.simtel_io_histogram.HistogramIdNotFoundError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histogram.</span></span><span class="sig-name descname"><span class="pre">HistogramIdNotFoundError</span></span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#HistogramIdNotFoundError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.HistogramIdNotFoundError" title="Link to this definition">#</a></dt>
@@ -904,6 +902,7 @@ for the triggered events.</p>
 <dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.config">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.config" title="Link to this definition">#</a></dt>
 <dd><p>Return information about the input parameters for the simulation.</p>
+<p>If the file is a .hdata or .hdata.zst, config will be None.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -975,9 +974,7 @@ of based on the total number of trigger events from the simulation configuration
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>dict:</dt><dd><p>Information about the histograms with simulated events.</p>
-</dd>
-<dt>dict:</dt><dd><p>Information about the histograms with triggered events.</p>
+<dt>tuple(dict, dict):</dt><dd><p>Information about the histograms with simulated and triggered events.</p>
 </dd>
 </dl>
 </dd>
@@ -1014,11 +1011,11 @@ of based on the total number of trigger events from the simulation configuration
 <dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function">
 <span class="sig-name descname"><span class="pre">get_particle_distribution_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reference'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.get_particle_distribution_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function" title="Link to this definition">#</a></dt>
 <dd><p>Get the particle distribution function.</p>
-<p>This depends  on whether one wants the reference CR distribution or the distribution
+<p>This depends on whether one wants the reference CR distribution or the distribution
 used in the simulation. This is controlled by label.
 By using label=”reference”, one gets the distribution function according to a pre-defined CR
 distribution, while by using label=”simulation”, the spectral index of the distribution
-function from the simulation is used. Naturally, label=”simulation” only works when the
+function from the simulation is used. The label=”simulation” works only when the
 input file is a .simtel file and not a .hdata file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1102,30 +1099,13 @@ system trigger rate.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.total_num_simulated_events">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_num_simulated_events</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_num_simulated_events" title="Link to this definition">#</a></dt>
-<dd><p>Return the total number of simulated events the histograms.</p>
+<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_number_of_events</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events" title="Link to this definition">#</a></dt>
+<dd><p>Return the total number of simulated and triggered events in the histograms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>int:</dt><dd><p>total number of simulated events.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.total_num_triggered_events">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_num_triggered_events</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_num_triggered_events" title="Link to this definition">#</a></dt>
-<dd><p>Returns the total number of triggered events.</p>
-<p>Please note that this value is not supposed to match the trigger rate x estimated
-observation time, as the simulation is optimized for computational time and the energy
-distribution assumed is not necessarily the reference cosmic-ray spectra.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>int:</dt><dd><p>total number of simulated events.</p>
+<dt>int, int:</dt><dd><p>total number of simulated and triggered events.</p>
 </dd>
 </dl>
 </dd>
@@ -1152,9 +1132,6 @@ distribution assumed is not necessarily the reference cosmic-ray spectra.</p>
 <section id="simtel-io-histograms">
 <h2>simtel_io_histograms<a class="headerlink" href="#simtel-io-histograms" title="Link to this heading">#</a></h2>
 <p id="module-simtel.simtel_io_histograms"><span id="simtel-io-histograms-1"></span>Reads the content of multiples files from sim_telarray.</p>
-<p>Reads the content of either multiple histogram (.hdata, or .hdata.zst) or
-simtel_array output files (.simtel or .simtel.zst). The module is built on top of the
-simtel_io_histogram module and uses its class (SimtelIOHistogram) to read the individual files.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_io_histograms.SimtelIOHistograms">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histograms.</span></span><span class="sig-name descname"><span class="pre">SimtelIOHistograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histogram_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_from_distribution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view_cone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histograms.html#SimtelIOHistograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histograms.SimtelIOHistograms" title="Link to this definition">#</a></dt>
@@ -1237,13 +1214,13 @@ Only filled if stack_files is False.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="simtel.simtel_io_histograms.SimtelIOHistograms.export_histograms">
 <span class="sig-name descname"><span class="pre">export_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hdf5_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histograms.html#SimtelIOHistograms.export_histograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histograms.SimtelIOHistograms.export_histograms" title="Link to this definition">#</a></dt>
-<dd><p>Export the histograms to hdf5 files.</p>
+<dd><p>Export sim_telarray histograms to hdf5 files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>hdf5_file_name: str</strong></dt><dd><p>Name of the file to be saved with the hdf5 tables.</p>
 </dd>
-<dt><strong>overwrite: bool</strong></dt><dd><p>If True overwrites the histograms already saved in the hdf5 file.</p>
+<dt><strong>overwrite: bool</strong></dt><dd><p>If True overwrites histograms already saved in the hdf5 file.</p>
 </dd>
 </dl>
 </dd>
@@ -1614,8 +1591,7 @@ mirror_numbers.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.produce_trigger_meta_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.solid_angle"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.solid_angle</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_area"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_area</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_num_simulated_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_num_simulated_events</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_num_triggered_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_num_triggered_events</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_number_of_events</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.trigger_info_in_table()</span></code></a></li>
 </ul>
 </li>
