@@ -865,3 +865,38 @@ def clear_default_sim_telarray_cfg_directories(command):
 
     """
     return f"SIM_TELARRAY_CONFIG_PATH='' {command}"
+
+
+def get_list_of_files_from_command_line(file_names, suffix_list):
+    """
+    Get a list of files from the command line.
+
+    Files can be given as a list of file names or as a text file containing the list of files.
+    The list of suffixes restrict the files types to be returned. Note that a file list must
+    have a different suffix than those in the suffix list.
+
+    Parameters
+    ----------
+    file_names: list
+        List of file names to be checked.
+    suffix_list: list
+        List of suffixes to be checked.
+
+    Returns
+    -------
+    list
+        List of files with the given suffixes.
+    """
+    _files = []
+    for one_file in file_names:
+        path = Path(one_file)
+        try:
+            if path.suffix in suffix_list:
+                _files.append(one_file)
+            elif len(file_names) == 1:
+                with open(one_file, encoding="utf-8") as file:
+                    _files.extend(line.strip() for line in file)
+        except FileNotFoundError as exc:
+            _logger.error(f"{one_file} is not a file.")
+            raise FileNotFoundError from exc
+    return _files
