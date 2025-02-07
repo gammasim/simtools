@@ -19,12 +19,11 @@ env:
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
-
   download-corsika:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        simtel_version: ['240927']
+        simtel_version: ['240205', '240927']
 
     steps:
       - name: Checkout repository
@@ -32,11 +31,8 @@ jobs:
 
       - name: Download corsika-simtel-package
         run: |
-          echo "CLOUD_SIMTEL_${{ matrix.simtel_version }}"
-          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download
-          mv download corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_CORSIKA_OPT }}/download
-          mv download corsikaOptPatch.tar.gz
+          wget --no-verbose https://syncandshare.desy.de/index.php/s/${{ secrets[format('CLOUD_SIMTEL_{0}', matrix.simtel_version)] }}/download -O corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz
+          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_CORSIKA_OPT }}/download -O corsikaOptPatch.tar.gz  # might depend on CORSIKA version
 
       - name: Upload corsika-simtel-package
         uses: actions/upload-artifact@v4
@@ -73,33 +69,29 @@ jobs:
           name: corsika-simtelarray-package-${{ matrix.simtel_version }}
           path: ./downloaded-artifacts
 
-      - name: Rename corsika-simtel-package files
+      - name: Rename and set build arguments
         run: |
           mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
-
-      - name: Set build arguments (correct branch)
-        run: |
           if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
             echo "BUILD_BRANCH=${GITHUB_HEAD_REF}" >> "$GITHUB_ENV"
           else
             echo "BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
           fi
-          echo "BUILD BRANCH ${{ env.BUILD_BRANCH }}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to the Container registry
+      - name: Log in to the registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -111,12 +103,12 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/simtools-corsika-sim-telarray-${{ env.LABELS }}
           flavor: latest=true
 
-      - name: Build and push Docker image
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          build-args: '{"BUILD_OPT": ${{ matrix.production }}, "HADRONIC_MODEL": "${{ matrix.hadronic_model }}"}'
+          build-args: '{"BUILD_OPT": "${{ matrix.production }}", "HADRONIC_MODEL": "${{ matrix.hadronic_model }}"}'
           push:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-simtelarray
@@ -131,17 +123,17 @@ jobs:
       packages: write
     strategy:
       matrix:
-        simtel_version: ['240927']
-        corsika_version: ['77550']
-        bernlohr_version: ['1.68']
+        version:
+          - { simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67' }
+          - { simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68' }
         hadronic_model: ['qgs2']
-#        production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
-#        avx_instruction: ['avx2', 'avx512f', 'sse4', 'avx']
         production: ['prod6-baseline']
+#        production: ['prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc']
         avx_instruction: ['avx2']
+#        avx_instruction: ['avx2', 'avx512f', 'sse4', 'avx']
 
     env:
-      LABELS: "${{ matrix.simtel_version }}-corsika-${{ matrix.corsika_version }}-bernlohr-${{ matrix.bernlohr_version }}-${{ matrix.production }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}"
+      LABELS: "${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}"
 
     steps:
       - name: Checkout repository
@@ -150,12 +142,12 @@ jobs:
       - name: Download corsika-simtel-package
         uses: actions/download-artifact@v4
         with:
-          name: corsika-simtelarray-package-${{ matrix.simtel_version }}
+          name: corsika-simtelarray-package-${{ matrix.version.simtel_version }}
           path: ./downloaded-artifacts
 
       - name: Rename corsika-simtel-package files
         run: |
-          mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
+          mv ./downloaded-artifacts/corsika_simtelarray_${{ matrix.version.simtel_version }}.tar.gz corsika_simtelarray.tar.gz
           mv ./downloaded-artifacts/corsikaOptPatch.tar.gz corsikaOptPatch.tar.gz
 
       - name: Set up Docker Buildx
@@ -168,7 +160,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -189,10 +181,10 @@ jobs:
             BUILD_OPT=${{ matrix.production }}
             HADRONIC_MODEL=${{ matrix.hadronic_model }}
             AVX_FLAG=${{ matrix.avx_instruction }}
-            CORSIKA_VERSION=${{ matrix.corsika_version }}
-            BERNLOHR_VERSION=${{ matrix.bernlohr_version }}
+            CORSIKA_VERSION=${{ matrix.version.corsika_version }}
+            BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
           push:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-prod-opt
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ env.LABELS }}
+          labels: ${{ steps.meta.outputs.labels }}-prod-opt
