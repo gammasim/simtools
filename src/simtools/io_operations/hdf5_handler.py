@@ -41,12 +41,7 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
     meta_data: dict
         Dictionary with the histogram metadata.
     """
-    if hist.ndim not in (1, 2):
-        raise ValueError("Histogram must be either 1D or 2D.")
-    if hist.ndim == 1 and y_bin_edges is not None:
-        raise ValueError("y_bin_edges should be None for 1D histograms.")
-    if hist.ndim == 2 and y_bin_edges is None:
-        raise ValueError("y_bin_edges should not be None for 2D histograms.")
+    validate_histogram(hist, y_bin_edges)
 
     meta_data["x_bin_edges"] = x_bin_edges
     meta_data["x_bin_edges_unit"] = (
@@ -89,6 +84,28 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
         )
 
     return table
+
+
+def validate_histogram(hist, y_bin_edges):
+    """Validate histogram dimensions and y_bin_edges consistency.
+
+    Parameters
+    ----------
+    hist (np.ndarray): The histogram array, expected to be 1D or 2D.
+    y_bin_edges (array-like or None): Bin edges for the second dimension (if applicable).
+
+    Raises
+    ------
+    ValueError: If histogram dimensions are invalid or inconsistent with y_bin_edges.
+    """
+    if hist.ndim not in (1, 2):
+        raise ValueError("Histogram must be either 1D or 2D.")
+
+    if hist.ndim == 1 and y_bin_edges is not None:
+        raise ValueError("y_bin_edges should be None for 1D histograms.")
+
+    if hist.ndim == 2 and y_bin_edges is None:
+        raise ValueError("y_bin_edges should not be None for 2D histograms.")
 
 
 def read_hdf5(hdf5_file_name):
