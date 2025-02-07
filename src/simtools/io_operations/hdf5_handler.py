@@ -78,7 +78,8 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
         else:
 
             names = [
-                f"{meta_data['Title'].split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
+                f"{sanitize_name(meta_data['Title']).split('__')[0]}_{i}"
+                for i in range(len(y_bin_edges[:-1]))
             ]
 
         table = Table(
