@@ -41,31 +41,24 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
     meta_data: dict
         Dictionary with the histogram metadata.
     """
+    if hist.ndim not in (1, 2):
+        raise ValueError("Histogram must be either 1D or 2D.")
+    if hist.ndim == 1 and y_bin_edges is not None:
+        raise ValueError("y_bin_edges should be None for 1D histograms.")
+    if hist.ndim == 2 and y_bin_edges is None:
+        raise ValueError("y_bin_edges should not be None for 2D histograms.")
+
+    meta_data["x_bin_edges"] = x_bin_edges
     meta_data["x_bin_edges_unit"] = (
         x_bin_edges.unit if isinstance(x_bin_edges, u.Quantity) else u.dimensionless_unscaled
     )
     if y_bin_edges is not None:
         meta_data["y_bin_edges"] = y_bin_edges
-
-        if y_label is not None:
-            sanitized_name = sanitize_name(y_label)
-            names = [f"{sanitized_name.split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))]
-        else:
-
-            names = [
-                f"{meta_data['Title'].split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
-            ]
         meta_data["y_bin_edges_unit"] = (
             y_bin_edges.unit if isinstance(y_bin_edges, u.Quantity) else u.dimensionless_unscaled
         )
 
-        table = Table(
-            [hist[i, :] for i in range(len(y_bin_edges[:-1]))],
-            names=names,
-            meta=meta_data,
-        )
-
-    else:
+    if hist.ndim == 1:
         if x_label is not None:
             names = meta_data["x_bin_edges"]
         else:
@@ -78,6 +71,22 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
             names=(names, sanitize_name("Values")),
             meta=meta_data,
         )
+    else:
+        if y_label is not None:
+            sanitized_name = sanitize_name(y_label)
+            names = [f"{sanitized_name.split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))]
+        else:
+
+            names = [
+                f"{meta_data['Title'].split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
+            ]
+
+        table = Table(
+            [hist[i, :] for i in range(len(y_bin_edges[:-1]))],
+            names=names,
+            meta=meta_data,
+        )
+
     return table
 
 
