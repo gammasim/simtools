@@ -56,7 +56,7 @@ COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
 RUN microdnf update -y && microdnf install -y \
     bc findutils gcc-c++ git gsl-devel gcc-fortran libgfortran \
-    procps python3.11-pip zstd && \
+    procps python3.11-pip python3.11-devel zstd && \
     microdnf clean all
 
 RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') && \
