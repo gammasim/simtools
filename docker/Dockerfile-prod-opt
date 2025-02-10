@@ -2,6 +2,7 @@ FROM almalinux:9.5 AS build_image
 WORKDIR /workdir/sim_telarray
 ENV GCC_PATH="/usr/bin/"
 ARG BUILD_OPT="prod6-sc"
+ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG CORSIKA_VERSION="77550"
@@ -43,7 +44,7 @@ RUN make -C corsika-$CORSIKA_VERSION clean && rm -f */*.a lib/*/*.a && \
 # Rename executable to 'corsika'
 RUN mv -f corsika-$CORSIKA_VERSION/run/corsika$CORSIKA_VERSIONLinux_*ceropt corsika-$CORSIKA_VERSION/run/corsika
 # build sim_telarray
-RUN export NO_CORSIKA=1 && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
+RUN export NO_CORSIKA=1 EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 
 # corsika source code is removed to follow
 # the corsika non-distribution policy.
