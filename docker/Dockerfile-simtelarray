@@ -1,17 +1,12 @@
 FROM almalinux:9.5 AS build_image
 WORKDIR /workdir/sim_telarray
-ENV DEBIAN_FRONTEND=noninteractive
 ARG BUILD_OPT="prod6-sc"
 ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HADRONIC_MODEL="qgs2"
 
 RUN yum update -y && yum install -y \
-    csh \
-    perl \
-    which \
-    gcc-fortran \
-    gsl-devel \
-    patch && \
+    gcc-fortran gsl-devel libgfortran \
+    csh patch perl which && \
     yum clean all
 
 ADD corsika_simtelarray.tar.gz .
@@ -29,7 +24,6 @@ RUN rm -f ./corsika-run && \
 
 FROM almalinux:9.5-minimal
 WORKDIR /workdir
-ENV DEBIAN_FRONTEND=noninteractive
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
 RUN microdnf update -y && microdnf install -y \
@@ -47,4 +41,3 @@ RUN cprog=$(/bin/ls /workdir/sim_telarray/corsika-run/corsika*$(uname)_* 2>/dev/
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
 
 SHELL ["/bin/bash", "-c"]
-WORKDIR /workdir/
