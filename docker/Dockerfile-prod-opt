@@ -17,7 +17,9 @@ ADD corsika_simtelarray.tar.gz .
 ADD corsikaOptPatch.tar.gz ./corsika-$CORSIKA_VERSION
 RUN tar -zxf corsika-$CORSIKA_VERSION.tar.gz && \
     tar -zxf bernlohr-$BERNLOHR_VERSION.tar.gz -C corsika-$CORSIKA_VERSION/bernlohr && \
-    rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz
+    rm -f examples-with-data.tar.gz sim_telarray_config.tar.gz \
+    corsika_simtelarray.tar.gz  corsika-$CORSIKA_VERSION.tar.gz \
+    bernlohr-$BERNLOHR_VERSION.tar.gz
 
 # build (optimized) corsika
 RUN cd corsika-$CORSIKA_VERSION && \
@@ -47,7 +49,10 @@ RUN export NO_CORSIKA=1 && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 # the corsika non-distribution policy.
 RUN mv ./corsika-77*/run corsika-run && \
     rm -rf ./corsika-7[0-9]* && \
-    find . -name "*.tar.gz" -delete
+    find . -name "*.tar.gz" -delete && \
+    find . -name "doc*" -delete && \
+    find . -name "*.o" -delete && \
+    rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
 FROM almalinux:9.5-minimal
 WORKDIR /workdir
@@ -56,7 +61,7 @@ COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
 RUN microdnf update -y && microdnf install -y \
     bc findutils gcc-c++ git gsl-devel gcc-fortran libgfortran \
-    procps python3.11-pip python3.11-devel zstd && \
+    procps python3.11-pip zstd && \
     microdnf clean all
 
 RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') && \
