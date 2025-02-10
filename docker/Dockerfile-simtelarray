@@ -2,6 +2,7 @@ FROM almalinux:9.5 AS build_image
 WORKDIR /workdir/sim_telarray
 ENV DEBIAN_FRONTEND=noninteractive
 ARG BUILD_OPT="prod6-sc"
+ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HADRONIC_MODEL="qgs2"
 
 RUN yum update -y && yum install -y \
@@ -16,7 +17,7 @@ RUN yum update -y && yum install -y \
 ADD corsika_simtelarray.tar.gz .
 RUN rm -f examples-with-data.tar.gz && \
     rm -f sim_telarray_config.tar.gz && \
-    ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
+    export EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 
 
 # corsika source code is removed to follow
