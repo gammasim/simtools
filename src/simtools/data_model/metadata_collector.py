@@ -266,7 +266,7 @@ class MetadataCollector:
             self._logger.error("Unknown metadata file format: %s", metadata_file_name)
             raise gen.InvalidConfigDataError
 
-        metadata_model.validate_schema(_input_metadata, None)
+        schema.validate_dict_using_schema(_input_metadata, None)
 
         return gen.change_dict_keys_case(
             self._process_metadata_from_file(_input_metadata),

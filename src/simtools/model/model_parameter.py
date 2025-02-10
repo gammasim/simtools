@@ -322,7 +322,7 @@ class ModelParameter:
 
         if self.name is not None:
             self._parameters = self.db.get_model_parameters(
-                self.site, self.name, self.model_version, self.collection
+                self.site, self.name, self.collection, self.model_version
             )
 
         if self.site is not None:
@@ -330,8 +330,8 @@ class ModelParameter:
                 self.db.get_model_parameters(
                     self.site,
                     None,
-                    self.model_version,
                     "sites",
+                    self.model_version,
                 )
             )
         self._load_simulation_software_parameter()

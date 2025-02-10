@@ -215,8 +215,8 @@ class DatabaseHandler:
         self,
         site,
         array_element_name,
-        model_version,
         collection,
+        model_version=None,
     ):
         """
         Get model parameters using the model version.
@@ -229,8 +229,8 @@ class DatabaseHandler:
             Site name.
         array_element_name: str
             Name of the array element model (e.g. LSTN-01, MSTS-design, ILLN-01).
-        model_version: str
-            Version of the model.
+        model_version: str, list
+            Version(s) of the model.
         collection: str
             Collection of array element (e.g. telescopes, calibration_devices).
 
@@ -238,39 +238,50 @@ class DatabaseHandler:
         -------
         dict containing the parameters
         """
-        production_table = self._read_production_table_from_mongo_db(collection, model_version)
-        array_element_list = self._get_array_element_list(
-            array_element_name, site, production_table, collection
+        model_versions = (
+            self.get_model_versions(collection) if model_version is None else [model_version]
         )
 
         pars = {}
-        for array_element in array_element_list:
-            cache_key, cache_dict = self._read_cache(
-                DatabaseHandler.model_parameters_cached,
-                names.validate_site_name(site) if site else None,
-                array_element,
-                model_version,
-                collection,
+        for _model_version in model_versions:
+            production_table = self._read_production_table_from_mongo_db(collection, _model_version)
+            array_element_list = self._get_array_element_list(
+                array_element_name, site, production_table, collection
             )
-            if cache_dict:
-                self._logger.debug(f"Found {array_element} in cache (key: {cache_key})")
-                pars.update(cache_dict)
-                continue
-            self._logger.debug(f"Did not find {array_element} in cache (key: {cache_key})")
-
-            try:
-                parameter_version_table = production_table["parameters"][array_element]
-            except KeyError:  # allow missing array elements (parameter dict is checked later)
-                continue
-            DatabaseHandler.model_parameters_cached[cache_key] = self._read_mongo_db(
-                query=self._get_query_from_parameter_version_table(
-                    parameter_version_table, array_element, site
-                ),
-                collection_name=collection,
-            )
-            pars.update(DatabaseHandler.model_parameters_cached[cache_key])
-
+            for array_element in array_element_list:
+                pars.update(
+                    self._get_parameter_for_model_version(
+                        array_element, _model_version, site, collection, production_table
+                    )
+                )
         return pars
+
+    def _get_parameter_for_model_version(
+        self, array_element, model_version, site, collection, production_table
+    ):
+        cache_key, cache_dict = self._read_cache(
+            DatabaseHandler.model_parameters_cached,
+            names.validate_site_name(site) if site else None,
+            array_element,
+            model_version,
+            collection,
+        )
+        if cache_dict:
+            self._logger.debug(f"Found {array_element} in cache (key: {cache_key})")
+            return cache_dict
+        self._logger.debug(f"Did not find {array_element} in cache (key: {cache_key})")
+
+        try:
+            parameter_version_table = production_table["parameters"][array_element]
+        except KeyError:  # allow missing array elements (parameter dict is checked later)
+            return {}
+        DatabaseHandler.model_parameters_cached[cache_key] = self._read_mongo_db(
+            query=self._get_query_from_parameter_version_table(
+                parameter_version_table, array_element, site
+            ),
+            collection_name=collection,
+        )
+        return DatabaseHandler.model_parameters_cached[cache_key]
 
     def get_collection(self, db_name, collection_name):
         """
@@ -449,6 +460,45 @@ class DatabaseHandler:
             "entry_date": ObjectId(post["_id"]).generation_time,
         }
 
+    def get_model_versions(self, collection_name="telescopes"):
+        """
+        Get list of model versions from the DB.
+
+        Parameters
+        ----------
+        collection_name: str
+            Name of the collection.
+
+        Returns
+        -------
+        list
+            List of model versions
+        """
+        collection = self.get_collection(self._get_db_name(), "production_tables")
+        return sorted(
+            [post["model_version"] for post in collection.find({"collection": collection_name})]
+        )
+
+    def get_array_elements(self, model_version, collection="telescopes"):
+        """
+        Get list array elements for a given model version and collection from the DB.
+
+        Parameters
+        ----------
+        model_version: str
+            Version of the model.
+        collection: str
+            Which collection to get the array elements from:
+            i.e. telescopes, calibration_devices.
+
+        Returns
+        -------
+        list
+            Sorted list of all array elements found in collection
+        """
+        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        return sorted([entry for entry in production_table["parameters"] if "-design" not in entry])
+
     def get_array_elements_of_type(self, array_element_type, model_version, collection):
         """
         Get array elements of a certain type (e.g. 'LSTN') for a DB collection.
@@ -510,7 +560,7 @@ class DatabaseHandler:
             return self.get_model_parameters(
                 None,
                 None,
-                model_version,
+                model_version=model_version,
                 collection="configuration_corsika",
             )
         if simulation_software == "simtel":
@@ -518,7 +568,7 @@ class DatabaseHandler:
                 self.get_model_parameters(
                     site,
                     array_element_name,
-                    model_version,
+                    model_version=model_version,
                     collection="configuration_sim_telarray",
                 )
                 if site and array_element_name

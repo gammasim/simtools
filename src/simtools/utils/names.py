@@ -589,12 +589,8 @@ def sanitize_name(name):
     ValueError:
         if the string name can not be sanitized.
     """
-    # Convert to lowercase
     sanitized = name.lower()
-
-    # Replace spaces with underscores
     sanitized = sanitized.replace(" ", "_")
-
     # Remove characters that are not alphanumerics or underscores
     sanitized = re.sub(r"\W|^(?=\d)", "_", sanitized)
     if not sanitized.isidentifier():
