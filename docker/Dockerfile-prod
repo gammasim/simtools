@@ -1,7 +1,9 @@
 ARG BUILD_OPT="prod6-sc"
 ARG HADRONIC_MODEL="qgs2"
-ARG VERSION="240927"
-FROM ghcr.io/gammasim/simtools-corsika-sim-telarray-${HADRONIC_MODEL}-${BUILD_OPT}-${VERSION}
+ARG SIMTEL_VERSION="240927"
+ARG CORSIKA_VERSION="77550"
+ARG BERNLOHR_VERSION="1.68"
+FROM ghcr.io/gammasim/simtools-corsika-sim-telarray-${SIMTEL_VERSION}-corsika-${CORSIKA_VERSION}-bernlohr-${BERNLOHR_VERSION}-${HADRONIC_MODEL}-${BUILD_OPT}
 WORKDIR /workdir
 ARG BUILD_BRANCH=main
 
