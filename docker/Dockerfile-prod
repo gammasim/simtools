@@ -3,27 +3,21 @@ ARG HADRONIC_MODEL="qgs2"
 ARG VERSION="240927"
 FROM ghcr.io/gammasim/simtools-corsika-sim-telarray-${HADRONIC_MODEL}-${BUILD_OPT}-${VERSION}
 WORKDIR /workdir
-ENV DEBIAN_FRONTEND=noninteractive
 ARG BUILD_BRANCH=main
 
 RUN microdnf update -y && microdnf install -y \
-    findutils \
-    gcc-c++ \
-    git \
-    python3.11-pip \
-    python3.11-devel && \
+    findutils gcc-c++ git \
+    python3.11-pip python3.11-devel && \
     microdnf clean all
 
 RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') && \
-    git clone -b $BUILD_BRANCH https://github.com/gammasim/simtools.git --depth 1
-RUN python3.11 -m venv env && \
+    git clone -b $BUILD_BRANCH https://github.com/gammasim/simtools.git --depth 1 && \
+    python3.11 -m venv env && \
     source env/bin/activate && \
-    cd /workdir/simtools/ && \
     pip install -U pip && \
-    pip install --no-cache-dir .
+    pip install --no-cache-dir ./simtools && \
+    rm -rf simtools
 
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
 ENV PATH="/workdir/env/bin/:$PATH"
 SHELL ["/bin/bash", "-c"]
-
-WORKDIR /workdir
