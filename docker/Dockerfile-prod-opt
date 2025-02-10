@@ -50,7 +50,7 @@ RUN export NO_CORSIKA=1 && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 RUN mv ./corsika-77*/run corsika-run && \
     rm -rf ./corsika-7[0-9]* && \
     find . -name "*.tar.gz" -delete && \
-    find . -name "doc*" -delete && \
+    find . -name "doc*" -type d -exec rm -rf {} + 2>/dev/null && \
     find . -name "*.o" -delete && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
