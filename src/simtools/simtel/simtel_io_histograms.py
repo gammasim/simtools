@@ -1,10 +1,4 @@
-"""
-Reads the content of multiples files from sim_telarray.
-
-Reads the content of either multiple histogram (.hdata, or .hdata.zst) or
-simtel_array output files (.simtel or .simtel.zst). The module is built on top of the
-simtel_io_histogram module and uses its class (SimtelIOHistogram) to read the individual files.
-"""
+"""Reads the content of multiples files from sim_telarray."""
 
 import copy
 import logging
@@ -192,8 +186,9 @@ class SimtelIOHistograms:
                 energy_range=self.energy_range,
                 view_cone=self.view_cone,
             )
-            stacked_num_simulated_events += simtel_hist_instance.total_num_simulated_events
-            stacked_num_triggered_events += simtel_hist_instance.total_num_triggered_events
+            _simulated, _triggered = simtel_hist_instance.total_number_of_events
+            stacked_num_simulated_events += _simulated
+            stacked_num_triggered_events += _triggered
         return stacked_num_simulated_events, stacked_num_triggered_events
 
     def _rates_for_stacked_files(self):
@@ -282,24 +277,17 @@ class SimtelIOHistograms:
             if print_info:
                 simtel_hist_instance.print_info()
 
+            _simulated_events, _triggered_events = simtel_hist_instance.total_number_of_events
             logging.info(f"Histogram {i_file + 1}:")
-            logging.info(
-                "Total number of simulated events: "
-                f"{simtel_hist_instance.total_num_simulated_events} events"
-            )
-            logging.info(
-                "Total number of triggered events: "
-                f"{simtel_hist_instance.total_num_triggered_events} events"
-            )
+            logging.info(f"Total number of simulated events: {_simulated_events} events")
+            logging.info(f"Total number of triggered events: {_triggered_events} events")
 
-            obs_time = simtel_hist_instance.estimate_observation_time(
-                simtel_hist_instance.total_num_simulated_events
-            )
+            obs_time = simtel_hist_instance.estimate_observation_time(_simulated_events)
             logging.info(
                 f"Estimated equivalent observation time corresponding to the number of "
                 f"events simulated: {obs_time.value} s"
             )
-            sim_event_rate = simtel_hist_instance.total_num_simulated_events / obs_time
+            sim_event_rate = _simulated_events / obs_time
             sim_event_rates.append(sim_event_rate)
             logging.info(f"Simulated event rate: {sim_event_rate.value:.4e} Hz")
 
@@ -515,15 +503,16 @@ class SimtelIOHistograms:
 
     def export_histograms(self, hdf5_file_name, overwrite=False):
         """
-        Export the histograms to hdf5 files.
+        Export sim_telarray histograms to hdf5 files.
 
         Parameters
         ----------
         hdf5_file_name: str
             Name of the file to be saved with the hdf5 tables.
         overwrite: bool
-            If True overwrites the histograms already saved in the hdf5 file.
+            If True overwrites histograms already saved in the hdf5 file.
         """
+        self._logger.info(f"Exporting histograms to {hdf5_file_name}.")
         for histogram in self.combined_hists:
             x_bin_edges_list = np.linspace(
                 histogram["lower_x"],
@@ -556,14 +545,10 @@ class SimtelIOHistograms:
                 f"Writing histogram with name {self._meta_dict['Title']} to {hdf5_file_name}."
             )
             # overwrite takes precedence over append
-            if overwrite is True:
-                append = False
-            else:
-                append = True
             write_table(
                 table,
                 hdf5_file_name,
                 f"/{self._meta_dict['Title']}",
-                append=append,
+                append=not overwrite,
                 overwrite=overwrite,
             )
