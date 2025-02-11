@@ -150,17 +150,21 @@ def test_add_tel(
     array_layout_north_instance,
     array_layout_south_instance,
 ):
-    def test_one_site(instance, altitude, tel_name):
+    def test_one_site(instance, altitude, tel_name, design_model):
         ntel_before = instance.get_number_of_telescopes()
-        instance.add_telescope(tel_name, "ground", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m)
+        instance.add_telescope(
+            tel_name, "ground", 100.0 * u.m, 50.0 * u.m, 2177.0 * u.m, design_model=design_model
+        )
         ntel_after = instance.get_number_of_telescopes()
         assert ntel_before + 1 == ntel_after
 
-        instance.add_telescope(tel_name, "ground", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m)
+        instance.add_telescope(
+            tel_name, "ground", 100.0 * u.m, 50.0 * u.m, None, 50.0 * u.m, design_model=design_model
+        )
         assert instance._telescope_list[-1].get_altitude().value == pytest.approx(altitude)
 
-    test_one_site(array_layout_north_instance, 2197.0, "MSTN-20")
-    test_one_site(array_layout_south_instance, 2181.0, "LSTS-05")
+    test_one_site(array_layout_north_instance, 2197.0, "MSTN-20", "MSTx-NectarCam")
+    test_one_site(array_layout_south_instance, 2181.0, "LSTS-05", "LSTS-design")
 
 
 def check_table_columns(_table, add_geocode, asset_code, sequence_number):
