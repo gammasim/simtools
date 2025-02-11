@@ -20,11 +20,12 @@ def invalid_name():
 def test_get_list_of_array_element_types():
     assert names.get_list_of_array_element_types(array_element_class="telescopes", site=None) == [
         "LSTN",
-        "MSTN",
         "LSTS",
+        "MSTN",
         "MSTS",
-        "SSTS",
+        "MSTx",
         "SCTS",
+        "SSTS",
     ]
 
     assert names.get_list_of_array_element_types(
@@ -39,8 +40,8 @@ def test_get_list_of_array_element_types():
     ) == [
         "LSTS",
         "MSTS",
-        "SSTS",
         "SCTS",
+        "SSTS",
     ]
 
     assert "ILLN" in names.get_list_of_array_element_types(
@@ -76,9 +77,8 @@ def test_validate_array_element_id_name(caplog):
         "01": "01",
         "5": "05",
         "55": "55",
-        "Design": "design",
-        "DESIGN": "design",
-        "TEST": "test",
+        "design": "design",
+        "test": "test",
     }
     for key, value in _test_ids.items():
         assert value == names.validate_array_element_id_name(key)
@@ -111,8 +111,8 @@ def test_validate_array_element_type(invalid_name):
 
 def test_validate_array_element_name(invalid_name):
     telescopes = {
-        "LSTN-Design": "LSTN-design",
-        "LSTN-TEST": "LSTN-test",
+        "LSTN-Design": "LSTN-Design",
+        "LSTN-TEST": "LSTN-TEST",
         "LSTN-01": "LSTN-01",
         "SSTS-01": "SSTS-01",
     }

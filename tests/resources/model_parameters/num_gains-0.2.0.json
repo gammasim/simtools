@@ -3,7 +3,7 @@
     "parameter": "num_gains",
     "instrument": "LSTN-design",
     "site": "North",
-    "parameter_version": "1.0.0",
+    "parameter_version": "0.2.0",
     "unique_id": null,
     "value": 2,
     "unit": null,
