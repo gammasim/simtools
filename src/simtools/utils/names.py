@@ -80,7 +80,10 @@ def array_element_design_types(array_element_type):
     list
         Array element design types.
     """
-    return array_elements()[array_element_type].get("design_types", ["design", "test"])
+    default_types = ["design", "test"]
+    if array_element_type is None:
+        return default_types
+    return array_elements()[array_element_type].get("design_types", default_types)
 
 
 @cache
@@ -106,7 +109,7 @@ def telescope_parameters():
     return load_model_parameters(class_key_list=("Structure", "Camera", "Telescope"))
 
 
-def validate_array_element_id_name(name, array_element_type):
+def validate_array_element_id_name(name, array_element_type=None):
     """
     Validate array element ID.
 
@@ -134,8 +137,8 @@ def validate_array_element_id_name(name, array_element_type):
     """
     if isinstance(name, int) or name.isdigit():
         return f"{int(name):02d}"
-    if name.lower() in array_element_design_types(array_element_type):
-        return str(name).lower()
+    if name.lower() in {t.lower() for t in array_element_design_types(array_element_type)}:
+        return str(name)
 
     msg = f"Invalid array element ID name {name}"
     _logger.error(msg)
@@ -318,13 +321,15 @@ def get_list_of_array_element_types(
     list
         List of array element types.
     """
-    return [
-        key
-        for key, value in array_elements().items()
-        if value["collection"] == array_element_class
-        and (site is None or value["site"] == site)
-        and (observatory is None or value["observatory"] == observatory)
-    ]
+    return sorted(
+        [
+            key
+            for key, value in array_elements().items()
+            if value["collection"] == array_element_class
+            and (site is None or value["site"] == site)
+            and (observatory is None or value["observatory"] == observatory)
+        ]
+    )
 
 
 def get_site_from_array_element_name(name):
