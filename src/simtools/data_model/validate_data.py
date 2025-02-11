@@ -121,18 +121,17 @@ class DataValidator:
         - file name ends with parameter version string
 
         """
-        if not str(Path(self.data_file_name).stem).startswith(self.data_dict.get("parameter")):
-            raise ValueError(
-                f"Parameter name in data dict {self.data_dict.get('parameter')} and "
-                f"file name {Path(self.data_file_name).stem} do not match."
-            )
-        if not str(Path(self.data_file_name).stem).endswith(
-            self.data_dict.get("parameter_version")
-        ):
-            raise ValueError(
-                f"Parameter version in data dict {self.data_dict.get('parameter_version')} and "
-                f"file name {Path(self.data_file_name).stem} do not match."
-            )
+        file_stem = Path(self.data_file_name).stem
+        param = self.data_dict.get("parameter")
+        param_version = self.data_dict.get("parameter_version")
+        if not file_stem.startswith(param):
+            raise ValueError(f"Mismatch: parameter '{param}' vs. file '{file_stem}'.")
+
+        if param_version and not file_stem.endswith(param_version):
+            raise ValueError(f"Mismatch: version '{param_version}' vs. file '{file_stem}'.")
+
+        if param_version is None:
+            self._logger.warning(f"File '{file_stem}' has no parameter version defined.")
 
     @staticmethod
     def validate_model_parameter(par_dict):
