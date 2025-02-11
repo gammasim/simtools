@@ -53,8 +53,34 @@ def site_names():
         Site names.
     """
     _array_elements = array_elements()
-    _sites = {entry["site"] for entry in _array_elements.values()}
+    _sites = set()
+    for entry in _array_elements.values():
+        site = entry["site"]
+        if isinstance(site, list):
+            _sites.update(site)
+        else:
+            _sites.add(site)
     return {site: [site.lower()] for site in _sites}
+
+
+@cache
+def array_element_design_types(array_element_type):
+    """
+    Array element site types (e.g., 'design' or 'flashcam').
+
+    Default value is ['design', 'test'].
+
+    Parameters
+    ----------
+    array_element_type
+        Array element type
+
+    Returns
+    -------
+    list
+        Array element design types.
+    """
+    return array_elements()[array_element_type].get("design_types", ["design", "test"])
 
 
 @cache
@@ -80,7 +106,7 @@ def telescope_parameters():
     return load_model_parameters(class_key_list=("Structure", "Camera", "Telescope"))
 
 
-def validate_array_element_id_name(name):
+def validate_array_element_id_name(name, array_element_type):
     """
     Validate array element ID.
 
@@ -93,6 +119,8 @@ def validate_array_element_id_name(name):
     ----------
     name: str or int
         Array element ID name.
+    array_element_type: str
+        Array element type (e.g., LSTN, MSTN).
 
     Returns
     -------
@@ -106,7 +134,7 @@ def validate_array_element_id_name(name):
     """
     if isinstance(name, int) or name.isdigit():
         return f"{int(name):02d}"
-    if name.lower() in ("design", "test"):
+    if name.lower() in array_element_design_types(array_element_type):
         return str(name).lower()
 
     msg = f"Invalid array element ID name {name}"
@@ -186,7 +214,7 @@ def validate_array_element_type(name):
 
 def validate_array_element_name(name):
     """
-    Validate array element name (e.g., MSTN-design, MSTN-01).
+    Validate array element name (e.g., MSTx-NectarCam, MSTN-01).
 
     Parameters
     ----------
@@ -203,10 +231,12 @@ def validate_array_element_name(name):
     except ValueError as exc:
         msg = f"Invalid name {name}"
         raise ValueError(msg) from exc
+    if _array_element_type == "OBS":
+        return validate_site_name(_array_element_id)
     return (
         _validate_name(_array_element_type, array_elements())
         + "-"
-        + validate_array_element_id_name(_array_element_id)
+        + validate_array_element_id_name(_array_element_id, _array_element_type)
     )
 
 
@@ -229,7 +259,7 @@ def get_array_element_name_from_type_site_id(array_element_type, site, array_ele
         Array element name.
     """
     _short_site = validate_site_name(site)[0]
-    _val_id = validate_array_element_id_name(array_element_id)
+    _val_id = validate_array_element_id_name(array_element_id, array_element_type)
     return f"{array_element_type}{_short_site}-{_val_id}"
 
 
@@ -248,6 +278,26 @@ def get_array_element_type_from_name(name):
         Array element type.
     """
     return _validate_name(name.split("-")[0], array_elements())
+
+
+def get_design_model_from_name(name):
+    """
+    Get design model name from array element name.
+
+    Note that for model parameters, the preferred way is to use the
+    'design_model' parameter.
+
+    Parameters
+    ----------
+    name: str
+       Array element name
+
+    Returns
+    -------
+    str
+        Design model name.
+    """
+    return f"{get_array_element_type_from_name(name)}-design"
 
 
 def get_list_of_array_element_types(
@@ -288,8 +338,8 @@ def get_site_from_array_element_name(name):
 
     Returns
     -------
-    str
-        Site name (South or North).
+    str, list
+        Site name(s).
     """
     return array_elements()[get_array_element_type_from_name(name)]["site"]
 
