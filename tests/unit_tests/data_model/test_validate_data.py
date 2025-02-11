@@ -107,7 +107,9 @@ def test_validate_and_transform(caplog, mocker):
         assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = "tests/resources/model_parameters/num_gains-0.2.0.json"
+    data_validator.data_file_name = (
+        "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    )
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
     mock_prepare_model_parameter = mocker.patch(
         "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
@@ -138,14 +140,16 @@ def test_validate_data_file(caplog):
 def test_validate_parameter_and_file_name():
 
     data_validator = validate_data.DataValidator()
-    data_validator.data_file_name = "tests/resources/model_parameters/num_gains-0.2.0.json"
+    data_validator.data_file_name = (
+        "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    )
     data_validator.schema_file_name = "tests/resources/num_gains.schema.yml"
     data_validator.validate_and_transform()
 
     data_validator.data_dict["parameter"] = "incorrect_name"
     with pytest.raises(
         ValueError,
-        match="Parameter name in data dict incorrect_name and file name num_gains-0.2.0 do not match.",
+        match="Mismatch: parameter 'incorrect_name' vs. file 'num_gains-1.0.0'.",
     ):
         data_validator.validate_parameter_and_file_name()
 
