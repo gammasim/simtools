@@ -236,7 +236,7 @@ def telescope_model_lst(db_config, io_handler, model_version):
 
 @pytest.fixture
 def telescope_model_mst(db_config, io_handler, model_version):
-    """Telescope model MST South."""
+    """Telescope model MST FlashCam."""
     return TelescopeModel(
         site="South",
         telescope_name="MSTx-FlashCam",
