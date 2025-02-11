@@ -88,7 +88,7 @@ class DataValidator:
         self._logger.error("No data or data table to validate")
         raise TypeError
 
-    def validate_data_file(self, is_model_parameter):
+    def validate_data_file(self, is_model_parameter=None):
         """
         Open data file and read data from file.
 
@@ -194,13 +194,16 @@ class DataValidator:
             self.data_dict["value"], self.data_dict["unit"] = value_as_list, unit_as_list
 
         if self.data_dict.get("instrument"):
-            names.validate_array_element_name(self.data_dict["instrument"])
+            if self.data_dict["instrument"] == self.data_dict["site"]:  # site parameters
+                names.validate_site_name(self.data_dict["site"])
+            else:
+                names.validate_array_element_name(self.data_dict["instrument"])
+                self._check_site_and_array_element_consistency(
+                    self.data_dict.get("instrument"), self.data_dict.get("site")
+                )
+
         for version_string in ("version", "parameter_version", "model_version"):
             self._check_version_string(self.data_dict.get(version_string))
-
-        self._check_site_and_array_element_consistency(
-            self.data_dict.get("instrument"), self.data_dict.get("site")
-        )
 
         if lists_as_strings:
             self._convert_results_to_model_format()
