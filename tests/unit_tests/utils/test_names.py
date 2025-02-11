@@ -115,6 +115,8 @@ def test_validate_array_element_name(invalid_name):
         "LSTN-TEST": "LSTN-TEST",
         "LSTN-01": "LSTN-01",
         "SSTS-01": "SSTS-01",
+        "OBS-North": "North",
+        "MSTx-NectarCam": "MSTx-NectarCam",
     }
 
     for key, value in telescopes.items():
@@ -498,6 +500,16 @@ def test_get_simulation_software_name_from_parameter_name():
             "reference_point_longitude", simulation_software="corsika"
         )
         == "reference_point_longitude"
+    )
+    with pytest.raises(KeyError, match="Parameter not_a_parameter without schema definition"):
+        names.get_simulation_software_name_from_parameter_name(
+            "not_a_parameter", simulation_software="corsika"
+        )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "reference_point_longitude", simulation_software=None
+        )
+        is None
     )
 
 

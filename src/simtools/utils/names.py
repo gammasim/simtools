@@ -415,8 +415,7 @@ def get_simulation_software_name_from_parameter_name(
     try:
         _parameter = _parameter_names[par_name]
     except KeyError as err:
-        _logger.error(f"Parameter {par_name} without schema definition")
-        raise err
+        raise KeyError(f"Parameter {par_name} without schema definition") from err
 
     try:
         for software in _parameter.get("simulation_software", []):
