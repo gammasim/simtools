@@ -156,7 +156,7 @@ def test_get_class_from_telescope_name(invalid_name):
 def test_get_collection_name_from_array_element_name():
 
     assert "telescopes" == names.get_collection_name_from_array_element_name("LSTN-01")
-    assert "telescopes" == names.get_collection_name_from_array_element_name("MSTS-design")
+    assert "telescopes" == names.get_collection_name_from_array_element_name("MSTx-FlashCam")
     assert "sites" == names.get_collection_name_from_array_element_name("OBS-North")
     assert "sites" == names.get_collection_name_from_array_element_name("North")
     assert "sites" == names.get_collection_name_from_array_element_name("OBS-North", False)
