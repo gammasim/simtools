@@ -239,7 +239,7 @@ def telescope_model_mst(db_config, io_handler, model_version):
     """Telescope model MST South."""
     return TelescopeModel(
         site="South",
-        telescope_name="MSTS-design",
+        telescope_name="MSTx-FlashCam",
         model_version=model_version,
         label="test-telescope-model-mst",
         mongo_db_config=db_config,
