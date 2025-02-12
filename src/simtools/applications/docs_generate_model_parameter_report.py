@@ -24,14 +24,8 @@ def _parse(label):
         description=("Generate a markdown report for model parameters."),
     )
 
-    config.parser.add_argument(
-        "--parameter",
-        action="store_true",
-        help="Compare all parameters across model versions for one telescope.",
-    )
-
     return config.initialize(
-        db_config=True, simulation_model=["site", "telescope", "model_version", "parameter_version"]
+        db_config=True, simulation_model=["site", "telescope", "model_version"]
     )
 
 
@@ -39,9 +33,7 @@ def main():  # noqa: D103
     label_name = "reports"
     args, db_config = _parse(label_name)
     io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory(
-        label=label_name, sub_dir=f"productions/{args['model_version']}"
-    )
+    output_path = io_handler_instance.get_output_directory(label=label_name, sub_dir="parameters")
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
@@ -58,7 +50,7 @@ def main():  # noqa: D103
         db_config,
         telescope_model,
         output_path,
-    ).generate_array_element_report(args)
+    ).generate_parameter_report(args)
 
     logger.info(
         f"Markdown report generated for {args['site']}"
