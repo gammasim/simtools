@@ -133,7 +133,7 @@ class ReadParameters:
 
         return data
 
-    def compare_parameter_across_versions(self, args, output_path, parameter_name):
+    def _compare_parameter_across_versions(self, args, output_path, parameter_name):
         """
         Compare a parameter's value across different model versions.
 
@@ -310,7 +310,7 @@ class ReadParameters:
         for parameter in all_params:
             if all_params[parameter]["instrument"] == args["telescope"]:
                 print("param: ", parameter, all_params[parameter]["instrument"])
-                comparison_data = self.compare_parameter_across_versions(
+                comparison_data = self._compare_parameter_across_versions(
                     args, output_path, parameter
                 )
                 if comparison_data:
