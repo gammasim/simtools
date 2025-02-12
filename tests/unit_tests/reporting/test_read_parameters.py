@@ -6,7 +6,9 @@ from simtools.reporting.docs_read_parameters import ReadParameters
 def test_get_all_parameter_descriptions(telescope_model_lst, io_handler):
 
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(telescope_model=telescope_model_lst, output_path=output_path)
+    read_parameters = ReadParameters(
+        db_config=None, telescope_model=telescope_model_lst, output_path=output_path
+    )
 
     # Call get_all_parameter_descriptions
     descriptions, short_descriptions, inst_class = read_parameters.get_all_parameter_descriptions()
@@ -19,24 +21,36 @@ def test_get_all_parameter_descriptions(telescope_model_lst, io_handler):
 def test_get_telescope_parameter_data(telescope_model_lst, io_handler):
 
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(telescope_model=telescope_model_lst, output_path=output_path)
+    read_parameters = ReadParameters(
+        db_config=None, telescope_model=telescope_model_lst, output_path=output_path
+    )
+    args = {
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+        "telescope": telescope_model_lst.name,
+    }
 
-    result = read_parameters.get_telescope_parameter_data()
+    result = read_parameters.get_telescope_parameter_data(args, telescope_model_lst)
 
     # Assert the result contains the expected data
     if result[1] == "focal_length":
         assert result[0] == "Structure"
-        assert result[2] == (2800.0 * u.cm)
-        assert result[3] == "Nominal overall focal length of the entire telescope."
+        assert result[3] == (2800.0 * u.cm)
+        assert result[4] == "Nominal overall focal length of the entire telescope."
 
 
-def test_compare_parameters_across_versions(telescope_model_lst, io_handler):
+def test_generate_array_element_report(telescope_model_lst, io_handler):
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(telescope_model=telescope_model_lst, output_path=output_path)
-
-    result = read_parameters.compare_parameter_across_versions(
-        parameter_name="focal_length", telescope_model=telescope_model_lst
+    read_parameters = ReadParameters(
+        db_config=None, telescope_model=telescope_model_lst, output_path=output_path
     )
+    args = {
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+        "telescope": telescope_model_lst.name,
+    }
+    read_parameters.generate_array_element_report(args)
 
-    assert result[0]["model_version"] == "5.0.0"
-    assert result[1]["model_version"] == "6.0.0"
+    file_path = output_path / telescope_model_lst.name
+    print("file_path:", file_path, telescope_model_lst.name)
+    assert file_path.exists()
