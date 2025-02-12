@@ -31,3 +31,13 @@ the visualization module.
 ```{eval-rst}
 .. automodule:: visualization.plot_camera
    :members:
+```
+
+(plot-tables)=
+
+## plot_tables
+
+```{eval-rst}
+.. automodule:: visualization.plot_tables
+   :members:
+```
