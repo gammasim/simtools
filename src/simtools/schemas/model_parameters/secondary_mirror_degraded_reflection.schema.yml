@@ -10,7 +10,7 @@ description: |-
   Mirror degradation factor for the secondary mirror (wavelength independent).
   Strictly interpreted as being for reflection on the secondary mirror of a
   dual-mirror telescope, and still gets applied in simulations where only
-  the reflection on the primary mirror is bypassd (for example a
+  the reflection on the primary mirror is bypassed (for example a
   flat-fielding light source illuminating the camera via reflection on the
   secondary).
 short_description: |-
