@@ -4,18 +4,15 @@ import astropy.units as u
 import numpy as np
 from scipy.interpolate import griddata
 
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
-)
 from simtools.production_configuration.event_scaler import EventScaler
+
+__all__ = ["InterpolationHandler"]
 
 
 class InterpolationHandler:
     """Handle interpolation between multiple StatisticalErrorEvaluator instances."""
 
-    def __init__(
-        self, evaluators: list["StatisticalErrorEvaluator"], science_case: str, metrics: dict
-    ):
+    def __init__(self, evaluators, science_case: str, metrics: dict):
         self.evaluators = evaluators
         self.science_case = science_case
         self.metrics = metrics
@@ -157,7 +154,7 @@ class InterpolationHandler:
 
         return interpolated_threshold.item()
 
-    def plot_comparison(self, evaluator: "StatisticalErrorEvaluator"):
+    def plot_comparison(self, evaluator):
         """
         Plot a comparison between the simulated, scaled, and reconstructed events.
 
