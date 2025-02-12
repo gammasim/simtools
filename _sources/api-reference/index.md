@@ -17,6 +17,7 @@ io_operations
 job_execution
 array_layout
 mc_model
+production_configuration
 ray_tracing
 runners
 sim_telarray

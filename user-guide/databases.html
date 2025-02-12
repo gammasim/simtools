@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Databases &#8212; simtools v0.1.dev1+g8fbf2a5 Manual</title>
+    <title>Databases &#8212; simtools v0.1.dev1+gecfc59e Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c390595b"></script>
+    <script src="../_static/documentation_options.js?v=844678ba"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Simulation Model" href="model_parameters.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g8fbf2a5" />
+  <meta name="docsearch:version" content="0.1.dev1+gecfc59e" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g8fbf2a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gecfc59e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -231,6 +231,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/production_configuration.html">Production Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/sim_telarray.html">sim_telarray</a></li>
@@ -477,7 +478,7 @@
 <h1>Databases<a class="headerlink" href="#databases" title="Link to this heading">#</a></h1>
 <p>The simtools package uses a prototype MongoDB database to store the simulation model parameters.
 Access to the DB is handled via a dedicated API module (<a class="reference internal" href="../api-reference/db_handler.html#dbhandler"><span class="std std-ref">db_handler</span></a>).</p>
-<p>Simulation model parameters are stored in databases (see the <a class="reference internal" href="model_parameters.html#simulation-model"><span class="std std-ref">Simulation Model</span></a> section) and synced with the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">CTAO model parameter repository</a>.</p>
+<p>Simulation model parameters are stored in databases (see the <a class="reference internal" href="model_parameters.html#simulation-model"><span class="std std-ref">Simulation Model</span></a> section) and synced with the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">CTAO model repository</a>.</p>
 <section id="database-structure">
 <h2>Database structure<a class="headerlink" href="#database-structure" title="Link to this heading">#</a></h2>
 <p>Several different databases are used in simtools.</p>
@@ -524,7 +525,7 @@ This documentation is therefore incomplete.</p>
 </section>
 <section id="update-the-database">
 <h2>Update the database<a class="headerlink" href="#update-the-database" title="Link to this heading">#</a></h2>
-<p>Model parameters should first be reviewed and accepted in the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">model parameter repository</a> before they are uploaded to the database (see the following sections on how to set up a local copy of the model parameter database for testing and development).</p>
+<p>Model parameters should first be reviewed and accepted in the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">model repository</a> before they are uploaded to the database (see the following sections on how to set up a local copy of the model parameter database for testing and development).</p>
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
 <p>Updating the database is for experts only.
@@ -566,7 +567,7 @@ are located in the directory <code class="docutils literal notranslate"><span cl
 </section>
 <section id="option-2-fill-local-database-from-model-parameter-repository">
 <h4>Option 2: Fill local database from model parameter repository<a class="headerlink" href="#option-2-fill-local-database-from-model-parameter-repository" title="Link to this heading">#</a></h4>
-<p>The script <code class="docutils literal notranslate"><span class="pre">upload_from_model_repository_to_db.sh</span></code> uses the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">model parameter repository</a> from the CTAO gitlab and
+<p>The script <code class="docutils literal notranslate"><span class="pre">upload_from_model_repository_to_db.sh</span></code> uses the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">model repository</a> from the CTAO gitlab and
 uploads its contents to the local database instance.</p>
 <p>Note that repository branches are hardcoded in the scripts and need to be adjusted accordingly.</p>
 <p><strong>If you get timeout errors, try to run it run from within the simtools container</strong></p>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g8fbf2a5 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+gecfc59e Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c390595b"></script>
+    <script src="../_static/documentation_options.js?v=844678ba"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Runners for simulation software." href="runners.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g8fbf2a5" />
+  <meta name="docsearch:version" content="0.1.dev1+gecfc59e" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g8fbf2a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gecfc59e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -231,6 +231,7 @@
 <li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">sim_telarray</a></li>
@@ -458,6 +459,10 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_telescope_config_file()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-table-reader">simtel_table_reader</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_table_reader.read_simtel_table"><code class="docutils literal notranslate"><span class="pre">read_simtel_table()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-events">simtel_io_events</a><ul class="nav section-nav flex-column">
@@ -693,6 +698,32 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+</section>
+<section id="simtel-table-reader">
+<h2>simtel_table_reader<a class="headerlink" href="#simtel-table-reader" title="Link to this heading">#</a></h2>
+<p id="module-simtel.simtel_table_reader"><span id="simtel-table-reader-1"></span>Read tabular data in sim_telarray format and return as astropy table.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtel.simtel_table_reader.read_simtel_table">
+<span class="sig-prename descclassname"><span class="pre">simtel.simtel_table_reader.</span></span><span class="sig-name descname"><span class="pre">read_simtel_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_table_reader.html#read_simtel_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_table_reader.read_simtel_table" title="Link to this definition">#</a></dt>
+<dd><p>Read sim_telarray table file for a given parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter_name: str</strong></dt><dd><p>Model parameter name.</p>
+</dd>
+<dt><strong>file_path: Path</strong></dt><dd><p>Name (full path) of the sim_telarray table file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Table</dt><dd><p>Astropy table.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -1560,6 +1591,10 @@ mirror_numbers.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_writer.SimtelConfigWriter.write_telescope_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigWriter.write_telescope_config_file()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-table-reader">simtel_table_reader</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_table_reader.read_simtel_table"><code class="docutils literal notranslate"><span class="pre">read_simtel_table()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-events">simtel_io_events</a><ul class="nav section-nav flex-column">

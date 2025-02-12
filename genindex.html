@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g8fbf2a5 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+gecfc59e Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=c390595b"></script>
+    <script src="_static/documentation_options.js?v=844678ba"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g8fbf2a5" />
+  <meta name="docsearch:version" content="0.1.dev1+gecfc59e" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g8fbf2a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gecfc59e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -230,6 +230,7 @@
 <li class="toctree-l2"><a class="reference internal" href="api-reference/job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/production_configuration.html">Production Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/sim_telarray.html">sim_telarray</a></li>
@@ -448,7 +449,21 @@
 </li>
       <li><a href="api-reference/camera_efficiency.html#camera_efficiency.CameraEfficiency.calc_tot_efficiency">calc_tot_efficiency() (camera_efficiency.CameraEfficiency method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_estimate">calculate_energy_estimate() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_threshold">calculate_energy_threshold() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_max_error_for_effective_area">calculate_max_error_for_effective_area() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_metrics">calculate_metrics() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_overall_metric">calculate_overall_metric() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events">calculate_required_events() (production_configuration.generate_simulation_config.SimulationConfig method)</a>
+</li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.calculate_rmsd">calculate_rmsd() (in module derive_psf_parameters)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.event_scaler.EventScaler.calculate_scaled_events_at_grid_point">calculate_scaled_events_at_grid_point() (production_configuration.event_scaler.EventScaler method)</a>
 </li>
       <li>
     calculate_trigger_rate
@@ -458,6 +473,8 @@
 </li>
       </ul></li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.calculate_trigger_rates">calculate_trigger_rates() (simtel.simtel_io_histograms.SimtelIOHistograms method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_uncertainty_effective_area">calculate_uncertainty_effective_area() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.calibration_pointing_direction">calibration_pointing_direction() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
@@ -524,12 +541,16 @@
 </li>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_json_or_yaml_files">compare_json_or_yaml_files() (in module testing.validate_output)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">compare_simtel_config_with_schema() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_efficiency_and_errors">compute_efficiency_and_errors() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_reconstructed_event_histogram">compute_reconstructed_event_histogram() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate">compute_system_trigger_rate() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/mc_model.html#model.model_utils.compute_telescope_transmission">compute_telescope_transmission() (in module model.model_utils)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.config">config (simtel.simtel_io_histogram.SimtelIOHistogram property)</a>
@@ -555,6 +576,8 @@
       <li><a href="api-reference/configuration_module.html#configuration.configurator.Configurator">Configurator (class in configuration.configurator)</a>
 </li>
       <li><a href="api-reference/testing.html#testing.configuration.configure">configure() (in module testing.configuration)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_simulation_config.SimulationConfig.configure_simulation">configure_simulation() (production_configuration.generate_simulation_config.SimulationConfig method)</a>
 </li>
       <li><a href="user-guide/applications/simtools-db-add-file-to-db.html#db_add_file_to_db.confirm_and_insert_files">confirm_and_insert_files() (in module db_add_file_to_db)</a>
 </li>
@@ -639,6 +662,8 @@
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.count_simulated_events">count_simulated_events() (simtel.simtel_io_events.SimtelIOEvents method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.count_triggered_events">count_triggered_events() (simtel.simtel_io_events.SimtelIOEvents method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.create_bin_edges">create_bin_edges() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
       <li><a href="user-guide/applications/simtools-generate-simtel-array-histograms.html#generate_simtel_array_histograms.create_pdf">create_pdf() (in module generate_simtel_array_histograms)</a>
 </li>
@@ -829,6 +854,8 @@
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_first_interaction_heights">event_first_interaction_heights (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_zenith_angles">event_zenith_angles (corsika.corsika_histograms.CorsikaHistograms property)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.event_scaler.EventScaler">EventScaler (class in production_configuration.event_scaler)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.array_model.ArrayModel.export_all_simtel_config_files">export_all_simtel_config_files() (model.array_model.ArrayModel method)</a>
 </li>
@@ -1235,10 +1262,16 @@
 </li>
       <li><a href="api-reference/db_handler.html#db.db_handler.DatabaseHandler.insert_file_to_db">insert_file_to_db() (db.db_handler.DatabaseHandler method)</a>
 </li>
-      <li><a href="api-reference/utils.html#utils.general.InvalidConfigDataError">InvalidConfigDataError</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.interpolation_handler.InterpolationHandler.interpolate">interpolate() (production_configuration.interpolation_handler.InterpolationHandler method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold">interpolate_energy_threshold() (production_configuration.interpolation_handler.InterpolationHandler method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.interpolation_handler.InterpolationHandler">InterpolationHandler (class in production_configuration.interpolation_handler)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/utils.html#utils.general.InvalidConfigDataError">InvalidConfigDataError</a>
+</li>
       <li><a href="api-reference/configuration_module.html#configuration.configurator.InvalidConfigurationParameterError">InvalidConfigurationParameterError</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.InvalidCoordSystemErrorError">InvalidCoordSystemErrorError</a>
@@ -1267,6 +1300,13 @@
 
       <ul>
         <li><a href="api-reference/io_operations.html#module-io_operations.io_handler">module</a>
+</li>
+      </ul></li>
+      <li>
+    io_operations.legacy_data_handler
+
+      <ul>
+        <li><a href="api-reference/io_operations.html#module-io_operations.legacy_data_handler">module</a>
 </li>
       </ul></li>
       <li><a href="api-reference/io_operations.html#io_operations.io_handler.IOHandler">IOHandler (class in io_operations.io_handler)</a>
@@ -1349,6 +1389,8 @@
 </li>
       </ul></li>
       <li><a href="api-reference/runners.html#runners.runner_services.RunnerServices.load_data_directories">load_data_directories() (runners.runner_services.RunnerServices method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.load_data_from_file">load_data_from_file() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.load_header_and_summary">load_header_and_summary() (simtel.simtel_io_events.SimtelIOEvents method)</a>
 </li>
@@ -1542,6 +1584,8 @@
 </li>
         <li><a href="api-reference/io_operations.html#module-io_operations.io_handler">io_operations.io_handler</a>
 </li>
+        <li><a href="api-reference/io_operations.html#module-io_operations.legacy_data_handler">io_operations.legacy_data_handler</a>
+</li>
         <li><a href="api-reference/job_execution.html#module-job_execution.htcondor_script_generator">job_execution.htcondor_script_generator</a>
 </li>
         <li><a href="api-reference/job_execution.html#module-job_execution.job_manager">job_execution.job_manager</a>
@@ -1572,6 +1616,14 @@
 </li>
         <li><a href="user-guide/applications/simtools-plot-tabular-data.html#module-plot_tabular_data">plot_tabular_data</a>
 </li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.calculate_statistical_errors_grid_point">production_configuration.calculate_statistical_errors_grid_point</a>
+</li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.event_scaler">production_configuration.event_scaler</a>
+</li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.generate_simulation_config">production_configuration.generate_simulation_config</a>
+</li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">production_configuration.interpolation_handler</a>
+</li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#module-production_generate_simulation_config">production_generate_simulation_config</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-scale-events.html#module-production_scale_events">production_scale_events</a>
@@ -1599,6 +1651,8 @@
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_histogram">simtel.simtel_io_histogram</a>
 </li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_histograms">simtel.simtel_io_histograms</a>
+</li>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_table_reader">simtel.simtel_table_reader</a>
 </li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simulator_array">simtel.simulator_array</a>
 </li>
@@ -1649,6 +1703,8 @@
         <li><a href="api-reference/visualization.html#module-visualization.legend_handlers">visualization.legend_handlers</a>
 </li>
         <li><a href="api-reference/visualization.html#module-visualization.plot_camera">visualization.plot_camera</a>
+</li>
+        <li><a href="api-reference/visualization.html#module-visualization.plot_tables">visualization.plot_tables</a>
 </li>
         <li><a href="api-reference/visualization.html#module-visualization.visualize">visualization.visualize</a>
 </li>
@@ -1715,8 +1771,12 @@
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.PixelObject">PixelObject (class in visualization.legend_handlers)</a>
 </li>
-      <li><a href="api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.plot">plot() (ray_tracing.ray_tracing.RayTracing method)</a>
+      <li><a href="api-reference/visualization.html#visualization.plot_tables.plot">plot() (in module visualization.plot_tables)</a>
+
+      <ul>
+        <li><a href="api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.plot">(ray_tracing.ray_tracing.RayTracing method)</a>
 </li>
+      </ul></li>
       <li><a href="api-reference/visualization.html#visualization.visualize.plot_1d">plot_1d() (in module visualization.visualize)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_1d_event_header_distribution">plot_1d_event_header_distribution() (in module corsika.corsika_histograms_visualize)</a>
@@ -1744,6 +1804,8 @@
         <li><a href="user-guide/applications/simtools-plot-array-layout.html#module-plot_array_layout">module</a>
 </li>
       </ul></li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison">plot_comparison() (production_configuration.interpolation_handler.InterpolationHandler method)</a>
+</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_counts_distr">plot_counts_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.plot_cumulative">plot_cumulative() (ray_tracing.psf_analysis.PSFImage method)</a>
@@ -1768,8 +1830,6 @@
 </li>
       <li><a href="api-reference/visualization.html#visualization.plot_camera.plot_pixel_layout">plot_pixel_layout() (in module visualization.plot_camera)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/visualization.html#visualization.visualize.plot_table">plot_table() (in module visualization.visualize)</a>
 </li>
       <li>
@@ -1779,6 +1839,8 @@
         <li><a href="user-guide/applications/simtools-plot-tabular-data.html#module-plot_tabular_data">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_time_distr">plot_time_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_wavelength_distr">plot_wavelength_distr() (in module corsika.corsika_histograms_visualize)</a>
@@ -1834,6 +1896,34 @@
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data">produce_trigger_meta_data() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
 </li>
       <li>
+    production_configuration.calculate_statistical_errors_grid_point
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.calculate_statistical_errors_grid_point">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_configuration.event_scaler
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.event_scaler">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_configuration.generate_simulation_config
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.generate_simulation_config">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_configuration.interpolation_handler
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">module</a>
+</li>
+      </ul></li>
+      <li>
     production_generate_simulation_config
 
       <ul>
@@ -1886,6 +1976,10 @@
 </li>
       <li><a href="api-reference/mc_model.html#model.telescope_model.TelescopeModel.read_incidence_angle_distribution">read_incidence_angle_distribution() (model.telescope_model.TelescopeModel method)</a>
 </li>
+      <li><a href="api-reference/io_operations.html#io_operations.legacy_data_handler.read_legacy_data_as_table">read_legacy_data_as_table() (in module io_operations.legacy_data_handler)</a>
+</li>
+      <li><a href="api-reference/io_operations.html#io_operations.legacy_data_handler.read_legacy_lst_single_pe">read_legacy_lst_single_pe() (in module io_operations.legacy_data_handler)</a>
+</li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.read_photon_list_from_simtel_file">read_photon_list_from_simtel_file() (ray_tracing.psf_analysis.PSFImage method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.read_pixel_list">read_pixel_list() (model.camera.Camera static method)</a>
@@ -1896,12 +1990,16 @@
         <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file">(simtel.simtel_config_reader.SimtelConfigReader method)</a>
 </li>
       </ul></li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_table_reader.read_simtel_table">read_simtel_table() (in module simtel.simtel_table_reader)</a>
+</li>
+      <li><a href="api-reference/visualization.html#visualization.plot_tables.read_table_data">read_table_data() (in module visualization.plot_tables)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/data_model.html#data_model.data_reader.read_table_from_file">read_table_from_file() (in module data_model.data_reader)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.telescope_model.TelescopeModel.read_two_dim_wavelength_angle">read_two_dim_wavelength_angle() (model.telescope_model.TelescopeModel method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/data_model.html#data_model.data_reader.read_value_from_file">read_value_from_file() (in module data_model.data_reader)</a>
 </li>
       <li><a href="api-reference/utils.html#utils.general.remove_substring_recursively_from_dict">remove_substring_recursively_from_dict() (in module utils.general)</a>
@@ -1963,6 +2061,8 @@
       <li><a href="api-reference/visualization.html#visualization.visualize.save_figure">save_figure() (in module visualization.visualize)</a>
 </li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.save_file_lists">save_file_lists() (simulator.Simulator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.event_scaler.EventScaler.scale_events">scale_events() (production_configuration.event_scaler.EventScaler method)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.SCTHandler">SCTHandler (class in visualization.legend_handlers)</a>
 </li>
@@ -2032,6 +2132,13 @@
 </li>
       </ul></li>
       <li>
+    simtel.simtel_table_reader
+
+      <ul>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_table_reader">module</a>
+</li>
+      </ul></li>
+      <li>
     simtel.simulator_array
 
       <ul>
@@ -2063,10 +2170,10 @@
 </li>
       <li><a href="api-reference/utils.html#utils.names.simtel_single_mirror_list_file_name">simtel_single_mirror_list_file_name() (in module utils.names)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">SimtelConfigReader (class in simtel.simtel_config_reader)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">SimtelConfigReader (class in simtel.simtel_config_reader)</a>
+</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter">SimtelConfigWriter (class in simtel.simtel_config_writer)</a>
 </li>
       <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelExecutionError">SimtelExecutionError</a>
@@ -2110,6 +2217,8 @@
       </ul></li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.simulation_software">simulation_software (simulator.Simulator property)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_simulation_config.SimulationConfig">SimulationConfig (class in production_configuration.generate_simulation_config)</a>
+</li>
       <li>
     simulator
 
@@ -2150,6 +2259,8 @@
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.SSTHandler">SSTHandler (class in visualization.legend_handlers)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.SSTObject">SSTObject (class in visualization.legend_handlers)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator">StatisticalErrorEvaluator (class in production_configuration.calculate_statistical_errors_grid_point)</a>
 </li>
       <li><a href="api-reference/job_execution.html#job_execution.job_manager.JobManager.submit">submit() (job_execution.job_manager.JobManager method)</a>
 </li>
@@ -2318,8 +2429,6 @@
         <li><a href="user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.validate_dict_using_schema">(in module validate_file_using_schema)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     validate_file_using_schema
 
@@ -2327,6 +2436,8 @@
         <li><a href="user-guide/applications/simtools-validate-file-using-schema.html#module-validate_file_using_schema">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.validate_metadata">validate_metadata() (in module validate_file_using_schema)</a>
 </li>
       <li><a href="api-reference/data_model.html#data_model.validate_data.DataValidator.validate_model_parameter">validate_model_parameter() (data_model.validate_data.DataValidator static method)</a>
@@ -2360,6 +2471,13 @@
 
       <ul>
         <li><a href="api-reference/visualization.html#module-visualization.plot_camera">module</a>
+</li>
+      </ul></li>
+      <li>
+    visualization.plot_tables
+
+      <ul>
+        <li><a href="api-reference/visualization.html#module-visualization.plot_tables">module</a>
 </li>
       </ul></li>
       <li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Visualization &#8212; simtools v0.1.dev1+g8fbf2a5 Manual</title>
+    <title>Visualization &#8212; simtools v0.1.dev1+gecfc59e Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c390595b"></script>
+    <script src="../_static/documentation_options.js?v=844678ba"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Utilities" href="utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g8fbf2a5" />
+  <meta name="docsearch:version" content="0.1.dev1+gecfc59e" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g8fbf2a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gecfc59e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -231,6 +231,7 @@
 <li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="production_configuration.html">Production Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sim_telarray.html">sim_telarray</a></li>
@@ -481,6 +482,11 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_camera">plot_camera</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_camera.plot_pixel_layout"><code class="docutils literal notranslate"><span class="pre">plot_pixel_layout()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_tables">plot_tables</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_tables.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_tables.read_table_data"><code class="docutils literal notranslate"><span class="pre">read_table_data()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -959,6 +965,46 @@ coordinate systems, FOV, focal length and the average edge radius.</p>
 </dd></dl>
 
 </section>
+<section id="module-visualization.plot_tables">
+<span id="id2"></span><span id="plot-tables"></span><h2>plot_tables<a class="headerlink" href="#module-visualization.plot_tables" title="Link to this heading">#</a></h2>
+<p>Plot tabular data.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_tables.plot">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_tables.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_tables.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_tables.plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot tabular data from data or from model parameter files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config: dict</strong></dt><dd><p>Configuration dictionary for plotting.</p>
+</dd>
+<dt><strong>output_file: str</strong></dt><dd><p>Output file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="visualization.plot_tables.read_table_data">
+<span class="sig-prename descclassname"><span class="pre">visualization.plot_tables.</span></span><span class="sig-name descname"><span class="pre">read_table_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/visualization/plot_tables.html#read_table_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#visualization.plot_tables.read_table_data" title="Link to this definition">#</a></dt>
+<dd><p>Read table data from file or parameter database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config: dict</strong></dt><dd><p>Configuration dictionary for plotting.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Dict</dt><dd><p>Dict with table data (astropy tables).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -1045,6 +1091,11 @@ coordinate systems, FOV, focal length and the average edge radius.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_camera">plot_camera</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_camera.plot_pixel_layout"><code class="docutils literal notranslate"><span class="pre">plot_pixel_layout()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-visualization.plot_tables">plot_tables</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_tables.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization.plot_tables.read_table_data"><code class="docutils literal notranslate"><span class="pre">read_table_data()</span></code></a></li>
 </ul>
 </li>
 </ul>

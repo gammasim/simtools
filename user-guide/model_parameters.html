@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Simulation Model &#8212; simtools v0.1.dev1+g8fbf2a5 Manual</title>
+    <title>Simulation Model &#8212; simtools v0.1.dev1+gecfc59e Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c390595b"></script>
+    <script src="../_static/documentation_options.js?v=844678ba"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Auxiliary Files" href="auxiliary_files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g8fbf2a5" />
+  <meta name="docsearch:version" content="0.1.dev1+gecfc59e" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g8fbf2a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gecfc59e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -231,6 +231,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/mc_model.html">MC Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api-reference/production_configuration.html">Production Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/ray_tracing.html">Ray Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/runners.html">Runners for simulation software.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api-reference/sim_telarray.html">sim_telarray</a></li>
@@ -505,7 +506,7 @@ The <a class="reference internal" href="../api-reference/db_handler.html#dbhandl
 <li><p>A <strong>model of an array and its elements</strong> consists of the <a class="reference internal" href="#mcmodel.md#site-model"><span class="xref myst">SiteModel</span></a> and several <a class="reference internal" href="#mcmodel.md#telescope-model"><span class="xref myst">TelescopeModel</span></a>`and <a class="reference internal" href="#mcmodel.md#calibration-model"><span class="xref myst">CalibrationModel</span></a> instances.</p></li>
 </ol>
 <p>Simtools includes applications to write new model parameters to the databases and the export or import model parameters from sim_telarray configuration files (see following sections).</p>
-<p>Review and revision control of the simulation models uses the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/blob/main/README.md?ref_type=heads">model parameters gitlab repository</a>. Simtools provides applications to read, write, and update the databases from this repository.</p>
+<p>Review and revision control of the simulation models uses a <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">gitlab repository</a>. Simtools provides applications to read, write, and update the databases from this repository.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The simulation model is a central part of the CTAO Simulation Pipeline. The responsibility for the values and the correctness of the simulation model parameters is with the CTAO Simulation Team.</p>
@@ -660,14 +661,14 @@ This is important to write correct and consistent CORSIKA or sim_telarray config
 </section>
 <section id="data-structure-for-model-parameters">
 <h2>Data structure for model parameters<a class="headerlink" href="#data-structure-for-model-parameters" title="Link to this heading">#</a></h2>
-<p>The model parameters are stored in json-style in the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters">model repository</a> and database.
+<p>The model parameters are stored in json-style in the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">model repository</a> and database.
 A typical model parameter file looks like:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;parameter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;num_gains&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;instrument&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LSTN-01&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;site&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;North&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;parameter_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6.0.0&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;parameter_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;unique_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
