@@ -1,24 +1,11 @@
-"""
-Derives simulation configuration parameters for a specific grid point based on several metrics.
-
-Key Components:
----------------
-- `SimulationConfig`: Main class to handle simulation configuration for a grid point.
-  - Attributes:
-    - `grid_point` (dict): Contains azimuth, elevation, and night sky background.
-    - `ctao_data_level` (str): The data level for the simulation (e.g., 'A', 'B', 'C').
-    - `science_case` (str): The science case for the simulation.
-    - `file_path` (str): Path to the DL2 MC event file
-       used for statistical error evaluation.
-    - `file_type` (str): Type of the DL2 MC event file ('point-like' or 'cone').
-    - `metrics` (dict, optional): Dictionary of metrics to evaluate.
-
-"""
+"""Derives simulation configuration parameters for a grid point based on several metrics."""
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.event_scaler import EventScaler
+
+__all__ = ["SimulationConfig"]
 
 
 class SimulationConfig:
