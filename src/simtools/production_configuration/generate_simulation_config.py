@@ -1,33 +1,11 @@
-"""
-Configures and generates simulation parameters for a specific grid point.
-
-Used to configure and generate simulation parameters for a specific grid point
-based on statistical uncertainties.
-The class considers parameters, such as azimuth, elevation, and night sky background,
-to compute core scatter area, viewcone, and the required number of simulated events.
-
-Key Components:
----------------
-- `SimulationConfig`: Main class to handle simulation configuration for a grid point.
-  - Attributes:
-    - `grid_point` (dict): Contains azimuth, elevation, and night sky background.
-    - `ctao_data_level` (str): The data level for the simulation (e.g., 'A', 'B', 'C').
-    - `science_case` (str): The science case for the simulation.
-    - `file_path` (str): Path to the DL2 MC event file
-       used for statistical error evaluation.
-    - `file_type` (str): Type of the DL2 MC event file ('point-like' or 'cone').
-    - `metrics` (dict, optional): Dictionary of metrics to evaluate.
-
-"""
-
-import logging
+"""Derives simulation configuration parameters for a grid point based on several metrics."""
 
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
 from simtools.production_configuration.event_scaler import EventScaler
 
-_logger = logging.getLogger(__name__)
+__all__ = ["SimulationConfig"]
 
 
 class SimulationConfig:
@@ -80,16 +58,11 @@ class SimulationConfig:
             A dictionary with simulation parameters such as core scatter area,
               viewcone, and number of simulated events.
         """
-        core_scatter_area = self._calculate_core_scatter_area()
-        viewcone = self._calculate_viewcone()
-        number_of_events = self.calculate_required_events()
-
         self.simulation_params = {
-            "core_scatter_area": core_scatter_area,
-            "viewcone": viewcone,
-            "number_of_events": number_of_events,
+            "core_scatter_area": self._calculate_core_scatter_area(),
+            "viewcone": self._calculate_viewcone(),
+            "number_of_events": self.calculate_required_events(),
         }
-
         return self.simulation_params
 
     def calculate_required_events(self) -> int:

@@ -1,7 +1,7 @@
 """Simulation using the light emission package for calibration."""
 
 import logging
-import os
+import stat
 from pathlib import Path
 
 import astropy.units as u
@@ -9,6 +9,7 @@ import numpy as np
 
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
+from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 
 __all__ = ["SimulatorLightEmission"]
 
@@ -360,7 +361,8 @@ class SimulatorLightEmission(SimtelRunner):
             f"{self.le_application[0]}_{self.le_application[1]}.ctsim.hdata\n",
         )
 
-        return command
+        # Remove the default sim_telarray configuration directories
+        return clear_default_sim_telarray_cfg_directories(command)
 
     def _remove_line_from_config(self, file_path, line_prefix):
         """
@@ -469,5 +471,5 @@ class SimulatorLightEmission(SimtelRunner):
                 file.write(f"{command_plot}\n\n")
                 file.write("# End\n\n")
 
-        os.system(f"chmod ug+x {_script_file}")
+        _script_file.chmod(_script_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         return _script_file

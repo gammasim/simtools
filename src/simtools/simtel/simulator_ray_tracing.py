@@ -8,6 +8,7 @@ import astropy.units as u
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import SimtelRunner
 from simtools.utils import names
+from simtools.utils.general import clear_default_sim_telarray_cfg_directories
 
 __all__ = ["SimulatorRayTracing"]
 
@@ -191,9 +192,8 @@ class SimulatorRayTracing(SimtelRunner):
             command += super().get_config_option("mirror_align_random_distance", "0.")
             command += super().get_config_option("mirror_align_random_vertical", "0.,28.,0.,0.")
         command += " " + str(self._corsika_file)
-        command += f" 2>&1 > {self._log_file} 2>&1"
 
-        return command
+        return clear_default_sim_telarray_cfg_directories(command), self._log_file, self._log_file
 
     def _check_run_result(self, run_number=None):  # pylint: disable=unused-argument
         """

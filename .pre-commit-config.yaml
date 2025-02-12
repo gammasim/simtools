@@ -1,12 +1,12 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: 24.10.0
+    rev: 25.1.0
     hooks:
       - id: black
         args: ["--line-length=100"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.8.1
+    rev: v0.9.5
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -40,7 +40,7 @@ repos:
         args: ["--verbose", "2", "--fail-under", "70.", "src/simtools"]
   # Github action
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.4
+    rev: v1.7.7
     hooks:
       - id: actionlint
   # https://pyproject-fmt.readthedocs.io/en/latest/
@@ -50,12 +50,12 @@ repos:
       - id: pyproject-fmt
   # codespell
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
   # markdownlint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.43.0
+    rev: v0.44.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD041"]

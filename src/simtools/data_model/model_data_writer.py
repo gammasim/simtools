@@ -10,8 +10,7 @@ import yaml
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
-from simtools.data_model import validate_data
+from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
 from simtools.utils import names, value_conversion
@@ -122,7 +121,7 @@ class ModelDataWriter:
         parameter_name,
         value,
         instrument,
-        model_version,
+        parameter_version,
         output_file,
         output_path=None,
         use_plain_output_path=False,
@@ -139,8 +138,8 @@ class ModelDataWriter:
             Value of the parameter.
         instrument: str
             Name of the instrument.
-        model_version: str
-            Version of the model.
+        parameter_version: str
+            Version of the parameter.
         output_file: str
             Name of output file.
         output_path: str or Path
@@ -163,19 +162,21 @@ class ModelDataWriter:
             use_plain_output_path=use_plain_output_path,
         )
         _json_dict = writer.get_validated_parameter_dict(
-            parameter_name, value, instrument, model_version
+            parameter_name, value, instrument, parameter_version
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         if metadata_input_dict is not None:
             metadata_input_dict["output_file"] = output_file
             metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
             writer.write_metadata_to_yml(
-                metadata=MetadataCollector(args_dict=metadata_input_dict).top_level_meta,
+                metadata=MetadataCollector(args_dict=metadata_input_dict).get_top_level_metadata(),
                 yml_file=output_path / f"{Path(output_file).stem}",
             )
         return _json_dict
 
-    def get_validated_parameter_dict(self, parameter_name, value, instrument, model_version):
+    def get_validated_parameter_dict(
+        self, parameter_name, value, instrument, parameter_version, schema_version=None
+    ):
         """
         Get validated parameter dictionary.
 
@@ -187,8 +188,10 @@ class ModelDataWriter:
             Value of the parameter.
         instrument: str
             Name of the instrument.
-        model_version: str
-            Version of the model.
+        parameter_version: str
+            Version of the parameter.
+        schema_version: str
+            Version of the schema.
 
         Returns
         -------
@@ -196,29 +199,26 @@ class ModelDataWriter:
             Validated parameter dictionary.
         """
         self._logger.debug(f"Getting validated parameter dictionary for {instrument}")
-        schema_file = self._read_model_parameter_schema(parameter_name)
+        schema_file = schema.get_model_parameter_schema_file(parameter_name)
+        self.schema_dict = gen.collect_data_from_file(schema_file)
 
         try:  # e.g. instrument is 'North"
             site = names.validate_site_name(instrument)
         except ValueError:  # e.g. instrument is 'LSTN-01'
             site = names.get_site_from_array_element_name(instrument)
 
-        try:
-            applicable = self._get_parameter_applicability(instrument)
-        except ValueError:
-            applicable = True  # Default to True (expect that this field goes in future)
-
         value, unit = value_conversion.split_value_and_unit(value)
 
         data_dict = {
+            "schema_version": schema.get_model_parameter_schema_version(schema_version),
             "parameter": parameter_name,
             "instrument": instrument,
             "site": site,
-            "version": model_version,
+            "parameter_version": parameter_version,
+            "unique_id": None,
             "value": value,
             "unit": unit,
             "type": self._get_parameter_type(),
-            "applicable": applicable,
             "file": self._parameter_is_a_file(),
         }
         return self.validate_and_transform(
@@ -226,22 +226,6 @@ class ModelDataWriter:
             validate_schema_file=schema_file,
             is_model_parameter=True,
         )
-
-    def _read_model_parameter_schema(self, parameter_name):
-        """
-        Read model parameter schema.
-
-        Parameters
-        ----------
-        parameter_name: str
-            Name of the parameter.
-        """
-        schema_file = MODEL_PARAMETER_SCHEMA_PATH / f"{parameter_name}.schema.yml"
-        try:
-            self.schema_dict = gen.collect_data_from_file(file_name=schema_file)
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Schema file not found: {schema_file}") from exc
-        return schema_file
 
     def _get_parameter_type(self):
         """
@@ -272,36 +256,6 @@ class ModelDataWriter:
         except (KeyError, IndexError):
             pass
         return False
-
-    def _get_parameter_applicability(self, telescope_name):
-        """
-        Check if a parameter is applicable for a given telescope using schema files.
-
-        First check for exact telescope name (e.g., LSTN-01), if not listed in the schema
-        use telescope type (LSTN).
-
-        Parameters
-        ----------
-        telescope_name: str
-            Telescope name (e.g., LSTN-01)
-
-        Returns
-        -------
-        bool
-            True if parameter is applicable to telescope.
-
-        """
-        try:
-            if telescope_name in self.schema_dict["instrument"]["type"]:
-                return True
-        except KeyError as exc:
-            self._logger.error("Schema file does not contain 'instrument:type' key.")
-            raise exc
-
-        return (
-            names.get_array_element_type_from_name(telescope_name)
-            in self.schema_dict["instrument"]["type"]
-        )
 
     def _get_unit_from_schema(self):
         """

@@ -13,8 +13,6 @@ r"""
         Name of the histogram files to be plotted.
         It can be given as the histogram file names (more than one option allowed) or as a text
         file with the names of the histogram files in it.
-    figure_name (str, required)
-        File name for the pdf output (without extension).
     pdf (bool, optional)
         If set, histograms are saved into pdf files.
         One pdf file contains all the histograms found in the file.
@@ -29,6 +27,8 @@ r"""
         If the output output_file_name.hdf5 file already exists and hdf5 is set, the tables
         associated to hdf5 will be overwritten. The remaining tables, if any, will stay
         untouched.
+    test: bool
+        Test option. Generate only two histograms for testing purposes.
 
     Raises
     ------
@@ -39,8 +39,8 @@ r"""
     -------
     .. code-block:: console
 
-        simtools-generate-simtel-array-histograms --hist_file_names tests/resources/ \\
-            run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst \\
+        simtools-generate-simtel-array-histograms --hist_file_names tests/resources/ \
+            run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst \
             --output_file_name test_hist_hdata --hdf5 --pdf
 
 """
@@ -108,38 +108,6 @@ def _parse(label, description):
     return config_parser
 
 
-def build_histogram_files(config_parser, logger):
-    """
-    Build a list of histogram files from command line arguments.
-
-    Parameters
-    ----------
-    config_parser: dict
-        Parsed command line arguments.
-    logger: logging.Logger
-        Logger object for logging messages.
-
-    Returns
-    -------
-    list
-        List of histogram file paths.
-    """
-    histogram_files = []
-    for one_file in config_parser["hist_file_names"]:
-        try:
-            if Path(one_file).suffix in [".zst", ".simtel", ".hdata"]:
-                histogram_files.append(one_file)
-            else:
-                with open(one_file, encoding="utf-8") as file:
-                    for line in file:
-                        histogram_files.append(line.strip())
-        except FileNotFoundError as exc:
-            msg = f"{one_file} is not a file."
-            logger.error(msg)
-            raise FileNotFoundError from exc
-    return histogram_files
-
-
 def check_and_log_overwrite(config_parser, logger):
     """
     Check if the output hdf5 file already exists and log a warning if it does.
@@ -197,36 +165,31 @@ def create_pdf(simtel_histograms, output_file_name, config_parser, logger):
         logger.info(f"Wrote histograms to the pdf file {output_file_name}.pdf")
 
 
-def export_to_hdf5(simtel_histograms, output_file_name, overwrite, config_parser, logger):
-    """Export histograms to an HDF5 file."""
-    if config_parser["hdf5"]:
-        logger.info(f"Wrote histograms to the hdf5 file {output_file_name}.hdf5")
-        simtel_histograms.export_histograms(f"{output_file_name}.hdf5", overwrite=overwrite)
-
-
 def main():  # noqa: D103
     label = Path(__file__).stem
-    description = "Display the simtel_array histograms."
+    description = "Display simtel_array histograms and/or write them into hdf5 format."
     io_handler_instance = io_handler.IOHandler()
     config_parser = _parse(label, description)
     output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
-    logger.info("Starting the application.")
 
-    histogram_files = build_histogram_files(config_parser, logger)
+    histogram_files = gen.get_list_of_files_from_command_line(
+        config_parser["hist_file_names"], [".zst", ".simtel", ".hdata"]
+    )
 
     # If no output name is passed, the tool gets the name of the first histogram of the list
     if config_parser["output_file_name"] is None:
         config_parser["output_file_name"] = Path(histogram_files[0]).absolute().name
     output_file_name = Path(output_path).joinpath(f"{config_parser['output_file_name']}")
 
-    # If the hdf5 output file already exists, it is overwritten
-    overwrite = check_and_log_overwrite(config_parser, logger)
-
     simtel_histograms = SimtelIOHistograms(histogram_files)
     create_pdf(simtel_histograms, output_file_name, config_parser, logger)
-    export_to_hdf5(simtel_histograms, output_file_name, overwrite, config_parser, logger)
+    if config_parser["hdf5"]:
+        simtel_histograms.export_histograms(
+            f"{output_file_name}.hdf5",
+            overwrite=check_and_log_overwrite(config_parser, logger),
+        )
 
 
 if __name__ == "__main__":

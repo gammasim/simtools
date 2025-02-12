@@ -10,8 +10,7 @@ r"""
     db_collection (str, required)
         The DB collection to which to add the file.
     db (str)
-        The DB to insert the files to. \
-        The choices are either the default CTA simulation DB or a sandbox for testing.
+        The DB to insert the files to.
 
     Example
     -------
@@ -81,16 +80,8 @@ def main():  # noqa: D103
             logger.info(f"Adding the following parameter to the DB: {par_dict['parameter']}")
             db.add_new_parameter(
                 db_name=db_config["db_simulation_model"],
-                array_element_name=par_dict["instrument"],
-                parameter=par_dict["parameter"],
-                version=par_dict["version"],
-                value=par_dict["value"],
-                site=par_dict["site"],
-                type=par_dict["type"],
+                par_dict=par_dict,
                 collection_name=args_dict["db_collection"],
-                applicable=par_dict["applicable"],
-                file=par_dict["file"],
-                unit=par_dict.get("unit", None),
                 file_prefix="./",
             )
             logger.info(

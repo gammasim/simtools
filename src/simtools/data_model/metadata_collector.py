@@ -10,13 +10,12 @@ import datetime
 import getpass
 import logging
 import uuid
-from importlib.resources import files
 from pathlib import Path
 
 import simtools.constants
 import simtools.utils.general as gen
 import simtools.version
-from simtools.data_model import metadata_model
+from simtools.data_model import metadata_model, schema
 from simtools.io_operations import io_handler
 from simtools.utils import names
 
@@ -86,6 +85,24 @@ class MetadataCollector:
             except AttributeError:
                 self._logger.debug(f"Method _fill_{meta_type}_meta not implemented")
 
+    def get_top_level_metadata(self):
+        """
+        Return top level metadata dictionary (with updated activity end time).
+
+        Returns
+        -------
+        dict
+            Top level metadata dictionary.
+
+        """
+        try:
+            self.top_level_meta[self.observatory]["activity"][
+                "end"
+            ] = datetime.datetime.now().isoformat(timespec="seconds")
+        except KeyError:
+            pass
+        return self.top_level_meta
+
     def get_data_model_schema_file_name(self):
         """
         Return data model schema file name.
@@ -117,7 +134,7 @@ class MetadataCollector:
         # from data model name
         if self.data_model_name:
             self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
-            return f"{files('simtools')}/schemas/model_parameters/{self.data_model_name}.schema.yml"
+            return str(schema.get_model_parameter_schema_file(self.data_model_name))
 
         # from input metadata
         try:
@@ -249,7 +266,7 @@ class MetadataCollector:
             self._logger.error("Unknown metadata file format: %s", metadata_file_name)
             raise gen.InvalidConfigDataError
 
-        metadata_model.validate_schema(_input_metadata, None)
+        schema.validate_dict_using_schema(_input_metadata, None)
 
         return gen.change_dict_keys_case(
             self._process_metadata_from_file(_input_metadata),

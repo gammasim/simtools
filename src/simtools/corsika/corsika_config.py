@@ -6,7 +6,6 @@ from pathlib import Path
 import numpy as np
 from astropy import units as u
 
-import simtools.utils.general as gen
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io_operations import io_handler
 from simtools.model.model_parameter import ModelParameter
@@ -110,8 +109,6 @@ class CorsikaConfig:
         """
         if args_dict is None:
             return {}
-
-        self._logger.debug("Setting CORSIKA parameters ")
 
         self._is_file_updated = False
         self.azimuth_angle = int(args_dict["azimuth_angle"].to("deg").value)
@@ -243,7 +240,7 @@ class CorsikaConfig:
 
     def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
         """Return ECUTS parameter CORSIKA format."""
-        e_cuts = gen.convert_string_to_list(entry["value"])
+        e_cuts = entry["value"]
         return [
             f"{e_cuts[0]*u.Unit(entry['unit']).to('GeV')} "
             f"{e_cuts[1]*u.Unit(entry['unit']).to('GeV')} "
@@ -280,7 +277,7 @@ class CorsikaConfig:
 
     def _input_config_corsika_cherenkov_wavelength(self, entry):
         """Return CWAVLG parameter CORSIKA format."""
-        wavelength_range = gen.convert_string_to_list(entry["value"])
+        wavelength_range = entry["value"]
         return [
             f"{wavelength_range[0]*u.Unit(entry['unit']).to('nm')}",
             f"{wavelength_range[1]*u.Unit(entry['unit']).to('nm')}",
@@ -318,8 +315,12 @@ class CorsikaConfig:
         }
 
     def _input_config_io_buff(self, entry):
-        """Return IO_BUFFER parameter CORSIKA format."""
-        return f"{entry['value']}{entry['unit']}"
+        """Return IO_BUFFER parameter CORSIKA format (Byte or MB required)."""
+        value = entry["value"] * u.Unit(entry["unit"]).to("Mbyte")
+        # check if value is integer-like
+        if value.is_integer():
+            return f"{int(value)}MB"
+        return f"{int(entry['value'] * u.Unit(entry['unit']).to('byte'))}"
 
     def _rotate_azimuth_by_180deg(self, az, correct_for_geomagnetic_field_alignment=True):
         """

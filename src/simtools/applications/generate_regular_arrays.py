@@ -1,31 +1,30 @@
 #!/usr/bin/python3
 
 """
-    Make a regular array of telescopes and save it as astropy table.
+Make a regular array of telescopes and save it as astropy table.
 
-    The arrays consist of one telescope at the center of the array and or of 4 telescopes
-    in a square grid. These arrays are used for trigger rate simulations.
+The arrays consist of one telescope at the center of the array and or of 4 telescopes
+in a square grid. These arrays are used for trigger rate simulations.
 
-    The array layout files created will be available at the data/layout directory.
+The array layout files created will be available at the data/layout directory.
 
-    Command line arguments
-    ----------------------
-    site (str, required)
-        observatory site (e.g., North or South).
-    model_version (str, optional)
-        Model version to use (e.g., 6.0.0). If not provided, the latest version is used.
+Command line arguments
+----------------------
+site (str, required)
+    observatory site (e.g., North or South).
+model_version (str, optional)
+    Model version to use (e.g., 6.0.0). If not provided, the latest version is used.
 
-    Example
-    -------
-    Runtime < 10 s.
+Example
+-------
+Runtime < 10 s.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-generate-regular-arrays --site=North
+    simtools-generate-regular-arrays --site=North
 """
 
 import logging
-import os
 from pathlib import Path
 
 import astropy.units as u
@@ -52,7 +51,9 @@ def _parse():
             f"  SST: {telescope_distance['SST']}\n"
         ),
     )
-    return config.initialize(db_config=False, simulation_model="site", output=True)
+    return config.initialize(
+        db_config=False, simulation_model=["site", "model_version"], output=True
+    )
 
 
 def main():
@@ -101,10 +102,12 @@ def main():
         table.sort("telescope_name")
         table.pprint()
 
-        output_file = args_dict.get("output_file", None)
-        if output_file is not None:
-            base_name, file_extension = os.path.splitext(output_file)
-            output_file = f"{base_name}-{args_dict['site']}-{array_name}{file_extension}"
+        output_file = args_dict.get("output_file")
+        if output_file:
+            output_path = Path(output_file)
+            output_file = output_path.with_name(
+                f"{output_path.stem}-{args_dict['site']}-{array_name}{output_path.suffix}"
+            )
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
             output_file=output_file,

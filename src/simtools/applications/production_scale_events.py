@@ -36,7 +36,6 @@ The output will display the scaled events for the specified grid point.
 
 import json
 import logging
-import os
 from pathlib import Path
 
 import astropy.units as u
@@ -94,8 +93,8 @@ def _parse(label, description):
     config.parser.add_argument(
         "--metrics_file",
         type=str,
-        default="production_simulation_config_metrics.yaml",
-        help="Metrics definition file. (default: production_simulation_config_metrics.yaml)",
+        default="production_simulation_config_metrics.yml",
+        help="Metrics definition file. (default: production_simulation_config_metrics.yml)",
     )
     config.parser.add_argument(
         "--science_case", type=str, required=True, help="Science case for the simulation."
@@ -129,7 +128,7 @@ def main():
                 # Build file path based on base_path, zenith, and offset
                 file_name = f"prod6_LaPalma-{int(zenith.value)}deg_"
                 file_name += "gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
-                file_path = os.path.join(args_dict["base_path"], file_name)
+                file_path = Path(args_dict["base_path"]).joinpath(file_name)
 
                 evaluator = StatisticalErrorEvaluator(
                     file_path,

@@ -84,7 +84,7 @@ def get_value_unit_type(value, unit_str=None):
             pass
         base_unit = unit_str
 
-    return base_value, base_unit, base_type
+    return base_value, _unit_as_string(base_unit), base_type
 
 
 def split_value_and_unit(value):
@@ -174,3 +174,11 @@ def get_value_as_quantity(value, unit):
             _logger.error(f"Cannot convert {value.unit} to {unit}.")
             raise
     return value * unit
+
+
+def _unit_as_string(unit):
+    """Return the string representation of a unit. Collapse if it is a list of identical items."""
+    if not isinstance(unit, list):
+        unit = [unit]
+    unit = [str(element) if element is not None else None for element in unit]
+    return unit[0] if len(set(unit)) == 1 else unit

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""
+r"""
     Simulate calibration devices using the light emission package.
 
     Run the application in the command line.
@@ -235,7 +235,7 @@ def _parse(label):
     )
     return config.initialize(
         db_config=True,
-        simulation_model="telescope",
+        simulation_model=["telescope", "model_version"],
         require_command_line=True,
     )
 

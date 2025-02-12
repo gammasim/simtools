@@ -73,7 +73,7 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--simtel_file_names",
-        help="Name of the simtel_array output files to be calculate the trigger rate from  or the "
+        help="Name of the simtel_array output files to be calculate the trigger rate from or the "
         "text file containing the list of simtel_array output files.",
         nargs="+",
         required=True,
@@ -82,19 +82,19 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--save_tables",
-        help="If true, saves the trigger rates per energy bin into ECSV files.",
+        help="Save trigger rates per energy bin into ECSV files.",
         action="store_true",
     )
 
     config.parser.add_argument(
         "--area_from_distribution",
-        help="If true, calculates the trigger rates using the event distribution.",
+        help="Calculate trigger rates using the event distribution.",
         action="store_true",
     )
 
     config.parser.add_argument(
         "--stack_files",
-        help="If true, stacks all the histograms.",
+        help="Stacks all histograms.",
         action="store_true",
     )
 
@@ -124,22 +124,13 @@ def _get_simulation_parameters(config_parser):
         The view cone used in the simulation.
 
     """
-    if config_parser["energy_range"] is not None:
-        energy_range = [
-            config_parser["energy_range"][0].to("TeV").value,
-            config_parser["energy_range"][1].to("TeV").value,
-        ]
-    else:
-        energy_range = None
-    if config_parser["view_cone"] is not None:
-        view_cone = [
-            config_parser["view_cone"][0].to("deg").value,
-            config_parser["view_cone"][1].to("deg").value,
-        ]
-    else:
-        view_cone = None
 
-    return energy_range, view_cone
+    def convert(param, unit):
+        return [param[0].to(unit).value, param[1].to(unit).value] if param else None
+
+    return convert(config_parser.get("energy_range"), "TeV"), convert(
+        config_parser.get("view_cone"), "deg"
+    )
 
 
 def main():  # noqa: D103
@@ -152,23 +143,9 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
 
-    # Building list of simtel_array files from the input files
-    simtel_array_files = []
-    for one_file in config_parser["simtel_file_names"]:
-        try:
-            if Path(one_file).suffix in [".zst", ".simtel", ".hdata"]:
-                simtel_array_files.append(one_file)
-            else:
-                # Collecting hist files
-                with open(one_file, encoding="utf-8") as file:
-                    for line in file:
-                        # Removing '\n' from filename, in case it is left there.
-                        simtel_array_files.append(line.replace("\n", ""))
-        except FileNotFoundError as exc:
-            msg = f"{one_file} is not a file."
-            logger.error(msg)
-            raise FileNotFoundError from exc
-
+    simtel_array_files = gen.get_list_of_files_from_command_line(
+        config_parser["simtel_file_names"], [".zst", ".simtel", ".hdata"]
+    )
     energy_range, view_cone = _get_simulation_parameters(config_parser)
 
     histograms = SimtelIOHistograms(
@@ -192,7 +169,7 @@ def main():  # noqa: D103
     for i_hist, _ in enumerate(sim_event_rates):
         print(f"\nFile {histograms.histogram_files[i_hist]}\n")
         print(
-            f"System trigger rate (Hz): {triggered_event_rates[i_hist].value:.4e} \u00B1 "
+            f"System trigger rate (Hz): {triggered_event_rates[i_hist].value:.4e} \u00b1 "
             f"{triggered_event_rate_uncertainties[i_hist].value:.4e} Hz"
         )
     if config_parser["save_tables"]:

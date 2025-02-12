@@ -218,10 +218,6 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     args_dict["db_server"] = "abc@def.de"
     args_dict["db_api_authentication_database"] = "admin"
     args_dict["db_simulation_model"] = "sim_model"
-    args_dict["db_simulation_model_url"] = (
-        "https://gitlab.cta-observatory.org/cta-science/simulations/"
-        "simulation-model/model_parameters/-/raw/main"
-    )
 
     assert configurator.config == args_dict
 
@@ -338,12 +334,23 @@ def test_get_db_parameters():
     configurator.default_config(add_db_config=True)
     db_params = configurator._get_db_parameters()
     assert db_params == {
+        "db_api_authentication_database": "admin",
         "db_api_port": None,
         "db_api_pw": None,
         "db_api_user": None,
         "db_server": None,
         "db_simulation_model": None,
-        "db_simulation_model_url": None,
+    }
+
+    # filled with one entry only
+    configurator = Configurator(config={})
+    configurator.default_config(add_db_config=True)
+    configurator.config = {
+        "db_api_port": 1234,
+    }
+    db_params = configurator._get_db_parameters()
+    assert db_params == {
+        "db_api_port": 1234,
     }
 
     # filled config

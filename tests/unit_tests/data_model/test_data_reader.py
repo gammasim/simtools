@@ -2,15 +2,13 @@
 
 import json
 import logging
-from importlib.resources import files
 
 import astropy.units as u
-import jsonschema
 import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
 
-from simtools.data_model import data_reader
+from simtools.data_model import data_reader, schema
 
 logger = logging.getLogger()
 
@@ -93,28 +91,17 @@ def test_read_value_from_file(tmp_test_directory, reference_point_altitude_file)
     )
 
 
-def test_read_value_from_file_and_validate(
-    caplog, tmp_test_directory, reference_point_altitude_file
-):
+def test_read_value_from_file_and_validate(caplog, reference_point_altitude_file):
     with caplog.at_level("DEBUG"):
         # schema file from metadata in file
         data_reader.read_value_from_file(reference_point_altitude_file, validate=True)
     assert "Successful validation of yaml/json file" in caplog.text
 
     # schema explicitly given
-    schema_dir = files("simtools").joinpath("schemas/model_parameters/")
-    schema_file = str(schema_dir) + "/reference_point_altitude.schema.yml"
     with caplog.at_level("DEBUG"):
         data_reader.read_value_from_file(
             reference_point_altitude_file,
-            schema_file=schema_file,
+            schema_file=schema.get_model_parameter_schema_file("reference_point_altitude"),
             validate=True,
         )
     assert "Successful validation of yaml/json file" in caplog.text
-
-    # no schema given
-    test_dict_1 = {"Value": 5.0}
-    with open(tmp_test_directory / JSON_TEST_FILE, "w", encoding="utf-8") as f:
-        json.dump(test_dict_1, f)
-    with pytest.raises(jsonschema.exceptions.ValidationError):
-        data_reader.read_value_from_file(tmp_test_directory / JSON_TEST_FILE, validate=True)

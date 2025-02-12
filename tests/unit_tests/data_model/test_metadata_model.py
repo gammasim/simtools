@@ -1,13 +1,8 @@
 import logging
-import os
-from importlib.resources import files
 
-import jsonschema
 import pytest
-import yaml
 
 from simtools.data_model import metadata_model
-from simtools.utils import general as gen
 
 
 def test_get_default_metadata_dict():
@@ -19,82 +14,6 @@ def test_get_default_metadata_dict():
     assert "VERSION" in _top_meta["CTA"]["REFERENCE"]
     assert _top_meta["CTA"]["REFERENCE"]["VERSION"] == "1.0.0"
     assert _top_meta["CTA"]["CONTACT"]["ORGANIZATION"] == "CTAO"
-
-
-def test_load_schema():
-    _metadata_schema, _ = metadata_model._load_schema()
-    assert isinstance(_metadata_schema, dict)
-    assert len(_metadata_schema) > 0
-
-    with pytest.raises(FileNotFoundError):
-        metadata_model._load_schema(schema_file="not_existing_file")
-
-
-def test_validate_schema(tmp_test_directory):
-    sample_schema = {
-        "type": "object",
-        "properties": {"name": {"type": "string"}, "age": {"type": "number"}},
-        "required": ["name", "age"],
-    }
-
-    schema_file = os.path.join(tmp_test_directory, "schema.yml")
-    with open(schema_file, "w", encoding="utf-8") as f:
-        yaml.dump(sample_schema, f)
-
-    # sample data dictionary to be validated
-    data = {"name": "John", "age": 30}
-
-    metadata_model.validate_schema(data, schema_file)
-
-    invalid_data = {"name": "Alice", "age": "Thirty"}
-    with pytest.raises(jsonschema.exceptions.ValidationError):
-        metadata_model.validate_schema(invalid_data, schema_file)
-
-
-def test_validate_schema_astropy_units(caplog):
-    _schema = files("simtools") / "schemas" / "model_parameter_and_data_schema.metaschema.yml"
-
-    success_string = "Successful validation of data using schema from"
-
-    _dict_1 = gen.collect_data_from_file(file_name="tests/resources/num_gains.schema.yml")
-    with caplog.at_level(logging.DEBUG):
-        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
-    assert success_string in caplog.text
-
-    # m and cm
-    _dict_1["data"][0]["unit"] = "m"
-    with caplog.at_level(logging.DEBUG):
-        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
-    assert success_string in caplog.text
-    _dict_1["data"][0]["unit"] = "cm"
-    with caplog.at_level(logging.DEBUG):
-        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
-    assert success_string in caplog.text
-
-    # combined units
-    _dict_1["data"][0]["unit"] = "cm/s"
-    with caplog.at_level(logging.DEBUG):
-        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
-    assert success_string in caplog.text
-    _dict_1["data"][0]["unit"] = "km/ s"
-    with caplog.at_level(logging.DEBUG):
-        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
-    assert success_string in caplog.text
-
-    # dimensionless
-    _dict_1["data"][0]["unit"] = "dimensionless"
-    with caplog.at_level(logging.DEBUG):
-        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
-    assert success_string in caplog.text
-    _dict_1["data"][0]["unit"] = ""
-    with caplog.at_level(logging.DEBUG):
-        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
-    assert success_string in caplog.text
-
-    # not good
-    _dict_1["data"][0]["unit"] = "not_a_unit"
-    with pytest.raises(ValueError, match="'not_a_unit' is not a valid Unit"):
-        metadata_model.validate_schema(data=_dict_1, schema_file=_schema)
 
 
 def test_resolve_references():
@@ -118,16 +37,6 @@ def test_resolve_references():
     }
 
     assert metadata_model._resolve_references(yaml_data) == expected_result
-
-
-def test_add_array_elements():
-
-    test_dict_1 = {"data": {"InstrumentTypeElement": {"enum": ["LSTN", "MSTN"]}}}
-    test_dict_added = metadata_model._add_array_elements("InstrumentTypeElement", test_dict_1)
-    assert len(test_dict_added["data"]["InstrumentTypeElement"]["enum"]) > 2
-    test_dict_2 = {"data": {"InstrumentTypeElement": {"not_the_right_enum": ["LSTN", "MSTN"]}}}
-    test_dict_added_2 = metadata_model._add_array_elements("InstrumentTypeElement", test_dict_2)
-    assert len(test_dict_added_2["data"]["InstrumentTypeElement"]["enum"]) > 2
 
 
 def test_fill_defaults(caplog):

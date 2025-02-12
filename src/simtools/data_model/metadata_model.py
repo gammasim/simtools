@@ -9,43 +9,10 @@ Follows CTAO top-level data model definition.
 """
 
 import logging
-from importlib.resources import files
 
-import jsonschema
-
-import simtools.constants
-import simtools.utils.general as gen
-from simtools.data_model import format_checkers
-from simtools.utils import names
+import simtools.data_model.schema
 
 _logger = logging.getLogger(__name__)
-
-
-def validate_schema(data, schema_file):
-    """
-    Validate dictionary against schema.
-
-    Parameters
-    ----------
-    data
-        dictionary to be validated
-    schema_file (dict)
-        schema used for validation
-
-    Raises
-    ------
-    jsonschema.exceptions.ValidationError
-        if validation fails
-
-    """
-    schema, schema_file = _load_schema(schema_file)
-
-    try:
-        jsonschema.validate(data, schema=schema, format_checker=format_checkers.format_checker)
-    except jsonschema.exceptions.ValidationError:
-        _logger.error(f"Failed using {schema}")
-        raise
-    _logger.debug(f"Successful validation of data using schema from {schema_file}")
 
 
 def get_default_metadata_dict(schema_file=None, observatory="CTA"):
@@ -68,78 +35,8 @@ def get_default_metadata_dict(schema_file=None, observatory="CTA"):
 
 
     """
-    schema, _ = _load_schema(schema_file)
+    schema = simtools.data_model.schema.load_schema(schema_file)
     return _fill_defaults(schema["definitions"], observatory)
-
-
-def _load_schema(schema_file=None):
-    """
-    Load parameter schema from file from simpipe metadata schema.
-
-    Returns
-    -------
-    schema_file dict
-        Schema used for validation.
-    schema_file str
-        File name schema is loaded from. If schema_file is not given,
-        the default schema file name is returned.
-
-    Raises
-    ------
-    FileNotFoundError
-        if schema file is not found
-
-    """
-    if schema_file is None:
-        schema_file = files("simtools").joinpath(simtools.constants.METADATA_JSON_SCHEMA)
-
-    try:
-        schema = gen.collect_data_from_file(file_name=schema_file)
-    except FileNotFoundError:
-        schema_file = files("simtools").joinpath("schemas") / schema_file
-        schema = gen.collect_data_from_file(file_name=schema_file)
-    _logger.debug(f"Loading schema from {schema_file}")
-    _add_array_elements("InstrumentTypeElement", schema)
-
-    return schema, schema_file
-
-
-def _add_array_elements(key, schema):
-    """
-    Add list of array elements to schema.
-
-    This assumes an element [key]['enum'] is a list of elements.
-
-    Parameters
-    ----------
-    key: str
-        Key in schema dictionary
-    schema: dict
-        Schema dictionary
-
-    Returns
-    -------
-    dict
-        Schema dictionary with added array elements.
-
-    """
-    _list_of_array_elements = sorted(names.array_elements().keys())
-
-    def recursive_search(sub_schema, key):
-        if key in sub_schema:
-            if "enum" in sub_schema[key] and isinstance(sub_schema[key]["enum"], list):
-                sub_schema[key]["enum"] = list(
-                    set(sub_schema[key]["enum"] + _list_of_array_elements)
-                )
-            else:
-                sub_schema[key]["enum"] = _list_of_array_elements
-        else:
-            for _, v in sub_schema.items():
-                if isinstance(v, dict):
-                    recursive_search(v, key)
-
-    recursive_search(schema, key)
-    return schema
 
 
 def _resolve_references(yaml_data, observatory="CTA"):
@@ -214,21 +111,21 @@ def _fill_defaults(schema, observatory="CTA"):
     return defaults
 
 
-def _fill_defaults_recursive(subschema, current_dict):
+def _fill_defaults_recursive(sub_schema, current_dict):
     """
-    Recursively fill default values from the subschema into the current dictionary.
+    Recursively fill default values from the sub_schema into the current dictionary.
 
     Parameters
     ----------
-    subschema: dict
-        Subschema describing part of the input data.
+    sub_schema: dict
+        Sub schema describing part of the input data.
     current_dict: dict
         Current dictionary to fill with default values.
     """
-    if "properties" not in subschema:
+    if "properties" not in sub_schema:
         _raise_missing_properties_error()
 
-    for prop, prop_schema in subschema["properties"].items():
+    for prop, prop_schema in sub_schema["properties"].items():
         _process_property(prop, prop_schema, current_dict)
 
 

@@ -4,18 +4,15 @@ import astropy.units as u
 import numpy as np
 from scipy.interpolate import griddata
 
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
-)
 from simtools.production_configuration.event_scaler import EventScaler
+
+__all__ = ["InterpolationHandler"]
 
 
 class InterpolationHandler:
     """Handle interpolation between multiple StatisticalErrorEvaluator instances."""
 
-    def __init__(
-        self, evaluators: list["StatisticalErrorEvaluator"], science_case: str, metrics: dict
-    ):
+    def __init__(self, evaluators, science_case: str, metrics: dict):
         self.evaluators = evaluators
         self.science_case = science_case
         self.metrics = metrics
@@ -157,9 +154,9 @@ class InterpolationHandler:
 
         return interpolated_threshold.item()
 
-    def plot_comparison(self, evaluator: "StatisticalErrorEvaluator"):
+    def plot_comparison(self, evaluator):
         """
-        Plot a comparison between the simulated, scaled, and triggered events.
+        Plot a comparison between the simulated, scaled, and reconstructed events.
 
         Parameters
         ----------
@@ -184,14 +181,14 @@ class InterpolationHandler:
 
         plt.plot(midpoints, evaluator.scaled_events, label="Scaled")
 
-        triggered_event_histogram, _ = np.histogram(
+        reconstructed_event_histogram, _ = np.histogram(
             evaluator.data["event_energies_reco"], bins=evaluator.data["bin_edges_low"]
         )
-        plt.plot(midpoints[:-1], triggered_event_histogram, label="Triggered")
+        plt.plot(midpoints[:-1], reconstructed_event_histogram, label="Reconstructed")
 
         plt.legend()
         plt.xscale("log")
         plt.xlabel("Energy (Midpoint of Bin Edges)")
         plt.ylabel("Event Count")
-        plt.title("Comparison of Simulated, Scaled, and Triggered Events")
+        plt.title("Comparison of Simulated, scaled, and reconstructed events")
         plt.show()

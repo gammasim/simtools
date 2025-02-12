@@ -45,24 +45,14 @@ def test_new_testeff_version_no_env_var():
 def test_skip_camera_efficiency_old_testeff(new_testeff_version):
     config = {"APPLICATION": "camera-efficiency", "TEST_NAME": "some_test"}
     with mock.patch(new_testeff_version, return_value=False):
-        with pytest.raises(pytest.skip.Exception):
-            helpers.skip_camera_efficiency(config)
+        skip_string = helpers.skip_camera_efficiency(config)
+        assert "old testeff" in skip_string
 
 
 def test_skip_camera_efficiency_new_testeff(new_testeff_version):
     config = {"APPLICATION": "camera-efficiency", "TEST_NAME": "some_test"}
     with mock.patch(new_testeff_version, return_value=True):
         helpers.skip_camera_efficiency(config)
-
-
-def test_skip_camera_efficiency_specific_test(new_testeff_version):
-    config = {
-        "APPLICATION": "simtools-validate-camera-efficiency",
-        "TEST_NAME": "SSTS",
-    }
-    with mock.patch(new_testeff_version, return_value=True):
-        with pytest.raises(pytest.skip.Exception):
-            helpers.skip_camera_efficiency(config)
 
 
 def test_skip_camera_efficiency_not_camera_efficiency():

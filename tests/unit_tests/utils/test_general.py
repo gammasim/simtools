@@ -11,8 +11,10 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 import yaml
+from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.constants import MODEL_PARAMETER_METASCHEMA
 
 url_desy = "https://www.desy.de"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
@@ -40,6 +42,26 @@ def test_collect_dict_data(io_handler, caplog) -> None:
     _dict = gen.collect_data_from_file(_file)
     assert isinstance(_dict, dict)
     assert len(_dict) > 0
+
+    # file with several documents
+    _list = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA)
+    assert isinstance(_list, list)
+    assert len(_list) > 0
+
+    # file with several documents - get first document
+    _dict = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 0)
+    assert _dict["version"] != "0.1.0"
+
+    with pytest.raises(gen.InvalidConfigDataError, match=r"^YAML file"):
+        gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 999)
+
+    # document type not supported
+    assert (
+        gen.collect_data_from_file(
+            "tests/resources/run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst"
+        )
+        is None
+    )
 
 
 def test_collect_dict_from_url(io_handler) -> None:
@@ -626,3 +648,146 @@ def test_read_file_encoded_in_utf_or_latin(tmp_test_directory, caplog) -> None:
     non_existent_file = tmp_test_directory / "non_existent_file.txt"
     with pytest.raises(FileNotFoundError):
         gen.read_file_encoded_in_utf_or_latin(non_existent_file)
+
+
+def test_get_structure_array_from_table():
+    table = Table(
+        {
+            "col1": [1, 2, 3],
+            "col2": [4.0, 5.0, 6.0],
+            "col3": ["a", "b", "c"],
+        }
+    )
+
+    # Test with all columns
+    column_names = ["col1", "col2", "col3"]
+    structured_array = gen.get_structure_array_from_table(table, column_names)
+    assert structured_array.dtype.names == ("col1", "col2", "col3")
+    assert structured_array["col1"].tolist() == [1, 2, 3]
+    assert structured_array["col2"].tolist() == [4.0, 5.0, 6.0]
+    assert structured_array["col3"].tolist() == ["a", "b", "c"]
+
+    # Test with a subset of columns
+    column_names = ["col1", "col3"]
+    structured_array = gen.get_structure_array_from_table(table, column_names)
+    assert structured_array.dtype.names == ("col1", "col3")
+    assert structured_array["col1"].tolist() == [1, 2, 3]
+    assert structured_array["col3"].tolist() == ["a", "b", "c"]
+
+    # Test with a single column
+    column_names = ["col2"]
+    structured_array = gen.get_structure_array_from_table(table, column_names)
+    assert structured_array.dtype.names == ("col2",)
+    assert structured_array["col2"].tolist() == [4.0, 5.0, 6.0]
+
+    # Test with an empty list of columns
+    column_names = []
+    assert gen.get_structure_array_from_table(table, column_names).size == 0
+
+    # Test with a non-existent column
+    column_names = ["col1", "non_existent_col"]
+    with pytest.raises(KeyError):
+        gen.get_structure_array_from_table(table, column_names)
+
+
+def test_convert_keys_in_dict_to_lowercase():
+    """
+    Test the convert_keys_in_dict_to_lowercase function.
+    """
+
+    # Test with a simple dictionary.
+    input_data = {"Key1": "value1", "Key2": "value2"}
+    expected_output = {"key1": "value1", "key2": "value2"}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a nested dictionary.
+    input_data = {"Key1": {"NestedKey1": "value1"}, "Key2": "value2"}
+    expected_output = {"key1": {"nestedkey1": "value1"}, "key2": "value2"}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a dictionary containing a list.
+    input_data = {"Key1": ["Value1", {"NestedKey1": "value1"}], "Key2": "value2"}
+    expected_output = {"key1": ["Value1", {"nestedkey1": "value1"}], "key2": "value2"}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a list of dictionaries.
+    input_data = [{"Key1": "value1"}, {"Key2": "value2"}]
+    expected_output = [{"key1": "value1"}, {"key2": "value2"}]
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a non-dictionary input.
+    input_data = "String"
+    expected_output = "String"
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with an empty dictionary.
+    input_data = {}
+    expected_output = {}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+    # Test with a dictionary containing mixed types.
+    input_data = {"Key1": 123, "Key2": [1, 2, 3], "Key3": {"NestedKey1": "value1"}}
+    expected_output = {"key1": 123, "key2": [1, 2, 3], "key3": {"nestedkey1": "value1"}}
+    assert gen.convert_keys_in_dict_to_lowercase(input_data) == expected_output
+
+
+def test_clear_default_sim_telarray_cfg_directories():
+    """
+    Test the clear_default_sim_telarray_cfg_directories function.
+    """
+
+    # Test with a simple command.
+    command = "run_simulation"
+    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation"
+    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
+
+    # Test with a command containing spaces.
+    command = "run_simulation --config config_file"
+    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation --config config_file"
+    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
+
+    # Test with an empty command.
+    command = ""
+    expected_output = "SIM_TELARRAY_CONFIG_PATH='' "
+    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
+
+    # Test with a command containing special characters.
+    command = "run_simulation && echo 'done'"
+    expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation && echo 'done'"
+    assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
+
+
+def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
+
+    # Test with a list of file names with valid suffixes.
+    file_1 = tmp_test_directory / "file1.txt"
+    file_2 = tmp_test_directory / "file2.txt"
+    with open(file_1, "w", encoding="utf-8") as f:
+        f.write("Content of file 1")
+    with open(file_2, "w", encoding="utf-8") as f:
+        f.write("Content of file 2")
+    file_names = [file_1, file_2]
+    suffix_list = [".txt"]
+    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
+    assert result == [str(file_1), str(file_2)]
+
+    # Test with a list of file names with invalid suffixes.
+    suffix_list = [".json"]
+    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
+    assert result == []
+
+    # Test with a text file containing a list of file names.
+    list_file = tmp_test_directory / "list_file.list"
+    with open(list_file, "w", encoding="utf-8") as f:
+        f.write(f"{file_1}\n{file_2}\n")
+    file_names = [list_file]
+    suffix_list = []
+    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
+    assert result == [str(file_1), str(file_2)]
+
+    # Test with a non-existent file.
+    non_existent_file = tmp_test_directory / "non_existent_file.list"
+    file_names = [non_existent_file]
+    suffix_list = [".txt"]
+    with pytest.raises(FileNotFoundError):
+        gen.get_list_of_files_from_command_line(file_names, suffix_list)

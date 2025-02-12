@@ -31,11 +31,10 @@ def validate_all_tests(config, request, config_file_model_version):
     elif config_file_model_version is not None:
         _from_command_line = request.config.getoption("--model_version")
         _from_config_file = config_file_model_version
-        if _from_command_line == _from_config_file:
-            validate_application_output(config)
+        validate_application_output(config, _from_command_line, _from_config_file)
 
 
-def validate_application_output(config):
+def validate_application_output(config, from_command_line=None, from_config_file=None):
     """
     Validate application output against expected output.
 
@@ -45,6 +44,10 @@ def validate_application_output(config):
     ----------
     config: dict
         dictionary with the configuration for the application test.
+    from_command_line: str
+        Model version from the command line.
+    from_config_file: str
+        Model version from the configuration file.
 
     """
     if "INTEGRATION_TESTS" not in config:
@@ -52,19 +55,39 @@ def validate_application_output(config):
 
     for integration_test in config["INTEGRATION_TESTS"]:
         _logger.info(f"Testing application output: {integration_test}")
-        if "REFERENCE_OUTPUT_FILE" in integration_test:
-            _validate_reference_output_file(config, integration_test)
 
-        if "OUTPUT_FILE" in integration_test:
-            _validate_output_path_and_file(config, integration_test)
+        if from_command_line == from_config_file:
+            if "REFERENCE_OUTPUT_FILE" in integration_test:
+                _validate_reference_output_file(config, integration_test)
 
-        if "FILE_TYPE" in integration_test:
-            assert assertions.assert_file_type(
-                integration_test["FILE_TYPE"],
-                Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
-                    config["CONFIGURATION"]["OUTPUT_FILE"]
-                ),
-            )
+            if "TEST_OUTPUT_FILES" in integration_test:
+                _validate_output_path_and_file(config, integration_test["TEST_OUTPUT_FILES"])
+
+            if "OUTPUT_FILE" in integration_test:
+                _validate_output_path_and_file(
+                    config,
+                    [{"PATH_DESCRIPTOR": "OUTPUT_PATH", "FILE": integration_test["OUTPUT_FILE"]}],
+                )
+
+            if "FILE_TYPE" in integration_test:
+                assert assertions.assert_file_type(
+                    integration_test["FILE_TYPE"],
+                    Path(config["CONFIGURATION"]["OUTPUT_PATH"]).joinpath(
+                        config["CONFIGURATION"]["OUTPUT_FILE"]
+                    ),
+                )
+        _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file)
+
+
+def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
+    """Test simtel cfg files."""
+    if "TEST_SIMTEL_CFG_FILES" in integration_test:
+        if from_command_line:
+            test_simtel_cfg_file = integration_test["TEST_SIMTEL_CFG_FILES"].get(from_command_line)
+        else:
+            test_simtel_cfg_file = integration_test["TEST_SIMTEL_CFG_FILES"].get(from_config_file)
+        if test_simtel_cfg_file:
+            _validate_simtel_cfg_files(config, test_simtel_cfg_file)
 
 
 def _validate_reference_output_file(config, integration_test):
@@ -79,31 +102,25 @@ def _validate_reference_output_file(config, integration_test):
     )
 
 
-def _validate_output_path_and_file(config, integration_test):
-    """Check if output path and file exist."""
-    _logger.info(f"PATH {config['CONFIGURATION']['OUTPUT_PATH']}")
-    _logger.info(f"File {integration_test['OUTPUT_FILE']}")
+def _validate_output_path_and_file(config, integration_file_tests):
+    """Check if output paths and files exist."""
+    for file_test in integration_file_tests:
+        try:
+            output_path = config["CONFIGURATION"][file_test["PATH_DESCRIPTOR"]]
+        except KeyError as exc:
+            raise KeyError(
+                f"Path {file_test['PATH_DESCRIPTOR']} not found in integration test configuration."
+            ) from exc
 
-    data_path = config["CONFIGURATION"].get(
-        "DATA_DIRECTORY", config["CONFIGURATION"]["OUTPUT_PATH"]
-    )
-    output_file_path = Path(data_path) / integration_test["OUTPUT_FILE"]
+        output_file_path = Path(output_path) / file_test["FILE"]
+        _logger.info(f"Checking path: {output_file_path}")
+        assert output_file_path.exists()
 
-    _logger.info(f"Checking path: {output_file_path}")
-    assert output_file_path.exists()
-
-    expected_output = [
-        d["EXPECTED_OUTPUT"] for d in config["INTEGRATION_TESTS"] if "EXPECTED_OUTPUT" in d
-    ]
-    if expected_output and "log_hist" not in integration_test["OUTPUT_FILE"]:
-        # Get the expected output from the configuration file
-        expected_output = expected_output[0]
-        _logger.info(
-            f"Checking the output of {integration_test['OUTPUT_FILE']} "
-            "complies with the expected output: "
-            f"{expected_output}"
-        )
-        assert assertions.check_output_from_sim_telarray(output_file_path, expected_output)
+        if "EXPECTED_OUTPUT" in file_test:
+            assert assertions.check_output_from_sim_telarray(
+                output_file_path,
+                file_test["EXPECTED_OUTPUT"],
+            )
 
 
 def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
@@ -129,12 +146,13 @@ def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     """
     _file1_suffix = Path(file1).suffix
     _file2_suffix = Path(file2).suffix
+    _logger.info("Comparing files: %s and %s", file1, file2)
     if _file1_suffix != _file2_suffix:
         raise ValueError(f"File suffixes do not match: {file1} and {file2}")
     if _file1_suffix == ".ecsv":
         return compare_ecsv_files(file1, file2, tolerance, test_columns)
     if _file1_suffix in (".json", ".yaml", ".yml"):
-        return compare_json_or_yaml_files(file1, file2)
+        return compare_json_or_yaml_files(file1, file2, tolerance)
 
     _logger.warning(f"Unknown file type for files: {file1} and {file2}")
     return False
@@ -169,11 +187,35 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     if data1 == data2:
         return True
 
-    if "value" in data1 and isinstance(data1["value"], str):
-        value_list_1 = gen.convert_string_to_list(data1.pop("value"))
-        value_list_2 = gen.convert_string_to_list(data2.pop("value"))
-        return np.allclose(value_list_1, value_list_2, rtol=tolerance)
-    return data1 == data2
+    if data1.keys() != data2.keys():
+        _logger.error(f"Keys do not match: {data1.keys()} and {data2.keys()}")
+        return False
+    _comparison = all(
+        (
+            _compare_value_from_parameter_dict(data1[k], data2[k], tolerance)
+            if k == "value"
+            else data1[k] == data2[k]
+        )
+        for k in data1
+    )
+    if not _comparison:
+        _logger.error(f"Values do not match: {data1} and {data2} (tolerance: {tolerance})")
+    return _comparison
+
+
+def _compare_value_from_parameter_dict(data1, data2, tolerance):
+    """Compare value fields given in different formats."""
+
+    def _as_list(value):
+        if isinstance(value, str):
+            return gen.convert_string_to_list(value)
+        if isinstance(value, list | np.ndarray):
+            return value
+        return [value]
+
+    _logger.info(f"Comparing values: {data1} and {data2} (tolerance: {tolerance})")
+
+    return np.allclose(_as_list(data1), _as_list(data2), rtol=tolerance)
 
 
 def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
@@ -235,6 +277,70 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
 
         if np.issubdtype(table1_masked[col_name].dtype, np.floating):
             if not np.allclose(table1_masked[col_name], table2_masked[col_name], rtol=tolerance):
+                _logger.warning(f"Column {col_name} outside of relative tolerance {tolerance}")
                 return False
+
+    return True
+
+
+def _validate_simtel_cfg_files(config, simtel_cfg_file):
+    """
+    Check sim_telarray configuration files and compare with reference file.
+
+    Note the finetuned naming of configuration files by simtools.
+
+    """
+    reference_file = Path(simtel_cfg_file)
+    test_file = Path(config["CONFIGURATION"]["OUTPUT_PATH"]) / reference_file.name.replace(
+        "_test", f"_{config['CONFIGURATION']['LABEL']}"
+    )
+    _logger.info(
+        f"Comparing simtel cfg files: {reference_file} and {test_file} "
+        f"for model version {config['CONFIGURATION']['MODEL_VERSION']}"
+    )
+    return _compare_simtel_cfg_files(reference_file, test_file)
+
+
+def _compare_simtel_cfg_files(reference_file, test_file):
+    """
+    Compare two sim_telarray configuration files.
+
+    Line-by-line string comparison. Requires similar sequence of
+    parameters in the files. Ignore lines containing 'config_release'
+    (as it contains the simtools package version).
+
+    Parameters
+    ----------
+    reference_file: Path
+        Reference sim_telarray configuration file.
+    test_file: Path
+        Test sim_telarray configuration file.
+
+    Returns
+    -------
+    bool
+        True if the files are equal.
+
+    """
+    with open(reference_file, encoding="utf-8") as f1, open(test_file, encoding="utf-8") as f2:
+        reference_cfg = [line.rstrip() for line in f1 if line.strip()]
+        test_cfg = [line.rstrip() for line in f2 if line.strip()]
+
+    if len(reference_cfg) != len(test_cfg):
+        _logger.error(
+            f"Line counts differ: {reference_file} ({len(reference_cfg)} lines), "
+            f"{test_file} ({len(test_cfg)} lines)."
+        )
+        return False
+
+    for ref_line, test_line in zip(reference_cfg, test_cfg):
+        if any(ignore in ref_line for ignore in ("config_release", "Label")):
+            continue
+        if ref_line != test_line:
+            _logger.error(
+                f"Configuration files {reference_file} and {test_file} do not match: "
+                f"'{ref_line}' and '{test_line}'"
+            )
+            return False
 
     return True

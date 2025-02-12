@@ -7,7 +7,7 @@ env:
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-  SIMTOOLS_DB_SIMULATION_MODEL: "CTAO-Simulation-Model-LATEST"
+  SIMTOOLS_DB_SIMULATION_MODEL: "CTAO-Simulation-ModelParameters-LATEST"
   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
 on:
@@ -102,7 +102,7 @@ jobs:
             --cov=simtools --cov-report=xml
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v4.1.0
+      - uses: SonarSource/sonarqube-scan-action@v4.2.1
         if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

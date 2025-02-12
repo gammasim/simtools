@@ -6,6 +6,8 @@ r"""
     ready to be submitted to the model database. Prints out parameters which are not found
     in simtel configuration file and parameters which are not found in simtools schema files.
 
+    Note that all parameters are assigned the same parameter version.
+
     Command line arguments
     ----------------------
     simtel_cfg_file (str)
@@ -30,7 +32,7 @@ r"""
           --simtel_cfg_file all_telescope_config_la_palma.cfg\\
           --simtel_telescope_name CT1\\
           --telescope LSTN-01\\
-          --model_version "2024-03-06"
+          --parameter_version "1.0.0"
 
     The export of the model parameters from sim_telarray for 6.0.0 can be done e.g., as follows:
 
@@ -59,7 +61,7 @@ import numpy as np
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
+from simtools.data_model import schema
 from simtools.io_operations.io_handler import IOHandler
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
@@ -103,27 +105,7 @@ def _parse(label=None, description=None):
         type=str,
         required=True,
     )
-    return config.initialize(simulation_model="telescope")
-
-
-def get_list_of_parameters_and_schema_files(schema_directory):
-    """
-    Return list of parameters and schema files located in schema file directory.
-
-    Returns
-    -------
-    list
-        List of parameters found in schema file directory.
-    list
-        List of schema files found in schema file directory.
-
-    """
-    schema_files = sorted(Path(schema_directory).rglob("*.schema.yml"))
-    parameters = []
-    for schema_file in schema_files:
-        schema_dict = gen.collect_data_from_file(file_name=schema_file)
-        parameters.append(schema_dict.get("name"))
-    return parameters, schema_files
+    return config.initialize(simulation_model=["telescope", "parameter_version"])
 
 
 def get_list_of_simtel_parameters(simtel_config_file, logger):
@@ -203,7 +185,7 @@ def get_number_of_camera_pixel(args_dict, logger):
     """
     try:
         simtel_config_reader = SimtelConfigReader(
-            schema_file=MODEL_PARAMETER_SCHEMA_PATH / "camera_pixels.schema.yml",
+            schema_file=schema.get_model_parameter_schema_file("camera_pixels"),
             simtel_config_file=args_dict["simtel_cfg_file"],
             simtel_telescope_name=args_dict["simtel_telescope_name"],
         )
@@ -219,7 +201,6 @@ def read_and_export_parameters(args_dict, logger):
     """
     Read and export parameters from simtel configuration file to json files.
 
-    Only applicable parameters are exported to json.
     Provide extensive logging information on the parameters found in the simtel
     configuration file.
 
@@ -238,8 +219,8 @@ def read_and_export_parameters(args_dict, logger):
         List of simtools parameter not found in simtel configuration file.
 
     """
-    _parameters, _schema_files = get_list_of_parameters_and_schema_files(
-        args_dict.get("schema_directory", MODEL_PARAMETER_SCHEMA_PATH)
+    _parameters, _schema_files = schema.get_get_model_parameter_schema_files(
+        args_dict.get("schema_directory")
     )
     _simtel_parameters = get_list_of_simtel_parameters(args_dict["simtel_cfg_file"], logger)
 
@@ -266,7 +247,7 @@ def read_and_export_parameters(args_dict, logger):
             parameter_name=_parameter,
             value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
             instrument=args_dict["telescope"],
-            model_version=args_dict["model_version"],
+            parameter_version=args_dict["parameter_version"],
             output_file=io_handler.get_output_file(f"{_parameter}.json"),
         )
 

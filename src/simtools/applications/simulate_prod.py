@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-    Generate simulation configuration and run simulations (if required).
+    Generate simulation configuration and run simulations.
 
     Multipipe scripts will be produced as part of this application.
     Allows to run array layout simulation including shower and detector simulations
@@ -31,7 +31,7 @@ r"""
         Zenith angle in degrees.
     nshow (int, optional)
         Number of showers to simulate.
-        The Number of simulated events depends on the number of times a shower is re-used in the
+        The Number of simulated events depends on the number of times a shower is reused in the
         telescope simulation. The number provided here is before any reuse factors.
     start_run (int, required)
         Start run number such that the actual run number will be 'start_run' + 'run'.
@@ -43,9 +43,9 @@ r"""
         The location of the output directories corsika-data and simtel-data.
         the label is added to the data_directory, such that the output
         will be written to data_directory/label/simtel-data.
-    pack_for_grid_register (bool, optional)
+    pack_for_grid_register (str, optional)
         Set whether to prepare a tarball for registering the output files on the grid.
-        The files are written to the output_path/directory_for_grid_upload directory.
+        The files are written to the specified directory.
     log_level (str, optional)
         Log level to print.
 
@@ -68,9 +68,6 @@ r"""
 """
 
 import logging
-import shutil
-import tarfile
-from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -106,10 +103,10 @@ def _parse(description=None):
     )
     config.parser.add_argument(
         "--pack_for_grid_register",
-        help="Set whether to prepare a tarball for registering the output files on the grid.",
-        action="store_true",
+        help="Directory for a tarball for registering the output files on the grid.",
+        type=str,
         required=False,
-        default=False,
+        default=None,
     )
     config.parser.add_argument(
         "--save_file_lists",
@@ -137,47 +134,9 @@ def _parse(description=None):
     return config.initialize(
         db_config=True,
         job_submission=True,
-        simulation_model=["site", "layout", "telescope"],
+        simulation_model=["site", "layout", "telescope", "model_version"],
         simulation_configuration={"software": None, "corsika_configuration": ["all"]},
     )
-
-
-def pack_for_register(logger, simulator, args_dict):
-    """
-    Pack the output files for registering on the grid.
-
-    Parameters
-    ----------
-    logger: logging.Logger
-        Logger object.
-    simulator: Simulator
-        Simulator object.
-
-    """
-    logger.info("Packing the output files for registering on the grid")
-    output_files = simulator.get_file_list(file_type="output")
-    log_files = simulator.get_file_list(file_type="log")
-    histogram_files = simulator.get_file_list(file_type="hist")
-    tar_file_name = Path(log_files[0]).name.replace("log.gz", "log_hist.tar.gz")
-    directory_for_grid_upload = Path(args_dict.get("output_path")).joinpath(
-        "directory_for_grid_upload"
-    )
-    directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
-    tar_file_name = directory_for_grid_upload.joinpath(tar_file_name)
-
-    with tarfile.open(tar_file_name, "w:gz") as tar:
-        files_to_tar = log_files[:1] + histogram_files[:1]
-        for file_to_tar in files_to_tar:
-            tar.add(file_to_tar, arcname=Path(file_to_tar).name)
-
-    for file_to_move in [*output_files]:
-        source_file = Path(file_to_move)
-        destination_file = directory_for_grid_upload / source_file.name
-        # Note that this will overwrite previous files which exist in the directory
-        # It should be fine for normal production since each run is on a separate node
-        # so no files are expected there.
-        shutil.move(source_file, destination_file)
-    logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
 
 
 def main():  # noqa: D103
@@ -192,17 +151,23 @@ def main():  # noqa: D103
 
     simulator.simulate()
 
-    logger.info(
-        f"Production run is complete for primary {args_dict['primary']} showers "
-        f"coming from {args_dict['azimuth_angle']} azimuth and zenith angle of "
-        f"{args_dict['zenith_angle']} at the {args_dict['site']} site, "
-        f"using the {args_dict['model_version']} simulation model."
-    )
-
-    if args_dict["pack_for_grid_register"]:
-        pack_for_register(logger, simulator, args_dict)
-    if args_dict["save_file_lists"]:
-        simulator.save_file_lists()
+    if simulator.submit_engine == "local":
+        logger.info(
+            f"Production run complete for primary {args_dict['primary']} showers "
+            f"from {args_dict['azimuth_angle']} azimuth and {args_dict['zenith_angle']} zenith "
+            f"at {args_dict['site']} site, using {args_dict['model_version']} model."
+        )
+        if args_dict.get("pack_for_grid_register"):
+            simulator.pack_for_register(args_dict["pack_for_grid_register"])
+        if args_dict["save_file_lists"]:
+            simulator.save_file_lists()
+    else:
+        logger.info("Production run submitted to the workload manager")
+        if args_dict["pack_for_grid_register"] or args_dict["save_file_lists"]:
+            logger.warning(
+                "Packing for grid register or saving file lists not supported for "
+                f"{simulator.submit_engine}."
+            )
 
 
 if __name__ == "__main__":

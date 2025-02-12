@@ -17,6 +17,7 @@ import yaml
 __all__ = [
     "InvalidConfigDataError",
     "change_dict_keys_case",
+    "clear_default_sim_telarray_cfg_directories",
     "collect_data_from_file",
     "collect_final_lines",
     "collect_kwargs",
@@ -135,7 +136,7 @@ def collect_data_from_http(url):
     return data
 
 
-def collect_data_from_file(file_name):
+def collect_data_from_file(file_name, yaml_document=None):
     """
     Collect data from file based on its extension.
 
@@ -143,6 +144,8 @@ def collect_data_from_file(file_name):
     ----------
     file_name: str
         Name of the yaml/json/ascii file.
+    yaml_document: None, int
+        Return list of yaml documents or a single document (for yaml files with several documents).
 
     Returns
     -------
@@ -152,18 +155,34 @@ def collect_data_from_file(file_name):
     if is_url(file_name):
         return collect_data_from_http(file_name)
 
+    suffix = Path(file_name).suffix.lower()
     with open(file_name, encoding="utf-8") as file:
-        if Path(file_name).suffix.lower() == ".json":
+        if suffix == ".json":
             return json.load(file)
+        if suffix == ".list":
+            return [line.strip() for line in file.readlines()]
+        if suffix in [".yml", ".yaml"]:
+            return _collect_data_from_yaml_file(file, file_name, yaml_document)
+    return None
 
-        if Path(file_name).suffix.lower() == ".list":
-            lines = file.readlines()
-            return [line.strip() for line in lines]
 
-        try:
-            return yaml.safe_load(file)
-        except yaml.constructor.ConstructorError:
-            return _load_yaml_using_astropy(file)
+def _collect_data_from_yaml_file(file, file_name, yaml_document):
+    """Collect data from a yaml file."""
+    try:
+        return yaml.safe_load(file)
+    except yaml.constructor.ConstructorError:
+        return _load_yaml_using_astropy(file)
+    except yaml.composer.ComposerError:
+        pass
+    file.seek(0)
+    if yaml_document is None:
+        return list(yaml.safe_load_all(file))
+    try:
+        return list(yaml.safe_load_all(file))[yaml_document]
+    except IndexError as exc:
+        raise InvalidConfigDataError(
+            f"YAML file {file_name} does not contain {yaml_document} documents."
+        ) from exc
 
 
 def collect_kwargs(label, in_kwargs):
@@ -333,9 +352,10 @@ def program_is_executable(program):
     Follows https://stackoverflow.com/questions/377017/
 
     """
+    program = Path(program)
 
     def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+        return fpath.is_file() and os.access(fpath, os.X_OK)
 
     fpath, _ = os.path.split(program)
     if fpath:
@@ -344,7 +364,7 @@ def program_is_executable(program):
     else:
         try:
             for path in os.environ["PATH"].split(os.pathsep):
-                exe_file = os.path.join(path, program)
+                exe_file = Path(path) / program
                 if is_exe(exe_file):
                     return exe_file
         except KeyError:
@@ -442,7 +462,7 @@ def get_file_age(file_path):
     if not Path(file_path).is_file():
         raise FileNotFoundError(f"'{file_path}' does not exist or is not a file.")
 
-    file_stats = os.stat(file_path)
+    file_stats = Path(file_path).stat()
     modification_time = file_stats.st_mtime
     current_time = time.time()
 
@@ -785,3 +805,98 @@ def read_file_encoded_in_utf_or_latin(file_name):
             raise UnicodeDecodeError("Unable to decode file using UTF-8 or Latin-1.") from exc
 
     return lines
+
+
+def get_structure_array_from_table(table, column_names):
+    """
+    Get a structured array from an astropy table for a selected list of columns.
+
+    Parameters
+    ----------
+    table: astropy.table.Table
+        Table to be converted.
+    column_names: list
+        List of column names to be included in the structured array.
+
+    Returns
+    -------
+    numpy.ndarray
+        Structured array containing the table data.
+    """
+    return np.array(
+        list(zip(*[np.array(table[col]) for col in column_names])),
+        dtype=[(col, np.array(table[col]).dtype) for col in column_names],
+    )
+
+
+def convert_keys_in_dict_to_lowercase(data):
+    """
+    Recursively convert all dictionary keys to lowercase.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary to be converted.
+
+    Returns
+    -------
+    dict
+        Dictionary with all keys converted to lowercase.
+    """
+    if isinstance(data, dict):
+        return {k.lower(): convert_keys_in_dict_to_lowercase(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [convert_keys_in_dict_to_lowercase(i) for i in data]
+    return data
+
+
+def clear_default_sim_telarray_cfg_directories(command):
+    """Prefix the command to clear default sim_telarray configuration directories.
+
+    Parameters
+    ----------
+    command: str
+        Command to be prefixed.
+
+    Returns
+    -------
+    str
+        Prefixed command.
+
+    """
+    return f"SIM_TELARRAY_CONFIG_PATH='' {command}"
+
+
+def get_list_of_files_from_command_line(file_names, suffix_list):
+    """
+    Get a list of files from the command line.
+
+    Files can be given as a list of file names or as a text file containing the list of files.
+    The list of suffixes restrict the files types to be returned. Note that a file list must
+    have a different suffix than those in the suffix list.
+
+    Parameters
+    ----------
+    file_names: list
+        List of file names to be checked.
+    suffix_list: list
+        List of suffixes to be checked.
+
+    Returns
+    -------
+    list
+        List of files with the given suffixes.
+    """
+    _files = []
+    for one_file in file_names:
+        path = Path(one_file)
+        try:
+            if path.suffix in suffix_list:
+                _files.append(one_file)
+            elif len(file_names) == 1:
+                with open(one_file, encoding="utf-8") as file:
+                    _files.extend(line.strip() for line in file)
+        except FileNotFoundError as exc:
+            _logger.error(f"{one_file} is not a file.")
+            raise FileNotFoundError from exc
+    return _files

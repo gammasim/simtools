@@ -7,6 +7,33 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.9.0](https://github.com/gammasim/simtools/tree/0.9.0) - 2025-01-22
+
+### Bugfixes
+
+- Add correct handling of return codes from simulation software to prevent reports of success even though a job failed (`simulate_prod`) ([#1289](https://github.com/gammasim/simtools/pull/1289))
+- Fix setting of activity:end time in the metadata collector. ([#1291](https://github.com/gammasim/simtools/pull/1291))
+
+### New Features
+
+- Add an application to plot tables from a file (from file system or for a model parameter file downloaded from the DB). ([#1267](https://github.com/gammasim/simtools/pull/1267))
+- Enhancements to file testing within integration tests. ([#1279](https://github.com/gammasim/simtools/pull/1279))
+- Add a tool to prepare job submission with `simulate_prod` for a HTCondor system. ([#1290](https://github.com/gammasim/simtools/pull/1290))
+- Remove functionality in `db_handler` to read from simulation model repository. ([#1306](https://github.com/gammasim/simtools/pull/1306))
+
+### Maintenance
+
+- Change dependency from ctapipe to ctapipe-base for ctapipe v0.23 ([#1247](https://github.com/gammasim/simtools/pull/1247))
+- Remove pytest dependent from user installation. ([#1286](https://github.com/gammasim/simtools/pull/1286))
+
+
+## [0.8.2](https://github.com/gammasim/simtools/tree/0.8.2) - 2024-12-03
+
+### Maintenance
+
+- Move simtools package layout to src-layout. ([#1264](https://github.com/gammasim/simtools/pull/1264))
+
+
 ## [v0.8.1](https://github.com/gammasim/simtools/tree/v0.8.1) - 2024-11-26
 
 ### Bugfixes

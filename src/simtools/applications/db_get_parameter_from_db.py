@@ -26,7 +26,7 @@ r"""
 
     Example
     -------
-    Get the mirror_list parameter from the DB.
+    Get the mirror_list parameter used for a given model_version from the DB.
 
     .. code-block:: console
 
@@ -34,18 +34,13 @@ r"""
                 --site North --telescope LSTN-01 \\
                 --model_version 5.0.0
 
-    Expected final print-out message:
+    Get the mirror_list parameter using the parameter_version from the DB.
 
     .. code-block:: console
 
-        {'Applicable': True,
-         'File': True,
-         'Type': 'str',
-         'Value': 'mirror_CTA-N-LST1_v2019-03-31.dat',
-         'Version': '5.0.0',
-         '_id': ObjectId('608834f257df2db2531b8e78'),
-         'entry_date': datetime.datetime(2021, 4, 27, 15, 59, 46, tzinfo=<bson.tz_util.FixedOffset \
-          object at 0x7f601dd51d80>)}
+        simtools-db-get-parameter-from-db --parameter mirror_list \\
+                --site North --telescope LSTN-01 \\
+                --parameter_version 1.0.0
 
 """
 
@@ -73,7 +68,6 @@ def _parse():
     config.parser.add_argument(
         "--db_collection",
         help="DB collection to which to add the file",
-        default="telescopes",
         required=False,
     )
     config.parser.add_argument(
@@ -83,7 +77,9 @@ def _parse():
         required=False,
     )
 
-    return config.initialize(db_config=True, simulation_model="telescope")
+    return config.initialize(
+        db_config=True, simulation_model=["telescope", "parameter_version", "model_version"]
+    )
 
 
 def main():  # noqa: D103
@@ -94,37 +90,53 @@ def main():  # noqa: D103
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    if args_dict["db_collection"] == "configuration_sim_telarray":
-        pars = db.get_model_parameters(
-            args_dict["site"],
-            args_dict["telescope"],
-            args_dict["model_version"],
-            collection="configuration_sim_telarray",
+    # get parameter using 'parameter_version'
+    if args_dict["parameter_version"] is not None:
+        pars = db.get_model_parameter(
+            parameter=args_dict["parameter"],
+            parameter_version=args_dict["parameter_version"],
+            site=args_dict["site"],
+            array_element_name=args_dict["telescope"],
+            collection=(
+                args_dict["db_collection"] if args_dict.get("db_collection") else "telescopes"
+            ),
         )
-    elif args_dict["db_collection"] == "configuration_corsika":
-        pars = db.get_corsika_configuration_parameters(args_dict["model_version"])
-    elif args_dict["telescope"] is not None:
-        pars = db.get_model_parameters(
-            args_dict["site"],
-            args_dict["telescope"],
-            args_dict["model_version"],
-            collection="telescopes",
-        )
+    # get parameter using 'model_version'
+    elif args_dict["model_version"] is not None:
+        if args_dict["telescope"]:
+            pars = db.get_model_parameters(
+                site=args_dict["site"],
+                array_element_name=args_dict["telescope"],
+                model_version=args_dict["model_version"],
+                collection=(
+                    "configuration_sim_telarray"
+                    if args_dict.get("db_collection") == "configuration_sim_telarray"
+                    else "telescopes"
+                ),
+            )
+        else:
+            pars = db.get_model_parameters(
+                site=args_dict.get("site"),
+                model_version=args_dict["model_version"],
+                collection=(
+                    args_dict["db_collection"] if args_dict.get("db_collection") else "sites"
+                ),
+                array_element_name=None,
+            )
     else:
-        pars = db.get_site_parameters(args_dict["site"], args_dict["model_version"])
+        raise ValueError("Either 'parameter_version' or 'model_version' must be provided.")
     if args_dict["parameter"] not in pars:
         raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
     if args_dict["output_file"] is not None:
-        _io_handler = io_handler.IOHandler()
+        _output_file = (
+            Path(io_handler.IOHandler().get_output_directory()) / args_dict["output_file"]
+        )
         pars[args_dict["parameter"]].pop("_id")
         pars[args_dict["parameter"]].pop("entry_date")
-        _output_file = Path(_io_handler.get_output_directory()) / args_dict["output_file"]
         with open(_output_file, "w", encoding="utf-8") as json_file:
             json.dump(pars[args_dict["parameter"]], json_file, indent=4)
     else:
-        print()
         pprint(pars[args_dict["parameter"]])
-        print()
 
 
 if __name__ == "__main__":

@@ -5,14 +5,13 @@ import os
 import re
 from pathlib import Path
 
-import jsonschema
 import numpy as np
 from astropy import units as u
 from astropy.table import Column, Table, unique
 from astropy.utils.diff import report_diff_values
 
 import simtools.utils.general as gen
-from simtools.data_model import format_checkers
+from simtools.data_model import schema
 from simtools.utils import value_conversion
 
 __all__ = ["DataValidator"]
@@ -57,7 +56,7 @@ class DataValidator:
         self.data_table = data_table
         self.check_exact_data_type = check_exact_data_type
 
-    def validate_and_transform(self, is_model_parameter=False):
+    def validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
         """
         Validate data and data file.
 
@@ -65,6 +64,8 @@ class DataValidator:
         ----------
         is_model_parameter: bool
             This is a model parameter (add some data preparation)
+        lists_as_strings: bool
+            Convert lists to strings (as needed for model parameters)
 
         Returns
         -------
@@ -80,13 +81,9 @@ class DataValidator:
         if self.data_file_name:
             self.validate_data_file()
         if isinstance(self.data_dict, dict):
-            if is_model_parameter:
-                self._prepare_model_parameter()
-            self._validate_data_dict()
-            return self.data_dict
+            return self._validate_data_dict(is_model_parameter, lists_as_strings)
         if isinstance(self.data_table, Table):
-            self._validate_data_table()
-            return self.data_table
+            return self._validate_data_table()
         self._logger.error("No data or data table to validate")
         raise TypeError
 
@@ -108,18 +105,47 @@ class DataValidator:
 
     def validate_parameter_and_file_name(self):
         """Validate that file name and key 'parameter_name' in data dict are the same."""
-        if self.data_dict.get("parameter") != Path(self.data_file_name).stem:
+        if not str(Path(self.data_file_name).stem).startswith(self.data_dict.get("parameter")):
             raise ValueError(
                 f"Parameter name in data dict {self.data_dict.get('parameter')} and "
                 f"file name {Path(self.data_file_name).stem} do not match."
             )
 
-    def _validate_data_dict(self):
+    @staticmethod
+    def validate_model_parameter(par_dict):
+        """
+        Validate a simulation model parameter (static method).
+
+        Parameters
+        ----------
+        par_dict: dict
+            Data dictionary
+
+        Returns
+        -------
+        dict
+            Validated data dictionary
+        """
+        data_validator = DataValidator(
+            schema_file=schema.get_model_parameter_schema_file(f"{par_dict['parameter']}"),
+            data_dict=par_dict,
+            check_exact_data_type=False,
+        )
+        return data_validator.validate_and_transform(is_model_parameter=True)
+
+    def _validate_data_dict(self, is_model_parameter=False, lists_as_strings=False):
         """
         Validate values in a dictionary.
 
         Handles different types of naming in data dicts (using 'name' or 'parameter'
         keys for name fields).
+
+        Parameters
+        ----------
+        is_model_parameter: bool
+            This is a model parameter (add some data preparation)
+        lists_as_strings: bool
+            Convert lists to strings (as needed for model parameters)
 
         Raises
         ------
@@ -127,9 +153,10 @@ class DataValidator:
             if data dict does not contain a 'name' or 'parameter' key.
 
         """
-        if not (_name := self.data_dict.get("name") or self.data_dict.get("parameter")):
-            raise KeyError("Data dict does not contain a 'name' or 'parameter' key.")
-        self._data_description = self._read_validation_schema(self.schema_file_name, _name)
+        if is_model_parameter:
+            self._prepare_model_parameter()
+
+        self._data_description = self._read_validation_schema(self.schema_file_name)
 
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
 
@@ -145,6 +172,11 @@ class DataValidator:
 
         self._check_version_string(self.data_dict.get("version"))
 
+        if lists_as_strings:
+            self._convert_results_to_model_format()
+
+        return self.data_dict
+
     def _validate_value_and_unit(self, value, unit, index):
         """
         Validate value, unit, and perform type checking and conversions.
@@ -152,8 +184,9 @@ class DataValidator:
         Take into account different data types and allow to use json_schema for testing.
         """
         if self._get_data_description(index).get("type", None) == "dict":
-            self._validate_data_dict_using_json_schema(
-                self.data_dict["value"], self._get_data_description(index).get("json_schema")
+            schema.validate_dict_using_schema(
+                data=self.data_dict["value"],
+                json_schema=self._get_data_description(index).get("json_schema"),
             )
         else:
             self._check_data_type(np.array(value).dtype, index)
@@ -191,28 +224,13 @@ class DataValidator:
         conversion_factor = [
             1 if v is None else u.Unit(v).to(u.Unit(t)) for v, t in zip(unit, target_unit)
         ]
-        return [v * c for v, c in zip(value, conversion_factor)], target_unit
-
-    def _validate_data_dict_using_json_schema(self, data, json_schema):
-        """
-        Validate a dictionary using a json schema.
-
-        Parameters
-        ----------
-        data: dict
-            Data dictionary
-        json_schema: dict
-            JSON schema
-        """
-        if json_schema is None:
-            self._logger.debug("Skipping validation of dict type")
-            return
-        self._logger.debug("Validation of dict type using JSON schema")
         try:
-            jsonschema.validate(data, json_schema, format_checker=format_checkers.format_checker)
-        except jsonschema.exceptions.ValidationError as exc:
-            self._logger.error(f"Validation error: {exc}")
-            raise exc
+            return [
+                v * c if not isinstance(v, bool) and not isinstance(v, dict) else v
+                for v, c in zip(value, conversion_factor)
+            ], target_unit
+        except TypeError:
+            return [None], target_unit
 
     def _validate_data_table(self):
         """Validate tabulated data."""
@@ -228,6 +246,7 @@ class DataValidator:
             self._validate_data_columns()
             self._check_data_for_duplicates()
             self._sort_data()
+        return self.data_table
 
     def _validate_data_columns(self):
         """
@@ -649,7 +668,7 @@ class DataValidator:
 
         return False
 
-    def _read_validation_schema(self, schema_file, parameter=None):
+    def _read_validation_schema(self, schema_file):
         """
         Read validation schema from file.
 
@@ -657,11 +676,6 @@ class DataValidator:
         ----------
         schema_file: Path
             Schema file describing input data.
-            If this is a directory, a filename of
-            '<par>.schema.yml' is assumed.
-        parameter: str
-            Parameter name of required schema
-            (if None, return first schema in file)
 
         Returns
         -------
@@ -672,17 +686,11 @@ class DataValidator:
         ------
         KeyError
             if 'data' can not be read from dict in schema file
-
         """
         try:
-            if Path(schema_file).is_dir():
-                return gen.collect_data_from_file(
-                    file_name=Path(schema_file) / (parameter + ".schema.yml"),
-                )["data"]
             return gen.collect_data_from_file(file_name=schema_file)["data"]
-        except KeyError:
-            self._logger.error(f"Error reading validation schema from {schema_file}")
-            raise
+        except KeyError as exc:
+            raise KeyError(f"Error reading validation schema from {schema_file}") from exc
 
     def _get_data_description(self, column_name=None, status_test=False):
         """
@@ -726,6 +734,8 @@ class DataValidator:
                 )
             )
         except IndexError as exc:
+            if len(self._data_description) == 1:  # all columns are described by the same schema
+                return self._data_description[0]
             self._logger.error(
                 f"Data column '{column_name}' not found in reference column definition"
             )
@@ -770,6 +780,18 @@ class DataValidator:
 
         if self.data_dict["unit"] is not None:
             self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
+
+    def _convert_results_to_model_format(self):
+        """
+        Convert results to model format.
+
+        Convert lists to strings (as needed for model parameters).
+        """
+        value = self.data_dict["value"]
+        if isinstance(value, list):
+            self.data_dict["value"] = gen.convert_list_to_string(value)
+        if isinstance(self.data_dict["unit"], list):
+            self.data_dict["unit"] = gen.convert_list_to_string(self.data_dict["unit"])
 
     def _check_version_string(self, version):
         """

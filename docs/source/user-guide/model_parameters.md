@@ -26,7 +26,7 @@ The {ref}`db_handler module <DBHANDLER>` provides reading and writing interfaces
 
 Simtools includes applications to write new model parameters to the databases and the export or import model parameters from sim_telarray configuration files (see following sections).
 
-Review and revision control of the simulation models uses the [model parameters gitlab repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters/-/blob/main/README.md?ref_type=heads). Simtools provides applications to read, write, and update the databases from this repository.
+Review and revision control of the simulation models uses a [gitlab repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models). Simtools provides applications to read, write, and update the databases from this repository.
 
 :::{Note}
 The simulation model is a central part of the CTAO Simulation Pipeline. The responsibility for the values and the correctness of the simulation model parameters is with the CTAO Simulation Team.
@@ -184,19 +184,20 @@ simulation_software:
 
 ## Data structure for model parameters
 
-The model parameters are stored in json-style in the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) and database.
+The model parameters are stored in json-style in the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) and database.
 A typical model parameter file looks like:
 
 ```json
 {
+    "schema_version": "0.1.0",
     "parameter": "num_gains",
     "instrument": "LSTN-01",
     "site": "North",
-    "version": "6.0.0",
+    "parameter_version": "1.0.0",
+    "unique_id": null,
     "value": 2,
     "unit": null,
     "type": "int64",
-    "applicable": true,
     "file": false
 }
 ```

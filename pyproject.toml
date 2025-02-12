@@ -39,7 +39,6 @@ dependencies = [
   "particle",
   "pymongo",
   "pyproj",
-  "pytest",
   "python-dotenv",
   "pyyaml",
   "scipy",
@@ -58,6 +57,7 @@ optional-dependencies."doc" = [
   "towncrier",
 ]
 optional-dependencies."tests" = [
+  "pytest",
   "pytest-cov",
   "pytest-mock",
   "pytest-profiling",
@@ -73,7 +73,7 @@ scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applicatio
 scripts.simtools-convert-geo-coordinates-of-array-elements = "simtools.applications.convert_geo_coordinates_of_array_elements:main"
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
 scripts.simtools-db-add-file-to-db = "simtools.applications.db_add_file_to_db:main"
-scripts.simtools-db-add-model-parameters-from-repository-to-db = "simtools.applications.db_add_model_parameters_from_repository_to_db:main"
+scripts.simtools-db-add-simulation-model-from-repository-to-db = "simtools.applications.db_add_simulation_model_from_repository_to_db:main"
 scripts.simtools-db-add-value-from-json-to-db = "simtools.applications.db_add_value_from_json_to_db:main"
 scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
 scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
@@ -87,11 +87,12 @@ scripts.simtools-generate-default-metadata = "simtools.applications.generate_def
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
-scripts.simtools-production-calculate-resource-estimates = "simtools.applications.production_calculate_resource_estimates:main"
+scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:main"
 scripts.simtools-production-generate-simulation-config = "simtools.applications.production_generate_simulation_config:main"
 scripts.simtools-production-scale-events = "simtools.applications.production_scale_events:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
+scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
 scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"
 scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
@@ -140,6 +141,7 @@ lint.extend-select = [
   "N",   # pep8 naming
   "NPY", # numpy
   "PT",  # pytest
+  "PTH", # use pathlib
   "RET", # return statements
   "RUF", # ruff
   "UP",  # pyupgrade
@@ -151,6 +153,7 @@ lint.ignore = [
   "D215",   # section-underline-not-over-indented
   "G004",   # Logging statement uses f-string
   "ISC001", # incompatible with ruff format
+  "PTH123", # open("foo") should be replaced by Path("foo").open()
   "RUF012", #  Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [

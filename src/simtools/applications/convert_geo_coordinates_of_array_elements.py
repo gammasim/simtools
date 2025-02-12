@@ -1,56 +1,56 @@
 #!/usr/bin/python3
 """Convert and print a list of array element positions in different coordinate systems.
 
-    Description
-    -----------
+Description
+-----------
 
-    Convert array element positions in different CTAO coordinate systems.
-    Available coordinate systems are:
+Convert array element positions in different CTAO coordinate systems.
+Available coordinate systems are:
 
-    1. UTM system
-    2. ground system (similar to sim_telarray system with x-axis pointing toward geographic north
-       and y-axis pointing towards the west); altitude relative to the CORSIKA observation level.
-       Altitude is the height of the elevation rotation axis (plus some possible mirror offset).
-    3. Mercator system
+1. UTM system
+2. ground system (similar to sim_telarray system with x-axis pointing toward geographic north
+   and y-axis pointing towards the west); altitude relative to the CORSIKA observation level.
+   Altitude is the height of the elevation rotation axis (plus some possible mirror offset).
+3. Mercator system
 
-    Command line arguments
-    ----------------------
-    input (str)
-        File name with list of array element positions.
-        Input can be given as astropy table file (ecsv) or a single array element in
-        a json file.
-    print (str)
-        Print in requested coordinate system; possible are ground, utm, mercator
-    export (str)
-        Export array element list to file in requested coordinate system;
-          possible are ground, utm, mercator
-    select_assets (str)
-        Select a subset of array elements / telescopes (e.g., MSTN, LSTN)
+Command line arguments
+----------------------
+input (str)
+    File name with list of array element positions.
+    Input can be given as astropy table file (ecsv) or a single array element in
+    a json file.
+print (str)
+    Print in requested coordinate system; possible are ground, utm, mercator
+export (str)
+    Export array element list to file in requested coordinate system;
+      possible are ground, utm, mercator
+select_assets (str)
+    Select a subset of array elements / telescopes (e.g., MSTN, LSTN)
 
-    Example
-    -------
-    Convert a list of array elements using a list of telescope positions in UTM coordinates.
+Example
+-------
+Convert a list of array elements using a list of telescope positions in UTM coordinates.
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-convert-geo-coordinates-of-array-elements
-            --input tests/resources/telescope_positions-North-utm.ecsv
-            --print ground
+    simtools-convert-geo-coordinates-of-array-elements
+        --input tests/resources/telescope_positions-North-utm.ecsv
+        --print ground
 
-    The converted list of telescope positions in ground coordinates is printed to the screen.
+The converted list of telescope positions in ground coordinates is printed to the screen.
 
-    The following example converts a list of telescope positions in UTM coordinates
-    and writes the output to a file in ground (sim_telarray) coordinates. Also selects
-    only a subset of the array elements (telescopes; ignore calibration devices):
+The following example converts a list of telescope positions in UTM coordinates
+and writes the output to a file in ground (sim_telarray) coordinates. Also selects
+only a subset of the array elements (telescopes; ignore calibration devices):
 
-    .. code-block:: console
+.. code-block:: console
 
-        simtools-convert-geo-coordinates-of-array-elements
-            --input tests/resources/telescope_positions-North-utm.ecsv
-            --export ground
-            --select_assets LSTN
+    simtools-convert-geo-coordinates-of-array-elements
+        --input tests/resources/telescope_positions-North-utm.ecsv
+        --export ground
+        --select_assets LSTN
 
-    Expected output is a ecsv file in the directory printed to the screen.
+Expected output is a ecsv file in the directory printed to the screen.
 
 """
 
@@ -130,7 +130,10 @@ def _parse(label=None, description=None):
         action="store_true",
     )
     return config.initialize(
-        output=True, require_command_line=True, db_config=True, simulation_model=["version", "site"]
+        output=True,
+        require_command_line=True,
+        db_config=True,
+        simulation_model=["model_version", "parameter_version", "site"],
     )
 
 
@@ -146,16 +149,12 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    json_type = args_dict.get("input", "").endswith(".json")
-    # simplified metadata treatment for model parameter json files
-    if json_type:
+    if args_dict.get("input", "").endswith(".json"):
         site = args_dict.get("site", None)
-        top_level_meta = None
-        validate_schema_file = None
+        metadata, validate_schema_file = None, None
     else:
         metadata = MetadataCollector(args_dict=args_dict, data_model_name=data_model_name)
         site = metadata.get_site(from_input_meta=True)
-        top_level_meta = metadata.top_level_meta
         validate_schema_file = metadata.get_data_model_schema_file_name()
 
     layout = array_layout.ArrayLayout(
@@ -171,13 +170,15 @@ def main():
 
     if args_dict["export"] is not None:
         product_data = (
-            layout.export_one_telescope_as_json(crs_name=args_dict["export"])
-            if json_type
+            layout.export_one_telescope_as_json(
+                crs_name=args_dict["export"], parameter_version=args_dict.get("parameter_version")
+            )
+            if args_dict.get("input", "").endswith(".json")
             else layout.export_telescope_list_table(crs_name=args_dict["export"])
         )
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
-            metadata=top_level_meta,
+            metadata=metadata.get_top_level_metadata() if metadata else None,
             product_data=product_data,
             validate_schema_file=validate_schema_file,
         )

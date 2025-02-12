@@ -1,32 +1,28 @@
 #!/usr/bin/python3
 """
-    Generate sim_telarray configuration files for a given array.
+Generate sim_telarray configuration files for a given array.
 
-    The applications generates the sim_telarray configuration files for a given array, site,
-    and model_version using the model parameters stored in the database.
+The applications generates the sim_telarray configuration files for a given array, site,
+and model_version using the model parameters stored in the database.
 
-    To change model parameters, clone the model parameters repository and apply the changes.
-    Forward the path to the repository to the application using the ``--db_simulation_model_url``
-    argument.
+Command line arguments
+----------------------
+site : str
+    Site name (e.g., North, South).
+array_layout_name : str
+    Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
+array_element_list : list
+    List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
 
-    Command line arguments
-    ----------------------
-    site : str
-        Site name (e.g., North, South).
-    array_layout_name : str
-        Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
-    array_element_list : list
-        List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
+Example
+-------
+North - 5.0.0:
 
-    Example
-    -------
-    North - 5.0.0:
+.. code-block:: console
 
-    .. code-block:: console
+    simtools-generate-array-config --site North --array_layout_name alpha --model_version 5.0.0
 
-        simtools-generate-array-config --site North --array_layout_name alpha --model_version 5.0.0
-
-    The output is saved in simtools-output/test/model.
+The output is saved in simtools-output/test/model.
 """
 
 import logging
@@ -54,7 +50,7 @@ def _parse(label, description):
         Command line parser object.
     """
     config = configurator.Configurator(label=label, description=description)
-    return config.initialize(db_config=True, simulation_model=["site", "layout"])
+    return config.initialize(db_config=True, simulation_model=["site", "layout", "model_version"])
 
 
 def main():

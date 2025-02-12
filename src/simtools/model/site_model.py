@@ -80,7 +80,7 @@ class SiteModel(ModelParameter):
             Site-related CORSIKA parameters as dict
         """
         if config_file_style:
-            model_directory = model_directory or Path("")
+            model_directory = model_directory or Path()
             return {
                 "OBSLEV": [
                     self.get_parameter_value_with_unit("corsika_observation_level").to_value("cm")
@@ -151,11 +151,11 @@ class SiteModel(ModelParameter):
             Model directory to export the file to.
         """
         self.db.export_model_files(
-            {
+            parameters={
                 "atmospheric_transmission_file": {
                     "value": self.get_parameter_value("atmospheric_profile"),
                     "file": True,
                 }
             },
-            model_directory,
+            dest=model_directory,
         )
