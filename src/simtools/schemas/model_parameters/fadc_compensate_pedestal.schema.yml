@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: fadc_compensate_pedestal
 description: |-
   Emulate FADC pedestal compensation (as e.g., done in camera firmware using FPGAs)
-  to homogenise significant pixel-to-pixel variations of raw pedestals values
+  to homogenize significant pixel-to-pixel variations of raw pedestals values
   (for high-gain channel for dual-gain readout).
   The resulting values are still unsigned integers and no rescaling takes place
   (pure integer pedestal offset). No compensation takes place for the default value

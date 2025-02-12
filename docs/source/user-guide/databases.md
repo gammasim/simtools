@@ -3,7 +3,7 @@
 The simtools package uses a prototype MongoDB database to store the simulation model parameters.
 Access to the DB is handled via a dedicated API module ([db_handler](#dbhandler)).
 
-Simulation model parameters are stored in databases (see the [Simulation Model](model_parameters.md#simulation-model) section) and synced with the [CTAO model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters).
+Simulation model parameters are stored in databases (see the [Simulation Model](model_parameters.md#simulation-model) section) and synced with the [CTAO model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models).
 
 ## Database structure
 
@@ -53,7 +53,7 @@ The mongoDB database can be accessed via the command-line interface `mongo` or v
 
 ## Update the database
 
-Model parameters should first be reviewed and accepted in the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) before they are uploaded to the database (see the following sections on how to set up a local copy of the model parameter database for testing and development).
+Model parameters should first be reviewed and accepted in the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) before they are uploaded to the database (see the following sections on how to set up a local copy of the model parameter database for testing and development).
 
 :::{Danger}
 Updating the database is for experts only.
@@ -99,7 +99,7 @@ Note that database names are hardcoded in the scripts and need to be adjusted ac
 
 #### Option 2: Fill local database from model parameter repository
 
-The script `upload_from_model_repository_to_db.sh` uses the [model parameter repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters) from the CTAO gitlab and
+The script `upload_from_model_repository_to_db.sh` uses the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) from the CTAO gitlab and
 uploads its contents to the local database instance.
 
 Note that repository branches are hardcoded in the scripts and need to be adjusted accordingly.
