@@ -105,7 +105,6 @@ jobs:
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
-          echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
           pytest --durations=10 --color=yes -n auto --dist loadscope \
             --cov=simtools --cov-report=xml
 
