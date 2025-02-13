@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""
+r"""
 Derives the limits for energy, radial distance, and viewcone using the LimitCalculator.
 
 The limits are derived based on the event loss fraction specified by the user.
@@ -11,6 +11,17 @@ hdf5_file (str, required)
     Path to the HDF5 file containing the event data.
 loss_fraction (float, required)
     Fraction of events to be lost.
+
+
+Example
+-------
+Derive thresholds for a given HDF5 file with a specified loss fraction.
+
+.. code-block:: console
+
+    simtools-derive-threshold \\
+        --hdf5_file path/to/hdf5_file.hdf5 \\
+        --loss_fraction 0.1
 """
 
 import logging
