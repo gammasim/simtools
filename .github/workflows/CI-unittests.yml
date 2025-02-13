@@ -99,6 +99,8 @@ jobs:
 
       - name: Unit tests
         shell: bash -l {0}
+        env:
+          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
           pytest --durations=10 --color=yes -n auto --dist loadscope \
             --cov=simtools --cov-report=xml
@@ -112,6 +114,8 @@ jobs:
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
         shell: bash -l {0}
+        env:
+          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
           pytest --color=yes -n auto --dist loadscope --count 5 --random-order
 
