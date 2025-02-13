@@ -370,6 +370,7 @@ def test_is_url():
 def test_url_exists():
     assert gen.url_exists(url_simtools_main)
     assert not gen.url_exists(url_simtools)  # raw ULR does not exist
+    assert not gen.url_exists(None)
 
 
 def test_collect_data_dict_from_json():
