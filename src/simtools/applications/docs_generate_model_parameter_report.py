@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-Generate markdown reports for relevant model parameters.
+Generate reports tracking changes to each parameter across productions.
 
 The generated reports include detailed information on each parameter,
 such as the parameter name, value, unit, description, and short description.
@@ -50,7 +50,7 @@ def main():  # noqa: D103
         db_config,
         telescope_model,
         output_path,
-    ).generate_parameter_report(args)
+    ).generate_parameter_report()
 
     logger.info(
         f"Markdown report generated for {args['site']}"

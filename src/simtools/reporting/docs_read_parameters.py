@@ -88,6 +88,11 @@ class ReadParameters:
         """
         Get model parameter data.
 
+        Parameters
+        ----------
+        telescope_model : TelescopeModel
+            The telescope model instance.
+
         Returns
         -------
             list: A list of lists containing parameter names, values with units,
@@ -144,16 +149,16 @@ class ReadParameters:
 
         return data
 
-    def _compare_parameter_across_versions(self, args, output_path, parameter_name):
+    def _compare_parameter_across_versions(self, output_path, parameter_name):
         """
         Compare a parameter's value across different model versions.
 
         Parameters
         ----------
+        output_path : str
+            The folder where the markdown file will be saved.
         parameter_name : str
             The name of the parameter to compare.
-        telescope_model : TelescopeModel
-            The telescope model instance.
 
         Returns
         -------
@@ -166,8 +171,8 @@ class ReadParameters:
 
         for model_version in all_versions:
             telescope_model = TelescopeModel(
-                site=args["site"],
-                telescope_name=args["telescope"],
+                site=self.telescope_model.site,
+                telescope_name=self.telescope_model.name,
                 model_version=model_version,
                 label="reports",
                 mongo_db_config=self.db_config,
@@ -198,6 +203,8 @@ class ReadParameters:
 
         Parameters
         ----------
+        output_path : str
+            The folder where the markdown file will be saved.
         parameter_name : str
             The name of the parameter to compare.
         telescope_model : TelescopeModel
@@ -241,12 +248,10 @@ class ReadParameters:
         """
         Generate a markdown report of all model parameters per array element.
 
-        Parameters
+        Output
         ----------
-        output_path : str
-            The folder where the markdown file will be saved.
-        args_dict : dict
-            Configuration arguments including model version and telescope name.
+        One markdown report of a given array element listing parameter values,
+        versions, and descriptions.
         """
         output_path = self.output_path / self.telescope_model.name
         output_filename = Path(output_path / (self.telescope_model.name + ".md"))
@@ -299,14 +304,9 @@ class ReadParameters:
                     )
                 file.write("\n\n")
 
-    def generate_parameter_report(self, args):
+    def generate_parameter_report(self):
         """
         Generate a markdown report per parameters per array element.
-
-        Parameters
-        ----------
-        args: dict
-            Configuration arguments including model version and telescope name.
 
         Output
         ----------
@@ -314,26 +314,29 @@ class ReadParameters:
         values across model versions.
         """
         logger.info(
-            f"Comparing parameters across model versions for Telescope: {args['telescope']}"
-            f"and Site: {args['site']}."
+            f"Comparing parameters across model versions for Telescope: {self.telescope_model.name}"
+            f"and Site: {self.telescope_model.site}."
         )
         io_handler_instance = io_handler.IOHandler()
         output_path = io_handler_instance.get_output_directory(
-            label="reports", sub_dir=f"parameters/{args['telescope']}"
+            label="reports", sub_dir=f"parameters/{self.telescope_model.name}"
         )
 
         all_params = self.telescope_model.db.get_model_parameters(
-            site=args["site"], array_element_name=args["telescope"], collection="telescopes"
+            site=self.telescope_model.site,
+            array_element_name=self.telescope_model.name,
+            collection="telescopes",
         )
         if not any(
-            all_params[parameter]["instrument"] == args["telescope"] for parameter in all_params
+            all_params[parameter]["instrument"] == self.telescope_model.name
+            for parameter in all_params
         ):
             logger.info("No telescope-specific parameters, check telescope design report.")
         else:
             for parameter in all_params:
-                if all_params[parameter]["instrument"] == args["telescope"]:
+                if all_params[parameter]["instrument"] == self.telescope_model.name:
                     comparison_data = self._compare_parameter_across_versions(
-                        args, output_path, parameter
+                        output_path, parameter
                     )
                     if comparison_data:
                         output_filename = output_path / f"{parameter}.md"
@@ -341,7 +344,7 @@ class ReadParameters:
                             # Write header
                             file.write(
                                 f"# {parameter}\n\n"
-                                f"**Telescope**: {args['telescope']}\n\n"
+                                f"**Telescope**: {self.telescope_model.name}\n\n"
                                 f"**Description**: {comparison_data[0]['description']}\n\n"
                                 "\n"
                             )
@@ -368,5 +371,5 @@ class ReadParameters:
                             ].endswith(".md)"):
                                 file.write(
                                     f"![Parameter plot.](images/"
-                                    f"{args['telescope']}_{parameter}.png)"
+                                    f"{self.telescope_model.name}_{parameter}.png)"
                                 )
