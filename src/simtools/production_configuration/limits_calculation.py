@@ -3,7 +3,7 @@
 import numpy as np
 
 
-class ThresholdCalculator:
+class LimitCalculator:
     """
     Class to compute thresholds/limits for energy, radial distance, and viewcone.
 
@@ -15,7 +15,7 @@ class ThresholdCalculator:
 
     def __init__(self, hdf5_file):
         """
-        Initialize the ThresholdCalculator with the given HDF5 file.
+        Initialize the LimitCalculator with the given HDF5 file.
 
         Parameters
         ----------

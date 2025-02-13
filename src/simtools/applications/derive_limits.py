@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 """
-Derives the thresholds for energy, radial distance, and viewcone using the ThresholdCalculator.
+Derives the limits for energy, radial distance, and viewcone using the LimitCalculator.
 
-The thresholds are derived based on the event loss fraction specified by the user.
+The limits are derived based on the event loss fraction specified by the user.
 
 Command line arguments
 ----------------------
@@ -17,14 +17,14 @@ import logging
 
 from simtools.configuration import configurator
 from simtools.io_operations.hdf5_handler import read_hdf5
-from simtools.production_configuration.threshold_calculation import ThresholdCalculator
+from simtools.production_configuration.limits_calculation import LimitCalculator
 
 _logger = logging.getLogger(__name__)
 
 
 def _parse():
     config = configurator.Configurator(
-        description="Derive thresholds for energy, radial distance, and viewcone."
+        description="Derive limits for energy, radial distance, and viewcone."
     )
     config.parser.add_argument(
         "--hdf5_file",
@@ -39,7 +39,7 @@ def _parse():
 
 
 def main():
-    """Derive thresholds for energy, radial distance, and viewcone."""
+    """Derive limits for energy, radial distance, and viewcone."""
     args_dict, _ = _parse()
     hdf5_file_path = args_dict["hdf5_file"]
     loss_fraction = args_dict["loss_fraction"]
@@ -47,8 +47,8 @@ def main():
     _logger.info(f"Loading HDF5 file: {hdf5_file_path}")
     tables = read_hdf5(hdf5_file_path)
 
-    _logger.info("Initializing ThresholdCalculator")
-    calculator = ThresholdCalculator(tables)
+    _logger.info("Initializing LimitCalculator")
+    calculator = LimitCalculator(tables)
 
     _logger.info("Computing lower energy limit")
     lower_energy_limit = calculator.compute_lower_energy_limit(loss_fraction)
