@@ -79,6 +79,7 @@ scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_ar
 scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
 scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
 scripts.simtools-db-inspect-databases = "simtools.applications.db_inspect_databases:main"
+scripts.simtools-derive-limits = "simtools.applications.derive_limits:main"
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
 scripts.simtools-derive-psf-parameters = "simtools.applications.derive_psf_parameters:main"
 scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
