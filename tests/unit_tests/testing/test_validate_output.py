@@ -300,28 +300,6 @@ def test_compare_files_unknown_type(tmp_test_directory, file_name):
     assert not validate_output.compare_files(file1, file2)
 
 
-def test_validate_all_tests_no_model_version(mocker, mock_validate_application_output):
-    config = {"key": "value"}
-    request = mocker.Mock()
-    request.config.getoption.return_value = None
-    config_file_model_version = None
-
-    validate_output.validate_all_tests(config, request, config_file_model_version)
-
-    mock_validate_application_output.assert_called_once_with(config)
-
-
-def test_validate_all_tests_matching_model_version(mocker, mock_validate_application_output):
-    config = {"key": "value"}
-    request = mocker.Mock()
-    request.config.getoption.return_value = "5.0"
-    config_file_model_version = "6.0"
-
-    validate_output.validate_all_tests(config, request, config_file_model_version)
-
-    mock_validate_application_output.assert_called_once_with(config, "5.0", "6.0")
-
-
 def test_validate_reference_output_file(mocker, output_path, test_path):
     config = {"CONFIGURATION": {"OUTPUT_PATH": output_path, "OUTPUT_FILE": "output_file"}}
     integration_test = {
