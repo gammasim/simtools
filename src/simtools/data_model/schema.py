@@ -118,7 +118,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     try:
         jsonschema.validate(data, schema=json_schema, format_checker=format_checkers.format_checker)
     except jsonschema.exceptions.ValidationError as exc:
-        _logger.error(f"Validation failed using schema: {json_schema}")
+        _logger.error(f"Validation failed using schema: {json_schema} for data: {data}")
         raise exc
     _logger.debug(f"Successful validation of data using schema ({json_schema.get('name')})")
 
