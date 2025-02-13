@@ -82,6 +82,29 @@ def is_url(url):
         return False
 
 
+def url_exists(url):
+    """
+    Check if a URL exists.
+
+    Parameters
+    ----------
+    url: str
+        URL to be checked.
+
+    Returns
+    -------
+    bool
+        True if URL exists.
+    """
+    try:
+        with urllib.request.urlopen(url, timeout=5) as response:
+            return response.status == 200
+    except urllib.error.HTTPError as e:
+        return e.status == 200
+    except Exception:  # pylint: disable=broad-except
+        return False
+
+
 def collect_data_from_http(url):
     """
     Download yaml or json file from url and return it contents as dict.
