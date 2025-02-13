@@ -85,7 +85,7 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
     schema.validate_dict_using_schema(data, schema_file)
 
     data["meta_schema_url"] = "https://invalid_url"
-    with pytest.raises(FileNotFoundError, match=r"^Schema file not found:"):
+    with pytest.raises(FileNotFoundError, match=r"^Meta schema URL does not exist:"):
         schema.validate_dict_using_schema(data, schema_file)
 
 
