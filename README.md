@@ -30,7 +30,7 @@ simtools provides:
 simtools is one part of the CTAO Simulation Pipeline, which consist of the following components:
 
 - [CORSIKA](https://www.iap.kit.edu/corsika/) air shower simulation code and the [sim_telarray](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/) telescope simulation code
-- [simulation model parameter](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters)
+- [simulation models](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models)
 - [databases](https://gammasim.github.io/simtools/databases.html), especially the model parameter database
 
 :::{note}
