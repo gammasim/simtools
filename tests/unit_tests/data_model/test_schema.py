@@ -54,10 +54,16 @@ def test_get_model_parameter_schema_version():
         schema.get_model_parameter_schema_version("0.0.1")
 
 
-def test_validate_dict_using_schema(tmp_test_directory):
+def test_validate_dict_using_schema(tmp_test_directory, caplog):
+
+    with caplog.at_level(logging.WARNING):
+        schema.validate_dict_using_schema(None, None)
+    assert "No schema provided for validation of" in caplog.text
+
     sample_schema = {
         "type": "object",
         "properties": {"name": {"type": "string"}, "age": {"type": "number"}},
+        "meta_schema_url": "string",
         "required": ["name", "age"],
     }
 
@@ -73,6 +79,14 @@ def test_validate_dict_using_schema(tmp_test_directory):
     invalid_data = {"name": "Alice", "age": "Thirty"}
     with pytest.raises(jsonschema.exceptions.ValidationError):
         schema.validate_dict_using_schema(invalid_data, schema_file)
+
+    # with valid meta_schema_url
+    data["meta_schema_url"] = "https://github.com/gammasim/simtools"
+    schema.validate_dict_using_schema(data, schema_file)
+
+    data["meta_schema_url"] = "https://invalid_url"
+    with pytest.raises(FileNotFoundError, match=r"^Schema file not found:"):
+        schema.validate_dict_using_schema(data, schema_file)
 
 
 def test_validate_schema_astropy_units(caplog):
