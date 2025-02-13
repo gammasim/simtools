@@ -206,7 +206,7 @@ def compare_json_or_yaml_files(file1, file2, tolerance=1.0e-2):
     return _comparison
 
 
-def _compare_value_from_parameter_dict(data1, data2, tolerance):
+def _compare_value_from_parameter_dict(data1, data2, tolerance=1.0e-5):
     """Compare value fields given in different formats."""
 
     def _as_list(value):
