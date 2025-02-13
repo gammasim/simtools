@@ -1,19 +1,12 @@
-"""
-Provides functionality to evaluate statistical uncertainties from DL2 MC event files.
-
-Classes
--------
-StatisticalErrorEvaluator
-    Handles error calculation for given DL2 MC event files and specified metrics.
-
-
-"""
+"""Evaluate statistical uncertainties from DL2 MC event files."""
 
 import logging
 
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
+
+__all__ = ["StatisticalErrorEvaluator"]
 
 
 class StatisticalErrorEvaluator:
@@ -39,20 +32,7 @@ class StatisticalErrorEvaluator:
         metrics: dict[str, float],
         grid_point: tuple[float, float, float, float, float] | None = None,
     ):
-        """
-        Init the evaluator with a DL2 MC event file, its type, and metrics to calculate.
-
-        Parameters
-        ----------
-        file_path : str
-            The path to the DL2 MC event file.
-        file_type : str
-            The type of the file ('point-like' or 'cone').
-        metrics : dict, optional
-            Dictionary specifying which metrics to compute and their reference values.
-        grid_point : tuple, optional
-            Tuple specifying the grid point (energy, azimuth, zenith, NSB, offset).
-        """
+        """Init the evaluator with a DL2 MC event file, its type, and metrics to calculate."""
         self._logger = logging.getLogger(__name__)
         self.file_type = file_type
         self.metrics = metrics

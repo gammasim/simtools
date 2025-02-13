@@ -755,3 +755,39 @@ def test_clear_default_sim_telarray_cfg_directories():
     command = "run_simulation && echo 'done'"
     expected_output = "SIM_TELARRAY_CONFIG_PATH='' run_simulation && echo 'done'"
     assert gen.clear_default_sim_telarray_cfg_directories(command) == expected_output
+
+
+def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
+
+    # Test with a list of file names with valid suffixes.
+    file_1 = tmp_test_directory / "file1.txt"
+    file_2 = tmp_test_directory / "file2.txt"
+    with open(file_1, "w", encoding="utf-8") as f:
+        f.write("Content of file 1")
+    with open(file_2, "w", encoding="utf-8") as f:
+        f.write("Content of file 2")
+    file_names = [file_1, file_2]
+    suffix_list = [".txt"]
+    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
+    assert result == [str(file_1), str(file_2)]
+
+    # Test with a list of file names with invalid suffixes.
+    suffix_list = [".json"]
+    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
+    assert result == []
+
+    # Test with a text file containing a list of file names.
+    list_file = tmp_test_directory / "list_file.list"
+    with open(list_file, "w", encoding="utf-8") as f:
+        f.write(f"{file_1}\n{file_2}\n")
+    file_names = [list_file]
+    suffix_list = []
+    result = gen.get_list_of_files_from_command_line(file_names, suffix_list)
+    assert result == [str(file_1), str(file_2)]
+
+    # Test with a non-existent file.
+    non_existent_file = tmp_test_directory / "non_existent_file.list"
+    file_names = [non_existent_file]
+    suffix_list = [".txt"]
+    with pytest.raises(FileNotFoundError):
+        gen.get_list_of_files_from_command_line(file_names, suffix_list)
