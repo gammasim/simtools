@@ -97,17 +97,13 @@ jobs:
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: echo "SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')" >> "$GITHUB_ENV"
 
-      - name: testing env
-        env:
-          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
-        run:
-          env
-
       - name: Unit tests
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
+          echo "SIMTOOLS_DB_SIMULATION_MODEL=${SIMTOOLS_DB_SIMULATION_MODEL}"
+          export SIMTOOLS_DB_SIMULATION_MODEL
           pytest --durations=10 --color=yes -n auto --dist loadscope \
             --cov=simtools --cov-report=xml
 
