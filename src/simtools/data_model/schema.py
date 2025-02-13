@@ -120,9 +120,8 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     except jsonschema.exceptions.ValidationError as exc:
         _logger.error(f"Validation failed using schema: {json_schema}")
         raise exc
-    if data.get("meta_schema_url"):
-        if not gen.url_exists(data["meta_schema_url"]):
-            raise FileNotFoundError(f"Schema file not found: {data['meta_schema_url']}")
+    if data.get("meta_schema_url") and not gen.url_exists(data["meta_schema_url"]):
+        raise FileNotFoundError(f"Schema file not found: {data['meta_schema_url']}")
 
     _logger.debug(f"Successful validation of data using schema ({json_schema.get('name')})")
 
