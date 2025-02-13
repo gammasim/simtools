@@ -55,9 +55,12 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
 
     if hist.ndim == 1:
         if x_label is not None:
-            names = meta_data["x_bin_edges"]
-        else:
+            names = sanitize_name(x_label)
+        try:
             names = meta_data["Title"]
+        except KeyError:
+            _logger.warning("Title not found in metadata.")
+
         table = Table(
             [
                 x_bin_edges[:-1],
@@ -68,13 +71,18 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
         )
     else:
         if y_label is not None:
-            sanitized_name = sanitize_name(y_label)
-            names = [f"{sanitized_name.split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))]
-        else:
-
             names = [
-                f"{sanitize_name(meta_data['Title']).split('__')[0]}_{i}"
+                f"{sanitize_name(y_label).split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
+            ]
+        try:
+            names = [
+                f"{(meta_data['Title']).split('__')[0]}_{sanitize_name(y_label)}_{i}"
                 for i in range(len(y_bin_edges[:-1]))
+            ]
+        except KeyError:
+            _logger.warning("Title not found in metadata.")
+            names = [
+                f"{sanitize_name(y_label).split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
             ]
 
         table = Table(
