@@ -109,7 +109,6 @@ class ReadParameters:
             data = "No telescope-specific parameters, check telescope design report."
             logger.info({data})
         else:
-            print("no")
             for parameter in all_params:
                 if not telescope_model.has_parameter(parameter):
                     continue
@@ -256,7 +255,6 @@ class ReadParameters:
 
         data = self.get_telescope_parameter_data(self.telescope_model)
 
-        print("data: ", data)
         # Sort data by class to prepare for grouping
         if not isinstance(data, str):
             data.sort(key=itemgetter(0, 1), reverse=True)
@@ -334,7 +332,6 @@ class ReadParameters:
         else:
             for parameter in all_params:
                 if all_params[parameter]["instrument"] == args["telescope"]:
-                    print("param: ", parameter, all_params[parameter]["instrument"])
                     comparison_data = self._compare_parameter_across_versions(
                         args, output_path, parameter
                     )
