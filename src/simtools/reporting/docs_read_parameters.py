@@ -84,7 +84,7 @@ class ReadParameters:
 
         return parameter_description, short_description, inst_class
 
-    def get_telescope_parameter_data(self, args, telescope_model):
+    def get_telescope_parameter_data(self, telescope_model):
         """
         Get model parameter data.
 
@@ -94,42 +94,54 @@ class ReadParameters:
                   descriptions, and short descriptions.
         """
         all_params = telescope_model.db.get_model_parameters(
-            site=args["site"], array_element_name=args["telescope"], collection="telescopes"
+            site=telescope_model.site,
+            array_element_name=telescope_model.name,
+            collection="telescopes",
         )
 
         telescope_model.export_model_files()
         parameter_descriptions = self.get_all_parameter_descriptions()
         data = []
 
-        for parameter in all_params:
-            if all_params[parameter]["instrument"] == args["telescope"]:
-                parameter_version = telescope_model.get_parameter_version(parameter)
-                value = telescope_model.get_parameter_value_with_unit(parameter)
-                if telescope_model.get_parameter_file_flag(parameter) and value:
-                    try:
-                        input_file_name = telescope_model.config_file_directory / Path(value)
-                        output_file_name = self._convert_to_md(input_file_name)
-                        value = f"[{Path(value).name}]({output_file_name})"
-                    except FileNotFoundError:
-                        value = f"File not found: {value}"
-                elif isinstance(value, list):
-                    value = ", ".join(str(q) for q in value)
-                else:
-                    value = str(value)
+        if not any(
+            all_params[parameter]["instrument"] == telescope_model.name for parameter in all_params
+        ):
+            data = "No telescope-specific parameters, check telescope design report."
+            logger.info({data})
+        else:
+            print("no")
+            for parameter in all_params:
+                if not telescope_model.has_parameter(parameter):
+                    continue
 
-                description = parameter_descriptions[0].get(parameter)
-                short_description = parameter_descriptions[1].get(parameter, description)
-                inst_class = parameter_descriptions[2].get(parameter)
-                data.append(
-                    [
-                        inst_class,
-                        parameter,
-                        parameter_version,
-                        value,
-                        description,
-                        short_description,
-                    ]
-                )
+                if all_params[parameter]["instrument"] == telescope_model.name:
+                    parameter_version = telescope_model.get_parameter_version(parameter)
+                    value = telescope_model.get_parameter_value_with_unit(parameter)
+                    if telescope_model.get_parameter_file_flag(parameter) and value:
+                        try:
+                            input_file_name = telescope_model.config_file_directory / Path(value)
+                            output_file_name = self._convert_to_md(input_file_name)
+                            value = f"[{Path(value).name}]({output_file_name})"
+                        except FileNotFoundError:
+                            value = f"File not found: {value}"
+                    elif isinstance(value, list):
+                        value = ", ".join(str(q) for q in value)
+                    else:
+                        value = str(value)
+
+                    description = parameter_descriptions[0].get(parameter)
+                    short_description = parameter_descriptions[1].get(parameter, description)
+                    inst_class = parameter_descriptions[2].get(parameter)
+                    data.append(
+                        [
+                            inst_class,
+                            parameter,
+                            parameter_version,
+                            value,
+                            description,
+                            short_description,
+                        ]
+                    )
 
         return data
 
@@ -164,7 +176,7 @@ class ReadParameters:
             value = telescope_model.get_parameter_value_with_unit(parameter_name)
             if isinstance(value, str) and value.endswith(".dat"):
                 self.plot_parameter(output_path, parameter_name, telescope_model)
-            parameter_data = self.get_telescope_parameter_data(args, telescope_model)
+            parameter_data = self.get_telescope_parameter_data(telescope_model)
             for param in parameter_data:
                 if param[1] == parameter_name:
                     comparison_data.append(
@@ -226,7 +238,7 @@ class ReadParameters:
             # self._logger.error('FileNotFoundError: ', parameter_name)
             pass
 
-    def generate_array_element_report(self, args):
+    def generate_array_element_report(self):
         """
         Generate a markdown report of all model parameters per array element.
 
@@ -237,17 +249,26 @@ class ReadParameters:
         args_dict : dict
             Configuration arguments including model version and telescope name.
         """
-        data = self.get_telescope_parameter_data(args, self.telescope_model)
+        output_path = self.output_path / self.telescope_model.name
+        output_filename = Path(output_path / (self.telescope_model.name + ".md"))
 
+        output_filename.parent.mkdir(parents=True, exist_ok=True)
+
+        data = self.get_telescope_parameter_data(self.telescope_model)
+
+        print("data: ", data)
         # Sort data by class to prepare for grouping
-        data.sort(key=itemgetter(0, 1), reverse=True)
+        if not isinstance(data, str):
+            data.sort(key=itemgetter(0, 1), reverse=True)
 
-        output_filename = self.output_path / Path(args["telescope"] + ".md")
-
-        # Start writing the Markdown file
-        with Path(output_filename).open("w", encoding="utf-8") as file:
+        with output_filename.open("w", encoding="utf-8") as file:
             # Group by class and write sections
-            file.write(f"# {args['telescope']}\n")
+            file.write(f"# {self.telescope_model.name}\n")
+
+            if isinstance(data, str):
+                file.write(data)
+                return
+
             for class_name, group in groupby(data, key=itemgetter(0)):
                 file.write(f"## {class_name}\n\n")
 
@@ -306,45 +327,49 @@ class ReadParameters:
         all_params = self.telescope_model.db.get_model_parameters(
             site=args["site"], array_element_name=args["telescope"], collection="telescopes"
         )
-
-        for parameter in all_params:
-            if all_params[parameter]["instrument"] == args["telescope"]:
-                print("param: ", parameter, all_params[parameter]["instrument"])
-                comparison_data = self._compare_parameter_across_versions(
-                    args, output_path, parameter
-                )
-                if comparison_data:
-                    output_filename = output_path / f"{parameter}.md"
-                    with output_filename.open("w", encoding="utf-8") as file:
-                        # Write header
-                        file.write(
-                            f"# {parameter}\n\n"
-                            f"**Telescope**: {args['telescope']}\n\n"
-                            f"**Description**: {comparison_data[0]['description']}\n\n"
-                            "\n"
-                        )
-
-                        # Write table header
-                        file.write(
-                            "| Model Version      | Parameter Version      "
-                            "| Value                |\n"
-                            "|--------------------|------------------------"
-                            "|----------------------|\n"
-                        )
-
-                        # Write table rows
-                        for item in comparison_data:
+        if not any(
+            all_params[parameter]["instrument"] == args["telescope"] for parameter in all_params
+        ):
+            logger.info("No telescope-specific parameters, check telescope design report.")
+        else:
+            for parameter in all_params:
+                if all_params[parameter]["instrument"] == args["telescope"]:
+                    print("param: ", parameter, all_params[parameter]["instrument"])
+                    comparison_data = self._compare_parameter_across_versions(
+                        args, output_path, parameter
+                    )
+                    if comparison_data:
+                        output_filename = output_path / f"{parameter}.md"
+                        with output_filename.open("w", encoding="utf-8") as file:
+                            # Write header
                             file.write(
-                                f"| {item['model_version']} |"
-                                f" {item['parameter_version']} |"
-                                f"{item['value']} |\n"
+                                f"# {parameter}\n\n"
+                                f"**Telescope**: {args['telescope']}\n\n"
+                                f"**Description**: {comparison_data[0]['description']}\n\n"
+                                "\n"
                             )
 
-                        file.write("\n")
-                        if isinstance(comparison_data[0]["value"], str) and comparison_data[0][
-                            "value"
-                        ].endswith(".md)"):
+                            # Write table header
                             file.write(
-                                f"![Parameter plot.](images/"
-                                f"{args['telescope']}_{parameter}.png)"
+                                "| Model Version      | Parameter Version      "
+                                "| Value                |\n"
+                                "|--------------------|------------------------"
+                                "|----------------------|\n"
                             )
+
+                            # Write table rows
+                            for item in comparison_data:
+                                file.write(
+                                    f"| {item['model_version']} |"
+                                    f" {item['parameter_version']} |"
+                                    f"{item['value']} |\n"
+                                )
+
+                            file.write("\n")
+                            if isinstance(comparison_data[0]["value"], str) and comparison_data[0][
+                                "value"
+                            ].endswith(".md)"):
+                                file.write(
+                                    f"![Parameter plot.](images/"
+                                    f"{args['telescope']}_{parameter}.png)"
+                                )

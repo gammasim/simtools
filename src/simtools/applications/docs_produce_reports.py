@@ -58,7 +58,7 @@ def main():  # noqa: D103
         db_config,
         telescope_model,
         output_path,
-    ).generate_array_element_report(args)
+    ).generate_array_element_report()
 
     logger.info(
         f"Markdown report generated for {args['site']}"
