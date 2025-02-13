@@ -3,7 +3,6 @@
 import logging
 import os
 import re
-from collections.abc import Iterable
 from pathlib import Path
 
 import numpy as np
@@ -858,10 +857,12 @@ class DataValidator:
 
         def to_sorted_list(value):
             """Return value as sorted list."""
-            return sorted(value) if isinstance(value, Iterable) else [value]
+            return [value] if isinstance(value, str) else sorted(value)
 
         instrument_site = to_sorted_list(names.get_site_from_array_element_name(instrument))
         site = to_sorted_list(site)
 
         if instrument_site != site:
-            raise ValueError(f"Site '{site}' and instrument '{instrument_site}' are inconsistent.")
+            raise ValueError(
+                f"Site '{site}' and instrument site '{instrument_site}' are inconsistent."
+            )

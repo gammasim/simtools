@@ -287,8 +287,8 @@ def get_design_model_from_name(name):
     """
     Get design model name from array element name.
 
-    Note that for model parameters, the preferred way is to use the
-    'design_model' parameter.
+    Note that this might not be correct and the preferred way is to use the
+    model parameter 'design_model'.
 
     Parameters
     ----------
