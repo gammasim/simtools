@@ -24,13 +24,8 @@ def test_get_telescope_parameter_data(telescope_model_lst, io_handler):
     read_parameters = ReadParameters(
         db_config=None, telescope_model=telescope_model_lst, output_path=output_path
     )
-    args = {
-        "site": telescope_model_lst.site,
-        "model_version": telescope_model_lst.model_version,
-        "telescope": telescope_model_lst.name,
-    }
 
-    result = read_parameters.get_telescope_parameter_data(args, telescope_model_lst)
+    result = read_parameters.get_telescope_parameter_data(telescope_model_lst)
 
     # Assert the result contains the expected data
     if result[1] == "focal_length":
@@ -44,13 +39,8 @@ def test_generate_array_element_report(telescope_model_lst, io_handler):
     read_parameters = ReadParameters(
         db_config=None, telescope_model=telescope_model_lst, output_path=output_path
     )
-    args = {
-        "site": telescope_model_lst.site,
-        "model_version": telescope_model_lst.model_version,
-        "telescope": telescope_model_lst.name,
-    }
-    read_parameters.generate_array_element_report(args)
+
+    read_parameters.generate_array_element_report()
 
     file_path = output_path / telescope_model_lst.name
-    print("file_path:", file_path, telescope_model_lst.name)
     assert file_path.exists()
