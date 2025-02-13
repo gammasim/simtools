@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Testing &#8212; simtools v0.1.dev1+gecfc59e Manual</title>
+    <title>Testing &#8212; simtools v0.1.dev1+g846920d Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=844678ba"></script>
+    <script src="../_static/documentation_options.js?v=f8e61294"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Simulator" href="simulators.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+gecfc59e" />
+  <meta name="docsearch:version" content="0.1.dev1+g846920d" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gecfc59e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g846920d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -190,6 +190,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
@@ -222,7 +223,7 @@
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">API Docs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="camera_efficiency.html">Camera Efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="camera.html">Camera</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
@@ -463,7 +464,6 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_ecsv_files"><code class="docutils literal notranslate"><span class="pre">compare_ecsv_files()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_files"><code class="docutils literal notranslate"><span class="pre">compare_files()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_json_or_yaml_files"><code class="docutils literal notranslate"><span class="pre">compare_json_or_yaml_files()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.validate_all_tests"><code class="docutils literal notranslate"><span class="pre">validate_all_tests()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.validate_application_output"><code class="docutils literal notranslate"><span class="pre">validate_application_output()</span></code></a></li>
 </ul>
 </li>
@@ -746,28 +746,12 @@ key-value pairs:
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="testing.validate_output.validate_all_tests">
-<span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">validate_all_tests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file_model_version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#validate_all_tests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.validate_all_tests" title="Link to this definition">#</a></dt>
-<dd><p>Validate test output for all integration tests.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>config: dict</strong></dt><dd><p>Integration test configuration dictionary.</p>
-</dd>
-<dt><strong>request: request</strong></dt><dd><p>Request object.</p>
-</dd>
-<dt><strong>config_file_model_version: str</strong></dt><dd><p>Model version from the configuration file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="testing.validate_output.validate_application_output">
 <span class="sig-prename descclassname"><span class="pre">testing.validate_output.</span></span><span class="sig-name descname"><span class="pre">validate_application_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_command_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/validate_output.html#validate_application_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.validate_output.validate_application_output" title="Link to this definition">#</a></dt>
 <dd><p>Validate application output against expected output.</p>
-<p>Expected output is defined in configuration file.</p>
+<p>Expected output is defined in configuration file.
+Some tests run only if the model version from the command line
+equals the model version from the configuration file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -860,7 +844,6 @@ key-value pairs:
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_ecsv_files"><code class="docutils literal notranslate"><span class="pre">compare_ecsv_files()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_files"><code class="docutils literal notranslate"><span class="pre">compare_files()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.compare_json_or_yaml_files"><code class="docutils literal notranslate"><span class="pre">compare_json_or_yaml_files()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.validate_all_tests"><code class="docutils literal notranslate"><span class="pre">validate_all_tests()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.validate_output.validate_application_output"><code class="docutils literal notranslate"><span class="pre">validate_application_output()</span></code></a></li>
 </ul>
 </li>
