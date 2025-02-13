@@ -97,7 +97,8 @@ jobs:
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
           SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
-          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> $GITHUB_ENV
+          SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
+          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
 
       - name: Unit tests
         shell: bash -l {0}
