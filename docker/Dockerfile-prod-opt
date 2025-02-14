@@ -22,8 +22,11 @@ RUN tar -zxf corsika-$CORSIKA_VERSION.tar.gz && \
     corsika_simtelarray.tar.gz  corsika-$CORSIKA_VERSION.tar.gz \
     bernlohr-$BERNLOHR_VERSION.tar.gz
 
-# build (optimized) corsika
+# apply patches and build (optimized) corsika
 RUN cd corsika-$CORSIKA_VERSION && \
+    if [[ $CORSIKA_VERSION -eq 77550 ]]; then \
+        (cd src && patch -b -p0 corsika.F < "../../corsika-77550.patch"); \
+    fi && \
     ./corsika_opt_patching.sh && \
     autoreconf  && \
     ../corsika_build_script $HADRONIC_MODEL generic cerenkopt vlibm
