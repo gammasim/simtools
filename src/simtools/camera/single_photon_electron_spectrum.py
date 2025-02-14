@@ -10,6 +10,8 @@ from pathlib import Path
 from astropy.table import Table
 
 import simtools.data_model.model_data_writer as writer
+from simtools.constants import SCHEMA_PATH
+from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
 
@@ -27,6 +29,8 @@ class SinglePhotonElectronSpectrum:
     prompt_column = "frequency (prompt)"
     prompt_plus_afterpulse_column = "frequency (prompt+afterpulsing)"
     afterpulse_column = "frequency (afterpulsing)"
+
+    input_schema = SCHEMA_PATH / "input" / "single_pe_spectrum.schema.yml"
 
     def __init__(self, args_dict):
         """Initialize SinglePhotonElectronSpectrum class."""
@@ -146,7 +150,10 @@ class SinglePhotonElectronSpectrum:
         input_file = Path(input_file)
 
         if input_file.suffix == ".ecsv":
-            table = Table.read(input_file)
+            data_validator = validate_data.DataValidator(
+                schema_file=self.input_schema, data_file=input_file
+            )
+            table = data_validator.validate_and_transform()
             input_data = "\n".join(f"{row['amplitude']} {row[frequency_column]}" for row in table)
         else:
             with open(input_file, encoding="utf-8") as f:
