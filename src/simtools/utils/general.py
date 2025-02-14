@@ -99,9 +99,8 @@ def url_exists(url):
     try:
         with urllib.request.urlopen(url, timeout=5) as response:
             return response.status == 200
-    except urllib.error.HTTPError as e:
-        return e.status == 200
-    except Exception:  # pylint: disable=broad-except
+    except (urllib.error.URLError, AttributeError) as e:
+        _logger.error(f"URL {url} does not exist: {e}")
         return False
 
 
