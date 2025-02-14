@@ -367,10 +367,14 @@ def test_is_url():
     assert gen.is_url(5.0) is False
 
 
-def test_url_exists():
+def test_url_exists(caplog):
     assert gen.url_exists(url_simtools_main)
-    assert not gen.url_exists(url_simtools)  # raw ULR does not exist
-    assert not gen.url_exists(None)
+    with caplog.at_level(logging.ERROR):
+        assert not gen.url_exists(url_simtools)  # raw ULR does not exist
+    assert "does not exist" in caplog.text
+    with caplog.at_level(logging.ERROR):
+        assert not gen.url_exists(None)
+    assert "URL None" in caplog.text
 
 
 def test_collect_data_dict_from_json():
