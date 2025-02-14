@@ -15,11 +15,11 @@ loss_fraction (float, required)
 
 Example
 -------
-Derive thresholds for a given HDF5 file with a specified loss fraction.
+Derive limits for a given HDF5 file with a specified loss fraction.
 
 .. code-block:: console
 
-    simtools-derive-threshold \\
+    simtools-derive-limits\\
         --hdf5_file path/to/hdf5_file.hdf5 \\
         --loss_fraction 0.1
 """
