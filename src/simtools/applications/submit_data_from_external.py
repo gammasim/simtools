@@ -24,7 +24,7 @@ r"""
         simtools-submit-data-from-external \\
             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \\
             --input ./tests/resources/MLTdata-preproduction.ecsv \\
-            --schema ./tests/resources/schema_MST_mirror_2f_measurements.yml \\
+            --schema src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml \\
             --output_file TEST-submit_data_from_external.ecsv
 
     Expected final print-out message:
@@ -83,6 +83,12 @@ def _parse(label, description):
         type=str,
         required=False,
     )
+    config.parser.add_argument(
+        "--ignore_metadata",
+        help="Ignore metadata",
+        action="store_true",
+        required=False,
+    )
     return config.initialize(output=True)
 
 
@@ -95,16 +101,18 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    _metadata = MetadataCollector(args_dict=args_dict)
+    _metadata = None if args_dict.get("ignore_metadata") else MetadataCollector(args_dict)
 
     data_validator = validate_data.DataValidator(
-        schema_file=_metadata.get_data_model_schema_file_name(),
+        schema_file=(
+            _metadata.get_data_model_schema_file_name() if _metadata else args_dict.get("schema")
+        ),
         data_file=args_dict["input"],
     )
 
     writer.ModelDataWriter.dump(
         args_dict=args_dict,
-        metadata=_metadata.get_top_level_metadata(),
+        metadata=_metadata.get_top_level_metadata() if _metadata else None,
         product_data=data_validator.validate_and_transform(),
     )
 
