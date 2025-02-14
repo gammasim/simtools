@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import simtools.io_operations.hdf5_handler as io_hdf5
+from simtools.io_operations.hdf5_handler import fill_hdf5_table, read_hdf5
 
 
 def test_fill_hdf5_table_1d(corsika_histograms_instance_set_histograms):
@@ -12,7 +12,7 @@ def test_fill_hdf5_table_1d(corsika_histograms_instance_set_histograms):
     x_label = "test_x_label"
     y_label = None
 
-    table = io_hdf5.fill_hdf5_table(
+    table = fill_hdf5_table(
         hist,
         x_bin_edges,
         y_bin_edges,
@@ -32,7 +32,7 @@ def test_fill_hdf5_table_2d(corsika_histograms_instance_set_histograms):
     x_label = "test_x_label"
     y_label = "test_y_label"
 
-    table = io_hdf5.fill_hdf5_table(
+    table = fill_hdf5_table(
         hist,
         x_bin_edges,
         y_bin_edges,
@@ -42,3 +42,11 @@ def test_fill_hdf5_table_2d(corsika_histograms_instance_set_histograms):
     )
     assert all(table["test_y_label_0"] == np.array([1, 2]))
     assert all(table["test_y_label_1"] == np.array([3, 4]))
+
+
+def test_read_hdf5():
+
+    tables = read_hdf5(
+        "tests/resources/run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5_reduced.hdata.hdf5"
+    )
+    assert len(tables) == 4
