@@ -17,6 +17,7 @@ import simtools.utils.general as gen
 from simtools.constants import MODEL_PARAMETER_METASCHEMA
 
 url_desy = "https://www.desy.de"
+url_simtools_main = "https://github.com/gammasim/simtools/"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
@@ -364,6 +365,16 @@ def test_is_url():
     assert gen.is_url(url) is False
 
     assert gen.is_url(5.0) is False
+
+
+def test_url_exists(caplog):
+    assert gen.url_exists(url_simtools_main)
+    with caplog.at_level(logging.ERROR):
+        assert not gen.url_exists(url_simtools)  # raw ULR does not exist
+    assert "does not exist" in caplog.text
+    with caplog.at_level(logging.ERROR):
+        assert not gen.url_exists(None)
+    assert "URL None" in caplog.text
 
 
 def test_collect_data_dict_from_json():
