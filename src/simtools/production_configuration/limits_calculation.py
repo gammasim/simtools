@@ -5,7 +5,14 @@ import numpy as np
 
 class LimitCalculator:
     """
-    Class to compute thresholds/limits for energy, radial distance, and viewcone.
+    Compute thresholds/limits for energy, radial distance, and viewcone.
+
+    Histograms are generated with simtools-generate-simtel-array-histograms with --hdf5 flag.
+
+    Event data is read from the generated HDF5 file from the following tables:
+    - angle_to_observing_position__triggered_showers_ for the viewcone limit.
+    - event_weight__ra3d__log10_e__ for the energy and radial distance limit.
+
 
     Parameters
     ----------
@@ -34,7 +41,7 @@ class LimitCalculator:
             elif "Title" in table.meta and table.meta["Title"] == "event_weight__ra3d__log10_e__":
                 self.event_weight__ra3d__log10_e__ = table
 
-    def compute_threshold(
+    def compute_limits(
         self, event_weight_array, bin_edges, loss_fraction, axis=0, limit_type="lower"
     ):
         """
@@ -80,7 +87,7 @@ class LimitCalculator:
 
     def compute_lower_energy_limit(self, loss_fraction):
         """
-        Compute the lower energy limit based on the event loss fraction.
+        Compute the lower energy limit in TeV based on the event loss fraction.
 
         Parameters
         ----------
@@ -90,7 +97,7 @@ class LimitCalculator:
         Returns
         -------
         float
-            Lower energy limit.
+            Lower energy limit (TeV).
         """
         event_weight_array = np.column_stack(
             [
@@ -99,7 +106,7 @@ class LimitCalculator:
             ]
         )
         bin_edges = self.event_weight__ra3d__log10_e__.meta["y_bin_edges"]
-        _, lower_bin_edge_value = self.compute_threshold(
+        _, lower_bin_edge_value = self.compute_limits(
             event_weight_array, bin_edges, loss_fraction, axis=0, limit_type="lower"
         )
         return 10**lower_bin_edge_value
@@ -116,7 +123,7 @@ class LimitCalculator:
         Returns
         -------
         float
-            Upper radial distance.
+            Upper radial distance in m.
         """
         event_weight_array = np.column_stack(
             [
@@ -125,7 +132,7 @@ class LimitCalculator:
             ]
         )
         bin_edges = self.event_weight__ra3d__log10_e__.meta["x_bin_edges"]
-        _, upper_bin_edge_value = self.compute_threshold(
+        _, upper_bin_edge_value = self.compute_limits(
             event_weight_array, bin_edges, loss_fraction, axis=1, limit_type="upper"
         )
         return upper_bin_edge_value
@@ -142,7 +149,7 @@ class LimitCalculator:
         Returns
         -------
         float
-            Viewcone value.
+            Viewcone radius in degrees.
         """
         angle_to_observing_position__triggered_showers = np.column_stack(
             [
@@ -151,7 +158,7 @@ class LimitCalculator:
             ]
         )
         bin_edges = self.angle_to_observing_position__triggered_showers_.meta["x_bin_edges"]
-        _, upper_bin_edge_value = self.compute_threshold(
+        _, upper_bin_edge_value = self.compute_limits(
             angle_to_observing_position__triggered_showers,
             bin_edges,
             loss_fraction,

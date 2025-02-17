@@ -21,7 +21,7 @@ Derive limits for a given file with a specified loss fraction.
 
     simtools-derive-limits\\
         --event_data_file path/to/event_data_file.hdf5 \\
-        --loss_fraction 0.1
+        --loss_fraction 1e-6
 """
 
 import logging
@@ -79,20 +79,16 @@ def main():
     _logger.info(f"Loading event data file: {event_data_file_path}")
     tables = read_hdf5(event_data_file_path)
 
-    _logger.info("Initializing LimitCalculator")
     calculator = LimitCalculator(tables)
 
-    _logger.info("Computing lower energy limit")
     lower_energy_limit = calculator.compute_lower_energy_limit(loss_fraction)
     _logger.info(f"Lower energy threshold: {lower_energy_limit} TeV")
 
-    _logger.info("Computing upper radial distance")
     upper_radial_distance = calculator.compute_upper_radial_distance(loss_fraction)
     _logger.info(f"Upper radius threshold: {upper_radial_distance} m")
 
-    _logger.info("Computing viewcone")
     viewcone = calculator.compute_viewcone(loss_fraction)
-    _logger.info(f"Viewcone threshold: {viewcone} degrees")
+    _logger.info(f"Viewcone radius: {viewcone} degrees")
 
 
 if __name__ == "__main__":
