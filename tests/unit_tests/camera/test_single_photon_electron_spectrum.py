@@ -159,11 +159,13 @@ def test_get_input_data(mock_open, spe_spectrum, spe_data):
     with open(input_data.name, encoding="utf-8") as f:
         assert f.read() == spe_data.replace(" ", ",")
 
-    with patch("astropy.table.Table.read") as mock_table_read:
+    with patch(
+        "simtools.data_model.validate_data.DataValidator.validate_and_transform"
+    ) as mock_validator:
         mock_table = Table()
         mock_table["amplitude"] = [0.0, 0.02, 0.04, 0.06]
         mock_table["frequency (prompt)"] = [0.4694, 0.46378, 0.45267, 0.44172]
-        mock_table_read.return_value = mock_table
+        mock_validator.return_value = mock_table
 
         ecsv_data = spe_spectrum._get_input_data("input_spectrum.ecsv", spe_spectrum.prompt_column)
         assert ecsv_data is not None
