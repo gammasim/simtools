@@ -592,3 +592,27 @@ def sanitize_name(name):
         _logger.error(msg)
         raise ValueError(msg)
     return sanitized
+
+
+def file_name_with_version(file_name, suffix):
+    """
+    Return a file name including a semantic version with the correct suffix.
+
+    Avoids having 'Path.suffix()' to remove trailing numbers.
+
+    Parameters
+    ----------
+    file_name: str
+        File name.
+    suffix: str
+        File suffix.
+
+    Returns
+    -------
+    Path
+        File name with version number.
+    """
+    file_name = str(file_name)
+    if bool(re.search(r"\d+\.\d+\.\d+$", file_name)):
+        return Path(file_name + suffix)
+    return Path(file_name).with_suffix(suffix)
