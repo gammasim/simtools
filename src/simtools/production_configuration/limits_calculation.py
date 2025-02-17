@@ -13,7 +13,7 @@ class LimitCalculator:
         The list of tables containing the event data.
     """
 
-    def __init__(self, hdf5_file):
+    def __init__(self, hdf5_file_tables):
         """
         Initialize the LimitCalculator with the given HDF5 file.
 
@@ -25,7 +25,7 @@ class LimitCalculator:
         self.angle_to_observing_position__triggered_showers_ = None
         self.event_weight__ra3d__log10_e__ = None
 
-        for table in hdf5_file:
+        for table in hdf5_file_tables:
             if (
                 "Title" in table.meta
                 and table.meta["Title"] == "angle_to_observing_position__triggered_showers_"
@@ -124,7 +124,7 @@ class LimitCalculator:
                 for name in self.event_weight__ra3d__log10_e__.dtype.names
             ]
         )
-        bin_edges = self.event_weight__ra3d__log10_e__.meta["y_bin_edges"]
+        bin_edges = self.event_weight__ra3d__log10_e__.meta["x_bin_edges"]
         _, upper_bin_edge_value = self.compute_threshold(
             event_weight_array, bin_edges, loss_fraction, axis=1, limit_type="upper"
         )
