@@ -16,7 +16,11 @@ def hdf5_file():
     )
     event_table = Table(
         data={"weight": [1, 2, 3]},
-        meta={"Title": "event_weight__ra3d__log10_e__", "y_bin_edges": [0, 1, 2, 3, 4]},
+        meta={
+            "Title": "event_weight__ra3d__log10_e__",
+            "x_bin_edges": [0, 1, 2, 3, 4],
+            "y_bin_edges": [0, 1, 2, 3, 4],
+        },
     )
     return [angle_table, event_table]
 
