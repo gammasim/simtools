@@ -612,6 +612,8 @@ def file_name_with_version(file_name, suffix):
     Path
         File name with version number.
     """
+    if file_name is None or suffix is None:
+        return None
     file_name = str(file_name)
     if bool(re.search(r"\d+\.\d+\.\d+$", file_name)):
         return Path(file_name + suffix)

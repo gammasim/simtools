@@ -509,6 +509,10 @@ def test_get_parameter_name_from_simtel_name():
 
 def test_file_name_with_version():
 
+    assert names.file_name_with_version(None, None) is None
+    assert names.file_name_with_version("file", None) is None
+    assert names.file_name_with_version(None, ".yml") is None
+
     assert names.file_name_with_version("file", ".yml") == Path("file.yml")
     assert names.file_name_with_version("file.json", ".yml") == Path("file.yml")
 

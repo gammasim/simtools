@@ -161,21 +161,30 @@ class ModelDataWriter:
             output_path=output_path,
             use_plain_output_path=use_plain_output_path,
         )
-        _json_dict = writer.get_validated_parameter_dict(
-            parameter_name, value, instrument, parameter_version
-        )
-        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        unique_id = None
         if metadata_input_dict is not None:
             metadata_input_dict["output_file"] = output_file
             metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
+            metadata = MetadataCollector(args_dict=metadata_input_dict).get_top_level_metadata()
             writer.write_metadata_to_yml(
-                metadata=MetadataCollector(args_dict=metadata_input_dict).get_top_level_metadata(),
-                yml_file=output_path / f"{Path(output_file).stem}",
+                metadata=metadata, yml_file=output_path / f"{Path(output_file).stem}"
             )
+            unique_id = metadata.get("cta", {}).get("product", {}).get("id")
+
+        _json_dict = writer.get_validated_parameter_dict(
+            parameter_name, value, instrument, parameter_version, unique_id
+        )
+        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
 
     def get_validated_parameter_dict(
-        self, parameter_name, value, instrument, parameter_version, schema_version=None
+        self,
+        parameter_name,
+        value,
+        instrument,
+        parameter_version,
+        unique_id=None,
+        schema_version=None,
     ):
         """
         Get validated parameter dictionary.
@@ -215,7 +224,7 @@ class ModelDataWriter:
             "instrument": instrument,
             "site": site,
             "parameter_version": parameter_version,
-            "unique_id": None,
+            "unique_id": unique_id,
             "value": value,
             "unit": unit,
             "type": self._get_parameter_type(),
