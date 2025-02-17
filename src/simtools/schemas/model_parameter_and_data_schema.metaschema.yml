@@ -25,6 +25,7 @@ definitions:
         description: "name of meta schema (e.g. simpipe-schema)"
       meta_schema_url:
         type: string
+        format: uri
         description: "url to meta schema definition"
       meta_schema_version:
         type: string
