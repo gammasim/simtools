@@ -4,16 +4,12 @@ r"""Class to read and manage relevant model parameters for a given telescope mod
 
 import logging
 import textwrap
-from importlib.resources import files
 from itertools import groupby
-from operator import itemgetter
 from pathlib import Path
 
 from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
-from simtools.utils import general as gen
 from simtools.utils import names
-from simtools.visualization import plot_tables
 
 logger = logging.getLogger()
 
@@ -42,7 +38,7 @@ class ReadParameters:
         - Path to the created Markdown file.
         """
         input_file = Path(input_file)
-        output_data_path = Path(self.output_path / self.telescope_model.name / "data_files")
+        output_data_path = Path(self.output_path / "_data_files")
         output_data_path.mkdir(parents=True, exist_ok=True)
         output_file_name = Path(input_file.stem + ".md")
         output_file = output_data_path / output_file_name
@@ -61,7 +57,7 @@ class ReadParameters:
             outfile.write("\n")
             outfile.write("```")
 
-        return f"data_files/{output_file_name}"
+        return f"_data_files/{output_file_name}"
 
     def get_all_parameter_descriptions(self):
         """
@@ -149,14 +145,12 @@ class ReadParameters:
 
         return data
 
-    def _compare_parameter_across_versions(self, output_path, parameter_name):
+    def _compare_parameter_across_versions(self, parameter_name):
         """
         Compare a parameter's value across different model versions.
 
         Parameters
         ----------
-        output_path : str
-            The folder where the markdown file will be saved.
         parameter_name : str
             The name of the parameter to compare.
 
@@ -166,7 +160,7 @@ class ReadParameters:
             A list of dictionaries containing model version, parameter value, and description.
         """
         all_versions = self.telescope_model.db.get_model_versions()
-
+        all_versions.reverse()
         comparison_data = []
 
         for model_version in all_versions:
@@ -177,9 +171,10 @@ class ReadParameters:
                 label="reports",
                 mongo_db_config=self.db_config,
             )
-            value = telescope_model.get_parameter_value_with_unit(parameter_name)
-            if isinstance(value, str) and value.endswith(".dat"):
-                self.plot_parameter(output_path, parameter_name, telescope_model)
+
+            if not telescope_model.has_parameter(parameter_name):
+                return comparison_data
+
             parameter_data = self.get_telescope_parameter_data(telescope_model)
             for param in parameter_data:
                 if param[1] == parameter_name:
@@ -194,56 +189,6 @@ class ReadParameters:
                     break
         return comparison_data
 
-    def plot_parameter(self, output_path, parameter_name, telescope_model):
-        """
-        Produce plot of given parameter.
-
-        Customize the config file according to command line input for
-        producing reports and then use it to plot the tabular parameter data.
-
-        Parameters
-        ----------
-        output_path : str
-            The folder where the markdown file will be saved.
-        parameter_name : str
-            The name of the parameter to compare.
-        telescope_model : TelescopeModel
-            The telescope model instance.
-
-        """
-        config_file_path = Path(files("simtools") / "reporting/plot_configuration_files")
-        config_template = config_file_path / f"plot_{parameter_name}_parameter.yml"
-        config_file = output_path / f"plot_{telescope_model.name}_{parameter_name}.yml"
-        new_output_path = output_path / "images"
-        new_output_path.mkdir(parents=True, exist_ok=True)
-        try:
-            with open(config_template, encoding="utf-8") as of:
-                old_content = of.read()
-
-            targets = ["site", "telescope"]
-            replacements = [telescope_model.site, telescope_model.name]
-
-            for k, v in zip(targets, replacements):
-                old_content = old_content.replace(f"{{{k}}}", str(v))
-
-            with open(config_file, "w", encoding="utf-8") as of:
-                of.write(old_content)
-
-            plot_config = gen.convert_keys_in_dict_to_lowercase(
-                gen.collect_data_from_file(config_file)
-            )
-
-            plot_tables.plot(
-                config=plot_config["cta_simpipe"]["plot"],
-                output_file=io_handler.IOHandler().get_output_file(
-                    new_output_path / f"{telescope_model.name}_{parameter_name}"
-                ),
-                db_config=self.db_config,
-            )
-        except FileNotFoundError:
-            # self._logger.error('FileNotFoundError: ', parameter_name)
-            pass
-
     def generate_array_element_report(self):
         """
         Generate a markdown report of all model parameters per array element.
@@ -253,16 +198,14 @@ class ReadParameters:
         One markdown report of a given array element listing parameter values,
         versions, and descriptions.
         """
-        output_path = self.output_path / self.telescope_model.name
-        output_filename = Path(output_path / (self.telescope_model.name + ".md"))
+        output_filename = Path(self.output_path / (self.telescope_model.name + ".md"))
 
         output_filename.parent.mkdir(parents=True, exist_ok=True)
 
         data = self.get_telescope_parameter_data(self.telescope_model)
-
         # Sort data by class to prepare for grouping
         if not isinstance(data, str):
-            data.sort(key=itemgetter(0, 1), reverse=True)
+            data.sort(key=lambda x: (x[0], x[1]), reverse=True)
 
         with output_filename.open("w", encoding="utf-8") as file:
             # Group by class and write sections
@@ -272,7 +215,8 @@ class ReadParameters:
                 file.write(data)
                 return
 
-            for class_name, group in groupby(data, key=itemgetter(0)):
+            for class_name, group in groupby(data, key=lambda x: x[0]):
+                group = sorted(group, key=lambda x: x[1])
                 file.write(f"## {class_name}\n\n")
 
                 # Write table header and separator row
@@ -315,7 +259,7 @@ class ReadParameters:
         """
         logger.info(
             f"Comparing parameters across model versions for Telescope: {self.telescope_model.name}"
-            f"and Site: {self.telescope_model.site}."
+            f" and Site: {self.telescope_model.site}."
         )
         io_handler_instance = io_handler.IOHandler()
         output_path = io_handler_instance.get_output_directory(
@@ -335,9 +279,7 @@ class ReadParameters:
         else:
             for parameter in all_params:
                 if all_params[parameter]["instrument"] == self.telescope_model.name:
-                    comparison_data = self._compare_parameter_across_versions(
-                        output_path, parameter
-                    )
+                    comparison_data = self._compare_parameter_across_versions(parameter)
                     if comparison_data:
                         output_filename = output_path / f"{parameter}.md"
                         with output_filename.open("w", encoding="utf-8") as file:
@@ -362,7 +304,7 @@ class ReadParameters:
                                 file.write(
                                     f"| {item['model_version']} |"
                                     f" {item['parameter_version']} |"
-                                    f"{item['value']} |\n"
+                                    f"{item['value'].replace('](', '](../')} |\n"
                                 )
 
                             file.write("\n")
@@ -370,6 +312,6 @@ class ReadParameters:
                                 "value"
                             ].endswith(".md)"):
                                 file.write(
-                                    f"![Parameter plot.](images/"
+                                    f"![Parameter plot.](_images/"
                                     f"{self.telescope_model.name}_{parameter}.png)"
                                 )
