@@ -11,7 +11,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 ### Bugfixes
 
-- Schema validation bug fixes. ([#1330](https://github.com/gammasim/simtools/pull/1330))
+- Schema validation bugfixes. ([#1330](https://github.com/gammasim/simtools/pull/1330))
 
 ### New Features
 
@@ -24,7 +24,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 ### Maintenance
 
 - Major restructering of database routines plus introduction of new simulation model. ([#1316](https://github.com/gammasim/simtools/pull/1316))
-- Improve testing of results and allow comparison of lists of floats in json/yaml files. ([#1319](https://github.com/gammasim/simtools/pull/1319))
+- Improve testing of results and allow comparison of lists of floats in json/YAML files. ([#1319](https://github.com/gammasim/simtools/pull/1319))
 - Remove database sandboxes . ([#1336](https://github.com/gammasim/simtools/pull/1336))
 
 
