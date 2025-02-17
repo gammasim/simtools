@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: channels_per_chip
 description: |-
   Number of channels per readout chip.
-  Potentially useful for crosstalk calculations.
+  Potentially useful for cross-talk calculations.
 short_description: Number of channels per readout chip.
 data:
   - type: uint
