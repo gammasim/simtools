@@ -6,7 +6,7 @@ repos:
         args: ["--line-length=100"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.9.5
+    rev: v0.9.6
     hooks:
       - id: ruff
         args: ["--fix"]

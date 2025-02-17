@@ -2,5 +2,5 @@ CTA_SIMPIPE:
   APPLICATION: simtools-validate-file-using-schema
   TEST_NAME: ecsv_validate_data
   CONFIGURATION:
-    SCHEMA: ./tests/resources/MST_mirror_2f_measurements.schema.yml
+    SCHEMA: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
     FILE_NAME: tests/resources/MLTdata-preproduction.ecsv
