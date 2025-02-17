@@ -82,13 +82,13 @@ def main():
     calculator = LimitCalculator(tables)
 
     lower_energy_limit = calculator.compute_lower_energy_limit(loss_fraction)
-    _logger.info(f"Lower energy threshold: {lower_energy_limit} TeV")
+    _logger.info(f"Lower energy threshold: {lower_energy_limit}")
 
     upper_radial_distance = calculator.compute_upper_radial_distance(loss_fraction)
-    _logger.info(f"Upper radius threshold: {upper_radial_distance} m")
+    _logger.info(f"Upper radius threshold: {upper_radial_distance}")
 
     viewcone = calculator.compute_viewcone(loss_fraction)
-    _logger.info(f"Viewcone radius: {viewcone} degrees")
+    _logger.info(f"Viewcone radius: {viewcone}")
 
 
 if __name__ == "__main__":

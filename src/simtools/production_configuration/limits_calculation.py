@@ -1,5 +1,6 @@
 """Calculate the thresholds for energy, radial distance, and viewcone."""
 
+import astropy.units as u
 import numpy as np
 
 
@@ -41,7 +42,7 @@ class LimitCalculator:
             elif "Title" in table.meta and table.meta["Title"] == "event_weight__ra3d__log10_e__":
                 self.event_weight__ra3d__log10_e__ = table
 
-    def compute_limits(
+    def _compute_limits(
         self, event_weight_array, bin_edges, loss_fraction, axis=0, limit_type="lower"
     ):
         """
@@ -85,6 +86,27 @@ class LimitCalculator:
             bin_edge_value = bin_edges[-bin_index]
         return bin_index, bin_edge_value
 
+    def get_bin_edges_and_units(self, table, axis="x"):
+        """
+        Extract bin edges and units from the table metadata.
+
+        Parameters
+        ----------
+        table : astropy.table.Table
+            Table containing the event data.
+
+        Returns
+        -------
+        tuple
+            Tuple containing the bin edges and their units.
+        """
+        bin_edges = table.meta[f"{axis}_bin_edges"]
+        try:
+            bin_edges_unit = table.meta[f"{axis}_bin_edges_unit"]
+        except KeyError:
+            bin_edges_unit = ""
+        return bin_edges, bin_edges_unit
+
     def compute_lower_energy_limit(self, loss_fraction):
         """
         Compute the lower energy limit in TeV based on the event loss fraction.
@@ -96,7 +118,7 @@ class LimitCalculator:
 
         Returns
         -------
-        float
+        astropy.units.Quantity
             Lower energy limit (TeV).
         """
         event_weight_array = np.column_stack(
@@ -105,11 +127,15 @@ class LimitCalculator:
                 for name in self.event_weight__ra3d__log10_e__.dtype.names
             ]
         )
-        bin_edges = self.event_weight__ra3d__log10_e__.meta["y_bin_edges"]
-        _, lower_bin_edge_value = self.compute_limits(
+        bin_edges, bin_edges_unit = self.get_bin_edges_and_units(
+            self.event_weight__ra3d__log10_e__, axis="y"
+        )
+        if bin_edges_unit == "":
+            bin_edges_unit = "TeV"
+        _, lower_bin_edge_value = self._compute_limits(
             event_weight_array, bin_edges, loss_fraction, axis=0, limit_type="lower"
         )
-        return 10**lower_bin_edge_value
+        return (10**lower_bin_edge_value) * u.Unit(bin_edges_unit)
 
     def compute_upper_radial_distance(self, loss_fraction):
         """
@@ -122,7 +148,7 @@ class LimitCalculator:
 
         Returns
         -------
-        float
+        astropy.units.Quantity
             Upper radial distance in m.
         """
         event_weight_array = np.column_stack(
@@ -131,11 +157,15 @@ class LimitCalculator:
                 for name in self.event_weight__ra3d__log10_e__.dtype.names
             ]
         )
-        bin_edges = self.event_weight__ra3d__log10_e__.meta["x_bin_edges"]
-        _, upper_bin_edge_value = self.compute_limits(
+        bin_edges, bin_edges_unit = self.get_bin_edges_and_units(
+            self.event_weight__ra3d__log10_e__, axis="x"
+        )
+        if bin_edges_unit == "":
+            bin_edges_unit = "m"
+        _, upper_bin_edge_value = self._compute_limits(
             event_weight_array, bin_edges, loss_fraction, axis=1, limit_type="upper"
         )
-        return upper_bin_edge_value
+        return upper_bin_edge_value * u.Unit(bin_edges_unit)
 
     def compute_viewcone(self, loss_fraction):
         """
@@ -148,7 +178,7 @@ class LimitCalculator:
 
         Returns
         -------
-        float
+        astropy.units.Quantity
             Viewcone radius in degrees.
         """
         angle_to_observing_position__triggered_showers = np.column_stack(
@@ -157,12 +187,16 @@ class LimitCalculator:
                 for name in self.angle_to_observing_position__triggered_showers_.dtype.names
             ]
         )
-        bin_edges = self.angle_to_observing_position__triggered_showers_.meta["x_bin_edges"]
-        _, upper_bin_edge_value = self.compute_limits(
+        bin_edges, bin_edges_unit = self.get_bin_edges_and_units(
+            self.angle_to_observing_position__triggered_showers_, axis="x"
+        )
+        if bin_edges_unit == "":
+            bin_edges_unit = "deg"
+        _, upper_bin_edge_value = self._compute_limits(
             angle_to_observing_position__triggered_showers,
             bin_edges,
             loss_fraction,
             axis=0,
             limit_type="upper",
         )
-        return upper_bin_edge_value
+        return upper_bin_edge_value * u.Unit(bin_edges_unit)
