@@ -1,0 +1,38 @@
+%YAML 1.2
+---
+title: Schema for single photon electron spectrum
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: single_pe_spectrum
+description: |-
+  Single photo-electron response as a function of signal amplitude.
+  May include prompt, prompt plus afterpulse, or afterpulse response.
+data:
+  - type: data_table
+    table_columns:
+      - name: amplitude
+        description: |-
+          Signal amplitude (p.e.)
+        required: true
+        unit: dimensionless
+        type: float64
+      - name: frequency (prompt)
+        description: |-
+          Single photo-electron response (prompt)
+        required: false
+        unit: dimensionless
+        type: float64
+      - name: frequency (afterpulsing)
+        description: |-
+          Single photo-electron response (afterpulsing)
+        required: false
+        unit: dimensionless
+        type: float64
+      - name: frequency (prompt+afterpulsing)
+        description: |-
+          Single photo-electron response (prompt+afterpulsing)
+        required: false
+        unit: dimensionless
+        type: float64
