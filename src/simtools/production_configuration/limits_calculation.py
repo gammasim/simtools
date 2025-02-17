@@ -45,7 +45,7 @@ class LimitCalculator:
         self, event_weight_array, bin_edges, loss_fraction, axis=0, limit_type="lower"
     ):
         """
-        Compute the threshold based on the loss fraction.
+        Compute the limits based on the loss fraction.
 
         Parameters
         ----------
