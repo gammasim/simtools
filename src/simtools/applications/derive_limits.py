@@ -1,26 +1,26 @@
 #!/usr/bin/python3
 
 r"""
-Derives the limits for energy, radial distance, and viewcone using the LimitCalculator.
+Derives the limits for energy, radial distance, and viewcone to be used in CORSIKA simulations.
 
 The limits are derived based on the event loss fraction specified by the user.
 
 Command line arguments
 ----------------------
-hdf5_file (str, required)
-    Path to the HDF5 file containing the event data.
+event_data_file (str, required)
+    Path to the file containing the event data.
 loss_fraction (float, required)
     Fraction of events to be lost.
 
 
 Example
 -------
-Derive limits for a given HDF5 file with a specified loss fraction.
+Derive limits for a given file with a specified loss fraction.
 
 .. code-block:: console
 
     simtools-derive-limits\\
-        --hdf5_file path/to/hdf5_file.hdf5 \\
+        --event_data_file path/to/event_data_file.hdf5 \\
         --loss_fraction 0.1
 """
 
@@ -40,8 +40,8 @@ def _parse():
 
     Parameters
     ----------
-    hdf5_file: str
-        The hdf5 file.
+    event_data_file: str
+        The event data file.
     loss_fraction: float
         Loss fraction of events for limit derivation.
 
@@ -55,10 +55,10 @@ def _parse():
         description="Derive limits for energy, radial distance, and viewcone."
     )
     config.parser.add_argument(
-        "--hdf5_file",
+        "--event_data_file",
         type=str,
         required=True,
-        help="Path to the HDF5 file containing the event data.",
+        help="Path to the event data file containing the event data.",
     )
     config.parser.add_argument(
         "--loss_fraction", type=float, required=True, help="Fraction of events to be lost."
@@ -73,11 +73,11 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    hdf5_file_path = args_dict["hdf5_file"]
+    event_data_file_path = args_dict["event_data_file"]
     loss_fraction = args_dict["loss_fraction"]
 
-    _logger.info(f"Loading HDF5 file: {hdf5_file_path}")
-    tables = read_hdf5(hdf5_file_path)
+    _logger.info(f"Loading event data file: {event_data_file_path}")
+    tables = read_hdf5(event_data_file_path)
 
     _logger.info("Initializing LimitCalculator")
     calculator = LimitCalculator(tables)
