@@ -280,40 +280,41 @@ class ReadParameters:
             return
 
         for parameter in all_params:
+            comparison_data = []
             if all_params[parameter]["instrument"] == self.telescope_model.name:
                 comparison_data = self._compare_parameter_across_versions(parameter)
-                if comparison_data:
-                    output_filename = output_path / f"{parameter}.md"
-                    with output_filename.open("w", encoding="utf-8") as file:
-                        # Write header
+            if comparison_data:
+                output_filename = output_path / f"{parameter}.md"
+                with output_filename.open("w", encoding="utf-8") as file:
+                    # Write header
+                    file.write(
+                        f"# {parameter}\n\n"
+                        f"**Telescope**: {self.telescope_model.name}\n\n"
+                        f"**Description**: {comparison_data[0]['description']}\n\n"
+                        "\n"
+                    )
+
+                    # Write table header
+                    file.write(
+                        "| Model Version      | Parameter Version      "
+                        "| Value                |\n"
+                        "|--------------------|------------------------"
+                        "|----------------------|\n"
+                    )
+
+                    # Write table rows
+                    for item in comparison_data:
                         file.write(
-                            f"# {parameter}\n\n"
-                            f"**Telescope**: {self.telescope_model.name}\n\n"
-                            f"**Description**: {comparison_data[0]['description']}\n\n"
-                            "\n"
+                            f"| {item['model_version']} |"
+                            f" {item['parameter_version']} |"
+                            f"{item['value'].replace('](', '](../')} |\n"
                         )
 
-                        # Write table header
+                    file.write("\n")
+                    if isinstance(comparison_data[0]["value"], str) and comparison_data[0][
+                        "value"
+                    ].endswith(".md)"):
                         file.write(
-                            "| Model Version      | Parameter Version      "
-                            "| Value                |\n"
-                            "|--------------------|------------------------"
-                            "|----------------------|\n"
+                            f"![Parameter plot.](_images/"
+                            f"{self.telescope_model.name}_{parameter}.png)"
                         )
-
-                        # Write table rows
-                        for item in comparison_data:
-                            file.write(
-                                f"| {item['model_version']} |"
-                                f" {item['parameter_version']} |"
-                                f"{item['value'].replace('](', '](../')} |\n"
-                            )
-
-                        file.write("\n")
-                        if isinstance(comparison_data[0]["value"], str) and comparison_data[0][
-                            "value"
-                        ].endswith(".md)"):
-                            file.write(
-                                f"![Parameter plot.](_images/"
-                                f"{self.telescope_model.name}_{parameter}.png)"
-                            )
