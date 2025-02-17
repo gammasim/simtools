@@ -26,6 +26,7 @@ Derive limits for a given HDF5 file with a specified loss fraction.
 
 import logging
 
+import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations.hdf5_handler import read_hdf5
 from simtools.production_configuration.limits_calculation import LimitCalculator
@@ -52,6 +53,10 @@ def _parse():
 def main():
     """Derive limits for energy, radial distance, and viewcone."""
     args_dict, _ = _parse()
+
+    logger = logging.getLogger()
+    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
     hdf5_file_path = args_dict["hdf5_file"]
     loss_fraction = args_dict["loss_fraction"]
 
