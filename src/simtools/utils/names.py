@@ -634,6 +634,9 @@ def sanitize_name(name):
     ValueError:
         if the string name can not be sanitized.
     """
+    if name is None:
+        # _logger.info("The string is None and can't be sanitized.")
+        return name
     sanitized = name.lower()
     sanitized = sanitized.replace(" ", "_")
     # Remove characters that are not alphanumerics or underscores

@@ -11,6 +11,7 @@ from astropy.table import Table
 
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
+from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.data_model.model_data_writer import JsonNumpyEncoder
 
@@ -108,7 +109,7 @@ def test_dump(args_dict, io_handler, tmp_test_directory):
             args_dict=args_dict,
             metadata=_metadata,
             product_data=empty_table,
-            validate_schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
+            validate_schema_file=SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml",
         )
 
     # explicitly set output_file
@@ -130,7 +131,7 @@ def test_validate_and_transform(num_gains_schema_file):
     _table = Table.read("tests/resources/MLTdata-preproduction.ecsv", format=ascii_format)
     return_table = w_1.validate_and_transform(
         product_data_table=_table,
-        validate_schema_file="tests/resources/MST_mirror_2f_measurements.schema.yml",
+        validate_schema_file=SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml",
     )
     assert len(_table.columns) == len(return_table.columns)
 
