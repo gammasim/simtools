@@ -35,6 +35,22 @@ _logger = logging.getLogger(__name__)
 
 
 def _parse():
+    """
+    Parse command line configuration.
+
+    Parameters
+    ----------
+    hdf5_file: str
+        The hdf5 file.
+    loss_fraction: float
+        Loss fraction of events for limit derivation.
+
+    Returns
+    -------
+    CommandLineParser
+        Command line parser object
+
+    """
     config = configurator.Configurator(
         description="Derive limits for energy, radial distance, and viewcone."
     )
