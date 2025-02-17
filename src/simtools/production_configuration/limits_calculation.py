@@ -9,23 +9,23 @@ class LimitCalculator:
 
     Parameters
     ----------
-    hdf5_file : list of astropy.table.Table
+    event_data_file : list of astropy.table.Table
         The list of tables containing the event data.
     """
 
-    def __init__(self, hdf5_file_tables):
+    def __init__(self, event_data_file_tables):
         """
-        Initialize the LimitCalculator with the given HDF5 file.
+        Initialize the LimitCalculator with the given event data file.
 
         Parameters
         ----------
-        hdf5_file : list of astropy.table.Table
+        event_data_file : list of astropy.table.Table
             The list of tables containing the event data.
         """
         self.angle_to_observing_position__triggered_showers_ = None
         self.event_weight__ra3d__log10_e__ = None
 
-        for table in hdf5_file_tables:
+        for table in event_data_file_tables:
             if (
                 "Title" in table.meta
                 and table.meta["Title"] == "angle_to_observing_position__triggered_showers_"
