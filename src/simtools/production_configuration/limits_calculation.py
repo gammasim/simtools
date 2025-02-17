@@ -119,7 +119,7 @@ class LimitCalculator:
         Returns
         -------
         astropy.units.Quantity
-            Lower energy limit (TeV).
+            Lower energy limit.
         """
         event_weight_array = np.column_stack(
             [
