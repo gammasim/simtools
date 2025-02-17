@@ -7,6 +7,27 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.10.0](https://github.com/gammasim/simtools/tree/0.10.0) - 2025-02-17
+
+### Bugfixes
+
+- Schema validation bug fixes. ([#1330](https://github.com/gammasim/simtools/pull/1330))
+
+### New Features
+
+- Add a simtool to derive (normalize) the single p.e. amplitude spectrum using the `sim_telarray` tool `norm_spe`. ([#1299](https://github.com/gammasim/simtools/pull/1299))
+- Add validation of simtools-generated configuration files for sim_telarray with reference files. ([#1322](https://github.com/gammasim/simtools/pull/1322))
+- Add schema for fake mirror list. ([#1338](https://github.com/gammasim/simtools/pull/1338))
+- Add additional queries to db handler to retrieve model versions etc. ([#1349](https://github.com/gammasim/simtools/pull/1349))
+- Add fixed database version for testing (instead of `LATEST`). ([#1365](https://github.com/gammasim/simtools/pull/1365))
+
+### Maintenance
+
+- Major restructering of database routines plus introduction of new simulation model. ([#1316](https://github.com/gammasim/simtools/pull/1316))
+- Improve testing of results and allow comparison of lists of floats in json/yaml files. ([#1319](https://github.com/gammasim/simtools/pull/1319))
+- Remove database sandboxes . ([#1336](https://github.com/gammasim/simtools/pull/1336))
+
+
 ## [0.9.0](https://github.com/gammasim/simtools/tree/0.9.0) - 2025-01-22
 
 ### Bugfixes
