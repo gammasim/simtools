@@ -7,9 +7,9 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: laser_photons
 description: |-
-  Number of laser photons at each photodetector.
+  Number of laser photons at each photo detector.
 short_description: |-
-  Number of laser photons at each photodetector.
+  Number of laser photons at each photo detector.
 data:
   - type: double
     unit: dimensionless

@@ -22,6 +22,15 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## simtel_table_reader
+
+(simtel-table-reader-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simtel_table_reader
+   :members:
+```
+
 ## simtel_io_events
 
 (simtel-io-events-1)=

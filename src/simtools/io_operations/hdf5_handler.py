@@ -41,40 +41,26 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
     meta_data: dict
         Dictionary with the histogram metadata.
     """
-    # Complement metadata
-    if x_label is not None:
-        meta_data["x_bin_edges"] = sanitize_name(x_label)
+    validate_histogram(hist, y_bin_edges)
+
+    meta_data["x_bin_edges"] = x_bin_edges
     meta_data["x_bin_edges_unit"] = (
         x_bin_edges.unit if isinstance(x_bin_edges, u.Quantity) else u.dimensionless_unscaled
     )
-
     if y_bin_edges is not None:
-        if y_label is not None:
-            meta_data["y_bin_edges"] = sanitize_name(y_label)
-            names = [
-                f"{meta_data['y_bin_edges'].split('__')[0]}_{i}"
-                for i in range(len(y_bin_edges[:-1]))
-            ]
-        else:
-            names = [
-                f"{meta_data['Title'].split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
-            ]
+        meta_data["y_bin_edges"] = y_bin_edges
         meta_data["y_bin_edges_unit"] = (
             y_bin_edges.unit if isinstance(y_bin_edges, u.Quantity) else u.dimensionless_unscaled
         )
 
-        table = Table(
-            [hist[i, :] for i in range(len(y_bin_edges[:-1]))],
-            names=names,
-            meta=meta_data,
-        )
-
-    else:
+    if hist.ndim == 1:
         if x_label is not None:
-            meta_data["x_bin_edges"] = sanitize_name(x_label)
-            names = meta_data["x_bin_edges"]
-        else:
+            names = sanitize_name(x_label)
+        try:
             names = meta_data["Title"]
+        except KeyError:
+            _logger.warning("Title not found in metadata.")
+
         table = Table(
             [
                 x_bin_edges[:-1],
@@ -83,7 +69,51 @@ def fill_hdf5_table(hist, x_bin_edges, y_bin_edges, x_label, y_label, meta_data)
             names=(names, sanitize_name("Values")),
             meta=meta_data,
         )
+    else:
+        if y_label is not None:
+            names = [
+                f"{sanitize_name(y_label).split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
+            ]
+        try:
+            names = [
+                f"{(meta_data['Title']).split('__')[0]}_{sanitize_name(y_label)}_{i}"
+                for i in range(len(y_bin_edges[:-1]))
+            ]
+        except KeyError:
+            _logger.warning("Title not found in metadata.")
+            names = [
+                f"{sanitize_name(y_label).split('__')[0]}_{i}" for i in range(len(y_bin_edges[:-1]))
+            ]
+
+        table = Table(
+            [hist[i, :] for i in range(len(y_bin_edges[:-1]))],
+            names=names,
+            meta=meta_data,
+        )
+
     return table
+
+
+def validate_histogram(hist, y_bin_edges):
+    """Validate histogram dimensions and y_bin_edges consistency.
+
+    Parameters
+    ----------
+    hist (np.ndarray): The histogram array, expected to be 1D or 2D.
+    y_bin_edges (array-like or None): Bin edges for the second dimension (if applicable).
+
+    Raises
+    ------
+    ValueError: If histogram dimensions are invalid or inconsistent with y_bin_edges.
+    """
+    if hist.ndim not in (1, 2):
+        raise ValueError("Histogram must be either 1D or 2D.")
+
+    if hist.ndim == 1 and y_bin_edges is not None:
+        raise ValueError("y_bin_edges should be None for 1D histograms.")
+
+    if hist.ndim == 2 and y_bin_edges is None:
+        raise ValueError("y_bin_edges should not be None for 2D histograms.")
 
 
 def read_hdf5(hdf5_file_name):
