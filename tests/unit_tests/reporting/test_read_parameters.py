@@ -42,5 +42,5 @@ def test_generate_array_element_report(telescope_model_lst, io_handler):
 
     read_parameters.generate_array_element_report()
 
-    file_path = output_path / telescope_model_lst.name
+    file_path = output_path / f"{telescope_model_lst.name}.md"
     assert file_path.exists()
