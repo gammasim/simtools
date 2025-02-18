@@ -24,6 +24,15 @@ __all__ = [
     "validate_site_name",
 ]
 
+# Mapping of db collection names to class keys
+db_collections_to_class_keys = {
+    "sites": ["Site"],
+    "telescopes": ["Structure", "Camera", "Telescope"],
+    "calibration_devices": ["Calibration"],
+    "configuration_sim_telarray": ["configuration_sim_telarray"],
+    "configuration_corsika": ["configuration_corsika"],
+}
+
 
 @cache
 def array_elements():
@@ -73,11 +82,19 @@ def load_model_parameters(class_key_list):
 
 
 def site_parameters():
-    return load_model_parameters(class_key_list="Site")
+    return load_model_parameters(class_key_list=tuple(db_collections_to_class_keys["sites"]))
 
 
 def telescope_parameters():
-    return load_model_parameters(class_key_list=("Structure", "Camera", "Telescope"))
+    return load_model_parameters(class_key_list=tuple(db_collections_to_class_keys["telescopes"]))
+
+
+def class_key_to_db_collection(class_name):
+    """Convert class key to collection name."""
+    for collection, classes in db_collections_to_class_keys.items():
+        if class_name in classes:
+            return collection
+    raise ValueError(f"Class {class_name} not found")
 
 
 def validate_array_element_id_name(name):
@@ -331,6 +348,31 @@ def get_collection_name_from_array_element_name(name, array_elements_only=True):
         return name
 
     raise ValueError(f"Invalid array element name {name}")
+
+
+def get_db_collection_for_parameter(parameter_name):
+    """
+    Get the db collection name for a given parameter.
+
+    Parameters
+    ----------
+    parameter_name: str
+        Name of the parameter.
+
+    Returns
+    -------
+    str
+        Collection name.
+    """
+    _parameter_names = {}
+    for _, class_keys in db_collections_to_class_keys.items():
+        _parameter_names.update(load_model_parameters(class_key_list=tuple(class_keys)))
+    try:
+        class_key = _parameter_names[parameter_name].get("instrument", {}).get("class")
+    except KeyError as err:
+        _logger.error(f"Parameter {parameter_name} without schema definition")
+        raise err
+    return class_key_to_db_collection(class_key)
 
 
 def get_simulation_software_name_from_parameter_name(
