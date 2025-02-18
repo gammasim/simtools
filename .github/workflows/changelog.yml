@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check for at least one changelog fragment
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed') }}
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed') && !contains(github.event.pull_request.labels.*.name, 'dependencies') }}
         run: |
           find docs/changes -type f | \
           grep -P "${FRAGMENT_NAME_PREFIX}\.(feature|bugfix|api|maintenance|doc|model)\.md"
