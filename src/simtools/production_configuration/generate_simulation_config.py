@@ -16,10 +16,6 @@ class SimulationConfig:
     ----------
     grid_point : dict
         Dictionary representing a grid point with azimuth, elevation, and night sky background.
-    ctao_data_level : str
-        The data level (e.g., 'A', 'B', 'C') for the simulation configuration.
-    science_case : str
-        The science case for the simulation configuration.
     file_path : str
         Path to the DL2 MC event file for statistical uncertainty evaluation.
     file_type : str
@@ -31,26 +27,22 @@ class SimulationConfig:
     def __init__(
         self,
         grid_point: dict[str, float],
-        ctao_data_level: str,
-        science_case: str,
         file_path: str,
         file_type: str,
         metrics: dict[str, float] | None = None,
     ):
         """Initialize the simulation configuration for a grid point."""
         self.grid_point = grid_point
-        self.ctao_data_level = ctao_data_level
-        self.science_case = science_case
         self.file_path = file_path
         self.file_type = file_type
         self.metrics = metrics or {}
         self.evaluator = StatisticalErrorEvaluator(file_path, file_type, metrics)
-        self.event_scaler = EventScaler(self.evaluator, science_case, self.metrics)
+        self.event_scaler = EventScaler(self.evaluator, self.metrics)
         self.simulation_params = {}
 
     def configure_simulation(self) -> dict[str, float]:
         """
-        Configure the simulation parameters for the grid point, data level, and science case.
+        Configure the simulation parameters for the grid point.
 
         Returns
         -------
@@ -80,7 +72,7 @@ class SimulationConfig:
 
     def _calculate_core_scatter_area(self) -> float:
         """
-        Calculate the core scatter area based on the grid point and data level.
+        Calculate the core scatter area based on the grid point.
 
         Returns
         -------
@@ -93,7 +85,7 @@ class SimulationConfig:
 
     def _calculate_viewcone(self) -> float:
         """
-        Calculate the viewcone based on the grid point conditions and data level.
+        Calculate the viewcone based on the grid point conditions.
 
         Returns
         -------
