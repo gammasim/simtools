@@ -152,7 +152,7 @@ r"""
      .. code-block:: console
 
         simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/\\
-        testsresources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\
+        tests/resources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\
             --pdf --hdf5 \\
             --event_2d_histograms zenith azimuth --event_1d_histograms total_energy
 
@@ -208,7 +208,7 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--telescope_indices",
-        help="Name of the CORSIKA IACT file from which to generate the histograms.",
+        help="List of telescope indices to be considered in the generation of the histograms",
         type=str,
         required=False,
         nargs="+",
