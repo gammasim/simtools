@@ -1,6 +1,6 @@
 
-simtools-derive-limits
+simtools-production-derive-limits
 ===========================
 
-.. automodule:: derive_limits
+.. automodule:: production_derive_limits
    :members:
