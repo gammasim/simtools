@@ -38,6 +38,8 @@ simtools-derive-limits <applications/simtools-derive-limits>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
+simtools-docs-generate-model-parameter-report <applications/simtools-docs-generate-model-parameter-report>
+simtools-docs-produce-reports <applications/simtools-docs-produce-reports>
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
