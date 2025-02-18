@@ -5,6 +5,7 @@ CTA_SIMPIPE:
     SITE: North
     TELESCOPE: LSTN-01
     MODEL_VERSION: 5.0.0
-    OUTPUT_PATH: simtools-output
+    OUTPUT_PATH: simtools-output/reports/parameters/LSTN-01
+    USE_PLAIN_OUTPUT_PATH: true
   INTEGRATION_TESTS:
-    - OUTPUT_FILE: reports/parameters/LSTN-01/quantum_efficiency.md
+    - OUTPUT_FILE: quantum_efficiency.md
