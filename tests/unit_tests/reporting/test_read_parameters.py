@@ -1,4 +1,5 @@
 import astropy.units as u
+import pytest
 
 from simtools.reporting.docs_read_parameters import ReadParameters
 
@@ -58,3 +59,18 @@ def test_generate_parameter_report(telescope_model_lst, io_handler, db_config):
 
     file_path = output_path / "quantum_efficiency.md"
     assert file_path.exists()
+
+
+def test__convert_to_md(telescope_model_lst, io_handler, db_config):
+    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
+    read_parameters = ReadParameters(
+        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
+    )
+
+    # testing with invalid file
+    with pytest.raises(FileNotFoundError):
+        read_parameters._convert_to_md("invalid-file.dat")
+
+    # testing with valid file
+    new_file = read_parameters._convert_to_md("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
+    assert isinstance(new_file, str)
