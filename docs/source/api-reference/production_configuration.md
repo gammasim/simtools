@@ -42,12 +42,16 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+(derive-computing-resources)=
+
 ## derive_computing_resources
 
 ```{eval-rst}
 .. automodule:: production_configuration.derive_computing_resources
    :members:
 ```
+
+(limits-calculation)=
 
 
 ## limits_calculation
