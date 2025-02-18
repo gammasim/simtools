@@ -9,7 +9,11 @@ both the name of the simtools application and the configuration for the applicat
 """
 
 import logging
+import subprocess
+import tempfile
 from pathlib import Path
+
+import yaml
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
@@ -45,6 +49,21 @@ def _parse(label, description, usage):
     return config.initialize(db_config=False)
 
 
+def run_application(application, configuration):
+    """Run a simtools application and return stdout and stderr."""
+    with tempfile.NamedTemporaryFile(mode="w", delete=True, suffix=".yml") as temp_config:
+        yaml.dump(configuration, temp_config, default_flow_style=False)
+        temp_config.flush()
+        configuration_file = Path(temp_config.name)
+        result = subprocess.run(
+            [application, "--config", configuration_file],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout, result.stderr
+
+
 def main():  # noqa: D103
 
     args_dict, _ = _parse(
@@ -54,6 +73,21 @@ def main():  # noqa: D103
     )
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+
+    # TODO still not working with the configuration files with and without lists
+    configurations = gen.collect_data_from_file(args_dict["configuration_file"]).get("CTA_SIMPIPE")
+    log_file = Path(configurations.get("LOG_PATH", "./")) / "simtools.log"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(configurations, dict):
+        configurations = [configurations]
+    with log_file.open("w", encoding="utf-8") as file:
+        for config in configurations:
+            config = gen.change_dict_keys_case(config, False)
+            stdout, stderr = run_application(config.get("APPLICATION"), config.get("CONFIGURATION"))
+            file.write("=" * 80 + "\n")
+            file.write(f"Application: {config.get('APPLICATION')}\n")
+            file.write("STDOUT:\n" + stdout)
+            file.write("STDERR:\n" + stderr)
 
 
 if __name__ == "__main__":
