@@ -43,7 +43,22 @@ class ResourceEstimator:
         existing_data: list[dict] | None = None,
         lookup_file: str = "production_resource_estimates.yaml",
     ):
-        """Initialize the resource estimator."""
+        """
+        Initialize the resource estimator.
+
+        Parameters
+        ----------
+        grid_point : dict
+            Dictionary containing parameters such as energy (TeV), azimuth (deg),
+            zenith (deg), and night sky background.
+        simulation_params : dict
+            Dictionary containing simulation parameters, including the number of events and site.
+        existing_data : list of dict, optional
+            List of dictionaries with historical data of compute and storage
+            resources for existing simulations.
+        lookup_file : str, optional
+            Path to the YAML file containing the lookup table.
+        """
         self.grid_point = grid_point
         self.simulation_params = simulation_params
         self.existing_data = existing_data or []
