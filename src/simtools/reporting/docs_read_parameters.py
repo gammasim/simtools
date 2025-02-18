@@ -267,12 +267,6 @@ class ReadParameters:
             array_element_name=self.telescope_model.name,
             collection="telescopes",
         )
-        if not any(
-            all_params[parameter]["instrument"] == self.telescope_model.name
-            for parameter in all_params
-        ):
-            logger.info("No telescope-specific parameters, check telescope design report.")
-            return
 
         for parameter in all_params:
             comparison_data = []
