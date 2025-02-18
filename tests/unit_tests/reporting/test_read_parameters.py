@@ -3,11 +3,11 @@ import astropy.units as u
 from simtools.reporting.docs_read_parameters import ReadParameters
 
 
-def test_get_all_parameter_descriptions(telescope_model_lst, io_handler):
+def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_config):
 
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(
-        db_config=None, telescope_model=telescope_model_lst, output_path=output_path
+        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
     )
 
     # Call get_all_parameter_descriptions
@@ -18,11 +18,11 @@ def test_get_all_parameter_descriptions(telescope_model_lst, io_handler):
     assert isinstance(inst_class.get("focal_length"), str)
 
 
-def test_get_telescope_parameter_data(telescope_model_lst, io_handler):
+def test_get_telescope_parameter_data(telescope_model_lst, io_handler, db_config):
 
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(
-        db_config=None, telescope_model=telescope_model_lst, output_path=output_path
+        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
     )
 
     result = read_parameters.get_telescope_parameter_data(telescope_model_lst)
@@ -34,13 +34,27 @@ def test_get_telescope_parameter_data(telescope_model_lst, io_handler):
         assert result[4] == "Nominal overall focal length of the entire telescope."
 
 
-def test_generate_array_element_report(telescope_model_lst, io_handler):
+def test_generate_array_element_report(telescope_model_lst, io_handler, db_config):
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(
-        db_config=None, telescope_model=telescope_model_lst, output_path=output_path
+        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
     )
 
     read_parameters.generate_array_element_report()
 
     file_path = output_path / f"{telescope_model_lst.name}.md"
+    assert file_path.exists()
+
+
+def test_generate_parameter_report(telescope_model_lst, io_handler, db_config):
+    output_path = io_handler.get_output_directory(
+        label="reports", sub_dir=f"parameters/{telescope_model_lst.name}"
+    )
+    read_parameters = ReadParameters(
+        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
+    )
+
+    read_parameters.generate_parameter_report()
+
+    file_path = output_path / "quantum_efficiency.md"
     assert file_path.exists()
