@@ -15,8 +15,8 @@ from pathlib import Path
 
 import yaml
 
-from simtools import dependencies
 import simtools.utils.general as gen
+from simtools import dependencies
 from simtools.configuration import configurator
 
 
@@ -75,7 +75,9 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    application_config = gen.collect_data_from_file(args_dict["configuration_file"]).get("CTA_SIMPIPE")
+    application_config = gen.collect_data_from_file(args_dict["configuration_file"]).get(
+        "CTA_SIMPIPE"
+    )
     log_file = Path(application_config.get("LOG_PATH", "./")) / "simtools.log"
     log_file.parent.mkdir(parents=True, exist_ok=True)
     configurations = application_config.get("APPLICATIONS")
