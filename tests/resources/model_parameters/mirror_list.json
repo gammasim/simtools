@@ -5,7 +5,7 @@
     "site": "North",
     "parameter_version": "2.0.0",
     "unique_id": null,
-    "value": "mirror_CTA-N-LST1_v2019-03-31.dat",
+    "value": "mirror_CTA-N-LST1_v2019-03-31_rotated.dat",
     "unit": null,
     "type": "string",
     "file": true

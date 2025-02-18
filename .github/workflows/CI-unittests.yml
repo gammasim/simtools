@@ -7,7 +7,6 @@ env:
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-  SIMTOOLS_DB_SIMULATION_MODEL: "CTAO-Simulation-ModelParameters-LATEST"
   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
 on:
@@ -95,14 +94,22 @@ jobs:
         run: |
           pip install -e '.[tests,dev,doc]'
 
+      - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
+        run: |
+          SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
+          SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
+          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
+
       - name: Unit tests
         shell: bash -l {0}
+        env:
+          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
           pytest --durations=10 --color=yes -n auto --dist loadscope \
             --cov=simtools --cov-report=xml
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v4.2.1
+      - uses: SonarSource/sonarqube-scan-action@v5.0.0
         if: contains(matrix.extra-args, 'codecov')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -110,6 +117,8 @@ jobs:
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
         shell: bash -l {0}
+        env:
+          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
           pytest --color=yes -n auto --dist loadscope --count 5 --random-order
 
