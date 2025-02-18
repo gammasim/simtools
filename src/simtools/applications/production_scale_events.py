@@ -28,7 +28,7 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 
     simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \
         --zeniths 20 52 40 60 --offsets 0 --interpolate --query_point 1 180 30 0 0 \
-        --science_case 1 --metrics_file "path/to/metrics.yaml"
+        --metrics_file "path/to/metrics.yaml"
 
 
 The output will display the scaled events for the specified grid point.
@@ -96,9 +96,6 @@ def _parse(label, description):
         default="production_simulation_config_metrics.yml",
         help="Metrics definition file. (default: production_simulation_config_metrics.yml)",
     )
-    config.parser.add_argument(
-        "--science_case", type=str, required=True, help="Science case for the simulation."
-    )
     return config.initialize(db_config=False)
 
 
@@ -147,9 +144,7 @@ def main():
         logger.warning(f"Offsets: {args_dict['offsets']}")
 
     # Perform interpolation for the given query point
-    interpolation_handler = InterpolationHandler(
-        evaluator_instances, science_case=args_dict["science_case"], metrics=metrics
-    )
+    interpolation_handler = InterpolationHandler(evaluator_instances, metrics=metrics)
     query_points = np.array([args_dict["query_point"]])
     scaled_events = interpolation_handler.interpolate(query_points)
 
