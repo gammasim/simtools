@@ -43,19 +43,24 @@ class ReadParameters:
         output_file_name = Path(input_file.stem + ".md")
         output_file = output_data_path / output_file_name
 
-        with (
-            input_file.open("r", encoding="utf-8") as infile,
-            output_file.open("w", encoding="utf-8") as outfile,
-        ):
+        try:
+            with (
+                input_file.open("r", encoding="utf-8") as infile,
+                output_file.open("w", encoding="utf-8") as outfile,
+            ):
 
-            outfile.write(f"# {input_file.stem}")
-            outfile.write("\n")
-            outfile.write("```")
-            outfile.write("\n")
-            file_contents = infile.read()
-            outfile.write(file_contents)
-            outfile.write("\n")
-            outfile.write("```")
+                outfile.write(f"# {input_file.stem}")
+                outfile.write("\n")
+                outfile.write("```")
+                outfile.write("\n")
+                file_contents = infile.read()
+                outfile.write(file_contents)
+                outfile.write("\n")
+                outfile.write("```")
+
+        except FileNotFoundError as e:
+            logger.exception(f"{e}: {input_file}.")
+            raise e
 
         return f"_data_files/{output_file_name}"
 
@@ -104,25 +109,15 @@ class ReadParameters:
         parameter_descriptions = self.get_all_parameter_descriptions()
         data = []
 
-        if not any(
-            all_params[parameter]["instrument"] == telescope_model.name for parameter in all_params
-        ):
-            data = "No telescope-specific parameters, check telescope design report."
-            logger.info({data})
-            return data
-
         for parameter in all_params:
             if all_params[parameter]["instrument"] != telescope_model.name:
                 continue
             parameter_version = telescope_model.get_parameter_version(parameter)
             value = telescope_model.get_parameter_value_with_unit(parameter)
             if telescope_model.get_parameter_file_flag(parameter) and value:
-                try:
-                    input_file_name = telescope_model.config_file_directory / Path(value)
-                    output_file_name = self._convert_to_md(input_file_name)
-                    value = f"[{Path(value).name}]({output_file_name})"
-                except FileNotFoundError:
-                    value = f"File not found: {value}"
+                input_file_name = telescope_model.config_file_directory / Path(value)
+                output_file_name = self._convert_to_md(input_file_name)
+                value = f"[{Path(value).name}]({output_file_name})"
             elif isinstance(value, list):
                 value = ", ".join(str(q) for q in value)
             else:
@@ -198,9 +193,7 @@ class ReadParameters:
         versions, and descriptions.
         """
         output_filename = Path(self.output_path / (self.telescope_model.name + ".md"))
-
         output_filename.parent.mkdir(parents=True, exist_ok=True)
-
         data = self.get_telescope_parameter_data(self.telescope_model)
         # Sort data by class to prepare for grouping
         if not isinstance(data, str):
@@ -210,9 +203,13 @@ class ReadParameters:
             # Group by class and write sections
             file.write(f"# {self.telescope_model.name}\n")
 
-            if isinstance(data, str):
-                file.write(data)
-                return
+            if self.telescope_model.name != self.telescope_model.design_model:
+                file.write(
+                    "The design model can be found here: "
+                    f"[{self.telescope_model.design_model}]"
+                    f"({self.telescope_model.design_model}.md).\n"
+                )
+                file.write("\n\n")
 
             for class_name, group in groupby(data, key=lambda x: x[0]):
                 group = sorted(group, key=lambda x: x[1])

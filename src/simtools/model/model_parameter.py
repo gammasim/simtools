@@ -76,6 +76,7 @@ class ModelParameter:
             if array_element_name is not None
             else None
         )
+        self.design_model = self.db.get_design_model(self.model_version, self.name)
         self._config_file_directory = None
         self._config_file_path = None
         self._load_parameters_from_db()

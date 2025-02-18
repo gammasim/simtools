@@ -1162,3 +1162,11 @@ def test_get_array_elements(db):
     assert "MSTN-101" in prod6_elements
     prod6_calibration_devices = db.get_array_elements("6.0.0", "calibration_devices")
     assert "ILLN-02" in prod6_calibration_devices
+
+
+def test_get_design_model(db):
+
+    assert db.get_design_model("5.0.0", "LSTN-01") == "LSTN-design"
+    assert db.get_design_model("6.0.0", "LSTN-01") == "LSTN-design"
+    assert db.get_design_model("5.0.0", "SSTS-03") == "SSTS-design"
+    assert db.get_design_model("6.0.0", "LSTN-design") == "LSTN-design"
