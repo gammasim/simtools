@@ -70,6 +70,26 @@ def test_validate_name():
             assert key == names._validate_name(_tel, with_lists_in_dicts)
 
 
+def test_class_key_to_db_collection():
+    assert "telescopes" == names.class_key_to_db_collection("Telescope")
+    assert "calibration_devices" == names.class_key_to_db_collection("Calibration")
+    assert "sites" == names.class_key_to_db_collection("Site")
+    assert "configuration_sim_telarray" == names.class_key_to_db_collection(
+        "configuration_sim_telarray"
+    )
+    assert "configuration_corsika" == names.class_key_to_db_collection("configuration_corsika")
+
+
+def test_get_db_collection_for_parameter():
+    assert "telescopes" == names.get_db_collection_for_parameter("num_gains")
+    assert "sites" == names.get_db_collection_for_parameter("atmospheric_profile")
+    assert "calibration_devices" == names.get_db_collection_for_parameter("laser_photons")
+    assert "configuration_sim_telarray" == names.get_db_collection_for_parameter("iobuf_maximum")
+    assert "configuration_corsika" == names.get_db_collection_for_parameter(
+        "corsika_particle_kinetic_energy_cutoff"
+    )
+
+
 def test_validate_array_element_id_name(caplog):
     _test_ids = {
         "1": "01",

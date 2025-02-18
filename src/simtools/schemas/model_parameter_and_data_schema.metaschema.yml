@@ -247,6 +247,8 @@ definitions:
           - Site
           - Structure
           - Telescope
+          - configuration_sim_telarray
+          - configuration_corsika
       type:
         type: array
         items:

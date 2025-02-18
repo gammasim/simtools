@@ -10,6 +10,8 @@ description: |-
   Starting altitude of the primary particle in mass overburden for all showers.
   This parameter should be set to values other than '0.' for specialized studies
   only. See CORSIKA manual for details.
+instrument:
+  class: configuration_corsika
 data:
   - type: float64
     unit: g/cm2
