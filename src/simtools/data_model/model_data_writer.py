@@ -186,7 +186,9 @@ class ModelDataWriter:
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
 
-    def check_db_for_existing_parameter(self, parameter_name, instrument, parameter_version, db_config):
+    def check_db_for_existing_parameter(
+        self, parameter_name, instrument, parameter_version, db_config
+    ):
         """
         Check if a parameter with the same version exists in the simulation model database.
 
@@ -195,7 +197,7 @@ class ModelDataWriter:
         parameter_name: str
             Name of the parameter.
         instrument: str
-            Name of the instrument. 
+            Name of the instrument.
         parameter_version: str
             Version of the parameter.
         db_config: dict
@@ -219,7 +221,8 @@ class ModelDataWriter:
             pass  # parameter does not exist - expected behavior
         else:
             raise ValueError(
-                f"Parameter {parameter_name} with version {parameter_version} already exists.")
+                f"Parameter {parameter_name} with version {parameter_version} already exists."
+            )
 
     def get_validated_parameter_dict(
         self,

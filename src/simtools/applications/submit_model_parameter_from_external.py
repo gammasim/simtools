@@ -44,7 +44,6 @@ from pathlib import Path
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.db import db_handler
 
 
 def _parse(label, description):
