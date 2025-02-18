@@ -369,9 +369,8 @@ def get_db_collection_for_parameter(parameter_name):
         _parameter_names.update(load_model_parameters(class_key_list=tuple(class_keys)))
     try:
         class_key = _parameter_names[parameter_name].get("instrument", {}).get("class")
-    except KeyError as err:
-        _logger.error(f"Parameter {parameter_name} without schema definition")
-        raise err
+    except KeyError as exc:
+        raise KeyError(f"Parameter {parameter_name} without schema definition") from exc
     return class_key_to_db_collection(class_key)
 
 
