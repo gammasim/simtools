@@ -14,37 +14,6 @@ from simtools.dependencies import (
 )
 
 
-def test_get_sim_telarray_version_success():
-    with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake/path"}):
-        version_content = '#define BASE_RELEASE "1.2.3"'
-
-        with mock.patch("builtins.open", mock.mock_open(read_data=version_content)):
-            assert get_sim_telarray_version() == "1.2.3"
-
-
-def test_get_sim_telarray_version_env_not_set():
-    with mock.patch.dict(os.environ, {}, clear=True):
-        assert get_sim_telarray_version() is None
-
-
-def test_get_sim_telarray_version_file_not_found():
-    with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake/path"}):
-        with mock.patch("pathlib.Path.open", side_effect=FileNotFoundError):
-            with pytest.raises(FileNotFoundError, match="sim_telarray version file not found."):
-                get_sim_telarray_version()
-
-
-def test_get_sim_telarray_version_base_release_not_found():
-    with mock.patch.dict(os.environ, {"SIMTOOLS_SIMTEL_PATH": "/fake/path"}):
-        version_content = '#define SOME_OTHER_DEFINE "1.2.3"'
-
-        with mock.patch("builtins.open", mock.mock_open(read_data=version_content)):
-            with pytest.raises(
-                ValueError, match="sim_telarray BASE_RELEASE not found in the file."
-            ):
-                get_sim_telarray_version()
-
-
 def test_get_database_version_success():
     db_config = {"host": "localhost", "port": 27017}
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
@@ -69,3 +38,35 @@ def test_get_corsika_version(caplog):
         assert get_corsika_version() == "7.7"
 
     assert "CORSIKA version not implemented yet." in caplog.text
+
+
+def test_get_sim_telarray_version_success():
+    os.environ["SIMTOOLS_SIMTEL_PATH"] = "/fake/path"
+    expected_version = "2024.271.0"
+    mock_result = mock.Mock()
+    mock_result.stdout = "Release: 2024.271.0 from 2024-09-27"
+    mock_result.stderr = ""
+
+    with mock.patch("subprocess.run", return_value=mock_result):
+        assert get_sim_telarray_version() == expected_version
+
+
+def test_get_sim_telarray_version_no_env_var(caplog):
+    if "SIMTOOLS_SIMTEL_PATH" in os.environ:
+        del os.environ["SIMTOOLS_SIMTEL_PATH"]
+
+    with caplog.at_level(logging.WARNING):
+        assert get_sim_telarray_version() is None
+
+    assert "Environment variable SIMTOOLS_SIMTEL_PATH is not set." in caplog.text
+
+
+def test_get_sim_telarray_version_no_release():
+    os.environ["SIMTOOLS_SIMTEL_PATH"] = "/fake/path"
+    mock_result = mock.Mock()
+    mock_result.stdout = "Some other output"
+    mock_result.stderr = ""
+
+    with mock.patch("subprocess.run", return_value=mock_result):
+        with pytest.raises(ValueError, match="sim_telarray release not found in Some other output"):
+            get_sim_telarray_version()

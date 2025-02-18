@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+import subprocess
 from pathlib import Path
 
 from simtools.db.db_handler import DatabaseHandler
@@ -33,7 +34,7 @@ def get_database_version(db_config):
 
 def get_sim_telarray_version():
     """
-    Get the version of the sim_telarray package.
+    Get the version of the sim_telarray package using 'sim_telarray --version'.
 
     Returns
     -------
@@ -44,18 +45,20 @@ def get_sim_telarray_version():
     if sim_telarray_path is None:
         _logger.warning("Environment variable SIMTOOLS_SIMTEL_PATH is not set.")
         return None
-    version_file = Path(sim_telarray_path) / "sim_telarray" / "version.h"
-    try:
-        with open(version_file, encoding="utf-8") as file:
-            content = file.read()
-    except FileNotFoundError as exc:
-        raise FileNotFoundError("sim_telarray version file not found.") from exc
+    sim_telarray_path = Path(sim_telarray_path) / "bin" / "sim_telarray"
 
-    match = re.search(r'#define BASE_RELEASE\s+"([^"]+)"', content)
+    # expect stdout with e.g. a line 'Release: 2024.271.0 from 2024-09-27'
+    result = subprocess.run(
+        [sim_telarray_path, "--version"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    match = re.search(r"^Release:\s+(.+)", result.stdout, re.MULTILINE)
 
     if match:
-        return match.group(1)
-    raise ValueError("sim_telarray BASE_RELEASE not found in the file.")
+        return match.group(1).split()[0]
+    raise ValueError(f"sim_telarray release not found in {result.stdout}")
 
 
 def get_corsika_version():
