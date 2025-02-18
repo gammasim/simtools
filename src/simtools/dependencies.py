@@ -11,6 +11,15 @@ from simtools.db.db_handler import DatabaseHandler
 _logger = logging.getLogger(__name__)
 
 
+def get_version_string(db_config=None):
+    """Print the versions of the dependencies."""
+    return (
+        f"Database version: {get_database_version(db_config)}\n"
+        f"sim_telarray version: {get_sim_telarray_version()}\n"
+        f"CORSIKA version: {get_corsika_version()}\n"
+    )
+
+
 def get_database_version(db_config):
     """
     Get the version of the simulation model data base used.

@@ -44,6 +44,7 @@ from pathlib import Path
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.db import db_handler
 
 
 def _parse(label, description):
@@ -73,7 +74,6 @@ def _parse(label, description):
     config.parser.add_argument(
         "--parameter_version", type=str, required=True, help="Parameter version"
     )
-
     config.parser.add_argument(
         "--value",
         type=str,
@@ -84,18 +84,22 @@ def _parse(label, description):
             'Examples: "--value=5", "--value=\'5 km\'", "--value=\'5 cm, 0.5 deg\'"'
         ),
     )
-
     config.parser.add_argument(
         "--input_meta",
         help="meta data file associated to input data",
         type=str,
         required=False,
     )
-    return config.initialize(output=True)
+    config.parser.add_argument(
+        "--check_parameter_version",
+        help="Check if the parameter version exists in the database",
+        action="store_true",
+    )
+    return config.initialize(output=True, db_config=True)
 
 
 def main():  # noqa: D103
-    args_dict, _ = _parse(
+    args_dict, db_config = _parse(
         label=Path(__file__).stem,
         description="Submit and validate a model parameters).",
     )
@@ -108,6 +112,7 @@ def main():  # noqa: D103
         if args_dict.get("output_path")
         else None
     )
+
     writer.ModelDataWriter.dump_model_parameter(
         parameter_name=args_dict["parameter"],
         value=args_dict["value"],
@@ -117,6 +122,7 @@ def main():  # noqa: D103
         output_path=output_path,
         use_plain_output_path=args_dict.get("use_plain_output_path"),
         metadata_input_dict=args_dict,
+        db_config=db_config if args_dict.get("check_parameter_version") else None,
     )
 
 

@@ -291,7 +291,10 @@ def get_site_from_array_element_name(name):
     str
         Site name (South or North).
     """
-    return array_elements()[get_array_element_type_from_name(name)]["site"]
+    try:  # e.g. instrument is 'North' as given for the site parameters
+        return validate_site_name(name)
+    except ValueError:  # e.g. instrument is 'LSTN' as given for the array element types
+        return array_elements()[get_array_element_type_from_name(name)]["site"]
 
 
 def get_collection_name_from_array_element_name(name, array_elements_only=True):
