@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_array &#8212; simtools v0.1.dev1+g38069a8 Manual</title>
+    <title>production_configuration.limits_calculation &#8212; simtools v0.1.dev1+g38069a8 Manual</title>
   
   
   
@@ -42,7 +42,7 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simulator_array';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/limits_calculation';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -301,7 +301,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simulator_array.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/production_configuration/limits_calculation.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -367,157 +367,222 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for simtel.simulator_array</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Simulation runner for array simulations.&quot;&quot;&quot;</span>
+  <h1>Source code for production_configuration.limits_calculation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Calculate the thresholds for energy, radial distance, and viewcone.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidOutputFileError</span><span class="p">,</span> <span class="n">SimtelRunner</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">clear_default_sim_telarray_cfg_directories</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorArray&quot;</span><span class="p">]</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 
-<div class="viewcode-block" id="SimulatorArray">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_array.SimulatorArray">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SimulatorArray</span><span class="p">(</span><span class="n">SimtelRunner</span><span class="p">):</span>
+<div class="viewcode-block" id="LimitCalculator">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LimitCalculator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SimulatorArray is the interface with sim_telarray to perform array simulations.</span>
+<span class="sd">    Compute thresholds/limits for energy, radial distance, and viewcone.</span>
+
+<span class="sd">    Histograms are generated with simtools-generate-simtel-array-histograms with --hdf5 flag.</span>
+
+<span class="sd">    Event data is read from the generated HDF5 file from the following tables:</span>
+<span class="sd">    - angle_to_observing_position__triggered_showers_ for the viewcone limit.</span>
+<span class="sd">    - event_weight__ra3d__log10_e__ for the energy and radial distance limit.</span>
+
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    corsika_config_data: CorsikaConfig</span>
-<span class="sd">        CORSIKA configuration.</span>
-<span class="sd">    simtel_path: str or Path</span>
-<span class="sd">        Location of source of the sim_telarray/CORSIKA package.</span>
-<span class="sd">    label: str</span>
-<span class="sd">        Instance label.</span>
-<span class="sd">    use_multipipe: bool</span>
-<span class="sd">        Use multipipe to run CORSIKA and sim_telarray.</span>
+<span class="sd">    event_data_file : list of astropy.table.Table</span>
+<span class="sd">        The list of tables containing the event data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">corsika_config</span><span class="p">,</span>
-        <span class="n">simtel_path</span><span class="p">,</span>
-        <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">use_multipipe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_data_file_tables</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the LimitCalculator with the given event data file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event_data_file : list of astropy.table.Table</span>
+<span class="sd">            The list of tables containing the event data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angle_to_observing_position__triggered_showers_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_weight__ra3d__log10_e__</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">event_data_file_tables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="s2">&quot;Title&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span>
+                <span class="ow">and</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;angle_to_observing_position__triggered_showers_&quot;</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">angle_to_observing_position__triggered_showers_</span> <span class="o">=</span> <span class="n">table</span>
+            <span class="k">elif</span> <span class="s2">&quot;Title&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span> <span class="ow">and</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;event_weight__ra3d__log10_e__&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">event_weight__ra3d__log10_e__</span> <span class="o">=</span> <span class="n">table</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_limits</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">event_weight_array</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize SimulatorArray.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init SimulatorArray&quot;</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-            <span class="n">simtel_path</span><span class="o">=</span><span class="n">simtel_path</span><span class="p">,</span>
-            <span class="n">corsika_config</span><span class="o">=</span><span class="n">corsika_config</span><span class="p">,</span>
-            <span class="n">use_multipipe</span><span class="o">=</span><span class="n">use_multipipe</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="o">=</span> <span class="n">sim_telarray_seeds</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span> <span class="o">=</span> <span class="n">corsika_config</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_make_run_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Build and return the command to run simtel_array.</span>
+<span class="sd">        Compute the limits based on the loss fraction.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        input_file: str</span>
-<span class="sd">            Full path of the input CORSIKA file</span>
-<span class="sd">        run_number: int (optional)</span>
-<span class="sd">            run number</span>
+<span class="sd">        event_weight_array : np.ndarray</span>
+<span class="sd">            Array of event weights.</span>
+<span class="sd">        bin_edges : np.ndarray</span>
+<span class="sd">            Array of bin edges.</span>
+<span class="sd">        loss_fraction : float</span>
+<span class="sd">            Fraction of events to be lost.</span>
+<span class="sd">        axis : int, optional</span>
+<span class="sd">            Axis along which to sum the event weights. Default is 0.</span>
+<span class="sd">        limit_type : str, optional</span>
+<span class="sd">            Type of limit (&#39;lower&#39; or &#39;upper&#39;). Default is &#39;lower&#39;.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            Command to run sim_telarray.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
-        <span class="n">histogram_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
-        <span class="n">output_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
-
-        <span class="c1"># Array</span>
-        <span class="n">command</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/sim_telarray&quot;</span><span class="p">))</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -c </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">get_config_file</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">get_config_directory</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
-            <span class="s2">&quot;power_law&quot;</span><span class="p">,</span>
-            <span class="n">SimulatorArray</span><span class="o">.</span><span class="n">get_power_law_for_sim_telarray_histograms</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">primary_particle</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;histogram_file&quot;</span><span class="p">,</span> <span class="n">histogram_file</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_state&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">:</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span><span class="si">}</span><span class="s2"> 2&gt;&amp;1 || exit&quot;</span>
-
-        <span class="k">return</span> <span class="n">clear_default_sim_telarray_cfg_directories</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_run_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if simtel output file exists.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        run_number: int</span>
-<span class="sd">            Run number.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        bool</span>
-<span class="sd">            True if simtel output file exists.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        InvalidOutputFileError</span>
-<span class="sd">            If simtel output file does not exist.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">output_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">output_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;sim_telarray output file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidOutputFileError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;simtel_array output file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> exists.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
-
-<div class="viewcode-block" id="SimulatorArray.get_power_law_for_sim_telarray_histograms">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_power_law_for_sim_telarray_histograms</span><span class="p">(</span><span class="n">primary</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the power law index for sim_telarray.</span>
-
-<span class="sd">        Events will be histogrammed in sim_telarray with a weight according to</span>
-<span class="sd">        the difference between this exponent and the one used for the shower simulations.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        primary: str</span>
-<span class="sd">            Primary particle.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Bin index where the threshold is reached.</span>
 <span class="sd">        float</span>
-<span class="sd">            Power law index.</span>
+<span class="sd">            Bin edge value corresponding to the threshold.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">power_laws</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span>
-            <span class="s2">&quot;electron&quot;</span><span class="p">:</span> <span class="mf">3.3</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="k">if</span> <span class="n">primary</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">power_laws</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">power_laws</span><span class="p">[</span><span class="n">primary</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">projection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">event_weight_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">bin_edge_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">cumulative_sum</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;upper&quot;</span><span class="p">:</span>
+            <span class="n">cumulative_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">projection</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="mf">2.68</span></div>
+        <span class="k">elif</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;lower&quot;</span><span class="p">:</span>
+            <span class="n">cumulative_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">projection</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">total_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">projection</span><span class="p">)</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">loss_fraction</span><span class="p">)</span> <span class="o">*</span> <span class="n">total_events</span>
+        <span class="n">bin_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cumulative_sum</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;upper&quot;</span><span class="p">:</span>
+            <span class="n">bin_edge_value</span> <span class="o">=</span> <span class="n">bin_edges</span><span class="p">[</span><span class="n">bin_index</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;lower&quot;</span><span class="p">:</span>
+            <span class="n">bin_edge_value</span> <span class="o">=</span> <span class="n">bin_edges</span><span class="p">[</span><span class="o">-</span><span class="n">bin_index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">bin_index</span><span class="p">,</span> <span class="n">bin_edge_value</span>
+
+<div class="viewcode-block" id="LimitCalculator.get_bin_edges_and_units">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.get_bin_edges_and_units">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_bin_edges_and_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract bin edges and units from the table metadata.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        table : astropy.table.Table</span>
+<span class="sd">            Table containing the event data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Tuple containing the bin edges and their units.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">_bin_edges&quot;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">bin_edges_unit</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">_bin_edges_unit&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">bin_edges_unit</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">bin_edges_unit</span></div>
+
+
+<div class="viewcode-block" id="LimitCalculator.compute_lower_energy_limit">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.compute_lower_energy_limit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_lower_energy_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the lower energy limit in TeV based on the event loss fraction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_fraction : float</span>
+<span class="sd">            Fraction of events to be lost.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.units.Quantity</span>
+<span class="sd">            Lower energy limit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">event_weight_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">event_weight__ra3d__log10_e__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_weight__ra3d__log10_e__</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">bin_edges</span><span class="p">,</span> <span class="n">bin_edges_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bin_edges_and_units</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_weight__ra3d__log10_e__</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">bin_edges_unit</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">bin_edges_unit</span> <span class="o">=</span> <span class="s2">&quot;TeV&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">lower_bin_edge_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">event_weight_array</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">lower_bin_edge_value</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">bin_edges_unit</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LimitCalculator.compute_upper_radial_distance">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.compute_upper_radial_distance">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_upper_radial_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the upper radial distance based on the event loss fraction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_fraction : float</span>
+<span class="sd">            Fraction of events to be lost.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.units.Quantity</span>
+<span class="sd">            Upper radial distance in m.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">event_weight_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">event_weight__ra3d__log10_e__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_weight__ra3d__log10_e__</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">bin_edges</span><span class="p">,</span> <span class="n">bin_edges_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bin_edges_and_units</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_weight__ra3d__log10_e__</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">bin_edges_unit</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">bin_edges_unit</span> <span class="o">=</span> <span class="s2">&quot;m&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">upper_bin_edge_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">event_weight_array</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">upper_bin_edge_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">bin_edges_unit</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LimitCalculator.compute_viewcone">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.compute_viewcone">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_viewcone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the viewcone based on the event loss fraction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_fraction : float</span>
+<span class="sd">            Fraction of events to be lost.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astropy.units.Quantity</span>
+<span class="sd">            Viewcone radius in degrees.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">angle_to_observing_position__triggered_showers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">angle_to_observing_position__triggered_showers_</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle_to_observing_position__triggered_showers_</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">bin_edges</span><span class="p">,</span> <span class="n">bin_edges_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bin_edges_and_units</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">angle_to_observing_position__triggered_showers_</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">bin_edges_unit</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">bin_edges_unit</span> <span class="o">=</span> <span class="s2">&quot;deg&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">upper_bin_edge_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">angle_to_observing_position__triggered_showers</span><span class="p">,</span>
+            <span class="n">bin_edges</span><span class="p">,</span>
+            <span class="n">loss_fraction</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">upper_bin_edge_value</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">bin_edges_unit</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

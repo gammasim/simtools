@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g5fd80fb Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g38069a8 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=30db01a7"></script>
+    <script src="_static/documentation_options.js?v=d695bc47"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g5fd80fb" />
+  <meta name="docsearch:version" content="0.1.dev1+g38069a8" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g5fd80fb Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g38069a8 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -188,6 +188,7 @@
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-derive-limits.html">simtools-derive-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
@@ -547,19 +548,25 @@
 </li>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_files">compare_files() (in module testing.validate_output)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_json_or_yaml_files">compare_json_or_yaml_files() (in module testing.validate_output)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">compare_simtel_config_with_schema() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_efficiency_and_errors">compute_efficiency_and_errors() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.compute_lower_energy_limit">compute_lower_energy_limit() (production_configuration.limits_calculation.LimitCalculator method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_reconstructed_event_histogram">compute_reconstructed_event_histogram() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate">compute_system_trigger_rate() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.model_utils.compute_telescope_transmission">compute_telescope_transmission() (in module model.model_utils)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.compute_upper_radial_distance">compute_upper_radial_distance() (production_configuration.limits_calculation.LimitCalculator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.compute_viewcone">compute_viewcone() (production_configuration.limits_calculation.LimitCalculator method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.config">config (simtel.simtel_io_histogram.SimtelIOHistogram property)</a>
 </li>
@@ -770,8 +777,6 @@
         <li><a href="user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html#module-db_add_simulation_model_from_repository_to_db">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     db_add_value_from_json_to_db
 
@@ -779,6 +784,8 @@
         <li><a href="user-guide/applications/simtools-db-add-value-from-json-to-db.html#module-db_add_value_from_json_to_db">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     db_get_array_layouts_from_db
 
@@ -811,6 +818,13 @@
 </li>
       <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.default_le_configs">default_le_configs() (in module simulate_light_emission)</a>
 </li>
+      <li>
+    derive_limits
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-derive-limits.html#module-derive_limits">module</a>
+</li>
+      </ul></li>
       <li>
     derive_mirror_rnda
 
@@ -1019,6 +1033,8 @@
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.get_axis_height">get_axis_height() (layout.telescope_position.TelescopePosition method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.get_bin_edges_and_units">get_bin_edges_and_units() (production_configuration.limits_calculation.LimitCalculator method)</a>
+</li>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.get_camera_fill_factor">get_camera_fill_factor() (model.camera.Camera method)</a>
 </li>
       <li><a href="api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_collection">get_collection() (db.db_handler.DatabaseHandler method)</a>
@@ -1085,10 +1101,10 @@
 </li>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">get_lightguide_efficiency_wavelength_file_name() (model.camera.Camera method)</a>
 </li>
-      <li><a href="api-reference/visualization.html#visualization.visualize.get_lines">get_lines() (in module visualization.visualize)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/visualization.html#visualization.visualize.get_lines">get_lines() (in module visualization.visualize)</a>
+</li>
       <li><a href="api-reference/mc_model.html#model.site_model.SiteModel.get_list_of_array_layouts">get_list_of_array_layouts() (model.site_model.SiteModel method)</a>
 </li>
       <li><a href="user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html#convert_all_model_parameters_from_simtel.get_list_of_simtel_parameters">get_list_of_simtel_parameters() (in module convert_all_model_parameters_from_simtel)</a>
@@ -1393,6 +1409,8 @@
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration">light_emission_default_configuration() (simtel.simulator_light_emission.SimulatorLightEmission static method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator">LimitCalculator (class in production_configuration.limits_calculation)</a>
+</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.list_of_histograms">list_of_histograms (simtel.simtel_io_histograms.SimtelIOHistograms property)</a>
 </li>
   </ul></td>
@@ -1433,6 +1451,8 @@
         <li><a href="user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html#db_add_simulation_model_from_repository_to_db.main">(in module db_add_simulation_model_from_repository_to_db)</a>
 </li>
         <li><a href="user-guide/applications/simtools-db-get-array-layouts-from-db.html#db_get_array_layouts_from_db.main">(in module db_get_array_layouts_from_db)</a>
+</li>
+        <li><a href="user-guide/applications/simtools-derive-limits.html#derive_limits.main">(in module derive_limits)</a>
 </li>
         <li><a href="user-guide/applications/simtools-generate-array-config.html#generate_array_config.main">(in module generate_array_config)</a>
 </li>
@@ -1585,6 +1605,8 @@
 </li>
         <li><a href="user-guide/applications/simtools-db-inspect-databases.html#module-db_inspect_databases">db_inspect_databases</a>
 </li>
+        <li><a href="user-guide/applications/simtools-derive-limits.html#module-derive_limits">derive_limits</a>
+</li>
         <li><a href="user-guide/applications/simtools-derive-mirror-rnda.html#module-derive_mirror_rnda">derive_mirror_rnda</a>
 </li>
         <li><a href="user-guide/applications/simtools-derive-photon-electron-spectrum.html#module-derive_photon_electron_spectrum">derive_photon_electron_spectrum</a>
@@ -1644,6 +1666,8 @@
         <li><a href="api-reference/production_configuration.html#module-production_configuration.generate_simulation_config">production_configuration.generate_simulation_config</a>
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">production_configuration.interpolation_handler</a>
+</li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.limits_calculation">production_configuration.limits_calculation</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#module-production_generate_simulation_config">production_generate_simulation_config</a>
 </li>
@@ -1860,10 +1884,10 @@
         <li><a href="user-guide/applications/simtools-plot-tabular-data.html#module-plot_tabular_data">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_time_distr">plot_time_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.plot_wavelength_distr">plot_wavelength_distr() (in module corsika.corsika_histograms_visualize)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.telescope_model.TelescopeModel.position">position() (model.telescope_model.TelescopeModel method)</a>
@@ -1942,6 +1966,13 @@
 
       <ul>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_configuration.limits_calculation
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.limits_calculation">module</a>
 </li>
       </ul></li>
       <li>

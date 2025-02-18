@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Production Configuration &#8212; simtools v0.1.dev1+g5fd80fb Manual</title>
+    <title>Production Configuration &#8212; simtools v0.1.dev1+g38069a8 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=30db01a7"></script>
+    <script src="../_static/documentation_options.js?v=d695bc47"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="MC Model" href="mc_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g5fd80fb" />
+  <meta name="docsearch:version" content="0.1.dev1+g38069a8" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g5fd80fb Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g38069a8 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -189,6 +189,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-limits.html">simtools-derive-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
@@ -482,6 +483,16 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate_energy_threshold()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.plot_comparison()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.limits_calculation">limits_calculation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator"><code class="docutils literal notranslate"><span class="pre">LimitCalculator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator.compute_upper_radial_distance"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radial_distance()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator.get_bin_edges_and_units"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.get_bin_edges_and_units()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -864,6 +875,108 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 </dd></dl>
 
 </section>
+<section id="module-production_configuration.limits_calculation">
+<span id="limits-calculation"></span><h2>limits_calculation<a class="headerlink" href="#module-production_configuration.limits_calculation" title="Link to this heading">#</a></h2>
+<p>Calculate the thresholds for energy, radial distance, and viewcone.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="production_configuration.limits_calculation.LimitCalculator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.limits_calculation.</span></span><span class="sig-name descname"><span class="pre">LimitCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file_tables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/limits_calculation.html#LimitCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.limits_calculation.LimitCalculator" title="Link to this definition">#</a></dt>
+<dd><p>Compute thresholds/limits for energy, radial distance, and viewcone.</p>
+<p>Histograms are generated with simtools-generate-simtel-array-histograms with –hdf5 flag.</p>
+<p>Event data is read from the generated HDF5 file from the following tables:
+- angle_to_observing_position__triggered_showers_ for the viewcone limit.
+- event_weight__ra3d__log10_e__ for the energy and radial distance limit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>event_data_file</strong><span class="classifier">list of astropy.table.Table</span></dt><dd><p>The list of tables containing the event data.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.limits_calculation.LimitCalculator.compute_lower_energy_limit">
+<span class="sig-name descname"><span class="pre">compute_lower_energy_limit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/limits_calculation.html#LimitCalculator.compute_lower_energy_limit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.limits_calculation.LimitCalculator.compute_lower_energy_limit" title="Link to this definition">#</a></dt>
+<dd><p>Compute the lower energy limit in TeV based on the event loss fraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loss_fraction</strong><span class="classifier">float</span></dt><dd><p>Fraction of events to be lost.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.units.Quantity</dt><dd><p>Lower energy limit.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.limits_calculation.LimitCalculator.compute_upper_radial_distance">
+<span class="sig-name descname"><span class="pre">compute_upper_radial_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/limits_calculation.html#LimitCalculator.compute_upper_radial_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.limits_calculation.LimitCalculator.compute_upper_radial_distance" title="Link to this definition">#</a></dt>
+<dd><p>Compute the upper radial distance based on the event loss fraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loss_fraction</strong><span class="classifier">float</span></dt><dd><p>Fraction of events to be lost.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.units.Quantity</dt><dd><p>Upper radial distance in m.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.limits_calculation.LimitCalculator.compute_viewcone">
+<span class="sig-name descname"><span class="pre">compute_viewcone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/limits_calculation.html#LimitCalculator.compute_viewcone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.limits_calculation.LimitCalculator.compute_viewcone" title="Link to this definition">#</a></dt>
+<dd><p>Compute the viewcone based on the event loss fraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loss_fraction</strong><span class="classifier">float</span></dt><dd><p>Fraction of events to be lost.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.units.Quantity</dt><dd><p>Viewcone radius in degrees.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.limits_calculation.LimitCalculator.get_bin_edges_and_units">
+<span class="sig-name descname"><span class="pre">get_bin_edges_and_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/limits_calculation.html#LimitCalculator.get_bin_edges_and_units"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.limits_calculation.LimitCalculator.get_bin_edges_and_units" title="Link to this definition">#</a></dt>
+<dd><p>Extract bin edges and units from the table metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>table</strong><span class="classifier">astropy.table.Table</span></dt><dd><p>Table containing the event data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>Tuple containing the bin edges and their units.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -949,6 +1062,16 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate_energy_threshold()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.plot_comparison()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.limits_calculation">limits_calculation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator"><code class="docutils literal notranslate"><span class="pre">LimitCalculator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator.compute_upper_radial_distance"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radial_distance()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.limits_calculation.LimitCalculator.get_bin_edges_and_units"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.get_bin_edges_and_units()</span></code></a></li>
 </ul>
 </li>
 </ul>

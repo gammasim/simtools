@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-generate-corsika-histograms &#8212; simtools v0.1.dev1+g38069a8 Manual</title>
+    <title>simtools-derive-limits &#8212; simtools v0.1.dev1+g38069a8 Manual</title>
   
   
   
@@ -43,11 +43,11 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-generate-corsika-histograms';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-derive-limits';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-generate-default-metadata" href="simtools-generate-default-metadata.html" />
-    <link rel="prev" title="simtools-generate-array-config" href="simtools-generate-array-config.html" />
+    <link rel="next" title="simtools-derive-mirror-rnda" href="simtools-derive-mirror-rnda.html" />
+    <link rel="prev" title="simtools-db-inspect-databases" href="simtools-db-inspect-databases.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g38069a8" />
@@ -189,12 +189,12 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simtools-derive-limits.html">simtools-derive-limits</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-derive-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-array-config.html">simtools-generate-array-config</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
@@ -313,7 +313,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-generate-corsika-histograms.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-derive-limits.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -330,7 +330,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-generate-corsika-histograms.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-derive-limits.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -360,7 +360,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/simtools-generate-corsika-histograms.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simtools-derive-limits.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -436,7 +436,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>simtools-generate-corsika-histograms</h1>
+    <h1>simtools-derive-limits</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -448,6 +448,7 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#derive_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -459,160 +460,34 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-generate_corsika_histograms">
-<span id="simtools-generate-corsika-histograms"></span><h1>simtools-generate-corsika-histograms<a class="headerlink" href="#module-generate_corsika_histograms" title="Link to this heading">#</a></h1>
-<p>Generates a set of histograms Cherenkov photon distributions from CORSIKA output.</p>
-<p>The Cherenkov photons (from observation level) are read from a CORSIKA IACT
-output file provided as input.</p>
-<p>The histograms can be saved both into pdfs and in a hdf5 file.</p>
-<dl class="simple">
-<dt>The following 2D histograms are generated:</dt><dd><ul class="simple">
-<li><p>Number of Cherenkov photons on the ground;</p></li>
-<li><p>Density of Cherenkov photons on the ground;</p></li>
-<li><p>Incoming direction (directive cosines) of the Cherenkov photons;</p></li>
-<li><p>Time of arrival (ns) vs altitude of production (km);</p></li>
-<li><p>Number of Cherenkov photons per event per telescope.</p></li>
-</ul>
-</dd>
-<dt>The following 1D histograms are generated:</dt><dd><ul class="simple">
-<li><p>Wavelength;</p></li>
-<li><p>Counts;</p></li>
-<li><p>Density;</p></li>
-<li><p>Time of arrival;</p></li>
-<li><p>Altitude of production;</p></li>
-<li><p>Number of photons per telescope;</p></li>
-<li><p>Number of photons per event.</p></li>
-</ul>
-</dd>
-</dl>
-<p>Histograms for the distribution of CORSIKA event header elements can also be generated by using
-the –event_1d_histograms and –event_2d_histograms arguments. The accepted arguments (keys)
-are to be found in the CORSIKA manual, e.g., “total_energy”, “zenith”, “azimuth”.</p>
+  <section id="module-derive_limits">
+<span id="simtools-derive-limits"></span><h1>simtools-derive-limits<a class="headerlink" href="#module-derive_limits" title="Link to this heading">#</a></h1>
+<p>Derives the limits for energy, radial distance, and viewcone to be used in CORSIKA simulations.</p>
+<p>The limits are derived based on the event loss fraction specified by the user.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>iact_file (str, required)</dt><dd><p>The name of the CORSIKA IACT file resulted from the CORSIKA simulation.</p>
+<dt>event_data_file (str, required)</dt><dd><p>Path to the file containing the event data.</p>
 </dd>
-<dt>telescope_indices (list, optional)</dt><dd><p>The list with the telescope indices to be considered in the generation of the histograms.
-Telescopes that are not in the list will not contribute with photons to the histograms.
-If the argument is not given, all telescopes are considered.</p>
-</dd>
-<dt>individual_telescopes (bool, optional)</dt><dd><p>Indicates whether single histograms are generated for the individual telescopes, or if
-a master histogram is generated for all the telescopes together.
-If the argument is not given, the Cherenkov photons from the given telescopes are considered
-together in the same histograms.</p>
-</dd>
-<dt>hist_config (hdf5 or dict, optional)</dt><dd><p>The configuration used for generating the histograms.
-It includes information about the bin sizes, the ranges, scale of the plot and units.
-By construction, three major histograms are created to start with:
-- hist_direction (2D): Directive cosines (x and y) for the incoming photons;
-- hist_position (3D): position x, position y, and wavelength;
-- hist_time_altitude (2D): time of arrival and altitude of emission;</p>
-</dd>
-</dl>
-<p>If the argument is not given, the default configuration is generated:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">hist_direction:</span>
-<span class="go">    x axis: {bins: 100, scale: linear, start: -1, stop: 1}</span>
-<span class="go">    y axis: {bins: 100, scale: linear, start: -1, stop: 1}</span>
-
-<span class="go">hist_position:</span>
-<span class="go">    x axis:</span>
-<span class="go">        bins: 100</span>
-<span class="go">        scale: linear</span>
-<span class="go">        start: !astropy.units.Quantity</span>
-<span class="go">            unit: &amp;id001 m</span>
-<span class="go">            value: -1000.0</span>
-<span class="go">        stop: &amp;id002 !astropy.units.Quantity</span>
-<span class="go">            unit: *id001</span>
-<span class="go">            value: 1000.0</span>
-<span class="go">    y axis:</span>
-<span class="go">        bins: 100</span>
-<span class="go">        scale: linear</span>
-<span class="go">        start: !astropy.units.Quantity</span>
-<span class="go">            unit: *id001</span>
-<span class="go">            value: -1000.0</span>
-<span class="go">        stop: *id002</span>
-<span class="go">    z axis:</span>
-<span class="go">        bins: 80</span>
-<span class="go">        scale: linear</span>
-<span class="go">        start: !astropy.units.Quantity</span>
-<span class="go">            unit: nm</span>
-<span class="go">            value: 200.0</span>
-<span class="go">        stop: !astropy.units.Quantity</span>
-<span class="go">            unit: *id003</span>
-<span class="go">            value: 1000.0</span>
-<span class="go">hist_time_altitude:</span>
-<span class="go">    x axis:</span>
-<span class="go">        bins: 100</span>
-<span class="go">        scale: linear</span>
-<span class="go">        start: !astropy.units.Quantity</span>
-<span class="go">            unit: ns</span>
-<span class="go">            value: -2000.0</span>
-<span class="go">        stop: !astropy.units.Quantity</span>
-<span class="go">            unit: *id004</span>
-<span class="go">            value: 2000.0</span>
-<span class="go">    y axis:</span>
-<span class="go">        bins: 100</span>
-<span class="go">        scale: linear</span>
-<span class="go">        start: !astropy.units.Quantity</span>
-<span class="go">            unit: km</span>
-<span class="go">            value: 120.0</span>
-<span class="go">        stop: !astropy.units.Quantity</span>
-<span class="go">            unit: *id005</span>
-<span class="go">            value: 0.0</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>pdf (bool, optional)</dt><dd><p>If set, histograms are saved into pdf files.
-One pdf file contains all the histograms for the Cherenkov photons.
-The name of the file is controlled via hdf5_file_name.
-If event_1d_histograms and event_2d_histograms are used, two separate pdf files might be
-created to accommodate the histograms for the CORSIKA event header elements. The core names
-of these output pdf files are also given by hdf5_file_name argument with the addition of
-‘event_1d_histograms’ and ‘event_2d_histograms’.</p>
-</dd>
-<dt>hdf5 (bool, optional)</dt><dd><p>If set, histograms are saved into hdf5 files.</p>
-</dd>
-<dt>hdf5_file_name (str, optional)</dt><dd><p>The name of the output hdf5 data (without the path).
-It requires the –hdf5 flag.
-If not given, hdf5_file_name takes the name from the input IACT file (input_file).
-If the output hdf5_file_name file already exists, the tables associated to the chosen
-flags (e.g. hdf5, event_1d_histograms, event_2d_histograms) will be overwritten. The
-remaining tables, if any, will stay untouched.</p>
-</dd>
-<dt>event_1d_histograms (str, optional)</dt><dd><p>Generate 1D histograms for elements given in –event_1d_histograms from the CORSIKA event
-header and save into hdf5/pdf files.
-It allows more than one argument, separated by simple spaces.
-Usage: –event_1d_histograms first_interaction_height total_energy.</p>
-</dd>
-<dt>event_2d_histograms (str, optional)</dt><dd><p>Generate 2D histograms for elements given in –event_2d_histograms from the CORSIKA event
-header and save into hdf5/pdf files.
-It allows more than one argument, separated by simple spaces.
-The elements are grouped into pairs and the 2D histograms are generated always for two
-subsequent elements.
-For example, –event_2d_histograms first_interaction_height total_energy zenith azimuth
-will generate one 2D histogram for first_interaction_height total_energy and another 2D
-histogram for zenith and azimuth.</p>
+<dt>loss_fraction (float, required)</dt><dd><p>Fraction of events to be lost.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Generate the histograms for a test IACT file:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-corsika-histograms --iact_file /workdir/external/simtools/\\</span>
-<span class="go">testsresources/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio \\</span>
-<span class="go">    --pdf --hdf5 \\</span>
-<span class="go">    --event_2d_histograms zenith azimuth --event_1d_histograms total_energy</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>Expected final print-out message:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">INFO::generate_corsika_histograms(l358)::main::Finalizing the application.</span>
-<span class="go">Total time needed: 8s.</span>
+<p>Derive limits for a given file with a specified loss fraction.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-limits\\</span>
+<span class="go">    --event_data_file path/to/event_data_file.hdf5 \\</span>
+<span class="go">    --loss_fraction 1e-6</span>
 </pre></div>
 </div>
 </section>
+<dl class="py function">
+<dt class="sig sig-object py" id="derive_limits.main">
+<span class="sig-prename descclassname"><span class="pre">derive_limits.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/derive_limits.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#derive_limits.main" title="Link to this definition">#</a></dt>
+<dd><p>Derive limits for energy, radial distance, and viewcone.</p>
+</dd></dl>
+
 </section>
 
 
@@ -627,20 +502,20 @@ histogram for zenith and azimuth.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-generate-array-config.html"
+       href="simtools-db-inspect-databases.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-generate-array-config</p>
+        <p class="prev-next-title">simtools-db-inspect-databases</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-generate-default-metadata.html"
+       href="simtools-derive-mirror-rnda.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-generate-default-metadata</p>
+        <p class="prev-next-title">simtools-derive-mirror-rnda</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -663,6 +538,7 @@ histogram for zenith and azimuth.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#derive_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 
