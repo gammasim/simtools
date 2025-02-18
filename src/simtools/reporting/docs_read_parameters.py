@@ -112,37 +112,35 @@ class ReadParameters:
             return data
 
         for parameter in all_params:
-            if not telescope_model.has_parameter(parameter):
+            if all_params[parameter]["instrument"] != telescope_model.name:
                 continue
+            parameter_version = telescope_model.get_parameter_version(parameter)
+            value = telescope_model.get_parameter_value_with_unit(parameter)
+            if telescope_model.get_parameter_file_flag(parameter) and value:
+                try:
+                    input_file_name = telescope_model.config_file_directory / Path(value)
+                    output_file_name = self._convert_to_md(input_file_name)
+                    value = f"[{Path(value).name}]({output_file_name})"
+                except FileNotFoundError:
+                    value = f"File not found: {value}"
+            elif isinstance(value, list):
+                value = ", ".join(str(q) for q in value)
+            else:
+                value = str(value)
 
-            if all_params[parameter]["instrument"] == telescope_model.name:
-                parameter_version = telescope_model.get_parameter_version(parameter)
-                value = telescope_model.get_parameter_value_with_unit(parameter)
-                if telescope_model.get_parameter_file_flag(parameter) and value:
-                    try:
-                        input_file_name = telescope_model.config_file_directory / Path(value)
-                        output_file_name = self._convert_to_md(input_file_name)
-                        value = f"[{Path(value).name}]({output_file_name})"
-                    except FileNotFoundError:
-                        value = f"File not found: {value}"
-                elif isinstance(value, list):
-                    value = ", ".join(str(q) for q in value)
-                else:
-                    value = str(value)
-
-                description = parameter_descriptions[0].get(parameter)
-                short_description = parameter_descriptions[1].get(parameter, description)
-                inst_class = parameter_descriptions[2].get(parameter)
-                data.append(
-                    [
-                        inst_class,
-                        parameter,
-                        parameter_version,
-                        value,
-                        description,
-                        short_description,
-                    ]
-                )
+            description = parameter_descriptions[0].get(parameter)
+            short_description = parameter_descriptions[1].get(parameter, description)
+            inst_class = parameter_descriptions[2].get(parameter)
+            data.append(
+                [
+                    inst_class,
+                    parameter,
+                    parameter_version,
+                    value,
+                    description,
+                    short_description,
+                ]
+            )
 
         return data
 
