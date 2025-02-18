@@ -100,7 +100,6 @@ def mock_assert_file_type(mocker):
 
 def test_compare_json_files_float_strings(create_json_file, file_name):
     content = {"key": 1, "value": "1.23 4.56 7.89", "schema_version": "1.0.0"}
-    content = {"key": 1, "value": "1.23 4.56 7.89", "schema_version": "1.0.0"}
     file1 = create_json_file(file_name(1, "json"), content)
     file2 = create_json_file(file_name(2, "json"), content)
 
