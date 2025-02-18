@@ -32,4 +32,4 @@ To prepare a release, the following steps are required:
 The conda feedstock for gammasimtools is [this repository](https://github.com/conda-forge/gammasimtools-feedstock).
 A new merge request is automatically created for new releases on pypi.
 
-New, updated, or removed command line tools require manual modifications in the `recipe/meta.yaml` file.
+New, updated, or removed command-line tools require manual modifications in the `recipe/meta.yaml` file.
