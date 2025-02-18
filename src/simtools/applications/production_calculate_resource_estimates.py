@@ -39,7 +39,6 @@ The output will show the estimated resources required for the simulation.
 
 import json
 import logging
-import os
 from pathlib import Path
 
 import astropy.units as u
@@ -106,7 +105,7 @@ def load_existing_data(file_path: str) -> list:
     list
         List of dictionaries with existing data.
     """
-    if file_path and os.path.exists(file_path):
+    if file_path and Path(file_path).exists():
         with open(file_path, encoding="utf-8") as file:
             return yaml.safe_load(file)
     return []
