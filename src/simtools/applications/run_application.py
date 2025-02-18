@@ -15,6 +15,7 @@ from pathlib import Path
 
 import yaml
 
+from simtools import dependencies
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 
@@ -74,14 +75,15 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    # TODO still not working with the configuration files with and without lists
-    configurations = gen.collect_data_from_file(args_dict["configuration_file"]).get("CTA_SIMPIPE")
-    log_file = Path(configurations.get("LOG_PATH", "./")) / "simtools.log"
+    application_config = gen.collect_data_from_file(args_dict["configuration_file"]).get("CTA_SIMPIPE")
+    log_file = Path(application_config.get("LOG_PATH", "./")) / "simtools.log"
     log_file.parent.mkdir(parents=True, exist_ok=True)
-    if isinstance(configurations, dict):
-        configurations = [configurations]
+    configurations = application_config.get("APPLICATIONS")
     with log_file.open("w", encoding="utf-8") as file:
+        file.write("Running simtools applications\n")
+        file.write(dependencies.get_version_string())
         for config in configurations:
+            logger.info(f"Running application: {config.get('APPLICATION')}")
             config = gen.change_dict_keys_case(config, False)
             stdout, stderr = run_application(config.get("APPLICATION"), config.get("CONFIGURATION"))
             file.write("=" * 80 + "\n")

@@ -142,6 +142,7 @@ def test_get_site_from_array_element_name(invalid_name):
     assert "South" == names.get_site_from_array_element_name("MSTS-05")
     with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.get_site_from_array_element_name("LSTW")
+    assert "North" == names.get_site_from_array_element_name("North")
 
 
 def test_get_class_from_telescope_name(invalid_name):

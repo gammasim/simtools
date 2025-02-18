@@ -12,6 +12,7 @@ from astropy.io.registry.base import IORegistryError
 import simtools.utils.general as gen
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names, value_conversion
 
@@ -126,6 +127,7 @@ class ModelDataWriter:
         output_path=None,
         use_plain_output_path=False,
         metadata_input_dict=None,
+        db_config=None,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -148,6 +150,8 @@ class ModelDataWriter:
             Use plain output path.
         metadata_input_dict: dict
             Input to metadata collector.
+        db_config: dict
+            Database configuration. If not None, check if parameter with the same version exists.
 
         Returns
         -------
@@ -161,6 +165,11 @@ class ModelDataWriter:
             output_path=output_path,
             use_plain_output_path=use_plain_output_path,
         )
+        if db_config is not None:
+            writer.check_db_for_existing_parameter(
+                parameter_name, instrument, parameter_version, db_config
+            )
+
         unique_id = None
         if metadata_input_dict is not None:
             metadata_input_dict["output_file"] = output_file
@@ -176,6 +185,41 @@ class ModelDataWriter:
         )
         writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
+
+    def check_db_for_existing_parameter(self, parameter_name, instrument, parameter_version, db_config):
+        """
+        Check if a parameter with the same version exists in the simulation model database.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the parameter.
+        instrument: str
+            Name of the instrument. 
+        parameter_version: str
+            Version of the parameter.
+        db_config: dict
+            Database configuration.
+
+        Raises
+        ------
+        ValueError
+            If parameter with the same version exists in the database.
+        """
+        db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+        try:
+            db.get_model_parameter(
+                parameter=parameter_name,
+                parameter_version=parameter_version,
+                site=names.get_site_from_array_element_name(instrument),
+                array_element_name=instrument,
+                collection="telescopes",  # TODO - generalize collection
+            )
+        except ValueError:
+            pass  # parameter does not exist - expected behavior
+        else:
+            raise ValueError(
+                f"Parameter {parameter_name} with version {parameter_version} already exists.")
 
     def get_validated_parameter_dict(
         self,
@@ -211,18 +255,13 @@ class ModelDataWriter:
         schema_file = schema.get_model_parameter_schema_file(parameter_name)
         self.schema_dict = gen.collect_data_from_file(schema_file)
 
-        try:  # e.g. instrument is 'North"
-            site = names.validate_site_name(instrument)
-        except ValueError:  # e.g. instrument is 'LSTN-01'
-            site = names.get_site_from_array_element_name(instrument)
-
         value, unit = value_conversion.split_value_and_unit(value)
 
         data_dict = {
             "schema_version": schema.get_model_parameter_schema_version(schema_version),
             "parameter": parameter_name,
             "instrument": instrument,
-            "site": site,
+            "site": names.get_site_from_array_element_name(instrument),
             "parameter_version": parameter_version,
             "unique_id": unique_id,
             "value": value,
