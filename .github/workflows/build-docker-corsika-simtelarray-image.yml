@@ -57,8 +57,8 @@ jobs:
           - { build_opt: 'prod5', extra_def: ''}
           - { build_opt: 'prod5-sc', extra_def: ''}
         version:
-#          - { simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67' }
-          - { simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68' }
+          - { simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67' }
+#          - { simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68' }
         hadronic_model: ['qgs2']
 
     env:
