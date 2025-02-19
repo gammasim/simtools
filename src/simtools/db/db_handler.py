@@ -178,7 +178,6 @@ class DatabaseHandler:
         parameter_version,
         site,
         array_element_name,
-        collection,
     ):
         """
         Get a model parameter using the parameter version.
@@ -193,8 +192,6 @@ class DatabaseHandler:
             Site name.
         array_element_name: str
             Name of the array element model (e.g. MSTN, SSTS).
-        collection: str
-            Collection of array element (e.g. telescopes, calibration_devices).
 
         Returns
         -------
@@ -209,7 +206,9 @@ class DatabaseHandler:
             query["instrument"] = array_element_name
         if site is not None:
             query["site"] = site
-        return self._read_mongo_db(query=query, collection_name=collection)
+        return self._read_mongo_db(
+            query=query, collection_name=names.get_collection_name_from_parameter_name(parameter)
+        )
 
     def get_model_parameters(
         self,

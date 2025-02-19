@@ -53,6 +53,7 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io_operations import io_handler
+from simtools.utils import names
 
 
 def _parse():
@@ -97,32 +98,15 @@ def main():  # noqa: D103
             parameter_version=args_dict["parameter_version"],
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
-            collection=(
-                args_dict["db_collection"] if args_dict.get("db_collection") else "telescopes"
-            ),
         )
     # get parameter using 'model_version'
     elif args_dict["model_version"] is not None:
-        if args_dict["telescope"]:
-            pars = db.get_model_parameters(
-                site=args_dict["site"],
-                array_element_name=args_dict["telescope"],
-                model_version=args_dict["model_version"],
-                collection=(
-                    "configuration_sim_telarray"
-                    if args_dict.get("db_collection") == "configuration_sim_telarray"
-                    else "telescopes"
-                ),
-            )
-        else:
-            pars = db.get_model_parameters(
-                site=args_dict.get("site"),
-                model_version=args_dict["model_version"],
-                collection=(
-                    args_dict["db_collection"] if args_dict.get("db_collection") else "sites"
-                ),
-                array_element_name=None,
-            )
+        pars = db.get_model_parameters(
+            site=args_dict["site"],
+            array_element_name=args_dict.get("telescope"),
+            model_version=args_dict["model_version"],
+            collection=names.get_collection_name_from_parameter_name(args_dict["parameter"]),
+        )
     else:
         raise ValueError("Either 'parameter_version' or 'model_version' must be provided.")
     if args_dict["parameter"] not in pars:

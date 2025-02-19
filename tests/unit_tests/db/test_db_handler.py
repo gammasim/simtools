@@ -164,9 +164,7 @@ def test_get_model_parameter(db, mocker):
     array_element_name = "LSTN-01"
     collection = "telescopes"
 
-    result = db.get_model_parameter(
-        parameter, parameter_version, site, array_element_name, collection
-    )
+    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
 
     query = {
         "parameter_version": parameter_version,
@@ -191,9 +189,7 @@ def test_get_model_parameter_no_site(db, mocker):
     array_element_name = "LSTS-01"
     collection = "telescopes"
 
-    result = db.get_model_parameter(
-        parameter, parameter_version, site, array_element_name, collection
-    )
+    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
 
     query = {
         "parameter_version": parameter_version,
@@ -217,9 +213,7 @@ def test_get_model_parameter_no_array_element_name(db, mocker):
     array_element_name = None
     collection = "configuration_corsika"
 
-    result = db.get_model_parameter(
-        parameter, parameter_version, site, array_element_name, collection
-    )
+    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
 
     query = {
         "parameter_version": parameter_version,
