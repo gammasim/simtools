@@ -58,9 +58,9 @@ class ReadParameters:
                 outfile.write("\n")
                 outfile.write("```")
 
-        except FileNotFoundError as e:
-            logger.exception(f"{e}: {input_file}.")
-            raise e
+        except FileNotFoundError as exc:
+            logger.exception(f"Data file not found: {input_file}.")
+            raise FileNotFoundError(f"Data file not found: {input_file}.") from exc
 
         return f"_data_files/{output_file_name}"
 
@@ -85,9 +85,11 @@ class ReadParameters:
 
         return parameter_description, short_description, inst_class
 
-    def get_telescope_parameter_data(self, telescope_model):
+    def get_array_element_parameter_data(self, telescope_model, collection="telescopes"):
         """
-        Get model parameter data.
+        Get model parameter data for a given array element.
+
+        Currently only configures for telescope.
 
         Parameters
         ----------
@@ -102,7 +104,7 @@ class ReadParameters:
         all_params = telescope_model.db.get_model_parameters(
             site=telescope_model.site,
             array_element_name=telescope_model.name,
-            collection="telescopes",
+            collection=collection,
         )
 
         telescope_model.export_model_files()
@@ -169,7 +171,7 @@ class ReadParameters:
             if not telescope_model.has_parameter(parameter_name):
                 return comparison_data
 
-            parameter_data = self.get_telescope_parameter_data(telescope_model)
+            parameter_data = self.get_array_element_parameter_data(telescope_model)
             for param in parameter_data:
                 if param[1] == parameter_name:
                     comparison_data.append(
@@ -183,9 +185,9 @@ class ReadParameters:
                     break
         return comparison_data
 
-    def generate_array_element_report(self):
+    def produce_array_element_report(self):
         """
-        Generate a markdown report of all model parameters per array element.
+        Produce a markdown report of all model parameters per array element.
 
         Output
         ----------
@@ -194,7 +196,7 @@ class ReadParameters:
         """
         output_filename = Path(self.output_path / (self.telescope_model.name + ".md"))
         output_filename.parent.mkdir(parents=True, exist_ok=True)
-        data = self.get_telescope_parameter_data(self.telescope_model)
+        data = self.get_array_element_parameter_data(self.telescope_model)
         # Sort data by class to prepare for grouping
         if not isinstance(data, str):
             data.sort(key=lambda x: (x[0], x[1]), reverse=True)
@@ -244,9 +246,9 @@ class ReadParameters:
                     )
                 file.write("\n\n")
 
-    def generate_parameter_report(self):
+    def produce_model_parameter_reports(self):
         """
-        Generate a markdown report per parameters per array element.
+        Produce a markdown report per parameter for a given array element.
 
         Output
         ----------

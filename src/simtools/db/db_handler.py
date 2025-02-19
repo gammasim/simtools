@@ -522,6 +522,7 @@ class DatabaseHandler:
         try:
             return production_table["design_model"][array_element_name]
         except KeyError:
+            # for eg. array_element_name == 'LSTN-design' returns 'LSTN-design'
             return array_element_name
 
     def get_array_elements_of_type(self, array_element_type, model_version, collection):

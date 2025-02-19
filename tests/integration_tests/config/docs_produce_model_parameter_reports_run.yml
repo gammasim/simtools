@@ -1,5 +1,5 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-docs-generate-model-parameter-report
+  APPLICATION: simtools-docs-produce-model-parameter-reports
   TEST_NAME: run
   CONFIGURATION:
     SITE: North
