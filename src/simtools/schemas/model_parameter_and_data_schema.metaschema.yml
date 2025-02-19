@@ -263,7 +263,6 @@ definitions:
             - South
     required:
       - class
-      - type
     title: Instrument
   InstrumentTypeElement:
     type: string
