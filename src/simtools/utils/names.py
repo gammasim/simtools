@@ -89,6 +89,14 @@ def telescope_parameters():
     return load_model_parameters(class_key_list=tuple(db_collections_to_class_keys["telescopes"]))
 
 
+def all_model_parameters():
+    """Return model parameters for all classes / collections."""
+    parameter_names = {}
+    for _, class_keys in db_collections_to_class_keys.items():
+        parameter_names.update(load_model_parameters(class_key_list=tuple(class_keys)))
+    return parameter_names
+
+
 def class_key_to_db_collection(class_name):
     """Convert class key to collection name."""
     for collection, classes in db_collections_to_class_keys.items():
@@ -313,44 +321,41 @@ def get_site_from_array_element_name(name):
 
 def get_collection_name_from_array_element_name(name, array_elements_only=True):
     """
-    Get collection name (e.g., telescopes, calibration_devices, sites) of array element from name.
+    Get collection name (e.g., telescopes, calibration_devices) of an array element from its name.
 
     Parameters
     ----------
     name: str
-        Array element name.
+        Array element name (e.g. LSTN-01)
     array_elements_only: bool
-        If True, only array elements are considered.
+        If True, only array elements are considered (e.g. "OBS-North" will raise a ValueError).
 
     Returns
     -------
     str
         Collection name .
+
+    Raises
+    ------
+    ValueError
+        If name is not a valid array element name.
     """
     try:
         return array_elements()[get_array_element_type_from_name(name)]["collection"]
-    except ValueError:
-        pass
-    if name.startswith("OBS"):
-        return "sites"
-    try:
-        validate_site_name(name)
-        return "sites"
     except ValueError as exc:
         if array_elements_only:
             raise ValueError(f"Invalid array element name {name}") from exc
-    if name in (
-        "configuration_sim_telarray",
-        "configuration_corsika",
-        "Files",
-        "Dummy-Telescope",
-    ):
+    try:
+        if name.startswith("OBS") or validate_site_name(name):
+            return "sites"
+    except ValueError:
+        pass
+    if name in {"configuration_sim_telarray", "configuration_corsika", "Files", "Dummy-Telescope"}:
         return name
-
     raise ValueError(f"Invalid array element name {name}")
 
 
-def get_db_collection_for_parameter(parameter_name):
+def get_collection_name_from_parameter_name(parameter_name):
     """
     Get the db collection name for a given parameter.
 
@@ -363,10 +368,13 @@ def get_db_collection_for_parameter(parameter_name):
     -------
     str
         Collection name.
+
+    Raises
+    ------
+    KeyError
+        If the parameter name is not found in the list of model parameters
     """
-    _parameter_names = {}
-    for _, class_keys in db_collections_to_class_keys.items():
-        _parameter_names.update(load_model_parameters(class_key_list=tuple(class_keys)))
+    _parameter_names = all_model_parameters()
     try:
         class_key = _parameter_names[parameter_name].get("instrument", {}).get("class")
     except KeyError as exc:
@@ -396,13 +404,12 @@ def get_simulation_software_name_from_parameter_name(
     str
         Simtel parameter name.
     """
-    _parameter_names = {**telescope_parameters(), **site_parameters()}
+    _parameter_names = all_model_parameters()
 
     try:
         _parameter = _parameter_names[par_name]
     except KeyError as err:
-        _logger.error(f"Parameter {par_name} without schema definition")
-        raise err
+        raise KeyError(f"Parameter {par_name} without schema definition") from err
 
     try:
         for software in _parameter.get("simulation_software", []):
