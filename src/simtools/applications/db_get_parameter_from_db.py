@@ -67,11 +67,6 @@ def _parse():
 
     config.parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
     config.parser.add_argument(
-        "--db_collection",
-        help="DB collection to which to add the file",
-        required=False,
-    )
-    config.parser.add_argument(
         "--output_file",
         help="output file name (if not given: print to stdout)",
         type=str,
