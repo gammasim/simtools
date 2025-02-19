@@ -501,12 +501,14 @@ class DatabaseHandler:
 
     def get_design_model(self, model_version, array_element_name, collection="telescopes"):
         """
-        Get list array elements for a given model version and collection from the DB.
+        Get the design model used for a given array element and a given model version.
 
         Parameters
         ----------
         model_version: str
             Version of the model.
+        array_element_name: str
+            Name of the array element model (e.g. MSTN, SSTS).
         collection: str
             Which collection to get the array elements from:
             i.e. telescopes, calibration_devices.
@@ -514,7 +516,7 @@ class DatabaseHandler:
         Returns
         -------
         str
-            Design model for a given array element
+            Design model for a given array element.
         """
         production_table = self._read_production_table_from_mongo_db(collection, model_version)
         try:
