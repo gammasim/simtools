@@ -96,8 +96,8 @@ class ReadParameters:
 
         Returns
         -------
-            list: A list of lists containing parameter names, values with units,
-                  descriptions, and short descriptions.
+        list: A list of lists containing parameter names, values with units,
+                descriptions, and short descriptions.
         """
         all_params = telescope_model.db.get_model_parameters(
             site=telescope_model.site,
