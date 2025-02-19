@@ -6,6 +6,7 @@ from unittest import mock
 
 import pytest
 
+from simtools import dependencies
 from simtools.db.db_handler import DatabaseHandler
 from simtools.dependencies import (
     get_corsika_version,
@@ -49,6 +50,11 @@ def test_get_sim_telarray_version_success():
 
     with mock.patch("subprocess.run", return_value=mock_result):
         assert get_sim_telarray_version() == expected_version
+
+    with mock.patch("subprocess.run", return_value=mock_result):
+        version_string = dependencies.get_version_string()
+        assert "Database version: None" in version_string
+        assert "sim_telarray version:" in version_string
 
 
 def test_get_sim_telarray_version_no_env_var(caplog):

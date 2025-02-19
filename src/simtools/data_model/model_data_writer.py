@@ -215,7 +215,6 @@ class ModelDataWriter:
                 parameter_version=parameter_version,
                 site=names.get_site_from_array_element_name(instrument),
                 array_element_name=instrument,
-                collection="telescopes",  # TODO - generalize collection
             )
         except ValueError:
             pass  # parameter does not exist - expected behavior
