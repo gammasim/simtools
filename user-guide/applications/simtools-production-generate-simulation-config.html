@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-generate-simulation-config &#8212; simtools v0.1.dev1+g21d04ed Manual</title>
+    <title>simtools-production-generate-simulation-config &#8212; simtools v0.1.dev1+g54c11b5 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=7be56783"></script>
+    <script src="../../_static/documentation_options.js?v=672178d2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="simtools-production-derive-limits" href="simtools-production-derive-limits.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g21d04ed" />
+  <meta name="docsearch:version" content="0.1.dev1+g54c11b5" />
   </head>
   
   
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g21d04ed Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g54c11b5 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -476,8 +476,11 @@ azimuth, and night sky background.</p>
 <ul class="simple">
 <li><p>statistical uncertainty on the determination of the effective area as function of primary energy</p></li>
 <li><p>fraction of lost events to the selected core scatter and view cone radius (to be implemented)</p></li>
-<li><p>statistical uncertainty of the energy migration matrix as function of primary energy
-(to be implemented)</p></li>
+<li><dl class="simple">
+<dt>statistical uncertainty of the energy migration matrix as function of primary energy</dt><dd><p>(to be implemented)</p>
+</dd>
+</dl>
+</li>
 </ul>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
@@ -488,15 +491,12 @@ azimuth, and night sky background.</p>
 </dd>
 <dt>nsb (float, required)</dt><dd><p>Night sky background value.</p>
 </dd>
-<dt>ctao_data_level (str, required)</dt><dd><p>The data level for the simulation (e.g., ‘A’, ‘B’, ‘C’).</p>
-</dd>
-<dt>science_case (str, required)</dt><dd><p>The science case for the simulation.</p>
-</dd>
-<dt>file_path (str, required)</dt><dd><p>Path to file with MC events at CTAO DL2 data level. Used for statistical uncertainty evaluation.</p>
+<dt>file_path (str, required)</dt><dd><p>Path to file with MC events at CTAO DL2 data level.
+Used for statistical uncertainty evaluation.</p>
 </dd>
 <dt>file_type (str, required)</dt><dd><p>Type of the DL2 MC event file (‘point-like’ or ‘cone’).</p>
 </dd>
-<dt>metrics (str, optional)</dt><dd><p>Path to a YAML file containing metrics for evaluation.</p>
+<dt>metrics (str, required)</dt><dd><p>Path to a YAML file containing metrics for evaluation.</p>
 </dd>
 <dt>site (str, required)</dt><dd><p>The observatory site (North or South).</p>
 </dd>
@@ -506,10 +506,9 @@ azimuth, and night sky background.</p>
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>To run the simulation configuration, execute the script as follows:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \</span>
-<span class="go">    --nsb 0.3 --ctao_data_level &quot;A&quot; --science_case &quot;high_precision&quot; \</span>
-<span class="go">    --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \</span>
-<span class="go">    --file_type &quot;point-like&quot;    \</span>
-<span class="go">    --metrics_file tests/resources/production_simulation_config_metrics.yml --site North</span>
+<span class="go">        --nsb 0.3 --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \</span>
+<span class="go">        --file_type &quot;point-like&quot;    \</span>
+<span class="go">        --metrics_file tests/resources/production_simulation_config_metrics.yml --site North</span>
 </pre></div>
 </div>
 <p>The output will show the derived simulation parameters.</p>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_configuration.generate_simulation_config &#8212; simtools v0.1.dev1+g21d04ed Manual</title>
+    <title>production_configuration.generate_simulation_config &#8212; simtools v0.1.dev1+g54c11b5 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=7be56783"></script>
+    <script src="../../_static/documentation_options.js?v=672178d2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g21d04ed" />
+  <meta name="docsearch:version" content="0.1.dev1+g54c11b5" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g21d04ed Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g54c11b5 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -388,10 +388,6 @@
 <span class="sd">    ----------</span>
 <span class="sd">    grid_point : dict</span>
 <span class="sd">        Dictionary representing a grid point with azimuth, elevation, and night sky background.</span>
-<span class="sd">    ctao_data_level : str</span>
-<span class="sd">        The data level (e.g., &#39;A&#39;, &#39;B&#39;, &#39;C&#39;) for the simulation configuration.</span>
-<span class="sd">    science_case : str</span>
-<span class="sd">        The science case for the simulation configuration.</span>
 <span class="sd">    file_path : str</span>
 <span class="sd">        Path to the DL2 MC event file for statistical uncertainty evaluation.</span>
 <span class="sd">    file_type : str</span>
@@ -403,28 +399,24 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">grid_point</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-        <span class="n">ctao_data_level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">science_case</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">file_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the simulation configuration for a grid point.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grid_point</span> <span class="o">=</span> <span class="n">grid_point</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ctao_data_level</span> <span class="o">=</span> <span class="n">ctao_data_level</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">science_case</span> <span class="o">=</span> <span class="n">science_case</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">file_type</span> <span class="o">=</span> <span class="n">file_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">StatisticalErrorEvaluator</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_scaler</span> <span class="o">=</span> <span class="n">EventScaler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="p">,</span> <span class="n">science_case</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_scaler</span> <span class="o">=</span> <span class="n">EventScaler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simulation_params</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="SimulationConfig.configure_simulation">
 <a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.generate_simulation_config.SimulationConfig.configure_simulation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">configure_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Configure the simulation parameters for the grid point, data level, and science case.</span>
+<span class="sd">        Configure the simulation parameters for the grid point.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -458,7 +450,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_core_scatter_area</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate the core scatter area based on the grid point and data level.</span>
+<span class="sd">        Calculate the core scatter area based on the grid point.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -471,7 +463,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_viewcone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate the viewcone based on the grid point conditions and data level.</span>
+<span class="sd">        Calculate the viewcone based on the grid point conditions.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>

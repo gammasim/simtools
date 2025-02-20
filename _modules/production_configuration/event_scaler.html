@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_configuration.event_scaler &#8212; simtools v0.1.dev1+g21d04ed Manual</title>
+    <title>production_configuration.event_scaler &#8212; simtools v0.1.dev1+g54c11b5 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=7be56783"></script>
+    <script src="../../_static/documentation_options.js?v=672178d2"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g21d04ed" />
+  <meta name="docsearch:version" content="0.1.dev1+g54c11b5" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g21d04ed Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g54c11b5 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -391,21 +391,18 @@
 <span class="sd">    Supports scaling both the entire dataset and specific grid points like energy values.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">,</span> <span class="n">science_case</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize the EventScaler with the evaluator, science case, and metrics.</span>
+<span class="sd">        Initialize the EventScaler with the evaluator and metrics.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        evaluator : StatisticalErrorEvaluator</span>
 <span class="sd">            The evaluator responsible for calculating metrics and handling event data.</span>
-<span class="sd">        science_case : str</span>
-<span class="sd">            The science case used to adjust the uncertainty factor.</span>
 <span class="sd">        metrics : dict</span>
 <span class="sd">            Dictionary containing metrics, including target error for effective area.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">evaluator</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">science_case</span> <span class="o">=</span> <span class="n">science_case</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
 
 <div class="viewcode-block" id="EventScaler.scale_events">
@@ -452,20 +449,7 @@
             <span class="s2">&quot;value&quot;</span>
         <span class="p">]</span>
 
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">current_max_error</span> <span class="o">/</span> <span class="n">target_max_error</span>
-        <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_science_case_scaling_factor</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_science_case_scaling_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Apply the uncertainty factor based on the science case.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        float</span>
-<span class="sd">            The final scaling factor after applying uncertainty.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">science_case</span> <span class="o">==</span> <span class="s2">&quot;science case 1&quot;</span> <span class="k">else</span> <span class="mf">1.0</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">current_max_error</span> <span class="o">/</span> <span class="n">target_max_error</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_number_of_simulated_events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
