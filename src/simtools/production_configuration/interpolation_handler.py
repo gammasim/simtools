@@ -12,13 +12,10 @@ __all__ = ["InterpolationHandler"]
 class InterpolationHandler:
     """Handle interpolation between multiple StatisticalErrorEvaluator instances."""
 
-    def __init__(self, evaluators, science_case: str, metrics: dict):
+    def __init__(self, evaluators, metrics: dict):
         self.evaluators = evaluators
-        self.science_case = science_case
         self.metrics = metrics
-        self.event_scalers = [
-            EventScaler(e, self.science_case, self.metrics) for e in self.evaluators
-        ]
+        self.event_scalers = [EventScaler(e, self.metrics) for e in self.evaluators]
 
         self.azimuths = [e.grid_point[1].to(u.deg).value for e in self.evaluators]
         self.zeniths = [e.grid_point[2].to(u.deg).value for e in self.evaluators]
