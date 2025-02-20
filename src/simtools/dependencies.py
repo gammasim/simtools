@@ -109,4 +109,4 @@ def get_build_options():
     except FileNotFoundError as exc:
         raise FileNotFoundError("No build_opts.yml file found.") from exc
     except TypeError as exc:
-        raise TypeError("SIMTEL_PATH not defined.") from exc
+        raise TypeError("SIMTOOLS_SIMTEL_PATH not defined.") from exc
