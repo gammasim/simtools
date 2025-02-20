@@ -15,6 +15,7 @@ from pathlib import Path
 import simtools.constants
 import simtools.utils.general as gen
 import simtools.version
+from simtools.constants import METADATA_JSON_SCHEMA
 from simtools.data_model import metadata_model, schema
 from simtools.io_operations import io_handler
 from simtools.utils import names
@@ -266,7 +267,7 @@ class MetadataCollector:
             self._logger.error("Unknown metadata file format: %s", metadata_file_name)
             raise gen.InvalidConfigDataError
 
-        schema.validate_dict_using_schema(_input_metadata, None)
+        schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
 
         return gen.change_dict_keys_case(
             self._process_metadata_from_file(_input_metadata),
