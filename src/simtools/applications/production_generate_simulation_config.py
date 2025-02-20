@@ -18,28 +18,25 @@ The configuration parameters are derived according to the required precision. Th
 * statistical uncertainty on the determination of the effective area as function of primary energy
 * fraction of lost events to the selected core scatter and view cone radius (to be implemented)
 * statistical uncertainty of the energy migration matrix as function of primary energy
-  (to be implemented)
+    (to be implemented)
 
 Command line arguments
 ----------------------
 azimuth (float, required)
-    Azimuth angle in degrees.
+        Azimuth angle in degrees.
 elevation (float, required)
-    Elevation angle in degrees.
+        Elevation angle in degrees.
 nsb (float, required)
-    Night sky background value.
-ctao_data_level (str, required)
-    The data level for the simulation (e.g., 'A', 'B', 'C').
-science_case (str, required)
-    The science case for the simulation.
+        Night sky background value.
 file_path (str, required)
-    Path to file with MC events at CTAO DL2 data level. Used for statistical uncertainty evaluation.
+        Path to file with MC events at CTAO DL2 data level.
+        Used for statistical uncertainty evaluation.
 file_type (str, required)
-    Type of the DL2 MC event file ('point-like' or 'cone').
-metrics (str, optional)
-    Path to a YAML file containing metrics for evaluation.
+        Type of the DL2 MC event file ('point-like' or 'cone').
+metrics (str, required)
+        Path to a YAML file containing metrics for evaluation.
 site (str, required)
-    The observatory site (North or South).
+        The observatory site (North or South).
 
 Example
 -------
@@ -47,11 +44,10 @@ To run the simulation configuration, execute the script as follows:
 
 .. code-block:: console
 
-    simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \
-        --nsb 0.3 --ctao_data_level "A" --science_case "high_precision" \
-        --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \
-        --file_type "point-like"    \
-        --metrics_file tests/resources/production_simulation_config_metrics.yml --site North
+        simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \
+                --nsb 0.3 --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \
+                --file_type "point-like"    \
+                --metrics_file tests/resources/production_simulation_config_metrics.yml --site North
 
 The output will show the derived simulation parameters.
 """
@@ -85,12 +81,6 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--nsb", type=float, required=True, help="Night sky background in units of 1/(sr*ns*cm**2)."
-    )
-    config.parser.add_argument(
-        "--ctao_data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
-    )
-    config.parser.add_argument(
-        "--science_case", type=str, required=True, help="Science case for the simulation."
     )
     config.parser.add_argument(
         "--file_path", type=str, required=True, help="Path to MC event file in DL2 format."
@@ -140,17 +130,13 @@ def main():
         "night_sky_background": args_dict["nsb"],
     }
 
-    metrics = (
-        gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
-    )
+    metrics = gen.collect_data_from_file(args_dict["metrics_file"])
     schema.validate_dict_using_schema(
         data=metrics, schema_file="production_configuration_metrics.schema.yml"
     )
 
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,
-        ctao_data_level=args_dict["ctao_data_level"],
-        science_case=args_dict["science_case"],
         file_path=args_dict["file_path"],
         file_type=args_dict["file_type"],
         metrics=metrics,

@@ -34,7 +34,6 @@ simtools-db-get-array-layouts-from-db <applications/simtools-db-get-array-layout
 simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
 simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-db>
 simtools-db-inspect-databases  <applications/simtools-db-inspect-databases>
-simtools-derive-limits <applications/simtools-derive-limits>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
@@ -45,6 +44,7 @@ simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-array-histograms <applications/simtools-generate-simtel-array-histograms>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
+simtools-production-derive-limits <applications/simtools-production-derive-limits>
 simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
 simtools-production-scale-events <applications/simtools-production-scale-events>
 simtools-run-application <applications/simtools-run-application>
