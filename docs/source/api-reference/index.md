@@ -12,6 +12,7 @@ camera
 configuration_module
 corsika
 data_model
+dependencies
 db_handler
 io_operations
 job_execution

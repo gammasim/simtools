@@ -19,21 +19,18 @@ class EventScaler:
     Supports scaling both the entire dataset and specific grid points like energy values.
     """
 
-    def __init__(self, evaluator, science_case: str, metrics: dict):
+    def __init__(self, evaluator, metrics: dict):
         """
-        Initialize the EventScaler with the evaluator, science case, and metrics.
+        Initialize the EventScaler with the evaluator and metrics.
 
         Parameters
         ----------
         evaluator : StatisticalErrorEvaluator
             The evaluator responsible for calculating metrics and handling event data.
-        science_case : str
-            The science case used to adjust the uncertainty factor.
         metrics : dict
             Dictionary containing metrics, including target error for effective area.
         """
         self.evaluator = evaluator
-        self.science_case = science_case
         self.metrics = metrics
 
     def scale_events(self, return_sum: bool = True) -> u.Quantity:
@@ -77,20 +74,7 @@ class EventScaler:
             "value"
         ]
 
-        return (
-            current_max_error / target_max_error
-        ) ** 2 * self._apply_science_case_scaling_factor()
-
-    def _apply_science_case_scaling_factor(self) -> float:
-        """
-        Apply the uncertainty factor based on the science case.
-
-        Returns
-        -------
-        float
-            The final scaling factor after applying uncertainty.
-        """
-        return 1 if self.science_case == "science case 1" else 1.0
+        return (current_max_error / target_max_error) ** 2
 
     def _number_of_simulated_events(self) -> u.Quantity:
         """
