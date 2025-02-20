@@ -20,6 +20,7 @@ array_layout
 mc_model
 production_configuration
 ray_tracing
+reporting
 runners
 sim_telarray
 simulators
