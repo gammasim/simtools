@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>I/O &#8212; simtools v0.1.dev1+g4f37d54 Manual</title>
+    <title>Dependency and version management. &#8212; simtools v0.1.dev1+g4f37d54 Manual</title>
   
   
   
@@ -43,11 +43,11 @@
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/io_operations';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api-reference/dependencies';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Job execution and submission" href="job_execution.html" />
-    <link rel="prev" title="Database support" href="db_handler.html" />
+    <link rel="next" title="Database support" href="db_handler.html" />
+    <link rel="prev" title="Data Model" href="data_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1.dev1+g4f37d54" />
@@ -228,9 +228,9 @@
 <li class="toctree-l2"><a class="reference internal" href="configuration_module.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corsika.html">CORSIKA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dependencies.html">Dependency and version management.</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Dependency and version management.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="db_handler.html">Database support</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_operations.html">I/O</a></li>
 <li class="toctree-l2"><a class="reference internal" href="job_execution.html">Job execution and submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="array_layout.html">Layout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mc_model.html">MC Model</a></li>
@@ -314,7 +314,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/api-reference/io_operations.md?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/api-reference/dependencies.md?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -331,7 +331,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fapi-reference/io_operations.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fapi-reference/dependencies.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -361,7 +361,7 @@
       
       
       
-      <li><a href="../_sources/api-reference/io_operations.md" target="_blank"
+      <li><a href="../_sources/api-reference/dependencies.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -437,7 +437,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>I/O</h1>
+    <h1>Dependency and version management.</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -447,27 +447,15 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-io_operations.io_handler">io_handler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler"><code class="docutils literal notranslate"><span class="pre">IOHandler</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler.get_input_data_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_input_data_file()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler.get_output_directory"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_output_directory()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler.get_output_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_output_file()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler.set_paths"><code class="docutils literal notranslate"><span class="pre">IOHandler.set_paths()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">dependencies</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_build_options"><code class="docutils literal notranslate"><span class="pre">get_build_options()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_corsika_version"><code class="docutils literal notranslate"><span class="pre">get_corsika_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_database_version"><code class="docutils literal notranslate"><span class="pre">get_database_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_sim_telarray_version"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_version_string"><code class="docutils literal notranslate"><span class="pre">get_version_string()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandlerSingleton"><code class="docutils literal notranslate"><span class="pre">IOHandlerSingleton</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-io_operations.hdf5_handler">hdf5_handler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.hdf5_handler.fill_hdf5_table"><code class="docutils literal notranslate"><span class="pre">fill_hdf5_table()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.hdf5_handler.read_hdf5"><code class="docutils literal notranslate"><span class="pre">read_hdf5()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-io_operations.legacy_data_handler">legacy_data_handler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.legacy_data_handler.read_legacy_data_as_table"><code class="docutils literal notranslate"><span class="pre">read_legacy_data_as_table()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.legacy_data_handler.read_legacy_lst_single_pe"><code class="docutils literal notranslate"><span class="pre">read_legacy_lst_single_pe()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version">version</a></li>
 </ul>
             </nav>
         </div>
@@ -479,231 +467,81 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="i-o">
-<span id="io"></span><h1>I/O<a class="headerlink" href="#i-o" title="Link to this heading">#</a></h1>
-<p>This module include I/O related functionality.</p>
-<section id="module-io_operations.io_handler">
-<span id="io-handler"></span><span id="iomodule"></span><h2>io_handler<a class="headerlink" href="#module-io_operations.io_handler" title="Link to this heading">#</a></h2>
-<p>Handle input and output paths.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="io_operations.io_handler.IOHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">io_operations.io_handler.</span></span><span class="sig-name descname"><span class="pre">IOHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler" title="Link to this definition">#</a></dt>
-<dd><p>Handle input and output paths.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="io_operations.io_handler.IOHandler.get_input_data_file">
-<span class="sig-name descname"><span class="pre">get_input_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler.get_input_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler.get_input_data_file" title="Link to this definition">#</a></dt>
-<dd><p>Get path of a data file, using data_path.</p>
+  <section id="dependency-and-version-management">
+<span id="dependencymanagement"></span><h1>Dependency and version management.<a class="headerlink" href="#dependency-and-version-management" title="Link to this heading">#</a></h1>
+<section id="dependencies">
+<span id="id1"></span><h2>dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h2>
+<p id="module-dependencies">Simtools dependencies version management.</p>
+<p>This modules provides two main functionalities:</p>
+<ul class="simple">
+<li><p>retrieve the versions of simtools dependencies (e.g., databases, sim_telarray, CORSIKA)</p></li>
+<li><p>provide space for future implementations of version management</p></li>
+</ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_build_options">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_build_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_build_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_build_options" title="Link to this definition">#</a></dt>
+<dd><p>Return CORSIKA / sim_telarray build options.</p>
+<p>Expects a build_opts.yml file in the sim_telarray directory.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_corsika_version">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_corsika_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_corsika_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_corsika_version" title="Link to this definition">#</a></dt>
+<dd><p>Get the version of the corsika package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>str</dt><dd><p>Version of the corsika package.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_database_version">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_database_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_database_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_database_version" title="Link to this definition">#</a></dt>
+<dd><p>Get the version of the simulation model data base used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>parent_dir: str</strong></dt><dd><p>Parent directory of the file.</p>
-</dd>
-<dt><strong>files_name: str</strong></dt><dd><p>File name.</p>
-</dd>
-<dt><strong>test: bool</strong></dt><dd><p>If true, return test resources location</p>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing the database configuration.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>Path</dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>IncompleteIOHandlerInitError</dt><dd><p>if data_path is not set</p>
+<dt>str</dt><dd><p>Version of the simulation model data base used.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="io_operations.io_handler.IOHandler.get_output_directory">
-<span class="sig-name descname"><span class="pre">get_output_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler.get_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler.get_output_directory" title="Link to this definition">#</a></dt>
-<dd><p>Return path to output directory.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_sim_telarray_version">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_sim_telarray_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_sim_telarray_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_sim_telarray_version" title="Link to this definition">#</a></dt>
+<dd><p>Get the version of the sim_telarray package using ‘sim_telarray –version’.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
-</dd>
-<dt><strong>sub_dir: str</strong></dt><dd><p>Name of the subdirectory (ray-tracing, model etc)</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Path</dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>FileNotFoundError</dt><dd><p>if error creating directory</p>
-</dd>
-<dt>TypeError</dt><dd><p>raised for errors while creating directory name</p>
+<dt>str</dt><dd><p>Version of the sim_telarray package.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="io_operations.io_handler.IOHandler.get_output_file">
-<span class="sig-name descname"><span class="pre">get_output_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler.get_output_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler.get_output_file" title="Link to this definition">#</a></dt>
-<dd><p>Get path of an output file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>files_name: str</strong></dt><dd><p>File name.</p>
-</dd>
-<dt><strong>label: str</strong></dt><dd><p>Instance label.</p>
-</dd>
-<dt><strong>sub_dir: str</strong></dt><dd><p>Name of the subdirectory (ray-tracing, model etc)</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Path</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="io_operations.io_handler.IOHandler.set_paths">
-<span class="sig-name descname"><span class="pre">set_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_plain_output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandler.set_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandler.set_paths" title="Link to this definition">#</a></dt>
-<dd><p>Set paths for input and output.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>output_path: str or Path</strong></dt><dd><p>Path pointing to the output directory.</p>
-</dd>
-<dt><strong>data_path: str or Path</strong></dt><dd><p>Path pointing to the data files (e.g., CORSIKA or sim_telarray output).</p>
-</dd>
-<dt><strong>model_path: str or Path</strong></dt><dd><p>Path pointing to the model file directory.</p>
-</dd>
-<dt><strong>use_plain_output_path: bool</strong></dt><dd><p>Use plain output path without adding tool name and date</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="io_operations.io_handler.IOHandlerSingleton">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">io_operations.io_handler.</span></span><span class="sig-name descname"><span class="pre">IOHandlerSingleton</span></span><a class="reference internal" href="../_modules/io_operations/io_handler.html#IOHandlerSingleton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.io_handler.IOHandlerSingleton" title="Link to this definition">#</a></dt>
-<dd><p>Singleton base class.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="dependencies.get_version_string">
+<span class="sig-prename descclassname"><span class="pre">dependencies.</span></span><span class="sig-name descname"><span class="pre">get_version_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dependencies.html#get_version_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dependencies.get_version_string" title="Link to this definition">#</a></dt>
+<dd><p>Print the versions of the dependencies.</p>
 </dd></dl>
 
 </section>
-<section id="module-io_operations.hdf5_handler">
-<span id="hdf5-handler"></span><span id="iohdf5"></span><h2>hdf5_handler<a class="headerlink" href="#module-io_operations.hdf5_handler" title="Link to this heading">#</a></h2>
-<p>Helper module for reading and writing in hd5 format.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="io_operations.hdf5_handler.fill_hdf5_table">
-<span class="sig-prename descclassname"><span class="pre">io_operations.hdf5_handler.</span></span><span class="sig-name descname"><span class="pre">fill_hdf5_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_bin_edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_bin_edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/hdf5_handler.html#fill_hdf5_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.hdf5_handler.fill_hdf5_table" title="Link to this definition">#</a></dt>
-<dd><p>Create and fill an hdf5 table with the histogram information.</p>
-<p>It works for both 1D and 2D distributions.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>hist: numpy.ndarray</strong></dt><dd><p>The counts of the histograms.</p>
-</dd>
-<dt><strong>x_bin_edges: numpy.array</strong></dt><dd><p>The x bin edges of the histograms.</p>
-</dd>
-<dt><strong>y_bin_edges: numpy.array</strong></dt><dd><p>The y bin edges of the histograms.
-Use None for 1D histograms.</p>
-</dd>
-<dt><strong>x_label: str</strong></dt><dd><p>X bin edges label.</p>
-</dd>
-<dt><strong>y_label: str</strong></dt><dd><p>Y bin edges label.
-Use None for 1D histograms.</p>
-</dd>
-<dt><strong>meta_data: dict</strong></dt><dd><p>Dictionary with the histogram metadata.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="io_operations.hdf5_handler.read_hdf5">
-<span class="sig-prename descclassname"><span class="pre">io_operations.hdf5_handler.</span></span><span class="sig-name descname"><span class="pre">read_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hdf5_file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/hdf5_handler.html#read_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.hdf5_handler.read_hdf5" title="Link to this definition">#</a></dt>
-<dd><p>Read a hdf5 output file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>hdf5_file_name: str or Path</strong></dt><dd><p>Name or Path of the hdf5 file to read from.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>The list with the astropy.Table instances for the various 1D and 2D histograms saved
-in the hdf5 file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<p>(legacy-data-handler)-</p>
-</section>
-<section id="module-io_operations.legacy_data_handler">
-<span id="legacy-data-handler"></span><h2>legacy_data_handler<a class="headerlink" href="#module-io_operations.legacy_data_handler" title="Link to this heading">#</a></h2>
-<p>Reading of legacy data files (expect that this will be obsolete in future).</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="io_operations.legacy_data_handler.read_legacy_data_as_table">
-<span class="sig-prename descclassname"><span class="pre">io_operations.legacy_data_handler.</span></span><span class="sig-name descname"><span class="pre">read_legacy_data_as_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/legacy_data_handler.html#read_legacy_data_as_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.legacy_data_handler.read_legacy_data_as_table" title="Link to this definition">#</a></dt>
-<dd><p>Read legacy data file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>file_path: Path</strong></dt><dd><p>Path to the legacy data file.</p>
-</dd>
-<dt><strong>file_type: str</strong></dt><dd><p>Type of legacy data file.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Table</dt><dd><p>Astropy table.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>If unsupported legacy data file type.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="io_operations.legacy_data_handler.read_legacy_lst_single_pe">
-<span class="sig-prename descclassname"><span class="pre">io_operations.legacy_data_handler.</span></span><span class="sig-name descname"><span class="pre">read_legacy_lst_single_pe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/io_operations/legacy_data_handler.html#read_legacy_lst_single_pe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#io_operations.legacy_data_handler.read_legacy_lst_single_pe" title="Link to this definition">#</a></dt>
-<dd><p>Read LST single pe file (in legacy data format).</p>
-<p>File contains two columns: amplitude (in units of single p.e) and response.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>file_path: Path</strong></dt><dd><p>Path to the legacy data file.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Table</dt><dd><p>Astropy table.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
+<section id="version">
+<span id="id2"></span><h2>version<a class="headerlink" href="#version" title="Link to this heading">#</a></h2>
+<p id="module-version">Software version setting.</p>
 </section>
 </section>
 
@@ -719,20 +557,20 @@ in the hdf5 file.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="db_handler.html"
+       href="data_model.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Database support</p>
+        <p class="prev-next-title">Data Model</p>
       </div>
     </a>
     <a class="right-next"
-       href="job_execution.html"
+       href="db_handler.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Job execution and submission</p>
+        <p class="prev-next-title">Database support</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -753,27 +591,15 @@ in the hdf5 file.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-io_operations.io_handler">io_handler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler"><code class="docutils literal notranslate"><span class="pre">IOHandler</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler.get_input_data_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_input_data_file()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler.get_output_directory"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_output_directory()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler.get_output_file"><code class="docutils literal notranslate"><span class="pre">IOHandler.get_output_file()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandler.set_paths"><code class="docutils literal notranslate"><span class="pre">IOHandler.set_paths()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">dependencies</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_build_options"><code class="docutils literal notranslate"><span class="pre">get_build_options()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_corsika_version"><code class="docutils literal notranslate"><span class="pre">get_corsika_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_database_version"><code class="docutils literal notranslate"><span class="pre">get_database_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_sim_telarray_version"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies.get_version_string"><code class="docutils literal notranslate"><span class="pre">get_version_string()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.io_handler.IOHandlerSingleton"><code class="docutils literal notranslate"><span class="pre">IOHandlerSingleton</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-io_operations.hdf5_handler">hdf5_handler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.hdf5_handler.fill_hdf5_table"><code class="docutils literal notranslate"><span class="pre">fill_hdf5_table()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.hdf5_handler.read_hdf5"><code class="docutils literal notranslate"><span class="pre">read_hdf5()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-io_operations.legacy_data_handler">legacy_data_handler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.legacy_data_handler.read_legacy_data_as_table"><code class="docutils literal notranslate"><span class="pre">read_legacy_data_as_table()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#io_operations.legacy_data_handler.read_legacy_lst_single_pe"><code class="docutils literal notranslate"><span class="pre">read_legacy_lst_single_pe()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version">version</a></li>
 </ul>
   </nav></div>
 

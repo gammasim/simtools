@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g54c11b5 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g4f37d54 Manual</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=672178d2"></script>
+    <script src="_static/documentation_options.js?v=d33f08af"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -47,7 +47,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev1+g54c11b5" />
+  <meta name="docsearch:version" content="0.1.dev1+g4f37d54" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g54c11b5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4f37d54 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -227,6 +227,7 @@
 <li class="toctree-l2"><a class="reference internal" href="api-reference/configuration_module.html">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/corsika.html">CORSIKA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api-reference/dependencies.html">Dependency and version management.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/db_handler.html">Database support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/io_operations.html">I/O</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api-reference/job_execution.html">Job execution and submission</a></li>
@@ -777,8 +778,6 @@
         <li><a href="user-guide/applications/simtools-db-add-simulation-model-from-repository-to-db.html#module-db_add_simulation_model_from_repository_to_db">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     db_add_value_from_json_to_db
 
@@ -786,6 +785,8 @@
         <li><a href="user-guide/applications/simtools-db-add-value-from-json-to-db.html#module-db_add_value_from_json_to_db">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     db_get_array_layouts_from_db
 
@@ -818,6 +819,13 @@
 </li>
       <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.default_le_configs">default_le_configs() (in module simulate_light_emission)</a>
 </li>
+      <li>
+    dependencies
+
+      <ul>
+        <li><a href="api-reference/dependencies.html#module-dependencies">module</a>
+</li>
+      </ul></li>
       <li>
     derive_mirror_rnda
 
@@ -1028,6 +1036,8 @@
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.limits_calculation.LimitCalculator.get_bin_edges_and_units">get_bin_edges_and_units() (production_configuration.limits_calculation.LimitCalculator method)</a>
 </li>
+      <li><a href="api-reference/dependencies.html#dependencies.get_build_options">get_build_options() (in module dependencies)</a>
+</li>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.get_camera_fill_factor">get_camera_fill_factor() (model.camera.Camera method)</a>
 </li>
       <li><a href="api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_collection">get_collection() (db.db_handler.DatabaseHandler method)</a>
@@ -1056,11 +1066,15 @@
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.get_corsika_telescope_list">get_corsika_telescope_list() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
+      <li><a href="api-reference/dependencies.html#dependencies.get_corsika_version">get_corsika_version() (in module dependencies)</a>
+</li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.get_cumulative_data">get_cumulative_data() (ray_tracing.psf_analysis.PSFImage method)</a>
 </li>
       <li><a href="api-reference/data_model.html#data_model.metadata_collector.MetadataCollector.get_data_model_schema_dict">get_data_model_schema_dict() (data_model.metadata_collector.MetadataCollector method)</a>
 </li>
       <li><a href="api-reference/data_model.html#data_model.metadata_collector.MetadataCollector.get_data_model_schema_file_name">get_data_model_schema_file_name() (data_model.metadata_collector.MetadataCollector method)</a>
+</li>
+      <li><a href="api-reference/dependencies.html#dependencies.get_database_version">get_database_version() (in module dependencies)</a>
 </li>
       <li><a href="api-reference/data_model.html#data_model.metadata_model.get_default_metadata_dict">get_default_metadata_dict() (in module data_model.metadata_model)</a>
 </li>
@@ -1186,6 +1200,8 @@
       </ul></li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_run_info">get_run_info() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
+      <li><a href="api-reference/dependencies.html#dependencies.get_sim_telarray_version">get_sim_telarray_version() (in module dependencies)</a>
+</li>
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.get_simtel_parameters">get_simtel_parameters() (model.model_parameter.ModelParameter method)</a>
 </li>
       <li><a href="api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_simulation_configuration_parameters">get_simulation_configuration_parameters() (db.db_handler.DatabaseHandler method)</a>
@@ -1217,6 +1233,8 @@
       <li><a href="api-reference/utils.html#utils.value_conversion.get_value_as_quantity">get_value_as_quantity() (in module utils.value_conversion)</a>
 </li>
       <li><a href="api-reference/utils.html#utils.value_conversion.get_value_unit_type">get_value_unit_type() (in module utils.value_conversion)</a>
+</li>
+      <li><a href="api-reference/dependencies.html#dependencies.get_version_string">get_version_string() (in module dependencies)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1598,6 +1616,8 @@
 </li>
         <li><a href="user-guide/applications/simtools-db-inspect-databases.html#module-db_inspect_databases">db_inspect_databases</a>
 </li>
+        <li><a href="api-reference/dependencies.html#module-dependencies">dependencies</a>
+</li>
         <li><a href="user-guide/applications/simtools-derive-mirror-rnda.html#module-derive_mirror_rnda">derive_mirror_rnda</a>
 </li>
         <li><a href="user-guide/applications/simtools-derive-photon-electron-spectrum.html#module-derive_photon_electron_spectrum">derive_photon_electron_spectrum</a>
@@ -1737,6 +1757,8 @@
         <li><a href="user-guide/applications/simtools-validate-file-using-schema.html#module-validate_file_using_schema">validate_file_using_schema</a>
 </li>
         <li><a href="user-guide/applications/simtools-validate-optics.html#module-validate_optics">validate_optics</a>
+</li>
+        <li><a href="api-reference/dependencies.html#module-version">version</a>
 </li>
         <li><a href="api-reference/visualization.html#module-visualization.legend_handlers">visualization.legend_handlers</a>
 </li>
@@ -2509,6 +2531,13 @@
 </li>
       <li><a href="api-reference/utils.html#utils.names.validate_site_name">validate_site_name() (in module utils.names)</a>
 </li>
+      <li>
+    version
+
+      <ul>
+        <li><a href="api-reference/dependencies.html#module-version">module</a>
+</li>
+      </ul></li>
       <li><a href="api-reference/testing.html#testing.configuration.VersionError">VersionError</a>
 </li>
       <li>
