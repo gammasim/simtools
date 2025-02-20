@@ -68,7 +68,7 @@ def test_get_sim_telarray_version_no_env_var(caplog, monkeypatch):
 
 
 def test_get_sim_telarray_version_no_release(monkeypatch):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path_simtel")
     mock_result = mock.Mock()
     mock_result.stdout = "Some other output"
     mock_result.stderr = ""
