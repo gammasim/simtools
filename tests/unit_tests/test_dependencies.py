@@ -48,10 +48,11 @@ def test_get_sim_telarray_version_success():
     mock_result.stdout = "Release: 2024.271.0 from 2024-09-27"
     mock_result.stderr = ""
 
-    with mock.patch("subprocess.run", return_value=mock_result):
+    subprocess_mock = "subprocess.run"
+    with mock.patch(subprocess_mock, return_value=mock_result):
         assert get_sim_telarray_version() == expected_version
 
-    with mock.patch("subprocess.run", return_value=mock_result):
+    with mock.patch(subprocess_mock, return_value=mock_result):
         version_string = dependencies.get_version_string()
         assert "Database version: None" in version_string
         assert "sim_telarray version:" in version_string
