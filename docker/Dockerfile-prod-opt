@@ -28,7 +28,6 @@ RUN cd corsika-$CORSIKA_VERSION && \
         (cd src && patch -b -p0 corsika.F < "../../corsika-77550.patch"); \
     fi && \
     if [[ "$AVX_FLAG" == "noOpt" ]]; then \
-        autoreconf && \
         ../corsika_build_script $HADRONIC_MODEL generic; \
     else \
         ./corsika_opt_patching.sh && \
@@ -60,7 +59,7 @@ RUN make -C corsika-$CORSIKA_VERSION clean && rm -f */*.a lib/*/*.a && \
         install
 
 # Rename executable to 'corsika'
-RUN mv -f corsika-$CORSIKA_VERSION/run/corsika$CORSIKA_VERSIONLinux_*ceropt corsika-$CORSIKA_VERSION/run/corsika
+RUN mv -f corsika-$CORSIKA_VERSION/run/corsika$CORSIKA_VERSIONLinux_* corsika-$CORSIKA_VERSION/run/corsika
 # Build sim_telarray
 RUN export NO_CORSIKA=1 EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 
