@@ -1,4 +1,12 @@
-"""Simtools dependencies version management."""
+"""
+Simtools dependencies version management.
+
+This modules provides two main functionalities:
+
+- retrieve the versions of simtools dependencies (e.g., databases, sim_telarray, CORSIKA)
+- provide space for future implementations of version management
+
+"""
 
 import logging
 import os
@@ -6,6 +14,7 @@ import re
 import subprocess
 from pathlib import Path
 
+import simtools.utils.general as gen
 from simtools.db.db_handler import DatabaseHandler
 
 _logger = logging.getLogger(__name__)
@@ -79,5 +88,25 @@ def get_corsika_version():
     str
         Version of the corsika package.
     """
-    _logger.warning("CORSIKA version not implemented yet.")
-    return "7.7"
+    try:
+        build_opts = get_build_options()
+    except (FileNotFoundError, TypeError):
+        _logger.warning("CORSIKA version not implemented yet.")
+        return None
+    return build_opts.get("corsika_version")
+
+
+def get_build_options():
+    """
+    Return CORSIKA / sim_telarray build options.
+
+    Expects a build_opts.yml file in the sim_telarray directory.
+    """
+    try:
+        return gen.collect_data_from_file(
+            Path(os.getenv("SIMTOOLS_SIMTEL_PATH")) / "build_opts.yml"
+        )
+    except FileNotFoundError as exc:
+        raise FileNotFoundError("No build_opts.yml file found.") from exc
+    except TypeError as exc:
+        raise TypeError("SIMTEL_PATH not defined.") from exc
