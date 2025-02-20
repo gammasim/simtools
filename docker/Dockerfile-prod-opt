@@ -22,35 +22,50 @@ RUN tar -zxf corsika-$CORSIKA_VERSION.tar.gz && \
     corsika_simtelarray.tar.gz  corsika-$CORSIKA_VERSION.tar.gz \
     bernlohr-$BERNLOHR_VERSION.tar.gz
 
-# apply patches and build (optimized) corsika
+# Apply patches for non-optimized / optimized CORSIKA
 RUN cd corsika-$CORSIKA_VERSION && \
     if [[ $CORSIKA_VERSION -eq 77550 ]]; then \
         (cd src && patch -b -p0 corsika.F < "../../corsika-77550.patch"); \
     fi && \
-    ./corsika_opt_patching.sh && \
-    autoreconf  && \
-    ../corsika_build_script $HADRONIC_MODEL generic cerenkopt vlibm
+    if [[ "$AVX_FLAG" == "noOpt" ]]; then \
+        autoreconf && \
+        ../corsika_build_script $HADRONIC_MODEL generic; \
+    else \
+        ./corsika_opt_patching.sh && \
+        autoreconf && \
+        ../corsika_build_script $HADRONIC_MODEL generic cerenkopt vlibm; \
+    fi
 
+# Build non-optimized / optimized CORSIKA
 RUN make -C corsika-$CORSIKA_VERSION clean && rm -f */*.a lib/*/*.a && \
     AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
-    echo "AVX_FLAG=${AVX_FLAG}"; \
+    CFLAGS="" && CXXFLAGS="" && FFLAGS="" && \
+    if [[ "$AVX_FLAG" == "noOpt" ]]; then \
+        CFLAGS="-g  -std=c99 -O3 -mavx2"; \
+        CXXFLAGS="-g  -std=c99 -O3 -mavx2"; \
+        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -std=c99 -O3 -mavx2"; \
+    else \
+        CFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+        CXXFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+    fi && \
     make -C corsika-$CORSIKA_VERSION \
         CC="${GCC_PATH}/gcc -static" \
         CXX="${GCC_PATH}/g++ -static" \
         CPP="${GCC_PATH}/gcc -static -E" \
         F77="${GCC_PATH}/gfortran -L/lib64/" \
-        CFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8" \
-        CXXFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8" \
-        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8" \
+        CFLAGS="${CFLAGS}" \
+        CXXFLAGS="${CXXFLAGS}" \
+        FFLAGS="$FFLAGS" \
         install
 
 # Rename executable to 'corsika'
 RUN mv -f corsika-$CORSIKA_VERSION/run/corsika$CORSIKA_VERSIONLinux_*ceropt corsika-$CORSIKA_VERSION/run/corsika
-# build sim_telarray
+# Build sim_telarray
 RUN export NO_CORSIKA=1 EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 
-# corsika source code is removed to follow
-# the corsika non-distribution policy.
+# CORSIKA source code is removed to follow
+# the CORSIKA non-distribution policy.
 RUN mv ./corsika-77*/run corsika-run && \
     rm -rf ./corsika-7[0-9]* && \
     find . -name "*.tar.gz" -delete && \
