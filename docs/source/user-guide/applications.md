@@ -37,6 +37,8 @@ simtools-db-inspect-databases  <applications/simtools-db-inspect-databases>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
+simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
+simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
