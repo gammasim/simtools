@@ -58,6 +58,14 @@ RUN mv ./corsika-77*/run corsika-run && \
     find . -name "*.o" -delete && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
+# create a yml file in workdir with the build options
+RUN echo "build_opt: $BUILD_OPT" > /workdir/sim_telarray/build_opts.yml && \
+    echo "extra_def: $EXTRA_DEF" >> /workdir/sim_telarray/build_opts.yml && \
+    echo "hadronic_model: $HADRONIC_MODEL" >> /workdir/sim_telarray/build_opts.yml && \
+    echo "avx_flag: $AVX_FLAG" >> /workdir/sim_telarray/build_opts.yml && \
+    echo "corsika_version: $CORSIKA_VERSION" >> /workdir/sim_telarray/build_opts.yml && \
+    echo "bernlohr_version: $BERNLOHR_VERSION" >> /workdir/sim_telarray/build_opts.yml
+
 FROM almalinux:9.5-minimal
 WORKDIR /workdir
 ARG BUILD_BRANCH=main
