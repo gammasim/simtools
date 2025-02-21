@@ -1,10 +1,16 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-db-get-array-layouts-from-db
-  TEST_NAME: layout_list
-  CONFIGURATION:
-    SITE: South
-    MODEL_VERSION: "6.0.0"
-    ARRAY_ELEMENT_LIST: ["LSTS", "MSTS", "SSTS"]
-    COORDINATE_SYSTEM: ground
-    OUTPUT_PATH: simtools-output
-    OUTPUT_FILE: array_layout_south_ground_from_list.ecsv
+  APPLICATIONS:
+  - APPLICATION: simtools-db-get-array-layouts-from-db
+    TEST_NAME: layout_list
+    CONFIGURATION:
+      SITE: South
+      MODEL_VERSION: 6.0.0
+      ARRAY_ELEMENT_LIST:
+      - LSTS
+      - MSTS
+      - SSTS
+      COORDINATE_SYSTEM: ground
+      OUTPUT_PATH: simtools-output
+      OUTPUT_FILE: array_layout_south_ground_from_list.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
