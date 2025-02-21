@@ -1,13 +1,16 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-generate-regular-arrays
-  TEST_NAME: run-north
-  CONFIGURATION:
-    OUTPUT_PATH: simtools-output
-    SITE: North
-    MODEL_VERSION: 6.0.0
-    OUTPUT_FILE: generate_regular_arrays.ecsv
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-generate-regular-arrays
+    TEST_NAME: run-north
+    CONFIGURATION:
+      OUTPUT_PATH: simtools-output
+      SITE: North
+      MODEL_VERSION: 6.0.0
+      OUTPUT_FILE: generate_regular_arrays.ecsv
+    INTEGRATION_TESTS:
     - OUTPUT_FILE: generate_regular_arrays-North-1LST.ecsv
     - OUTPUT_FILE: generate_regular_arrays-North-4LST.ecsv
     - OUTPUT_FILE: generate_regular_arrays-North-1MST.ecsv
     - OUTPUT_FILE: generate_regular_arrays-North-4MST.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
