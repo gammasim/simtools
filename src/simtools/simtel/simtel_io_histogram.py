@@ -419,7 +419,6 @@ class SimtelIOHistogram:
         return {
             "simtel_array_file": self.histogram_file,
             "simulation_input": self.print_info(mode="silent"),
-            # pylint: disable=E1101
             "system_trigger_rate (Hz)": self.trigger_rate.value,
         }
 
