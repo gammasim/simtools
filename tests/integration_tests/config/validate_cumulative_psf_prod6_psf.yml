@@ -1,13 +1,16 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-validate-cumulative-psf
-  TEST_NAME: run
-  CONFIGURATION:
-    SITE: North
-    TELESCOPE: LSTN-01
-    MODEL_VERSION: 6.0.0
-    DATA: ./tests/resources/PSFcurve_data_v2.txt
-    ZENITH: 20
-    TEST: true
-    OUTPUT_PATH: simtools-output
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-validate-cumulative-psf
+    TEST_NAME: run
+    CONFIGURATION:
+      SITE: North
+      TELESCOPE: LSTN-01
+      MODEL_VERSION: 6.0.0
+      DATA: ./tests/resources/PSFcurve_data_v2.txt
+      ZENITH: 20
+      TEST: true
+      OUTPUT_PATH: simtools-output
+    INTEGRATION_TESTS:
     - OUTPUT_FILE: results/ray-tracing-North-LSTN-01-d10.0km-za20.0deg_validate_cumulative_psf.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

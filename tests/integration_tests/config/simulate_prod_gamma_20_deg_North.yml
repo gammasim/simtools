@@ -1,30 +1,33 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-simulate-prod
-  TEST_NAME: gamma_20_deg_north
-  CONFIGURATION:
-    SIMULATION_SOFTWARE: corsika_simtel
-    LABEL: test-production-North
-    MODEL_VERSION: 6.0.0
-    SITE: North
-    ARRAY_LAYOUT_NAME: test_layout
-    PRIMARY: gamma
-    RUN_NUMBER_START: 10
-    NUMBER_OF_RUNS: 1
-    AZIMUTH_ANGLE: North
-    ZENITH_ANGLE: 20
-    NSHOW: 5
-    ESLOPE: -2.
-    VIEW_CONE: "0 deg 0 deg"
-    ENERGY_RANGE: "100 GeV 1 TeV"
-    CORE_SCATTER: "10 500 m"
-    DATA_DIRECTORY: simtools-data
-    OUTPUT_PATH: simtools-output
-    PACK_FOR_GRID_REGISTER: simtools-grid-output
-    LOG_LEVEL: DEBUG
-    SUBMIT_ENGINE: local
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-simulate-prod
+    TEST_NAME: gamma_20_deg_north
+    CONFIGURATION:
+      SIMULATION_SOFTWARE: corsika_simtel
+      LABEL: test-production-North
+      MODEL_VERSION: 6.0.0
+      SITE: North
+      ARRAY_LAYOUT_NAME: test_layout
+      PRIMARY: gamma
+      RUN_NUMBER_START: 10
+      NUMBER_OF_RUNS: 1
+      AZIMUTH_ANGLE: North
+      ZENITH_ANGLE: 20
+      NSHOW: 5
+      ESLOPE: -2.0
+      VIEW_CONE: 0 deg 0 deg
+      ENERGY_RANGE: 100 GeV 1 TeV
+      CORE_SCATTER: 10 500 m
+      DATA_DIRECTORY: simtools-data
+      OUTPUT_PATH: simtools-output
+      PACK_FOR_GRID_REGISTER: simtools-grid-output
+      LOG_LEVEL: DEBUG
+      SUBMIT_ENGINE: local
+    INTEGRATION_TESTS:
     - TEST_OUTPUT_FILES:
-        - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-          FILE: run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.log_hist.tar.gz
-        - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-          FILE: run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.zst
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+        FILE: run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.log_hist.tar.gz
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+        FILE: run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.zst
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
