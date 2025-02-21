@@ -22,7 +22,7 @@ data:
       min: 0
       max: 10000
 instrument:
-  class: Camera
+  class: configuration_sim_telarray
   type:
     - LSTN
     - LSTS

@@ -16,7 +16,7 @@ data:
     unit: dimensionless
     default: -1
 instrument:
-  class: Camera
+  class: configuration_sim_telarray
   type:
     - LSTN
     - LSTS
