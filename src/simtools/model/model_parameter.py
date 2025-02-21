@@ -76,6 +76,9 @@ class ModelParameter:
             if array_element_name is not None
             else None
         )
+        self.design_model = self.db.get_design_model(
+            self.model_version, self.name, collection="telescopes"
+        )
         self._config_file_directory = None
         self._config_file_path = None
         self._load_parameters_from_db()
@@ -239,6 +242,22 @@ class ModelParameter:
             self._logger.debug(f"Parameter {par_name} does not have a file associated with it.")
         return False
 
+    def get_parameter_version(self, par_name):
+        """
+        Get version for a given parameter used in the model.
+
+        Parameters
+        ----------
+        par_name: str
+            Name of the parameter.
+
+        Returns
+        -------
+        str
+            parameter version used in the model (eg. '1.0.0')
+        """
+        return self._get_parameter_dict(par_name)["parameter_version"]
+
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
         for par in self._parameters:
@@ -280,6 +299,21 @@ class ModelParameter:
             Simulation software parameters.
         """
         return self._simulation_config_parameters.get(simulation_software)
+
+    def has_parameter(self, par_name):
+        """Check if a parameter exists in the model.
+
+        Parameters
+        ----------
+        par_name : str
+            Name of the parameter.
+
+        Returns
+        -------
+        bool
+            True if parameter exists in the model.
+        """
+        return par_name in self._parameters
 
     def _load_simulation_software_parameter(self):
         """Read simulation software parameters from DB."""

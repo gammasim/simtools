@@ -88,10 +88,7 @@ def test_interpolation_handler(test_fits_file, test_fits_file_2, metric):
     evaluator2 = StatisticalErrorEvaluator(
         file_path=test_fits_file_2, file_type="point-like", metrics=metric, grid_point=grid_point2
     )
-    science_case = "example case"
-    handler = InterpolationHandler(
-        [evaluator1, evaluator2], science_case=science_case, metrics=metric
-    )
+    handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)
     query_point = np.array([[1, 180, 50, 0, 0.5]])
     interpolated_values = handler.interpolate(query_point)
     assert interpolated_values.shape[0] == query_point.shape[0]
@@ -109,7 +106,7 @@ def test_calculate_scaled_events(test_fits_file, metric):
     )
     evaluator.grid_point = (1.5, 180, 45, 0, 0.5)
 
-    event_scaler = EventScaler(evaluator, science_case="science case 1", metrics=metric)
+    event_scaler = EventScaler(evaluator, metrics=metric)
 
     scaled_events = event_scaler.scale_events()
 
