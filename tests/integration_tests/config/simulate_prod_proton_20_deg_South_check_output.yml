@@ -1,40 +1,43 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-simulate-prod
-  TEST_NAME: proton_20_deg_south_check_output
-  CONFIGURATION:
-    SIMULATION_SOFTWARE: corsika_simtel
-    LABEL: check_output
-    MODEL_VERSION: 6.0.0
-    SITE: South
-    ARRAY_LAYOUT_NAME: alpha
-    PRIMARY: proton
-    RUN_NUMBER_START: 1
-    NUMBER_OF_RUNS: 1
-    AZIMUTH_ANGLE: South
-    ZENITH_ANGLE: 20
-    NSHOW: 10 # Increase the number of showers to 10, otherwise we do not get any triggered events
-    VIEW_CONE: "0 deg 5 deg" # Decrease the view cone to 5 degrees, otherwise we do not get any triggered events
-    ENERGY_RANGE: "200 GeV 800 GeV"
-    CORE_SCATTER: "20 700 m"
-    DATA_DIRECTORY: simtools-data
-    OUTPUT_PATH: simtools-output
-    SIM_TELARRAY_SEEDS: "1745,290"
-    CORSIKA_TEST_SEEDS: True
-    PACK_FOR_GRID_REGISTER: simtools-grid-output
-    LOG_LEVEL: DEBUG
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-simulate-prod
+    TEST_NAME: proton_20_deg_south_check_output
+    CONFIGURATION:
+      SIMULATION_SOFTWARE: corsika_simtel
+      LABEL: check_output
+      MODEL_VERSION: 6.0.0
+      SITE: South
+      ARRAY_LAYOUT_NAME: alpha
+      PRIMARY: proton
+      RUN_NUMBER_START: 1
+      NUMBER_OF_RUNS: 1
+      AZIMUTH_ANGLE: South
+      ZENITH_ANGLE: 20
+      NSHOW: 10
+      VIEW_CONE: 0 deg 5 deg
+      ENERGY_RANGE: 200 GeV 800 GeV
+      CORE_SCATTER: 20 700 m
+      DATA_DIRECTORY: simtools-data
+      OUTPUT_PATH: simtools-output
+      SIM_TELARRAY_SEEDS: 1745,290
+      CORSIKA_TEST_SEEDS: true
+      PACK_FOR_GRID_REGISTER: simtools-grid-output
+      LOG_LEVEL: DEBUG
+    INTEGRATION_TESTS:
     - TEST_OUTPUT_FILES:
-        - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-          FILE: run000001_proton_za20deg_azm180deg_South_alpha_check_output.zst
-          EXPECTED_OUTPUT:
-            # The mean trigger time for all telescopes should be
-            # between 0 and 50 ns (very loose requirement)
-            trigger_time: [0, 50]
-            # The mean number of photoelectrons for telescopes with a signal
-            # should be between 20 and 1000 (very loose requirement)
-            pe_sum: [20, 1000]
-            # The mean number of photons per telescope after atmospheric absorption and QE
-            # should be between 75 and 1000 (very loose requirement)
-            photons: [75, 1000]
-        - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-          FILE: run000001_proton_za20deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+        FILE: run000001_proton_za20deg_azm180deg_South_alpha_check_output.zst
+        EXPECTED_OUTPUT:
+          trigger_time:
+          - 0
+          - 50
+          pe_sum:
+          - 20
+          - 1000
+          photons:
+          - 75
+          - 1000
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+        FILE: run000001_proton_za20deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

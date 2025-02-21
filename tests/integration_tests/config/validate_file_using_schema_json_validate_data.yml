@@ -1,8 +1,12 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-validate-file-using-schema
-  TEST_NAME: json_validate_data
-  CONFIGURATION:
-    SCHEMA: >
-      https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameters/reference_point_altitude.schema.yml
-    FILE_NAME: tests/resources/reference_point_altitude.json
-    DATA_TYPE: data
+  APPLICATIONS:
+  - APPLICATION: simtools-validate-file-using-schema
+    TEST_NAME: json_validate_data
+    CONFIGURATION:
+      SCHEMA: 'https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameters/reference_point_altitude.schema.yml
+
+        '
+      FILE_NAME: tests/resources/reference_point_altitude.json
+      DATA_TYPE: data
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
