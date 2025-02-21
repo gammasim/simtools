@@ -499,6 +499,32 @@ class DatabaseHandler:
         production_table = self._read_production_table_from_mongo_db(collection, model_version)
         return sorted([entry for entry in production_table["parameters"] if "-design" not in entry])
 
+    def get_design_model(self, model_version, array_element_name, collection="telescopes"):
+        """
+        Get the design model used for a given array element and a given model version.
+
+        Parameters
+        ----------
+        model_version: str
+            Version of the model.
+        array_element_name: str
+            Name of the array element model (e.g. MSTN, SSTS).
+        collection: str
+            Which collection to get the array elements from:
+            i.e. telescopes, calibration_devices.
+
+        Returns
+        -------
+        str
+            Design model for a given array element.
+        """
+        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        try:
+            return production_table["design_model"][array_element_name]
+        except KeyError:
+            # for eg. array_element_name == 'LSTN-design' returns 'LSTN-design'
+            return array_element_name
+
     def get_array_elements_of_type(self, array_element_type, model_version, collection):
         """
         Get array elements of a certain type (e.g. 'LSTN') for a DB collection.
