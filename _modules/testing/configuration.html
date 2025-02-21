@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.configuration &#8212; simtools v0.1.dev1+g1cdf2a5 Manual</title>
+    <title>testing.configuration &#8212; simtools v0.1.dev1+gf680506 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c97dce89"></script>
+    <script src="../../_static/documentation_options.js?v=284d7b10"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1cdf2a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf680506 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -465,7 +465,8 @@ document.write(`
         <span class="n">_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">remove_substring_recursively_from_dict</span><span class="p">(</span>
             <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">config_file</span><span class="p">),</span> <span class="n">substring</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="p">)</span>
-        <span class="n">configs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CTA_SIMPIPE&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">application</span> <span class="ow">in</span> <span class="n">_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CTA_SIMPIPE&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;APPLICATIONS&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">configs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">application</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">configs</span>
 
 
