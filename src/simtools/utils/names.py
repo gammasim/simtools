@@ -316,9 +316,9 @@ def get_array_element_type_from_name(name):
     return _validate_name(name.split("-")[0], array_elements())
 
 
-def get_design_model_from_name(name):
+def guess_design_model_from_name(name):
     """
-    Get design model name from array element name.
+    Guess design model name from array element name.
 
     Note that this might not be correct and the preferred way is to use the
     model parameter 'design_model'.

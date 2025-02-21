@@ -112,7 +112,10 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     if json_schema is None:
         json_schema = load_schema(
             schema_file,
-            data.get("schema_version", "0.1.0"),  # default version to ensure backward compatibility
+            data.get("schema_version")
+            or data.get(
+                "SCHEMA_VERSION", "0.1.0"
+            ),  # default version to ensure backward compatibility
         )
 
     try:
@@ -120,7 +123,11 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     except jsonschema.exceptions.ValidationError as exc:
         _logger.error(f"Validation failed using schema: {json_schema} for data: {data}")
         raise exc
-    if data.get("meta_schema_url") and not gen.url_exists(data["meta_schema_url"]):
+    if (
+        isinstance(data, dict)
+        and data.get("meta_schema_url")
+        and not gen.url_exists(data["meta_schema_url"])
+    ):
         raise FileNotFoundError(f"Meta schema URL does not exist: {data['meta_schema_url']}")
 
     _logger.debug(f"Successful validation of data using schema ({json_schema.get('name')})")
