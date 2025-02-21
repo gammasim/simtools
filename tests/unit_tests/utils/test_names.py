@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
 
 import pytest
 
@@ -168,6 +169,7 @@ def test_get_site_from_array_element_name(invalid_name):
     assert "South" == names.get_site_from_array_element_name("MSTS-05")
     with pytest.raises(ValueError, match=rf"^{invalid_name}"):
         names.get_site_from_array_element_name("LSTW")
+    assert "North" == names.get_site_from_array_element_name("North")
 
 
 def test_get_collection_name_from_array_element_name():
@@ -531,3 +533,16 @@ def test_get_simulation_software_name_from_parameter_name():
 def test_get_parameter_name_from_simtel_name():
     assert names.get_parameter_name_from_simtel_name("focal_length") == "focal_length"
     assert names.get_parameter_name_from_simtel_name("altitude") == "corsika_observation_level"
+
+
+def test_file_name_with_version():
+
+    assert names.file_name_with_version(None, None) is None
+    assert names.file_name_with_version("file", None) is None
+    assert names.file_name_with_version(None, ".yml") is None
+
+    assert names.file_name_with_version("file", ".yml") == Path("file.yml")
+    assert names.file_name_with_version("file.json", ".yml") == Path("file.yml")
+
+    assert names.file_name_with_version("file-5.22.0", ".yml") == Path("file-5.22.0.yml")
+    assert names.file_name_with_version("file-5.0.0.json", ".yml") == Path("file-5.0.0.yml")

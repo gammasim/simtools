@@ -63,7 +63,7 @@ def get_sim_telarray_version():
     if sim_telarray_path is None:
         _logger.warning("Environment variable SIMTOOLS_SIMTEL_PATH is not set.")
         return None
-    sim_telarray_path = Path(sim_telarray_path) / "bin" / "sim_telarray"
+    sim_telarray_path = Path(sim_telarray_path) / "sim_telarray" / "bin" / "sim_telarray"
 
     # expect stdout with e.g. a line 'Release: 2024.271.0 from 2024-09-27'
     result = subprocess.run(
