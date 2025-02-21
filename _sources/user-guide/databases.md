@@ -23,7 +23,8 @@ Collections:
 * `telescopes` with the model parameters for each telescope plus the reference design model
 * `sites` with all site-specific parameters (e.g., atmosphere, magnetic field, array layouts)
 * `calibration_devices` with the model parameters for e.g., the illumination devices
-* `configuration_sim_telarray` with default configuration parameters for the sim_telarray simulation
+* `configuration_sim_telarray` with configuration parameters for the sim_telarray simulation
+* `configuration_corsika` with configuration parameters for the CORSIKA simulation
 * `metadata` containing tables describing the model versions
 * `fs.files` with all file type entries for the model parameters (e.g., the quantum-efficiency tables)
 

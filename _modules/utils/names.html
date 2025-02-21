@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+gc7c82db Manual</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+g72d7f80 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=49848480"></script>
+    <script src="../../_static/documentation_options.js?v=da53b46e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc7c82db Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g72d7f80 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -412,6 +412,15 @@ document.write(`
     <span class="s2">&quot;validate_site_name&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
+<span class="c1"># Mapping of db collection names to class keys</span>
+<span class="n">db_collections_to_class_keys</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;sites&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Site&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;telescopes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Structure&quot;</span><span class="p">,</span> <span class="s2">&quot;Camera&quot;</span><span class="p">,</span> <span class="s2">&quot;Telescope&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;calibration_devices&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Calibration&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;configuration_corsika&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;configuration_corsika&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
 
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">array_elements</span><span class="p">():</span>
@@ -470,11 +479,27 @@ document.write(`
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">site_parameters</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="n">instrument_classes</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;sites&quot;</span><span class="p">]))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">telescope_parameters</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="n">instrument_classes</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">]))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">all_model_parameters</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return model parameters for all classes / collections.&quot;&quot;&quot;</span>
+    <span class="n">parameter_names</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">class_keys</span> <span class="ow">in</span> <span class="n">db_collections_to_class_keys</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">parameter_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">class_keys</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">parameter_names</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">class_key_to_db_collection</span><span class="p">(</span><span class="n">class_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert class key to collection name.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">collection</span><span class="p">,</span> <span class="n">classes</span> <span class="ow">in</span> <span class="n">db_collections_to_class_keys</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">collection</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="validate_array_element_id_name">
@@ -708,41 +733,65 @@ document.write(`
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">array_elements_only</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get collection name (e.g., telescopes, calibration_devices, sites) of array element from name.</span>
+<span class="sd">    Get collection name (e.g., telescopes, calibration_devices) of an array element from its name.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    name: str</span>
-<span class="sd">        Array element name.</span>
+<span class="sd">        Array element name (e.g. LSTN-01)</span>
 <span class="sd">    array_elements_only: bool</span>
-<span class="sd">        If True, only array elements are considered.</span>
+<span class="sd">        If True, only array elements are considered (e.g. &quot;OBS-North&quot; will raise a ValueError).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
 <span class="sd">        Collection name .</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If name is not a valid array element name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-        <span class="k">pass</span>
-    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;OBS&quot;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;sites&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">validate_site_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;sites&quot;</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">array_elements_only</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span>
-        <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Files&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Dummy-Telescope&quot;</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;OBS&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;sites&quot;</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;Files&quot;</span><span class="p">,</span> <span class="s2">&quot;Dummy-Telescope&quot;</span><span class="p">}:</span>
         <span class="k">return</span> <span class="n">name</span>
-
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_collection_name_from_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the db collection name for a given parameter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parameter_name: str</span>
+<span class="sd">        Name of the parameter.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Collection name.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If the parameter name is not found in the list of model parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_parameter_names</span> <span class="o">=</span> <span class="n">all_model_parameters</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">class_key</span> <span class="o">=</span> <span class="n">_parameter_names</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">return</span> <span class="n">class_key_to_db_collection</span><span class="p">(</span><span class="n">class_key</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
@@ -767,13 +816,12 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Simtel parameter name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_parameter_names</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">telescope_parameters</span><span class="p">(),</span> <span class="o">**</span><span class="n">site_parameters</span><span class="p">()}</span>
+    <span class="n">_parameter_names</span> <span class="o">=</span> <span class="n">all_model_parameters</span><span class="p">()</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">_parameter</span> <span class="o">=</span> <span class="n">_parameter_names</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">err</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">software</span> <span class="ow">in</span> <span class="n">_parameter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">,</span> <span class="p">[]):</span>
