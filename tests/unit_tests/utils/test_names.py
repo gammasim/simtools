@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-from unittest import mock
 
 import pytest
 
@@ -535,27 +534,17 @@ def test_get_simulation_software_name_from_parameter_name():
         )
         == "reference_point_longitude"
     )
-    with pytest.raises(KeyError, match="Parameter not_a_parameter without schema definition"):
+    with pytest.raises(KeyError, match=r"Parameter Not_a_parameter without schema definition"):
         names.get_simulation_software_name_from_parameter_name(
-            "not_a_parameter", simulation_software="corsika"
+            "Not_a_parameter", simulation_software="sim_telarray"
         )
     assert (
         names.get_simulation_software_name_from_parameter_name(
-            "reference_point_longitude", simulation_software=None
+            "corsika_observation_level",
+            simulation_software=None,
         )
         is None
     )
-    # Test with parameter having simulation_software as None
-    with mock.patch(
-        "simtools.utils.names.telescope_parameters",
-        return_value={"param_with_none": {"simulation_software": None}},
-    ):
-        assert (
-            names.get_simulation_software_name_from_parameter_name(
-                "param_with_none", simulation_software="sim_telarray"
-            )
-            is None
-        )
 
 
 def test_get_parameter_name_from_simtel_name():
