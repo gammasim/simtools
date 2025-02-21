@@ -8,6 +8,8 @@ meta_schema_version: 0.1.0
 name: corsika_particle_kinetic_energy_cutoff
 description: |-
   Kinetic energy cutoffs for different particle types.
+instrument:
+  class: configuration_corsika
 data:
   - name: hadrons
     type: float64

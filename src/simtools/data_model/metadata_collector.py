@@ -366,7 +366,7 @@ class MetadataCollector:
         )
         if instrument_dict["ID"]:
             instrument_dict["class"] = names.get_collection_name_from_array_element_name(
-                instrument_dict["ID"]
+                instrument_dict["ID"], False
             )
 
     def _fill_process_meta(self, process_dict):

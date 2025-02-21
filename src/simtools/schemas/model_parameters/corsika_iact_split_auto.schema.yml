@@ -13,6 +13,8 @@ description: |-
   If the full data block for the entire array would exceed the given number of bunches,
   it gets split up into separate blocks per individual telescope, in order to avoid
   exceeding the hard I/O buffer size limit.
+instrument:
+  class: configuration_corsika
 data:
   - type: int
     unit: dimensionless
