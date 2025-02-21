@@ -871,6 +871,6 @@ class DatabaseHandler:
             ]
         except KeyError:
             return [
-                names.get_design_model_from_name(array_element_name),
+                names.guess_design_model_from_name(array_element_name),
                 array_element_name,
             ]
