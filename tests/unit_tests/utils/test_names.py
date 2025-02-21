@@ -174,10 +174,10 @@ def test_get_array_element_name_from_type_site_id():
     assert "LSTS-01" == names.get_array_element_name_from_type_site_id("LST", "South", "01")
 
 
-def test_get_design_model_from_name():
-    assert "LSTN-design" == names.get_design_model_from_name("LSTN-design")
-    assert "LSTN-design" == names.get_design_model_from_name("LSTN-01")
-    assert "MSTS-design" == names.get_design_model_from_name("MSTS-01")
+def test_guess_design_model_from_name():
+    assert "LSTN-design" == names.guess_design_model_from_name("LSTN-design")
+    assert "LSTN-design" == names.guess_design_model_from_name("LSTN-01")
+    assert "MSTS-design" == names.guess_design_model_from_name("MSTS-01")
 
 
 def test_get_site_from_array_element_name(invalid_name):

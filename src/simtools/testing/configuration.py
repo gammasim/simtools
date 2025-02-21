@@ -71,7 +71,8 @@ def _read_configs_from_files(config_files):
         _dict = gen.remove_substring_recursively_from_dict(
             gen.collect_data_from_file(file_name=config_file), substring="\n"
         )
-        configs.append(_dict.get("CTA_SIMPIPE", None))
+        for application in _dict.get("CTA_SIMPIPE", {}).get("APPLICATIONS", []):
+            configs.append(application)
     return configs
 
 
