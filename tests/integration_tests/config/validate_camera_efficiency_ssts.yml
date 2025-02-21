@@ -1,13 +1,14 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-validate-camera-efficiency
-  TEST_NAME: SSTS
-  CONFIGURATION:
-    SITE: South
-    TELESCOPE: SSTS-design
-    MODEL_VERSION: 6.0.0
-    OUTPUT_PATH: simtools-output
-    LOG_LEVEL: debug
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-validate-camera-efficiency
+    TEST_NAME: SSTS
+    CONFIGURATION:
+      SITE: South
+      TELESCOPE: SSTS-design
+      MODEL_VERSION: 6.0.0
+      OUTPUT_PATH: simtools-output
+      LOG_LEVEL: debug
+    INTEGRATION_TESTS:
     - OUTPUT_FILE: validate_camera_efficiency_SSTS-design_nsb.pdf
     - OUTPUT_FILE: validate_camera_efficiency_SSTS-design_nsb.png
     - OUTPUT_FILE: validate_camera_efficiency_SSTS-design_cherenkov.png

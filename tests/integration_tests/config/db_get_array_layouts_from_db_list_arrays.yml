@@ -1,7 +1,8 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-db-get-array-layouts-from-db
-  TEST_NAME: list_arrays
-  CONFIGURATION:
-    SITE: North
-    MODEL_VERSION: "6.0.0"
-    LIST_AVAILABLE_LAYOUTS: True
+  APPLICATIONS:
+  - APPLICATION: simtools-db-get-array-layouts-from-db
+    TEST_NAME: list_arrays
+    CONFIGURATION:
+      SITE: North
+      MODEL_VERSION: 6.0.0
+      LIST_AVAILABLE_LAYOUTS: true

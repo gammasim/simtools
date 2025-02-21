@@ -1,7 +1,8 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-db-get-parameter-from-db
-  TEST_NAME: site_parameter
-  CONFIGURATION:
-    SITE: North
-    PARAMETER: reference_point_altitude
-    MODEL_VERSION: 6.0.0
+  APPLICATIONS:
+  - APPLICATION: simtools-db-get-parameter-from-db
+    TEST_NAME: site_parameter
+    CONFIGURATION:
+      SITE: North
+      PARAMETER: reference_point_altitude
+      MODEL_VERSION: 6.0.0

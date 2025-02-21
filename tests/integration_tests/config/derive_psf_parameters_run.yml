@@ -1,13 +1,14 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-derive-psf-parameters
-  TEST_NAME: run
-  CONFIGURATION:
-    SITE: North
-    TELESCOPE: LSTN-01
-    MODEL_VERSION: 6.0.0
-    data: ./tests/resources/PSFcurve_data_v2.txt
-    ZENITH: 20
-    TEST: true
-    OUTPUT_PATH: simtools-output
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-derive-psf-parameters
+    TEST_NAME: run
+    CONFIGURATION:
+      SITE: North
+      TELESCOPE: LSTN-01
+      MODEL_VERSION: 6.0.0
+      data: ./tests/resources/PSFcurve_data_v2.txt
+      ZENITH: 20
+      TEST: true
+      OUTPUT_PATH: simtools-output
+    INTEGRATION_TESTS:
     - OUTPUT_FILE: results/ray-tracing-North-LSTN-01-d10.0km-za20.0deg_tune_psf.ecsv

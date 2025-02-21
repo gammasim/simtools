@@ -1,8 +1,9 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-db-add-file-to-db
-  TEST_NAME: run
-  CONFIGURATION:
-    FILE_NAME:
+  APPLICATIONS:
+  - APPLICATION: simtools-db-add-file-to-db
+    TEST_NAME: run
+    CONFIGURATION:
+      FILE_NAME:
       - ./tests/resources/MLTdata-preproduction.meta.yml
       - ./tests/resources/MLTdata-preproduction.ecsv
-    DB: sandbox
+      DB: sandbox
