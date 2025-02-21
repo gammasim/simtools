@@ -12,10 +12,6 @@ Command line arguments
 ----------------------
 axes (str, required)
     Path to a YAML or JSON file defining the axes of the grid.
-ctao_data_level (str, required)
-    The data level for the grid generation (e.g., 'A', 'B', 'C').
-science_case (str, required)
-    The science case for the grid generation (e.g., 'high_precision').
 coordinate_system (str, optional, default='zenith_azimuth')
     The coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
 latitude (float, required)
@@ -35,8 +31,6 @@ To generate a grid of simulation points, execute the script as follows:
 
     simtools-production-generate-grid --site North --model_version "6.0.0"\
       --axes  tests/resources/production_grid_generation_axes_definition.yaml\
-      --ctao_data_level "B" \
-      --science_case "high_precision" \
       --coordinate_system "ra_dec" --observing_time "2017-09-16 00:00:00"
 
 The output will display the generated grid points and their RA/Dec coordinates
@@ -80,12 +74,6 @@ def _parse(label, description):
         type=str,
         required=True,
         help="Path to a YAML or JSON file defining the grid axes.",
-    )
-    config.parser.add_argument(
-        "--ctao_data_level", type=str, required=True, help="Data level (e.g., 'A', 'B', 'C')."
-    )
-    config.parser.add_argument(
-        "--science_case", type=str, required=True, help="Science case for the grid generation."
     )
     config.parser.add_argument(
         "--coordinate_system",
@@ -170,8 +158,6 @@ def main():
 
     grid_gen = gridgen.GridGeneration(
         axes=axes,
-        ctao_data_level=args_dict["ctao_data_level"],
-        science_case=args_dict["science_case"],
         coordinate_system=args_dict["coordinate_system"],
         observing_location=observing_location,
         observing_time=observing_time,

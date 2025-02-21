@@ -15,8 +15,6 @@ Key Components:
   - Attributes:
     - `axes` (list of dict): List of dictionaries defining each axis with properties
       such as name, range, binning, scaling, etc.
-    - `ctao_data_level` (str): The data level for the grid generation (e.g., 'A', 'B', 'C').
-    - `science_case` (str): The science case for the grid generation (e.g., 'high_precision').
     - `coordinate_system` (str): The coordinate system being used
     (e.g., 'zenith_azimuth' or 'ra_dec').
     - `observing_location` (EarthLocation): The location of the observation
@@ -43,9 +41,7 @@ axes = [
 ]
 
 
-# Define data level, science case, and coordinate system
-ctao_data_level = "B"
-science_case = "high_precision"
+# Define coordinate system
 coordinate_system = "ra_dec"
 
 # Define the observing location and time
@@ -58,8 +54,7 @@ observing_location = EarthLocation(lon=longitude*u.deg, lat=latitude*u.deg, heig
 observing_time = Time('2017-09-16 0:0:0')
 
 # Create grid generation instance
-grid_gen = GridGeneration(axes, ctao_data_level, science_case, coordinate_system,
- observing_location, observing_time)
+grid_gen = GridGeneration(axes, coordinate_system, observing_location, observing_time)
 
 # Generate grid points
 grid_points = grid_gen.generate_grid()
@@ -94,10 +89,6 @@ class GridGeneration:
     axes : list of dict
         List of dictionaries defining each axis with properties such as name,
           range, binning, scaling, distribution, and unit.
-    ctao_data_level : str
-        The data level (e.g., 'A', 'B', 'C') for the grid generation.
-    science_case : str
-        The science case (e.g., 'high_precision') for the grid generation.
     coordinate_system : str
         The coordinate system being used (e.g., 'zenith_azimuth' or 'declination_azimuth').
     observing_location : EarthLocation
@@ -109,24 +100,18 @@ class GridGeneration:
     def __init__(
         self,
         axes: list[dict],
-        ctao_data_level: str,
-        science_case: str,
         coordinate_system: str = "zenith_azimuth",
         observing_location=None,
         observing_time=None,
     ):
         """
-        Initialize the grid with the given axes, data level, science case, and coordinate system.
+        Initialize the grid with the given axes and coordinate system.
 
         Parameters
         ----------
         axes : list of dict
             List of dictionaries where each dictionary defines an axis with properties
               such as name, range, binning, scaling, distribution type, and unit.
-        ctao_data_level : str
-            The data level (e.g., 'A', 'B', 'C') for the grid generation.
-        science_case : str
-            The science case for the grid generation.
         coordinate_system : str, optional
             The coordinate system for the grid generation (default is 'zenith_azimuth').
         observing_location : EarthLocation, optional
@@ -135,8 +120,6 @@ class GridGeneration:
             The time of the observation.
         """
         self.axes = axes
-        self.ctao_data_level = ctao_data_level
-        self.science_case = science_case
         self.coordinate_system = coordinate_system
         self.observing_location = (
             observing_location
@@ -147,7 +130,7 @@ class GridGeneration:
 
     def generate_grid(self) -> list[dict]:
         """
-        Generate the grid based on the defined axes, data level, and science case.
+        Generate the grid based on the defined axes.
 
         Returns
         -------
@@ -159,7 +142,7 @@ class GridGeneration:
 
         for axis in self.axes:
             name = axis["name"]
-            axis_range = self.adjust_axis_range(axis["range"], name)
+            axis_range = axis["range"]
             binning = axis["binning"]
             scaling = axis.get("scaling", "linear")
             distribution = axis.get("distribution", "uniform")
@@ -210,70 +193,6 @@ class GridGeneration:
         lin_space = np.linspace(0, 1, binning)
         lin_space = np.clip(lin_space, 1e-10, 1 - 1e-10)  # Avoid division by zero
         return axis_range[0] + (axis_range[1] - axis_range[0]) * (lin_space) ** (power_law_index)
-
-    def adjust_axis_range(self, axis_range, axis_name) -> tuple:
-        """
-        Adjust the range of an axis based on data level or the value of another axis.
-
-        Parameters
-        ----------
-        axis_range : tuple
-            The original range of the axis.
-        axis_name : str
-            The name of the axis to be adjusted.
-
-        Returns
-        -------
-        tuple
-            The adjusted axis range.
-        """
-        if axis_name == "energy":
-            zenith_angle_axis = next(
-                (axis for axis in self.axes if axis["name"] == "zenith_angle"), None
-            )
-            if zenith_angle_axis:
-                zenith_range = zenith_angle_axis["range"]
-                axis_range = (
-                    axis_range[0],
-                    axis_range[1] * (1 + (zenith_range[1] - zenith_range[0]) / 90),
-                )
-
-        if self.ctao_data_level == "A":
-            return (axis_range[0], axis_range[1] * 0.5)
-        if self.ctao_data_level == "B":
-            return axis_range
-        if self.ctao_data_level == "C":
-            return (axis_range[0], axis_range[1] * 1.5)
-
-        return axis_range
-
-    def adapt_grid(self) -> list[dict]:
-        """
-        Adapt the grid definition based on the science case and data level.
-
-        Returns
-        -------
-        list of dict
-            The adapted list of grid points based on the science case and data level.
-        """
-        adapted_axes = []
-
-        for axis in self.axes:
-            adapted_axis = axis.copy()
-
-            if self.science_case == "high_precision":
-                adapted_axis["binning"] *= 2  # Increase binning for high precision
-            elif self.science_case == "low_precision":
-                adapted_axis["binning"] //= 2  # Decrease binning for low precision
-
-            adapted_axis["range"] = self.adjust_axis_range(
-                adapted_axis["range"], adapted_axis["name"]
-            )
-
-            adapted_axes.append(adapted_axis)
-
-        self.axes = adapted_axes
-        return self.generate_grid()
 
     def convert_altaz_to_radec(self, alt, az):
         """

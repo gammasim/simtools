@@ -33,9 +33,6 @@ axes = [
     },
 ]
 
-
-ctao_data_level = "B"
-science_case = "high_precision"
 coordinate_system = "ra_dec"
 
 latitude = 28.7622  # degrees
@@ -43,9 +40,7 @@ longitude = -17.8920  # degrees
 observing_location = EarthLocation(lon=longitude * u.deg, lat=latitude * u.deg, height=2000 * u.m)
 observing_time = Time("2017-09-16 00:00:00")
 
-grid_gen = GridGeneration(
-    axes, ctao_data_level, science_case, coordinate_system, observing_location, observing_time
-)
+grid_gen = GridGeneration(axes, coordinate_system, observing_location, observing_time)
 
 
 def test_generate_grid():
