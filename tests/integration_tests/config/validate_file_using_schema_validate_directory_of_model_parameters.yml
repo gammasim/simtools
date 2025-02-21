@@ -1,5 +1,6 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-validate-file-using-schema
-  TEST_NAME: validate_directory_of_model_parameters
-  CONFIGURATION:
-    FILE_DIRECTORY: tests/resources/model_parameters
+  APPLICATIONS:
+  - APPLICATION: simtools-validate-file-using-schema
+    TEST_NAME: validate_directory_of_model_parameters
+    CONFIGURATION:
+      FILE_DIRECTORY: tests/resources/model_parameters
