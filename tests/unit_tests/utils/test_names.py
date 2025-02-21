@@ -212,6 +212,7 @@ def test_sanitize_name(caplog):
     assert names.sanitize_name("123name") == "_123name"
     assert names.sanitize_name("na!@#$%^&*()me") == "na__________me"
     assert names.sanitize_name("!validName") == "_validname"
+    assert names.sanitize_name(None) is None
 
     with pytest.raises(ValueError, match=r"^The string  could not be sanitized."):
         names.sanitize_name("")
@@ -550,3 +551,11 @@ def test_get_simulation_software_name_from_parameter_name():
 def test_get_parameter_name_from_simtel_name():
     assert names.get_parameter_name_from_simtel_name("focal_length") == "focal_length"
     assert names.get_parameter_name_from_simtel_name("altitude") == "corsika_observation_level"
+
+
+def test_db_collection_to_class_key():
+
+    assert names.db_collection_to_class_key() == ["Structure", "Camera", "Telescope"]
+
+    with pytest.raises(KeyError, match="Invalid collection name no_collection"):
+        names.db_collection_to_class_key("no_collection")
