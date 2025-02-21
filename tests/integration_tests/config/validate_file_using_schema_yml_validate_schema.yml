@@ -6,3 +6,5 @@ CTA_SIMPIPE:
       SCHEMA: src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
       FILE_NAME: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
       DATA_TYPE: schema
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

@@ -8,3 +8,5 @@ CTA_SIMPIPE:
         '
       VIEW_CONE: 0 deg 10 deg
       ENERGY_RANGE: 8 GeV 300 TeV
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

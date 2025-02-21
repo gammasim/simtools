@@ -18,3 +18,5 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: test_file_2D_run_header.pdf
     - OUTPUT_FILE: test_file_2D_run_header.hdf5
     - OUTPUT_FILE: test_file_2D_run_header.hdf5_event_2d_histograms.pdf
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

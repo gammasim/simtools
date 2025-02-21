@@ -28,3 +28,5 @@ CTA_SIMPIPE:
         FILE: simulate_prod.submit.condor
       - PATH_DESCRIPTOR: OUTPUT_PATH
         FILE: simulate_prod.submit.sh
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

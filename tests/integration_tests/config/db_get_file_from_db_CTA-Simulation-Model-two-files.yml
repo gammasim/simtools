@@ -10,3 +10,5 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - OUTPUT_FILE: mirror_CTA-S-LST_v2020-04-07.dat
     - OUTPUT_FILE: ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

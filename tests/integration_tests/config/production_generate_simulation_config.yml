@@ -14,3 +14,5 @@ CTA_SIMPIPE:
       OUTPUT_FILE: configured_simulation_params.json
     INTEGRATION_TESTS:
     - OUTPUT_FILE: configured_simulation_params.json
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

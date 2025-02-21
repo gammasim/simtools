@@ -12,3 +12,5 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - OUTPUT_FILE: num_gains.json
     - OUTPUT_FILE: telescope_transmission.json
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

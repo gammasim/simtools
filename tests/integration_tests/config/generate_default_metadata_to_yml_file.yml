@@ -9,3 +9,5 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test.yml
     - FILE_TYPE: yml
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

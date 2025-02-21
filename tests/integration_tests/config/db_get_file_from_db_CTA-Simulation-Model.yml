@@ -7,3 +7,5 @@ CTA_SIMPIPE:
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
     - OUTPUT_FILE: mirror_CTA-S-LST_v2020-04-07.dat
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

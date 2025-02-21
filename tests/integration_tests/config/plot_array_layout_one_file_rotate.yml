@@ -10,3 +10,5 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - OUTPUT_FILE: array_layout_telescope_positions-North-ground_North_ground_20deg.pdf
     - OUTPUT_FILE: array_layout_telescope_positions-North-ground_North_ground_20deg.png
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

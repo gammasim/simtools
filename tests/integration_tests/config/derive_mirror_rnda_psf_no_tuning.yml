@@ -29,3 +29,5 @@ CTA_SIMPIPE:
       - TEST_COLUMN_NAME: mirror_reflection_random_angle_sigma1
         CUT_COLUMN_NAME: best_fit
         CUT_CONDITION: ==True
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

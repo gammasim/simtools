@@ -6,3 +6,5 @@ CTA_SIMPIPE:
       SITE: North
       MODEL_VERSION: 6.0.0
       ARRAY_LAYOUT_NAME: test_layout
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

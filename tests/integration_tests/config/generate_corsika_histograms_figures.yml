@@ -11,3 +11,5 @@ CTA_SIMPIPE:
       TEST: true
     INTEGRATION_TESTS:
     - OUTPUT_FILE: tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

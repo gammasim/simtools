@@ -14,3 +14,5 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - OUTPUT_FILE: array_layout_list_South_utm_0deg.png
     - OUTPUT_FILE: array_layout_list_South_utm_0deg.pdf
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

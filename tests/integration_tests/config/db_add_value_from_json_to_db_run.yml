@@ -6,3 +6,5 @@ CTA_SIMPIPE:
       FILE_NAME: ./tests/resources/model_parameters/num_gains.json
       DB_COLLECTION: telescopes
       DB: sandbox
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

@@ -7,3 +7,5 @@ CTA_SIMPIPE:
       PRINT: ground
       MODEL_VERSION: 6.0.0
       LOG_LEVEL: DEBUG
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

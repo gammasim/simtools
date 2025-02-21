@@ -14,3 +14,5 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: validate_camera_efficiency_MSTN-design_cherenkov.pdf
     - OUTPUT_FILE: camera-efficiency-summary-North-MSTN-design-za20.0deg_azm000deg_validate_camera_efficiency.txt
     - OUTPUT_FILE: camera-efficiency-table-North-MSTN-design-za20.0deg_azm000deg_validate_camera_efficiency.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
