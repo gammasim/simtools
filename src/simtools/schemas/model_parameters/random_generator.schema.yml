@@ -17,7 +17,7 @@ data:
   - type: string
     default: "Ranlux"
 instrument:
-  class: Camera
+  class: configuration_sim_telarray
   type:
     - LSTN
     - LSTS
