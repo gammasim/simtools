@@ -9,3 +9,5 @@ CTA_SIMPIPE:
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test.png
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

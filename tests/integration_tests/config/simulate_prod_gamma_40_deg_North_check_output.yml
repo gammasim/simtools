@@ -50,3 +50,5 @@ CTA_SIMPIPE:
     - TEST_SIMTEL_CFG_FILES:
         5.0.0: tests/resources/sim_telarray_configurations/CTA-alpha-North-5.0.0_test.cfg
         6.0.0: tests/resources/sim_telarray_configurations/CTA-alpha-North-6.0.0_test.cfg
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

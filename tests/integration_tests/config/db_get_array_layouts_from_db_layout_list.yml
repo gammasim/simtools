@@ -12,3 +12,5 @@ CTA_SIMPIPE:
       COORDINATE_SYSTEM: ground
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: array_layout_south_ground_from_list.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

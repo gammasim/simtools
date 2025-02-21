@@ -12,3 +12,5 @@ CTA_SIMPIPE:
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
     - OUTPUT_FILE: results/ray-tracing-North-LSTN-01-d10.0km-za20.0deg_tune_psf.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

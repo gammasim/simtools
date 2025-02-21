@@ -12,3 +12,5 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: generate_regular_arrays-South-4LST.ecsv
     - OUTPUT_FILE: generate_regular_arrays-South-1MST.ecsv
     - OUTPUT_FILE: generate_regular_arrays-South-4MST.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

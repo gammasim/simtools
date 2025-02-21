@@ -11,3 +11,5 @@ CTA_SIMPIPE:
       INPUT_META: ./tests/resources/num_gains.meta.yml
       OUTPUT_PATH: simtools-output
       USE_PLAIN_OUTPUT_PATH: true
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

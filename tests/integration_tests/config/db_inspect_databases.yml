@@ -4,3 +4,5 @@ CTA_SIMPIPE:
     TEST_NAME: db_inspect_databases
     CONFIGURATION:
       DB_NAME: all
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

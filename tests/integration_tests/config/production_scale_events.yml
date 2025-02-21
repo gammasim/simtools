@@ -22,3 +22,5 @@ CTA_SIMPIPE:
       METRIC: tests/resources/production_simulation_config_metrics.yml
     INTEGRATION_TESTS:
     - OUTPUT_FILE: interpolated_scaled_events.json
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

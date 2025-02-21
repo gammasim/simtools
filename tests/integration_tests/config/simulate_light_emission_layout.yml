@@ -14,3 +14,5 @@ CTA_SIMPIPE:
       TELESCOPE_FILE: tests/resources/telescope_positions-North-ground.ecsv
     INTEGRATION_TESTS:
     - OUTPUT_FILE: logfile.log
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

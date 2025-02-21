@@ -7,3 +7,5 @@ CTA_SIMPIPE:
       TELESCOPE: LSTN-01
       PARAMETER: mirror_list
       MODEL_VERSION: 6.0.0
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

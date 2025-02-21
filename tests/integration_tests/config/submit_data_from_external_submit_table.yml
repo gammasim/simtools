@@ -10,3 +10,5 @@ CTA_SIMPIPE:
       OUTPUT_FILE: test.ecsv
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

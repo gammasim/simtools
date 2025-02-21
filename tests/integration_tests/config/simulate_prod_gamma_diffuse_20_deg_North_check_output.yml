@@ -39,3 +39,5 @@ CTA_SIMPIPE:
           photons:
           - 90
           - 1000
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

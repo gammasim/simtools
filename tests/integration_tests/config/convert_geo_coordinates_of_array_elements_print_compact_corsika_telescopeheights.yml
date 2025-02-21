@@ -13,3 +13,5 @@ CTA_SIMPIPE:
       - LSTN
       - MSTN
       LOG_LEVEL: DEBUG
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

@@ -6,3 +6,5 @@ CTA_SIMPIPE:
       SITE: North
       MODEL_VERSION: 6.0.0
       LIST_AVAILABLE_LAYOUTS: true
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

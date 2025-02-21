@@ -6,3 +6,5 @@ CTA_SIMPIPE:
       SCHEMA: tests/resources/num_gains.schema.yml
       FILE_NAME: tests/resources/model_parameters/num_gains-0.2.0.json
       DATA_TYPE: model_parameter
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

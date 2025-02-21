@@ -35,3 +35,5 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: log_files.txt
     - OUTPUT_FILE: output_files.txt
     - OUTPUT_FILE: hist_files.txt
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

@@ -10,3 +10,5 @@ CTA_SIMPIPE:
       USE_PLAIN_OUTPUT_PATH: true
     INTEGRATION_TESTS:
     - OUTPUT_FILE: quantum_efficiency.md
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

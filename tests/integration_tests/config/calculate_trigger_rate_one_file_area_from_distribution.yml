@@ -7,3 +7,5 @@ CTA_SIMPIPE:
 
         '
       AREA_FROM_DISTRIBUTION: true
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

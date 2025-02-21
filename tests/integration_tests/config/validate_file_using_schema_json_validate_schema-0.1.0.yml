@@ -6,3 +6,5 @@ CTA_SIMPIPE:
       SCHEMA: src/simtools/schemas/model_parameter.metaschema.yml
       FILE_NAME: tests/resources/model_parameters/num_gains-0.0.0.json
       DATA_TYPE: schema
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

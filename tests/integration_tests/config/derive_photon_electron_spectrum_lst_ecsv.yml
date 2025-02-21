@@ -18,3 +18,5 @@ CTA_SIMPIPE:
 
         '
       TOLERANCE: 0.0001
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

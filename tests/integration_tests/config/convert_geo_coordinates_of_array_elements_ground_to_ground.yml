@@ -10,3 +10,5 @@ CTA_SIMPIPE:
       SELECT_ASSETS:
       - LSTN
       - MSTN
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

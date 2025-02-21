@@ -6,3 +6,5 @@ CTA_SIMPIPE:
       SITE: North
       PARAMETER: reference_point_altitude
       MODEL_VERSION: 6.0.0
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

@@ -18,3 +18,5 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test_file_telescope_indices.hdf5
     - OUTPUT_FILE: test_file_telescope_indices.pdf
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

@@ -12,3 +12,5 @@ CTA_SIMPIPE:
       TEST: true
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test_file_tables.hdf5
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

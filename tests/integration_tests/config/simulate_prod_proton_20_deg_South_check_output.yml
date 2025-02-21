@@ -39,3 +39,5 @@ CTA_SIMPIPE:
           - 1000
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
         FILE: run000001_proton_za20deg_azm180deg_South_alpha_check_output.log_hist.tar.gz
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

@@ -5,3 +5,5 @@ CTA_SIMPIPE:
     CONFIGURATION:
       FILE_NAME: tests/resources/reference_point_altitude.json
       DATA_TYPE: metadata
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
