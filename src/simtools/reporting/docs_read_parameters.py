@@ -77,7 +77,7 @@ class ReadParameters:
         """
         parameter_description, short_description, inst_class = {}, {}, {}
 
-        for instrument_class in names.instrument_classes("telescope"):
+        for instrument_class in names.db_collection_to_class_key("telescopes"):
             for parameter, details in names.load_model_parameters(instrument_class).items():
                 parameter_description[parameter] = details.get("description")
                 short_description[parameter] = details.get("short_description")
