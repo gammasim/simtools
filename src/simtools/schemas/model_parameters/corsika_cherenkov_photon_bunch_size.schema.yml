@@ -10,6 +10,8 @@ developer_note: |-
 name: corsika_cherenkov_photon_bunch_size
 description: |-
   Cherenkov bunch size definition.
+instrument:
+  class: configuration_corsika
 data:
   - type: float64
     unit: dimensionless

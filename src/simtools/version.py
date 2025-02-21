@@ -9,11 +9,11 @@ try:
         from ._dev_version import version
     except ImportError:
         from ._version import version
-except Exception:
+except Exception:  # pylint: disable=broad-except
     import warnings
 
     warnings.warn("Could not determine simtools version; this indicates a broken installation.")
     del warnings
-    version = "0.0.0"
+    version = "0.0.0"  # pylint: disable=invalid-name
 
 __version__ = version

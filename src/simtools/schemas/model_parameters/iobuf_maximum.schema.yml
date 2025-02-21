@@ -15,7 +15,7 @@ data:
     allowed_range:
       min: 100000
 instrument:
-  class: Camera
+  class: configuration_sim_telarray
   type:
     - LSTN
     - LSTS

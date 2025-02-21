@@ -9,6 +9,8 @@ name: corsika_longitudinal_shower_development
 description: |-
   Step size for recording of longitudinal shower development.
   Any value >=1. for the step size enables the recording of the shower development.
+instrument:
+  class: configuration_corsika
 data:
   - type: float64
     unit: g/cm2

@@ -215,7 +215,6 @@ ignore = [
   "scm_version.py",
   "_version.py",
   "legend_handlers.py",
-  "version.py",
 ]
 
 # See discussion in issue 521
