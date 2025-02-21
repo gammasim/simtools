@@ -1,12 +1,17 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-plot-array-layout
-  TEST_NAME: from_list_north
-  CONFIGURATION:
-    ARRAY_ELEMENT_LIST: ["LSTN-01", "MSTN"]
-    MODEL_VERSION: 6.0.0
-    OUTPUT_PATH: simtools-output
-    AXES_RANGE: 500.
-    SHOW_LABELS: True
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-plot-array-layout
+    TEST_NAME: from_list_north
+    CONFIGURATION:
+      ARRAY_ELEMENT_LIST:
+      - LSTN-01
+      - MSTN
+      MODEL_VERSION: 6.0.0
+      OUTPUT_PATH: simtools-output
+      AXES_RANGE: 500.0
+      SHOW_LABELS: true
+    INTEGRATION_TESTS:
     - OUTPUT_FILE: array_layout_list_North_ground_0deg.pdf
     - OUTPUT_FILE: array_layout_list_North_ground_0deg.png
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

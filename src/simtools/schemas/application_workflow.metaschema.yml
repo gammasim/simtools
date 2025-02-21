@@ -1,50 +1,68 @@
 ---
 $schema: http://json-schema.org/draft-06/schema#
-$ref: '#/definitions/SimtoolsIntegrationTestConfiguration'
-title: SimPipe integration test configuration metaschema
-description: YAML representation of integration test configuration metaschema
-version: 0.2.0
-name: integration_tests_config.metaschema
+$ref: '#/definitions/SimtoolsApplicationWorkflowConfiguration'
+title: SimPipe application workflow configuration metaschema
+description: YAML representation of application workflow configuration metaschema
+version: 0.3.0
+name: application_workflow.metaschema
 type: object
 additionalProperties: false
 
-
 definitions:
-  SimtoolsIntegrationTestConfiguration:
+  SimtoolsApplicationWorkflowConfiguration:
     type: object
     additionalProperties: false
     properties:
       CTA_SIMPIPE:
         "$ref": "#/definitions/CTASIMPIPE"
+      SCHEMA_VERSION:
+        type: string
+        description: "Version of the schema."
+      SCHEMA_URL:
+        type: string
+        format: uri
+        description: "URL of the schema."
+      SCHEMA_NAME:
+        type: string
+        description: "Name of the schema."
     required:
       - CTA_SIMPIPE
+      - SCHEMA_VERSION
+      - SCHEMA_NAME
     title: ""
   CTASIMPIPE:
     type: object
     additionalProperties: false
     properties:
-      APPLICATION:
+      LOG_PATH:
         type: string
-        description: "Name of simtools application"
-      TEST_NAME:
-        type: string
-        description: "Test name. Should be unique for this application."
-      MODEL_VERSION_USE_CURRENT:
-        type: boolean
-        description: |
-          "Skip test if model version is changed via command line.
-          Important e.g., for cases where DB model is incomplete for some
-          model versions."
-      CONFIGURATION:
-        "$ref": "#/definitions/Configuration"
-      INTEGRATION_TESTS:
+        description: "Path to the log file."
+      APPLICATIONS:
         type: array
         items:
-          "$ref": "#/definitions/IntegrationTest"
-    required:
-      - APPLICATION
-      - CONFIGURATION
-      - TEST_NAME
+          type: object
+          properties:
+            APPLICATION:
+              type: string
+              description: "Name of simtools application"
+            TEST_NAME:
+              type: string
+              description: "Test name. Should be unique for this application."
+            MODEL_VERSION_USE_CURRENT:
+              type: boolean
+              description: |
+                "Skip test if model version is changed via command line.
+                Important e.g., for cases where DB model is incomplete for some
+                model versions."
+            CONFIGURATION:
+              "$ref": "#/definitions/Configuration"
+            INTEGRATION_TESTS:
+              type: array
+              items:
+                "$ref": "#/definitions/IntegrationTest"
+          required:
+            - APPLICATION
+            - CONFIGURATION
     title: CTASimpipe
   Configuration:
     description: "Command line configuration of simtools application."
@@ -110,4 +128,4 @@ definitions:
             CUT_CONDITION:
               description: "Condition to apply to the cut column."
               type: string
-    title: IntegrationTest
+    title: ApplicationWorkflow
