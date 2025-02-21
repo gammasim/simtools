@@ -112,7 +112,10 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     if json_schema is None:
         json_schema = load_schema(
             schema_file,
-            data.get("schema_version", "0.1.0"),  # default version to ensure backward compatibility
+            data.get("schema_version")
+            or data.get(
+                "SCHEMA_VERSION", "0.1.0"
+            ),  # default version to ensure backward compatibility
         )
 
     try:

@@ -59,7 +59,7 @@ jobs:
             echo "Testing config file $file"
             python src/simtools/applications/validate_file_using_schema.py \
             --file_name "$file" \
-            --schema integration_tests_config.metaschema.yml \
+            --schema application_workflow.metaschema.yml \
             --data_type "schema" \
             --log_level DEBUG
           done
