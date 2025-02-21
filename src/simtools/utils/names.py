@@ -110,15 +110,6 @@ def load_model_parameters(class_key_list):
     return model_parameters
 
 
-def instrument_classes(instrument_type="telescope"):
-    """Return list of instrument classes for a given instrument type."""
-    if instrument_type == "site":
-        return "Site"
-    if instrument_type == "telescope":
-        return ("Structure", "Camera", "Telescope")
-    raise ValueError(f"Invalid instrument type {instrument_type}")
-
-
 def site_parameters():
     return load_model_parameters(class_key_list=tuple(db_collections_to_class_keys["sites"]))
 
@@ -141,6 +132,14 @@ def class_key_to_db_collection(class_name):
         if class_name in classes:
             return collection
     raise ValueError(f"Class {class_name} not found")
+
+
+def db_collection_to_class_key(collection_name="telescopes"):
+    """Return list of instrument classes for a given collection."""
+    try:
+        return db_collections_to_class_keys[collection_name]
+    except KeyError as exc:
+        raise KeyError(f"Invalid collection name {collection_name}") from exc
 
 
 def validate_array_element_id_name(name, array_element_type=None):
@@ -693,8 +692,7 @@ def sanitize_name(name):
         if the string name can not be sanitized.
     """
     if name is None:
-        # _logger.info("The string is None and can't be sanitized.")
-        return name
+        return None
     sanitized = name.lower()
     sanitized = sanitized.replace(" ", "_")
     # Remove characters that are not alphanumerics or underscores
