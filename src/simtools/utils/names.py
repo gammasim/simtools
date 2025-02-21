@@ -81,6 +81,15 @@ def load_model_parameters(class_key_list):
     return model_parameters
 
 
+def instrument_classes(instrument_type="telescope"):
+    """Return list of instrument classes for a given instrument type."""
+    if instrument_type == "site":
+        return "Site"
+    if instrument_type == "telescope":
+        return ("Structure", "Camera", "Telescope")
+    raise ValueError(f"Invalid instrument type {instrument_type}")
+
+
 def site_parameters():
     return load_model_parameters(class_key_list=tuple(db_collections_to_class_keys["sites"]))
 
