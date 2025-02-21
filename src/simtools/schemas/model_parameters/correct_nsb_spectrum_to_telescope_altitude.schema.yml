@@ -16,7 +16,7 @@ data:
     unit: dimensionless
     default: "atm_trans_2200_1_3_0_0_0.dat"
 instrument:
-  class: Telescope
+  class: configuration_sim_telarray
   type:
     - LSTN
     - LSTS
