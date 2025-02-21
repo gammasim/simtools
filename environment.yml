@@ -4,10 +4,12 @@ channels:
   - conda-forge
 dependencies:
   - python=3.11
-  - astropy
+  - astropy-base
   - boost-histogram
+  - ctao-dpps-cosmic-ray-spectra
   - ctapipe-base
   - eventio
+  - h5py
   - jsonschema
   - matplotlib-base
   - myst-parser
@@ -34,7 +36,6 @@ dependencies:
   - towncrier
   - toml
   - pip:
-      - ctao-dpps-cosmic-ray-spectra
       - pytest-random-order
 
 # cheatsheet

@@ -1,5 +1,6 @@
-# https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
+---
 name: docker-simtools
+# Build simtools dev and prod images based on CORSIKA / sim_telarray images (no optimizations)
 
 on:
   workflow_dispatch:
@@ -14,7 +15,7 @@ on:
   release:
     types: [published]
   schedule:
-    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC (build only)
 
 env:
   SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
@@ -89,8 +90,6 @@ jobs:
       - name: Test Docker image
         if: matrix.type == 'prod'
         run: >
-          # Clone simulation model repo for faster file access
-          git clone https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/model_parameters.git
           # run docker
           docker run --rm
           -e "SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'"
@@ -98,17 +97,29 @@ jobs:
           -e "SIMTOOLS_DB_API_USER=${{ env.SIMTOOLS_DB_API_USER }}"
           -e "SIMTOOLS_DB_API_PW=${{ env.SIMTOOLS_DB_API_PW }}"
           -e "SIMTOOLS_DB_SERVER=${{ env.SIMTOOLS_DB_SERVER }}"
-          -e "SIMTOOLS_DB_SIMULATION_MODEL_URL='./model_parameters'"
           -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }}
           bash -c "cd /workdir/external && simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml"
         shell: /usr/bin/bash -e {0}
 
-      - name: Push Docker image
+      - name: Test Command Line Tools
+        if: matrix.type == 'prod'
+        run: |
+          set -e
+          echo "Reading scripts defined in pyproject.toml"
+          ls -l pyproject.toml
+          scripts=$(grep 'scripts.simtools-' pyproject.toml | sed -e 's/^scripts\.//' -e 's/ =.*$//')
+          for script in $scripts; do
+            echo "Testing command: $script --help"
+            docker run --rm ${{ env.TEST_TAG }} $script --help
+          done
+        shell: /usr/bin/bash -e {0}
+
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
-          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           platforms: linux/amd64,linux/arm64/v8
+          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           push:
             ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
           file: ./docker/Dockerfile-${{ matrix.type }}

@@ -7,7 +7,6 @@ env:
   SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
   SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
   SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-  SIMTOOLS_DB_SIMULATION_MODEL: "CTAO-Simulation-Model-LATEST"
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
 
 on:
@@ -19,7 +18,7 @@ on:
 
 jobs:
 
-  testbuilding:
+  test_building:
     # Build the package and check if it is installable
     # (tests among others that all components are there)
     runs-on: ubuntu-latest
@@ -39,31 +38,7 @@ jobs:
           python -m pip install --upgrade build
           python -m build
 
-  test_commandline_tools:
-    # Test the command line tools defined in pyproject.toml
-    # (tests if they are correctly defined and can be executed)
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/gammasim/simtools-prod:latest
-      options: --user 0
-
-    steps:
-
-      - name: checkout
-        uses: actions/checkout@v4
-
-      - name: Test command line tools
-        run: |
-          set -e
-          # read list of scripts from pyproject.toml and execute them
-          scripts=$(grep 'scripts.simtools-' pyproject.toml | sed -e 's/^scripts\.//' -e 's/ =.*$//')
-          for script in $scripts; do
-            echo "Running $script"
-            $script --help
-          done
-
-  integrationtests:
-    # Run integration tests
+  integration_tests:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/gammasim/simtools-dev:latest
@@ -86,10 +61,17 @@ jobs:
         run: |
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
 
+      - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
+        run: |
+          SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
+          SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
+          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
+
       - name: Run integration tests
         shell: bash -l {0}
+        env:
+          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
           source /workdir/env/bin/activate
-          pip install '.[tests,dev,doc]'
-          export PYTHONPATH=$PYTHONPATH:.
+          pip install -e '.[tests,dev,doc]'
           pytest --model_version=${{ matrix.type }} --color=yes --durations=20 -n auto --dist loadscope --no-cov tests/integration_tests/

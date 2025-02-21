@@ -10,6 +10,7 @@ import pytest
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
+from simtools.utils import general as gen
 from simtools.visualization.visualize import plot_simtel_ctapipe
 
 
@@ -354,6 +355,7 @@ def test_make_simtel_script(mock_simulator):
         mock_simulator.output_directory = "/directory"
 
         expected_command = (
+            "SIM_TELARRAY_CONFIG_PATH='' "
             "/path/to/sim_telarray/bin/sim_telarray/ "
             "-I -I/path/to/config/ "
             "-c /path/to/config/config.cfg "
@@ -398,7 +400,7 @@ def test_prepare_script(
     )
 
     # Assertions
-    mock_os_system.assert_called_once_with(f"chmod ug+x {script_path}")
+    assert gen.program_is_executable(script_path)
     mock_make_light_emission_script.assert_called_once()  # Ensure this mock is called
     mock_make_simtel_script.assert_called_once()  # Ensure this mock is called
 

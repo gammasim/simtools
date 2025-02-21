@@ -131,6 +131,12 @@ def test_handling_parameters(telescope_model_lst):
         tel_model._get_parameter_dict("bla_bla")
 
 
+def test_has_parameter(telescope_model_lst):
+    tel_model = telescope_model_lst
+    assert tel_model.has_parameter("secondary_mirror_diameter") is False
+    assert tel_model.has_parameter("focus_offset") is True
+
+
 def test_print_parameters(telescope_model_lst, capsys):
     tel_model = telescope_model_lst
     tel_model.print_parameters()
@@ -140,6 +146,7 @@ def test_print_parameters(telescope_model_lst, capsys):
 def test_set_config_file_directory_and_name(telescope_model_lst, caplog):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     telescope_copy.name = None
+    telescope_copy.site = None
     with caplog.at_level(logging.DEBUG):
         telescope_copy._set_config_file_directory_and_name()
     assert "Config file path" not in caplog.text
@@ -161,11 +168,11 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 2
+    assert mock_db.call_count == 4
 
     telescope_copy.db = None
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 2
+    assert mock_db.call_count == 4
 
 
 def test_extra_labels(telescope_model_lst):
@@ -214,10 +221,12 @@ def test_change_parameter(telescope_model_lst):
         tel_model.change_parameter("bla_bla", 9999.9)
 
 
-def test_change_multiple_parameters_from_file(telescope_model_lst, mocker):
+def test_change_multiple_parameters_from_file(telescope_model_lst, caplog, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mocker_gen = mocker.patch("simtools.utils.general.collect_data_from_file", return_value={})
-    telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
+    with caplog.at_level(logging.WARNING):
+        telescope_copy.change_multiple_parameters_from_file(file_name="test_file")
+    assert "Changing multiple parameters from file is a feature for developers." in caplog.text
     mocker_gen.assert_called_once()
 
 
@@ -292,22 +301,6 @@ def test_updating_export_model_files(db_config, io_handler, model_version):
     assert False is tel._is_exported_model_files_up_to_date
 
 
-@pytest.mark.xfail(reason="Test requires Derived-Values Database")
-def test_export_derived_files(io_handler, db_config, model_version_prod5):
-    tel_model = TelescopeModel(
-        site="North",
-        telescope_name="LSTN-01",
-        model_version=model_version_prod5,
-        mongo_db_config=db_config,
-        label="test-telescope-model-lst",
-    )
-
-    _ = tel_model.derived
-    assert tel_model.config_file_directory.joinpath(
-        "ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv"
-    ).exists()
-
-
 def test_export_parameter_file(telescope_model_lst, mocker):
     parameter = "array_coordinates_UTM"
     file_path = "tests/resources/telescope_positions-North-ground.ecsv"
@@ -368,11 +361,40 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
     telescope_copy.export_nsb_spectrum_to_telescope_altitude_correction_file(model_directory)
 
     mock_db_export.assert_called_once_with(
-        {
+        parameters={
             "nsb_spectrum_at_2200m": {
                 "value": "test_value",
                 "file": True,
             }
         },
-        model_directory,
+        dest=model_directory,
     )
+
+
+def test_get_model_file_as_table(telescope_model_lst, mocker):
+
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+
+    with pytest.raises(ValueError, match="Parameter not_a_parameter not found in the model"):
+        telescope_copy.get_model_file_as_table("not_a_parameter")
+
+    mock_db_export = mocker.patch.object(DatabaseHandler, "export_model_files")
+    mock_simtel_table_reader = mocker.patch("simtools.simtel.simtel_table_reader.read_simtel_table")
+    telescope_copy.get_model_file_as_table("pm_photoelectron_spectrum")
+
+    assert mock_db_export.call_count == 1
+    assert mock_simtel_table_reader.call_count == 1
+
+
+def test_get_model_file_as_ecsv_table(telescope_model_sst, mocker):
+
+    telescope_copy = copy.deepcopy(telescope_model_sst)
+
+    mock_db_export = mocker.patch.object(DatabaseHandler, "export_model_files")
+    mock_simtel_table_reader = mocker.patch("simtools.simtel.simtel_table_reader.read_simtel_table")
+    mock_astropy_table_reader = mocker.patch("astropy.table.Table.read")
+    telescope_copy.get_model_file_as_table("secondary_mirror_incidence_angle")
+
+    assert mock_db_export.call_count == 1
+    assert mock_simtel_table_reader.call_count == 0
+    assert mock_astropy_table_reader.call_count == 1

@@ -1,8 +1,8 @@
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [
-  "setuptools>=65",
-  "setuptools-scm[toml]>=6.2",
+  "setuptools>=64",
+  "setuptools-scm[toml]>=8",
 ]
 
 [project]
@@ -33,13 +33,13 @@ dependencies = [
   "ctao-dpps-cosmic-ray-spectra",
   "ctapipe",
   "eventio",
+  "h5py",
   "jsonschema",
   "matplotlib",
   "numpy",
   "particle",
   "pymongo",
   "pyproj",
-  "pytest",
   "python-dotenv",
   "pyyaml",
   "scipy",
@@ -58,6 +58,7 @@ optional-dependencies."doc" = [
   "towncrier",
 ]
 optional-dependencies."tests" = [
+  "pytest",
   "pytest-cov",
   "pytest-mock",
   "pytest-profiling",
@@ -73,26 +74,30 @@ scripts.simtools-convert-all-model-parameters-from-simtel = "simtools.applicatio
 scripts.simtools-convert-geo-coordinates-of-array-elements = "simtools.applications.convert_geo_coordinates_of_array_elements:main"
 scripts.simtools-convert-model-parameter-from-simtel = "simtools.applications.convert_model_parameter_from_simtel:main"
 scripts.simtools-db-add-file-to-db = "simtools.applications.db_add_file_to_db:main"
-scripts.simtools-db-add-model-parameters-from-repository-to-db = "simtools.applications.db_add_model_parameters_from_repository_to_db:main"
+scripts.simtools-db-add-simulation-model-from-repository-to-db = "simtools.applications.db_add_simulation_model_from_repository_to_db:main"
 scripts.simtools-db-add-value-from-json-to-db = "simtools.applications.db_add_value_from_json_to_db:main"
 scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
 scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
 scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
 scripts.simtools-db-inspect-databases = "simtools.applications.db_inspect_databases:main"
 scripts.simtools-derive-mirror-rnda = "simtools.applications.derive_mirror_rnda:main"
+scripts.simtools-derive-photon-electron-spectrum = "simtools.applications.derive_photon_electron_spectrum:main"
 scripts.simtools-derive-psf-parameters = "simtools.applications.derive_psf_parameters:main"
+scripts.simtools-docs-produce-array-element-report = "simtools.applications.docs_produce_array_element_report:main"
+scripts.simtools-docs-produce-model-parameter-reports = "simtools.applications.docs_produce_model_parameter_reports:main"
 scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
 scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
 scripts.simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
-scripts.simtools-production-calculate-resource-estimates = "simtools.applications.production_calculate_resource_estimates:main"
-scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
+scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:main"
+scripts.simtools-production-derive-limits = "simtools.applications.production_derive_limits:main"
 scripts.simtools-production-generate-simulation-config = "simtools.applications.production_generate_simulation_config:main"
 scripts.simtools-production-scale-events = "simtools.applications.production_scale_events:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
+scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
 scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"
 scripts.simtools-validate-camera-efficiency = "simtools.applications.validate_camera_efficiency:main"
@@ -102,13 +107,14 @@ scripts.simtools-validate-file-using-schema = "simtools.applications.validate_fi
 scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
 
 [tool.setuptools]
-packages = [
-  "simtools",
-]
-include-package-data = true
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = [ "src" ]
+exclude = [ "simtools._dev_version.*" ]
 
 [tool.setuptools_scm]
-write_to = "simtools/_version.py"
+write_to = "src/simtools/_version.py"
 
 [tool.black]
 line-length = 100
@@ -140,6 +146,7 @@ lint.extend-select = [
   "N",   # pep8 naming
   "NPY", # numpy
   "PT",  # pytest
+  "PTH", # use pathlib
   "RET", # return statements
   "RUF", # ruff
   "UP",  # pyupgrade
@@ -151,6 +158,7 @@ lint.ignore = [
   "D215",   # section-underline-not-over-indented
   "G004",   # Logging statement uses f-string
   "ISC001", # incompatible with ruff format
+  "PTH123", # open("foo") should be replaced by Path("foo").open()
   "RUF012", #  Mutable class attributes should be annotated
 ]
 lint.per-file-ignores."**/tests/**" = [
@@ -262,7 +270,7 @@ minversion = "6.0"
 norecursedirs = [
   "build",
   "docs/_build",
-  "simtools/applications",
+  "src/simtools/applications",
 ]
 addopts = "-v --cov=simtools --cov-report=xml --cov-report=term"
 testpaths = "tests/unit_tests/"
@@ -275,10 +283,8 @@ exclude_also = [
 ]
 
 [tool.coverage.run]
+omit = [ "src/simtools/_version.py", "*__init__*", "src/simtools/applications/**" ]
 relative_files = true
-source = [
-  "simtools",
-]
 
 [tool.towncrier]
 package = "simtools"

@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import pytest
 
-from simtools.camera_efficiency import CameraEfficiency
+from simtools.camera.camera_efficiency import CameraEfficiency
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
@@ -44,7 +45,7 @@ def benn_ellison_spectrum_file_name():
 def test_make_run_command(
     simulator_camera_efficiency, expected_command, benn_ellison_spectrum_file_name
 ):
-    command = simulator_camera_efficiency._make_run_command()
+    command, std_out_file, std_err_file = simulator_camera_efficiency._make_run_command()
 
     for item in expected_command:
         assert item in command
@@ -53,12 +54,15 @@ def test_make_run_command(
     # Benn_LaPalma_sky_converted.lis is the default nsb spectrum
     assert benn_ellison_spectrum_file_name in command
 
+    assert isinstance(std_out_file, Path)
+    assert std_err_file is None
+
 
 def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency, expected_command):
     simulator_camera_efficiency.nsb_spectrum = (
         "tests/resources/benn_ellison_spectrum_for_testing.txt"
     )
-    command = simulator_camera_efficiency._make_run_command()
+    command, _, _ = simulator_camera_efficiency._make_run_command()
 
     for item in expected_command:
         assert item in command
@@ -70,7 +74,7 @@ def test_make_run_command_without_altitude_correction(
     simulator_camera_efficiency, expected_command, benn_ellison_spectrum_file_name
 ):
     simulator_camera_efficiency.skip_correction_to_nsb_spectrum = True
-    command = simulator_camera_efficiency._make_run_command()
+    command, _, _ = simulator_camera_efficiency._make_run_command()
 
     for item in expected_command:
         assert item in command

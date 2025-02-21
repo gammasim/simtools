@@ -75,14 +75,15 @@ def test_config(simtel_hist_io_instance):
     assert "B_declination" in config
 
 
-def test_total_num_simulated_events(simtel_hist_io_instance):
-    total_num_simulated_events = simtel_hist_io_instance.total_num_simulated_events
-    assert total_num_simulated_events == 2000
+def test_config_hdata(simtel_hist_hdata_io_instance):
+    config = simtel_hist_hdata_io_instance.config
+    assert config is None
 
 
-def test_total_num_triggered_events(simtel_hist_io_instance):
-    total_num_triggered_events = simtel_hist_io_instance.total_num_triggered_events
-    assert total_num_triggered_events == 1.0
+def test_total_num_events(simtel_hist_io_instance):
+    _simulated, _triggered = simtel_hist_io_instance.total_number_of_events
+    assert _simulated == 2000
+    assert _triggered == 1.0
 
 
 def test_fill_event_histogram_dicts(simtel_hist_io_instance, caplog):
@@ -281,10 +282,11 @@ def test_estimate_observation_time(simtel_hist_io_instance):
 def test_estimate_trigger_rate_uncertainty(simtel_hist_io_instance):
 
     simtel_hist_io_instance.compute_system_trigger_rate()
+    _simulated, _triggered = simtel_hist_io_instance.total_number_of_events
     trigger_rate_uncertainty = simtel_hist_io_instance.estimate_trigger_rate_uncertainty(
         simtel_hist_io_instance.trigger_rate,
-        simtel_hist_io_instance.total_num_simulated_events,
-        simtel_hist_io_instance.total_num_triggered_events,
+        _simulated,
+        _triggered,
     )
     assert trigger_rate_uncertainty.unit == 1 / u.s
     assert pytest.approx(trigger_rate_uncertainty.value, 0.1) == 9008

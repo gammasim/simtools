@@ -17,8 +17,9 @@ CTA_SIMPIPE:
     VIEW_CONE: "0 deg 0 deg"
     ENERGY_RANGE: "100 GeV 1 TeV"
     CORE_SCATTER: "10 500 m"
-    DATA_DIRECTORY: simtools-output
+    DATA_DIRECTORY: simtools-data
     OUTPUT_PATH: simtools-output
+    SAVE_FILE_LISTS: true
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
     - OUTPUT_FILE: |
@@ -27,3 +28,6 @@ CTA_SIMPIPE:
         simtel/logs/run000001_proton_za20deg_azm000deg_South_4mst_test-production-South-for-trigger-rates.log.gz
     - OUTPUT_FILE: |
         simtel/logs/run000001_proton_za20deg_azm000deg_South_4mst_test-production-South-for-trigger-rates.hdata.zst
+    - OUTPUT_FILE: log_files.txt
+    - OUTPUT_FILE: output_files.txt
+    - OUTPUT_FILE: hist_files.txt

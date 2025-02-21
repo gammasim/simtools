@@ -1,11 +1,16 @@
 {
+    "schema_version": "0.2.0",
     "parameter": "array_element_position_ground",
-    "instrument": "SSTS-09",
-    "site": "South",
-    "version": "6.0.0",
-    "value": "-4.79 -499.24 39.75",
+    "instrument": "MSTN-09",
+    "site": "North",
+    "parameter_version": "2.0.0",
+    "unique_id": null,
+    "value": [
+        221.68,
+        -355.66,
+        49.0
+    ],
     "unit": "m",
     "type": "float64",
-    "applicable": true,
     "file": false
 }

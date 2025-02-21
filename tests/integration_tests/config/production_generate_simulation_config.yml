@@ -6,11 +6,9 @@ CTA_SIMPIPE:
     AZIMUTH: 60.0
     ELEVATION: 45.0
     NSB: 0.3
-    CTAO_DATA_LEVEL: "B"
-    SCIENCE_CASE: "high_precision"
     FILE_PATH: "tests/resources/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
     FILE_TYPE: "point-like"
-    METRICS_FILE: tests/resources/production_simulation_config_metrics.yaml
+    METRICS_FILE: tests/resources/production_simulation_config_metrics.yml
     OUTPUT_PATH: simtools-output
     OUTPUT_FILE: "configured_simulation_params.json"
 

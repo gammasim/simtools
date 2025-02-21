@@ -18,7 +18,7 @@ CTA_SIMPIPE:
     VIEW_CONE: "0 deg 0 deg"
     ENERGY_RANGE: "100 GeV 2 TeV"
     CORE_SCATTER: "10 1400 m"
-    DATA_DIRECTORY: simtools-output
+    DATA_DIRECTORY: simtools-data
     OUTPUT_PATH: simtools-output
     LOG_LEVEL: DEBUG
   INTEGRATION_TESTS:
@@ -27,4 +27,6 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: |
         corsika/data/run000011/run000011_gamma_North_test_layout_za020-azm000deg_test-production-North-corsika-corsika7-particle-id_North_test_layout_test-production-North-corsika-corsika7-particle-id.zst
     - OUTPUT_FILE: |
-        corsika/data/run000010/run10.log
+        corsika/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North-corsika-corsika7-particle-id.corsika.log.gz
+    - OUTPUT_FILE: |
+        corsika/logs/run000011_gamma_za20deg_azm000deg_North_test_layout_test-production-North-corsika-corsika7-particle-id.corsika.log.gz
