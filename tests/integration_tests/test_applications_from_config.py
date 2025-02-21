@@ -20,7 +20,7 @@ test_configs, test_ids = configuration.get_list_of_test_configurations(config_fi
 
 
 @pytest.mark.parametrize("config", test_configs, ids=test_ids)
-def test_applications_from_config(tmp_test_directory, config, monkeypatch, request, model_version):
+def test_applications_from_config(tmp_test_directory, config, monkeypatch, request):
     """
     Test all applications from config files found in the config directory.
 

@@ -1,11 +1,14 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-validate-camera-fov
-  TEST_NAME: fov-run
-  CONFIGURATION:
-    SITE: North
-    TELESCOPE: MSTN-design
-    MODEL_VERSION: 6.0.0
-    OUTPUT_PATH: simtools-output
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-validate-camera-fov
+    TEST_NAME: fov-run
+    CONFIGURATION:
+      SITE: North
+      TELESCOPE: MSTN-design
+      MODEL_VERSION: 6.0.0
+      OUTPUT_PATH: simtools-output
+    INTEGRATION_TESTS:
     - OUTPUT_FILE: validate_camera_fov_MSTN-design_pixel_layout.pdf
     - OUTPUT_FILE: validate_camera_fov_MSTN-design_pixel_layout.png
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

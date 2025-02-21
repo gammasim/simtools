@@ -1,10 +1,13 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-plot-array-layout
-  TEST_NAME: one_file_with_name_with_extension
-  CONFIGURATION:
-    ARRAY_LAYOUT_FILE: tests/resources/telescope_positions-North-ground.ecsv
-    MODEL_VERSION: 6.0.0
-    FIGURE_NAME: test.png
-    OUTPUT_PATH: simtools-output
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-plot-array-layout
+    TEST_NAME: one_file_with_name_with_extension
+    CONFIGURATION:
+      ARRAY_LAYOUT_FILE: tests/resources/telescope_positions-North-ground.ecsv
+      MODEL_VERSION: 6.0.0
+      FIGURE_NAME: test.png
+      OUTPUT_PATH: simtools-output
+    INTEGRATION_TESTS:
     - OUTPUT_FILE: test.png
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

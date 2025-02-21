@@ -1,11 +1,14 @@
 CTA_SIMPIPE:
-  APPLICATION: simtools-submit-data-from-external
-  TEST_NAME: submit_table
-  CONFIGURATION:
-    INPUT_META: ./tests/resources/MLTdata-preproduction.meta.yml
-    INPUT: ./tests/resources/MLTdata-preproduction.ecsv
-    SCHEMA: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
-    OUTPUT_PATH: simtools-output
-    OUTPUT_FILE: test.ecsv
-  INTEGRATION_TESTS:
+  APPLICATIONS:
+  - APPLICATION: simtools-submit-data-from-external
+    TEST_NAME: submit_table
+    CONFIGURATION:
+      INPUT_META: ./tests/resources/MLTdata-preproduction.meta.yml
+      INPUT: ./tests/resources/MLTdata-preproduction.ecsv
+      SCHEMA: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
+      OUTPUT_PATH: simtools-output
+      OUTPUT_FILE: test.ecsv
+    INTEGRATION_TESTS:
     - OUTPUT_FILE: test.ecsv
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
