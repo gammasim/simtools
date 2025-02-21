@@ -10,6 +10,8 @@ description: |-
   Starting altitude of primary particles in altitude above observation level.
   This parameter should be set to values other than '0.' for specialized studies
   only. See CORSIKA manual for details.
+instrument:
+  class: configuration_corsika
 data:
   - type: float64
     unit: cm

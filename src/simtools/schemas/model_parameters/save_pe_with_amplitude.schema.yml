@@ -15,7 +15,7 @@ data:
   - type: boolean
     default: false
 instrument:
-  class: Camera
+  class: configuration_sim_telarray
   type:
     - LSTN
     - LSTS

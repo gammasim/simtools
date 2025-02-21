@@ -8,6 +8,8 @@ meta_schema_version: 0.1.0
 name: corsika_iact_io_buffer
 description: |-
   Maximum size of data blocks written by the CORSIKA IACT module.
+instrument:
+  class: configuration_corsika
 data:
   - type: int
     unit: MB

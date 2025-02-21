@@ -12,6 +12,8 @@ description: |-
   Maximum number of bunches that can be kept per telescope, including in temporary files.
   Telescopes for which this limit is exceeded will have the number of bunches reduced in
   increasing powers of two (by discarding every second bunch and adding its bunch size to the bunch kept).
+instrument:
+  class: configuration_corsika
 data:
   - type: int
     unit: dimensionless
