@@ -72,6 +72,33 @@ def test_validate_name():
             assert key == names._validate_name(_tel, with_lists_in_dicts)
 
 
+def test_class_key_to_db_collection():
+    assert "telescopes" == names.class_key_to_db_collection("Telescope")
+    assert "calibration_devices" == names.class_key_to_db_collection("Calibration")
+    assert "sites" == names.class_key_to_db_collection("Site")
+    assert "configuration_sim_telarray" == names.class_key_to_db_collection(
+        "configuration_sim_telarray"
+    )
+    assert "configuration_corsika" == names.class_key_to_db_collection("configuration_corsika")
+
+    with pytest.raises(ValueError, match=r"^Class Not_a_class not found"):
+        names.class_key_to_db_collection("Not_a_class")
+
+
+def test_get_collection_name_from_parameter_name():
+    assert "telescopes" == names.get_collection_name_from_parameter_name("num_gains")
+    assert "sites" == names.get_collection_name_from_parameter_name("atmospheric_profile")
+    assert "calibration_devices" == names.get_collection_name_from_parameter_name("laser_photons")
+    assert "configuration_sim_telarray" == names.get_collection_name_from_parameter_name(
+        "iobuf_maximum"
+    )
+    assert "configuration_corsika" == names.get_collection_name_from_parameter_name(
+        "corsika_particle_kinetic_energy_cutoff"
+    )
+    with pytest.raises(KeyError, match=r"Parameter Not_a_parameter without schema definition"):
+        names.get_collection_name_from_parameter_name("Not_a_parameter")
+
+
 def test_validate_array_element_id_name(caplog):
     _test_ids = {
         "1": "01",
@@ -163,22 +190,11 @@ def test_get_site_from_array_element_name(invalid_name):
     assert ["North", "South"] == names.get_site_from_array_element_name("MSTx")
 
 
-def test_get_class_from_telescope_name(invalid_name):
-    assert "telescopes" == names.get_collection_name_from_array_element_name("LSTN-01")
-    assert "calibration_devices" == names.get_collection_name_from_array_element_name("ILLS-01")
-    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
-        names.get_site_from_array_element_name("SATW")
-    assert "sites" == names.get_collection_name_from_array_element_name("North")
-    with pytest.raises(ValueError, match="Invalid array element name Not_a_collection"):
-        names.get_collection_name_from_array_element_name("Not_a_collection")
-
-
 def test_get_collection_name_from_array_element_name():
 
     assert "telescopes" == names.get_collection_name_from_array_element_name("LSTN-01")
     assert "telescopes" == names.get_collection_name_from_array_element_name("MSTx-FlashCam")
-    assert "sites" == names.get_collection_name_from_array_element_name("OBS-North")
-    assert "sites" == names.get_collection_name_from_array_element_name("North")
+    assert "sites" == names.get_collection_name_from_array_element_name("North", False)
     assert "sites" == names.get_collection_name_from_array_element_name("OBS-North", False)
     assert "configuration_sim_telarray" == names.get_collection_name_from_array_element_name(
         "configuration_sim_telarray", False

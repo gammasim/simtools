@@ -54,7 +54,6 @@ jobs:
           MODULES=$(find src/simtools -type f -name "*.py" \
           ! -path "src/simtools/applications/*" \
           ! -name "__init__.py" \
-          ! -name "version.py" \
           ! -path "src/simtools/_*" -prune)
 
           for M in $MODULES; do
