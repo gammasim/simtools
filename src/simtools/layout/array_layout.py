@@ -445,10 +445,10 @@ class ArrayLayout:
             )
             try:
                 tel_model = self._get_telescope_model(telescope_name)
-            except ValueError:
-                tel_model = self._get_telescope_model(
-                    names.guess_design_model_from_name(telescope_name),
-                )
+            except (
+                ValueError
+            ):  ## todo - somefix design model for telescopes not defined in database
+                tel_model = self._get_telescope_model("LSTN-design")
 
             for para in ("telescope_axis_height", "telescope_sphere_radius"):
                 telescope.set_auxiliary_parameter(

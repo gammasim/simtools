@@ -77,7 +77,9 @@ def main():
         # Single telescope at the center
         if array_name[0] == "1":
             tel_name.append(
-                names.get_array_element_name_from_type_site_id(tel_size, args_dict["site"], "01")
+                names.generate_array_element_name_from_type_site_id(
+                    tel_size, args_dict["site"], "01"
+                )
             )
             pos_x.append(0 * u.m)
             pos_y.append(0 * u.m)
@@ -86,7 +88,7 @@ def main():
         else:
             for i in range(1, 5):
                 tel_name.append(
-                    names.get_array_element_name_from_type_site_id(
+                    names.generate_array_element_name_from_type_site_id(
                         tel_size, args_dict["site"], f"0{i}"
                     )
                 )
