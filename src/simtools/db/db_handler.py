@@ -227,7 +227,7 @@ class DatabaseHandler:
         site: str
             Site name.
         array_element_name: str
-            Name of the array element model (e.g. LSTN-01, MSTS-design, ILLN-01).
+            Name of the array element model (e.g. LSTN-01, MSTx-FlashCam, ILLN-01).
         model_version: str, list
             Version(s) of the model.
         collection: str
@@ -475,7 +475,7 @@ class DatabaseHandler:
         """
         collection = self.get_collection(self._get_db_name(), "production_tables")
         return sorted(
-            [post["model_version"] for post in collection.find({"collection": collection_name})]
+            {post["model_version"] for post in collection.find({"collection": collection_name})}
         )
 
     def get_array_elements(self, model_version, collection="telescopes"):
@@ -871,6 +871,6 @@ class DatabaseHandler:
             ]
         except KeyError:
             return [
-                f"{names.get_array_element_type_from_name(array_element_name)}-design",
+                names.guess_design_model_from_name(array_element_name),
                 array_element_name,
             ]

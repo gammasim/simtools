@@ -4,7 +4,7 @@ CTA_SIMPIPE:
     TEST_NAME: psf_measurement
     CONFIGURATION:
       SITE: North
-      TELESCOPE: MSTN-design
+      TELESCOPE: MSTx-NectarCam
       MODEL_VERSION: 6.0.0
       CONTAINMENT_FRACTION: 0.8
       PSF_MEASUREMENT: ./tests/resources/MLTdata-preproduction.ecsv
@@ -18,9 +18,7 @@ CTA_SIMPIPE:
       LOG_LEVEL: DEBUG
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test_derive_mirror_rnda_psf_measurement.ecsv
-    - REFERENCE_OUTPUT_FILE: 'tests/resources/derive_mirror_rnda_psf_measurement.ecsv
-
-        '
+    - REFERENCE_OUTPUT_FILE: tests/resources/derive_mirror_rnda_psf_measurement.ecsv
       TOLERANCE: 0.3
       TEST_COLUMNS:
       - TEST_COLUMN_NAME: mirror_reflection_random_angle_sigma1
