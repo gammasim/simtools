@@ -145,7 +145,7 @@ def test_validate_array_element_id_name(caplog):
 def test_array_element_design_types():
     assert names.array_element_design_types(None) == ["design", "test"]
     assert names.array_element_design_types("LSTN") == ["design", "test"]
-    _expected_mstx_types = ["design", "test", "FlashCam", "NectarCam"]
+    _expected_mstx_types = ["test", "FlashCam", "NectarCam"]
     for _type in _expected_mstx_types:
         assert _type in names.array_element_design_types("MSTx")
 

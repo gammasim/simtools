@@ -465,7 +465,6 @@ def get_collection_name_from_array_element_name(array_element_name, array_elemen
             return "sites"
     except ValueError:
         pass
-    # TODO check why this is needed
     if array_element_name in {
         "configuration_sim_telarray",
         "configuration_corsika",

@@ -247,8 +247,6 @@ class DatabaseHandler:
             array_element_list = self._get_array_element_list(
                 array_element_name, site, production_table, collection
             )
-            if collection == "configuration_sim_telarray":
-                print("AAA", array_element_name, site, array_element_list)
             for array_element in array_element_list:
                 pars.update(
                     self._get_parameter_for_model_version(
