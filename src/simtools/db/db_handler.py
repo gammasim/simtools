@@ -475,7 +475,7 @@ class DatabaseHandler:
         """
         collection = self.get_collection(self._get_db_name(), "production_tables")
         return sorted(
-            [post["model_version"] for post in collection.find({"collection": collection_name})]
+            {post["model_version"] for post in collection.find({"collection": collection_name})}
         )
 
     def get_array_elements(self, model_version, collection="telescopes"):
