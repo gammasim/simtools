@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+g84f35b6 Manual</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+g7af325d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b19e6883"></script>
+    <script src="../../_static/documentation_options.js?v=b2af20bd"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g84f35b6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7af325d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -450,8 +450,37 @@ document.write(`
 <span class="sd">        Site names.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_array_elements</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">()</span>
-    <span class="n">_sites</span> <span class="o">=</span> <span class="p">{</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">_array_elements</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
+    <span class="n">_sites</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">_array_elements</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">_sites</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_sites</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="n">site</span><span class="p">:</span> <span class="p">[</span><span class="n">site</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">_sites</span><span class="p">}</span>
+
+
+<span class="nd">@cache</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">array_element_design_types</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Array element site types (e.g., &#39;design&#39; or &#39;flashcam&#39;).</span>
+
+<span class="sd">    Default value is [&#39;design&#39;, &#39;test&#39;].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_element_type</span>
+<span class="sd">        Array element type</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        Array element design types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">default_types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;design&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">array_element_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default_types</span>
+    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">array_element_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;design_types&quot;</span><span class="p">,</span> <span class="n">default_types</span><span class="p">)</span>
 
 
 <span class="nd">@cache</span>
@@ -504,7 +533,7 @@ document.write(`
 
 <div class="viewcode-block" id="validate_array_element_id_name">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_array_element_id_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_id_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_id_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">array_element_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate array element ID.</span>
 
@@ -517,6 +546,8 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    name: str or int</span>
 <span class="sd">        Array element ID name.</span>
+<span class="sd">    array_element_type: str</span>
+<span class="sd">        Array element type (e.g., LSTN, MSTN).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -530,8 +561,8 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;design&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">array_element_design_types</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">)}:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
     <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid array element ID name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -616,7 +647,7 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_array_element_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate array element name (e.g., MSTN-design, MSTN-01).</span>
+<span class="sd">    Validate array element name (e.g., MSTx-NectarCam, MSTN-01).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -633,10 +664,12 @@ document.write(`
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">if</span> <span class="n">_array_element_type</span> <span class="o">==</span> <span class="s2">&quot;OBS&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">_array_element_id</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="n">_validate_name</span><span class="p">(</span><span class="n">_array_element_type</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">())</span>
         <span class="o">+</span> <span class="s2">&quot;-&quot;</span>
-        <span class="o">+</span> <span class="n">validate_array_element_id_name</span><span class="p">(</span><span class="n">_array_element_id</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">validate_array_element_id_name</span><span class="p">(</span><span class="n">_array_element_id</span><span class="p">,</span> <span class="n">_array_element_type</span><span class="p">)</span>
     <span class="p">)</span></div>
 
 
@@ -660,7 +693,7 @@ document.write(`
 <span class="sd">        Array element name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_short_site</span> <span class="o">=</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">site</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">_val_id</span> <span class="o">=</span> <span class="n">validate_array_element_id_name</span><span class="p">(</span><span class="n">array_element_id</span><span class="p">)</span>
+    <span class="n">_val_id</span> <span class="o">=</span> <span class="n">validate_array_element_id_name</span><span class="p">(</span><span class="n">array_element_id</span><span class="p">,</span> <span class="n">array_element_type</span><span class="p">)</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">array_element_type</span><span class="si">}{</span><span class="n">_short_site</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">_val_id</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
@@ -684,6 +717,26 @@ document.write(`
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">guess_design_model_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Guess design model name from array element name.</span>
+
+<span class="sd">    Note that this might not be correct and the preferred way is to use the</span>
+<span class="sd">    model parameter &#39;design_model&#39;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">       Array element name</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Design model name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">-design&quot;</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_array_element_types</span><span class="p">(</span>
     <span class="n">array_element_class</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observatory</span><span class="o">=</span><span class="s2">&quot;CTAO&quot;</span>
 <span class="p">):</span>
@@ -702,13 +755,15 @@ document.write(`
 <span class="sd">    list</span>
 <span class="sd">        List of array element types.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">key</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">array_element_class</span>
-        <span class="ow">and</span> <span class="p">(</span><span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span><span class="p">)</span>
-        <span class="ow">and</span> <span class="p">(</span><span class="n">observatory</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;observatory&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">observatory</span><span class="p">)</span>
-    <span class="p">]</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">key</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">array_element_class</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">site</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">site</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">observatory</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;observatory&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">observatory</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
 
 
 <div class="viewcode-block" id="get_site_from_array_element_name">
@@ -724,8 +779,8 @@ document.write(`
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    str</span>
-<span class="sd">        Site name (South or North).</span>
+<span class="sd">    str, list</span>
+<span class="sd">        Site name(s).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;site&quot;</span><span class="p">]</span></div>
 

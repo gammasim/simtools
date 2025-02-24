@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Model &#8212; simtools v0.1.dev1+g84f35b6 Manual</title>
+    <title>Data Model &#8212; simtools v0.1.dev1+g7af325d Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b19e6883"></script>
+    <script src="../_static/documentation_options.js?v=b2af20bd"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g84f35b6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7af325d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1198,9 +1198,17 @@ Replace “None” with “null” for unit field.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_data_file">
-<span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/validate_data.html#DataValidator.validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_data_file" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">validate_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_model_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/validate_data.html#DataValidator.validate_data_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_data_file" title="Link to this definition">#</a></dt>
 <dd><p>Open data file and read data from file.</p>
 <p>Doing this successfully is understood as file validation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>is_model_parameter: bool</strong></dt><dd><p>This is a model parameter file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1226,7 +1234,12 @@ Replace “None” with “null” for unit field.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="data_model.validate_data.DataValidator.validate_parameter_and_file_name">
 <span class="sig-name descname"><span class="pre">validate_parameter_and_file_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/data_model/validate_data.html#DataValidator.validate_parameter_and_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_model.validate_data.DataValidator.validate_parameter_and_file_name" title="Link to this definition">#</a></dt>
-<dd><p>Validate that file name and key ‘parameter_name’ in data dict are the same.</p>
+<dd><p>Validate model parameter file name.</p>
+<p>Expect that the following convention is used:</p>
+<ul class="simple">
+<li><p>file name starts with the parameter name</p></li>
+<li><p>file name ends with parameter version string</p></li>
+</ul>
 </dd></dl>
 
 </dd></dl>

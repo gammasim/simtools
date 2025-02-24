@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.schema &#8212; simtools v0.1.dev1+g84f35b6 Manual</title>
+    <title>data_model.schema &#8212; simtools v0.1.dev1+g7af325d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b19e6883"></script>
+    <script src="../../_static/documentation_options.js?v=b2af20bd"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g84f35b6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7af325d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -520,9 +520,13 @@ document.write(`
     <span class="k">try</span><span class="p">:</span>
         <span class="n">jsonschema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">json_schema</span><span class="p">,</span> <span class="n">format_checker</span><span class="o">=</span><span class="n">format_checkers</span><span class="o">.</span><span class="n">format_checker</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation failed using schema: </span><span class="si">{</span><span class="n">json_schema</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation failed using schema: </span><span class="si">{</span><span class="n">json_schema</span><span class="si">}</span><span class="s2"> for data: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">exc</span>
-    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_schema_url&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">gen</span><span class="o">.</span><span class="n">url_exists</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;meta_schema_url&quot;</span><span class="p">]):</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_schema_url&quot;</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">gen</span><span class="o">.</span><span class="n">url_exists</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;meta_schema_url&quot;</span><span class="p">])</span>
+    <span class="p">):</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Meta schema URL does not exist: </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;meta_schema_url&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of data using schema (</span><span class="si">{</span><span class="n">json_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>

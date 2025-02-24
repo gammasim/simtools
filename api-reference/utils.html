@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+g84f35b6 Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+g7af325d Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b19e6883"></script>
+    <script src="../_static/documentation_options.js?v=b2af20bd"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g84f35b6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7af325d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -904,7 +904,7 @@ the rotation of the coordinate system is clockwise.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Site name (South or North).</p>
+<dt>str, list</dt><dd><p>Site name(s).</p>
 </dd>
 </dl>
 </dd>
@@ -1023,7 +1023,7 @@ the rotation of the coordinate system is clockwise.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.names.validate_array_element_id_name">
-<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_array_element_id_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_array_element_id_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_array_element_id_name" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_array_element_id_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_array_element_id_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_array_element_id_name" title="Link to this definition">#</a></dt>
 <dd><p>Validate array element ID.</p>
 <p>Allowed IDs are
 - design (for design array elements or testing)
@@ -1033,6 +1033,8 @@ the rotation of the coordinate system is clockwise.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str or int</strong></dt><dd><p>Array element ID name.</p>
+</dd>
+<dt><strong>array_element_type: str</strong></dt><dd><p>Array element type (e.g., LSTN, MSTN).</p>
 </dd>
 </dl>
 </dd>
@@ -1054,7 +1056,7 @@ the rotation of the coordinate system is clockwise.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.names.validate_array_element_name">
 <span class="sig-prename descclassname"><span class="pre">utils.names.</span></span><span class="sig-name descname"><span class="pre">validate_array_element_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/names.html#validate_array_element_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.names.validate_array_element_name" title="Link to this definition">#</a></dt>
-<dd><p>Validate array element name (e.g., MSTN-design, MSTN-01).</p>
+<dd><p>Validate array element name (e.g., MSTx-NectarCam, MSTN-01).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">

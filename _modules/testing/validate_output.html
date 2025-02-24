@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.validate_output &#8212; simtools v0.1.dev1+g84f35b6 Manual</title>
+    <title>testing.validate_output &#8212; simtools v0.1.dev1+g7af325d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b19e6883"></script>
+    <script src="../../_static/documentation_options.js?v=b2af20bd"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g84f35b6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7af325d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -537,6 +537,7 @@ document.write(`
 <span class="sd">    Compare two json or yaml files.</span>
 
 <span class="sd">    Take into account float comparison for sim_telarray string-embedded floats.</span>
+<span class="sd">    Allow differences in &#39;schema_version&#39; field.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -555,6 +556,8 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data1</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file1</span><span class="p">)</span>
     <span class="n">data2</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file2</span><span class="p">)</span>
+    <span class="n">data1</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;schema_version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">data2</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;schema_version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparing json/yaml files: </span><span class="si">{</span><span class="n">file1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">file2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -578,7 +581,7 @@ document.write(`
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_compare_value_from_parameter_dict</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compare_value_from_parameter_dict</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-5</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare value fields given in different formats.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_as_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -590,7 +593,11 @@ document.write(`
 
     <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparing values: </span><span class="si">{</span><span class="n">data1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">data2</span><span class="si">}</span><span class="s2"> (tolerance: </span><span class="si">{</span><span class="n">tolerance</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">_as_list</span><span class="p">(</span><span class="n">data1</span><span class="p">),</span> <span class="n">_as_list</span><span class="p">(</span><span class="n">data2</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">_as_list_1</span> <span class="o">=</span> <span class="n">_as_list</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span>
+    <span class="n">_as_list_2</span> <span class="o">=</span> <span class="n">_as_list</span><span class="p">(</span><span class="n">data2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_as_list_1</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_as_list_1</span> <span class="o">==</span> <span class="n">_as_list_2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">_as_list_1</span><span class="p">,</span> <span class="n">_as_list_2</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="compare_ecsv_files">

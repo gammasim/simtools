@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.validate_data &#8212; simtools v0.1.dev1+g84f35b6 Manual</title>
+    <title>data_model.validate_data &#8212; simtools v0.1.dev1+g7af325d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b19e6883"></script>
+    <script src="../../_static/documentation_options.js?v=b2af20bd"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g84f35b6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g7af325d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -400,7 +400,7 @@ document.write(`
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">schema</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">value_conversion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span><span class="p">,</span> <span class="n">value_conversion</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DataValidator&quot;</span><span class="p">]</span>
 
@@ -471,7 +471,7 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">validate_data_file</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_data_file</span><span class="p">(</span><span class="n">is_model_parameter</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data_dict</span><span class="p">(</span><span class="n">is_model_parameter</span><span class="p">,</span> <span class="n">lists_as_strings</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_table</span><span class="p">,</span> <span class="n">Table</span><span class="p">):</span>
@@ -482,11 +482,16 @@ document.write(`
 
 <div class="viewcode-block" id="DataValidator.validate_data_file">
 <a class="viewcode-back" href="../../api-reference/data_model.html#data_model.validate_data.DataValidator.validate_data_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">validate_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_model_parameter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Open data file and read data from file.</span>
 
 <span class="sd">        Doing this successfully is understood as file validation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        is_model_parameter: bool</span>
+<span class="sd">            This is a model parameter file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">):</span>
@@ -496,18 +501,34 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">,</span> <span class="n">guess</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating tabled data from: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-            <span class="k">pass</span></div>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">is_model_parameter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_parameter_and_file_name</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="DataValidator.validate_parameter_and_file_name">
 <a class="viewcode-back" href="../../api-reference/data_model.html#data_model.validate_data.DataValidator.validate_parameter_and_file_name">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_parameter_and_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that file name and key &#39;parameter_name&#39; in data dict are the same.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter&quot;</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Parameter name in data dict </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parameter&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> and &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;file name </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2"> do not match.&quot;</span>
-            <span class="p">)</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate model parameter file name.</span>
+
+<span class="sd">        Expect that the following convention is used:</span>
+
+<span class="sd">        - file name starts with the parameter name</span>
+<span class="sd">        - file name ends with parameter version string</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">file_stem</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_file_name</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter&quot;</span><span class="p">)</span>
+        <span class="n">param_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_stem</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mismatch: parameter &#39;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&#39; vs. file &#39;</span><span class="si">{</span><span class="n">file_stem</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">param_version</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">file_stem</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">param_version</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mismatch: version &#39;</span><span class="si">{</span><span class="n">param_version</span><span class="si">}</span><span class="s2">&#39; vs. file &#39;</span><span class="si">{</span><span class="n">file_stem</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">param_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">file_stem</span><span class="si">}</span><span class="s2">&#39; has no parameter version defined.&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DataValidator.validate_model_parameter">
@@ -572,7 +593,17 @@ document.write(`
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_as_list</span><span class="p">,</span> <span class="n">unit_as_list</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_version_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]:</span>  <span class="c1"># site parameters</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">validate_array_element_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_check_site_and_array_element_consistency</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">version_string</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="s2">&quot;parameter_version&quot;</span><span class="p">,</span> <span class="s2">&quot;model_version&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_version_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">version_string</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">lists_as_strings</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_convert_results_to_model_format</span><span class="p">()</span>
@@ -1215,7 +1246,28 @@ document.write(`
         <span class="n">semver_regex</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">semver_regex</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid version string &#39;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Valid version string &#39;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Valid version string &#39;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_site_and_array_element_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">site</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check that site and array element names are consistent.</span>
+
+<span class="sd">        An example for an inconsistency is &#39;LSTN&#39; at site &#39;South&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">instrument</span><span class="p">,</span> <span class="n">site</span><span class="p">])</span> <span class="ow">or</span> <span class="s2">&quot;OBS&quot;</span> <span class="ow">in</span> <span class="n">instrument</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_sorted_list</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return value as sorted list.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">instrument_site</span> <span class="o">=</span> <span class="n">to_sorted_list</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">instrument</span><span class="p">))</span>
+        <span class="n">site</span> <span class="o">=</span> <span class="n">to_sorted_list</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">instrument_site</span> <span class="o">!=</span> <span class="n">site</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Site &#39;</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">&#39; and instrument site &#39;</span><span class="si">{</span><span class="n">instrument_site</span><span class="si">}</span><span class="s2">&#39; are inconsistent.&quot;</span>
+            <span class="p">)</span></div>
 
 </pre></div>
 
