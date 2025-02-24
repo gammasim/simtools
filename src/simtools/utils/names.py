@@ -658,7 +658,7 @@ def file_name_with_version(file_name, suffix):
     """
     Return a file name including a semantic version with the correct suffix.
 
-    Avoids having 'Path.suffix()' to remove trailing numbers.
+    Replaces 'Path.suffix()', which removes trailing numbers (and therefore version numbers).
 
     Parameters
     ----------
