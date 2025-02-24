@@ -4,6 +4,7 @@ CTA_SIMPIPE:
     TEST_NAME: utm_to_ground_json
     CONFIGURATION:
       INPUT: tests/resources/model_parameters/array_element_position_utm.json
+      INPUT: tests/resources/model_parameters/array_element_position_utm-2.0.0.json
       SITE: North
       EXPORT: ground
       MODEL_VERSION: 6.0.0
@@ -12,9 +13,8 @@ CTA_SIMPIPE:
       OUTPUT_FILE: test.json
       LOG_LEVEL: DEBUG
     INTEGRATION_TESTS:
-    - REFERENCE_OUTPUT_FILE: 'tests/resources/model_parameters/array_element_position_ground.json
-
-        '
+    - REFERENCE_OUTPUT_FILE: |
+        tests/resources/model_parameters/array_element_position_ground-2.0.0.json
       TOLERANCE: 0.01
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
