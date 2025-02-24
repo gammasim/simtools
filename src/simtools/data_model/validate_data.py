@@ -770,7 +770,7 @@ class DataValidator:
             self.data_dict["value"],
             "int" in self.data_dict.get("type", "float"),
         )
-        if self.data_dict["unit"] is not None:
+        if isinstance(self.data_dict["unit"], str):
             self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
 
     def _convert_results_to_model_format(self):

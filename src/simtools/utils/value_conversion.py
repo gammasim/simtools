@@ -101,15 +101,13 @@ def split_value_and_unit(value, is_integer=False):
     is_integer: bool
         Flag to indicate if the value is an integer.
 
-    # TODO unit tests for is_integer
-
     Returns
     -------
     value, str
         Value and units as (value, unit), or lists of values and unites
     """
     if isinstance(value, u.Quantity):
-        return _split_value_is_quantity(value)
+        return _split_value_is_quantity(value, is_integer)
     if isinstance(value, str):
         return _split_value_is_string(value, is_integer)
     if isinstance(value, list | np.ndarray):
@@ -117,11 +115,11 @@ def split_value_and_unit(value, is_integer=False):
     return value, None
 
 
-def _split_value_is_quantity(value):
+def _split_value_is_quantity(value, is_integer=False):
     """Split value and unit for an astropy Quantity."""
-    if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m,
-        return list(value.value), [str(value.unit)] * len(value)
-    return value.value, str(value.unit)
+    if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m
+        return [int(v) if is_integer else v for v in value.value], [str(value.unit)] * len(value)
+    return int(value.value) if is_integer else value.value, str(value.unit)
 
 
 def _split_value_is_string(value, is_integer=False):
