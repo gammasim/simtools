@@ -4,7 +4,7 @@ CTA_SIMPIPE:
     TEST_NAME: psf_random_flen
     CONFIGURATION:
       SITE: South
-      TELESCOPE: MSTS-design
+      TELESCOPE: MSTx-FlashCam
       MODEL_VERSION: 6.0.0
       CONTAINMENT_FRACTION: 0.8
       PSF_MEASUREMENT_CONTAINMENT_MEAN: 1.4
@@ -17,9 +17,7 @@ CTA_SIMPIPE:
       LOG_LEVEL: DEBUG
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test_derive_mirror_rnda_psf_random_flen.ecsv
-    - REFERENCE_OUTPUT_FILE: 'tests/resources/derive_mirror_rnda_psf_random_flen.ecsv
-
-        '
+    - REFERENCE_OUTPUT_FILE: tests/resources/derive_mirror_rnda_psf_random_flen.ecsv
       TOLERANCE: 0.3
       TEST_COLUMNS:
       - TEST_COLUMN_NAME: mirror_reflection_random_angle_sigma1
