@@ -79,7 +79,6 @@ def test_get_top_level_metadata(args_dict_site):
     )
 
     # no update when activity cannot be found in the metadata
-    time.sleep(1)
     collector.observatory = "not_cta"
     top_level_meta = collector.get_top_level_metadata()
     assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
@@ -144,8 +143,22 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(FileNotFoundError, match=r"^No metadata file found:"):
         metadata_1._read_input_metadata_from_file()
+
+    metadata_1.args_dict["input_meta"] = (
+        "tests/resources/run202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
+    )
+    with pytest.raises(gen.InvalidConfigDataError, match=r"^Unknown metadata file format:"):
+        metadata_1._read_input_metadata_from_file()
+
+
+def test_read_input_metadata_from_ecsv(args_dict_site, caplog):
+    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(FileNotFoundError):
+            metadata_1._read_input_metadata_from_ecsv("file_not_there.ecsv")
+    assert "Failed reading metadata for" in caplog.text
 
 
 def test_fill_product_meta(args_dict_site):
@@ -467,3 +480,84 @@ def test_clean_meta_data():
 
     collector = metadata_collector.MetadataCollector({})
     assert collector.clean_meta_data(pre_clean) == post_clean
+
+
+def test_fill_context_meta(args_dict_site, caplog):
+    context_dict = {"associated_data": []}
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    # Case 1: input_metadata is None
+    collector.input_metadata = None
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == []
+
+    # Case 2: input_metadata is an empty list
+    collector.input_metadata = []
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == []
+
+    test_product = "Test product"
+    test_id = "1234"
+    # Case 3: input_metadata with valid product metadata
+    collector.input_metadata = [
+        {
+            "cta": {
+                "product": {
+                    "description": test_product,
+                    "id": test_id,
+                    "creation_time": "2023-01-01T00:00:00",
+                    "valid": "2023-12-31T23:59:59",
+                    "format": "json",
+                    "filename": "test_product.json",
+                }
+            }
+        }
+    ]
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == [
+        {
+            "description": test_product,
+            "id": test_id,
+            "creation_time": "2023-01-01T00:00:00",
+            "valid": "2023-12-31T23:59:59",
+            "format": "json",
+            "filename": "test_product.json",
+        }
+    ]
+
+    # Case 4: input_metadata with missing product metadata
+    collector.input_metadata = [
+        {
+            "cta": {
+                "product": {
+                    "description": test_product,
+                    "id": test_id,
+                }
+            }
+        }
+    ]
+    context_dict = {"associated_data": []}
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == [
+        {
+            "description": test_product,
+            "id": test_id,
+        }
+    ]
+
+    # Case 5: input_metadata with invalid structure
+    collector.input_metadata = [
+        {
+            "cta": {
+                "invalid_product": {
+                    "description": test_product,
+                    "id": test_id,
+                }
+            }
+        }
+    ]
+    context_dict = {"associated_data": []}
+    with caplog.at_level(logging.DEBUG):
+        collector._fill_context_meta(context_dict)
+    assert "No input product metadata appended to associated data." in caplog.text
+    assert context_dict["associated_data"] == []

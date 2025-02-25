@@ -223,7 +223,9 @@ class MetadataCollector:
                     for key, value in metadata[self.observatory]["product"].items()
                     if key in {"description", "id", "creation_time", "valid", "format", "filename"}
                 }
-                self._fill_context_sim_list(context_dict["associated_data"], reduced_product_meta)
+                context_dict["associated_data"] = self._fill_context_sim_list(
+                    context_dict["associated_data"], reduced_product_meta
+                )
             except (KeyError, TypeError):
                 self._logger.debug("No input product metadata appended to associated data.")
 
@@ -277,8 +279,7 @@ class MetadataCollector:
             elif Path(metadata_file).suffix == ".ecsv":
                 _input_metadata = self._read_input_metadata_from_ecsv(metadata_file)
             else:
-                self._logger.error("Unknown metadata file format: %s", metadata_file)
-                raise gen.InvalidConfigDataError
+                raise gen.InvalidConfigDataError(f"Unknown metadata file format: {metadata_file}")
 
             schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
             metadata.append(gen.change_dict_keys_case(_input_metadata, lower_case=True))
@@ -463,15 +464,14 @@ class MetadataCollector:
             Updated meta list.
 
         """
-        if len(new_entry_dict) == 0:
+        if not new_entry_dict:
             return []
-        try:
-            if self._all_values_none(meta_list[0]):
-                meta_list[0] = new_entry_dict
-            else:
-                meta_list.append(new_entry_dict)
-        except (TypeError, IndexError):
-            meta_list = [new_entry_dict]
+        if meta_list is None or not meta_list:
+            return [new_entry_dict]
+        if self._all_values_none(meta_list[0]):
+            meta_list[0] = new_entry_dict
+        else:
+            meta_list.append(new_entry_dict)
         return meta_list
 
     def _process_metadata_from_file(self, meta_dict):
@@ -536,7 +536,7 @@ class MetadataCollector:
         """
         try:
             for document in _input_metadata["context"][key]:
-                self._fill_context_sim_list(context_dict[key], document)
+                context_dict[key] = self._fill_context_sim_list(context_dict[key], document)
         except KeyError:
             pass
 
