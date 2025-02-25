@@ -52,9 +52,9 @@ def test_get_data_model_schema_file_name():
     assert Path(schema_file) == (schema.get_model_parameter_schema_file(_collector.data_model_name))
 
     # from input metadata
-    _collector.input_metadata = {
-        "cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}
-    }
+    _collector.input_metadata = [
+        {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
+    ]
     _collector.data_model_name = None
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == "from_input_meta"
@@ -116,14 +116,10 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
 
-    assert metadata_1._read_input_metadata_from_file() == {}
+    assert metadata_1._read_input_metadata_from_file() is None
 
     metadata_1.args_dict["input_meta"] = "./file_does_not_exist.yml"
-    with pytest.raises(FileNotFoundError):
-        metadata_1._read_input_metadata_from_file()
-
-    metadata_1.args_dict["input_meta"] = "./file_does_not_exist.not_a_good_suffix"
-    with pytest.raises(gen.InvalidConfigDataError):
+    with pytest.raises(FileNotFoundError, match="No metadata file found: ./file_does_not_exist"):
         metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
