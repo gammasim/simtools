@@ -108,7 +108,9 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
         "output_path": "./abc/",
         "test": True,
     }
-    _tmp_dict_workflow = {"CTA_SIMPIPE": {"CONFIGURATION": _tmp_dict}}
+    _tmp_dict_workflow = {
+        "CTA_SIMPIPE": {"APPLICATIONS": [{"APPLICATION": "test", "CONFIGURATION": _tmp_dict}]}
+    }
     _workflow_file = tmp_test_directory / "configuration-test.yml"
     with open(_workflow_file, "w") as output:
         yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
@@ -124,17 +126,6 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
             else:
                 _tmp_config[key] = value
     assert _tmp_config == configurator.config
-
-    # test that no KeyError is raised for "CTA_SIMPIPE:NO_CONFIGURATION"
-    _tmp_dict_workflow = {"CTA_SIMPIPE": {"NO_CONFIGURATION": _tmp_dict}}
-    _workflow_file = tmp_test_directory / "configuration-test-2.yml"
-    with open(_workflow_file, "w") as output:
-        yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
-    configurator.config["config"] = str(_workflow_file)
-    _tmp_config["config"] = str(_workflow_file)
-    configurator.config["output_path"] = None
-    # no KeyError
-    configurator._fill_from_config_file(_workflow_file)
 
 
 def test_initialize_io_handler(configurator, tmp_test_directory):
