@@ -8,6 +8,7 @@ implementation of the observatory metadata model.
 
 import datetime
 import getpass
+import glob
 import logging
 import uuid
 from pathlib import Path
@@ -69,9 +70,7 @@ class MetadataCollector:
         self.top_level_meta = gen.change_dict_keys_case(
             data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
-        self.input_metadata = self._read_input_metadata_from_file(
-            metadata_file_name=metadata_file_name
-        )
+        self.input_metadata = self._read_input_metadata_from_file(metadata_file_name)
         self.collect_meta_data()
         if clean_meta:
             self.top_level_meta = self.clean_meta_data(self.top_level_meta)
@@ -137,12 +136,12 @@ class MetadataCollector:
             self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
             return str(schema.get_model_parameter_schema_file(self.data_model_name))
 
-        # from input metadata
+        # from first entry in input metadata (least preferred)
         try:
-            url = self.input_metadata[self.observatory]["product"]["data"]["model"]["url"]
+            url = self.input_metadata[0][self.observatory]["product"]["data"]["model"]["url"]
             self._logger.debug(f"Schema file from input metadata: {url}")
             return url
-        except KeyError:
+        except (KeyError, IndexError):
             pass
 
         self._logger.warning("No schema file found.")
@@ -171,7 +170,7 @@ class MetadataCollector:
         Parameters
         ----------
         from_input_meta: bool
-            Get site from input metadata (default: False)
+            Get site from first entry of input metadata (default: False)
 
         Returns
         -------
@@ -183,11 +182,11 @@ class MetadataCollector:
             _site = (
                 self.top_level_meta[self.observatory]["instrument"]["site"]
                 if not from_input_meta
-                else self.input_metadata[self.observatory]["instrument"]["site"]
+                else self.input_metadata[0][self.observatory]["instrument"]["site"]
             )
             if _site is not None:
                 return names.validate_site_name(_site)
-        except KeyError:
+        except (KeyError, IndexError):
             pass
         return None
 
@@ -213,17 +212,22 @@ class MetadataCollector:
             Dictionary for context metadata fields.
 
         """
-        try:  # wide try..except as for some cases we expect that there is no product metadata
-            reduced_product_meta = {
-                key: value
-                for key, value in self.input_metadata[self.observatory]["product"].items()
-                if key in {"description", "id", "creation_time", "valid", "format", "filename"}
-            }
-            self._fill_context_sim_list(context_dict["associated_data"], reduced_product_meta)
-        except (KeyError, TypeError):
-            self._logger.debug("No input product metadata appended to associated data.")
+        input_metadata = (
+            self.input_metadata if isinstance(self.input_metadata, list) else [self.input_metadata]
+        )
 
-    def _read_input_metadata_from_file(self, metadata_file_name=None):
+        for metadata in input_metadata:
+            try:  # wide try..except as for some cases we expect that there is no product metadata
+                reduced_product_meta = {
+                    key: value
+                    for key, value in metadata[self.observatory]["product"].items()
+                    if key in {"description", "id", "creation_time", "valid", "format", "filename"}
+                }
+                self._fill_context_sim_list(context_dict["associated_data"], reduced_product_meta)
+            except (KeyError, TypeError):
+                self._logger.debug("No input product metadata appended to associated data.")
+
+    def _read_input_metadata_from_file(self, metadata_file_name_expression=None):
         """
         Read and validate input metadata from file.
 
@@ -232,8 +236,8 @@ class MetadataCollector:
 
         Parameter
         ---------
-        metadata_file_name: str or Path
-            Name of metadata file.
+        metadata_file_name_expression: str or Path
+            Name of metadata file (regular expressions allowed).
 
         Returns
         -------
@@ -248,31 +252,35 @@ class MetadataCollector:
             if metadata does not exist
 
         """
-        metadata_file_name = (
+        metadata_file_names = (
             self.args_dict.get("input_meta", None) or self.args_dict.get("input", None)
-            if metadata_file_name is None
-            else metadata_file_name
+            if metadata_file_name_expression is None
+            else metadata_file_name_expression
         )
+        # pylint exception, as Path.glob does not expand bracket expressions
+        metadata_files = [
+            Path(f) for f in glob.glob(metadata_file_names, recursive=True)  # noqa: PTH207
+        ]
 
-        if metadata_file_name is None:
+        metadata = []
+        for metadata_file in metadata_files:
+
+            self._logger.debug("Reading meta data from %s", metadata_file)
+            if Path(metadata_file).suffix in (".yaml", ".yml", ".json"):
+                _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file)
+            elif Path(metadata_file).suffix == ".ecsv":
+                _input_metadata = self._read_input_metadata_from_ecsv(metadata_file)
+            else:
+                self._logger.error("Unknown metadata file format: %s", metadata_file)
+                raise gen.InvalidConfigDataError
+
+            schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
+            metadata.append(gen.change_dict_keys_case(_input_metadata, lower_case=True))
+
+        if not metadata:
             self._logger.debug("No input metadata file defined.")
             return {}
-
-        self._logger.debug("Reading meta data from %s", metadata_file_name)
-        if Path(metadata_file_name).suffix in (".yaml", ".yml", ".json"):
-            _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file_name)
-        elif Path(metadata_file_name).suffix == ".ecsv":
-            _input_metadata = self._read_input_metadata_from_ecsv(metadata_file_name)
-        else:
-            self._logger.error("Unknown metadata file format: %s", metadata_file_name)
-            raise gen.InvalidConfigDataError
-
-        schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
-
-        return gen.change_dict_keys_case(
-            self._process_metadata_from_file(_input_metadata),
-            lower_case=True,
-        )
+        return metadata
 
     def _read_input_metadata_from_ecsv(self, metadata_file_name):
         """Read input metadata from ecsv file."""
