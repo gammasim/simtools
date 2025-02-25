@@ -141,7 +141,7 @@ class MetadataCollector:
             url = self.input_metadata[0][self.observatory]["product"]["data"]["model"]["url"]
             self._logger.debug(f"Schema file from input metadata: {url}")
             return url
-        except (KeyError, IndexError):
+        except (KeyError, TypeError):
             pass
 
         self._logger.warning("No schema file found.")
@@ -186,7 +186,7 @@ class MetadataCollector:
             )
             if _site is not None:
                 return names.validate_site_name(_site)
-        except (KeyError, IndexError):
+        except (KeyError, TypeError):
             pass
         return None
 
@@ -253,14 +253,20 @@ class MetadataCollector:
 
         """
         metadata_file_names = (
-            self.args_dict.get("input_meta", None) or self.args_dict.get("input", None)
-            if metadata_file_name_expression is None
-            else metadata_file_name_expression
+            metadata_file_name_expression
+            or self.args_dict.get("input_meta")
+            or self.args_dict.get("input")
         )
-        # pylint exception, as Path.glob does not expand bracket expressions
+
+        if metadata_file_names is None:
+            self._logger.debug("No input metadata file defined.")
+            return None
+        # linter exception, as Path.glob does not expand bracket expressions
         metadata_files = [
-            Path(f) for f in glob.glob(metadata_file_names, recursive=True)  # noqa: PTH207
+            Path(f) for f in glob.glob(str(metadata_file_names), recursive=True)  # noqa: PTH207
         ]
+        if not metadata_files:
+            raise FileNotFoundError(f"No metadata file found: {metadata_file_names}")
 
         metadata = []
         for metadata_file in metadata_files:
@@ -277,9 +283,6 @@ class MetadataCollector:
             schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
             metadata.append(gen.change_dict_keys_case(_input_metadata, lower_case=True))
 
-        if not metadata:
-            self._logger.debug("No input metadata file defined.")
-            return {}
         return metadata
 
     def _read_input_metadata_from_ecsv(self, metadata_file_name):
