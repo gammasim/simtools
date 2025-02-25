@@ -287,16 +287,14 @@ class Configurator:
             )
             # yaml parser adds \n in multiline strings, remove them
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
-            if "CTA_SIMPIPE" in _config_dict:
-                try:
-                    self._fill_from_config_dict(
-                        input_dict=gen.change_dict_keys_case(
-                            _config_dict["CTA_SIMPIPE"]["CONFIGURATION"],
-                        ),
-                        overwrite=True,
-                    )
-                except KeyError:
-                    self._logger.info(f"No CTA_SIMPIPE:CONFIGURATION dict found in {config_file}.")
+            # read configuration for first application
+            if "CONFIGURATION" in _config_dict.get("CTA_SIMPIPE", {}).get("APPLICATIONS", [{}])[0]:
+                self._fill_from_config_dict(
+                    input_dict=gen.change_dict_keys_case(
+                        _config_dict["CTA_SIMPIPE"]["APPLICATIONS"][0]["CONFIGURATION"],
+                    ),
+                    overwrite=True,
+                )
             else:
                 self._fill_from_config_dict(
                     input_dict=gen.change_dict_keys_case(_config_dict), overwrite=True

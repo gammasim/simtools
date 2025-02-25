@@ -138,7 +138,7 @@ jobs:
           - { build_opt: 'prod6-baseline', extra_def: ''}
 #          - { build_opt: 'prod5', extra_def: ''}
 #          - { build_opt: 'prod5-sc', extra_def: ''}
-        avx_instruction: ['avx2']
+        avx_instruction: ['avx2', 'noOpt']
 #        avx_instruction: ['avx2', 'avx512f', 'sse4', 'avx']
 
     env:
