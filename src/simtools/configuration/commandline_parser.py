@@ -70,6 +70,7 @@ class CommandLineParser(argparse.ArgumentParser):
             self.initialize_output_arguments()
         self.initialize_config_files()
         self.initialize_application_execution_arguments()
+        self.initialize_user_arguments()
 
     def initialize_config_files(self):
         """Initialize configuration files."""
@@ -173,6 +174,34 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
+        )
+
+    def initialize_user_arguments(self):
+        """Initialize user arguments."""
+        _job_group = self.add_argument_group("user")
+        _job_group.add_argument(
+            "--user_name",
+            help="user name",
+            type=str,
+            required=False,
+        )
+        _job_group.add_argument(
+            "--user_organization",
+            help="user organization",
+            type=str,
+            required=False,
+        )
+        _job_group.add_argument(
+            "--user_email",
+            help="user email",
+            type=str,
+            required=False,
+        )
+        _job_group.add_argument(
+            "--user_orcid",
+            help="user ORCID",
+            type=str,
+            required=False,
         )
 
     def initialize_db_config_arguments(self):
