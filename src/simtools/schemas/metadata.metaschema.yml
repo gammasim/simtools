@@ -524,6 +524,13 @@ definitions:
                     - type: string
                     - type: "null"
                   default: null
+                AUTHOR:
+                  description: |-
+                    Author of document.
+                  anyOf:
+                    - type: string
+                    - type: "null"
+                  default: null
                 ID:
                   description: |-
                     Unique identifier of document.
