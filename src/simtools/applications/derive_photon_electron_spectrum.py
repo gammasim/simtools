@@ -81,7 +81,7 @@ def _parse(label):
         required=False,
     )
 
-    return config.initialize(db_config=False, output=True)
+    return config.initialize(db_config=False, output=True, simulation_model=["telescope"])
 
 
 def main():  # noqa: D103

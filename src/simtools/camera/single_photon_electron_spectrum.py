@@ -10,7 +10,7 @@ from pathlib import Path
 from astropy.table import Table
 
 import simtools.data_model.model_data_writer as writer
-from simtools.constants import SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_SCHEMA_URL, SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
@@ -44,6 +44,10 @@ class SinglePhotonElectronSpectrum:
         )
         self.io_handler = io_handler.IOHandler()
         self.data = ""  # Single photon electron spectrum data (as string)
+        self.args_dict["metadata_product_data_name"] = "single_pe_spectrum"
+        self.args_dict["metadata_product_data_url"] = (
+            MODEL_PARAMETER_SCHEMA_URL + "/pm_photoelectron_spectrum.schema.yml"
+        )
         self.metadata = MetadataCollector(args_dict=self.args_dict)
 
     def derive_single_pe_spectrum(self):

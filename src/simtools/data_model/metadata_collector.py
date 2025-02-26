@@ -347,10 +347,14 @@ class MetadataCollector:
             pass
 
         # DATA:MODEL
-        helper_dict = {"name": "name", "version": "version", "type": "meta_schema"}
-        for key, value in helper_dict.items():
-            product_dict["data"]["model"][key] = self.schema_dict.get(value, None)
-        product_dict["data"]["model"]["url"] = self.schema_file
+        product_dict["data"]["model"]["name"] = self.schema_dict.get(
+            "name", None
+        ) or self.args_dict.get("metadata_product_data_name")
+        product_dict["data"]["model"]["version"] = self.schema_dict.get("version", "0.0.0")
+        product_dict["data"]["model"]["type"] = self.schema_dict.get("meta_schema", None)
+        product_dict["data"]["model"]["url"] = self.schema_file or self.args_dict.get(
+            "metadata_product_data_url"
+        )
 
         product_dict["format"] = self.args_dict.get("output_file_format", None)
         product_dict["filename"] = str(self.args_dict.get("output_file", None))
@@ -368,13 +372,16 @@ class MetadataCollector:
             Dictionary for instrument metadata fields.
 
         """
-        instrument_dict["site"] = self.args_dict.get("site", None)
-        instrument_dict["ID"] = self.args_dict.get("instrument") or self.args_dict.get(
-            "telescope", None
-        )
+        instrument_dict["site"] = self.args_dict.get("site")
+        instrument_dict["ID"] = self.args_dict.get("instrument") or self.args_dict.get("telescope")
         if instrument_dict["ID"]:
             instrument_dict["class"] = names.get_collection_name_from_array_element_name(
                 instrument_dict["ID"], False
+            )
+            instrument_dict["type"] = (
+                names.get_array_element_type_from_name(instrument_dict["ID"])
+                if not instrument_dict.get("type")
+                else instrument_dict["type"]
             )
 
     def _fill_process_meta(self, process_dict):

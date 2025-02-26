@@ -51,9 +51,7 @@ definitions:
           Describes the person or institution that is responsible for this
           data product.
         required:
-          - EMAIL
           - NAME
-          - ORGANIZATION
         type: object
         additionalProperties: false
         properties:
@@ -90,10 +88,8 @@ definitions:
           links to the data model definition.
         required:
           - DATA
-          - DESCRIPTION
           - FORMAT
           - ID
-          - VALID
         type: object
         additionalProperties: false
         properties:
@@ -125,7 +121,6 @@ definitions:
             title: Data
             required:
               - CATEGORY
-              - ASSOCIATION
               - LEVEL
               - MODEL
             type: object
@@ -346,7 +341,6 @@ definitions:
           associated ID.
         required:
           - TYPE
-          - ID
         type: object
         additionalProperties: false
         properties:
