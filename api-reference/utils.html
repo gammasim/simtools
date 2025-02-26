@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities &#8212; simtools v0.1.dev1+g3738059 Manual</title>
+    <title>Utilities &#8212; simtools v0.1.dev1+g4c180f9 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=d3233769"></script>
+    <script src="../_static/documentation_options.js?v=52b53f19"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3738059 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4c180f9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1152,7 +1152,7 @@ and string representation of the type of the value.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="utils.value_conversion.split_value_and_unit">
-<span class="sig-prename descclassname"><span class="pre">utils.value_conversion.</span></span><span class="sig-name descname"><span class="pre">split_value_and_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/value_conversion.html#split_value_and_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.value_conversion.split_value_and_unit" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.value_conversion.</span></span><span class="sig-name descname"><span class="pre">split_value_and_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_integer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/utils/value_conversion.html#split_value_and_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.value_conversion.split_value_and_unit" title="Link to this definition">#</a></dt>
 <dd><p>Split a value into its value and unit.</p>
 <p>Takes into account the case where the value is a Quantity, a number,
 or a simtools-type string encoding a list of values and units.</p>
@@ -1160,6 +1160,8 @@ or a simtools-type string encoding a list of values and units.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>value: str, int, float, bool, u.Quantity</strong></dt><dd><p>Value to be parsed.</p>
+</dd>
+<dt><strong>is_integer: bool</strong></dt><dd><p>Flag to indicate if the value is an integer.</p>
 </dd>
 </dl>
 </dd>
