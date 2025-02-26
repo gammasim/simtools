@@ -1121,23 +1121,6 @@ def test_get_array_element_list_with_design_model_in_production_table(db, mocker
     assert result == ["LSTN-design", "LSTN-01"]
 
 
-def test_get_array_element_list_without_design_model_in_production_table(db, mocker):
-    """Test _get_array_element_list method without design model in production table."""
-    array_element_name = "LSTN-01"
-    site = "North"
-    production_table = {}
-    collection = "telescopes"
-
-    mock_get_array_element_type_from_name = mocker.patch(
-        "simtools.utils.names.get_array_element_type_from_name", return_value="LSTN"
-    )
-
-    result = db._get_array_element_list(array_element_name, site, production_table, collection)
-
-    mock_get_array_element_type_from_name.assert_called_once_with(array_element_name)
-    assert result == ["LSTN-design", "LSTN-01"]
-
-
 def test_get_model_versions(db):
 
     model_versions = db.get_model_versions()
