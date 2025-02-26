@@ -265,20 +265,6 @@ class MetadataCollector:
             self._logger.debug("No input metadata file defined.")
             return None
 
-        #        if metadata_file_names is None:
-        #            self._logger.debug("No input metadata file defined.")
-        #            return None
-        #        if not isinstance(metadata_file_names, list):
-        #            metadata_file_names = [metadata_file_names]
-        #
-        #        metadata_files = []
-        ##        for file_name in metadata_file_names:
-        #            metadata_files.extend(
-        #                Path(f) for f in glob.glob(str(file_name), recursive=True)
-        #            )
-        #        if not metadata_files:
-        #            raise FileNotFoundError(f"No metadata file found: {metadata_file_names}")
-
         metadata = []
         for metadata_file in metadata_files:
 
