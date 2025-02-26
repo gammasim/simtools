@@ -15,6 +15,7 @@ data:
     collection: "telescopes"
     observatory: "CTAO"
     site: "North"
+    design_types: ["FlashCam", "NectarCam", "test"]
   LSTS:
     collection: "telescopes"
     observatory: "CTAO"
@@ -23,6 +24,7 @@ data:
     collection: "telescopes"
     observatory: "CTAO"
     site: "South"
+    design_types: ["FlashCam", "NectarCam", "test"]
   SSTS:
     collection: "telescopes"
     observatory: "CTAO"
@@ -37,7 +39,7 @@ data:
     collection: "telescopes"
     observatory: "CTAO"
     site: ["North", "South"]
-    design_types: ["design", "test", "FlashCam", "NectarCam"]
+    design_types: ["FlashCam", "NectarCam", "test"]
     description: "Mid-sized telescope"
   ILLN:
     collection: "calibration_devices"

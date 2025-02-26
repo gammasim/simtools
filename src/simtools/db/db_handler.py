@@ -862,15 +862,20 @@ class DatabaseHandler:
             return ["xSTx-design"]  # placeholder to ignore 'instrument' field in query.
         if collection == "sites":
             return [f"OBS-{site}"]
-        if "-design" in array_element_name:
+        if names.is_design_type(array_element_name):
             return [array_element_name]
+        if collection == "configuration_sim_telarray":
+            # get design model from 'telescope' or 'calibration_device' production tables
+            production_table = self._read_production_table_from_mongo_db(
+                names.get_collection_name_from_array_element_name(array_element_name),
+                production_table["model_version"],
+            )
         try:
             return [
                 production_table["design_model"][array_element_name],
                 array_element_name,
             ]
-        except KeyError:
-            return [
-                names.guess_design_model_from_name(array_element_name),
-                array_element_name,
-            ]
+        except KeyError as exc:
+            raise KeyError(
+                f"Failed generated array element list for db query for {array_element_name}"
+            ) from exc
