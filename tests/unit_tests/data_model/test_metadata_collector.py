@@ -90,10 +90,13 @@ def test_get_top_level_metadata(args_dict_site):
     assert top_level_meta["cta"]["activity"]["end"] > top_level_meta["cta"]["activity"]["start"]
 
 
-def test_fill_contact_meta(args_dict_site):
+def test_fill_contact_meta(args_dict_site, caplog):
     contact_dict = {}
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     collector._fill_contact_meta(contact_dict)
+    with caplog.at_level(logging.WARNING):
+        collector._fill_contact_meta(contact_dict)
+    assert "No user name provided, take user info from system level." in caplog.text
     assert contact_dict["name"] == getpass.getuser()
 
 
