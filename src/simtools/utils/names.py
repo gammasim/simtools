@@ -1,4 +1,16 @@
-"""Validation of names."""
+"""Name utilities for array elements, sites, and model parameters.
+
+Naming in simtools:
+
+* 'site': South or North
+* 'array element': e.g., LSTN-01, MSTN-01, ...
+* 'array element type': e.g., LSTN, MSTN, ...
+* 'array element ID': e.g., 01, 02, ...
+* 'array element design type': e.g., design, test
+* 'instrument class key': e.g., telescope, camera, structure
+* 'db collection': e.g., telescopes, sites, calibration_devices
+
+"""
 
 import logging
 import re
@@ -15,7 +27,6 @@ __all__ = [
     "generate_file_name",
     "get_array_element_type_from_name",
     "get_site_from_array_element_name",
-    "layout_telescope_list_file_name",
     "sanitize_name",
     "simtel_config_file_name",
     "simtel_single_mirror_list_file_name",
@@ -37,7 +48,7 @@ db_collections_to_class_keys = {
 @cache
 def array_elements():
     """
-    Load array elements from reference files and keep in cache.
+    Get array elements and their properties.
 
     Returns
     -------
@@ -51,33 +62,29 @@ def array_elements():
 @cache
 def site_names():
     """
-    Site names from reference file.
+    Get site names.
 
-    The list of sites is derived from the sites listed in the model parameter
-    schema files. Return a dictionary for compatibility with the validation routines.
+    The list of sites is derived from the sites listed in array element definition file.
+    Return a dictionary for compatibility with the validation '_validate_name' routine.
 
     Returns
     -------
     dict
         Site names.
     """
-    _array_elements = array_elements()
-    _sites = set()
-    for entry in _array_elements.values():
-        site = entry["site"]
-        if isinstance(site, list):
-            _sites.update(site)
-        else:
-            _sites.add(site)
-    return {site: [site.lower()] for site in _sites}
+    return {
+        site: [site.lower()]
+        for entry in array_elements().values()
+        for site in (entry["site"] if isinstance(entry["site"], list) else [entry["site"]])
+    }
 
 
 @cache
 def array_element_design_types(array_element_type):
     """
-    Array element site types (e.g., 'design' or 'flashcam').
+    Get array element site types (e.g., 'design' or 'flashcam').
 
-    Default value is ['design', 'test'].
+    Default values are ['design', 'test'].
 
     Parameters
     ----------
@@ -92,63 +99,106 @@ def array_element_design_types(array_element_type):
     default_types = ["design", "test"]
     if array_element_type is None:
         return default_types
-    return array_elements()[array_element_type].get("design_types", default_types)
+    try:
+        return array_elements()[array_element_type].get("design_types", default_types)
+    except KeyError as exc:
+        raise ValueError(f"Invalid name {array_element_type}") from exc
+
+
+def is_design_type(array_element_name):
+    """
+    Check if array element is a design type (e.g., "MSTS-FlashCam" or "LSTN-design").
+
+    Parameters
+    ----------
+    array_element_name: str
+        Array element name.
+
+    Returns
+    -------
+    bool
+        True if array element is a design type.
+    """
+    return get_array_element_id_from_name(array_element_name) in array_element_design_types(
+        get_array_element_type_from_name(array_element_name)
+    )
 
 
 @cache
-def load_model_parameters(class_key_list):
-    model_parameters = {}
-    schema_files = list(Path(MODEL_PARAMETER_SCHEMA_PATH).rglob("*.yml"))
-    for schema_file in schema_files:
+def _load_model_parameters():
+    """
+    Get model parameters properties from schema files.
+
+    Returns
+    -------
+    dict
+        Model parameters definitions for all model parameters.
+    """
+    _parameters = {}
+    for schema_file in list(Path(MODEL_PARAMETER_SCHEMA_PATH).rglob("*.yml")):
         with open(schema_file, encoding="utf-8") as f:
             data = yaml.safe_load(f)
-        try:
-            if data["instrument"]["class"] in class_key_list:
-                model_parameters[data["name"]] = data
-        except KeyError:
-            pass
-    return model_parameters
+            _parameters[data["name"]] = data
+    return _parameters
 
 
-def instrument_classes(instrument_type="telescope"):
-    """Return list of instrument classes for a given instrument type."""
-    if instrument_type == "site":
-        return "Site"
-    if instrument_type == "telescope":
-        return ("Structure", "Camera", "Telescope")
-    raise ValueError(f"Invalid instrument type {instrument_type}")
+def model_parameters(class_key_list=None):
+    """
+    Get model parameters and their properties for a given instrument class key.
+
+    Returns all model parameters if class_key is None.
+
+    Parameters
+    ----------
+    class_key: str, None
+        Class key (e.g., "telescope", "camera", structure").
+
+    Returns
+    -------
+    dict
+        Model parameters definitions.
+    """
+    _parameters = {}
+    if class_key_list is None:
+        return _load_model_parameters()
+    for key, value in _load_model_parameters().items():
+        if value.get("instrument", {}).get("class", "") in class_key_list:
+            _parameters[key] = value
+    return _parameters
 
 
 def site_parameters():
-    return load_model_parameters(class_key_list=tuple(db_collections_to_class_keys["sites"]))
+    """Return site model parameters."""
+    return model_parameters(class_key_list=tuple(db_collections_to_class_keys["sites"]))
 
 
 def telescope_parameters():
-    return load_model_parameters(class_key_list=tuple(db_collections_to_class_keys["telescopes"]))
+    """Return telescope model parameters."""
+    return model_parameters(class_key_list=tuple(db_collections_to_class_keys["telescopes"]))
 
 
-def all_model_parameters():
-    """Return model parameters for all classes / collections."""
-    parameter_names = {}
-    for _, class_keys in db_collections_to_class_keys.items():
-        parameter_names.update(load_model_parameters(class_key_list=tuple(class_keys)))
-    return parameter_names
-
-
-def class_key_to_db_collection(class_name):
-    """Convert class key to collection name."""
+def instrument_class_key_to_db_collection(class_name):
+    """Convert instrument class key to collection name."""
     for collection, classes in db_collections_to_class_keys.items():
         if class_name in classes:
             return collection
     raise ValueError(f"Class {class_name} not found")
 
 
-def validate_array_element_id_name(name, array_element_type=None):
+def db_collection_to_instrument_class_key(collection_name="telescopes"):
+    """Return list of instrument classes for a given collection."""
+    try:
+        return db_collections_to_class_keys[collection_name]
+    except KeyError as exc:
+        raise KeyError(f"Invalid collection name {collection_name}") from exc
+
+
+def validate_array_element_id_name(array_element_id, array_element_type=None):
     """
     Validate array element ID.
 
     Allowed IDs are
-    - design (for design array elements or testing)
+    - design types (for design array elements or testing)
     - array element ID (e.g., 1, 5, 15)
     - test (for testing)
 
@@ -169,23 +219,20 @@ def validate_array_element_id_name(name, array_element_type=None):
     ValueError
         If name is not valid.
     """
-    if isinstance(name, int) or name.isdigit():
-        return f"{int(name):02d}"
-    if name.lower() in {t.lower() for t in array_element_design_types(array_element_type)}:
-        return str(name)
-
-    msg = f"Invalid array element ID name {name}"
-    _logger.error(msg)
-    raise ValueError(msg)
+    if isinstance(array_element_id, int) or array_element_id.isdigit():
+        return f"{int(array_element_id):02d}"
+    if array_element_id in array_element_design_types(array_element_type):
+        return str(array_element_id)
+    raise ValueError(f"Invalid array element ID name {array_element_id}")
 
 
-def validate_site_name(name):
+def validate_site_name(site_name):
     """
     Validate site name.
 
     Parameters
     ----------
-    name: str
+    site_name: str
         Site name.
 
     Returns
@@ -193,7 +240,7 @@ def validate_site_name(name):
     str
         Validated name.
     """
-    return _validate_name(name, site_names())
+    return _validate_name(site_name, site_names())
 
 
 def _validate_name(name, all_names):
@@ -232,13 +279,13 @@ def _validate_name(name, all_names):
     raise ValueError(msg)
 
 
-def validate_array_element_type(name):
+def validate_array_element_type(array_element_type):
     """
     Validate array element type (e.g., LSTN, MSTN).
 
     Parameters
     ----------
-    name: str
+    array_element_type: str
         Array element type.
 
     Returns
@@ -246,16 +293,18 @@ def validate_array_element_type(name):
     str
         Validated name.
     """
-    return _validate_name(name, array_elements())
+    return _validate_name(array_element_type, array_elements())
 
 
-def validate_array_element_name(name):
+def validate_array_element_name(array_element_name):
     """
     Validate array element name (e.g., MSTx-NectarCam, MSTN-01).
 
+    Forgiving validation, is it allows also to give a site name (e.g., OBS-North).
+
     Parameters
     ----------
-    name: str
+    array_element_name: str
         Array element name.
 
     Returns
@@ -264,9 +313,9 @@ def validate_array_element_name(name):
         Validated name.
     """
     try:
-        _array_element_type, _array_element_id = name.split("-")
+        _array_element_type, _array_element_id = array_element_name.split("-")
     except ValueError as exc:
-        msg = f"Invalid name {name}"
+        msg = f"Invalid name {array_element_name}"
         raise ValueError(msg) from exc
     if _array_element_type == "OBS":
         return validate_site_name(_array_element_id)
@@ -277,9 +326,9 @@ def validate_array_element_name(name):
     )
 
 
-def get_array_element_name_from_type_site_id(array_element_type, site, array_element_id):
+def generate_array_element_name_from_type_site_id(array_element_type, site, array_element_id):
     """
-    Get array element name from type, site and ID.
+    Generate a new array element name from array element type, site, and array element ID.
 
     Parameters
     ----------
@@ -300,13 +349,13 @@ def get_array_element_name_from_type_site_id(array_element_type, site, array_ele
     return f"{array_element_type}{_short_site}-{_val_id}"
 
 
-def get_array_element_type_from_name(name):
+def get_array_element_type_from_name(array_element_name):
     """
-    Get array element type from name, e.g. "LSTN", "MSTN".
+    Get array element type from array element name (e.g "MSTN" from "MSTN-01").
 
     Parameters
     ----------
-    name: str
+    array_element_name: str
         Array element name
 
     Returns
@@ -314,34 +363,36 @@ def get_array_element_type_from_name(name):
     str
         Array element type.
     """
-    return _validate_name(name.split("-")[0], array_elements())
+    return _validate_name(array_element_name.split("-")[0], array_elements())
 
 
-def guess_design_model_from_name(name):
+def get_array_element_id_from_name(array_element_name):
     """
-    Guess design model name from array element name.
-
-    Note that this might not be correct and the preferred way is to use the
-    model parameter 'design_model'.
+    Get array element ID from array element name, (e.g. "01" from "MSTN-01").
 
     Parameters
     ----------
-    name: str
-       Array element name
+    array_element_name: str
+        Array element name
 
     Returns
     -------
     str
-        Design model name.
+        Array element ID.
     """
-    return f"{get_array_element_type_from_name(name)}-design"
+    try:
+        return validate_array_element_id_name(
+            array_element_name.split("-")[1], array_element_name.split("-")[0]
+        )
+    except IndexError as exc:
+        raise ValueError(f"Invalid name {array_element_name}") from exc
 
 
 def get_list_of_array_element_types(
     array_element_class="telescopes", site=None, observatory="CTAO"
 ):
     """
-    Get list of array element types.
+    Get list of array element types (e.g., ["LSTN", "MSTN"] for the Northern site).
 
     Parameters
     ----------
@@ -366,13 +417,13 @@ def get_list_of_array_element_types(
     )
 
 
-def get_site_from_array_element_name(name):
+def get_site_from_array_element_name(array_element_name):
     """
-    Get site name from array element name.
+    Get site name from array element name (e.g., "South" from "MSTS-01").
 
     Parameters
     ----------
-    name: str
+    array_element_name: str
         Array element name.
 
     Returns
@@ -380,19 +431,16 @@ def get_site_from_array_element_name(name):
     str, list
         Site name(s).
     """
-    try:  # e.g. instrument is 'North' as given for the site parameters
-        return validate_site_name(name)
-    except ValueError:  # e.g. instrument is 'LSTN' as given for the array element types
-        return array_elements()[get_array_element_type_from_name(name)]["site"]
+    return array_elements()[get_array_element_type_from_name(array_element_name)]["site"]
 
 
-def get_collection_name_from_array_element_name(name, array_elements_only=True):
+def get_collection_name_from_array_element_name(array_element_name, array_elements_only=True):
     """
     Get collection name (e.g., telescopes, calibration_devices) of an array element from its name.
 
     Parameters
     ----------
-    name: str
+    array_element_name: str
         Array element name (e.g. LSTN-01)
     array_elements_only: bool
         If True, only array elements are considered (e.g. "OBS-North" will raise a ValueError).
@@ -408,18 +456,23 @@ def get_collection_name_from_array_element_name(name, array_elements_only=True):
         If name is not a valid array element name.
     """
     try:
-        return array_elements()[get_array_element_type_from_name(name)]["collection"]
+        return array_elements()[get_array_element_type_from_name(array_element_name)]["collection"]
     except ValueError as exc:
         if array_elements_only:
-            raise ValueError(f"Invalid array element name {name}") from exc
+            raise ValueError(f"Invalid array element name {array_element_name}") from exc
     try:
-        if name.startswith("OBS") or validate_site_name(name):
+        if array_element_name.startswith("OBS") or validate_site_name(array_element_name):
             return "sites"
     except ValueError:
         pass
-    if name in {"configuration_sim_telarray", "configuration_corsika", "Files", "Dummy-Telescope"}:
-        return name
-    raise ValueError(f"Invalid array element name {name}")
+    if array_element_name in {
+        "configuration_sim_telarray",
+        "configuration_corsika",
+        "Files",
+        "Dummy-Telescope",
+    }:
+        return array_element_name
+    raise ValueError(f"Invalid array element name {array_element_name}")
 
 
 def get_collection_name_from_parameter_name(parameter_name):
@@ -441,27 +494,27 @@ def get_collection_name_from_parameter_name(parameter_name):
     KeyError
         If the parameter name is not found in the list of model parameters
     """
-    _parameter_names = all_model_parameters()
+    _parameter_names = model_parameters()
     try:
         class_key = _parameter_names[parameter_name].get("instrument", {}).get("class")
     except KeyError as exc:
         raise KeyError(f"Parameter {parameter_name} without schema definition") from exc
-    return class_key_to_db_collection(class_key)
+    return instrument_class_key_to_db_collection(class_key)
 
 
 def get_simulation_software_name_from_parameter_name(
-    par_name,
+    parameter_name,
     simulation_software="sim_telarray",
 ):
     """
-    Get the name used in the simulation software from the model parameter name.
+    Get the name used in the given simulation software from the model parameter name.
 
-    Name convention is expected to be defined in the schema.
+    Name convention is expected to be defined in the model parameter schema.
     Returns the parameter name if no simulation software name is found.
 
     Parameters
     ----------
-    par_name: str
+    parameter_name: str
         Model parameter name.
     simulation_software: str
         Simulation software name.
@@ -471,51 +524,15 @@ def get_simulation_software_name_from_parameter_name(
     str
         Simtel parameter name.
     """
-    _parameter_names = all_model_parameters()
+    _parameter = model_parameters().get(parameter_name)
+    if not _parameter:
+        raise KeyError(f"Parameter {parameter_name} without schema definition")
 
-    try:
-        _parameter = _parameter_names[par_name]
-    except KeyError as err:
-        raise KeyError(f"Parameter {par_name} without schema definition") from err
+    for software in _parameter.get("simulation_software", []):
+        if software.get("name") == simulation_software:
+            return software.get("internal_parameter_name", parameter_name)
 
-    try:
-        for software in _parameter.get("simulation_software", []):
-            if software.get("name") == simulation_software:
-                return software.get("internal_parameter_name", par_name)
-    except TypeError:  # catches cases for which 'simulation_software' is None
-        pass
     return None
-
-
-def get_parameter_name_from_simtel_name(simtel_name):
-    """
-    Get the model parameter name from the simtel parameter name.
-
-    Assumes that both names are equal if not defined otherwise in names.py.
-
-    Parameters
-    ----------
-    simtel_name: str
-        Simtel parameter name.
-
-    Returns
-    -------
-    str
-        Model parameter name.
-    """
-    _parameters = {**telescope_parameters(), **site_parameters()}
-
-    for par_name, par_info in _parameters.items():
-        try:
-            for software in par_info["simulation_software"]:
-                if (
-                    software["name"] == "sim_telarray"
-                    and software["internal_parameter_name"] == simtel_name
-                ):
-                    return par_name
-        except (KeyError, TypeError):  # catches cases for which 'simulation_software' is None
-            pass
-    return simtel_name
 
 
 def simtel_config_file_name(
@@ -587,28 +604,6 @@ def simtel_single_mirror_list_file_name(
     name += f"_{label}" if label is not None else ""
     name += ".dat"
     return name
-
-
-def layout_telescope_list_file_name(name, label):
-    """
-    File name for files required at the RayTracing class.
-
-    Parameters
-    ----------
-    name: str
-        Name of the array.
-    label: str
-        Instance label.
-
-    Returns
-    -------
-    str
-        File name.
-    """
-    file_name = f"telescope_positions-{name}"
-    file_name += f"_{label}" if label is not None else ""
-    file_name += ".ecsv"
-    return file_name
 
 
 def generate_file_name(
@@ -696,8 +691,7 @@ def sanitize_name(name):
         if the string name can not be sanitized.
     """
     if name is None:
-        # _logger.info("The string is None and can't be sanitized.")
-        return name
+        return None
     sanitized = name.lower()
     sanitized = sanitized.replace(" ", "_")
     # Remove characters that are not alphanumerics or underscores
