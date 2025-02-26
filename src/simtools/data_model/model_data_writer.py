@@ -476,9 +476,7 @@ class ModelDataWriter:
             If yml_file is not defined.
         """
         try:
-            yml_file = names.file_name_with_version(
-                yml_file or self.product_data_file, ".metadata.yml"
-            )
+            yml_file = names.file_name_with_version(yml_file or self.product_data_file, ".meta.yml")
             with open(yml_file, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(
                     gen.change_dict_keys_case(
