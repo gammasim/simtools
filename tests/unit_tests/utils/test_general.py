@@ -802,3 +802,20 @@ def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
     suffix_list = [".txt"]
     with pytest.raises(FileNotFoundError):
         gen.get_list_of_files_from_command_line(file_names, suffix_list)
+
+
+def test_generate_list_of_files():
+
+    with pytest.raises(ValueError, match=r"^No file list provided"):
+        gen.generate_list_of_files(None)
+
+    assert gen.generate_list_of_files("LICENSE") == [Path("LICENSE")]
+    yml_list = gen.generate_list_of_files("tests/resources/*.yml")
+    assert len(yml_list) > 0
+    yml_and_ecvs_list = gen.generate_list_of_files(
+        ["tests/resources/*.yml", "tests/resources/*.ecsv"]
+    )
+    assert len(yml_and_ecvs_list) > len(yml_list)
+
+    with pytest.raises(FileNotFoundError, match=r"^No files found"):
+        gen.generate_list_of_files("tests/resources/*.non_existent")

@@ -8,7 +8,6 @@ implementation of the observatory metadata model.
 
 import datetime
 import getpass
-import glob
 import logging
 import uuid
 from pathlib import Path
@@ -260,15 +259,25 @@ class MetadataCollector:
             or self.args_dict.get("input")
         )
 
-        if metadata_file_names is None:
+        try:
+            metadata_files = gen.generate_list_of_files(metadata_file_names)
+        except ValueError:
             self._logger.debug("No input metadata file defined.")
             return None
-        # linter exception, as Path.glob does not expand bracket expressions
-        metadata_files = [
-            Path(f) for f in glob.glob(str(metadata_file_names), recursive=True)  # noqa: PTH207
-        ]
-        if not metadata_files:
-            raise FileNotFoundError(f"No metadata file found: {metadata_file_names}")
+
+        #        if metadata_file_names is None:
+        #            self._logger.debug("No input metadata file defined.")
+        #            return None
+        #        if not isinstance(metadata_file_names, list):
+        #            metadata_file_names = [metadata_file_names]
+        #
+        #        metadata_files = []
+        ##        for file_name in metadata_file_names:
+        #            metadata_files.extend(
+        #                Path(f) for f in glob.glob(str(file_name), recursive=True)
+        #            )
+        #        if not metadata_files:
+        #            raise FileNotFoundError(f"No metadata file found: {metadata_file_names}")
 
         metadata = []
         for metadata_file in metadata_files:
