@@ -387,7 +387,8 @@ class ModelDataWriter:
             product_data.write(
                 self.product_data_file, format=self.product_data_format, overwrite=True
             )
-            self.write_metadata_to_yml(metadata, self.product_data_file)
+            if metadata is not None:
+                self.write_metadata_to_yml(metadata, self.product_data_file)
         except IORegistryError:
             self._logger.error(f"Error writing model data to {self.product_data_file}.")
             raise
