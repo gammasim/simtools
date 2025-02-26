@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+g342872c Manual</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+g3738059 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=ecdeb04d"></script>
+    <script src="../../_static/documentation_options.js?v=d3233769"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g342872c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3738059 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -386,7 +386,19 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for utils.names</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Validation of names.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Name utilities for array elements, sites, and model parameters.</span>
+
+<span class="sd">Naming in simtools:</span>
+
+<span class="sd">* &#39;site&#39;: South or North</span>
+<span class="sd">* &#39;array element&#39;: e.g., LSTN-01, MSTN-01, ...</span>
+<span class="sd">* &#39;array element type&#39;: e.g., LSTN, MSTN, ...</span>
+<span class="sd">* &#39;array element ID&#39;: e.g., 01, 02, ...</span>
+<span class="sd">* &#39;array element design type&#39;: e.g., design, test</span>
+<span class="sd">* &#39;instrument class key&#39;: e.g., telescope, camera, structure</span>
+<span class="sd">* &#39;db collection&#39;: e.g., telescopes, sites, calibration_devices</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
@@ -403,7 +415,6 @@ document.write(`
     <span class="s2">&quot;generate_file_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_array_element_type_from_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;get_site_from_array_element_name&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;layout_telescope_list_file_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;sanitize_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;simtel_config_file_name&quot;</span><span class="p">,</span>
     <span class="s2">&quot;simtel_single_mirror_list_file_name&quot;</span><span class="p">,</span>
@@ -425,7 +436,7 @@ document.write(`
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">array_elements</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load array elements from reference files and keep in cache.</span>
+<span class="sd">    Get array elements and their properties.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -439,33 +450,29 @@ document.write(`
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">site_names</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Site names from reference file.</span>
+<span class="sd">    Get site names.</span>
 
-<span class="sd">    The list of sites is derived from the sites listed in the model parameter</span>
-<span class="sd">    schema files. Return a dictionary for compatibility with the validation routines.</span>
+<span class="sd">    The list of sites is derived from the sites listed in array element definition file.</span>
+<span class="sd">    Return a dictionary for compatibility with the validation &#39;_validate_name&#39; routine.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    dict</span>
 <span class="sd">        Site names.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_array_elements</span> <span class="o">=</span> <span class="n">array_elements</span><span class="p">()</span>
-    <span class="n">_sites</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">_array_elements</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="n">site</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">_sites</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">_sites</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="n">site</span><span class="p">:</span> <span class="p">[</span><span class="n">site</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">_sites</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">site</span><span class="p">:</span> <span class="p">[</span><span class="n">site</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]])</span>
+    <span class="p">}</span>
 
 
 <span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">array_element_design_types</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Array element site types (e.g., &#39;design&#39; or &#39;flashcam&#39;).</span>
+<span class="sd">    Get array element site types (e.g., &#39;design&#39; or &#39;flashcam&#39;).</span>
 
-<span class="sd">    Default value is [&#39;design&#39;, &#39;test&#39;].</span>
+<span class="sd">    Default values are [&#39;design&#39;, &#39;test&#39;].</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -480,65 +487,108 @@ document.write(`
     <span class="n">default_types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;design&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">array_element_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">default_types</span>
-    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">array_element_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;design_types&quot;</span><span class="p">,</span> <span class="n">default_types</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">array_element_type</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;design_types&quot;</span><span class="p">,</span> <span class="n">default_types</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">array_element_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_design_type</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if array element is a design type (e.g., &quot;MSTS-FlashCam&quot; or &quot;LSTN-design&quot;).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array_element_name: str</span>
+<span class="sd">        Array element name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if array element is a design type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">get_array_element_id_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">array_element_design_types</span><span class="p">(</span>
+        <span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span>
+    <span class="p">)</span>
 
 
 <span class="nd">@cache</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="p">):</span>
-    <span class="n">model_parameters</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">schema_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">MODEL_PARAMETER_SCHEMA_PATH</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.yml&quot;</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">schema_file</span> <span class="ow">in</span> <span class="n">schema_files</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_model_parameters</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get model parameters properties from schema files.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Model parameters definitions for all model parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">schema_file</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">MODEL_PARAMETER_SCHEMA_PATH</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.yml&quot;</span><span class="p">)):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">schema_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">][</span><span class="s2">&quot;class&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">class_key_list</span><span class="p">:</span>
-                <span class="n">model_parameters</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-    <span class="k">return</span> <span class="n">model_parameters</span>
+            <span class="n">_parameters</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="k">return</span> <span class="n">_parameters</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">instrument_classes</span><span class="p">(</span><span class="n">instrument_type</span><span class="o">=</span><span class="s2">&quot;telescope&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return list of instrument classes for a given instrument type.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">instrument_type</span> <span class="o">==</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;Site&quot;</span>
-    <span class="k">if</span> <span class="n">instrument_type</span> <span class="o">==</span> <span class="s2">&quot;telescope&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Structure&quot;</span><span class="p">,</span> <span class="s2">&quot;Camera&quot;</span><span class="p">,</span> <span class="s2">&quot;Telescope&quot;</span><span class="p">)</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid instrument type </span><span class="si">{</span><span class="n">instrument_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get model parameters and their properties for a given instrument class key.</span>
+
+<span class="sd">    Returns all model parameters if class_key is None.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    class_key: str, None</span>
+<span class="sd">        Class key (e.g., &quot;telescope&quot;, &quot;camera&quot;, structure&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Model parameters definitions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">class_key_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_load_model_parameters</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_load_model_parameters</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">class_key_list</span><span class="p">:</span>
+            <span class="n">_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">_parameters</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">site_parameters</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;sites&quot;</span><span class="p">]))</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return site model parameters.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;sites&quot;</span><span class="p">]))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">telescope_parameters</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">]))</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return telescope model parameters.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="s2">&quot;telescopes&quot;</span><span class="p">]))</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">all_model_parameters</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return model parameters for all classes / collections.&quot;&quot;&quot;</span>
-    <span class="n">parameter_names</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">class_keys</span> <span class="ow">in</span> <span class="n">db_collections_to_class_keys</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">parameter_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">load_model_parameters</span><span class="p">(</span><span class="n">class_key_list</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">class_keys</span><span class="p">)))</span>
-    <span class="k">return</span> <span class="n">parameter_names</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">class_key_to_db_collection</span><span class="p">(</span><span class="n">class_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert class key to collection name.&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">instrument_class_key_to_db_collection</span><span class="p">(</span><span class="n">class_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert instrument class key to collection name.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">collection</span><span class="p">,</span> <span class="n">classes</span> <span class="ow">in</span> <span class="n">db_collections_to_class_keys</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">collection</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">db_collection_to_instrument_class_key</span><span class="p">(</span><span class="n">collection_name</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return list of instrument classes for a given collection.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">db_collections_to_class_keys</span><span class="p">[</span><span class="n">collection_name</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid collection name </span><span class="si">{</span><span class="n">collection_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+
 <div class="viewcode-block" id="validate_array_element_id_name">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_array_element_id_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_id_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">array_element_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_id_name</span><span class="p">(</span><span class="n">array_element_id</span><span class="p">,</span> <span class="n">array_element_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate array element ID.</span>
 
 <span class="sd">    Allowed IDs are</span>
-<span class="sd">    - design (for design array elements or testing)</span>
+<span class="sd">    - design types (for design array elements or testing)</span>
 <span class="sd">    - array element ID (e.g., 1, 5, 15)</span>
 <span class="sd">    - test (for testing)</span>
 
@@ -559,26 +609,23 @@ document.write(`
 <span class="sd">    ValueError</span>
 <span class="sd">        If name is not valid.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">array_element_design_types</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">)}:</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-
-    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid array element ID name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array_element_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">array_element_id</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">array_element_id</span><span class="p">)</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="n">array_element_id</span> <span class="ow">in</span> <span class="n">array_element_design_types</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">array_element_id</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element ID name </span><span class="si">{</span><span class="n">array_element_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="validate_site_name">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_site_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_site_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_site_name</span><span class="p">(</span><span class="n">site_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate site name.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
+<span class="sd">    site_name: str</span>
 <span class="sd">        Site name.</span>
 
 <span class="sd">    Returns</span>
@@ -586,7 +633,7 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Validated name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">site_names</span><span class="p">())</span></div>
+    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">site_name</span><span class="p">,</span> <span class="n">site_names</span><span class="p">())</span></div>
 
 
 
@@ -626,13 +673,13 @@ document.write(`
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_type</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_type</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate array element type (e.g., LSTN, MSTN).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
+<span class="sd">    array_element_type: str</span>
 <span class="sd">        Array element type.</span>
 
 <span class="sd">    Returns</span>
@@ -640,18 +687,20 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Validated name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">array_elements</span><span class="p">())</span>
 
 
 <div class="viewcode-block" id="validate_array_element_name">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.names.validate_array_element_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate array element name (e.g., MSTx-NectarCam, MSTN-01).</span>
 
+<span class="sd">    Forgiving validation, is it allows also to give a site name (e.g., OBS-North).</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
+<span class="sd">    array_element_name: str</span>
 <span class="sd">        Array element name.</span>
 
 <span class="sd">    Returns</span>
@@ -660,9 +709,9 @@ document.write(`
 <span class="sd">        Validated name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">_array_element_type</span><span class="p">,</span> <span class="n">_array_element_id</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+        <span class="n">_array_element_type</span><span class="p">,</span> <span class="n">_array_element_id</span> <span class="o">=</span> <span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
     <span class="k">if</span> <span class="n">_array_element_type</span> <span class="o">==</span> <span class="s2">&quot;OBS&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">_array_element_id</span><span class="p">)</span>
@@ -674,9 +723,9 @@ document.write(`
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_name_from_type_site_id</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_element_id</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_array_element_name_from_type_site_id</span><span class="p">(</span><span class="n">array_element_type</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_element_id</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get array element name from type, site and ID.</span>
+<span class="sd">    Generate a new array element name from array element type, site, and array element ID.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -699,13 +748,13 @@ document.write(`
 
 <div class="viewcode-block" id="get_array_element_type_from_name">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_array_element_type_from_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get array element type from name, e.g. &quot;LSTN&quot;, &quot;MSTN&quot;.</span>
+<span class="sd">    Get array element type from array element name (e.g &quot;MSTN&quot; from &quot;MSTN-01&quot;).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
+<span class="sd">    array_element_name: str</span>
 <span class="sd">        Array element name</span>
 
 <span class="sd">    Returns</span>
@@ -713,35 +762,37 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Array element type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array_elements</span><span class="p">())</span></div>
+    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array_elements</span><span class="p">())</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">guess_design_model_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_id_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Guess design model name from array element name.</span>
-
-<span class="sd">    Note that this might not be correct and the preferred way is to use the</span>
-<span class="sd">    model parameter &#39;design_model&#39;.</span>
+<span class="sd">    Get array element ID from array element name, (e.g. &quot;01&quot; from &quot;MSTN-01&quot;).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
-<span class="sd">       Array element name</span>
+<span class="sd">    array_element_name: str</span>
+<span class="sd">        Array element name</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
-<span class="sd">        Design model name.</span>
+<span class="sd">        Array element ID.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">-design&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">validate_array_element_id_name</span><span class="p">(</span>
+            <span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_array_element_types</span><span class="p">(</span>
     <span class="n">array_element_class</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">observatory</span><span class="o">=</span><span class="s2">&quot;CTAO&quot;</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get list of array element types.</span>
+<span class="sd">    Get list of array element types (e.g., [&quot;LSTN&quot;, &quot;MSTN&quot;] for the Northern site).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -768,13 +819,13 @@ document.write(`
 
 <div class="viewcode-block" id="get_site_from_array_element_name">
 <a class="viewcode-back" href="../../api-reference/utils.html#utils.names.get_site_from_array_element_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_site_from_array_element_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_site_from_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get site name from array element name.</span>
+<span class="sd">    Get site name from array element name (e.g., &quot;South&quot; from &quot;MSTS-01&quot;).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
+<span class="sd">    array_element_name: str</span>
 <span class="sd">        Array element name.</span>
 
 <span class="sd">    Returns</span>
@@ -782,17 +833,17 @@ document.write(`
 <span class="sd">    str, list</span>
 <span class="sd">        Site name(s).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;site&quot;</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)][</span><span class="s2">&quot;site&quot;</span><span class="p">]</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">array_elements_only</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">,</span> <span class="n">array_elements_only</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get collection name (e.g., telescopes, calibration_devices) of an array element from its name.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
+<span class="sd">    array_element_name: str</span>
 <span class="sd">        Array element name (e.g. LSTN-01)</span>
 <span class="sd">    array_elements_only: bool</span>
 <span class="sd">        If True, only array elements are considered (e.g. &quot;OBS-North&quot; will raise a ValueError).</span>
@@ -808,18 +859,23 @@ document.write(`
 <span class="sd">        If name is not a valid array element name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">array_elements_only</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;OBS&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">array_element_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;OBS&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
             <span class="k">return</span> <span class="s2">&quot;sites&quot;</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="k">pass</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;Files&quot;</span><span class="p">,</span> <span class="s2">&quot;Dummy-Telescope&quot;</span><span class="p">}:</span>
-        <span class="k">return</span> <span class="n">name</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">array_element_name</span> <span class="ow">in</span> <span class="p">{</span>
+        <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;configuration_corsika&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Files&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Dummy-Telescope&quot;</span><span class="p">,</span>
+    <span class="p">}:</span>
+        <span class="k">return</span> <span class="n">array_element_name</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_collection_name_from_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">):</span>
@@ -841,27 +897,27 @@ document.write(`
 <span class="sd">    KeyError</span>
 <span class="sd">        If the parameter name is not found in the list of model parameters</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_parameter_names</span> <span class="o">=</span> <span class="n">all_model_parameters</span><span class="p">()</span>
+    <span class="n">_parameter_names</span> <span class="o">=</span> <span class="n">model_parameters</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">class_key</span> <span class="o">=</span> <span class="n">_parameter_names</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class&quot;</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-    <span class="k">return</span> <span class="n">class_key_to_db_collection</span><span class="p">(</span><span class="n">class_key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">instrument_class_key_to_db_collection</span><span class="p">(</span><span class="n">class_key</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
-    <span class="n">par_name</span><span class="p">,</span>
+    <span class="n">parameter_name</span><span class="p">,</span>
     <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the name used in the simulation software from the model parameter name.</span>
+<span class="sd">    Get the name used in the given simulation software from the model parameter name.</span>
 
-<span class="sd">    Name convention is expected to be defined in the schema.</span>
+<span class="sd">    Name convention is expected to be defined in the model parameter schema.</span>
 <span class="sd">    Returns the parameter name if no simulation software name is found.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    par_name: str</span>
+<span class="sd">    parameter_name: str</span>
 <span class="sd">        Model parameter name.</span>
 <span class="sd">    simulation_software: str</span>
 <span class="sd">        Simulation software name.</span>
@@ -871,51 +927,15 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Simtel parameter name.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_parameter_names</span> <span class="o">=</span> <span class="n">all_model_parameters</span><span class="p">()</span>
+    <span class="n">_parameter</span> <span class="o">=</span> <span class="n">model_parameters</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_parameter</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">_parameter</span> <span class="o">=</span> <span class="n">_parameter_names</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+    <span class="k">for</span> <span class="n">software</span> <span class="ow">in</span> <span class="n">_parameter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="k">if</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">simulation_software</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">)</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">software</span> <span class="ow">in</span> <span class="n">_parameter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-            <span class="k">if</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">simulation_software</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">,</span> <span class="n">par_name</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># catches cases for which &#39;simulation_software&#39; is None</span>
-        <span class="k">pass</span>
     <span class="k">return</span> <span class="kc">None</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">get_parameter_name_from_simtel_name</span><span class="p">(</span><span class="n">simtel_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the model parameter name from the simtel parameter name.</span>
-
-<span class="sd">    Assumes that both names are equal if not defined otherwise in names.py.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    simtel_name: str</span>
-<span class="sd">        Simtel parameter name.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str</span>
-<span class="sd">        Model parameter name.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">telescope_parameters</span><span class="p">(),</span> <span class="o">**</span><span class="n">site_parameters</span><span class="p">()}</span>
-
-    <span class="k">for</span> <span class="n">par_name</span><span class="p">,</span> <span class="n">par_info</span> <span class="ow">in</span> <span class="n">_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">software</span> <span class="ow">in</span> <span class="n">par_info</span><span class="p">[</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">software</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span>
-                    <span class="ow">and</span> <span class="n">software</span><span class="p">[</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">simtel_name</span>
-                <span class="p">):</span>
-                    <span class="k">return</span> <span class="n">par_name</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>  <span class="c1"># catches cases for which &#39;simulation_software&#39; is None</span>
-            <span class="k">pass</span>
-    <span class="k">return</span> <span class="n">simtel_name</span>
 
 
 <div class="viewcode-block" id="simtel_config_file_name">
@@ -992,31 +1012,6 @@ document.write(`
     <span class="n">name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
     <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;.dat&quot;</span>
     <span class="k">return</span> <span class="n">name</span></div>
-
-
-
-<div class="viewcode-block" id="layout_telescope_list_file_name">
-<a class="viewcode-back" href="../../api-reference/utils.html#utils.names.layout_telescope_list_file_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">layout_telescope_list_file_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    File name for files required at the RayTracing class.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    name: str</span>
-<span class="sd">        Name of the array.</span>
-<span class="sd">    label: str</span>
-<span class="sd">        Instance label.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str</span>
-<span class="sd">        File name.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;telescope_positions-</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="n">file_name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">file_name</span> <span class="o">+=</span> <span class="s2">&quot;.ecsv&quot;</span>
-    <span class="k">return</span> <span class="n">file_name</span></div>
 
 
 
@@ -1110,8 +1105,7 @@ document.write(`
 <span class="sd">        if the string name can not be sanitized.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># _logger.info(&quot;The string is None and can&#39;t be sanitized.&quot;)</span>
-        <span class="k">return</span> <span class="n">name</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="n">sanitized</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="n">sanitized</span> <span class="o">=</span> <span class="n">sanitized</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
     <span class="c1"># Remove characters that are not alphanumerics or underscores</span>

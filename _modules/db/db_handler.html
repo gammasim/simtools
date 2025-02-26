@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+g342872c Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+g3738059 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=ecdeb04d"></script>
+    <script src="../../_static/documentation_options.js?v=d3233769"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g342872c Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3738059 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1291,18 +1291,23 @@ document.write(`
             <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;xSTx-design&quot;</span><span class="p">]</span>  <span class="c1"># placeholder to ignore &#39;instrument&#39; field in query.</span>
         <span class="k">if</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;sites&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;OBS-</span><span class="si">{</span><span class="n">site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="s2">&quot;-design&quot;</span> <span class="ow">in</span> <span class="n">array_element_name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">is_design_type</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">array_element_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">collection</span> <span class="o">==</span> <span class="s2">&quot;configuration_sim_telarray&quot;</span><span class="p">:</span>
+            <span class="c1"># get design model from &#39;telescope&#39; or &#39;calibration_device&#39; production tables</span>
+            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_array_element_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">),</span>
+                <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span>
                 <span class="n">production_table</span><span class="p">[</span><span class="s2">&quot;design_model&quot;</span><span class="p">][</span><span class="n">array_element_name</span><span class="p">],</span>
                 <span class="n">array_element_name</span><span class="p">,</span>
             <span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span>
-                <span class="n">names</span><span class="o">.</span><span class="n">guess_design_model_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">),</span>
-                <span class="n">array_element_name</span><span class="p">,</span>
-            <span class="p">]</span></div>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed generated array element list for db query for </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 </pre></div>
 
