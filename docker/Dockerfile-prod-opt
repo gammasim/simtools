@@ -98,6 +98,9 @@ RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') && \
     pip install --no-cache-dir ./simtools && \
     rm -rf simtools
 
+RUN useradd --create-home --system --user-group ctao
+USER ctao
+
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
 ENV PATH="/workdir/env/bin/:$PATH"
 SHELL ["/bin/bash", "-c"]
