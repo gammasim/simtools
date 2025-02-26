@@ -199,8 +199,17 @@ class MetadataCollector:
         contact_dict: dict
             Dictionary for contact metadata fields.
         """
-        if contact_dict.get("name", None) is None:
+        contact_dict["name"] = contact_dict.get("name") or self.args_dict.get("user_name")
+        if contact_dict["name"] is None:
+            self._logger.warning("No user name provided, take user info from system level.")
             contact_dict["name"] = getpass.getuser()
+        meta_dict = {
+            "email": "user_mail",
+            "orcid": "user_orcid",
+            "organization": "user_organization",
+        }
+        for key, value in meta_dict.items():
+            contact_dict[key] = contact_dict.get(key) or self.args_dict.get(value)
 
     def _fill_context_meta(self, context_dict):
         """
