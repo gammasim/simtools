@@ -480,7 +480,10 @@ class ModelDataWriter:
             )
             with open(yml_file, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(
-                    gen.change_dict_keys_case(metadata, keys_lower_case),
+                    gen.change_dict_keys_case(
+                        gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
+                        keys_lower_case,
+                    ),
                     file,
                     sort_keys=False,
                 )
