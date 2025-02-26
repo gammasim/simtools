@@ -154,6 +154,7 @@ def test_initialize_default_arguments():
             "paths",
             "configuration",
             "execution",
+            "user",
         ]
 
     _parser_2 = parser.CommandLineParser()

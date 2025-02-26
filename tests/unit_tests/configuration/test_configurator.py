@@ -210,7 +210,11 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     args_dict["db_api_authentication_database"] = "admin"
     args_dict["db_simulation_model"] = "sim_model"
 
-    assert configurator.config == args_dict
+    # remove user defined parameters from comparison (depends on environment)
+    expected_config = {k: v for k, v in args_dict.items() if not k.startswith("user_")}
+    actual_config = {k: v for k, v in configurator.config.items() if not k.startswith("user_")}
+
+    assert expected_config == actual_config
 
 
 def test_initialize_output(configurator):
