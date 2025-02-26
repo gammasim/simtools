@@ -246,7 +246,7 @@ def test_dump_model_parameter(tmp_test_directory):
     assert pytest.approx(value_list[0]) == 217659.6
     assert pytest.approx(value_list[1]) == 3184995.1
     assert pytest.approx(value_list[2]) == 2185.0
-    assert Path(tmp_test_directory / "array_element_position_utm.metadata.yml").is_file()
+    assert Path(tmp_test_directory / "array_element_position_utm.meta.yml").is_file()
 
     position_dict = writer.ModelDataWriter.dump_model_parameter(
         parameter_name="focus_offset",

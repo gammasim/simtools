@@ -189,7 +189,7 @@ def test_fill_product_meta(args_dict_site):
     except ValueError:
         pytest.fail("Invalid UUID format in metadata")
 
-    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] is None
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
 
     # read product metadata from schema file
     metadata_1.args_dict["schema"] = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
