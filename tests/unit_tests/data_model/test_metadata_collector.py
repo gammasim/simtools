@@ -4,6 +4,7 @@ import copy
 import getpass
 import json
 import logging
+import re
 import time
 import uuid
 from pathlib import Path
@@ -118,7 +119,9 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     assert metadata_1._read_input_metadata_from_file() is None
 
     metadata_1.args_dict["input_meta"] = "./file_does_not_exist.yml"
-    with pytest.raises(FileNotFoundError, match="No metadata file found: ./file_does_not_exist"):
+    with pytest.raises(
+        FileNotFoundError, match=re.escape("No files found: ['./file_does_not_exist.yml']")
+    ):
         metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
@@ -126,6 +129,12 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
 
     metadata_1.args_dict["input_meta"] = "tests/resources/reference_point_altitude.json"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
+
+    metadata_1.args_dict["input_meta"] = [
+        "tests/resources/MLTdata-preproduction.meta.yml",
+        "tests/resources/reference_point_altitude.json",
+    ]
+    assert len(metadata_1._read_input_metadata_from_file()) == 2
 
     test_dict = {
         "metadata": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
@@ -143,7 +152,7 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"
-    with pytest.raises(FileNotFoundError, match=r"^No metadata file found:"):
+    with pytest.raises(FileNotFoundError, match=r"^No files found:"):
         metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = (
