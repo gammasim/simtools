@@ -431,7 +431,10 @@ def get_site_from_array_element_name(array_element_name):
     str, list
         Site name(s).
     """
-    return array_elements()[get_array_element_type_from_name(array_element_name)]["site"]
+    try:  # e.g. instrument is 'North' as given for the site parameters
+        return validate_site_name(array_element_name)
+    except ValueError:  # e.g. instrument is 'LSTN' as given for the array element types
+        return array_elements()[get_array_element_type_from_name(array_element_name)]["site"]
 
 
 def get_collection_name_from_array_element_name(array_element_name, array_elements_only=True):
@@ -701,3 +704,29 @@ def sanitize_name(name):
         _logger.error(msg)
         raise ValueError(msg)
     return sanitized
+
+
+def file_name_with_version(file_name, suffix):
+    """
+    Return a file name including a semantic version with the correct suffix.
+
+    Replaces 'Path.suffix()', which removes trailing numbers (and therefore version numbers).
+
+    Parameters
+    ----------
+    file_name: str
+        File name.
+    suffix: str
+        File suffix.
+
+    Returns
+    -------
+    Path
+        File name with version number.
+    """
+    if file_name is None or suffix is None:
+        return None
+    file_name = str(file_name)
+    if bool(re.search(r"\d+\.\d+\.\d+$", file_name)):
+        return Path(file_name + suffix)
+    return Path(file_name).with_suffix(suffix)
