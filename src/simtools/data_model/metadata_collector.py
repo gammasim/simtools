@@ -300,6 +300,10 @@ class MetadataCollector:
                     for key, value in metadata[self.observatory]["product"].items()
                     if key in {"description", "id", "creation_time", "valid", "format", "filename"}
                 }
+                if metadata[self.observatory].get("activity", {}).get("name"):
+                    reduced_product_meta["activity_name"] = metadata[self.observatory][
+                        "activity"
+                    ].get("name")
                 context_dict["associated_data"] = self._fill_context_sim_list(
                     context_dict["associated_data"], reduced_product_meta
                 )
