@@ -87,7 +87,7 @@ class SinglePhotonElectronSpectrum:
 
         writer.ModelDataWriter.dump(
             args_dict=self.args_dict,
-            metadata=self.metadata.top_level_meta,
+            metadata=self.metadata,
             product_data=table,
             validate_schema_file=None,
         )

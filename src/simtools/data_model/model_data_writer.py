@@ -6,7 +6,6 @@ from pathlib import Path
 
 import astropy.units as u
 import numpy as np
-import yaml
 from astropy.io.registry.base import IORegistryError
 
 import simtools.utils.general as gen
@@ -95,7 +94,7 @@ class ModelDataWriter:
             Dictionary with configuration parameters (including output file name and path).
         output_file: string or Path
             Name of output file (args["output_file"] is used if this parameter is not set).
-        metadata: dict
+        metadata: MetadataCollector object
             Metadata to be written.
         product_data: astropy Table
             Model data to be written
@@ -174,11 +173,11 @@ class ModelDataWriter:
         if metadata_input_dict is not None:
             metadata_input_dict["output_file"] = output_file
             metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
-            metadata = MetadataCollector(args_dict=metadata_input_dict).get_top_level_metadata()
-            writer.write_metadata_to_yml(
-                metadata=metadata, yml_file=output_path / f"{Path(output_file).stem}"
+            metadata = MetadataCollector(args_dict=metadata_input_dict)
+            metadata.write(output_path / Path(output_file))
+            unique_id = (
+                metadata.get_top_level_metadata().get("cta", {}).get("product", {}).get("id")
             )
-            unique_id = metadata.get("cta", {}).get("product", {}).get("id")
 
         _json_dict = writer.get_validated_parameter_dict(
             parameter_name, value, instrument, parameter_version, unique_id
@@ -364,7 +363,7 @@ class ModelDataWriter:
         ----------
         product_data: astropy Table
             Model data to be written
-        metadata: dict
+        metadata: MetadataCollector object
             Metadata to be written.
 
         Raises
@@ -377,7 +376,9 @@ class ModelDataWriter:
             return
 
         if metadata is not None:
-            product_data.meta.update(gen.change_dict_keys_case(metadata, False))
+            product_data.meta.update(
+                gen.change_dict_keys_case(metadata.get_top_level_metadata(), False)
+            )
 
         self._logger.info(f"Writing data to {self.product_data_file}")
         if isinstance(product_data, dict) and Path(self.product_data_file).suffix == ".json":
@@ -387,11 +388,11 @@ class ModelDataWriter:
             product_data.write(
                 self.product_data_file, format=self.product_data_format, overwrite=True
             )
-            if metadata is not None:
-                self.write_metadata_to_yml(metadata, self.product_data_file)
         except IORegistryError:
             self._logger.error(f"Error writing model data to {self.product_data_file}.")
             raise
+        if metadata is not None:
+            metadata.write(self.product_data_file)
 
     def write_dict_to_model_parameter_json(self, file_name, data_dict):
         """
@@ -450,54 +451,6 @@ class ModelDataWriter:
         except KeyError:
             pass
         return data_dict
-
-    def write_metadata_to_yml(self, metadata, yml_file=None, keys_lower_case=False):
-        """
-        Write model metadata file (yaml file format).
-
-        Parameters
-        ----------
-        metadata: dict
-            Metadata to be stored
-        yml_file: str
-            Name of output file.
-        keys_lower_case: bool
-            Write yaml keys in lower case.
-
-        Returns
-        -------
-        str
-            Name of output file
-
-        Raises
-        ------
-        FileNotFoundError
-            If yml_file not found.
-        TypeError
-            If yml_file is not defined.
-        """
-        try:
-            yml_file = names.file_name_with_version(yml_file or self.product_data_file, ".meta.yml")
-            with open(yml_file, "w", encoding="UTF-8") as file:
-                yaml.safe_dump(
-                    gen.change_dict_keys_case(
-                        gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
-                        keys_lower_case,
-                    ),
-                    file,
-                    sort_keys=False,
-                )
-            self._logger.info(f"Writing metadata to {yml_file}")
-            return yml_file
-        except FileNotFoundError:
-            self._logger.error(f"Error writing model data to {yml_file}")
-            raise
-        except AttributeError:
-            self._logger.error("No metadata defined for writing")
-            raise
-        except TypeError:
-            self._logger.error("No output file for metadata defined")
-            raise
 
     @staticmethod
     def _astropy_data_format(product_data_format):

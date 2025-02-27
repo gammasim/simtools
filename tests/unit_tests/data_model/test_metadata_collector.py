@@ -573,3 +573,27 @@ def test_fill_context_meta(args_dict_site, caplog):
         collector._fill_context_meta(context_dict)
     assert "No input product metadata appended to associated data." in caplog.text
     assert context_dict["associated_data"] == []
+
+
+def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    with pytest.raises(TypeError, match="No output file for metadata defined"):
+        collector.write(yml_file=None)
+
+    with caplog.at_level(logging.INFO):
+        yml_file = collector.write(yml_file=tmp_test_directory.join("test_file.yml"))
+    assert "Writing metadata to" in caplog.text
+    assert Path(yml_file).exists()
+
+    yml_file = collector.write(
+        yml_file=tmp_test_directory.join("test_file.yml"), add_activity_name=True
+    )
+    assert Path(yml_file).exists()
+    assert yml_file.name == "test_file.integration_test.meta.yml"
+
+    with pytest.raises(FileNotFoundError, match=r"^Error writing metadata"):
+        collector.write(yml_file="./this_directory_is_not_there/test_file.yml")
+
+    with pytest.raises(TypeError, match="No output file for metadata defined"):
+        collector.write(yml_file=None)

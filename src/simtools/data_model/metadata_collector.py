@@ -12,6 +12,8 @@ import logging
 import uuid
 from pathlib import Path
 
+import yaml
+
 import simtools.constants
 import simtools.utils.general as gen
 import simtools.version
@@ -101,6 +103,58 @@ class MetadataCollector:
         except KeyError:
             pass
         return self.top_level_meta
+
+    def write(self, yml_file=None, keys_lower_case=False, add_activity_name=False):
+        """
+        Write toplevel metadata to file file (yaml file format).
+
+        Parameters
+        ----------
+        metadata: dict
+            Metadata to be stored
+        yml_file: str
+            Name of output file.
+        keys_lower_case: bool
+            Write yaml keys in lower case.
+        add_activity_name: bool
+            Add activity name to file name.
+
+        Returns
+        -------
+        str
+            Name of output file
+
+        Raises
+        ------
+        FileNotFoundError
+            If yml_file not found.
+        TypeError
+            If yml_file is not defined.
+        AttributeError
+            If top level metadata is not defined.
+        """
+        metadata = self.get_top_level_metadata()
+        activity_name = metadata.get("cta", {}).get("activity", {}).get("name", "").rstrip(".")
+        suffix = f".{activity_name}.meta.yml" if add_activity_name else ".meta.yml"
+
+        if yml_file is None:
+            raise TypeError("No output file for metadata defined")
+
+        try:
+            yml_file = names.file_name_with_version(yml_file, suffix)
+            with open(yml_file, "w", encoding="UTF-8") as file:
+                yaml.safe_dump(
+                    gen.change_dict_keys_case(
+                        gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
+                        keys_lower_case,
+                    ),
+                    file,
+                    sort_keys=False,
+                )
+            self._logger.info(f"Writing metadata to {yml_file}")
+            return yml_file
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Error writing metadata to {yml_file}") from exc
 
     def get_data_model_schema_file_name(self):
         """
