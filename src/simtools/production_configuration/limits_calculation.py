@@ -35,6 +35,7 @@ class LimitCalculator:
         self.list_of_files = None
         self.shower_azimuth = None
         self.shower_sim_altitude = None
+        self.array_azimuth = None
         self.array_altitude = None
         self._read_event_data()
 
@@ -208,7 +209,7 @@ class LimitCalculator:
             self.shower_id_triggered, num_files, showers_per_file
         )
 
-        azimuth_diff = (self.shower_azimuth - self.array_altitude) * (np.pi / 180.0)
+        azimuth_diff = (self.array_azimuth - self.shower_azimuth) * (np.pi / 180.0)
         sim_altitude_rad = self.shower_sim_altitude * (np.pi / 180.0)
         array_altitude_rad = self.array_altitude * (np.pi / 180.0)
 
