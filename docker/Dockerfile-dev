@@ -24,7 +24,4 @@ ENV SIMTEL_PATH="/workdir/sim_telarray/"
 ENV PATH="/workdir/simtools/env/bin/:$PATH"
 SHELL ["/bin/bash", "-c"]
 
-RUN useradd --create-home --system --user-group ctao
-USER ctao
-
 WORKDIR /workdir/external
