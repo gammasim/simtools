@@ -88,6 +88,7 @@ scripts.simtools-docs-produce-model-parameter-reports = "simtools.applications.d
 scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
 scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
 scripts.simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
+scripts.simtools-generate-lookup-tables = "simtools.applications.generate_lookup_tables:main"
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-array-histograms = "simtools.applications.generate_simtel_array_histograms:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
