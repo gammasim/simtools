@@ -28,7 +28,6 @@ import logging
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.io_operations.hdf5_handler import read_hdf5
 from simtools.production_configuration.limits_calculation import LimitCalculator
 
 _logger = logging.getLogger(__name__)
@@ -76,10 +75,7 @@ def main():
     event_data_file_path = args_dict["event_data_file"]
     loss_fraction = args_dict["loss_fraction"]
 
-    _logger.info(f"Loading event data file: {event_data_file_path}")
-    tables = read_hdf5(event_data_file_path)
-
-    calculator = LimitCalculator(tables)
+    calculator = LimitCalculator(event_data_file_path)
 
     lower_energy_limit = calculator.compute_lower_energy_limit(loss_fraction)
     _logger.info(f"Lower energy threshold: {lower_energy_limit}")
