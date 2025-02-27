@@ -49,7 +49,4 @@ RUN cprog=$(/bin/ls /workdir/sim_telarray/corsika-run/corsika*$(uname)_* 2>/dev/
 
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
 
-RUN useradd --create-home --system --user-group ctao
-USER ctao
-
 SHELL ["/bin/bash", "-c"]
