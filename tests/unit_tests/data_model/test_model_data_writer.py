@@ -210,13 +210,14 @@ def test_json_numpy_encoder():
         encoder.default("abc")
 
 
-def test_dump_model_parameter(tmp_test_directory):
+def test_dump_model_parameter(tmp_test_directory, db_config):
 
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
+    num_gains_name = "num_gains"
     # single value, no unit
     num_gains_dict = writer.ModelDataWriter.dump_model_parameter(
-        parameter_name="num_gains",
+        parameter_name=num_gains_name,
         value=2,
         instrument=instrument,
         parameter_version=parameter_version,
@@ -262,6 +263,23 @@ def test_dump_model_parameter(tmp_test_directory):
     assert pytest.approx(value_list[1]) == 0.0
     assert pytest.approx(value_list[2]) == 0.0
     assert pytest.approx(value_list[3]) == 0.0
+
+    with patch(
+        "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
+    ) as mock_db_check:
+        writer.ModelDataWriter.dump_model_parameter(
+            parameter_name=num_gains_name,
+            value=2,
+            instrument=instrument,
+            parameter_version=parameter_version,
+            output_file=num_gains_name + ".json",
+            output_path=tmp_test_directory,
+            use_plain_output_path=True,
+            db_config=db_config,
+        )
+        mock_db_check.assert_called_once_with(
+            num_gains_name, instrument, parameter_version, db_config
+        )
 
 
 def test_get_validated_parameter_dict():
