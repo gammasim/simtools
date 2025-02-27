@@ -49,7 +49,7 @@ def _parse(label, description, usage):
         required=True,
         default=None,
     )
-    return config.initialize(db_config=False)
+    return config.initialize(db_config=True)
 
 
 def run_application(application, configuration, logger):
@@ -132,7 +132,7 @@ def read_application_configuration(configuration_file, logger):
 
 def main():  # noqa: D103
 
-    args_dict, _ = _parse(
+    args_dict, db_config = _parse(
         Path(__file__).stem,
         description="Run simtools applications from configuration file.",
         usage="simtools-run-application --config_file config_file_name",
@@ -146,7 +146,7 @@ def main():  # noqa: D103
 
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
-        file.write(dependencies.get_version_string())
+        file.write(dependencies.get_version_string(db_config))
         for config in configurations:
             logger.info(f"Running application: {config.get('APPLICATION')}")
             config = gen.change_dict_keys_case(config, False)
