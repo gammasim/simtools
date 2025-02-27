@@ -91,8 +91,9 @@ class LookupTableGenerator:
                     array_altitude = None
                     for eventio_object in f:
                         if isinstance(eventio_object, MCRunHeader):
-                            n_use = eventio_object.parse()["n_use"]
-                            array_altitude = eventio_object.parse()["altitude"]
+                            mc_head = eventio_object.parse()
+                            n_use = mc_head["n_use"]
+                            array_altitude = mc_head["obsheight"]
 
                         if isinstance(eventio_object, MCShower):
                             shower = eventio_object.parse()
