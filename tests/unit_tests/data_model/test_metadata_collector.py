@@ -521,7 +521,10 @@ def test_fill_context_meta(args_dict_site, caplog):
                     "valid": "2023-12-31T23:59:59",
                     "format": "json",
                     "filename": "test_product.json",
-                }
+                },
+                "activity": {
+                    "name": "test_activity",
+                },
             }
         }
     ]
@@ -534,6 +537,7 @@ def test_fill_context_meta(args_dict_site, caplog):
             "valid": "2023-12-31T23:59:59",
             "format": "json",
             "filename": "test_product.json",
+            "activity_name": "test_activity",
         }
     ]
 
