@@ -104,6 +104,23 @@ class MetadataCollector:
             pass
         return self.top_level_meta
 
+    @staticmethod
+    def dump(args_dict, output_file, add_activity_name=False):
+        """
+        Write mdata to file (static method).
+
+        Parameters
+        ----------
+        args_dict: dict
+            Command line parameters
+        output_file: str or Path
+            Name of output file.
+        add_activity_name: bool
+            Add activity name to file name.
+        """
+        collector = MetadataCollector(args_dict)
+        collector.write(output_file, add_activity_name=add_activity_name)
+
     def write(self, yml_file=None, keys_lower_case=False, add_activity_name=False):
         """
         Write toplevel metadata to file file (yaml file format).
@@ -410,17 +427,23 @@ class MetadataCollector:
             pass
 
         # DATA:MODEL
-        product_dict["data"]["model"]["name"] = self.schema_dict.get(
-            "name", None
-        ) or self.args_dict.get("metadata_product_data_name")
+        product_dict["data"]["model"]["name"] = (
+            self.schema_dict.get("name")
+            or self.args_dict.get("metadata_product_data_name")
+            or "undefined_model_name"
+        )
         product_dict["data"]["model"]["version"] = self.schema_dict.get("version", "0.0.0")
         product_dict["data"]["model"]["type"] = self.schema_dict.get("meta_schema", None)
         product_dict["data"]["model"]["url"] = self.schema_file or self.args_dict.get(
             "metadata_product_data_url"
         )
 
-        product_dict["format"] = self.args_dict.get("output_file_format", None)
-        product_dict["filename"] = str(self.args_dict.get("output_file", None))
+        product_dict["filename"] = str(self.args_dict.get("output_file", ""))
+        product_dict["format"] = (
+            self.args_dict.get("output_file_format")
+            or Path(product_dict["filename"]).suffix.lstrip(".")
+            or None
+        )
 
     def _fill_instrument_meta(self, instrument_dict):
         """
