@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.model_data_writer &#8212; simtools v0.1.dev1+g229795b Manual</title>
+    <title>data_model.model_data_writer &#8212; simtools v0.1.dev1+g3a60fe8 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=0c2120fd"></script>
+    <script src="../../_static/documentation_options.js?v=a2080611"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g229795b Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3a60fe8 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -210,11 +210,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-limits.html">simtools-production-derive-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
@@ -400,6 +401,7 @@ document.write(`
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">schema</span><span class="p">,</span> <span class="n">validate_data</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span><span class="p">,</span> <span class="n">value_conversion</span>
 
@@ -521,6 +523,7 @@ document.write(`
         <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">use_plain_output_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">metadata_input_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate DB-style model parameter dict and write it to json file.</span>
@@ -543,6 +546,8 @@ document.write(`
 <span class="sd">            Use plain output path.</span>
 <span class="sd">        metadata_input_dict: dict</span>
 <span class="sd">            Input to metadata collector.</span>
+<span class="sd">        db_config: dict</span>
+<span class="sd">            Database configuration. If not None, check if parameter with the same version exists.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -556,24 +561,78 @@ document.write(`
             <span class="n">output_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span>
             <span class="n">use_plain_output_path</span><span class="o">=</span><span class="n">use_plain_output_path</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">_json_dict</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">get_validated_parameter_dict</span><span class="p">(</span>
-            <span class="n">parameter_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">parameter_version</span>
-        <span class="p">)</span>
-        <span class="n">writer</span><span class="o">.</span><span class="n">write_dict_to_model_parameter_json</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">_json_dict</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">db_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">check_db_for_existing_parameter</span><span class="p">(</span>
+                <span class="n">parameter_name</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">parameter_version</span><span class="p">,</span> <span class="n">db_config</span>
+            <span class="p">)</span>
+
+        <span class="n">unique_id</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">metadata_input_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">metadata_input_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_file</span>
             <span class="n">metadata_input_dict</span><span class="p">[</span><span class="s2">&quot;output_file_format&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">MetadataCollector</span><span class="p">(</span><span class="n">args_dict</span><span class="o">=</span><span class="n">metadata_input_dict</span><span class="p">)</span><span class="o">.</span><span class="n">get_top_level_metadata</span><span class="p">()</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">write_metadata_to_yml</span><span class="p">(</span>
-                <span class="n">metadata</span><span class="o">=</span><span class="n">MetadataCollector</span><span class="p">(</span><span class="n">args_dict</span><span class="o">=</span><span class="n">metadata_input_dict</span><span class="p">)</span><span class="o">.</span><span class="n">get_top_level_metadata</span><span class="p">(),</span>
-                <span class="n">yml_file</span><span class="o">=</span><span class="n">output_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">yml_file</span><span class="o">=</span><span class="n">output_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
+            <span class="n">unique_id</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cta&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+
+        <span class="n">_json_dict</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">get_validated_parameter_dict</span><span class="p">(</span>
+            <span class="n">parameter_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">parameter_version</span><span class="p">,</span> <span class="n">unique_id</span>
+        <span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">write_dict_to_model_parameter_json</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">_json_dict</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_json_dict</span></div>
+
+
+<div class="viewcode-block" id="ModelDataWriter.check_db_for_existing_parameter">
+<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_db_for_existing_parameter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">parameter_version</span><span class="p">,</span> <span class="n">db_config</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if a parameter with the same version exists in the simulation model database.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameter_name: str</span>
+<span class="sd">            Name of the parameter.</span>
+<span class="sd">        instrument: str</span>
+<span class="sd">            Name of the instrument.</span>
+<span class="sd">        parameter_version: str</span>
+<span class="sd">            Version of the parameter.</span>
+<span class="sd">        db_config: dict</span>
+<span class="sd">            Database configuration.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If parameter with the same version exists in the database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">db_handler</span><span class="o">.</span><span class="n">DatabaseHandler</span><span class="p">(</span><span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">get_model_parameter</span><span class="p">(</span>
+                <span class="n">parameter</span><span class="o">=</span><span class="n">parameter_name</span><span class="p">,</span>
+                <span class="n">parameter_version</span><span class="o">=</span><span class="n">parameter_version</span><span class="p">,</span>
+                <span class="n">site</span><span class="o">=</span><span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">instrument</span><span class="p">),</span>
+                <span class="n">array_element_name</span><span class="o">=</span><span class="n">instrument</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># parameter does not exist - expected behavior</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2"> with version </span><span class="si">{</span><span class="n">parameter_version</span><span class="si">}</span><span class="s2"> already exists.&quot;</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ModelDataWriter.get_validated_parameter_dict">
 <a class="viewcode-back" href="../../api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.get_validated_parameter_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_validated_parameter_dict</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">instrument</span><span class="p">,</span> <span class="n">parameter_version</span><span class="p">,</span> <span class="n">schema_version</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">parameter_name</span><span class="p">,</span>
+        <span class="n">value</span><span class="p">,</span>
+        <span class="n">instrument</span><span class="p">,</span>
+        <span class="n">parameter_version</span><span class="p">,</span>
+        <span class="n">unique_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">schema_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get validated parameter dictionary.</span>
@@ -600,20 +659,15 @@ document.write(`
         <span class="n">schema_file</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_model_parameter_schema_file</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">schema_file</span><span class="p">)</span>
 
-        <span class="k">try</span><span class="p">:</span>  <span class="c1"># e.g. instrument is &#39;North&quot;</span>
-            <span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">validate_site_name</span><span class="p">(</span><span class="n">instrument</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># e.g. instrument is &#39;LSTN-01&#39;</span>
-            <span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">instrument</span><span class="p">)</span>
-
         <span class="n">value</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">value_conversion</span><span class="o">.</span><span class="n">split_value_and_unit</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
         <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;schema_version&quot;</span><span class="p">:</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_model_parameter_schema_version</span><span class="p">(</span><span class="n">schema_version</span><span class="p">),</span>
             <span class="s2">&quot;parameter&quot;</span><span class="p">:</span> <span class="n">parameter_name</span><span class="p">,</span>
             <span class="s2">&quot;instrument&quot;</span><span class="p">:</span> <span class="n">instrument</span><span class="p">,</span>
-            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">site</span><span class="p">,</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">instrument</span><span class="p">),</span>
             <span class="s2">&quot;parameter_version&quot;</span><span class="p">:</span> <span class="n">parameter_version</span><span class="p">,</span>
-            <span class="s2">&quot;unique_id&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;unique_id&quot;</span><span class="p">:</span> <span class="n">unique_id</span><span class="p">,</span>
             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
             <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">unit</span><span class="p">,</span>
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_type</span><span class="p">(),</span>
@@ -838,7 +892,9 @@ document.write(`
 <span class="sd">            If yml_file is not defined.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">yml_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">yml_file</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">product_data_file</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.metadata.yml&quot;</span><span class="p">)</span>
+            <span class="n">yml_file</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">file_name_with_version</span><span class="p">(</span>
+                <span class="n">yml_file</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">product_data_file</span><span class="p">,</span> <span class="s2">&quot;.metadata.yml&quot;</span>
+            <span class="p">)</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yml_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;UTF-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
                 <span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span>
                     <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">keys_lower_case</span><span class="p">),</span>

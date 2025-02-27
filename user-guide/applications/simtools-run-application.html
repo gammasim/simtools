@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-generate-default-metadata &#8212; simtools v0.1.dev1+g3a60fe8 Manual</title>
+    <title>simtools-run-application &#8212; simtools v0.1.dev1+g3a60fe8 Manual</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-generate-default-metadata';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-run-application';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-generate-regular-arrays" href="simtools-generate-regular-arrays.html" />
-    <link rel="prev" title="simtools-generate-corsika-histograms" href="simtools-generate-corsika-histograms.html" />
+    <link rel="next" title="simtools-simulate-light-emission" href="simtools-simulate-light-emission.html" />
+    <link rel="prev" title="simtools-production-scale-events" href="simtools-production-scale-events.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -207,7 +207,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-array-config.html">simtools-generate-array-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-generate-default-metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
@@ -215,7 +215,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-derive-limits.html">simtools-production-derive-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-scale-events.html">simtools-production-scale-events</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-run-application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
@@ -324,7 +324,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-generate-default-metadata.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-run-application.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -341,7 +341,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-generate-default-metadata.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-run-application.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -371,7 +371,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/simtools-generate-default-metadata.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simtools-run-application.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -455,7 +455,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>simtools-generate-default-metadata</h1>
+    <h1>simtools-run-application</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -465,8 +465,9 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.get_subdirectory_name"><code class="docutils literal notranslate"><span class="pre">get_subdirectory_name()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.read_application_configuration"><code class="docutils literal notranslate"><span class="pre">read_application_configuration()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.run_application"><code class="docutils literal notranslate"><span class="pre">run_application()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -478,27 +479,55 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-generate_default_metadata">
-<span id="simtools-generate-default-metadata"></span><h1>simtools-generate-default-metadata<a class="headerlink" href="#module-generate_default_metadata" title="Link to this heading">#</a></h1>
-<p>Generate a default simtools metadata file from a json schema.</p>
-<section id="command-line-arguments">
-<h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
-<dl class="simple">
-<dt>schema (str, optional)</dt><dd><p>Schema file describing the input data
-(default: simtools/schemas/metadata.metaschema.yml)</p>
+  <section id="module-run_application">
+<span id="simtools-run-application"></span><h1>simtools-run-application<a class="headerlink" href="#module-run_application" title="Link to this heading">#</a></h1>
+<p>Run simtools applications from configuration files for setting workflows.</p>
+<p>Allows to run several simtools applications with a single configuration file, which includes
+both the name of the simtools application and the configuration for the application.</p>
+<p>Strong assumption on the directory structure for input and output files of applications.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="run_application.get_subdirectory_name">
+<span class="sig-prename descclassname"><span class="pre">run_application.</span></span><span class="sig-name descname"><span class="pre">get_subdirectory_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/run_application.html#get_subdirectory_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#run_application.get_subdirectory_name" title="Link to this definition">#</a></dt>
+<dd><p>Get the first subdirectory name under ‘input’.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="run_application.read_application_configuration">
+<span class="sig-prename descclassname"><span class="pre">run_application.</span></span><span class="sig-name descname"><span class="pre">read_application_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/run_application.html#read_application_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#run_application.read_application_configuration" title="Link to this definition">#</a></dt>
+<dd><p>Read application configuration from file and modify for setting workflows.</p>
+<p>Strong assumptions on the structure of input and output files:</p>
+<ul class="simple">
+<li><p>configuration file is expected to be in ‘./input/&lt;workflow directory&gt;/&lt;yaml file&gt;’</p></li>
+<li><p>output files will be written out to ‘./output/&lt;workflow directory&gt;/’</p></li>
+</ul>
+<p>Replaces the placeholders in the configuration file with the actual values.
+Sets ‘USE_PLAIN_OUTPUT_PATH’ to True for all applications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>configuration_file</strong><span class="classifier">str</span></dt><dd><p>Configuration file name.</p>
 </dd>
-<dt>output_file (str, optional)</dt><dd><p>Output file name.</p>
+<dt><strong>logger</strong><span class="classifier">Logger</span></dt><dd><p>Logger object.</p>
 </dd>
 </dl>
-</section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-default-metadata \\</span>
-<span class="go">    --schema simtools/schemas/metadata.metaschema.yml \\</span>
-<span class="go">    --output_file default_metadata.yml</span>
-</pre></div>
-</div>
-</section>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Application configuration.</p>
+</dd>
+<dt>Path</dt><dd><p>Path to the log file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="run_application.run_application">
+<span class="sig-prename descclassname"><span class="pre">run_application.</span></span><span class="sig-name descname"><span class="pre">run_application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/run_application.html#run_application"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#run_application.run_application" title="Link to this definition">#</a></dt>
+<dd><p>Run a simtools application and return stdout and stderr.</p>
+</dd></dl>
+
 </section>
 
 
@@ -513,20 +542,20 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-generate-corsika-histograms.html"
+       href="simtools-production-scale-events.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-generate-corsika-histograms</p>
+        <p class="prev-next-title">simtools-production-scale-events</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-generate-regular-arrays.html"
+       href="simtools-simulate-light-emission.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-generate-regular-arrays</p>
+        <p class="prev-next-title">simtools-simulate-light-emission</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -546,8 +575,9 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.get_subdirectory_name"><code class="docutils literal notranslate"><span class="pre">get_subdirectory_name()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.read_application_configuration"><code class="docutils literal notranslate"><span class="pre">read_application_configuration()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.run_application"><code class="docutils literal notranslate"><span class="pre">run_application()</span></code></a></li>
 </ul>
   </nav></div>
 
