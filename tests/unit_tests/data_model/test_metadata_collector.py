@@ -597,3 +597,20 @@ def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
 
     with pytest.raises(TypeError, match="No output file for metadata defined"):
         collector.write(yml_file=None)
+
+
+def test_dump(args_dict_site, tmp_test_directory, caplog):
+    output_file = tmp_test_directory.join("test_dump.yml")
+
+    with caplog.at_level(logging.INFO):
+        metadata_collector.MetadataCollector.dump(args_dict=args_dict_site, output_file=output_file)
+    assert "Writing metadata to" in caplog.text
+    assert Path(output_file).with_suffix(".meta.yml").exists()
+
+    output_file_with_activity = tmp_test_directory.join("test_dump_with_activity.yml")
+    with caplog.at_level(logging.INFO):
+        metadata_collector.MetadataCollector.dump(
+            args_dict=args_dict_site, output_file=output_file_with_activity, add_activity_name=True
+        )
+    assert "Writing metadata to" in caplog.text
+    assert Path(output_file_with_activity).with_suffix(".integration_test.meta.yml").exists()
