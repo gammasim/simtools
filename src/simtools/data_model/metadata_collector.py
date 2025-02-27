@@ -107,7 +107,7 @@ class MetadataCollector:
     @staticmethod
     def dump(args_dict, output_file, add_activity_name=False):
         """
-        Write mdata to file (static method).
+        Write metadata to file (static method).
 
         Parameters
         ----------
@@ -123,7 +123,7 @@ class MetadataCollector:
 
     def write(self, yml_file=None, keys_lower_case=False, add_activity_name=False):
         """
-        Write toplevel metadata to file file (yaml file format).
+        Write toplevel metadata to file (yaml file format).
 
         Parameters
         ----------
@@ -147,8 +147,6 @@ class MetadataCollector:
             If yml_file not found.
         TypeError
             If yml_file is not defined.
-        AttributeError
-            If top level metadata is not defined.
         """
         metadata = self.get_top_level_metadata()
         activity_name = metadata.get("cta", {}).get("activity", {}).get("name", "").rstrip(".")

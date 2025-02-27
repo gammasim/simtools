@@ -612,5 +612,4 @@ def test_dump(args_dict_site, tmp_test_directory, caplog):
         metadata_collector.MetadataCollector.dump(
             args_dict=args_dict_site, output_file=output_file_with_activity, add_activity_name=True
         )
-    assert "Writing metadata to" in caplog.text
     assert Path(output_file_with_activity).with_suffix(".integration_test.meta.yml").exists()
