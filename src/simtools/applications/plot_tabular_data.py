@@ -17,6 +17,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
 from simtools.visualization import plot_tables
 
@@ -54,7 +55,7 @@ def _parse(label, description, usage):
         type=str,
         required=True,
     )
-    return config.initialize(db_config=True)
+    return config.initialize(db_config=True, simulation_model=["telescope"])
 
 
 def main():
@@ -77,6 +78,12 @@ def main():
         config=plot_config["cta_simpipe"]["plot"],
         output_file=io_handler_instance.get_output_file(args_dict["output_file"]),
         db_config=db_config_,
+    )
+
+    MetadataCollector.dump(
+        args_dict,
+        io_handler_instance.get_output_file(args_dict["output_file"]),
+        add_activity_name=True,
     )
 
 

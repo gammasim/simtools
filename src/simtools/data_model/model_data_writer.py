@@ -392,7 +392,7 @@ class ModelDataWriter:
             self._logger.error(f"Error writing model data to {self.product_data_file}.")
             raise
         if metadata is not None:
-            metadata.write(self.product_data_file)
+            metadata.write(self.product_data_file, add_activity_name=True)
 
     def write_dict_to_model_parameter_json(self, file_name, data_dict):
         """
