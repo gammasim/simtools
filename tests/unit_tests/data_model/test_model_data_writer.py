@@ -60,7 +60,9 @@ def test_write(tmp_test_directory, args_dict_site):
     w_1.product_data_file = tmp_test_directory.join(test_file_2)
     w_1.write(metadata=_metadata, product_data=small_table)
     assert Path(w_1.product_data_file).exists()
-    assert (Path(tmp_test_directory) / test_file_2).with_suffix(".meta.yml").exists()
+    assert (
+        (Path(tmp_test_directory) / test_file_2).with_suffix(".integration_test.meta.yml").exists()
+    )
 
     # check that table and metadata is good
     table = Table.read(w_1.product_data_file, format=ascii_format)
