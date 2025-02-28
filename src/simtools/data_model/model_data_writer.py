@@ -12,6 +12,7 @@ from astropy.io.registry.base import IORegistryError
 import simtools.utils.general as gen
 from simtools.data_model import schema, validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names, value_conversion
 
@@ -126,6 +127,7 @@ class ModelDataWriter:
         output_path=None,
         use_plain_output_path=False,
         metadata_input_dict=None,
+        db_config=None,
     ):
         """
         Generate DB-style model parameter dict and write it to json file.
@@ -148,6 +150,8 @@ class ModelDataWriter:
             Use plain output path.
         metadata_input_dict: dict
             Input to metadata collector.
+        db_config: dict
+            Database configuration. If not None, check if parameter with the same version exists.
 
         Returns
         -------
@@ -161,21 +165,72 @@ class ModelDataWriter:
             output_path=output_path,
             use_plain_output_path=use_plain_output_path,
         )
-        _json_dict = writer.get_validated_parameter_dict(
-            parameter_name, value, instrument, parameter_version
-        )
-        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
+        if db_config is not None:
+            writer.check_db_for_existing_parameter(
+                parameter_name, instrument, parameter_version, db_config
+            )
+
+        unique_id = None
         if metadata_input_dict is not None:
             metadata_input_dict["output_file"] = output_file
             metadata_input_dict["output_file_format"] = Path(output_file).suffix.lstrip(".")
+            metadata = MetadataCollector(args_dict=metadata_input_dict).get_top_level_metadata()
             writer.write_metadata_to_yml(
-                metadata=MetadataCollector(args_dict=metadata_input_dict).get_top_level_metadata(),
-                yml_file=output_path / f"{Path(output_file).stem}",
+                metadata=metadata, yml_file=output_path / f"{Path(output_file).stem}"
             )
+            unique_id = metadata.get("cta", {}).get("product", {}).get("id")
+
+        _json_dict = writer.get_validated_parameter_dict(
+            parameter_name, value, instrument, parameter_version, unique_id
+        )
+        writer.write_dict_to_model_parameter_json(output_file, _json_dict)
         return _json_dict
 
+    def check_db_for_existing_parameter(
+        self, parameter_name, instrument, parameter_version, db_config
+    ):
+        """
+        Check if a parameter with the same version exists in the simulation model database.
+
+        Parameters
+        ----------
+        parameter_name: str
+            Name of the parameter.
+        instrument: str
+            Name of the instrument.
+        parameter_version: str
+            Version of the parameter.
+        db_config: dict
+            Database configuration.
+
+        Raises
+        ------
+        ValueError
+            If parameter with the same version exists in the database.
+        """
+        db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+        try:
+            db.get_model_parameter(
+                parameter=parameter_name,
+                parameter_version=parameter_version,
+                site=names.get_site_from_array_element_name(instrument),
+                array_element_name=instrument,
+            )
+        except ValueError:
+            pass  # parameter does not exist - expected behavior
+        else:
+            raise ValueError(
+                f"Parameter {parameter_name} with version {parameter_version} already exists."
+            )
+
     def get_validated_parameter_dict(
-        self, parameter_name, value, instrument, parameter_version, schema_version=None
+        self,
+        parameter_name,
+        value,
+        instrument,
+        parameter_version,
+        unique_id=None,
+        schema_version=None,
     ):
         """
         Get validated parameter dictionary.
@@ -202,20 +257,15 @@ class ModelDataWriter:
         schema_file = schema.get_model_parameter_schema_file(parameter_name)
         self.schema_dict = gen.collect_data_from_file(schema_file)
 
-        try:  # e.g. instrument is 'North"
-            site = names.validate_site_name(instrument)
-        except ValueError:  # e.g. instrument is 'LSTN-01'
-            site = names.get_site_from_array_element_name(instrument)
-
         value, unit = value_conversion.split_value_and_unit(value)
 
         data_dict = {
             "schema_version": schema.get_model_parameter_schema_version(schema_version),
             "parameter": parameter_name,
             "instrument": instrument,
-            "site": site,
+            "site": names.get_site_from_array_element_name(instrument),
             "parameter_version": parameter_version,
-            "unique_id": None,
+            "unique_id": unique_id,
             "value": value,
             "unit": unit,
             "type": self._get_parameter_type(),
@@ -425,7 +475,9 @@ class ModelDataWriter:
             If yml_file is not defined.
         """
         try:
-            yml_file = Path(yml_file or self.product_data_file).with_suffix(".metadata.yml")
+            yml_file = names.file_name_with_version(
+                yml_file or self.product_data_file, ".metadata.yml"
+            )
             with open(yml_file, "w", encoding="UTF-8") as file:
                 yaml.safe_dump(
                     gen.change_dict_keys_case(metadata, keys_lower_case),

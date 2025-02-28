@@ -797,19 +797,11 @@ class DataValidator:
         Converts strings to numerical values or lists of values, if required.
 
         """
-        value = self.data_dict["value"]
-        if not isinstance(value, str):
-            return
-
-        # assume float value if type is not defined
-        _is_float = self.data_dict.get("type", "float").startswith(("float", "double"))
-
-        if value.isnumeric():
-            self.data_dict["value"] = float(value) if _is_float else int(value)
-        else:
-            self.data_dict["value"] = gen.convert_string_to_list(value, is_float=_is_float)
-
-        if self.data_dict["unit"] is not None:
+        self.data_dict["value"], _ = value_conversion.split_value_and_unit(
+            self.data_dict["value"],
+            "int" in self.data_dict.get("type", "float"),
+        )
+        if isinstance(self.data_dict["unit"], str):
             self.data_dict["unit"] = gen.convert_string_to_list(self.data_dict["unit"])
 
     def _convert_results_to_model_format(self):

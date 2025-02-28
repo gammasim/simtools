@@ -128,6 +128,12 @@ def test_split_value_and_unit():
 
     assert value_conversion.split_value_and_unit("100 cm, 400 cm") == ([100, 400], ["cm", "cm"])
 
+    int_value, _ = value_conversion.split_value_and_unit(100 * u.m, True)
+    assert isinstance(int_value, int)
+    float_value, _ = value_conversion.split_value_and_unit(100 * u.m, False)
+    print(type(float_value))
+    assert isinstance(float_value, float)
+
 
 def test_split_value_is_quantity():
     assert value_conversion._split_value_is_quantity(100 * u.m) == (100, "m")

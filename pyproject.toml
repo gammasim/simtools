@@ -95,6 +95,7 @@ scripts.simtools-plot-tabular-data = "simtools.applications.plot_tabular_data:ma
 scripts.simtools-production-derive-limits = "simtools.applications.production_derive_limits:main"
 scripts.simtools-production-generate-simulation-config = "simtools.applications.production_generate_simulation_config:main"
 scripts.simtools-production-scale-events = "simtools.applications.production_scale_events:main"
+scripts.simtools-run-application = "simtools.applications.run_application:main"
 scripts.simtools-simulate-light-emission = "simtools.applications.simulate_light_emission:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
@@ -115,9 +116,6 @@ exclude = [ "simtools._dev_version.*" ]
 
 [tool.setuptools_scm]
 write_to = "src/simtools/_version.py"
-
-[tool.black]
-line-length = 100
 
 [tool.ruff]
 line-length = 100

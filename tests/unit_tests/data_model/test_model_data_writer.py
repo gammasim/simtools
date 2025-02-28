@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from unittest.mock import patch
 
 import astropy.units as u
 import numpy as np
@@ -14,6 +15,7 @@ import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model import schema
 from simtools.data_model.model_data_writer import JsonNumpyEncoder
+from simtools.utils import names
 
 logger = logging.getLogger()
 
@@ -208,13 +210,14 @@ def test_json_numpy_encoder():
         encoder.default("abc")
 
 
-def test_dump_model_parameter(tmp_test_directory):
+def test_dump_model_parameter(tmp_test_directory, db_config):
 
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
+    num_gains_name = "num_gains"
     # single value, no unit
     num_gains_dict = writer.ModelDataWriter.dump_model_parameter(
-        parameter_name="num_gains",
+        parameter_name=num_gains_name,
         value=2,
         instrument=instrument,
         parameter_version=parameter_version,
@@ -260,6 +263,23 @@ def test_dump_model_parameter(tmp_test_directory):
     assert pytest.approx(value_list[1]) == 0.0
     assert pytest.approx(value_list[2]) == 0.0
     assert pytest.approx(value_list[3]) == 0.0
+
+    with patch(
+        "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
+    ) as mock_db_check:
+        writer.ModelDataWriter.dump_model_parameter(
+            parameter_name=num_gains_name,
+            value=2,
+            instrument=instrument,
+            parameter_version=parameter_version,
+            output_file=num_gains_name + ".json",
+            output_path=tmp_test_directory,
+            use_plain_output_path=True,
+            db_config=db_config,
+        )
+        mock_db_check.assert_called_once_with(
+            num_gains_name, instrument, parameter_version, db_config
+        )
 
 
 def test_get_validated_parameter_dict():
@@ -393,3 +413,44 @@ def test_parameter_is_a_file(num_gains_schema):
 
     w1.schema_dict["data"] = []
     assert not w1._parameter_is_a_file()
+
+
+def test_check_db_for_existing_parameter():
+    db_config = {"host": "localhost", "port": 27017}
+    parameter_name = "test_parameter"
+    instrument = "LSTN-01"
+    parameter_version = "1.0.0"
+
+    w1 = writer.ModelDataWriter()
+
+    with patch("simtools.data_model.model_data_writer.db_handler.DatabaseHandler") as mockdbhandler:
+        mock_db_instance = mockdbhandler.return_value
+        mock_db_instance.get_model_parameter.side_effect = ValueError("Parameter not found")
+
+        # Test case where parameter does not exist
+        w1.check_db_for_existing_parameter(parameter_name, instrument, parameter_version, db_config)
+        mock_db_instance.get_model_parameter.assert_called_once_with(
+            parameter=parameter_name,
+            parameter_version=parameter_version,
+            site=names.get_site_from_array_element_name(instrument),
+            array_element_name=instrument,
+        )
+
+        # Reset mock for next test
+        mock_db_instance.get_model_parameter.reset_mock()
+
+        # Test case where parameter exists
+        mock_db_instance.get_model_parameter.side_effect = None
+        with pytest.raises(
+            ValueError,
+            match=f"Parameter {parameter_name} with version {parameter_version} already exists.",
+        ):
+            w1.check_db_for_existing_parameter(
+                parameter_name, instrument, parameter_version, db_config
+            )
+        mock_db_instance.get_model_parameter.assert_called_once_with(
+            parameter=parameter_name,
+            parameter_version=parameter_version,
+            site=names.get_site_from_array_element_name(instrument),
+            array_element_name=instrument,
+        )

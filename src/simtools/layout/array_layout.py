@@ -445,9 +445,11 @@ class ArrayLayout:
             )
             try:
                 tel_model = self._get_telescope_model(telescope_name)
-            except ValueError:
+            except ValueError:  # telescope not found in the database revert to design model
                 tel_model = self._get_telescope_model(
-                    names.guess_design_model_from_name(telescope_name),
+                    names.array_element_design_types(
+                        names.get_array_element_type_from_name(telescope_name)
+                    )[0]
                 )
 
             for para in ("telescope_axis_height", "telescope_sphere_radius"):
