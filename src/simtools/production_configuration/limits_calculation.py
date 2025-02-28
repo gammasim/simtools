@@ -204,12 +204,6 @@ class LimitCalculator:
         astropy.units.Quantity
             Viewcone radius in degrees.
         """
-        num_files = len(self.list_of_files)
-        showers_per_file = len(self.simulated) // num_files
-        shower_id_triggered_adjusted = self.adjust_shower_ids_across_files(
-            self.shower_id_triggered, num_files, showers_per_file
-        )
-
         azimuth_diff = (self.array_azimuth - self.shower_sim_azimuth) * (np.pi / 180.0)
         sim_altitude_rad = self.shower_sim_altitude * (np.pi / 180.0)
         array_altitude_rad = self.array_altitude * (np.pi / 180.0)
@@ -222,16 +216,11 @@ class LimitCalculator:
         z_2 = x_1 * np.cos(array_altitude_rad) + z_1 * np.sin(array_altitude_rad)
         off_angles = np.arctan2(np.sqrt(x_2**2 + y_2**2), z_2) * (180.0 / np.pi)
 
-        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 100)
-        core_distances_all = np.sqrt(self.event_x_core**2 + self.event_y_core**2)
-        core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
-        core_bins = np.linspace(core_distances_triggered.min(), core_distances_triggered.max(), 100)
+        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 200)
+        hist, _ = np.histogram(off_angles, bins=angle_bins)
 
-        hist = self._generate_2d_histogram(
-            core_distances_triggered, off_angles, core_bins, angle_bins
-        )
         _, upper_bin_edge_value = self._compute_limits(
-            hist, angle_bins, loss_fraction, axis=1, limit_type="upper"
+            hist, angle_bins, loss_fraction, axis=0, limit_type="upper"
         )
         return upper_bin_edge_value * u.deg
 
