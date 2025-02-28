@@ -9,6 +9,7 @@ from simtools.production_configuration.limits_calculation import LimitCalculator
 @pytest.fixture
 def hdf5_file(tmp_path):
     file_path = tmp_path / "test_data.h5"
+    vlen_int_type = h5py.special_dtype(vlen=np.int16)
     with h5py.File(file_path, "w") as f:
         grp = f.create_group("data")
         grp.create_dataset("core_x", data=np.array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3]))
@@ -22,6 +23,19 @@ def hdf5_file(tmp_path):
         grp.create_dataset("shower_sim_altitude", data=np.array([0.1, 0.4, 0.8, 1.2, 1.6, 2.0]))
         grp.create_dataset("array_azimuth", data=np.array([0.1, 0.5, 1.0, 1.5, 2.0, 2.5]))
         grp.create_dataset("array_altitude", data=np.array([0.2, 0.6, 1.0, 1.4, 1.8, 2.2]))
+        grp.create_dataset(
+            "trigger_telescope_list_list",
+            (6,),
+            dtype=vlen_int_type,
+            data=[
+                np.array([1, 2, 3], dtype=np.int16),
+                np.array([1, 2], dtype=np.int16),
+                np.array([2, 3], dtype=np.int16),
+                np.array([1, 3], dtype=np.int16),
+                np.array([1, 2, 3], dtype=np.int16),
+                np.array([1, 2, 3], dtype=np.int16),
+            ],
+        )
     return file_path
 
 
@@ -30,9 +44,21 @@ def limit_calculator(hdf5_file):
     return LimitCalculator(hdf5_file)
 
 
+@pytest.fixture
+def limit_calculator_with_telescopes(hdf5_file):
+    return LimitCalculator(hdf5_file, telescope_list=[1, 2])
+
+
 def test_compute_lower_energy_limit(limit_calculator):
     loss_fraction = 0.5
     lower_energy_limit = limit_calculator.compute_lower_energy_limit(loss_fraction)
+    assert lower_energy_limit.unit == u.TeV
+    assert lower_energy_limit.value > 0
+
+
+def test_compute_lower_energy_limit_with_telescopes(limit_calculator_with_telescopes):
+    loss_fraction = 0.5
+    lower_energy_limit = limit_calculator_with_telescopes.compute_lower_energy_limit(loss_fraction)
     assert lower_energy_limit.unit == u.TeV
     assert lower_energy_limit.value > 0
 
@@ -44,6 +70,15 @@ def test_compute_upper_radial_distance(limit_calculator):
     assert upper_radial_distance.value > 0
 
 
+def test_compute_upper_radial_distance_with_telescopes(limit_calculator_with_telescopes):
+    loss_fraction = 0.2
+    upper_radial_distance = limit_calculator_with_telescopes.compute_upper_radial_distance(
+        loss_fraction
+    )
+    assert upper_radial_distance.unit == u.m
+    assert upper_radial_distance.value > 0
+
+
 def test_compute_viewcone(limit_calculator):
     loss_fraction = 0.001
     viewcone = limit_calculator.compute_viewcone(loss_fraction)
@@ -51,5 +86,16 @@ def test_compute_viewcone(limit_calculator):
     assert viewcone.value > 0
 
 
+def test_compute_viewcone_with_telescopes(limit_calculator_with_telescopes):
+    loss_fraction = 0.001
+    viewcone = limit_calculator_with_telescopes.compute_viewcone(loss_fraction)
+    assert viewcone.unit == u.deg
+    assert viewcone.value > 0
+
+
 def test_plot_data(limit_calculator):
     limit_calculator.plot_data()
+
+
+def test_plot_data_with_telescopes(limit_calculator_with_telescopes):
+    limit_calculator_with_telescopes.plot_data()
