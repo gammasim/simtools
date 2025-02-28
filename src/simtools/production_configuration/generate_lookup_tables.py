@@ -67,8 +67,8 @@ class LookupTableGenerator:
             dset_file_names = grp.create_dataset(
                 "file_names", (0,), maxshape=(None,), dtype=h5py.string_dtype(encoding="utf-8")
             )
-            dset_shower_azimuth = grp.create_dataset(
-                "shower_azimuth", (0,), maxshape=(None,), dtype="f4"
+            dset_shower_sim_azimuth = grp.create_dataset(
+                "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4"
             )
             dset_shower_sim_altitude = grp.create_dataset(
                 "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4"
@@ -76,12 +76,20 @@ class LookupTableGenerator:
             dset_array_altitude = grp.create_dataset(
                 "array_altitude", (0,), maxshape=(None,), dtype="f4"
             )
+            dset_array_azimuth = grp.create_dataset(
+                "array_azimuth", (0,), maxshape=(None,), dtype="f4"
+            )
 
             batch_size = 50000
             simulated, shower_id_triggered, triggered_energies = [], [], []
             num_triggered_telescopes, event_x_core, event_y_core = [], [], []
             trigger_telescope_list_list, file_names = [], []
-            shower_azimuth, shower_sim_altitude, array_altitudes = [], [], []
+            shower_sim_azimuth, shower_sim_altitude, array_altitudes, array_azimuths = (
+                [],
+                [],
+                [],
+                [],
+            )
 
             for i_file, file in enumerate(self.input_files[: self.max_files]):
                 self._logger.info(f"Processing file {i_file+1}/{self.max_files}: {file}")
@@ -89,17 +97,21 @@ class LookupTableGenerator:
 
                 with EventIOFile(file) as f:
                     array_altitude = None
+                    array_azimuth = None
                     for eventio_object in f:
                         if isinstance(eventio_object, MCRunHeader):
                             mc_head = eventio_object.parse()
                             n_use = mc_head["n_use"]
-                            array_altitude = mc_head["obsheight"]
+                            array_altitude = np.mean(mc_head["alt_range"])
+                            array_azimuth = np.mean(mc_head["az_range"])
 
                         if isinstance(eventio_object, MCShower):
                             shower = eventio_object.parse()
                             simulated.extend(n_use * [shower["energy"]])
-                            shower_azimuth.extend(n_use * [shower["azimuth"]])
+                            shower_sim_azimuth.extend(n_use * [shower["azimuth"]])
                             shower_sim_altitude.extend(n_use * [shower["altitude"]])
+                            array_altitudes.extend(n_use * [array_altitude])
+                            array_azimuths.extend(n_use * [array_azimuth])
 
                         if isinstance(eventio_object, MCEvent):
                             event = eventio_object.parse()
@@ -118,8 +130,6 @@ class LookupTableGenerator:
                                         trigger_telescope_list_list.append(
                                             np.array(telescopes, dtype=np.int16)
                                         )
-                    if array_altitude is not None:
-                        array_altitudes.append(array_altitude)
 
                 if len(simulated) >= batch_size:
                     self._append_to_hdf5(dset_simulated, simulated)
@@ -132,14 +142,20 @@ class LookupTableGenerator:
                     self._append_to_hdf5(dset_core_x, event_x_core)
                     self._append_to_hdf5(dset_core_y, event_y_core)
                     self._append_to_hdf5(dset_file_names, file_names)
-                    self._append_to_hdf5(dset_shower_azimuth, shower_azimuth)
+                    self._append_to_hdf5(dset_shower_sim_azimuth, shower_sim_azimuth)
                     self._append_to_hdf5(dset_shower_sim_altitude, shower_sim_altitude)
                     self._append_to_hdf5(dset_array_altitude, array_altitudes)
+                    self._append_to_hdf5(dset_array_azimuth, array_azimuths)
 
                     simulated, shower_id_triggered, triggered_energies = [], [], []
                     num_triggered_telescopes, event_x_core, event_y_core = [], [], []
                     trigger_telescope_list_list, file_names = [], []
-                    shower_azimuth, shower_sim_altitude, array_altitudes = [], [], []
+                    shower_sim_azimuth, shower_sim_altitude, array_altitudes, array_azimuths = (
+                        [],
+                        [],
+                        [],
+                        [],
+                    )
 
             self._append_to_hdf5(dset_simulated, simulated)
             self._append_to_hdf5(dset_shower_id_triggered, shower_id_triggered)
@@ -149,9 +165,10 @@ class LookupTableGenerator:
             self._append_to_hdf5(dset_core_x, event_x_core)
             self._append_to_hdf5(dset_core_y, event_y_core)
             self._append_to_hdf5(dset_file_names, file_names)
-            self._append_to_hdf5(dset_shower_azimuth, shower_azimuth)
+            self._append_to_hdf5(dset_shower_sim_azimuth, shower_sim_azimuth)
             self._append_to_hdf5(dset_shower_sim_altitude, shower_sim_altitude)
             self._append_to_hdf5(dset_array_altitude, array_altitudes)
+            self._append_to_hdf5(dset_array_azimuth, array_azimuths)
 
     @staticmethod
     def _append_to_hdf5(dataset, data):
