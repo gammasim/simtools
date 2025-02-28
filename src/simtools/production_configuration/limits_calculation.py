@@ -314,8 +314,8 @@ class LimitCalculator:
         np.ndarray
             Adjusted shower IDs.
         """
-        adjusted_ids = []
-        for file_idx in range(num_files):
-            file_offset = file_idx * showers_per_file
-            adjusted_ids.append(shower_id_triggered + file_offset)
-        return np.concatenate(adjusted_ids)
+        adjusted_ids = shower_id_triggered.copy()
+        for file_idx in range(1, num_files):
+            mask = shower_id_triggered >= file_idx * showers_per_file
+            adjusted_ids[mask] += file_idx * showers_per_file
+        return adjusted_ids
