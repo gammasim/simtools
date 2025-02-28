@@ -16,9 +16,11 @@ class LimitCalculator:
     ----------
     event_data_file : str
         Path to the HDF5 file containing the event data.
+    telescope_list : list, optional
+        List of telescope IDs to filter the events (default is None).
     """
 
-    def __init__(self, event_data_file):
+    def __init__(self, event_data_file, telescope_list=None):
         """
         Initialize the LimitCalculator with the given event data file.
 
@@ -26,8 +28,11 @@ class LimitCalculator:
         ----------
         event_data_file : str
             Path to the HDF5 file containing the event data.
+        telescope_list : list, optional
+            List of telescope IDs to filter the events (default is None).
         """
         self.event_data_file = event_data_file
+        self.telescope_list = telescope_list
         self.event_x_core = None
         self.event_y_core = None
         self.simulated = None
@@ -37,6 +42,7 @@ class LimitCalculator:
         self.shower_sim_altitude = None
         self.array_azimuth = None
         self.array_altitude = None
+        self.trigger_telescope_list_list = None
         self._read_event_data()
 
     def _read_event_data(self):
@@ -54,6 +60,7 @@ class LimitCalculator:
                     self.shower_sim_altitude = data_group["shower_sim_altitude"][:]
                     self.array_altitude = data_group["array_altitude"][:]
                     self.array_azimuth = data_group["array_azimuth"][:]
+                    self.trigger_telescope_list_list = data_group["trigger_telescope_list_list"][:]
                 except KeyError as exc:
                     raise KeyError(
                         "One or more required datasets are missing from the 'data' group."
@@ -132,6 +139,15 @@ class LimitCalculator:
         shower_id_triggered_adjusted = self.adjust_shower_ids_across_files(
             self.shower_id_triggered, num_files, showers_per_file
         )
+
+        if self.telescope_list is not None:
+            mask = np.array(
+                [
+                    all(tel in event for tel in self.telescope_list)
+                    for event in self.trigger_telescope_list_list
+                ]
+            )
+            shower_id_triggered_adjusted = shower_id_triggered_adjusted[mask]
 
         triggered_energies = self.simulated[shower_id_triggered_adjusted]
         energy_bins = np.logspace(
@@ -237,6 +253,15 @@ class LimitCalculator:
         shower_id_triggered_adjusted = self.adjust_shower_ids_across_files(
             self.shower_id_triggered, num_files, showers_per_file
         )
+
+        if self.telescope_list is not None:
+            mask = np.array(
+                [
+                    all(tel in event for tel in self.telescope_list)
+                    for event in self.trigger_telescope_list_list
+                ]
+            )
+            shower_id_triggered_adjusted = shower_id_triggered_adjusted[mask]
 
         core_distances_all = np.sqrt(self.event_x_core**2 + self.event_y_core**2)
         core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
