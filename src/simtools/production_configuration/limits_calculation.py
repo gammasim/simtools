@@ -33,7 +33,7 @@ class LimitCalculator:
         self.simulated = None
         self.shower_id_triggered = None
         self.list_of_files = None
-        self.shower_azimuth = None
+        self.shower_sim_azimuth = None
         self.shower_sim_altitude = None
         self.array_azimuth = None
         self.array_altitude = None
@@ -50,9 +50,10 @@ class LimitCalculator:
                     self.simulated = data_group["simulated"][:]
                     self.shower_id_triggered = data_group["shower_id_triggered"][:]
                     self.list_of_files = data_group["file_names"][:]
-                    self.shower_azimuth = data_group["shower_azimuth"][:]
+                    self.shower_sim_azimuth = data_group["shower_sim_azimuth"][:]
                     self.shower_sim_altitude = data_group["shower_sim_altitude"][:]
                     self.array_altitude = data_group["array_altitude"][:]
+                    self.array_azimuth = data_group["array_azimuth"][:]
                 except KeyError as exc:
                     raise KeyError(
                         "One or more required datasets are missing from the 'data' group."
@@ -209,7 +210,7 @@ class LimitCalculator:
             self.shower_id_triggered, num_files, showers_per_file
         )
 
-        azimuth_diff = (self.array_azimuth - self.shower_azimuth) * (np.pi / 180.0)
+        azimuth_diff = (self.array_azimuth - self.shower_sim_azimuth) * (np.pi / 180.0)
         sim_altitude_rad = self.shower_sim_altitude * (np.pi / 180.0)
         array_altitude_rad = self.array_altitude * (np.pi / 180.0)
 
