@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.validate_output &#8212; simtools v0.1.dev1+g03cf9fb Manual</title>
+    <title>testing.validate_output &#8212; simtools v0.1.dev1+ge365d30 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c8cff2ac"></script>
+    <script src="../../_static/documentation_options.js?v=8327f3ea"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g03cf9fb Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge365d30 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -428,17 +428,7 @@ document.write(`
         <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Testing application output: </span><span class="si">{</span><span class="n">integration_test</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">from_command_line</span> <span class="o">==</span> <span class="n">from_config_file</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s2">&quot;REFERENCE_OUTPUT_FILE&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
-                <span class="n">_validate_reference_output_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="s2">&quot;TEST_OUTPUT_FILES&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
-                <span class="n">_validate_output_path_and_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;TEST_OUTPUT_FILES&quot;</span><span class="p">])</span>
-
-            <span class="k">if</span> <span class="s2">&quot;OUTPUT_FILE&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
-                <span class="n">_validate_output_path_and_file</span><span class="p">(</span>
-                    <span class="n">config</span><span class="p">,</span>
-                    <span class="p">[{</span><span class="s2">&quot;PATH_DESCRIPTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;FILE&quot;</span><span class="p">:</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;OUTPUT_FILE&quot;</span><span class="p">]}],</span>
-                <span class="p">)</span>
+            <span class="n">_validate_output_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="s2">&quot;FILE_TYPE&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
                 <span class="k">assert</span> <span class="n">assertions</span><span class="o">.</span><span class="n">assert_file_type</span><span class="p">(</span>
@@ -449,6 +439,19 @@ document.write(`
                 <span class="p">)</span>
         <span class="n">_test_simtel_cfg_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">,</span> <span class="n">from_command_line</span><span class="p">,</span> <span class="n">from_config_file</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_output_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate output files.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;REFERENCE_OUTPUT_FILE&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+        <span class="n">_validate_reference_output_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;TEST_OUTPUT_FILES&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+        <span class="n">_validate_output_path_and_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;TEST_OUTPUT_FILES&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s2">&quot;OUTPUT_FILE&quot;</span> <span class="ow">in</span> <span class="n">integration_test</span><span class="p">:</span>
+        <span class="n">_validate_output_path_and_file</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span>
+            <span class="p">[{</span><span class="s2">&quot;PATH_DESCRIPTOR&quot;</span><span class="p">:</span> <span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;FILE&quot;</span><span class="p">:</span> <span class="n">integration_test</span><span class="p">[</span><span class="s2">&quot;OUTPUT_FILE&quot;</span><span class="p">]}],</span>
+        <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_test_simtel_cfg_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">,</span> <span class="n">from_command_line</span><span class="p">,</span> <span class="n">from_config_file</span><span class="p">):</span>
