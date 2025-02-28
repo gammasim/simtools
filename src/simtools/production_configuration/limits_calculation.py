@@ -118,19 +118,14 @@ class LimitCalculator:
         bin_edge_value = bin_edges[bin_index] if limit_type == "upper" else bin_edges[-bin_index]
         return bin_index, bin_edge_value
 
-    def compute_lower_energy_limit(self, loss_fraction):
+    def _prepare_data_for_limits(self):
         """
-        Compute the lower energy limit in TeV based on the event loss fraction.
-
-        Parameters
-        ----------
-        loss_fraction : float
-            Fraction of events to be lost.
+        Prepare the data required for computing limits.
 
         Returns
         -------
-        astropy.units.Quantity
-            Lower energy limit.
+        tuple
+            Tuple containing core distances, triggered energies, core bins, and energy bins.
         """
         num_files = len(self.list_of_files)
         showers_per_file = len(self.simulated) // num_files
@@ -145,6 +140,26 @@ class LimitCalculator:
         core_distances_all = np.sqrt(self.event_x_core**2 + self.event_y_core**2)
         core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
         core_bins = np.linspace(core_distances_triggered.min(), core_distances_triggered.max(), 100)
+
+        return core_distances_triggered, triggered_energies, core_bins, energy_bins
+
+    def compute_lower_energy_limit(self, loss_fraction):
+        """
+        Compute the lower energy limit in TeV based on the event loss fraction.
+
+        Parameters
+        ----------
+        loss_fraction : float
+            Fraction of events to be lost.
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Lower energy limit.
+        """
+        core_distances_triggered, triggered_energies, core_bins, energy_bins = (
+            self._prepare_data_for_limits()
+        )
 
         hist = self._generate_2d_histogram(
             core_distances_triggered, triggered_energies, core_bins, energy_bins
@@ -168,19 +183,9 @@ class LimitCalculator:
         astropy.units.Quantity
             Upper radial distance in m.
         """
-        num_files = len(self.list_of_files)
-        showers_per_file = len(self.simulated) // num_files
-        shower_id_triggered_adjusted = self.adjust_shower_ids_across_files(
-            self.shower_id_triggered, num_files, showers_per_file
+        core_distances_triggered, triggered_energies, core_bins, energy_bins = (
+            self._prepare_data_for_limits()
         )
-
-        triggered_energies = self.simulated[shower_id_triggered_adjusted]
-        energy_bins = np.logspace(
-            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 100
-        )
-        core_distances_all = np.sqrt(self.event_x_core**2 + self.event_y_core**2)
-        core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
-        core_bins = np.linspace(core_distances_triggered.min(), core_distances_triggered.max(), 100)
 
         hist = self._generate_2d_histogram(
             core_distances_triggered, triggered_energies, core_bins, energy_bins
