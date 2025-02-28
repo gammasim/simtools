@@ -44,15 +44,17 @@ class ReducedDatasetGenerator:
         """Process the input files and store it in an HDF5 file."""
         with h5py.File(self.output_file, "w") as hdf:
             grp = hdf.create_group("data")
-            dset_simulated = grp.create_dataset("simulated", (0,), maxshape=(None,), dtype="f4")
+            dset_simulated = grp.create_dataset(
+                "simulated", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            )
             dset_shower_id_triggered = grp.create_dataset(
-                "shower_id_triggered", (0,), maxshape=(None,), dtype="i4"
+                "shower_id_triggered", (0,), maxshape=(None,), dtype="i4", compression="gzip"
             )
             dset_triggered = grp.create_dataset(
-                "triggered_energies", (0,), maxshape=(None,), dtype="f4"
+                "triggered_energies", (0,), maxshape=(None,), dtype="f4", compression="gzip"
             )
             dset_num_triggered_telescopes = grp.create_dataset(
-                "num_triggered_telescopes", (0,), maxshape=(None,), dtype="i4"
+                "num_triggered_telescopes", (0,), maxshape=(None,), dtype="i4", compression="gzip"
             )
             vlen_int_type = h5py.special_dtype(vlen=np.int16)
             dset_trigger_telescope_list_list = grp.create_dataset(
@@ -61,23 +63,32 @@ class ReducedDatasetGenerator:
                 maxshape=(None,),
                 dtype=vlen_int_type,
                 chunks=True,
+                compression="gzip",
             )
-            dset_core_x = grp.create_dataset("core_x", (0,), maxshape=(None,), dtype="f4")
-            dset_core_y = grp.create_dataset("core_y", (0,), maxshape=(None,), dtype="f4")
+            dset_core_x = grp.create_dataset(
+                "core_x", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            )
+            dset_core_y = grp.create_dataset(
+                "core_y", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            )
             dset_file_names = grp.create_dataset(
-                "file_names", (0,), maxshape=(None,), dtype=h5py.string_dtype(encoding="utf-8")
+                "file_names",
+                (0,),
+                maxshape=(None,),
+                dtype=h5py.string_dtype(encoding="utf-8"),
+                compression="gzip",
             )
             dset_shower_sim_azimuth = grp.create_dataset(
-                "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4"
+                "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"
             )
             dset_shower_sim_altitude = grp.create_dataset(
-                "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4"
+                "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"
             )
             dset_array_altitude = grp.create_dataset(
-                "array_altitude", (0,), maxshape=(None,), dtype="f4"
+                "array_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"
             )
             dset_array_azimuth = grp.create_dataset(
-                "array_azimuth", (0,), maxshape=(None,), dtype="f4"
+                "array_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"
             )
 
             batch_size = 50000
