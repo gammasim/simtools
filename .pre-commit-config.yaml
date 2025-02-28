@@ -1,6 +1,6 @@
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.7
     hooks:
       - id: ruff
@@ -59,7 +59,7 @@ repos:
     rev: v1.35.1
     hooks:
       - id: yamllint
-        args: ["--strict", "-d", '{rules: {line-length: {max: 250}}}']
+        args: ["--strict", "-d", '{extends: default, rules: {line-length: {max: 250}, document-start: {present: false}}}']
   # towncrier
   - repo: https://github.com/twisted/towncrier
     rev: 24.8.0
