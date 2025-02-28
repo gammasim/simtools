@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Generates a lookup table from input data.
+Generates a reduced dataset from input data.
 
 Command line arguments
 ----------------------
@@ -14,11 +14,11 @@ Command line arguments
 
 Example
 -------
-Generate a lookup table from input files and save the result.
+Generate a reduced dataset from input files and save the result.
 
 .. code-block:: console
 
-    generate-lookup-table \
+    generate-reduced-dataset \
         --prefix path/to/input_files \
         --output_file path/to/output_file.hdf5
 """
@@ -28,7 +28,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.production_configuration.generate_lookup_tables import LookupTableGenerator
+from simtools.production_configuration.generate_reduced_datasets import ReducedDatasetGenerator
 
 
 def _parse():
@@ -41,7 +41,7 @@ def _parse():
         Parsed command-line arguments.
     """
     config = configurator.Configurator(
-        description="Process EventIO files and store data in HDF5 lookup table."
+        description="Process EventIO files and store data in HDF5 reduced dataset."
     )
     config.parser.add_argument(
         "--prefix", type=str, required=True, help="Prefix path for input files."
@@ -63,7 +63,7 @@ def _parse():
 
 
 def main():
-    """Process EventIO files and store data in HDF5 lookup table."""
+    """Process EventIO files and store data in HDF5 reduced dataset."""
     args_dict, _ = _parse()
 
     _logger = logging.getLogger()
@@ -76,9 +76,9 @@ def main():
         _logger.warning("No matching input files found.")
         return
 
-    generator = LookupTableGenerator(files, args_dict["output_file"], args_dict["max_files"])
+    generator = ReducedDatasetGenerator(files, args_dict["output_file"], args_dict["max_files"])
     generator.process_files()
-    _logger.info(f"Lookup table saved to: {args_dict['output_file']}")
+    _logger.info(f"reduced dataset saved to: {args_dict['output_file']}")
 
 
 if __name__ == "__main__":

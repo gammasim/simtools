@@ -8,7 +8,7 @@ from eventio import EventIOFile
 from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerInformation
 
 
-class LookupTableGenerator:
+class ReducedDatasetGenerator:
     """
     A class to generate lookup tables from EventIO simulation files and store them in an HDF5 file.
 
@@ -24,7 +24,7 @@ class LookupTableGenerator:
 
     def __init__(self, input_files, output_file, max_files=100):
         """
-        Initialize the LookupTableGenerator with input files, output file, and maximum file limit.
+        Initialize the ReducedDatasetGenerator with input files, output file, and max file limit.
 
         Parameters
         ----------

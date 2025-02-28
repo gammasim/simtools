@@ -24,7 +24,7 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(generate-lookup-tables)=
+(generate-reduced-datasets)=
 
 ## generate_lookup_tables
 
