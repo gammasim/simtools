@@ -44,7 +44,7 @@ def mock_eventio_objects():
     return [mc_run_header, mc_shower, mc_event, array_event]
 
 
-@patch("simtools.production_configuration.generate_lookup_tables.EventIOFile", autospec=True)
+@patch("simtools.production_configuration.generate_reduced_datasets.EventIOFile", autospec=True)
 def test_process_files(mock_eventio_class, lookup_table_generator):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
         mock_eventio_objects()
@@ -82,7 +82,7 @@ def test_process_files(mock_eventio_class, lookup_table_generator):
         assert len(data_group["array_azimuth"]) > 0
 
 
-@patch("simtools.production_configuration.generate_lookup_tables.EventIOFile", autospec=True)
+@patch("simtools.production_configuration.generate_reduced_datasets.EventIOFile", autospec=True)
 def test_print_hdf5_file(mock_eventio_class, lookup_table_generator, capsys):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
         mock_eventio_objects()
