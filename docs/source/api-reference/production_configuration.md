@@ -26,10 +26,10 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 (generate-reduced-datasets)=
 
-## generate_lookup_tables
+## generate_reduced_datasets
 
 ```{eval-rst}
-.. automodule:: production_configuration.generate_lookup_tables
+.. automodule:: production_configuration.generate_reduced_datasets
    :members:
 ```
 
