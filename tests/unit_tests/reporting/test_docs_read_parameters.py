@@ -83,5 +83,8 @@ def test__compare_parameter_across_versions(telescope_model_lst, io_handler, db_
     )
 
     qe_comparison = read_parameters._compare_parameter_across_versions("quantum_efficiency")
-    assert qe_comparison[0]["model_version"] != qe_comparison[1]["model_version"]
-    assert qe_comparison["model_version" == "5.0.0"]["parameter_version"] == "1.0.0"
+    assert qe_comparison["parameter_version" == "1.0.0"]["model_version"] == "6.0.0, 5.0.0"
+
+    nsb_comparison = read_parameters._compare_parameter_across_versions("nsb_pixel_rate")
+    assert nsb_comparison[0]["model_version"] != nsb_comparison[1]["model_version"]
+    assert nsb_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
