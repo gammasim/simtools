@@ -204,9 +204,10 @@ class LimitCalculator:
         astropy.units.Quantity
             Viewcone radius in degrees.
         """
-        azimuth_diff = (self.array_azimuth - self.shower_sim_azimuth) * (np.pi / 180.0)
-        sim_altitude_rad = self.shower_sim_altitude * (np.pi / 180.0)
-        array_altitude_rad = self.array_altitude * (np.pi / 180.0)
+        # already in radians
+        azimuth_diff = self.array_azimuth - self.shower_sim_azimuth  # * (np.pi / 180.0)
+        sim_altitude_rad = self.shower_sim_altitude  # * (np.pi / 180.0)
+        array_altitude_rad = self.array_altitude  # * (np.pi / 180.0)
 
         x_1 = np.cos(azimuth_diff) * np.cos(sim_altitude_rad)
         y_1 = np.sin(azimuth_diff) * np.cos(sim_altitude_rad)
