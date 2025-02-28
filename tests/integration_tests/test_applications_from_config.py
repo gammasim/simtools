@@ -32,6 +32,10 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
         Dictionary with the configuration parameters for the test.
 
     """
+    if config.get("TEST_REQUIREMENT"):
+        request.node.add_marker(pytest.mark.verifies_requirement(config["TEST_REQUIREMENT"]))
+    if config.get("TEST_USE_CASE"):
+        request.node.add_marker(pytest.mark.verifies_use_case(config["TEST_USE_CASE"]))
 
     tmp_config = copy.deepcopy(config)
     skip_message = helpers.skip_camera_efficiency(tmp_config)
@@ -46,6 +50,8 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {request.config.getoption('--model_version')}")
     logger.info(f"Application configuration: {tmp_config}")
+    logger.info(f"Test requirement: {config.get('TEST_REQUIREMENT')}")
+    logger.info(f"Test use case: {config.get('TEST_USE_CASE')}")
     try:
         cmd, config_file_model_version = configuration.configure(
             tmp_config, tmp_test_directory, request

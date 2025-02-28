@@ -2,6 +2,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-calculate-trigger-rate
     TEST_NAME: file_list
+    TEST_USE_CASE: UC-150-1.1
     CONFIGURATION:
       SIMTEL_FILE_NAMES:
       - ./tests/resources/simtel_output_files.txt

@@ -2,6 +2,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-simulate-prod
     TEST_NAME: gamma_20_deg_north
+    TEST_REQUIREMENT: UC-150-1.1
     CONFIGURATION:
       SIMULATION_SOFTWARE: corsika_simtel
       LABEL: test-production-North
