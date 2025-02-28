@@ -41,7 +41,7 @@ simtools-docs-produce-array-element-report <applications/simtools-docs-produce-a
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
-simtools-production-generate-lookup-tables <applications/simtools-production-generate-lookup-tables>
+simtools-production-generate-reduced-datasets <applications/simtools-production-generate-reduced-datasets>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-array-histograms <applications/simtools-generate-simtel-array-histograms>

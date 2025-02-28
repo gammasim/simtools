@@ -1,5 +1,5 @@
 
-simtools-production-generate-lookup-tables
+simtools-production-generate-reduced-datasets
 ==========================================
 
 .. automodule:: production_generate_lookup_tables

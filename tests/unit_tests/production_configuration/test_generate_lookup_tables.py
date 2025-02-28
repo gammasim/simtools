@@ -4,7 +4,7 @@ import h5py
 import pytest
 from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerInformation
 
-from simtools.production_configuration.generate_lookup_tables import LookupTableGenerator
+from simtools.production_configuration.generate_reduced_datasets import ReducedDatasetGenerator
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def mock_eventio_file(tmp_path):
 @pytest.fixture
 def lookup_table_generator(mock_eventio_file, tmp_path):
     output_file = tmp_path / "output.h5"
-    return LookupTableGenerator([mock_eventio_file], output_file, max_files=1)
+    return ReducedDatasetGenerator([mock_eventio_file], output_file, max_files=1)
 
 
 def mock_eventio_objects():
