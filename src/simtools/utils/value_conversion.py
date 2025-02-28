@@ -87,7 +87,7 @@ def get_value_unit_type(value, unit_str=None):
     return base_value, _unit_as_string(base_unit), base_type
 
 
-def split_value_and_unit(value):
+def split_value_and_unit(value, is_integer=False):
     """
     Split a value into its value and unit.
 
@@ -98,6 +98,8 @@ def split_value_and_unit(value):
     ----------
     value: str, int, float, bool, u.Quantity
         Value to be parsed.
+    is_integer: bool
+        Flag to indicate if the value is an integer.
 
     Returns
     -------
@@ -105,40 +107,42 @@ def split_value_and_unit(value):
         Value and units as (value, unit), or lists of values and unites
     """
     if isinstance(value, u.Quantity):
-        return _split_value_is_quantity(value)
+        return _split_value_is_quantity(value, is_integer)
     if isinstance(value, str):
-        return _split_value_is_string(value)
+        return _split_value_is_string(value, is_integer)
     if isinstance(value, list | np.ndarray):
-        return _split_value_is_list(value)
+        return _split_value_is_list(value, is_integer)
     return value, None
 
 
-def _split_value_is_quantity(value):
+def _split_value_is_quantity(value, is_integer=False):
     """Split value and unit for an astropy Quantity."""
-    if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m,
-        return list(value.value), [str(value.unit)] * len(value)
-    return value.value, str(value.unit)
+    if isinstance(value.value, list | np.ndarray):  # type [100.0, 200] * u.m
+        return [int(v) if is_integer else v for v in value.value], [str(value.unit)] * len(value)
+    return int(value.value) if is_integer else value.value, str(value.unit)
 
 
-def _split_value_is_string(value):
+def _split_value_is_string(value, is_integer=False):
     """Split vale and unit for a string."""
     if value.isdigit():  # single integer value
         return int(value), None
     try:  # single value with/without unit
-        return u.Quantity(value).value, str(u.Quantity(value).unit)
+        return int(u.Quantity(value).value) if is_integer else u.Quantity(value).value, str(
+            u.Quantity(value).unit
+        )
     except ValueError:
-        return _split_value_is_list(gen.convert_string_to_list(value))
+        return _split_value_is_list(gen.convert_string_to_list(value), is_integer)
     except TypeError:  # string value (not numerical)
         return value, None
 
 
-def _split_value_is_list(value):
+def _split_value_is_list(value, is_integer=False):
     """Split value and unit for a list."""
     value_list = []
     unit_list = []
     for item in value:
         _value, _unit = split_value_and_unit(item)
-        value_list.append(_value)
+        value_list.append(int(_value) if is_integer else _value)
         if isinstance(_unit, str):
             unit_list.append(_unit)
         else:
