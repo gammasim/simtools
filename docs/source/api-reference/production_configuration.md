@@ -24,6 +24,15 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+(generate-lookup-tables)=
+
+## generate_lookup_tables
+
+```{eval-rst}
+.. automodule:: production_configuration.generate_lookup_tables
+   :members:
+```
+
 (generate-simulation-config)=
 
 ## generate_simulation_config
@@ -42,6 +51,7 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+(limits-calculation)=
 
 ## limits_calculation
 
