@@ -19,10 +19,7 @@ config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
 test_configs, test_ids = configuration.get_list_of_test_configurations(config_files)
 
 
-test_configs = [
-    pytest.param(config, id=test_id)
-    for config, test_id in zip(test_configs, test_ids)
-]
+test_configs = [pytest.param(config, id=test_id) for config, test_id in zip(test_configs, test_ids)]
 
 
 @pytest.fixture(scope="session", params=test_configs)
