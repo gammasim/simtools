@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
 
 import pytest
 
@@ -558,6 +559,19 @@ def test_get_simulation_software_name_from_parameter_name():
         )
         is None
     )
+
+
+def test_file_name_with_version():
+
+    assert names.file_name_with_version(None, None) is None
+    assert names.file_name_with_version("file", None) is None
+    assert names.file_name_with_version(None, ".yml") is None
+
+    assert names.file_name_with_version("file", ".yml") == Path("file.yml")
+    assert names.file_name_with_version("file.json", ".yml") == Path("file.yml")
+
+    assert names.file_name_with_version("file-5.22.0", ".yml") == Path("file-5.22.0.yml")
+    assert names.file_name_with_version("file-5.0.0.json", ".yml") == Path("file-5.0.0.yml")
 
 
 def test_db_collection_to_instrument_class_key():
