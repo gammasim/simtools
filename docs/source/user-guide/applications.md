@@ -46,11 +46,12 @@ simtools-generate-default-metadata <applications/simtools-generate-default-metad
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-array-histograms <applications/simtools-generate-simtel-array-histograms>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
+simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-production-derive-limits <applications/simtools-production-derive-limits>
 simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
 simtools-production-scale-events <applications/simtools-production-scale-events>
+simtools-run-application <applications/simtools-run-application>
 simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
-simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
 simtools-submit-data-from-external <applications/simtools-submit-data-from-external>
