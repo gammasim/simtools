@@ -94,7 +94,6 @@ class LookupTableGenerator:
             for i_file, file in enumerate(self.input_files[: self.max_files]):
                 self._logger.info(f"Processing file {i_file+1}/{self.max_files}: {file}")
                 file_names.append(file)
-
                 with EventIOFile(file) as f:
                     array_altitude = None
                     array_azimuth = None
