@@ -19,8 +19,26 @@ config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
 test_configs, test_ids = configuration.get_list_of_test_configurations(config_files)
 
 
-@pytest.mark.parametrize("config", test_configs, ids=test_ids)
-def test_applications_from_config(tmp_test_directory, config, monkeypatch, request):
+test_configs = [
+    pytest.param(config, id=test_id)
+    for config, test_id in zip(test_configs, test_ids)
+]
+
+
+@pytest.fixture(scope="session", params=test_configs)
+def test_config(request):
+    config = request.param
+
+    if config.get("TEST_REQUIREMENT"):
+        request.applymarker(pytest.mark.verifies_requirement(config["TEST_REQUIREMENT"]))
+
+    if config.get("TEST_USE_CASE"):
+        request.applymarker(pytest.mark.verifies_usecase(config["TEST_USE_CASE"]))
+
+    return config
+
+
+def test_applications_from_config(tmp_test_directory, test_config, monkeypatch, request):
     """
     Test all applications from config files found in the config directory.
 
@@ -32,11 +50,7 @@ def test_applications_from_config(tmp_test_directory, config, monkeypatch, reque
         Dictionary with the configuration parameters for the test.
 
     """
-    if config.get("TEST_REQUIREMENT"):
-        request.node.add_marker(pytest.mark.verifies_requirement(config["TEST_REQUIREMENT"]))
-    if config.get("TEST_USE_CASE"):
-        request.node.add_marker(pytest.mark.verifies_use_case(config["TEST_USE_CASE"]))
-
+    config = test_config
     tmp_config = copy.deepcopy(config)
     skip_message = helpers.skip_camera_efficiency(tmp_config)
     if skip_message:
