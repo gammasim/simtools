@@ -1,44 +1,44 @@
 ---
 CTA_SIMPIPE:
   APPLICATIONS:
-  - APPLICATION: simtools-simulate-prod
-    TEST_NAME: proton_20_deg_north_check_output
-    CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_simtel
-      LABEL: check_output
-      MODEL_VERSION: 6.0.0
-      SITE: North
-      ARRAY_LAYOUT_NAME: alpha
-      PRIMARY: proton
-      RUN_NUMBER_START: 1
-      NUMBER_OF_RUNS: 1
-      AZIMUTH_ANGLE: South
-      ZENITH_ANGLE: 20
-      NSHOW: 10
-      VIEW_CONE: 0 deg 5 deg
-      ENERGY_RANGE: 200 GeV 800 GeV
-      CORE_SCATTER: 20 500 m
-      DATA_DIRECTORY: simtools-data
-      OUTPUT_PATH: simtools-output
-      SIM_TELARRAY_SEEDS: 1745,290
-      CORSIKA_TEST_SEEDS: true
-      PACK_FOR_GRID_REGISTER: simtools-grid-output
-      LOG_LEVEL: DEBUG
-    INTEGRATION_TESTS:
-    - TEST_OUTPUT_FILES:
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_proton_za20deg_azm180deg_North_alpha_check_output.log_hist.tar.gz
-      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_proton_za20deg_azm180deg_North_alpha_check_output.zst
-        EXPECTED_OUTPUT:
-          trigger_time:
-          - 0
-          - 50
-          pe_sum:
-          - 20
-          - 1000
-          photons:
-          - 90
-          - 1000
+    - APPLICATION: simtools-simulate-prod
+      TEST_NAME: proton_20_deg_north_check_output
+      CONFIGURATION:
+        SIMULATION_SOFTWARE: corsika_simtel
+        LABEL: check_output
+        MODEL_VERSION: 6.0.0
+        SITE: North
+        ARRAY_LAYOUT_NAME: alpha
+        PRIMARY: proton
+        RUN_NUMBER_START: 1
+        NUMBER_OF_RUNS: 1
+        AZIMUTH_ANGLE: South
+        ZENITH_ANGLE: 20
+        NSHOW: 10
+        VIEW_CONE: 0 deg 5 deg
+        ENERGY_RANGE: 200 GeV 800 GeV
+        CORE_SCATTER: 20 500 m
+        DATA_DIRECTORY: simtools-data
+        OUTPUT_PATH: simtools-output
+        SIM_TELARRAY_SEEDS: 1745,290
+        CORSIKA_TEST_SEEDS: true
+        PACK_FOR_GRID_REGISTER: simtools-grid-output
+        LOG_LEVEL: DEBUG
+      INTEGRATION_TESTS:
+        - TEST_OUTPUT_FILES:
+            - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+              FILE: run000001_proton_za20deg_azm180deg_North_alpha_check_output.log_hist.tar.gz
+            - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+              FILE: run000001_proton_za20deg_azm180deg_North_alpha_check_output.zst
+              EXPECTED_OUTPUT:
+                trigger_time:
+                  - 0
+                  - 50
+                pe_sum:
+                  - 20
+                  - 1000
+                photons:
+                  - 90
+                  - 1000
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

@@ -1,19 +1,19 @@
 ---
 CTA_SIMPIPE:
   APPLICATIONS:
-  - APPLICATION: simtools-plot-array-layout
-    TEST_NAME: two_files_rotate
-    CONFIGURATION:
-      ARRAY_LAYOUT_FILE:
-      - tests/resources/telescope_positions-North-ground.ecsv
-      - tests/resources/telescope_positions-South-ground.ecsv
-      MODEL_VERSION: 6.0.0
-      ROTATE_ANGLE: 20
-      OUTPUT_PATH: simtools-output
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: array_layout_telescope_positions-North-ground_North_ground_20deg.pdf
-    - OUTPUT_FILE: array_layout_telescope_positions-North-ground_North_ground_20deg.png
-    - OUTPUT_FILE: array_layout_telescope_positions-South-ground_South_ground_20deg.pdf
-    - OUTPUT_FILE: array_layout_telescope_positions-South-ground_South_ground_20deg.png
+    - APPLICATION: simtools-plot-array-layout
+      TEST_NAME: two_files_rotate
+      CONFIGURATION:
+        ARRAY_LAYOUT_FILE:
+          - tests/resources/telescope_positions-North-ground.ecsv
+          - tests/resources/telescope_positions-South-ground.ecsv
+        MODEL_VERSION: 6.0.0
+        ROTATE_ANGLE: 20
+        OUTPUT_PATH: simtools-output
+      INTEGRATION_TESTS:
+        - OUTPUT_FILE: array_layout_telescope_positions-North-ground_North_ground_20deg.pdf
+        - OUTPUT_FILE: array_layout_telescope_positions-North-ground_North_ground_20deg.png
+        - OUTPUT_FILE: array_layout_telescope_positions-South-ground_South_ground_20deg.pdf
+        - OUTPUT_FILE: array_layout_telescope_positions-South-ground_South_ground_20deg.png
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
