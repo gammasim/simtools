@@ -1,27 +1,27 @@
 ---
 CTA_SIMPIPE:
   APPLICATIONS:
-  - APPLICATION: simtools-production-scale-events
-    TEST_NAME: production_scale_events
-    CONFIGURATION:
-      BASE_PATH: tests/resources/production_dl2_fits/
-      ZENITHS:
-      - 20
-      - 40
-      - 52
-      - 60
-      OFFSETS: 0
-      QUERY_POINT:
-      - 1
-      - 180
-      - 30
-      - 0
-      - 0
-      INTERPOLATE: true
-      OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: interpolated_scaled_events.json
-      METRIC: tests/resources/production_simulation_config_metrics.yml
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: interpolated_scaled_events.json
+    - APPLICATION: simtools-production-scale-events
+      TEST_NAME: production_scale_events
+      CONFIGURATION:
+        BASE_PATH: tests/resources/production_dl2_fits/
+        ZENITHS:
+          - 20
+          - 40
+          - 52
+          - 60
+        OFFSETS: 0
+        QUERY_POINT:
+          - 1
+          - 180
+          - 30
+          - 0
+          - 0
+        INTERPOLATE: true
+        OUTPUT_PATH: simtools-output
+        OUTPUT_FILE: interpolated_scaled_events.json
+        METRIC: tests/resources/production_simulation_config_metrics.yml
+      INTEGRATION_TESTS:
+        - OUTPUT_FILE: interpolated_scaled_events.json
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

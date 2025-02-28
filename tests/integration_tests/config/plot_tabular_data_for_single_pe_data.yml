@@ -1,15 +1,15 @@
 ---
 CTA_SIMPIPE:
   APPLICATIONS:
-  - APPLICATION: simtools-plot-tabular-data
-    TEST_NAME: single_pe_data
-    CONFIGURATION:
-      PLOT_CONFIG: tests/resources/plot_single_pe_config_data.yml
-      OUTPUT_FILE: single_pe_data
-      OUTPUT_PATH: simtools-output
-      USE_PLAIN_OUTPUT_PATH: true
-    INTEGRATION_TESTS:
-    - OUTPUT_FILE: single_pe_data.pdf
-    - OUTPUT_FILE: single_pe_data.png
+    - APPLICATION: simtools-plot-tabular-data
+      TEST_NAME: single_pe_data
+      CONFIGURATION:
+        PLOT_CONFIG: tests/resources/plot_single_pe_config_data.yml
+        OUTPUT_FILE: single_pe_data
+        OUTPUT_PATH: simtools-output
+        USE_PLAIN_OUTPUT_PATH: true
+      INTEGRATION_TESTS:
+        - OUTPUT_FILE: single_pe_data.pdf
+        - OUTPUT_FILE: single_pe_data.png
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
