@@ -11,7 +11,8 @@ event_data_file (str, required)
     Path to the file containing the event data.
 loss_fraction (float, required)
     Fraction of events to be lost.
-
+telescope_ids (list of int, optional)
+    List of telescope IDs to filter the events (default is None).
 
 Example
 -------
@@ -21,7 +22,8 @@ Derive limits for a given file with a specified loss fraction.
 
     simtools-production-derive-limits\\
         --event_data_file path/to/event_data_file.hdf5 \\
-        --loss_fraction 1e-6
+        --loss_fraction 1e-6 \\
+        --telescope_ids 1 2 3
 """
 
 import logging
@@ -43,6 +45,8 @@ def _parse():
         The event data file.
     loss_fraction: float
         Loss fraction of events for limit derivation.
+    telescope_ids: list of int, optional
+        List of telescope IDs to filter the events (default is None).
 
     Returns
     -------
@@ -62,6 +66,12 @@ def _parse():
     config.parser.add_argument(
         "--loss_fraction", type=float, required=True, help="Fraction of events to be lost."
     )
+    config.parser.add_argument(
+        "--telescope_ids",
+        type=int,
+        nargs="*",
+        help="List of telescope IDs to filter the events (default is None).",
+    )
     return config.initialize(db_config=False)
 
 
@@ -74,8 +84,9 @@ def main():
 
     event_data_file_path = args_dict["event_data_file"]
     loss_fraction = args_dict["loss_fraction"]
+    telescope_ids = args_dict.get("telescope_ids")
 
-    calculator = LimitCalculator(event_data_file_path)
+    calculator = LimitCalculator(event_data_file_path, telescope_list=telescope_ids)
 
     lower_energy_limit = calculator.compute_lower_energy_limit(loss_fraction)
     _logger.info(f"Lower energy threshold: {lower_energy_limit}")
