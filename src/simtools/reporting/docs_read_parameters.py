@@ -186,7 +186,7 @@ class ReadParameters:
                 elif len(value_data) > 5 and np.allclose(value_data, value_data[0]):
                     value = f"all: {value_data[0]} {unit}"
                 else:
-                    value = ", ".join([f"{v:.3f} {u}" for v in value_data for u in unit])
+                    value = ", ".join([f"{v:.3f} {u}" for v, u in zip(value_data, unit)])
 
                 parameter_version = parameter_data["parameter_version"]
                 model_version = version
