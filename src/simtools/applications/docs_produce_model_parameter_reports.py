@@ -24,9 +24,7 @@ def _parse(label):
         description=("Produce a markdown report for model parameters."),
     )
 
-    return config.initialize(
-        db_config=True, simulation_model=["site", "telescope", "model_version"]
-    )
+    return config.initialize(db_config=True, simulation_model=["site", "telescope"])
 
 
 def main():  # noqa: D103
@@ -41,7 +39,7 @@ def main():  # noqa: D103
     telescope_model = TelescopeModel(
         site=args["site"],
         telescope_name=args["telescope"],
-        model_version=args["model_version"],
+        model_version="5.0.0",
         label=label_name,
         mongo_db_config=db_config,
     )
@@ -54,7 +52,7 @@ def main():  # noqa: D103
 
     logger.info(
         f"Markdown report generated for {args['site']}"
-        f" Telescope {args['telescope']} (v{args['model_version']}):"
+        f" Telescope {args['telescope']}:"
         f" {output_path}"
     )
 

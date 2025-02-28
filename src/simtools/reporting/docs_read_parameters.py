@@ -4,11 +4,13 @@ r"""Class to read and manage relevant model parameters for a given telescope mod
 
 import logging
 import textwrap
+from collections import defaultdict
 from itertools import groupby
 from pathlib import Path
 
+import numpy as np
+
 from simtools.io_operations import io_handler
-from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -156,34 +158,52 @@ class ReadParameters:
             A list of dictionaries containing model version, parameter value, and description.
         """
         all_versions = self.telescope_model.db.get_model_versions()
-        all_versions.reverse()
-        comparison_data = []
+        all_versions.reverse()  # latest first
+        grouped_data = defaultdict(list)
 
-        for model_version in all_versions:
-            telescope_model = TelescopeModel(
+        for version in all_versions:
+            all_params = self.telescope_model.db.get_model_parameters(
                 site=self.telescope_model.site,
-                telescope_name=self.telescope_model.name,
-                model_version=model_version,
-                label="reports",
-                mongo_db_config=self.db_config,
+                array_element_name=self.telescope_model.name,
+                collection="telescopes",
+                model_version=version,
             )
 
-            if not telescope_model.has_parameter(parameter_name):
-                return comparison_data
+            try:
+                parameter_data = all_params[parameter_name]
+            except KeyError:
+                continue
 
-            parameter_data = self.get_array_element_parameter_data(telescope_model)
-            for param in parameter_data:
-                if param[1] == parameter_name:
-                    comparison_data.append(
-                        {
-                            "model_version": model_version,
-                            "parameter_version": param[2],
-                            "value": param[3],
-                            "description": param[4],
-                        }
-                    )
-                    break
-        return comparison_data
+            if parameter_data["instrument"] != self.telescope_model.name:
+                return None
+
+            try:
+                unit = parameter_data["unit"] if parameter_data["unit"] else ""
+                value_data = parameter_data["value"]
+
+                if isinstance(value_data, str | int | float):
+                    value = f"{value_data} {unit}"
+                elif len(value_data) > 5 and np.allclose(value_data, value_data[0]):
+                    value = f"all: {value_data[0]} {unit}"
+                else:
+                    value = ", ".join([f"{v:.3f} {u}" for v in value_data for u in unit])
+
+                parameter_version = parameter_data["parameter_version"]
+                model_version = version
+                grouped_data[(value, parameter_version)].append(model_version)
+
+                model_versions = ", ".join(grouped_data[(value, parameter_version)])
+            except TypeError:
+                continue
+
+        return [
+            {
+                "value": value.strip(),
+                "parameter_version": parameter_version,
+                "model_version": model_versions if len(model_version) > 1 else model_version[0],
+            }
+            for (value, parameter_version), model_version in grouped_data.items()
+        ]
 
     def produce_array_element_report(self):
         """
@@ -276,28 +296,29 @@ class ReadParameters:
                 comparison_data = self._compare_parameter_across_versions(parameter)
             if comparison_data:
                 output_filename = output_path / f"{parameter}.md"
+                description = self.get_all_parameter_descriptions()[0].get(parameter)
                 with output_filename.open("w", encoding="utf-8") as file:
                     # Write header
                     file.write(
                         f"# {parameter}\n\n"
                         f"**Telescope**: {self.telescope_model.name}\n\n"
-                        f"**Description**: {comparison_data[0]['description']}\n\n"
+                        f"**Description**: {description}\n\n"
                         "\n"
                     )
 
                     # Write table header
                     file.write(
-                        "| Model Version      | Parameter Version      "
+                        "| Parameter Version      | Model Version(s)      "
                         "| Value                |\n"
-                        "|--------------------|------------------------"
+                        "|------------------------|--------------------"
                         "|----------------------|\n"
                     )
 
                     # Write table rows
                     for item in comparison_data:
                         file.write(
-                            f"| {item['model_version']} |"
-                            f" {item['parameter_version']} |"
+                            f"| {item['parameter_version']} |"
+                            f" {item['model_version']} |"
                             f"{item['value'].replace('](', '](../')} |\n"
                         )
 
