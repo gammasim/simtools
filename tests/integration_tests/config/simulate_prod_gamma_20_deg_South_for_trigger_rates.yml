@@ -1,40 +1,39 @@
----
 CTA_SIMPIPE:
   APPLICATIONS:
-    - APPLICATION: simtools-simulate-prod
-      TEST_NAME: gamma_20_deg_north_for_trigger_rates
-      CONFIGURATION:
-        SIMULATION_SOFTWARE: corsika_simtel
-        LABEL: test-production-South-for-trigger-rates
-        MODEL_VERSION: 6.0.0
-        SITE: South
-        ARRAY_LAYOUT_NAME: 4mst
-        PRIMARY: proton
-        RUN_NUMBER_START: 1
-        NUMBER_OF_RUNS: 2
-        AZIMUTH_ANGLE: North
-        ZENITH_ANGLE: 20
-        NSHOW: 5
-        ESLOPE: -2.0
-        VIEW_CONE: 0 deg 0 deg
-        ENERGY_RANGE: 100 GeV 1 TeV
-        CORE_SCATTER: 10 500 m
-        DATA_DIRECTORY: simtools-data
-        OUTPUT_PATH: simtools-output
-        SAVE_FILE_LISTS: true
-        LOG_LEVEL: DEBUG
-      INTEGRATION_TESTS:
-        - OUTPUT_FILE: 'simtel/data/run000001/run000001_proton_za20deg_azm000deg_South_4mst_test-production-South-for-trigger-rates.zst
+  - APPLICATION: simtools-simulate-prod
+    TEST_NAME: gamma_20_deg_north_for_trigger_rates
+    CONFIGURATION:
+      SIMULATION_SOFTWARE: corsika_simtel
+      LABEL: test-production-South-for-trigger-rates
+      MODEL_VERSION: 6.0.0
+      SITE: South
+      ARRAY_LAYOUT_NAME: 4mst
+      PRIMARY: proton
+      RUN_NUMBER_START: 1
+      NUMBER_OF_RUNS: 2
+      AZIMUTH_ANGLE: North
+      ZENITH_ANGLE: 20
+      NSHOW: 5
+      ESLOPE: -2.0
+      VIEW_CONE: 0 deg 0 deg
+      ENERGY_RANGE: 100 GeV 1 TeV
+      CORE_SCATTER: 10 500 m
+      DATA_DIRECTORY: simtools-data
+      OUTPUT_PATH: simtools-output
+      SAVE_FILE_LISTS: true
+      LOG_LEVEL: DEBUG
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: 'simtel/data/run000001/run000001_proton_za20deg_azm000deg_South_4mst_test-production-South-for-trigger-rates.zst
 
-            '
-        - OUTPUT_FILE: 'simtel/logs/run000001_proton_za20deg_azm000deg_South_4mst_test-production-South-for-trigger-rates.log.gz
+        '
+    - OUTPUT_FILE: 'simtel/logs/run000001_proton_za20deg_azm000deg_South_4mst_test-production-South-for-trigger-rates.log.gz
 
-            '
-        - OUTPUT_FILE: 'simtel/logs/run000001_proton_za20deg_azm000deg_South_4mst_test-production-South-for-trigger-rates.hdata.zst
+        '
+    - OUTPUT_FILE: 'simtel/logs/run000001_proton_za20deg_azm000deg_South_4mst_test-production-South-for-trigger-rates.hdata.zst
 
-            '
-        - OUTPUT_FILE: log_files.txt
-        - OUTPUT_FILE: output_files.txt
-        - OUTPUT_FILE: hist_files.txt
+        '
+    - OUTPUT_FILE: log_files.txt
+    - OUTPUT_FILE: output_files.txt
+    - OUTPUT_FILE: hist_files.txt
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

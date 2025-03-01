@@ -1,10 +1,9 @@
----
 CTA_SIMPIPE:
   APPLICATIONS:
-    - APPLICATION: simtools-validate-file-using-schema
-      TEST_NAME: json_validate_data_schema_from_meta
-      CONFIGURATION:
-        FILE_NAME: tests/resources/reference_point_altitude.json
-        DATA_TYPE: data
+  - APPLICATION: simtools-validate-file-using-schema
+    TEST_NAME: json_validate_data_schema_from_meta
+    CONFIGURATION:
+      FILE_NAME: tests/resources/reference_point_altitude.json
+      DATA_TYPE: data
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

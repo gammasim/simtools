@@ -1,10 +1,9 @@
----
 CTA_SIMPIPE:
   APPLICATIONS:
-    - APPLICATION: simtools-validate-file-using-schema
-      TEST_NAME: ecsv_validate_metadata
-      CONFIGURATION:
-        FILE_NAME: tests/resources/telescope_positions-North-utm.ecsv
-        DATA_TYPE: metadata
+  - APPLICATION: simtools-validate-file-using-schema
+    TEST_NAME: ecsv_validate_metadata
+    CONFIGURATION:
+      FILE_NAME: tests/resources/telescope_positions-North-utm.ecsv
+      DATA_TYPE: metadata
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

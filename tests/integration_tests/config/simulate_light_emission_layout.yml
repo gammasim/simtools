@@ -1,19 +1,18 @@
----
 CTA_SIMPIPE:
   APPLICATIONS:
-    - APPLICATION: simtools-simulate-light-emission
-      TEST_NAME: run-layout
-      MODEL_VERSION_USE_CURRENT: true
-      CONFIGURATION:
-        SITE: North
-        TELESCOPE: MSTN-04
-        ILLUMINATOR: ILLN-01
-        LIGHT_SOURCE_SETUP: layout
-        MODEL_VERSION: 6.0.0
-        LIGHT_SOURCE_TYPE: led
-        OUTPUT_PATH: simtools-output
-        TELESCOPE_FILE: tests/resources/telescope_positions-North-ground.ecsv
-      INTEGRATION_TESTS:
-        - OUTPUT_FILE: logfile.log
+  - APPLICATION: simtools-simulate-light-emission
+    TEST_NAME: run-layout
+    MODEL_VERSION_USE_CURRENT: true
+    CONFIGURATION:
+      SITE: North
+      TELESCOPE: MSTN-04
+      ILLUMINATOR: ILLN-01
+      LIGHT_SOURCE_SETUP: layout
+      MODEL_VERSION: 6.0.0
+      LIGHT_SOURCE_TYPE: led
+      OUTPUT_PATH: simtools-output
+      TELESCOPE_FILE: tests/resources/telescope_positions-North-ground.ecsv
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: logfile.log
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
