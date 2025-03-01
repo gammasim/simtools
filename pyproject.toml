@@ -270,8 +270,14 @@ norecursedirs = [
   "docs/_build",
   "src/simtools/applications",
 ]
-#addopts = ["-v", "--cov=simtools", "--cov-report=xml", "--cov-report=term", "-p", "pytest_requirements"]
-addopts = [ "-v", "-p", "pytest_requirements" ]
+addopts = [
+  "-v",
+  "--cov=simtools",
+  "--cov-report=xml",
+  "--cov-report=term",
+  "-p",
+  "pytest_requirements",
+]
 testpaths = "tests/unit_tests/"
 # Ignore the warning about fontTools.misc.py23
 filterwarnings = "ignore:The py23 module has been deprecated:DeprecationWarning"
