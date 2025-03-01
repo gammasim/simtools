@@ -118,9 +118,6 @@ exclude = [ "simtools._dev_version.*" ]
 [tool.setuptools_scm]
 write_to = "src/simtools/_version.py"
 
-[tool.black]
-line-length = 100
-
 [tool.ruff]
 line-length = 100
 indent-width = 4
