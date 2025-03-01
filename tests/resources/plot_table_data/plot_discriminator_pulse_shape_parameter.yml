@@ -1,10 +1,11 @@
+---
 CTA_SIMPIPE:
   PLOT:
     TYPE: discriminator_pulse_shape
     TITLE: 'Discriminator pulse shape'
     XTITLE: 'Time [ns]'
     YTITLE: 'Amplitude [a.u.]'
-    NO_MARKERS: True
+    NO_MARKERS: true
     TABLES:
       - PARAMETER: discriminator_pulse_shape
         TELESCOPE: LSTN-01
@@ -27,7 +28,7 @@ CTA_SIMPIPE:
         LABEL: 'MSTN (high gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude'
-        NORMALIZE_Y: True
+        NORMALIZE_Y: true
       - PARAMETER: discriminator_pulse_shape
         TELESCOPE: MSTx-NectarCam
         SITE: NORTH
@@ -35,7 +36,7 @@ CTA_SIMPIPE:
         LABEL: 'MSTN (low gain)'
         COLUMN_X: 'time'
         COLUMN_Y: 'amplitude (low gain)'
-        NORMALIZE_Y: True
+        NORMALIZE_Y: true
       - PARAMETER: discriminator_pulse_shape
         TELESCOPE: MSTx-FlashCam
         SITE: SOUTH
