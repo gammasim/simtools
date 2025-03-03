@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
 from simtools.utils import names
 
@@ -22,7 +23,7 @@ class ReadParameters:
     def __init__(self, db_config, telescope_model, output_path):
         """Initialise class with a telescope model."""
         self._logger = logging.getLogger(__name__)
-        self.db_config = db_config
+        self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
         self.telescope_model = telescope_model
         self.output_path = output_path
 
@@ -169,6 +170,10 @@ class ReadParameters:
                 model_version=version,
             )
 
+            self.db.export_model_files(
+                parameters=all_params,
+                dest=self.telescope_model.config_file_directory)
+
             try:
                 parameter_data = all_params[parameter_name]
             except KeyError:
@@ -181,7 +186,11 @@ class ReadParameters:
                 unit = parameter_data["unit"] if parameter_data["unit"] else ""
                 value_data = parameter_data["value"]
 
-                if isinstance(value_data, str | int | float):
+                if self.telescope_model.get_parameter_file_flag(parameter_name) and value_data:
+                    input_file_name = self.telescope_model.config_file_directory / Path(value_data)
+                    output_file_name = self._convert_to_md(input_file_name)
+                    value = f"[{Path(value_data).name}]({output_file_name})"
+                elif isinstance(value_data, str | int | float):
                     value = f"{value_data} {unit}"
                 elif len(value_data) > 5 and np.allclose(value_data, value_data[0]):
                     value = f"all: {value_data[0]} {unit}"

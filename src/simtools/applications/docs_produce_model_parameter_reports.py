@@ -39,7 +39,7 @@ def main():  # noqa: D103
     telescope_model = TelescopeModel(
         site=args["site"],
         telescope_name=args["telescope"],
-        model_version="5.0.0",
+        model_version="6.0.0",
         label=label_name,
         mongo_db_config=db_config,
     )
