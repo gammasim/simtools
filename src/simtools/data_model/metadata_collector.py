@@ -164,7 +164,7 @@ class MetadataCollector:
                         keys_lower_case,
                     ),
                     file,
-                    sort_keys=False,
+                    sort_keys=False, explicit_start=True
                 )
             self._logger.info(f"Writing metadata to {yml_file}")
             return yml_file
