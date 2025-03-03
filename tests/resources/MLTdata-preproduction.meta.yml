@@ -29,10 +29,10 @@ CTA:
     DESCRIPTION: |-
       Mirror curvature radius and PSF measurements
       from 2f test stand
-    CREATION_TIME: '2020-03-20 12:00:00'
+    CREATION_TIME: '2020-03-20T12:00:00+00:00'
     ID: null
     VALID:
-      START: '2020-03-20 12:00:00'
+      START: '2020-03-20T12:00:00+00:00'
       END: '2024-03-20 12:00:00'
     FORMAT: ascii.ecsv
     DATA:

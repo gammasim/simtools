@@ -29,10 +29,10 @@ CTA:
   PRODUCT:
     DESCRIPTION: >
       Number of gains.
-    CREATION_TIME: '2017-05-08 12:00:00'
+    CREATION_TIME: '2017-05-08T12:00:00+00:00'
     ID: null
     VALID:
-      START: '2017-05-08 12:00:00'
+      START: '2017-05-08T12:00:00+00:00'
     FORMAT: number
     FILENAME: null
     DATA:
