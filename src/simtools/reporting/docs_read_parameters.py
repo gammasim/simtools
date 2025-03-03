@@ -201,7 +201,6 @@ class ReadParameters:
                 parameter_version = parameter_data["parameter_version"]
                 model_version = version
                 grouped_data[(value, parameter_version)].append(model_version)
-
                 model_versions = ", ".join(grouped_data[(value, parameter_version)])
             except TypeError:
                 continue
