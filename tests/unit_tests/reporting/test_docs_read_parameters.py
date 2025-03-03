@@ -88,3 +88,18 @@ def test__compare_parameter_across_versions(telescope_model_lst, io_handler, db_
     nsb_comparison = read_parameters._compare_parameter_across_versions("nsb_pixel_rate")
     assert nsb_comparison[0]["model_version"] != nsb_comparison[1]["model_version"]
     assert nsb_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
+
+
+def test__compare_parameter_across_versions_sst(telescope_model_sst, io_handler, db_config):
+    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_sst.model_version}")
+    read_parameters = ReadParameters(
+        db_config=db_config, telescope_model=telescope_model_sst, output_path=output_path
+    )
+
+    # parameter value set to null, function should return empty list
+    asum_shaping_comparison = read_parameters._compare_parameter_across_versions("asum_shaping")
+    assert len(asum_shaping_comparison) == 0
+
+    # value defined for only one model version
+    adjust_gain_comparison = read_parameters._compare_parameter_across_versions("adjust_gain")
+    assert len(adjust_gain_comparison) == 1
