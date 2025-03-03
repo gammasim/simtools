@@ -66,7 +66,7 @@ class LimitCalculator:
                         "One or more required datasets are missing from the 'data' group."
                     ) from exc
             else:
-                raise KeyError("'data' group is missing from the HDF5 file.")
+                raise KeyError("data group is missing from the HDF5 file.")
 
     def _generate_2d_histogram(self, x_data, y_data, x_bins, y_bins):
         """
@@ -267,18 +267,12 @@ class LimitCalculator:
         core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
         triggered_energies = self.simulated[shower_id_triggered_adjusted]
 
-        if len(core_distances_triggered) > 0 and len(triggered_energies) > 0:
-            core_bins = np.linspace(
+        core_bins = np.linspace(
                 core_distances_triggered.min(), core_distances_triggered.max(), 100
             )
-            energy_bins = np.logspace(
+        energy_bins = np.logspace(
                 np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 100
             )
-        else:
-            print("Warning: No triggered events found.")
-            core_bins = np.linspace(0, 1, 10)
-            energy_bins = np.logspace(-1, 1, 10)
-
         plt.figure(figsize=(8, 6))
         plt.hist2d(
             core_distances_triggered,
