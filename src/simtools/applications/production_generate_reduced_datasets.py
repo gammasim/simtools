@@ -28,6 +28,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.production_configuration.generate_reduced_datasets import ReducedDatasetGenerator
 
 
@@ -58,6 +59,8 @@ def _parse():
     config.parser.add_argument(
         "--max_files", type=int, default=100, help="Maximum number of files to process."
     )
+    config.parser.add_argument("--print_hdf5", action="store_true",
+                                help="Print additionally HDF5 file contents after file generation.")
 
     return config.initialize(db_config=False)
 
@@ -76,9 +79,17 @@ def main():
         _logger.warning("No matching input files found.")
         return
 
-    generator = ReducedDatasetGenerator(files, args_dict["output_file"], args_dict["max_files"])
+    _output_file = (
+            Path(io_handler.IOHandler().get_output_directory()) / Path(
+            args_dict["output_file"]
+        )
+        )
+
+    generator = ReducedDatasetGenerator(files, _output_file, args_dict["max_files"])
     generator.process_files()
-    _logger.info(f"reduced dataset saved to: {args_dict['output_file']}")
+    _logger.info(f"reduced dataset saved to: {_output_file}")
+    if args_dict["print_hdf5"]:
+        ReducedDatasetGenerator(files, _output_file, args_dict["max_files"]).print_hdf5_file()
 
 
 if __name__ == "__main__":
