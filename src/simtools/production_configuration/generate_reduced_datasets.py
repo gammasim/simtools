@@ -1,4 +1,4 @@
-"""Generate lookup tables from EventIO simulation files and store them in an HDF5 file."""
+"""Generate reduced datasets from EventIO simulation files and store them in an HDF5 file."""
 
 import logging
 
@@ -10,7 +10,7 @@ from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerIn
 
 class ReducedDatasetGenerator:
     """
-    A class to generate lookup tables from EventIO simulation files and store them in an HDF5 file.
+    A class to generate reduced datasets from EventIO simulation files and store them.
 
     Attributes
     ----------
@@ -39,149 +39,129 @@ class ReducedDatasetGenerator:
         self.input_files = input_files
         self.output_file = output_file
         self.max_files = max_files
+        self.n_use = None
 
     def process_files(self):
         """Process the input files and store it in an HDF5 file."""
         with h5py.File(self.output_file, "w") as hdf:
             grp = hdf.create_group("data")
-            dset_simulated = grp.create_dataset(
-                "simulated", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            )
-            dset_shower_id_triggered = grp.create_dataset(
-                "shower_id_triggered", (0,), maxshape=(None,), dtype="i4", compression="gzip"
-            )
-            dset_triggered = grp.create_dataset(
-                "triggered_energies", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            )
-            dset_num_triggered_telescopes = grp.create_dataset(
-                "num_triggered_telescopes", (0,), maxshape=(None,), dtype="i4", compression="gzip"
-            )
-            vlen_int_type = h5py.special_dtype(vlen=np.int16)
-            dset_trigger_telescope_list_list = grp.create_dataset(
-                "trigger_telescope_list_list",
-                (0,),
-                maxshape=(None,),
-                dtype=vlen_int_type,
-                chunks=True,
-                compression="gzip",
-            )
-            dset_core_x = grp.create_dataset(
-                "core_x", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            )
-            dset_core_y = grp.create_dataset(
-                "core_y", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            )
-            dset_file_names = grp.create_dataset(
-                "file_names",
-                (0,),
-                maxshape=(None,),
-                dtype=h5py.string_dtype(encoding="utf-8"),
-                compression="gzip",
-            )
-            dset_shower_sim_azimuth = grp.create_dataset(
-                "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            )
-            dset_shower_sim_altitude = grp.create_dataset(
-                "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            )
-            dset_array_altitude = grp.create_dataset(
-                "array_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            )
-            dset_array_azimuth = grp.create_dataset(
-                "array_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            )
-
-            batch_size = 50000
-            simulated, shower_id_triggered, triggered_energies = [], [], []
-            num_triggered_telescopes, event_x_core, event_y_core = [], [], []
-            trigger_telescope_list_list, file_names = [], []
-            shower_sim_azimuth, shower_sim_altitude, array_altitudes, array_azimuths = (
-                [],
-                [],
-                [],
-                [],
-            )
+            datasets = self._create_datasets(grp)
+            data_lists = self._initialize_data_lists()
 
             for i_file, file in enumerate(self.input_files[: self.max_files]):
                 self._logger.info(f"Processing file {i_file+1}/{self.max_files}: {file}")
-                file_names.append(file)
-                with EventIOFile(file) as f:
-                    array_altitude = None
-                    array_azimuth = None
-                    for eventio_object in f:
-                        if isinstance(eventio_object, MCRunHeader):
-                            mc_head = eventio_object.parse()
-                            n_use = mc_head["n_use"]
-                            array_altitude = np.mean(mc_head["alt_range"])
-                            array_azimuth = np.mean(mc_head["az_range"])
+                data_lists["file_names"].append(file)
+                self._process_file(file, data_lists)
 
-                        if isinstance(eventio_object, MCShower):
-                            shower = eventio_object.parse()
-                            simulated.extend(n_use * [shower["energy"]])
-                            shower_sim_azimuth.extend(n_use * [shower["azimuth"]])
-                            shower_sim_altitude.extend(n_use * [shower["altitude"]])
-                            array_altitudes.extend(n_use * [array_altitude])
-                            array_azimuths.extend(n_use * [array_azimuth])
+                if len(data_lists["simulated"]) >= 50000:
+                    self._append_all_datasets(datasets, data_lists)
+                    self._reset_data_lists(data_lists)
 
-                        if isinstance(eventio_object, MCEvent):
-                            event = eventio_object.parse()
-                            event_x_core.append(event["xcore"])
-                            event_y_core.append(event["ycore"])
+            self._append_all_datasets(datasets, data_lists)
 
-                        if isinstance(eventio_object, ArrayEvent):
-                            for i, obj in enumerate(eventio_object):
-                                if i == 0 and isinstance(obj, TriggerInformation):
-                                    trigger_info = obj.parse()
-                                    telescopes = trigger_info["telescopes_with_data"]
-                                    if len(telescopes) > 0:
-                                        shower_id_triggered.append(shower["shower"])
-                                        triggered_energies.append(shower["energy"])
-                                        num_triggered_telescopes.append(len(telescopes))
-                                        trigger_telescope_list_list.append(
-                                            np.array(telescopes, dtype=np.int16)
-                                        )
+    def _create_datasets(self, grp):
+        """Create HDF5 datasets."""
+        vlen_int_type = h5py.special_dtype(vlen=np.int16)
+        return {
+            "simulated": grp.create_dataset(
+                "simulated", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "shower_id_triggered": grp.create_dataset(
+                "shower_id_triggered", (0,), maxshape=(None,), dtype="i4", compression="gzip"),
+            "triggered_energies": grp.create_dataset(
+                "triggered_energies", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "num_triggered_telescopes": grp.create_dataset(
+                "num_triggered_telescopes", (0,), maxshape=(None,), dtype="i4", compression="gzip"),
+            "trigger_telescope_list_list": grp.create_dataset(
+                "trigger_telescope_list_list", (0,), maxshape=(None,), dtype=vlen_int_type,
+                  chunks=True, compression="gzip"),
+            "core_x": grp.create_dataset(
+                "core_x", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "core_y": grp.create_dataset(
+                "core_y", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "file_names": grp.create_dataset(
+                "file_names", (0,), maxshape=(None,), dtype=h5py.string_dtype(encoding="utf-8"),
+                  compression="gzip"),
+            "shower_sim_azimuth": grp.create_dataset(
+                "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "shower_sim_altitude": grp.create_dataset(
+                "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "array_altitude": grp.create_dataset(
+                "array_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "array_azimuth": grp.create_dataset(
+                "array_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+        }
 
-                if len(simulated) >= batch_size:
-                    self._append_to_hdf5(dset_simulated, simulated)
-                    self._append_to_hdf5(dset_shower_id_triggered, shower_id_triggered)
-                    self._append_to_hdf5(dset_triggered, triggered_energies)
-                    self._append_to_hdf5(dset_num_triggered_telescopes, num_triggered_telescopes)
-                    self._append_to_hdf5(
-                        dset_trigger_telescope_list_list, trigger_telescope_list_list
-                    )
-                    self._append_to_hdf5(dset_core_x, event_x_core)
-                    self._append_to_hdf5(dset_core_y, event_y_core)
-                    self._append_to_hdf5(dset_file_names, file_names)
-                    self._append_to_hdf5(dset_shower_sim_azimuth, shower_sim_azimuth)
-                    self._append_to_hdf5(dset_shower_sim_altitude, shower_sim_altitude)
-                    self._append_to_hdf5(dset_array_altitude, array_altitudes)
-                    self._append_to_hdf5(dset_array_azimuth, array_azimuths)
+    def _initialize_data_lists(self):
+        """Initialize data lists."""
+        return {
+            "simulated": [],
+            "shower_id_triggered": [],
+            "triggered_energies": [],
+            "num_triggered_telescopes": [],
+            "event_x_core": [],
+            "event_y_core": [],
+            "trigger_telescope_list_list": [],
+            "file_names": [],
+            "shower_sim_azimuth": [],
+            "shower_sim_altitude": [],
+            "array_altitudes": [],
+            "array_azimuths": [],
+        }
 
-                    simulated, shower_id_triggered, triggered_energies = [], [], []
-                    num_triggered_telescopes, event_x_core, event_y_core = [], [], []
-                    trigger_telescope_list_list, file_names = [], []
-                    shower_sim_azimuth, shower_sim_altitude, array_altitudes, array_azimuths = (
-                        [],
-                        [],
-                        [],
-                        [],
-                    )
+    def _process_file(self, file, data_lists):
+        """Process a single file and update data lists."""
+        with EventIOFile(file) as f:
+            array_altitude = None
+            array_azimuth = None
+            for eventio_object in f:
+                if isinstance(eventio_object, MCRunHeader):
+                    self._process_mc_run_header(eventio_object, data_lists)
+                elif isinstance(eventio_object, MCShower):
+                    self._process_mc_shower(eventio_object, data_lists,
+                                             array_altitude, array_azimuth)
+                elif isinstance(eventio_object, MCEvent):
+                    self._process_mc_event(eventio_object, data_lists)
+                elif isinstance(eventio_object, ArrayEvent):
+                    self._process_array_event(eventio_object, data_lists)
 
-            self._append_to_hdf5(dset_simulated, simulated)
-            self._append_to_hdf5(dset_shower_id_triggered, shower_id_triggered)
-            self._append_to_hdf5(dset_triggered, triggered_energies)
-            self._append_to_hdf5(dset_num_triggered_telescopes, num_triggered_telescopes)
-            self._append_to_hdf5(dset_trigger_telescope_list_list, trigger_telescope_list_list)
-            self._append_to_hdf5(dset_core_x, event_x_core)
-            self._append_to_hdf5(dset_core_y, event_y_core)
-            self._append_to_hdf5(dset_file_names, file_names)
-            self._append_to_hdf5(dset_shower_sim_azimuth, shower_sim_azimuth)
-            self._append_to_hdf5(dset_shower_sim_altitude, shower_sim_altitude)
-            self._append_to_hdf5(dset_array_altitude, array_altitudes)
-            self._append_to_hdf5(dset_array_azimuth, array_azimuths)
+    def _process_mc_run_header(self, eventio_object, data_lists):
+        """Process MC run header and update data lists."""
+        mc_head = eventio_object.parse()
+        self.n_use = mc_head["n_use"]
+        array_altitude = np.mean(mc_head["alt_range"])
+        array_azimuth = np.mean(mc_head["az_range"])
+        data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
+        data_lists["array_azimuths"].extend(self.n_use * [array_azimuth])
 
-    @staticmethod
-    def _append_to_hdf5(dataset, data):
+    def _process_mc_shower(self, eventio_object, data_lists, array_altitude, array_azimuth):
+        """Process MC shower and update data lists."""
+        shower = eventio_object.parse()
+        data_lists["simulated"].extend(self.n_use * [shower["energy"]])
+        data_lists["shower_sim_azimuth"].extend(self.n_use * [shower["azimuth"]])
+        data_lists["shower_sim_altitude"].extend(self.n_use * [shower["altitude"]])
+        data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
+        data_lists["array_azimuths"].extend(self.n_use * [array_azimuth])
+
+    def _process_mc_event(self, eventio_object, data_lists):
+        """Process MC event and update data lists."""
+        event = eventio_object.parse()
+        data_lists["event_x_core"].append(event["xcore"])
+        data_lists["event_y_core"].append(event["ycore"])
+
+    def _process_array_event(self, eventio_object, data_lists):
+        """Process array event and update data lists."""
+        for i, obj in enumerate(eventio_object):
+            if i == 0 and isinstance(obj, TriggerInformation):
+                trigger_info = obj.parse()
+                telescopes = trigger_info["telescopes_with_data"]
+                if len(telescopes) > 0:
+                    data_lists["shower_id_triggered"].append(trigger_info["shower"])
+                    data_lists["triggered_energies"].append(trigger_info["energy"])
+                    data_lists["num_triggered_telescopes"].append(len(telescopes))
+                    data_lists["trigger_telescope_list_list"].append(
+                        np.array(telescopes, dtype=np.int16))
+
+    def _append_to_hdf5(self, dataset, data):
         """
         Append data to an HDF5 dataset, resizing it as needed.
 
@@ -195,6 +175,25 @@ class ReducedDatasetGenerator:
         if len(data) > 0:
             dataset.resize((dataset.shape[0] + len(data),))
             dataset[-len(data) :] = data
+
+    def _append_all_datasets(self, datasets, data_lists):
+        """
+        Append all data to the respective HDF5 datasets.
+
+        Parameters
+        ----------
+        datasets : dict
+            Dictionary containing HDF5 datasets.
+        data_lists : dict
+            Dictionary containing lists of data to append.
+        """
+        for key, dataset in datasets.items():
+            self._append_to_hdf5(dataset, data_lists[key])
+
+    def _reset_data_lists(self, data_lists):
+        """Reset data lists."""
+        for key in data_lists:
+            data_lists[key] = []
 
     def print_hdf5_file(self):
         """Print information about the datasets in the generated HDF5 file."""
