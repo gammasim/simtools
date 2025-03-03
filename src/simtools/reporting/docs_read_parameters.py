@@ -164,7 +164,7 @@ class ReadParameters:
 
         def format_value(value_data, unit):
             """Format parameter value based on type and parameter name."""
-            if self.telescope_model.get_parameter_file_flag(parameter_name) and value_data:
+            if self.telescope_model.get_parameter_file_flag(parameter_name):
                 input_file_name = self.telescope_model.config_file_directory / Path(value_data)
                 output_file_name = self._convert_to_md(input_file_name)
                 return f"[{Path(value_data).name}]({output_file_name})"
