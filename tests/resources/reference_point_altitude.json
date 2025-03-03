@@ -16,7 +16,7 @@
             },
             "PRODUCT": {
                 "DESCRIPTION": "Reference point altitude as used in prod6",
-                "CREATION_TIME": "2024-01-11T08:16:11",
+                "CREATION_TIME": "2024-01-11T08:16:11+00:00",
                 "ID": null,
                 "DATA": {
                     "CATEGORY": null,

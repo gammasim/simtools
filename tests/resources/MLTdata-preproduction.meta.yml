@@ -33,7 +33,7 @@ CTA:
     ID: null
     VALID:
       START: '2020-03-20T12:00:00+00:00'
-      END: '2024-03-20 12:00:00'
+      END: '2024-03-20T12:00:00+00:00'
     FORMAT: ascii.ecsv
     DATA:
       CATEGORY: CAL
