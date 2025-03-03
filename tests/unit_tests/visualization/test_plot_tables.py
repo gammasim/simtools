@@ -34,11 +34,32 @@ def test_plot(mock_read_table_data, mock_visualize):
     mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file)
 
 
+@mock.patch("simtools.visualization.plot_tables.Table.read")
+def test_read_astropy_table_data_from_file(
+    mock_table_read,
+):
+    config = {
+        "tables": [
+            {
+                "label": "test_table",
+                "file_name": "test_file",
+                "type": "ascii.ecsv",
+                "column_x": "x",
+                "column_y": "y",
+                "select_values": {"column_name": "x", "value": 42},
+            },
+        ]
+    }
+    mock_table = mock.MagicMock()
+    mock_table_read.return_value = mock_table
+
+    plot_tables.read_table_data(config, None)
+    mock_table_read.assert_called_once_with("test_file", format="ascii.ecsv")
+
+
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
-@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
 def test_read_table_data_from_file(
-    mock_read_table_from_model_database,
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
@@ -47,31 +68,28 @@ def test_read_table_data_from_file(
             {
                 "label": "test_table",
                 "file_name": "test_file",
-                "type": "csv",
+                "type": "legacy_csv",
                 "column_x": "x",
                 "column_y": "y",
-            }
+            },
         ]
     }
-    db_config = None
     mock_table = mock.MagicMock()
     mock_read_legacy_data_as_table.return_value = mock_table
     mock_structure_array = mock.MagicMock()
     mock_get_structure_array_from_table.return_value = mock_structure_array
 
-    result = plot_tables.read_table_data(config, db_config)
+    result = plot_tables.read_table_data(config, None)
 
-    mock_read_legacy_data_as_table.assert_called_once_with("test_file", "csv")
+    mock_read_legacy_data_as_table.assert_called_once_with("test_file", "legacy_csv")
     mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y"])
     assert result == {"test_table": mock_structure_array}
 
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
-@mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
 @mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
 def test_read_table_data_from_model_database(
     mock_read_table_from_model_database,
-    mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
     config = {
