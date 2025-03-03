@@ -64,8 +64,8 @@ def test_process_files(mock_eventio_class, lookup_table_generator):
         assert "file_names" in data_group
         assert "shower_sim_azimuth" in data_group
         assert "shower_sim_altitude" in data_group
-        assert "array_altitude" in data_group
-        assert "array_azimuth" in data_group
+        assert "array_altitudes" in data_group
+        assert "array_azimuths" in data_group
 
         # Check that datasets are not empty
         assert len(data_group["simulated"]) > 0
@@ -78,8 +78,8 @@ def test_process_files(mock_eventio_class, lookup_table_generator):
         assert len(data_group["file_names"]) > 0
         assert len(data_group["shower_sim_azimuth"]) > 0
         assert len(data_group["shower_sim_altitude"]) > 0
-        assert len(data_group["array_altitude"]) > 0
-        assert len(data_group["array_azimuth"]) > 0
+        assert len(data_group["array_altitudes"]) > 0
+        assert len(data_group["array_azimuths"]) > 0
 
 
 @patch("simtools.production_configuration.generate_reduced_datasets.EventIOFile", autospec=True)
@@ -102,5 +102,5 @@ def test_print_hdf5_file(mock_eventio_class, lookup_table_generator, capsys):
     assert "- file_names: shape=" in captured.out
     assert "- shower_sim_azimuth: shape=" in captured.out
     assert "- shower_sim_altitude: shape=" in captured.out
-    assert "- array_altitude: shape=" in captured.out
-    assert "- array_azimuth: shape=" in captured.out
+    assert "- array_altitudes: shape=" in captured.out
+    assert "- array_azimuths: shape=" in captured.out
