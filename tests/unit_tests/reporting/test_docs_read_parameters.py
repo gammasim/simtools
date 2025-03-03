@@ -106,3 +106,7 @@ def test__compare_parameter_across_versions_sst(telescope_model_sst, io_handler,
     # value defined for only one model version
     adjust_gain_comparison = read_parameters._compare_parameter_across_versions("adjust_gain")
     assert len(adjust_gain_comparison) == 1
+
+    # should return empty list for invalid parameters
+    invalid_parameter = read_parameters._compare_parameter_across_versions("invalid_parameter")
+    assert len(invalid_parameter) == 0
