@@ -10,11 +10,11 @@
 # meta: !!omap
 # - CTA:
 #     ACTIVITY:
-#       END: '2024-10-19T11:43:08'
+#       END: '2024-10-19T11:43:08+00:00'
 #       ID: d45ad25b-dd15-40e4-93c6-cd214cbfab40
 #       NAME: derive_mirror_rnda
 #       SOFTWARE: {NAME: simtools, VERSION: 0.7.1.dev608+g141ca6b22.d20241018}
-#       START: '2024-10-19T11:43:08'
+#       START: '2024-10-19T11:43:08+00:00'
 #       TYPE: software
 #     CONTACT: {EMAIL: null, NAME: root, ORGANIZATION: CTAO}
 #     CONTEXT:
@@ -40,7 +40,7 @@
 #     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: null, SUBTYPE: null, TYPE: null}
 #     PROCESS: {ID: null, SUBTYPE: null, TYPE: simulation}
 #     PRODUCT:
-#       CREATION_TIME: '2024-10-19T11:43:08'
+#       CREATION_TIME: '2024-10-19T11:43:08+00:00'
 #       DATA:
 #         ASSOCIATION: null
 #         CATEGORY: SIM

@@ -29,10 +29,10 @@ CTA:
   PRODUCT:
     DESCRIPTION: >
       Number of gains.
-    CREATION_TIME: '2017-05-08 12:00:00'
+    CREATION_TIME: '2017-05-08T12:00:00+00:00'
     ID: null
     VALID:
-      START: '2017-05-08 12:00:00'
+      START: '2017-05-08T12:00:00+00:00'
     FORMAT: number
     FILENAME: null
     DATA:
@@ -51,7 +51,7 @@ CTA:
       - TYPE: CTAO-MC-DOC
         TITLE: "CTA Monte Carlo Model LST Appendix (last update: 04 May 2020)"
         ID: null
-        CREATION_TIME: '2020-04-20 12:00:00'
+        CREATION_TIME: '2020-04-20T12:00:00+00:00'
         URL: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/verification/verification-process/lst/-/blob/master/Appendix-LST.pdf
     # List of array elements this data product is associated with
     ASSOCIATED_ELEMENTS:
