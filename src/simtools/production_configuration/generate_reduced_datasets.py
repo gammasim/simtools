@@ -39,6 +39,7 @@ class ReducedDatasetGenerator:
         self.input_files = input_files
         self.output_file = output_file
         self.max_files = max_files
+        self.shower = None
         self.n_use = None
 
     def process_files(self):
@@ -50,7 +51,7 @@ class ReducedDatasetGenerator:
 
             for i_file, file in enumerate(self.input_files[: self.max_files]):
                 self._logger.info(f"Processing file {i_file+1}/{self.max_files}: {file}")
-                data_lists["file_names"].append(file)
+                data_lists["file_names"].append(str(file))
                 self._process_file(file, data_lists)
 
                 if len(data_lists["simulated"]) >= 50000:
@@ -85,10 +86,10 @@ class ReducedDatasetGenerator:
                 "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
             "shower_sim_altitude": grp.create_dataset(
                 "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
-            "array_altitude": grp.create_dataset(
-                "array_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
-            "array_azimuth": grp.create_dataset(
-                "array_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "array_altitudes": grp.create_dataset(
+                "array_altitudes", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+            "array_azimuths": grp.create_dataset(
+                "array_azimuths", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
         }
 
     def _initialize_data_lists(self):
@@ -98,8 +99,8 @@ class ReducedDatasetGenerator:
             "shower_id_triggered": [],
             "triggered_energies": [],
             "num_triggered_telescopes": [],
-            "event_x_core": [],
-            "event_y_core": [],
+            "core_x": [],
+            "core_y": [],
             "trigger_telescope_list_list": [],
             "file_names": [],
             "shower_sim_azimuth": [],
@@ -135,18 +136,18 @@ class ReducedDatasetGenerator:
 
     def _process_mc_shower(self, eventio_object, data_lists, array_altitude, array_azimuth):
         """Process MC shower and update data lists."""
-        shower = eventio_object.parse()
-        data_lists["simulated"].extend(self.n_use * [shower["energy"]])
-        data_lists["shower_sim_azimuth"].extend(self.n_use * [shower["azimuth"]])
-        data_lists["shower_sim_altitude"].extend(self.n_use * [shower["altitude"]])
+        self.shower = eventio_object.parse()
+        data_lists["simulated"].extend(self.n_use * [self.shower["energy"]])
+        data_lists["shower_sim_azimuth"].extend(self.n_use * [self.shower["azimuth"]])
+        data_lists["shower_sim_altitude"].extend(self.n_use * [self.shower["altitude"]])
         data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
         data_lists["array_azimuths"].extend(self.n_use * [array_azimuth])
 
     def _process_mc_event(self, eventio_object, data_lists):
         """Process MC event and update data lists."""
         event = eventio_object.parse()
-        data_lists["event_x_core"].append(event["xcore"])
-        data_lists["event_y_core"].append(event["ycore"])
+        data_lists["core_x"].append(event["xcore"])
+        data_lists["core_y"].append(event["ycore"])
 
     def _process_array_event(self, eventio_object, data_lists):
         """Process array event and update data lists."""
@@ -155,8 +156,8 @@ class ReducedDatasetGenerator:
                 trigger_info = obj.parse()
                 telescopes = trigger_info["telescopes_with_data"]
                 if len(telescopes) > 0:
-                    data_lists["shower_id_triggered"].append(trigger_info["shower"])
-                    data_lists["triggered_energies"].append(trigger_info["energy"])
+                    data_lists["shower_id_triggered"].append(self.shower["shower"])
+                    data_lists["triggered_energies"].append(self.shower["energy"])
                     data_lists["num_triggered_telescopes"].append(len(telescopes))
                     data_lists["trigger_telescope_list_list"].append(
                         np.array(telescopes, dtype=np.int16))

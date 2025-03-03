@@ -1,0 +1,14 @@
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-production-generate-reduced-datasets
+    TEST_NAME: production_generate_reduced_datasets
+    CONFIGURATION:
+      PREFIX: tests/resources/
+      WILDCARD: 'proton*.simtel.zst'
+      OUTPUT_FILE: output_file.hdf5
+      OUTPUT_PATH: simtools-output
+      MAX_FILES: 1
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: output_file.hdf5
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
