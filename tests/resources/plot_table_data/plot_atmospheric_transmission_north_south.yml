@@ -1,3 +1,4 @@
+---
 CTA_SIMPIPE:
   PLOT:
     TYPE: atmospheric_transmission
@@ -5,8 +6,8 @@ CTA_SIMPIPE:
     XTITLE: 'Wavelength [nm]'
     YTITLE: 'Extinction'
     YSCALE: 'log'
-    NO_MARKERS: True
-#    PLOT_RATIO: True
+    NO_MARKERS: true
+    # PLOT_RATIO: true
     TABLES:
       - PARAMETER: atmospheric_transmission
         SITE: North

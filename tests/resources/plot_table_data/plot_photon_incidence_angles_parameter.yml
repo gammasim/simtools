@@ -1,10 +1,11 @@
+---
 CTA_SIMPIPE:
   PLOT:
     TYPE: Photon incident angles
     TITLE: 'Photon incident angles'
     XTITLE: 'Photon incident angle [deg]'
     YTITLE: 'Fraction'
-    NO_MARKERS: True
+    NO_MARKERS: true
     TABLES:
       - PARAMETER: camera_filter_incidence_angle
         TELESCOPE: SSTS-design

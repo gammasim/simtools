@@ -1,3 +1,4 @@
+---
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-db-add-value-from-json-to-db

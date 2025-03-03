@@ -1,3 +1,4 @@
+---
 name: Changelog
 # Require a changelog entry for each pull request
 # from: https://github.com/cta-observatory/ctapipe/blob/main/.github/workflows/changelog.yml

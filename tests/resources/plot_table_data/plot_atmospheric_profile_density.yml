@@ -1,3 +1,4 @@
+---
 CTA_SIMPIPE:
   PLOT:
     TYPE: atmospheric_profile
@@ -5,8 +6,8 @@ CTA_SIMPIPE:
     XTITLE: 'Height [km]'
     YTITLE: 'Densitity [g/cm^3]'
     YSCALE: 'log'
-    NO_MARKERS: True
-    PLOT_RATIO: True
+    NO_MARKERS: true
+    PLOT_RATIO: true
     TABLES:
       - PARAMETER: atmospheric_profile
         SITE: NORTH

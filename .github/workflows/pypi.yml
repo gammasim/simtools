@@ -1,3 +1,4 @@
+---
 # Derived from https://github.com/cta-observatory/project-template-python-pure/blob/main/.github/workflows/pypi.yml
 name: Deploy to PyPi
 

@@ -1,10 +1,11 @@
+---
 CTA_SIMPIPE:
   PLOT:
     TYPE: mirror reflectivity
     TITLE: 'Mirror reflectivity'
     XTITLE: 'Wavelength [nm]'
     YTITLE: 'Reflectivity'
-    NO_MARKERS: True
+    NO_MARKERS: true
     TABLES:
       - PARAMETER: mirror_reflectivity
         TELESCOPE: LSTN-01
