@@ -925,6 +925,6 @@ def get_list_of_files_from_command_line(file_names, suffix_list):
     return _files
 
 
-def now_in_date_time_isoformat():
+def now_date_time_in_isoformat():
     """Return date and time in isoformat and second accuracy."""
     return datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
