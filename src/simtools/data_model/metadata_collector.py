@@ -99,7 +99,7 @@ class MetadataCollector:
         try:
             self.top_level_meta[self.observatory]["activity"][
                 "end"
-            ] = datetime.datetime.now().isoformat(timespec="seconds")
+            ] = datetime.datetime.now().isoformat(sep="T", timespec="seconds")
         except KeyError:
             pass
         return self.top_level_meta
@@ -416,7 +416,8 @@ class MetadataCollector:
         self.schema_dict = self.get_data_model_schema_dict()
 
         product_dict["id"] = str(uuid.uuid4())
-        product_dict["creation_time"] = datetime.datetime.now().isoformat(timespec="seconds")
+        product_dict["creation_time"] = datetime.datetime.now().isoformat(
+            sep="T", timespec="seconds")
         product_dict["description"] = self.schema_dict.get("description", None)
 
         # DATA:CATEGORY
@@ -497,7 +498,7 @@ class MetadataCollector:
         activity_dict["name"] = self.args_dict.get("label", None)
         activity_dict["type"] = "software"
         activity_dict["id"] = self.args_dict.get("activity_id", "UNDEFINED_ACTIVITY_ID")
-        activity_dict["start"] = datetime.datetime.now().isoformat(timespec="seconds")
+        activity_dict["start"] = datetime.datetime.now().isoformat(sep="T", timespec="seconds")
         activity_dict["end"] = activity_dict["start"]
         activity_dict["software"]["name"] = "simtools"
         activity_dict["software"]["version"] = simtools.version.__version__
