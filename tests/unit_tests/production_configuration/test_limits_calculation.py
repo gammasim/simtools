@@ -39,6 +39,8 @@ def hdf5_file(tmp_path):
     return file_path
 
 
+
+
 @pytest.fixture
 def limit_calculator(hdf5_file):
     return LimitCalculator(hdf5_file)
@@ -99,3 +101,32 @@ def test_plot_data(limit_calculator):
 
 def test_plot_data_with_telescopes(limit_calculator_with_telescopes):
     limit_calculator_with_telescopes.plot_data()
+
+
+@pytest.fixture
+def hdf5_file_missing_datasets(tmp_path):
+    file_path = tmp_path / "test_data_missing.h5"
+    with h5py.File(file_path, "w") as f:
+        grp = f.create_group("data")
+        grp.create_dataset("core_x", data=np.array([0.1, 0.2, 0.3]))
+    return file_path
+
+
+def test_read_event_data_missing_datasets(hdf5_file_missing_datasets):
+    with pytest.raises(KeyError, match="One or more required datasets are missing from the 'data' group."):
+        LimitCalculator(hdf5_file_missing_datasets)
+
+
+
+@pytest.fixture
+def hdf5_file_missing_datagroup(tmp_path):
+    file_path = tmp_path / "test_datagroup_missing.h5"
+    with h5py.File(file_path, "w") as f:
+        grp = f.create_group("wrong_data")
+        grp.create_dataset("core_x", data=np.array([0.1, 0.2, 0.3]))
+    return file_path
+
+
+def test_read_event_data_missing_datagroup(hdf5_file_missing_datagroup):
+    with pytest.raises(KeyError, match="data group is missing from the HDF5 file."):
+        LimitCalculator(hdf5_file_missing_datagroup)
