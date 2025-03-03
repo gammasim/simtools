@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import astropy.units as u
 import pytest
 
@@ -74,6 +76,7 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     # testing with valid file
     new_file = read_parameters._convert_to_md("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
     assert isinstance(new_file, str)
+    assert Path(output_path / new_file).exists()
 
 
 def test__compare_parameter_across_versions(telescope_model_lst, io_handler, db_config):
