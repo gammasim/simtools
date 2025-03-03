@@ -40,9 +40,9 @@ RUN make -C corsika-$CORSIKA_VERSION clean && rm -f */*.a lib/*/*.a && \
     AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
     CFLAGS="" && CXXFLAGS="" && FFLAGS="" && \
     if [[ "$AVX_FLAG" == "noOpt" ]]; then \
-        CFLAGS="-g  -std=c99 -O3 -mavx2"; \
-        CXXFLAGS="-g  -std=c99 -O3 -mavx2"; \
-        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -std=c99 -O3 -mavx2"; \
+        CFLAGS="-g  -std=c99 -O3"; \
+        CXXFLAGS="-g  -std=c99 -O3"; \
+        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -std=c99 -O3"; \
     else \
         CFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
         CXXFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
