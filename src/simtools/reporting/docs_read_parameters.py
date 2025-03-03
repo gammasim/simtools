@@ -4,11 +4,14 @@ r"""Class to read and manage relevant model parameters for a given telescope mod
 
 import logging
 import textwrap
+from collections import defaultdict
 from itertools import groupby
 from pathlib import Path
 
+import numpy as np
+
+from simtools.db import db_handler
 from simtools.io_operations import io_handler
-from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -20,7 +23,7 @@ class ReadParameters:
     def __init__(self, db_config, telescope_model, output_path):
         """Initialise class with a telescope model."""
         self._logger = logging.getLogger(__name__)
-        self.db_config = db_config
+        self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
         self.telescope_model = telescope_model
         self.output_path = output_path
 
@@ -156,34 +159,60 @@ class ReadParameters:
             A list of dictionaries containing model version, parameter value, and description.
         """
         all_versions = self.telescope_model.db.get_model_versions()
-        all_versions.reverse()
-        comparison_data = []
+        all_versions.reverse()  # latest first
+        grouped_data = defaultdict(list)
 
-        for model_version in all_versions:
-            telescope_model = TelescopeModel(
+        def format_value(value_data, unit):
+            """Format parameter value based on type and parameter name."""
+            if self.telescope_model.get_parameter_file_flag(parameter_name):
+                input_file_name = self.telescope_model.config_file_directory / Path(value_data)
+                output_file_name = self._convert_to_md(input_file_name)
+                return f"[{Path(value_data).name}]({output_file_name})"
+            if isinstance(value_data, str | int | float):
+                return f"{value_data} {unit}"
+            if len(value_data) > 5 and np.allclose(value_data, value_data[0]):
+                return f"all: {value_data[0]} {unit}"
+            return ", ".join([f"{v:.3f} {u}" for v, u in zip(value_data, unit)])
+
+        for version in all_versions:
+            all_params = self.telescope_model.db.get_model_parameters(
                 site=self.telescope_model.site,
-                telescope_name=self.telescope_model.name,
-                model_version=model_version,
-                label="reports",
-                mongo_db_config=self.db_config,
+                array_element_name=self.telescope_model.name,
+                collection="telescopes",
+                model_version=version,
             )
 
-            if not telescope_model.has_parameter(parameter_name):
-                return comparison_data
+            self.db.export_model_files(
+                parameters=all_params,
+                dest=self.telescope_model.config_file_directory)
 
-            parameter_data = self.get_array_element_parameter_data(telescope_model)
-            for param in parameter_data:
-                if param[1] == parameter_name:
-                    comparison_data.append(
-                        {
-                            "model_version": model_version,
-                            "parameter_version": param[2],
-                            "value": param[3],
-                            "description": param[4],
-                        }
-                    )
-                    break
-        return comparison_data
+            try:
+                parameter_data = all_params[parameter_name]
+            except KeyError:
+                continue
+
+            if parameter_data["instrument"] != self.telescope_model.name:
+                return None
+
+            try:
+                unit = parameter_data.get("unit", "")
+                value_data = parameter_data["value"]
+                value = format_value(value_data, unit)
+                parameter_version = parameter_data["parameter_version"]
+                model_version = version
+                grouped_data[(value, parameter_version)].append(model_version)
+                model_versions = ", ".join(grouped_data[(value, parameter_version)])
+            except TypeError:
+                continue
+
+        return [
+            {
+                "value": value.strip(),
+                "parameter_version": parameter_version,
+                "model_version": model_versions if len(model_version) > 1 else model_version[0],
+            }
+            for (value, parameter_version), model_version in grouped_data.items()
+        ]
 
     def produce_array_element_report(self):
         """
@@ -276,28 +305,29 @@ class ReadParameters:
                 comparison_data = self._compare_parameter_across_versions(parameter)
             if comparison_data:
                 output_filename = output_path / f"{parameter}.md"
+                description = self.get_all_parameter_descriptions()[0].get(parameter)
                 with output_filename.open("w", encoding="utf-8") as file:
                     # Write header
                     file.write(
                         f"# {parameter}\n\n"
                         f"**Telescope**: {self.telescope_model.name}\n\n"
-                        f"**Description**: {comparison_data[0]['description']}\n\n"
+                        f"**Description**: {description}\n\n"
                         "\n"
                     )
 
                     # Write table header
                     file.write(
-                        "| Model Version      | Parameter Version      "
+                        "| Parameter Version      | Model Version(s)      "
                         "| Value                |\n"
-                        "|--------------------|------------------------"
+                        "|------------------------|--------------------"
                         "|----------------------|\n"
                     )
 
                     # Write table rows
                     for item in comparison_data:
                         file.write(
-                            f"| {item['model_version']} |"
-                            f" {item['parameter_version']} |"
+                            f"| {item['parameter_version']} |"
+                            f" {item['model_version']} |"
                             f"{item['value'].replace('](', '](../')} |\n"
                         )
 
