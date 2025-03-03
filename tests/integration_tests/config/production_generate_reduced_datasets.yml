@@ -4,9 +4,9 @@ CTA_SIMPIPE:
     TEST_NAME: production_generate_reduced_datasets
     CONFIGURATION:
       PREFIX: tests/resources/
-      WILDCARD: 'proton*.simtel.zst'
-      OUTPUT_FILE: output_file.hdf5
+      WILDCARD: '*proton*.simtel.zst'
       OUTPUT_PATH: simtools-output
+      OUTPUT_FILE: output_file.hdf5
       MAX_FILES: 1
     INTEGRATION_TESTS:
     - OUTPUT_FILE: output_file.hdf5

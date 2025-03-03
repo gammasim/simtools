@@ -32,7 +32,7 @@ from simtools.io_operations import io_handler
 from simtools.production_configuration.generate_reduced_datasets import ReducedDatasetGenerator
 
 
-def _parse():
+def _parse(label, description):
     """
     Parse command line arguments.
 
@@ -41,9 +41,8 @@ def _parse():
     dict
         Parsed command-line arguments.
     """
-    config = configurator.Configurator(
-        description="Process EventIO files and store data in HDF5 reduced dataset."
-    )
+    config = configurator.Configurator(label=label, description=description)
+
     config.parser.add_argument(
         "--prefix", type=str, required=True, help="Prefix path for input files."
     )
@@ -67,7 +66,9 @@ def _parse():
 
 def main():
     """Process EventIO files and store data in HDF5 reduced dataset."""
-    args_dict, _ = _parse()
+    label = Path(__file__).stem
+    args_dict, _ = _parse(label=label,
+                description="Process EventIO files and store data in HDF5 reduced dataset.")
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
@@ -79,17 +80,17 @@ def main():
         _logger.warning("No matching input files found.")
         return
 
-    _output_file = (
-            Path(io_handler.IOHandler().get_output_directory()) / Path(
-            args_dict["output_file"]
-        )
-        )
 
-    generator = ReducedDatasetGenerator(files, _output_file, args_dict["max_files"])
+    output_path = io_handler.IOHandler().get_output_directory(label)
+    output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
+
+
+    output_filepath.parent.mkdir(parents=True, exist_ok=True)
+    generator = ReducedDatasetGenerator(files, output_filepath, args_dict["max_files"])
     generator.process_files()
-    _logger.info(f"reduced dataset saved to: {_output_file}")
+    _logger.info(f"reduced dataset saved to: {output_filepath}")
     if args_dict["print_hdf5"]:
-        ReducedDatasetGenerator(files, _output_file, args_dict["max_files"]).print_hdf5_file()
+        ReducedDatasetGenerator(files, output_filepath, args_dict["max_files"]).print_hdf5_file()
 
 
 if __name__ == "__main__":
