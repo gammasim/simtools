@@ -162,6 +162,18 @@ class ReadParameters:
         all_versions.reverse()  # latest first
         grouped_data = defaultdict(list)
 
+        def format_value(value_data, unit):
+            """Format parameter value based on type and parameter name."""
+            if self.telescope_model.get_parameter_file_flag(parameter_name) and value_data:
+                input_file_name = self.telescope_model.config_file_directory / Path(value_data)
+                output_file_name = self._convert_to_md(input_file_name)
+                return f"[{Path(value_data).name}]({output_file_name})"
+            if isinstance(value_data, str | int | float):
+                return f"{value_data} {unit}"
+            if len(value_data) > 5 and np.allclose(value_data, value_data[0]):
+                return f"all: {value_data[0]} {unit}"
+            return ", ".join([f"{v:.3f} {u}" for v, u in zip(value_data, unit)])
+
         for version in all_versions:
             all_params = self.telescope_model.db.get_model_parameters(
                 site=self.telescope_model.site,
@@ -183,20 +195,9 @@ class ReadParameters:
                 return None
 
             try:
-                unit = parameter_data["unit"] if parameter_data["unit"] else ""
+                unit = parameter_data.get("unit", "")
                 value_data = parameter_data["value"]
-
-                if self.telescope_model.get_parameter_file_flag(parameter_name) and value_data:
-                    input_file_name = self.telescope_model.config_file_directory / Path(value_data)
-                    output_file_name = self._convert_to_md(input_file_name)
-                    value = f"[{Path(value_data).name}]({output_file_name})"
-                elif isinstance(value_data, str | int | float):
-                    value = f"{value_data} {unit}"
-                elif len(value_data) > 5 and np.allclose(value_data, value_data[0]):
-                    value = f"all: {value_data[0]} {unit}"
-                else:
-                    value = ", ".join([f"{v:.3f} {u}" for v, u in zip(value_data, unit)])
-
+                value = format_value(value_data, unit)
                 parameter_version = parameter_data["parameter_version"]
                 model_version = version
                 grouped_data[(value, parameter_version)].append(model_version)
