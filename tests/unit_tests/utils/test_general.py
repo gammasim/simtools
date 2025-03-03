@@ -805,9 +805,9 @@ def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
         gen.get_list_of_files_from_command_line(file_names, suffix_list)
 
 
-def test_now_in_date_time_isoformat():
+def test_now_date_time_in_isoformat():
 
-    now = gen.now_in_date_time_isoformat()
+    now = gen.now_date_time_in_isoformat()
     assert now is not None
     assert isinstance(now, str)
     assert len(now) == 25
