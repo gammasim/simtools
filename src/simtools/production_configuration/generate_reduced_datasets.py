@@ -1,4 +1,4 @@
-"""Generate reduced datasets from EventIO simulation files and store them in an HDF5 file."""
+"""Generate reduced datasets from EventIO simulation files and store in a HDF5 file."""
 
 import logging
 
@@ -10,7 +10,7 @@ from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerIn
 
 class ReducedDatasetGenerator:
     """
-    A class to generate reduced datasets from EventIO simulation files and store them.
+    A class to generate a reduced dataset from given EventIO simulation files.
 
     Attributes
     ----------
@@ -192,7 +192,7 @@ class ReducedDatasetGenerator:
             self._append_to_hdf5(dataset, data_lists[key])
 
     def _reset_data_lists(self, data_lists):
-        """Reset data lists."""
+        """Reset data lists during batch processing."""
         for key in data_lists:
             data_lists[key] = []
 
