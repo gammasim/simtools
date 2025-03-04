@@ -1,10 +1,11 @@
+---
 CTA_SIMPIPE:
   PLOT:
     TYPE: quantum_efficiency
     TITLE: 'Quantum/detection efficiency'
     XTITLE: 'Wavelength [nm]'
     YTITLE: 'Quantum/detection efficiency'
-    NO_MARKERS: True
+    NO_MARKERS: true
     TABLES:
       - PARAMETER: quantum_efficiency
         TELESCOPE: LSTN-01
