@@ -14,16 +14,16 @@
 #       steps of size 0.020000 from 0.000000 to 42.000000.]
 # - CTA:
 #     ACTIVITY:
-#       END: '2025-01-06T13:27:47'
+#       END: '2025-01-06T13:27:47+00:00'
 #       ID: 1aa11e50-a4ec-4654-b221-08e77e93afed
 #       NAME: derive_photon_electron_spectrum
 #       SOFTWARE: {NAME: simtools, VERSION: 0.8.3.dev106+g9fc2e7f29.d20250106}
-#       START: '2025-01-06T13:27:47'
+#       START: '2025-01-06T13:27:47+00:00'
 #       TYPE: software
 #     CONTACT: {NAME: root, ORGANIZATION: CTAO}
 #     PROCESS: {TYPE: simulation}
 #     PRODUCT:
-#       CREATION_TIME: '2025-01-06T13:27:47'
+#       CREATION_TIME: '2025-01-06T13:27:47+00:00'
 #       DATA: {CATEGORY: SIM, LEVEL: R1, TYPE: Service}
 #       FILENAME: test_single_pe_lst.ecsv
 #       FORMAT: ecsv
