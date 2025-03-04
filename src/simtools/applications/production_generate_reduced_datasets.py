@@ -19,8 +19,8 @@ Generate a reduced dataset from input files and save the result.
 .. code-block:: console
 
     generate-reduced-dataset \
-        --prefix path/to/input_files \
-        --output_file path/to/output_file.hdf5
+        --prefix path/to/input_files/ \
+        --output_file output_file.hdf5
 """
 
 import logging
@@ -53,7 +53,7 @@ def _parse(label, description):
         help="Wildcard for querying the files in the directory i.e. 'gamma_*dark*.simtel.zst'",
     )
     config.parser.add_argument(
-        "--output_file", type=str, required=True, help="Path to output HDF5 file."
+        "--output_file", type=str, required=True, help="Output HDF5 filename."
     )
     config.parser.add_argument(
         "--max_files", type=int, default=100, help="Maximum number of files to process."
@@ -90,7 +90,7 @@ def main():
     generator.process_files()
     _logger.info(f"reduced dataset saved to: {output_filepath}")
     if args_dict["print_hdf5"]:
-        ReducedDatasetGenerator(files, output_filepath, args_dict["max_files"]).print_hdf5_file()
+        generator.print_hdf5_file()
 
 
 if __name__ == "__main__":
