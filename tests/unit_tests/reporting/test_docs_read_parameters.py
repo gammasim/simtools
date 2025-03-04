@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import astropy.units as u
 import pytest
 
@@ -74,6 +76,7 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     # testing with valid file
     new_file = read_parameters._convert_to_md("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
     assert isinstance(new_file, str)
+    assert Path(output_path / new_file).exists()
 
 
 def test__compare_parameter_across_versions(telescope_model_lst, io_handler, db_config):
@@ -83,5 +86,27 @@ def test__compare_parameter_across_versions(telescope_model_lst, io_handler, db_
     )
 
     qe_comparison = read_parameters._compare_parameter_across_versions("quantum_efficiency")
-    assert qe_comparison[0]["model_version"] != qe_comparison[1]["model_version"]
-    assert qe_comparison["model_version" == "5.0.0"]["parameter_version"] == "1.0.0"
+    assert qe_comparison["parameter_version" == "1.0.0"]["model_version"] == "6.0.0, 5.0.0"
+
+    nsb_comparison = read_parameters._compare_parameter_across_versions("nsb_pixel_rate")
+    assert nsb_comparison[0]["model_version"] != nsb_comparison[1]["model_version"]
+    assert nsb_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
+
+
+def test__compare_parameter_across_versions_sst(telescope_model_sst, io_handler, db_config):
+    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_sst.model_version}")
+    read_parameters = ReadParameters(
+        db_config=db_config, telescope_model=telescope_model_sst, output_path=output_path
+    )
+
+    # parameter value set to null, function should return empty list
+    asum_shaping_comparison = read_parameters._compare_parameter_across_versions("asum_shaping")
+    assert len(asum_shaping_comparison) == 0
+
+    # value defined for only one model version
+    adjust_gain_comparison = read_parameters._compare_parameter_across_versions("adjust_gain")
+    assert len(adjust_gain_comparison) == 1
+
+    # should return empty list for invalid parameters
+    invalid_parameter = read_parameters._compare_parameter_across_versions("invalid_parameter")
+    assert len(invalid_parameter) == 0
