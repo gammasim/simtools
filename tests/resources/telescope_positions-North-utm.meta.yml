@@ -29,10 +29,10 @@ CTA:
       Telescope positions for the CTAO Northern site
       (UTM coordinate system). Consistent with
       document CTA-SPE-PSC-000000-0001 1c.
-    CREATION_TIME: '2022-05-30 12:00:00'
+    CREATION_TIME: '2022-05-30T12:00:00+00:00'
     ID: null
     VALID:
-      START: '2022-05-30 12:00:00'
+      START: '2022-05-30T12:00:00+00:00'
     FORMAT: ascii.ecsv
     FILENAME: telescope_positions-North-utm.ecsv
     DATA:
@@ -49,7 +49,7 @@ CTA:
       - TYPE: CTAO-DOC
         TITLE: Layouts of the CTAO Arrays
         ID: CTA-SPE-PSC-000000-0001 1c
-        CREATION_TIME: '2022-05-30 12:00:00'
+        CREATION_TIME: '2022-05-30T12:00:00+00:00'
     ASSOCIATED_ELEMENTS:
       - SITE: North
         CLASS: array

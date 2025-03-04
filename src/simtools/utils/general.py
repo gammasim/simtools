@@ -1,6 +1,7 @@
 """General functions useful across different parts of the code."""
 
 import copy
+import datetime
 import json
 import logging
 import os
@@ -922,3 +923,8 @@ def get_list_of_files_from_command_line(file_names, suffix_list):
             _logger.error(f"{one_file} is not a file.")
             raise FileNotFoundError from exc
     return _files
+
+
+def now_date_time_in_isoformat():
+    """Return date and time in isoformat and second accuracy."""
+    return datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")

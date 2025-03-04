@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import datetime
 import gzip
 import logging
 import os
@@ -802,3 +803,17 @@ def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
     suffix_list = [".txt"]
     with pytest.raises(FileNotFoundError):
         gen.get_list_of_files_from_command_line(file_names, suffix_list)
+
+
+def test_now_date_time_in_isoformat():
+
+    now = gen.now_date_time_in_isoformat()
+    assert now is not None
+    assert isinstance(now, str)
+    assert len(now) == 25
+    assert now[4] == "-"
+    assert now[7] == "-"
+    assert now[10] == "T"
+    assert now[13] == ":"
+    assert now[16] == ":"
+    assert datetime.datetime.fromisoformat(now) is not None
