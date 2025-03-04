@@ -24,6 +24,12 @@ test_configs = [pytest.param(config, id=test_id) for config, test_id in zip(test
 
 @pytest.fixture(scope="session", params=test_configs)
 def test_config(request):
+    """
+    Fixture to parametrize the test with the configurations from the config files.
+
+    Allows to add markers to very requirements and use cases for CTAO using the
+    'pytest-requirements' package.
+    """
     config = request.param
 
     if config.get("TEST_REQUIREMENT"):
