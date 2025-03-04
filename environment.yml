@@ -37,6 +37,7 @@ dependencies:
   - toml
   - pip:
       - pytest-random-order
+      - pytest-requirements
 
 # cheatsheet
 # create: conda env create -f environment.yml
