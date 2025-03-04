@@ -1,10 +1,11 @@
+---
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-validate-file-using-schema
     TEST_NAME: json_validate_schema-0.2.0
+    TEST_USE_CASE: UC-150-1.1
     CONFIGURATION:
       SCHEMA: src/simtools/schemas/model_parameter.metaschema.yml
-      FILE_NAME: tests/resources/model_parameters/num_gains-0.2.0.json
       FILE_NAME: tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json
       DATA_TYPE: schema
 SCHEMA_NAME: application_workflow.metaschema

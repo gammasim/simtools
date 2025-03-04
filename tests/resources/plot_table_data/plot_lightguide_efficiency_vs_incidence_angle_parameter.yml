@@ -1,10 +1,11 @@
+---
 CTA_SIMPIPE:
   PLOT:
     TYPE: lightguide_efficiency_vs_incidence_angle
     TITLE: 'Light guide efficiency'
     XTITLE: 'Incident angle [deg]'
     YTITLE: 'Efficiency'
-    NO_MARKERS: True
+    NO_MARKERS: true
     TABLES:
       - PARAMETER: lightguide_efficiency_vs_incidence_angle
         TELESCOPE: LSTN-01
