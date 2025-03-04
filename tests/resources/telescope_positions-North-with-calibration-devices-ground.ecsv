@@ -9,11 +9,11 @@
 # meta:
 #   CTA:
 #     ACTIVITY:
-#       END: '2023-12-21T12:55:11'
+#       END: '2023-12-21T12:55:11+00:00'
 #       ID: 4488a138-1384-439f-af0d-9f9a3e639481
 #       NAME: convert_geo_coordinates_of_array_elements
 #       SOFTWARE: {NAME: simtools, VERSION: 0.5.2.dev1089+gf69028b0.d20231221}
-#       START: '2023-12-21T12:55:11'
+#       START: '2023-12-21T12:55:11+00:00'
 #       TYPE: software
 #     CONTACT: {EMAIL: null, NAME: maierg, ORGANIZATION: CTAO}
 #     CONTEXT:
@@ -37,7 +37,7 @@
 #     INSTRUMENT: {CLASS: null, DESCRIPTION: null, ID: null, SITE: North, SUBTYPE: null, TYPE: null}
 #     PROCESS: {ID: null, SUBTYPE: null, TYPE: simulation}
 #     PRODUCT:
-#       CREATION_TIME: '2023-12-21T12:55:11'
+#       CREATION_TIME: '2023-12-21T12:55:11+00:00'
 #       DATA:
 #         ASSOCIATION: Site
 #         CATEGORY: SIM

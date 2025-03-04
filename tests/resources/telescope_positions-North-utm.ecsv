@@ -15,11 +15,11 @@
 #       ASSOCIATED_ELEMENTS:
 #       - {CLASS: array, ID: null, SITE: North, TYPE: null}
 #       DOCUMENT:
-#       - {CREATION_TIME: '2022-05-30 12:00:00', ID: CTA-SPE-PSC-000000-0001 1c, TITLE: Layouts of the CTAO Arrays, TYPE: CTAO-DOC}
+#       - {CREATION_TIME: '2022-05-30T12:00:00+00:00', ID: CTA-SPE-PSC-000000-0001 1c, TITLE: Layouts of the CTAO Arrays, TYPE: CTAO-DOC}
 #     INSTRUMENT: {CLASS: null, ID: null, SITE: North, TYPE: null}
 #     PROCESS: {ID: null, TYPE: null}
 #     PRODUCT:
-#       CREATION_TIME: '2022-05-30 12:00:00'
+#       CREATION_TIME: '2022-05-30T12:00:00+00:00'
 #       DATA:
 #         ASSOCIATION: Subarray
 #         CATEGORY: CAL
@@ -33,7 +33,7 @@
 #       FILENAME: telescope_positions-North-utm.ecsv
 #       FORMAT: ascii.ecsv
 #       ID: null
-#       VALID: {START: '2022-05-30 12:00:00'}
+#       VALID: {START: '2022-05-30T12:00:00+00:00'}
 #     REFERENCE: {VERSION: 1.0.0}
 # schema: astropy-2.0
 asset_code sequence_number utm_east utm_north altitude geo_code
