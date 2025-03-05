@@ -1,0 +1,16 @@
+---
+CTA_SIMPIPE:
+  PLOT:
+    TYPE: single_pe
+    TITLE: 'Single p.e. response'
+    XTITLE: 'Amplitude'
+    YTITLE: 'Response'
+    XSCALE: 'linear'
+    YSCALE: 'log'
+    XLIM: [0., 40.]
+    YLIM: [1.e-11, null]
+    TABLES:
+      - FILE_NAME: tests/resources/spe_LST_2022-04-27_AP2.0e-4.ecsv
+        LABEL: 'LST-ecsv'
+        COLUMN_X: 'amplitude'
+        COLUMN_Y: 'frequency (prompt+afterpulsing)'
