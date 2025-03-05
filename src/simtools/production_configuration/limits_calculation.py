@@ -70,62 +70,33 @@ class LimitCalculator:
             else:
                 raise KeyError("data group is missing from the HDF5 file.")
 
-    def _generate_2d_histogram(self, x_data, y_data, x_bins, y_bins):
-        """
-        Generate a 2D histogram from the given data.
-
-        Parameters
-        ----------
-        x_data : np.ndarray
-            Array of x-axis data.
-        y_data : np.ndarray
-            Array of y-axis data.
-        x_bins : np.ndarray
-            Array of bin edges for the x-axis.
-        y_bins : np.ndarray
-            Array of bin edges for the y-axis.
-
-        Returns
-        -------
-        np.ndarray
-            2D histogram array.
-        """
-        hist, _, _ = np.histogram2d(x_data, y_data, bins=[x_bins, y_bins])
-        return hist
-
-    def _compute_limits(self, hist, bin_edges, loss_fraction, axis=0, limit_type="lower"):
+    def _compute_limits(self, hist, bin_edges, loss_fraction, limit_type="lower"):
         """
         Compute the limits based on the loss fraction.
 
         Parameters
         ----------
         hist : np.ndarray
-            2D histogram array.
+            1D histogram array.
         bin_edges : np.ndarray
             Array of bin edges.
         loss_fraction : float
             Fraction of events to be lost.
-        axis : int, optional
-            Axis along which to sum the histogram. Default is 0.
         limit_type : str, optional
             Type of limit ('lower' or 'upper'). Default is 'lower'.
 
         Returns
         -------
-        int
-            Bin index where the threshold is reached.
         float
             Bin edge value corresponding to the threshold.
         """
-        projection = np.sum(hist, axis=axis)
         cumulative_sum = (
-            np.cumsum(projection) if limit_type == "upper" else np.cumsum(projection[::-1])
+            np.cumsum(hist) if limit_type == "upper" else np.cumsum(hist[::-1])
         )
-        total_events = np.sum(projection)
+        total_events = np.sum(hist)
         threshold = (1 - loss_fraction) * total_events
         bin_index = np.searchsorted(cumulative_sum, threshold)
-        bin_edge_value = bin_edges[bin_index] if limit_type == "upper" else bin_edges[-bin_index]
-        return bin_index, bin_edge_value
+        return bin_edges[bin_index] if limit_type == "upper" else bin_edges[-bin_index]
 
     def _prepare_data_for_limits(self):
         """
@@ -177,15 +148,13 @@ class LimitCalculator:
         astropy.units.Quantity
             Lower energy limit.
         """
-        core_distances_triggered, triggered_energies, core_bins, energy_bins = (
+        _, triggered_energies, _, energy_bins = (
             self._prepare_data_for_limits()
         )
 
-        hist = self._generate_2d_histogram(
-            core_distances_triggered, triggered_energies, core_bins, energy_bins
-        )
-        _, lower_bin_edge_value = self._compute_limits(
-            hist, energy_bins, loss_fraction, axis=1, limit_type="lower"
+        hist, _ = np.histogram(triggered_energies, bins=energy_bins)
+        lower_bin_edge_value = self._compute_limits(
+            hist, energy_bins, loss_fraction, limit_type="lower"
         )
         return lower_bin_edge_value * u.TeV
 
@@ -203,15 +172,13 @@ class LimitCalculator:
         astropy.units.Quantity
             Upper radial distance in m.
         """
-        core_distances_triggered, triggered_energies, core_bins, energy_bins = (
+        core_distances_triggered, _, core_bins, _ = (
             self._prepare_data_for_limits()
         )
 
-        hist = self._generate_2d_histogram(
-            core_distances_triggered, triggered_energies, core_bins, energy_bins
-        )
-        _, upper_bin_edge_value = self._compute_limits(
-            hist, core_bins, loss_fraction, axis=0, limit_type="upper"
+        hist, _ = np.histogram(core_distances_triggered, bins=core_bins)
+        upper_bin_edge_value = self._compute_limits(
+            hist, core_bins, loss_fraction, limit_type="upper"
         )
         return upper_bin_edge_value * u.m
 
@@ -245,11 +212,10 @@ class LimitCalculator:
         angle_bins = np.linspace(off_angles.min(), off_angles.max(), 400)
         hist, _ = np.histogram(off_angles, bins=angle_bins)
 
-        _, upper_bin_edge_value = self._compute_limits(
-            hist, angle_bins, loss_fraction, axis=0, limit_type="upper"
+        upper_bin_edge_value = self._compute_limits(
+            hist, angle_bins, loss_fraction, limit_type="upper"
         )
         return upper_bin_edge_value * u.deg
-
 
     def _transform_to_shower_coordinates(self):
         """
@@ -257,8 +223,8 @@ class LimitCalculator:
 
         Returns
         -------
-        TiltedGroundFrame
-            Core positions in shower coordinates.
+        tuple
+            Core positions in shower coordinates (x, y).
         """
         pointing_az = self.shower_sim_azimuth * u.rad
         pointing_alt = self.shower_sim_altitude * u.rad
