@@ -1,4 +1,4 @@
-"""Generate reduced datasets from EventIO simulation files and store in a HDF5 file."""
+"""Generate a reduced dataset from given simulation event list and save the output to file."""
 
 import logging
 
@@ -10,7 +10,7 @@ from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerIn
 
 class ReducedDatasetGenerator:
     """
-    A class to generate a reduced dataset from given EventIO simulation files.
+    Generate a reduced dataset from given simulation event list and save the output to file.
 
     Attributes
     ----------
@@ -33,7 +33,7 @@ class ReducedDatasetGenerator:
         output_file : str
             Path to the output HDF5 file.
         max_files : int, optional
-            Maximum number of files to process (default is 100).
+            Maximum number of files to process.
         """
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
@@ -61,9 +61,10 @@ class ReducedDatasetGenerator:
             self._append_all_datasets(datasets, data_lists)
 
     def _create_datasets(self, grp):
-        """Create HDF5 datasets."""
+        """Create HDF5 datasets and add units as attributes."""
         vlen_int_type = h5py.special_dtype(vlen=np.int16)
-        return {
+
+        datasets = {
             "simulated": grp.create_dataset(
                 "simulated", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
             "shower_id_triggered": grp.create_dataset(
@@ -91,6 +92,20 @@ class ReducedDatasetGenerator:
             "array_azimuths": grp.create_dataset(
                 "array_azimuths", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
         }
+
+        datasets["simulated"].attrs["units"] = "TeV"
+        datasets["shower_id_triggered"].attrs["units"] = "ID"
+        datasets["triggered_energies"].attrs["units"] = "TeV"
+        datasets["num_triggered_telescopes"].attrs["units"] = "count"
+        datasets["trigger_telescope_list_list"].attrs["units"] = "ID"
+        datasets["core_x"].attrs["units"] = "m"
+        datasets["core_y"].attrs["units"] = "m"
+        datasets["shower_sim_azimuth"].attrs["units"] = "rad"
+        datasets["shower_sim_altitude"].attrs["units"] = "rad"
+        datasets["array_altitudes"].attrs["units"] = "m"
+        datasets["array_azimuths"].attrs["units"] = "rad"
+
+        return datasets
 
     def _initialize_data_lists(self):
         """Initialize data lists."""
@@ -128,7 +143,7 @@ class ReducedDatasetGenerator:
     def _process_mc_run_header(self, eventio_object, data_lists):
         """Process MC run header and update data lists."""
         mc_head = eventio_object.parse()
-        self.n_use = mc_head["n_use"]
+        self.n_use = mc_head["n_use"] # reuse factor n_use needed to extend the values below
         array_altitude = np.mean(mc_head["alt_range"])
         array_azimuth = np.mean(mc_head["az_range"])
         data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
@@ -153,14 +168,17 @@ class ReducedDatasetGenerator:
         """Process array event and update data lists."""
         for i, obj in enumerate(eventio_object):
             if i == 0 and isinstance(obj, TriggerInformation):
-                trigger_info = obj.parse()
-                telescopes = trigger_info["telescopes_with_data"]
-                if len(telescopes) > 0:
-                    data_lists["shower_id_triggered"].append(self.shower["shower"])
-                    data_lists["triggered_energies"].append(self.shower["energy"])
-                    data_lists["num_triggered_telescopes"].append(len(telescopes))
-                    data_lists["trigger_telescope_list_list"].append(
-                        np.array(telescopes, dtype=np.int16))
+                self._process_trigger_information(obj, data_lists)
+
+    def _process_trigger_information(self, trigger_info, data_lists):
+        """Process trigger information and update data lists."""
+        trigger_info = trigger_info.parse()
+        telescopes = trigger_info["telescopes_with_data"]
+        if len(telescopes) > 0:
+            data_lists["shower_id_triggered"].append(self.shower["shower"])
+            data_lists["triggered_energies"].append(self.shower["energy"])
+            data_lists["num_triggered_telescopes"].append(len(telescopes))
+            data_lists["trigger_telescope_list_list"].append(np.array(telescopes, dtype=np.int16))
 
     def _append_to_hdf5(self, dataset, data):
         """
@@ -195,7 +213,6 @@ class ReducedDatasetGenerator:
         """Reset data lists during batch processing."""
         for key in data_lists:
             data_lists[key] = []
-
     def print_hdf5_file(self):
         """Print information about the datasets in the generated HDF5 file."""
         try:
@@ -207,5 +224,9 @@ class ReducedDatasetGenerator:
 
                     # Print first 5 values each
                     print(f"  First 5 values: {dset[:5]}")
+
+                    # Print units if available
+                    units = dset.attrs.get("units", "N/A")
+                    print(f"  Units: {units}")
         except Exception as exc:
             raise ValueError("An error occurred while reading the HDF5 file") from exc
