@@ -28,7 +28,6 @@ def test_get_database_version_no_version():
 
 
 def test_get_corsika_version(caplog):
-
     # no build_opts.yml file
     with caplog.at_level(logging.WARNING):
         assert dependencies.get_corsika_version() is None

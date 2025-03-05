@@ -234,7 +234,6 @@ class SimulatorLightEmission(SimtelRunner):
         command += f"/{self.le_application[0]}"
 
         if self.light_source_type == "led":
-
             if self.le_application[1] == "variable":
                 command += f" -x {self.default_le_config['x_pos']['default'].to(u.cm).value}"
                 command += f" -y {self.default_le_config['y_pos']['default'].to(u.cm).value}"
@@ -245,7 +244,6 @@ class SimulatorLightEmission(SimtelRunner):
                 command += f" -n {self.photons_per_run}"
 
             elif self.le_application[1] == "layout":
-
                 x_origin = x_cal - x_tel
                 y_origin = y_cal - y_tel
                 z_origin = z_cal - z_tel
@@ -291,7 +289,7 @@ class SimulatorLightEmission(SimtelRunner):
 
             command += f" --telescope-theta {angle_theta}"
             command += f" --telescope-phi {angle_phi}"
-            command += f" --laser-theta {90-angles[2]}"
+            command += f" --laser-theta {90 - angles[2]}"
             command += f" --laser-phi {angles[3]}"  # convention north (x) towards east (-y)
             command += f" --atmosphere {_model_directory}/"
             command += f"{self._telescope_model.get_parameter_value('atmospheric_profile')}"
@@ -352,8 +350,7 @@ class SimulatorLightEmission(SimtelRunner):
         )
         command += super().get_config_option(
             "output_file",
-            f"{self.output_directory}/"
-            f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz",
+            f"{self.output_directory}/{self.le_application[0]}_{self.le_application[1]}.simtel.gz",
         )
         command += super().get_config_option(
             "histogram_file",

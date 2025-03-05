@@ -36,7 +36,6 @@ def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler, 
 
 
 def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
-
     ray = RayTracing(
         telescope_model=telescope_model_lst,
         simtel_path=simtel_path_no_mock,

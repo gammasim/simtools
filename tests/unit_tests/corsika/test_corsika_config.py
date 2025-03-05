@@ -47,7 +47,6 @@ def test_repr(corsika_config_mock_array_model):
 
 
 def test_fill_corsika_configuration(io_handler, corsika_config_mock_array_model):
-
     empty_config = CorsikaConfig(
         array_model=None, label="test-corsika-config", args_dict=None, db_config=None
     )

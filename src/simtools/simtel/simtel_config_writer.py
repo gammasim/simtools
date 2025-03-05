@@ -72,8 +72,7 @@ class SimtelConfigWriter:
 
             file.write("#ifdef TELESCOPE\n")
             file.write(
-                f"   echo Configuration for {self._telescope_model_name}"
-                " - TELESCOPE $(TELESCOPE)\n"
+                f"   echo Configuration for {self._telescope_model_name} - TELESCOPE $(TELESCOPE)\n"
             )
             file.write("#endif\n\n")
 

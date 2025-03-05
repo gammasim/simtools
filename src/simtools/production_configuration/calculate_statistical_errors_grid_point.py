@@ -81,8 +81,7 @@ class StatisticalErrorEvaluator:
         unique_zeniths = 90 * u.deg - np.unique(events_data["PNT_ALT"]) * u.deg
         if len(unique_azimuths) > 1 or len(unique_zeniths) > 1:
             msg = (
-                f"Multiple values found for azimuth ({unique_azimuths}) "
-                f"zenith ({unique_zeniths})."
+                f"Multiple values found for azimuth ({unique_azimuths}) zenith ({unique_zeniths})."
             )
             self._logger.error(msg)
             raise ValueError(msg)
@@ -326,15 +325,15 @@ class StatisticalErrorEvaluator:
     def calculate_metrics(self):
         """Calculate all defined metrics as specified in self.metrics and store results."""
         if "uncertainty_effective_area" in self.metrics:
-
             self.uncertainty_effective_area = self.calculate_uncertainty_effective_area()
             if self.uncertainty_effective_area:
                 energy_range = self.metrics.get("uncertainty_effective_area", {}).get(
                     "energy_range"
                 )
-                min_energy, max_energy = energy_range["value"][0] * u.Unit(
-                    energy_range["unit"]
-                ), energy_range["value"][1] * u.Unit(energy_range["unit"])
+                min_energy, max_energy = (
+                    energy_range["value"][0] * u.Unit(energy_range["unit"]),
+                    energy_range["value"][1] * u.Unit(energy_range["unit"]),
+                )
 
                 valid_errors = [
                     error
