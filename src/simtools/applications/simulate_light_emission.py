@@ -117,7 +117,6 @@ r"""
 
 """
 
-
 import logging
 import subprocess
 from pathlib import Path
@@ -390,7 +389,6 @@ def main():
             run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
             log_file = f"{light_source.output_directory}/logfile.log"
             with open(log_file, "w", encoding="utf-8") as log_file:
-
                 subprocess.run(
                     run_script,
                     shell=False,
@@ -430,7 +428,6 @@ def main():
                 )
 
     elif args_dict["light_source_setup"] == "layout":
-
         light_source = SimulatorLightEmission(
             telescope_model=telescope_model,
             calibration_model=calibration_model,
@@ -443,7 +440,6 @@ def main():
         run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
         log_file = f"{light_source.output_directory}/logfile.log"
         with open(log_file, "w", encoding="utf-8") as log_file:
-
             subprocess.run(
                 run_script, shell=False, check=False, text=True, stdout=log_file, stderr=log_file
             )

@@ -96,9 +96,9 @@ class MetadataCollector:
 
         """
         try:
-            self.top_level_meta[self.observatory]["activity"][
-                "end"
-            ] = gen.now_date_time_in_isoformat()
+            self.top_level_meta[self.observatory]["activity"]["end"] = (
+                gen.now_date_time_in_isoformat()
+            )
         except KeyError:
             pass
         return self.top_level_meta
@@ -163,7 +163,8 @@ class MetadataCollector:
                         keys_lower_case,
                     ),
                     file,
-                    sort_keys=False, explicit_start=True
+                    sort_keys=False,
+                    explicit_start=True,
                 )
             self._logger.info(f"Writing metadata to {yml_file}")
             return yml_file
@@ -348,7 +349,6 @@ class MetadataCollector:
 
         metadata = []
         for metadata_file in metadata_files:
-
             self._logger.debug("Reading meta data from %s", metadata_file)
             if Path(metadata_file).suffix in (".yaml", ".yml", ".json"):
                 _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file)
