@@ -48,7 +48,6 @@ class ReadParameters:
                 input_file.open("r", encoding="utf-8") as infile,
                 output_file.open("w", encoding="utf-8") as outfile,
             ):
-
                 outfile.write(f"# {input_file.stem}")
                 outfile.write("\n")
                 outfile.write("```")
