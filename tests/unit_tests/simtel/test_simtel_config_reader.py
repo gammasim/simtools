@@ -67,7 +67,6 @@ def test_simtel_config_reader_num_gains(config_reader_num_gains):
 def test_simtel_config_reader_telescope_transmission(
     config_reader_telescope_transmission, simtel_config_file, schema_telescope_transmission
 ):
-
     _config = config_reader_telescope_transmission
     assert isinstance(_config.parameter_dict, dict)
     assert _config.parameter_name == "telescope_transmission"
@@ -85,7 +84,6 @@ def test_simtel_config_reader_telescope_transmission(
 def test_compare_simtel_config_with_schema(
     config_reader_num_gains, config_reader_telescope_transmission, caplog
 ):
-
     _config_ng = config_reader_num_gains
 
     # no differences; should result in no output
@@ -123,7 +121,6 @@ def test_compare_simtel_config_with_schema(
 
 
 def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, caplog):
-
     _config_ng = config_reader_num_gains
 
     with pytest.raises(FileNotFoundError):
@@ -144,7 +141,6 @@ def test_read_simtel_config_file(config_reader_num_gains, simtel_config_file, ca
 
 
 def test_get_type_and_dimension_from_simtel_cfg(config_reader_num_gains):
-
     _config = copy.deepcopy(config_reader_num_gains)
 
     assert _config._get_type_and_dimension_from_simtel_cfg(["Int", "1"]) == ("int64", 1)
@@ -161,7 +157,6 @@ def test_get_type_and_dimension_from_simtel_cfg(config_reader_num_gains):
 
 
 def test_resolve_all_in_column(config_reader_num_gains):
-
     _config = config_reader_num_gains
 
     # empty
@@ -180,7 +175,6 @@ def test_resolve_all_in_column(config_reader_num_gains):
 
 
 def test_add_value_from_simtel_cfg(config_reader_num_gains):
-
     _config = config_reader_num_gains
 
     # None
@@ -218,7 +212,6 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
 
 def test_get_simtel_parameter_name(config_reader_num_gains):
-
     _config = copy.deepcopy(config_reader_num_gains)
     assert _config._get_simtel_parameter_name("num_gains") == "NUM_GAINS"
     assert _config._get_simtel_parameter_name("telescope_transmission") == "TELESCOPE_TRANSMISSION"

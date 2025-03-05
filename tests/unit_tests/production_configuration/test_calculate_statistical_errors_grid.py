@@ -180,9 +180,9 @@ def test_calculate_overall_metric_average(test_fits_file):
     overall_metric = evaluator.calculate_overall_metric(metric="average")
     expected_metric = 0.4
 
-    assert np.isclose(
-        overall_metric, expected_metric
-    ), f"Expected {expected_metric}, got {overall_metric}"
+    assert np.isclose(overall_metric, expected_metric), (
+        f"Expected {expected_metric}, got {overall_metric}"
+    )
 
 
 def test_calculate_overall_metric_maximum(test_fits_file):
@@ -202,9 +202,9 @@ def test_calculate_overall_metric_maximum(test_fits_file):
         0.4  # max and average are the same in this case since there is only one metric
     )
 
-    assert np.isclose(
-        overall_metric, expected_metric
-    ), f"Expected {expected_metric}, got {overall_metric}"
+    assert np.isclose(overall_metric, expected_metric), (
+        f"Expected {expected_metric}, got {overall_metric}"
+    )
 
 
 def test_create_bin_edges(test_fits_file, metric):
@@ -222,9 +222,9 @@ def test_create_bin_edges(test_fits_file, metric):
     expected_bin_edges = np.array([1.0, 2.0, 3.0, 4.0])
 
     assert isinstance(bin_edges, np.ndarray)
-    assert np.array_equal(
-        bin_edges, expected_bin_edges
-    ), f"Expected {expected_bin_edges}, got {bin_edges}"
+    assert np.array_equal(bin_edges, expected_bin_edges), (
+        f"Expected {expected_bin_edges}, got {bin_edges}"
+    )
 
 
 def test_compute_efficiency_and_errors(test_fits_file, metric):
@@ -242,12 +242,12 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
     expected_efficiencies = np.array([0.1, 0.1, 0.1, 0.0]) * u.dimensionless_unscaled
     expected_relative_errors = np.array([0.3, 0.21213203, 0.42426407, 0.0])
 
-    assert np.allclose(
-        efficiencies, expected_efficiencies, atol=1e-2
-    ), f"Expected efficiencies {expected_efficiencies}, but got {efficiencies}"
-    assert np.allclose(
-        relative_errors, expected_relative_errors, atol=1e-2
-    ), f"Expected relative errors {expected_relative_errors}, but got {relative_errors}"
+    assert np.allclose(efficiencies, expected_efficiencies, atol=1e-2), (
+        f"Expected efficiencies {expected_efficiencies}, but got {efficiencies}"
+    )
+    assert np.allclose(relative_errors, expected_relative_errors, atol=1e-2), (
+        f"Expected relative errors {expected_relative_errors}, but got {relative_errors}"
+    )
 
     with pytest.raises(
         ValueError, match="Reconstructed event counts exceed simulated event counts."

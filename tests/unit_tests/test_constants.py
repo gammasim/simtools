@@ -6,7 +6,6 @@ import simtools.constants as constants
 
 
 def test_constants():
-
     assert isinstance(constants.METADATA_JSON_SCHEMA, Path)
     assert constants.METADATA_JSON_SCHEMA.is_file()
 

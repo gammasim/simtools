@@ -96,9 +96,9 @@ class MetadataCollector:
 
         """
         try:
-            self.top_level_meta[self.observatory]["activity"][
-                "end"
-            ] = gen.now_date_time_in_isoformat()
+            self.top_level_meta[self.observatory]["activity"]["end"] = (
+                gen.now_date_time_in_isoformat()
+            )
         except KeyError:
             pass
         return self.top_level_meta

@@ -246,7 +246,6 @@ def test_make_light_emission_script_laser(
     mock_output_path,
     io_handler,
 ):
-
     # Call the method under test
     command = mock_simulator_laser._make_light_emission_script()
 
@@ -277,7 +276,6 @@ def test_make_light_emission_script_laser(
 
 
 def test_calibration_pointing_direction(mock_simulator):
-
     # Calling calibration_pointing_direction method
     pointing_vector, angles = mock_simulator.calibration_pointing_direction()
 
@@ -307,7 +305,6 @@ def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
 
 
 def test_plot_simtel_ctapipe(mock_simulator, mock_output_path):
-
     mock_simulator.output_directory = "./tests/resources/"
     cleaning_args = [5, 3, 2]
     filename = f"{mock_simulator.output_directory}/"
