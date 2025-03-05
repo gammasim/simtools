@@ -618,12 +618,13 @@ def test_convert_string_to_list():
     t_3 = gen.convert_string_to_list("0.1")
     assert pytest.approx(t_3[0]) == 0.1
 
+    bla_bla = "bla bla"
     assert gen.convert_string_to_list("bla_bla") == "bla_bla"
-    assert gen.convert_string_to_list("bla bla") == ["bla", "bla"]
+    assert gen.convert_string_to_list(bla_bla) == ["bla", "bla"]
     assert gen.convert_string_to_list("bla,bla") == ["bla", "bla"]
-    assert gen.convert_string_to_list("bla bla", force_comma_separation=True) == "bla bla"
+    assert gen.convert_string_to_list(bla_bla, force_comma_separation=True) == bla_bla
     assert gen.convert_string_to_list("bla bla, bla blaa", force_comma_separation=True) == [
-        "bla bla",
+        bla_bla,
         "bla blaa",
     ]
     # import for list of dimensionless entries in database
