@@ -624,6 +624,7 @@ def test_convert_string_to_list():
     assert gen.convert_string_to_list("bla_bla") == "bla_bla"
     assert gen.convert_string_to_list("bla bla") == ["bla", "bla"]
     assert gen.convert_string_to_list("bla,bla") == ["bla", "bla"]
+    assert gen.convert_string_to_list("bla bla", force_comma_separation=True) == ["bla la"]
     # import for list of dimensionless entries in database
     assert gen.convert_string_to_list(",") == ["", ""]
     assert gen.convert_string_to_list(" , , ") == ["", "", ""]
