@@ -16,7 +16,6 @@ logger = logging.getLogger()
 
 
 def test_get_parameter_type(telescope_model_lst, caplog):
-
     assert telescope_model_lst.get_parameter_type("num_gains") == "int64"
     telescope_model_copy = copy.deepcopy(telescope_model_lst)
     telescope_model_copy._parameters["num_gains"].pop("type")
@@ -26,7 +25,6 @@ def test_get_parameter_type(telescope_model_lst, caplog):
 
 
 def test_get_parameter_file_flag(telescope_model_lst, caplog):
-
     assert telescope_model_lst.get_parameter_file_flag("num_gains") is False
     telescope_model_copy = copy.deepcopy(telescope_model_lst)
     telescope_model_copy._parameters["num_gains"].pop("file")
@@ -372,7 +370,6 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
 
 
 def test_get_model_file_as_table(telescope_model_lst, mocker):
-
     telescope_copy = copy.deepcopy(telescope_model_lst)
 
     with pytest.raises(ValueError, match="Parameter not_a_parameter not found in the model"):
@@ -387,7 +384,6 @@ def test_get_model_file_as_table(telescope_model_lst, mocker):
 
 
 def test_get_model_file_as_ecsv_table(telescope_model_sst, mocker):
-
     telescope_copy = copy.deepcopy(telescope_model_sst)
 
     mock_db_export = mocker.patch.object(DatabaseHandler, "export_model_files")

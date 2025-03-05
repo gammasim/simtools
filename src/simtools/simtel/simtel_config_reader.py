@@ -153,8 +153,7 @@ class SimtelConfigReader:
 
         """
         self._logger.debug(
-            f"Reading simtel config file {simtel_config_file} "
-            f"for parameter {self.parameter_name}"
+            f"Reading simtel config file {simtel_config_file} for parameter {self.parameter_name}"
         )
         matching_lines = {}
         try:

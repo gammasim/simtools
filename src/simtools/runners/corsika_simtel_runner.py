@@ -129,9 +129,7 @@ class CorsikaSimtelRunner:
         )
         with open(multipipe_script, "w", encoding="utf-8") as file:
             multipipe_command = Path(self._simtel_path).joinpath(
-                "sim_telarray/bin/multipipe_corsika "
-                f"-c {multipipe_file}"
-                " || echo 'Fan-out failed'"
+                f"sim_telarray/bin/multipipe_corsika -c {multipipe_file} || echo 'Fan-out failed'"
             )
             file.write(f"{multipipe_command}")
 

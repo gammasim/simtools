@@ -19,20 +19,17 @@ def invalid_name():
 
 
 def test_model_parameters():
-
     assert isinstance(names.model_parameters(), dict)
     assert isinstance(names.model_parameters("Telescope"), dict)
     assert len(names.model_parameters()) > len(names.model_parameters("Telescope"))
 
 
 def test_site_parameters():
-
     assert isinstance(names.site_parameters(), dict)
     assert "altitude" in names.site_parameters()
 
 
 def test_telescope_parameters():
-
     assert isinstance(names.telescope_parameters(), dict)
     assert "focal_length" in names.telescope_parameters()
 
@@ -207,7 +204,6 @@ def test_get_site_from_array_element_name(invalid_name):
 
 
 def test_get_collection_name_from_array_element_name():
-
     assert "telescopes" == names.get_collection_name_from_array_element_name("LSTN-01")
     assert "telescopes" == names.get_collection_name_from_array_element_name("MSTx-FlashCam")
     assert "sites" == names.get_collection_name_from_array_element_name("North", False)
@@ -262,7 +258,6 @@ def test_get_array_element_id_from_name(invalid_name):
 
 
 def test_generate_file_name_camera_efficiency():
-
     site = "South"
     telescope_model_name = "LSTS-01"
     zenith_angle = 20
@@ -563,7 +558,6 @@ def test_get_simulation_software_name_from_parameter_name():
 
 
 def test_file_name_with_version():
-
     assert names.file_name_with_version(None, None) is None
     assert names.file_name_with_version("file", None) is None
     assert names.file_name_with_version(None, ".yml") is None
@@ -576,7 +570,6 @@ def test_file_name_with_version():
 
 
 def test_db_collection_to_instrument_class_key():
-
     assert names.db_collection_to_instrument_class_key() == ["Structure", "Camera", "Telescope"]
 
     with pytest.raises(KeyError, match="Invalid collection name no_collection"):
@@ -584,7 +577,6 @@ def test_db_collection_to_instrument_class_key():
 
 
 def test_is_design_type():
-
     assert names.is_design_type("LSTN-design")
     assert names.is_design_type("MSTS-FlashCam")
     assert names.is_design_type("MSTS-NectarCam")

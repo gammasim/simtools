@@ -97,7 +97,6 @@ def test_load_files(camera_efficiency_lst):
 
 
 def test_simulate(io_handler, camera_efficiency_lst, caplog, mocker):
-
     mock_run = mocker.patch.object(SimulatorCameraEfficiency, "run")
     with caplog.at_level(logging.INFO):
         camera_efficiency_lst.simulate()
@@ -132,9 +131,7 @@ def test_calc_tot_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_tot_efficiency(
         camera_efficiency_lst.calc_tel_efficiency()
-    ) == pytest.approx(
-        0.48018680628175714
-    )  # Value for Prod5 LST-1
+    ) == pytest.approx(0.48018680628175714)  # Value for Prod5 LST-1
 
 
 def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
