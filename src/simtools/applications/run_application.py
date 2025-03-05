@@ -134,7 +134,6 @@ def read_application_configuration(configuration_file, logger):
 
 
 def main():  # noqa: D103
-
     args_dict, _ = _parse(
         Path(__file__).stem,
         description="Run simtools applications from configuration file.",

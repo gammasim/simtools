@@ -74,7 +74,6 @@ def array_layout_south_four_lst_instance(db_config, model_version):
 
 
 def test_initialize_site_parameters_from_db():
-
     with pytest.raises(ValueError, match="No database configuration provided"):
         ArrayLayout(site="North", mongo_db_config=None, model_version="test_model_version")
 
@@ -449,7 +448,6 @@ def test_export_telescope_list_table(
 
 
 def test_export_one_telescope_as_json(db_config, model_version, telescope_north_utm_test_file):
-
     layout = ArrayLayout(
         mongo_db_config=db_config,
         site="North",
@@ -479,7 +477,6 @@ def test_export_one_telescope_as_json(db_config, model_version, telescope_north_
 
 
 def test_read_table_from_json_file(db_config, model_version):
-
     ground_table_file = "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
     layout = ArrayLayout(
         mongo_db_config=db_config,

@@ -45,7 +45,6 @@ def valid_sim_telarray_file_content():
 
 
 def test_assert_file_type_json(test_json_file, test_yaml_file):
-
     assert assertions.assert_file_type("json", test_json_file)
     assert not assertions.assert_file_type("json", "tests/resources/does_not_exist.json")
     assert not assertions.assert_file_type("json", test_yaml_file)
@@ -54,7 +53,6 @@ def test_assert_file_type_json(test_json_file, test_yaml_file):
 
 
 def test_assert_file_type_yaml(test_json_file, test_yaml_file, caplog):
-
     assert assertions.assert_file_type("yaml", test_yaml_file)
     assert assertions.assert_file_type("yml", test_yaml_file)
     assert not assertions.assert_file_type("yml", "tests/resources/does_not_exit.schema.yml")
@@ -65,7 +63,6 @@ def test_assert_file_type_yaml(test_json_file, test_yaml_file, caplog):
 
 
 def test_assert_file_type_others(caplog):
-
     with caplog.at_level(logging.INFO):
         assert assertions.assert_file_type(
             "ecsv", "tests/resources/telescope_positions-South-ground.ecsv"
