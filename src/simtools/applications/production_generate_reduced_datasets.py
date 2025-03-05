@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Generates a reduced dataset from input data.
+Reduces and compiles event data from multiple input files into a structured dataset.
 
 Command line arguments
 ----------------------
@@ -18,9 +18,12 @@ Generate a reduced dataset from input files and save the result.
 
 .. code-block:: console
 
-    generate-reduced-dataset \
+    simtools-production-generate-reduced-dataset \
         --prefix path/to/input_files/ \
-        --output_file output_file.hdf5
+        --wildcard 'gamma_*dark*.simtel.zst' \
+        --output_file output_file.hdf5 \
+        --max_files 50 \
+        --print_hdf5
 """
 
 import logging
@@ -67,7 +70,7 @@ def _parse(label, description):
 
 def main():
     """
-    Process EventIO files and store data in reduced dataset.
+    Process event data files and store data in reduced dataset.
 
     The reduced dataset contains the following information:
         - simulated: List of simulated events.
