@@ -525,7 +525,6 @@ def test_user_confirm_no(mock_input):
 
 
 def test_validate_data_type():
-
     test_cases = [
         # Test exact data type match
         ("int", 5, None, False, True),
@@ -570,7 +569,6 @@ def test_validate_data_type():
 
 
 def test_convert_list_to_string():
-
     assert gen.convert_list_to_string(None) is None
     assert gen.convert_list_to_string("a") == "a"
     assert gen.convert_list_to_string(5) == 5
@@ -603,7 +601,6 @@ def test_convert_list_to_string():
 
 
 def test_convert_string_to_list():
-
     t_1 = gen.convert_string_to_list("1 2 3 4")
     assert len(t_1) == 4
     assert pytest.approx(t_1[1]) == 2.0
@@ -625,7 +622,10 @@ def test_convert_string_to_list():
     assert gen.convert_string_to_list("bla bla") == ["bla", "bla"]
     assert gen.convert_string_to_list("bla,bla") == ["bla", "bla"]
     assert gen.convert_string_to_list("bla bla", force_comma_separation=True) == "bla bla"
-    assert gen.convert_string_to_list("bla bla, bla blaa", force_comma_separation=True) == ["bla bla", "bla blaa"]
+    assert gen.convert_string_to_list("bla bla, bla blaa", force_comma_separation=True) == [
+        "bla bla",
+        "bla blaa",
+    ]
     # import for list of dimensionless entries in database
     assert gen.convert_string_to_list(",") == ["", ""]
     assert gen.convert_string_to_list(" , , ") == ["", "", ""]
@@ -772,7 +772,6 @@ def test_clear_default_sim_telarray_cfg_directories():
 
 
 def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
-
     # Test with a list of file names with valid suffixes.
     file_1 = tmp_test_directory / "file1.txt"
     file_2 = tmp_test_directory / "file2.txt"
@@ -808,7 +807,6 @@ def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
 
 
 def test_now_date_time_in_isoformat():
-
     now = gen.now_date_time_in_isoformat()
     assert now is not None
     assert isinstance(now, str)
