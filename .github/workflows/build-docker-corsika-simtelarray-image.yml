@@ -143,7 +143,7 @@ jobs:
           - {build_opt: 'prod6-baseline', extra_def: ''}
           # - {build_opt: 'prod5', extra_def: ''}
           # - {build_opt: 'prod5-sc', extra_def: ''}
-        avx_instruction: ['avx2', 'noOpt']
+        avx_instruction: ['avx2', 'noopt']
         # avx_instruction: ['avx2', 'avx512f', 'sse4', 'avx']
 
     env:
@@ -228,15 +228,9 @@ jobs:
         production:
 #          - {build_opt: 'prod6-sc', extra_def: '-DMAXIMUM_TELESCOPES=128'}
           - {build_opt: 'prod6-baseline', extra_def: ''}
-        avx_instruction: ['noOpt']
+        avx_instruction: ['noopt']
     container:
-      image: ${{ format('ghcr.io/gammasim/simtools-prod-opt-{0}-corsika-{1}-bernlohr-{2}-{3}-{4}-{5}', 
-                  toLowerCase(matrix.version.simtel_version), 
-                  toLowerCase(matrix.version.corsika_version), 
-                  toLowerCase(matrix.version.bernlohr_version), 
-                  toLowerCase(matrix.production.build_opt), 
-                  toLowerCase(matrix.hadronic_model), 
-                  toLowerCase(matrix.avx_instruction)) }}
+      image: ghcr.io/gammasim/simtools-prod-opt-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}
       env:
         SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray"
         SIMTOOLS_DB_API_PORT: ${{ env.SIMTOOLS_DB_API_PORT }}
