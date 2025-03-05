@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+gc999d95 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+gd51c7a2 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=1a9e807f"></script>
+    <script src="../../_static/documentation_options.js?v=7c24da91"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc999d95 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd51c7a2 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1163,7 +1163,7 @@ document.write(`
     <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">convert_string_to_list</span><span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="n">is_float</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_string_to_list</span><span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="n">is_float</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_comma_separation</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert string (as used e.g. in sim_telarray) to list.</span>
 
@@ -1173,6 +1173,10 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    data_string: object</span>
 <span class="sd">        String to be converted</span>
+<span class="sd">    is_float: bool</span>
+<span class="sd">        If True, convert to float, otherwise to int.</span>
+<span class="sd">    force_comma_separation: bool</span>
+<span class="sd">        If True, force comma separation.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1190,7 +1194,7 @@ document.write(`
     <span class="k">if</span> <span class="s2">&quot;,&quot;</span> <span class="ow">in</span> <span class="n">data_string</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">data_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
-    <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">data_string</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">data_string</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_comma_separation</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">data_string</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">data_string</span>
 
