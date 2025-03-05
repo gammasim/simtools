@@ -96,7 +96,6 @@ def test_data_simple_columns():
 
 
 def test_data_columns_mirror_reflectivity():
-
     columns, description = simtel_table_reader._data_columns_mirror_reflectivity(2, ["0", "20"])
     assert columns == [
         {"name": "wavelength", "description": "Wavelength", "unit": "nm"},

@@ -48,7 +48,6 @@ def test_fill_hdf5_table_2d(corsika_histograms_instance_set_histograms):
 
 
 def test_read_hdf5():
-
     tables = read_hdf5(
         "tests/resources/run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5_reduced.hdata.hdf5"
     )

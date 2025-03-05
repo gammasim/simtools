@@ -443,8 +443,7 @@ class ModelParameter:
             )
 
         self._logger.debug(
-            f"Changing parameter {par_name} "
-            f"from {self.get_parameter_value(par_name)} to {value}"
+            f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
         )
         self._parameters[par_name]["value"] = value
 
