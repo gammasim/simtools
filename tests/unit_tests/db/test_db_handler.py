@@ -118,7 +118,6 @@ def test_open_mongo_db_direct_connection(mocker, db, db_config):
 
 
 def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
-
     db_no_config_file._find_latest_simulation_model_db()
     assert db_no_config_file.mongo_db_config is None
 
@@ -1122,7 +1121,6 @@ def test_get_array_element_list_with_design_model_in_production_table(db, mocker
 
 
 def test_get_model_versions(db):
-
     model_versions = db.get_model_versions()
     assert len(model_versions) > 0
     assert "5.0.0" in model_versions
@@ -1130,7 +1128,6 @@ def test_get_model_versions(db):
 
 
 def test_get_array_elements(db):
-
     prod5_elements = db.get_array_elements("5.0.0", "telescopes")
     assert len(prod5_elements) > 0
     assert "LSTN-01" in prod5_elements
@@ -1142,7 +1139,6 @@ def test_get_array_elements(db):
 
 
 def test_get_design_model(db):
-
     assert db.get_design_model("5.0.0", "LSTN-01") == "LSTN-design"
     assert db.get_design_model("6.0.0", "LSTN-01") == "LSTN-design"
     assert db.get_design_model("5.0.0", "SSTS-03") == "SSTS-design"

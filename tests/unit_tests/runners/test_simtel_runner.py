@@ -58,7 +58,6 @@ def test_run(simtel_runner, caplog):
 
 
 def test_run_simtel_and_check_output(simtel_runner):
-
     with pytest.raises(SimtelExecutionError):
         simtel_runner._run_simtel_and_check_output("test-5", None, None)
     assert simtel_runner._run_simtel_and_check_output("echo test", None, None) == 0

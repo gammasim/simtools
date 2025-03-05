@@ -211,7 +211,6 @@ def test_json_numpy_encoder():
 
 
 def test_dump_model_parameter(tmp_test_directory, db_config):
-
     parameter_version = "1.1.0"
     instrument = "LSTN-01"
     num_gains_name = "num_gains"
@@ -283,7 +282,6 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
 
 
 def test_get_validated_parameter_dict():
-
     w1 = writer.ModelDataWriter()
     assert w1.get_validated_parameter_dict(
         parameter_name="num_gains", value=2, instrument="MSTN-01", parameter_version="0.0.1"
@@ -338,7 +336,6 @@ def test_get_validated_parameter_dict():
 
 
 def test_prepare_data_dict_for_writing():
-
     data_dict_1 = {}
     assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_1) == {}
     data_dict_2 = {
@@ -380,7 +377,6 @@ def test_prepare_data_dict_for_writing():
 
 
 def test_get_unit_from_schema(num_gains_schema):
-
     w1 = writer.ModelDataWriter()
 
     assert w1._get_unit_from_schema() is None
@@ -398,7 +394,6 @@ def test_get_unit_from_schema(num_gains_schema):
 
 
 def test_parameter_is_a_file(num_gains_schema):
-
     w1 = writer.ModelDataWriter()
 
     assert not w1._parameter_is_a_file()

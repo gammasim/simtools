@@ -744,7 +744,7 @@ def convert_list_to_string(data, comma_separated=False, shorten_list=False, coll
     return " ".join(str(item) for item in data)
 
 
-def convert_string_to_list(data_string, is_float=True):
+def convert_string_to_list(data_string, is_float=True, force_comma_separation=False):
     """
     Convert string (as used e.g. in sim_telarray) to list.
 
@@ -754,6 +754,10 @@ def convert_string_to_list(data_string, is_float=True):
     ----------
     data_string: object
         String to be converted
+    is_float: bool
+        If True, convert to float, otherwise to int.
+    force_comma_separation: bool
+        If True, force comma separation.
 
     Returns
     -------
@@ -771,7 +775,7 @@ def convert_string_to_list(data_string, is_float=True):
     if "," in data_string:
         result = data_string.split(",")
         return [item.strip() for item in result]
-    if " " in data_string:
+    if " " in data_string and not force_comma_separation:
         return data_string.split()
     return data_string
 
