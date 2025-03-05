@@ -11,6 +11,8 @@ Command line arguments
     Path to save the output file.
 --max_files (int, optional, default=100)
     Maximum number of files to process.
+--print_dataset_information (flag)
+    Print information about the datasets in the generated reduced event dataset.
 
 Example
 -------
@@ -23,7 +25,7 @@ Generate a reduced dataset from input files and save the result.
         --wildcard 'gamma_*dark*.simtel.zst' \
         --output_file output_file.hdf5 \
         --max_files 50 \
-        --print_hdf5
+        --print_dataset_information
 """
 
 import logging
@@ -56,14 +58,14 @@ def _parse(label, description):
         help="Wildcard for querying the files in the directory (e.g., 'gamma_*dark*.simtel.zst')",
     )
     config.parser.add_argument(
-        "--output_file", type=str, required=True, help="Output HDF5 filename."
+        "--output_file", type=str, required=True, help="Output filename."
     )
     config.parser.add_argument(
         "--max_files", type=int, default=100, help="Maximum number of files to process."
     )
 
-    config.parser.add_argument("--print_hdf5", action="store_true",
-        help="Print information about the datasets in the generated HDF5 file.")
+    config.parser.add_argument("--print_dataset_information", action="store_true",
+        help="Print information about the datasets in the generated reduced event dataset.")
 
     return config.initialize(db_config=False)
 
@@ -113,7 +115,7 @@ def main():
     generator = ReducedDatasetGenerator(files, output_filepath, args_dict["max_files"])
     generator.process_files()
     _logger.info(f"reduced dataset saved to: {output_filepath}")
-    if args_dict["print_hdf5"]:
+    if args_dict["print_dataset_information"]:
         generator.print_hdf5_file()
 
 
