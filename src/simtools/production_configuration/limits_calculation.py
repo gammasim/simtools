@@ -4,6 +4,8 @@ import astropy.units as u
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.coordinates import AltAz
+from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
 
 class LimitCalculator:
@@ -151,11 +153,13 @@ class LimitCalculator:
 
         triggered_energies = self.simulated[shower_id_triggered_adjusted]
         energy_bins = np.logspace(
-            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 100
+            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 1000
         )
-        core_distances_all = np.sqrt(self.event_x_core**2 + self.event_y_core**2)
+        event_x_core_shower, event_y_core_shower = self._transform_to_shower_coordinates()
+        core_distances_all = np.sqrt(event_x_core_shower**2 + event_y_core_shower**2)
         core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
-        core_bins = np.linspace(core_distances_triggered.min(), core_distances_triggered.max(), 100)
+        core_bins = np.linspace(core_distances_triggered.min(),
+                                core_distances_triggered.max(), 1000)
 
         return core_distances_triggered, triggered_energies, core_bins, energy_bins
 
@@ -238,13 +242,32 @@ class LimitCalculator:
         z_2 = x_1 * np.cos(array_altitude_rad) + z_1 * np.sin(array_altitude_rad)
         off_angles = np.arctan2(np.sqrt(x_2**2 + y_2**2), z_2) * (180.0 / np.pi)
 
-        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 200)
+        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 400)
         hist, _ = np.histogram(off_angles, bins=angle_bins)
 
         _, upper_bin_edge_value = self._compute_limits(
             hist, angle_bins, loss_fraction, axis=0, limit_type="upper"
         )
         return upper_bin_edge_value * u.deg
+
+
+    def _transform_to_shower_coordinates(self):
+        """
+        Transform core positions from ground coordinates to shower coordinates.
+
+        Returns
+        -------
+        TiltedGroundFrame
+            Core positions in shower coordinates.
+        """
+        pointing_az = self.shower_sim_azimuth * u.rad
+        pointing_alt = self.shower_sim_altitude * u.rad
+
+        pointing = AltAz(az=pointing_az, alt=pointing_alt)
+        ground = GroundFrame(x=self.event_x_core * u.m, y=self.event_y_core * u.m, z=0 * u.m)
+        shower_frame = ground.transform_to(TiltedGroundFrame(pointing_direction=pointing))
+
+        return shower_frame.x, shower_frame.y
 
     def plot_data(self):
         """Plot the core distances and energies of triggered events."""
@@ -268,10 +291,10 @@ class LimitCalculator:
         triggered_energies = self.simulated[shower_id_triggered_adjusted]
 
         core_bins = np.linspace(
-                core_distances_triggered.min(), core_distances_triggered.max(), 100
+                core_distances_triggered.min(), core_distances_triggered.max(), 400
             )
         energy_bins = np.logspace(
-                np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 100
+                np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 400
             )
         plt.figure(figsize=(8, 6))
         plt.hist2d(
