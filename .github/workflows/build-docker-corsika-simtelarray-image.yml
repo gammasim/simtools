@@ -211,8 +211,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}-prod-opt
       - name: set image tag
         run: |
-            TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep 'latest' | head -n1)
-            echo "image_tag=$TAG" >> "$GITHUB_ENV"
+            echo "image_tag=$(echo '${{ steps.meta.outputs.tags }}' | head -n1)" >> "$GITHUB_ENV"
         id: set-image-tag
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
@@ -231,6 +230,7 @@ jobs:
         avx_instruction: ['noOpt']
 
     steps:
+
       # test the no-opt image with one application using the database,
       # CORSIKA, sim_telarray, and simtools
       - name: Test image
