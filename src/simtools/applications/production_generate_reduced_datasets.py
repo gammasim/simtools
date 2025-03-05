@@ -50,7 +50,7 @@ def _parse(label, description):
         "--wildcard",
         type=str,
         required=True,
-        help="Wildcard for querying the files in the directory i.e. 'gamma_*dark*.simtel.zst'",
+        help="Wildcard for querying the files in the directory (e.g., 'gamma_*dark*.simtel.zst')",
     )
     config.parser.add_argument(
         "--output_file", type=str, required=True, help="Output HDF5 filename."
@@ -58,17 +58,40 @@ def _parse(label, description):
     config.parser.add_argument(
         "--max_files", type=int, default=100, help="Maximum number of files to process."
     )
+
     config.parser.add_argument("--print_hdf5", action="store_true",
-                                help="Print additionally HDF5 file contents after file generation.")
+        help="Print information about the datasets in the generated HDF5 file.")
 
     return config.initialize(db_config=False)
 
 
 def main():
-    """Process EventIO files and store data in HDF5 reduced dataset."""
+    """
+    Process EventIO files and store data in reduced dataset.
+
+    The reduced dataset contains the following information:
+        - simulated: List of simulated events.
+        - shower_id_triggered: List of triggered shower IDs.
+        - triggered_energies: List of energies for triggered events.
+        - num_triggered_telescopes: Number of triggered telescopes for each event.
+        - core_x: X-coordinate of the shower core.
+        - core_y: Y-coordinate of the shower core.
+        - trigger_telescope_list_list: List of lists containing triggered telescope IDs.
+        - file_names: List of input file names.
+        - shower_sim_azimuth: Simulated azimuth angle of the shower.
+        - shower_sim_altitude: Simulated altitude angle of the shower.
+        - array_altitudes: List of altitudes for the array.
+        - array_azimuths: List of azimuths for the array.
+    """
     label = Path(__file__).stem
-    args_dict, _ = _parse(label=label,
-                description="Process EventIO files and store data in HDF5 reduced dataset.")
+
+    args_dict, _ = _parse(
+        label=label,
+        description=(
+            "Process EventIO files and store reduced dataset with event information, "
+            "array information and triggered telescopes."
+        )
+    )
 
     _logger = logging.getLogger()
     _logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
@@ -80,10 +103,8 @@ def main():
         _logger.warning("No matching input files found.")
         return
 
-
     output_path = io_handler.IOHandler().get_output_directory(label)
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
-
 
     output_filepath.parent.mkdir(parents=True, exist_ok=True)
     generator = ReducedDatasetGenerator(files, output_filepath, args_dict["max_files"])
