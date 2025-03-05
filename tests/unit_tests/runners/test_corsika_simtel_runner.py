@@ -45,7 +45,6 @@ def corsika_simtel_runner(io_handler, corsika_config_mock_array_model, simtel_pa
 
 
 def test_corsika_simtel_runner(corsika_simtel_runner):
-
     assert isinstance(corsika_simtel_runner.corsika_runner, CorsikaRunner)
     assert isinstance(corsika_simtel_runner.simulator_array, SimulatorArray)
 
@@ -140,7 +139,6 @@ def test_make_run_command_divergent(corsika_simtel_runner, simtel_command, show_
 
 
 def test_get_file_name(corsika_simtel_runner, simulation_file):
-
     assert (
         corsika_simtel_runner.get_file_name(
             simulation_software="corsika", file_type="log", run_number=1

@@ -194,8 +194,7 @@ def _parse(label):
     config.parser.add_argument(
         "--random_focal_length",
         help=(
-            "Value of the random focal length. "
-            "Only used if 'use_random_focal_length' is activated."
+            "Value of the random focal length. Only used if 'use_random_focal_length' is activated."
         ),
         default=None,
         type=float,

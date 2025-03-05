@@ -232,25 +232,25 @@ class CorsikaConfig:
 
     def _input_config_first_interaction_height(self, entry):
         """Return FIXHEI parameter CORSIKA format."""
-        return [f"{entry['value']*u.Unit(entry['unit']).to('cm'):.2f}", "0"]
+        return [f"{entry['value'] * u.Unit(entry['unit']).to('cm'):.2f}", "0"]
 
     def _input_config_corsika_starting_grammage(self, entry):
         """Return FIXCHI parameter CORSIKA format."""
-        return f"{entry['value']*u.Unit(entry['unit']).to('g/cm2')}"
+        return f"{entry['value'] * u.Unit(entry['unit']).to('g/cm2')}"
 
     def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
         """Return ECUTS parameter CORSIKA format."""
         e_cuts = entry["value"]
         return [
-            f"{e_cuts[0]*u.Unit(entry['unit']).to('GeV')} "
-            f"{e_cuts[1]*u.Unit(entry['unit']).to('GeV')} "
-            f"{e_cuts[2]*u.Unit(entry['unit']).to('GeV')} "
-            f"{e_cuts[3]*u.Unit(entry['unit']).to('GeV')}"
+            f"{e_cuts[0] * u.Unit(entry['unit']).to('GeV')} "
+            f"{e_cuts[1] * u.Unit(entry['unit']).to('GeV')} "
+            f"{e_cuts[2] * u.Unit(entry['unit']).to('GeV')} "
+            f"{e_cuts[3] * u.Unit(entry['unit']).to('GeV')}"
         ]
 
     def _input_config_corsika_longitudinal_parameters(self, entry):
         """Return LONGI parameter CORSIKA format."""
-        return ["T", f"{entry['value']*u.Unit(entry['unit']).to('g/cm2')}", "F", "F"]
+        return ["T", f"{entry['value'] * u.Unit(entry['unit']).to('g/cm2')}", "F", "F"]
 
     def _corsika_configuration_cherenkov_parameters(self, parameters_from_db):
         """
@@ -279,8 +279,8 @@ class CorsikaConfig:
         """Return CWAVLG parameter CORSIKA format."""
         wavelength_range = entry["value"]
         return [
-            f"{wavelength_range[0]*u.Unit(entry['unit']).to('nm')}",
-            f"{wavelength_range[1]*u.Unit(entry['unit']).to('nm')}",
+            f"{wavelength_range[0] * u.Unit(entry['unit']).to('nm')}",
+            f"{wavelength_range[1] * u.Unit(entry['unit']).to('nm')}",
         ]
 
     def _corsika_configuration_iact_parameters(self, parameters_from_db):
