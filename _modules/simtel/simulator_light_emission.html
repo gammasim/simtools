@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_light_emission &#8212; simtools v0.1.dev1+gd51c7a2 Manual</title>
+    <title>simtel.simulator_light_emission &#8212; simtools v0.1.dev1+g004be03 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=7c24da91"></script>
+    <script src="../../_static/documentation_options.js?v=b57108ee"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gd51c7a2 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g004be03 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -634,7 +634,6 @@ document.write(`
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;led&quot;</span><span class="p">:</span>
-
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
                 <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -x </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s1">&#39;x_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -y </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s1">&#39;y_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -645,7 +644,6 @@ document.write(`
                 <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -n </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span><span class="si">}</span><span class="s2">&quot;</span>
 
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;layout&quot;</span><span class="p">:</span>
-
                 <span class="n">x_origin</span> <span class="o">=</span> <span class="n">x_cal</span> <span class="o">-</span> <span class="n">x_tel</span>
                 <span class="n">y_origin</span> <span class="o">=</span> <span class="n">y_cal</span> <span class="o">-</span> <span class="n">y_tel</span>
                 <span class="n">z_origin</span> <span class="o">=</span> <span class="n">z_cal</span> <span class="o">-</span> <span class="n">z_tel</span>
@@ -691,7 +689,7 @@ document.write(`
 
             <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --telescope-theta </span><span class="si">{</span><span class="n">angle_theta</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --telescope-phi </span><span class="si">{</span><span class="n">angle_phi</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --laser-theta </span><span class="si">{</span><span class="mi">90</span><span class="o">-</span><span class="n">angles</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --laser-theta </span><span class="si">{</span><span class="mi">90</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">angles</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --laser-phi </span><span class="si">{</span><span class="n">angles</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># convention north (x) towards east (-y)</span>
             <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; --atmosphere </span><span class="si">{</span><span class="n">_model_directory</span><span class="si">}</span><span class="s2">/&quot;</span>
             <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s1">&#39;atmospheric_profile&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -752,8 +750,7 @@ document.write(`
         <span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
             <span class="s2">&quot;output_file&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.simtel.gz&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.simtel.gz&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
             <span class="s2">&quot;histogram_file&quot;</span><span class="p">,</span>
