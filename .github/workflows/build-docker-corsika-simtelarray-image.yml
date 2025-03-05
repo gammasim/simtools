@@ -210,7 +210,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-prod-opt
       - name: set image tag
-        run: echo "image_tag=${{ steps.meta.outputs.tags }}" >> $GITHUB_OUTPUT
+        run: |
+            TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep 'latest' | head -n1)
+            echo "image_tag=$TAG" >> "$GITHUB_ENV"
         id: set-image-tag
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
