@@ -803,7 +803,8 @@ class DataValidator:
         )
         if isinstance(self.data_dict["unit"], str):
             self.data_dict["unit"] = gen.convert_string_to_list(
-                self.data_dict["unit"], force_comma_separation=True)
+                self.data_dict["unit"], force_comma_separation=True
+            )
 
     def _convert_results_to_model_format(self):
         """
