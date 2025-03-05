@@ -13,6 +13,9 @@ loss_fraction (float, required)
     Fraction of events to be lost.
 telescope_ids (list of int, optional)
     List of telescope IDs to filter the events (default is None).
+    Definition of the telescope IDs can be found in the telescope
+      definition file used for simulations.
+
 
 Example
 -------
@@ -47,6 +50,8 @@ def _parse():
         Loss fraction of events for limit derivation.
     telescope_ids: list of int, optional
         List of telescope IDs to filter the events (default is None).
+        Definition of the telescope IDs can be found in the telescope
+        definition file used for simulations.
 
     Returns
     -------
