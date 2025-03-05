@@ -192,7 +192,6 @@ def test_submit_gridengine(mock_gen, job_submitter, mocker, output_log, logfile_
 
 @patch("simtools.job_execution.job_manager.subprocess.run")
 def test_execute(mock_subprocess_run, job_submitter, job_submitter_real):
-
     shell_command = "echo Hello World"
     job_submitter._execute("local", shell_command)
 
