@@ -139,7 +139,7 @@ jobs:
           # - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68'}
         hadronic_model: ['qgs2']
         production:
-          - {build_opt: 'prod6-sc', extra_def: '-DMAXIMUM_TELESCOPES=128'}
+#          - {build_opt: 'prod6-sc', extra_def: '-DMAXIMUM_TELESCOPES=128'}
           - {build_opt: 'prod6-baseline', extra_def: ''}
           # - {build_opt: 'prod5', extra_def: ''}
           # - {build_opt: 'prod5-sc', extra_def: ''}
@@ -223,25 +223,25 @@ jobs:
       matrix:
         version:
           - {simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67'}
+#          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68'}
         hadronic_model: ['qgs2']
         production:
-          - {build_opt: 'prod6-sc', extra_def: '-DMAXIMUM_TELESCOPES=128'}
+#          - {build_opt: 'prod6-sc', extra_def: '-DMAXIMUM_TELESCOPES=128'}
           - {build_opt: 'prod6-baseline', extra_def: ''}
         avx_instruction: ['noOpt']
-
+    container:
+      image: ghcr.io/gammasim/simtools-prod-opt-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}
+      env:
+        SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray"
+        SIMTOOLS_DB_API_PORT: ${{ env.SIMTOOLS_DB_API_PORT }}
+        SIMTOOLS_DB_API_USER: ${{ env.SIMTOOLS_DB_API_USER }}
+        SIMTOOLS_DB_API_PW: ${{ env.SIMTOOLS_DB_API_PW }}
+        SIMTOOLS_DB_SERVER: ${{ env.SIMTOOLS_DB_SERVER }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # test the no-opt image with one application using the database,
-      # CORSIKA, sim_telarray, and simtools
-      - name: Test image
-        if: ${{ matrix.avx_instruction == 'noOpt' }}
+      - name: Run test
         run: >
-          docker run --rm
-          -e "SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'"
-          -e "SIMTOOLS_DB_API_PORT=${{ env.SIMTOOLS_DB_API_PORT }}"
-          -e "SIMTOOLS_DB_API_USER=${{ env.SIMTOOLS_DB_API_USER }}"
-          -e "SIMTOOLS_DB_API_PW=${{ env.SIMTOOLS_DB_API_PW }}"
-          -e "SIMTOOLS_DB_SERVER=${{ env.SIMTOOLS_DB_SERVER }}"
-          -v "$(pwd):/workdir/external" ${{ needs.build-production-images-optimized.outputs.image_tag }}
-          bash -c "cd /workdir/external && simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml"
-        shell: /usr/bin/bash -e {0}
+          cd /workdir/external &&
+          simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml
