@@ -16,9 +16,7 @@ env:
 jobs:
   changelog:
     runs-on: ubuntu-latest
-    if: >
-      github.event.pull_request.draft == false &&
-      contains(github.event.pull_request.labels.*.name, 'ready for review')
+    if: github.event.pull_request.draft == false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
