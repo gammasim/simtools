@@ -6,7 +6,7 @@ name: Changelog
 on:
   pull_request:
     # should also be re-run when changing labels
-    types: [opened, reopened, labeled, unlabeled, synchronize]
+    types: [opened, reopened, labeled, unlabeled, synchronize, edited]
     branches:
       - 'main'
 
