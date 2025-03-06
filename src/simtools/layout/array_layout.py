@@ -718,8 +718,7 @@ class ArrayLayout:
                     set(_telescope_list_from_name + _telescope_list_from_type)
                 )
             self._logger.info(
-                f"Selected {len(self._telescope_list)} telescopes"
-                f" (from originally {_n_telescopes})"
+                f"Selected {len(self._telescope_list)} telescopes (from originally {_n_telescopes})"
             )
         except TypeError:
             self._logger.info("No asset list provided, keeping all telescopes")

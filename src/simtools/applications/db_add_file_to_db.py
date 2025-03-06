@@ -46,7 +46,6 @@ from simtools.db import db_handler
 
 
 def _parse():
-
     config = configurator.Configurator(
         description="Add file to the DB.",
         usage="simtools-add-file-to-db --file_name test_application.dat --db test-data",

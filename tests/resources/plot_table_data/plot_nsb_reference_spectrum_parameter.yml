@@ -1,3 +1,4 @@
+---
 CTA_SIMPIPE:
   PLOT:
     TYPE: NSB spectrum
@@ -6,7 +7,7 @@ CTA_SIMPIPE:
     YTITLE: 'Differential photon rate [10^9 / (nm s m^2 sr)]'
     XSCALE: 'linear'
     YSCALE: 'log'
-    NO_MARKERS: True
+    NO_MARKERS: true
     TABLES:
       - PARAMETER: nsb_reference_spectrum
         SITE: NORTH

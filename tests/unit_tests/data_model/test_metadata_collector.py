@@ -71,7 +71,6 @@ def test_get_data_model_schema_dict(args_dict_site):
 
 
 def test_get_top_level_metadata(args_dict_site):
-
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     assert (
         collector.top_level_meta["cta"]["activity"]["end"]
@@ -418,7 +417,6 @@ def test_fill_instrument_meta(args_dict_site):
 
 
 def test_clean_meta_data():
-
     pre_clean = {
         "reference": {"version": "1.0.0"},
         "contact": {"organization": "CTAO", "name": "not_me", "email": None, "orcid": None},

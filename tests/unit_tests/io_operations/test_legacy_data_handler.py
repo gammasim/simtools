@@ -12,7 +12,6 @@ def test_spe_file():
 
 
 def test_read_legacy_data_file(test_spe_file):
-
     table = legacy_data_handler.read_legacy_data_as_table(test_spe_file, "legacy_lst_single_pe")
     assert table.colnames == ["amplitude", "response"]
 
@@ -21,5 +20,4 @@ def test_read_legacy_data_file(test_spe_file):
 
 
 def test_read_legacy_lst_single_pe(test_spe_file):
-
     assert isinstance(legacy_data_handler.read_legacy_lst_single_pe(test_spe_file), Table)

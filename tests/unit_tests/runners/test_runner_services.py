@@ -164,18 +164,14 @@ def test_get_data_file_path(runner_service, corsika_runner_mock_array_model, fil
         file_type="corsika_output", file_name=file_base_name, run_number=1
     ) == corsika_runner_mock_array_model._directory["data"].joinpath(
         runner_service._get_run_number_string(1)
-    ).joinpath(
-        f"{file_base_name}.zst"
-    )
+    ).joinpath(f"{file_base_name}.zst")
 
     # simtel output
     assert runner_service._get_data_file_path(
         file_type="simtel_output", file_name=file_base_name, run_number=1
     ) == corsika_runner_mock_array_model._directory["data"].joinpath(
         runner_service._get_run_number_string(1)
-    ).joinpath(
-        f"{file_base_name}.simtel.zst"
-    )
+    ).joinpath(f"{file_base_name}.simtel.zst")
 
 
 def test_get_sub_file_path(runner_service, file_base_name, io_handler):
@@ -200,7 +196,6 @@ def test_get_sub_file_path(runner_service, file_base_name, io_handler):
 
 
 def test_get_file_name(runner_service):
-
     assert isinstance(runner_service.get_file_name("log", run_number=1), pathlib.Path)
     assert isinstance(runner_service.get_file_name("output", run_number=1), pathlib.Path)
     assert isinstance(runner_service.get_file_name("sub_log", run_number=1), pathlib.Path)

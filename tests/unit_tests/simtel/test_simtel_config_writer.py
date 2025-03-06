@@ -59,7 +59,6 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
 
 
 def test_get_simtel_metadata(simtel_config_writer):
-
     _tel = simtel_config_writer._get_simtel_metadata("telescope")
     assert len(_tel) == 8
     assert _tel["camera_config_name"] == simtel_config_writer._telescope_model_name
@@ -75,7 +74,6 @@ def test_get_simtel_metadata(simtel_config_writer):
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):
-
     assert simtel_config_writer._get_value_string_for_simtel(None) == "none"
     assert simtel_config_writer._get_value_string_for_simtel(True) == 1
     assert simtel_config_writer._get_value_string_for_simtel(False) == 0

@@ -17,7 +17,6 @@ from simtools.utils import general as gen
 
 
 def test_get_get_model_parameter_schema_files(tmp_test_directory):
-
     par, files = schema.get_get_model_parameter_schema_files()
     assert len(files)
     assert files[0].is_file()
@@ -33,7 +32,6 @@ def test_get_get_model_parameter_schema_files(tmp_test_directory):
 
 
 def test_get_model_parameter_schema_file():
-
     schema_file = str(schema.get_model_parameter_schema_file("num_gains"))
 
     assert str(MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml") in schema_file
@@ -43,7 +41,6 @@ def test_get_model_parameter_schema_file():
 
 
 def test_get_model_parameter_schema_version():
-
     most_recent = schema.get_model_parameter_schema_version()
     assert most_recent == "0.3.0"
 
@@ -55,7 +52,6 @@ def test_get_model_parameter_schema_version():
 
 
 def test_validate_dict_using_schema(tmp_test_directory, caplog):
-
     with caplog.at_level(logging.WARNING):
         schema.validate_dict_using_schema(None, None)
     assert "No schema provided for validation of" in caplog.text
@@ -180,7 +176,6 @@ def test_load_schema(caplog, tmp_test_directory):
 
 
 def test_add_array_elements():
-
     test_dict_1 = {"data": {"InstrumentTypeElement": {"enum": ["LSTN", "MSTN"]}}}
     test_dict_added = schema._add_array_elements("InstrumentTypeElement", test_dict_1)
     assert len(test_dict_added["data"]["InstrumentTypeElement"]["enum"]) > 2

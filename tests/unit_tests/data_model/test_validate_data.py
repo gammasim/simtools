@@ -139,7 +139,6 @@ def test_validate_data_file(caplog):
 
 
 def test_validate_parameter_and_file_name(caplog):
-
     num_gain_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
     parameter = "num_gains"
     parameter_version = "1.0.0"
@@ -372,7 +371,6 @@ def test_check_range(reference_columns, caplog):
 
 
 def test_is_dimensionless():
-
     data_validator = validate_data.DataValidator()
 
     assert data_validator._is_dimensionless(None)
@@ -642,7 +640,6 @@ def test_read_validation_schema(tmp_test_directory):
 
 # incomplete test
 def test_validate_data_dict():
-
     # parameter with unit
     data_validator = validate_data.DataValidator(
         schema_file=schema.get_model_parameter_schema_file("reference_point_altitude")
@@ -899,7 +896,6 @@ def test_validate_model_parameter(mocker):
 
 
 def test__check_site_and_array_element_consistency():
-
     data_validator = validate_data.DataValidator()
 
     sucess_matrix = [(None, None), ("OBS-North", None), ("OBS-North", "North")]

@@ -82,7 +82,6 @@ def _parse(label=None, description=None):
 
 
 def main():  # noqa: D103
-
     args_dict, _ = _parse(
         label=Path(__file__).stem,
         description="Convert simulation model parameter from sim_telarray to simtools format.",
