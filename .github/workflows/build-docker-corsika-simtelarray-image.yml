@@ -189,7 +189,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-          images: ${{ env.REGISTRY }}/gammasim/simtools-prod-opt-${{ env.LABELS }}
+          images: ${{ env.REGISTRY }}/gammasim/simtools-prod-${{ env.LABELS }}
           flavor: latest=true
 
       - name: Build and push optimized image
@@ -207,9 +207,9 @@ jobs:
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           push:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
-          file: ./docker/Dockerfile-prod-opt
+          file: ./docker/Dockerfile-prod
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}-prod-opt
+          labels: ${{ steps.meta.outputs.labels }}-prod
       - name: set image tag
         run: |
             echo "image_tag=$(echo '${{ steps.meta.outputs.tags }}' | head -n1)" >> "$GITHUB_ENV"
@@ -231,7 +231,7 @@ jobs:
           - {build_opt: 'prod6-baseline', extra_def: ''}
         avx_instruction: ['no_opt']
     container:
-      image: ghcr.io/gammasim/simtools-prod-opt-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}
+      image: ghcr.io/gammasim/simtools-prod-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.hadronic_model }}-${{ matrix.avx_instruction }}
       env:
         SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray"
         SIMTOOLS_DB_API_PORT: ${{ env.SIMTOOLS_DB_API_PORT }}
@@ -244,7 +244,7 @@ jobs:
 
       - name: Set sim_telarray path
         run: |
-          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+          echo "PATH=\$PATH:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
