@@ -242,6 +242,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set sim_telarray path
+        run: |
+          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+
+      - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
+        run: |
+          SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
+          SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
+          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
+
       - name: Run test
+        shell: bash -l {0}
+        env:
+          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: >
           simtools-simulate-prod --config tests/integration_tests/config/simulate_prod_gamma_20_deg_South_pack_for_grid.yml
