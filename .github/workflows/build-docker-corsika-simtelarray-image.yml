@@ -255,8 +255,9 @@ jobs:
       - name: Run test
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          PYTEST_ADDOPTS: ""
         run: |
           source /workdir/env/bin/activate
           # simtools-simulate-prod --config tests/integration_tests/config/simulate_prod_gamma_20_deg_South_pack_for_grid.yml
-          pip install --no-cache-dir pytest pytest-requirements
+          pip install --no-cache-dir pytest pytest-requirements pytest-xdist 
           pytest --no-cov -n auto tests/integration_tests/test_applications_from_config.py
