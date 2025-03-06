@@ -33,7 +33,6 @@ def spe_data():
 @patch("simtools.io_operations.io_handler.IOHandler")
 @patch("simtools.camera.single_photon_electron_spectrum.MetadataCollector")
 def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
-
     mock_io_handler_instance = mock_io_handler.return_value
     mock_metadata_collector_instance = mock_metadata_collector.return_value
 
@@ -52,7 +51,6 @@ def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
     "SinglePhotonElectronSpectrum._derive_spectrum_norm_spe"
 )
 def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
-
     spe_spectrum.args_dict["use_norm_spe"] = True
     spe_spectrum.derive_single_pe_spectrum()
     mock_derive_spectrum_norm_spe.assert_called_once()

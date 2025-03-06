@@ -164,7 +164,6 @@ def test_split_value_is_list():
 
 
 def test_unit_as_string():
-
     assert value_conversion._unit_as_string(None) is None
     assert value_conversion._unit_as_string("m") == "m"
     assert value_conversion._unit_as_string(["m"]) == "m"

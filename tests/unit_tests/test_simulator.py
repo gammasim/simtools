@@ -90,7 +90,6 @@ def shower_array_simulator(io_handler, db_config, simulations_args_dict):
 
 
 def test_init_simulator(shower_simulator, array_simulator, shower_array_simulator):
-
     assert isinstance(shower_simulator._simulation_runner, CorsikaRunner)
     assert isinstance(shower_array_simulator._simulation_runner, CorsikaSimtelRunner)
     assert isinstance(array_simulator._simulation_runner, SimulatorArray)

@@ -1,9 +1,9 @@
+---
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-convert-geo-coordinates-of-array-elements
     TEST_NAME: utm_to_ground_json
     CONFIGURATION:
-      INPUT: tests/resources/model_parameters/array_element_position_utm.json
       INPUT: tests/resources/model_parameters/array_element_position_utm-2.0.0.json
       SITE: North
       EXPORT: ground

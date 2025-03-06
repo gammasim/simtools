@@ -1248,8 +1248,7 @@ class CorsikaHistograms:
                     meta_data=self._meta_dict,
                 )
                 self._logger.info(
-                    f"Writing 1D histogram with name {hdf5_table_name} to "
-                    f"{self.hdf5_file_name}."
+                    f"Writing 1D histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
                 )
                 # overwrite takes precedence over append
                 if overwrite is True:
@@ -1382,8 +1381,7 @@ class CorsikaHistograms:
                 )
 
                 self._logger.info(
-                    f"Writing 2D histogram with name {hdf5_table_name} to "
-                    f"{self.hdf5_file_name}."
+                    f"Writing 2D histogram with name {hdf5_table_name} to {self.hdf5_file_name}."
                 )
                 # Always appending to table due to the file previously created
                 # by self._export_1d_histograms.

@@ -219,8 +219,8 @@ class SimtelIOHistograms:
         )
 
         stacked_num_simulated_events, stacked_num_triggered_events = self.get_stacked_num_events()
-        logging.info("Total number of simulated events: " f"{stacked_num_simulated_events} events")
-        logging.info("Total number of triggered events: " f"{stacked_num_triggered_events} events")
+        logging.info(f"Total number of simulated events: {stacked_num_simulated_events} events")
+        logging.info(f"Total number of triggered events: {stacked_num_triggered_events} events")
         obs_time = simtel_hist_instance.estimate_observation_time(stacked_num_simulated_events)
         logging.info(
             "Estimated equivalent observation time corresponding to the number of"

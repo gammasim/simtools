@@ -232,7 +232,6 @@ def read_and_export_parameters(args_dict, logger):
     _parameters_not_in_simtel = []
 
     for _parameter, _schema_file in zip(_parameters, _schema_files):
-
         logger.info(f"Parameter: {_parameter} Schema file: {_schema_file}")
         simtel_config_reader = read_simtel_config_file(
             args_dict, logger, _schema_file, _camera_pixel
