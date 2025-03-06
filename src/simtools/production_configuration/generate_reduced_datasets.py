@@ -50,7 +50,7 @@ class ReducedDatasetGenerator:
             data_lists = self._initialize_data_lists()
 
             for i_file, file in enumerate(self.input_files[: self.max_files]):
-                self._logger.info(f"Processing file {i_file+1}/{self.max_files}: {file}")
+                self._logger.info(f"Processing file {i_file + 1}/{self.max_files}: {file}")
                 data_lists["file_names"].append(str(file))
                 self._process_file(file, data_lists)
 
@@ -66,31 +66,50 @@ class ReducedDatasetGenerator:
 
         datasets = {
             "simulated": grp.create_dataset(
-                "simulated", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+                "simulated", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            ),
             "shower_id_triggered": grp.create_dataset(
-                "shower_id_triggered", (0,), maxshape=(None,), dtype="i4", compression="gzip"),
+                "shower_id_triggered", (0,), maxshape=(None,), dtype="i4", compression="gzip"
+            ),
             "triggered_energies": grp.create_dataset(
-                "triggered_energies", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+                "triggered_energies", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            ),
             "num_triggered_telescopes": grp.create_dataset(
-                "num_triggered_telescopes", (0,), maxshape=(None,), dtype="i4", compression="gzip"),
+                "num_triggered_telescopes", (0,), maxshape=(None,), dtype="i4", compression="gzip"
+            ),
             "trigger_telescope_list_list": grp.create_dataset(
-                "trigger_telescope_list_list", (0,), maxshape=(None,), dtype=vlen_int_type,
-                  chunks=True, compression="gzip"),
+                "trigger_telescope_list_list",
+                (0,),
+                maxshape=(None,),
+                dtype=vlen_int_type,
+                chunks=True,
+                compression="gzip",
+            ),
             "core_x": grp.create_dataset(
-                "core_x", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+                "core_x", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            ),
             "core_y": grp.create_dataset(
-                "core_y", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+                "core_y", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            ),
             "file_names": grp.create_dataset(
-                "file_names", (0,), maxshape=(None,), dtype=h5py.string_dtype(encoding="utf-8"),
-                  compression="gzip"),
+                "file_names",
+                (0,),
+                maxshape=(None,),
+                dtype=h5py.string_dtype(encoding="utf-8"),
+                compression="gzip",
+            ),
             "shower_sim_azimuth": grp.create_dataset(
-                "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+                "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            ),
             "shower_sim_altitude": grp.create_dataset(
-                "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+                "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            ),
             "array_altitudes": grp.create_dataset(
-                "array_altitudes", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+                "array_altitudes", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            ),
             "array_azimuths": grp.create_dataset(
-                "array_azimuths", (0,), maxshape=(None,), dtype="f4", compression="gzip"),
+                "array_azimuths", (0,), maxshape=(None,), dtype="f4", compression="gzip"
+            ),
         }
 
         datasets["simulated"].attrs["units"] = "TeV"
@@ -133,8 +152,9 @@ class ReducedDatasetGenerator:
                 if isinstance(eventio_object, MCRunHeader):
                     self._process_mc_run_header(eventio_object, data_lists)
                 elif isinstance(eventio_object, MCShower):
-                    self._process_mc_shower(eventio_object, data_lists,
-                                             array_altitude, array_azimuth)
+                    self._process_mc_shower(
+                        eventio_object, data_lists, array_altitude, array_azimuth
+                    )
                 elif isinstance(eventio_object, MCEvent):
                     self._process_mc_event(eventio_object, data_lists)
                 elif isinstance(eventio_object, ArrayEvent):
@@ -143,7 +163,7 @@ class ReducedDatasetGenerator:
     def _process_mc_run_header(self, eventio_object, data_lists):
         """Process MC run header and update data lists."""
         mc_head = eventio_object.parse()
-        self.n_use = mc_head["n_use"] # reuse factor n_use needed to extend the values below
+        self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
         array_altitude = np.mean(mc_head["alt_range"])
         array_azimuth = np.mean(mc_head["az_range"])
         data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
@@ -213,6 +233,7 @@ class ReducedDatasetGenerator:
         """Reset data lists during batch processing."""
         for key in data_lists:
             data_lists[key] = []
+
     def print_hdf5_file(self):
         """Print information about the datasets in the generated HDF5 file."""
         try:
