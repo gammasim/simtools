@@ -255,5 +255,6 @@ jobs:
       - name: Run test
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
-        run: >
+        run: |
+          source /workdir/env/bin/activate
           simtools-simulate-prod --config tests/integration_tests/config/simulate_prod_gamma_20_deg_South_pack_for_grid.yml
