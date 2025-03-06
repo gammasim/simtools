@@ -50,6 +50,7 @@ jobs:
   build-corsika-simtelarray:
     runs-on: ubuntu-latest
     needs: download-corsika
+    if: false
     permissions:
       contents: read
       packages: write
@@ -243,4 +244,4 @@ jobs:
 
       - name: Run test
         run: >
-          simtools-simulate-prod --config ./tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml
+          simtools-simulate-prod --config tests/integration_tests/config/simulate_prod_gamma_20_deg_South_pack_for_grid.yml
