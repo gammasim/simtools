@@ -57,15 +57,16 @@ def _parse(label, description):
         required=True,
         help="Wildcard for querying the files in the directory (e.g., 'gamma_*dark*.simtel.zst')",
     )
-    config.parser.add_argument(
-        "--output_file", type=str, required=True, help="Output filename."
-    )
+    config.parser.add_argument("--output_file", type=str, required=True, help="Output filename.")
     config.parser.add_argument(
         "--max_files", type=int, default=100, help="Maximum number of files to process."
     )
 
-    config.parser.add_argument("--print_dataset_information", action="store_true",
-        help="Print information about the datasets in the generated reduced event dataset.")
+    config.parser.add_argument(
+        "--print_dataset_information",
+        action="store_true",
+        help="Print information about the datasets in the generated reduced event dataset.",
+    )
 
     return config.initialize(db_config=False)
 
@@ -96,7 +97,7 @@ def main():
         description=(
             "Process EventIO files and store reduced dataset with event information, "
             "array information and triggered telescopes."
-        )
+        ),
     )
 
     _logger = logging.getLogger()
