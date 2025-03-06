@@ -45,6 +45,7 @@ class LimitCalculator:
         self.array_azimuth = None
         self.array_altitude = None
         self.trigger_telescope_list_list = None
+        self.units = {}
         self._read_event_data()
 
     def _read_event_data(self):
@@ -60,13 +61,42 @@ class LimitCalculator:
                     self.list_of_files = data_group["file_names"][:]
                     self.shower_sim_azimuth = data_group["shower_sim_azimuth"][:]
                     self.shower_sim_altitude = data_group["shower_sim_altitude"][:]
-                    self.array_altitude = data_group["array_altitude"][:]
-                    self.array_azimuth = data_group["array_azimuth"][:]
+                    self.array_altitude = data_group["array_altitudes"][:]
+                    self.array_azimuth = data_group["array_azimuths"][:]
                     self.trigger_telescope_list_list = data_group["trigger_telescope_list_list"][:]
                 except KeyError as exc:
                     raise KeyError(
                         "One or more required datasets are missing from the 'data' group."
                     ) from exc
+                try:
+
+                    self.units["core_x"] = data_group["core_x"].attrs.get(
+                        "units", None
+                    )
+                    self.units["core_y"] = data_group["core_y"].attrs.get(
+                        "units", None
+                    )
+                    self.units["simulated"] = data_group["simulated"].attrs.get(
+                        "units", None
+                    )
+                    self.units["shower_id_triggered"] = data_group[
+                        "shower_id_triggered"
+                    ].attrs.get("units", None)
+                    self.units["shower_sim_azimuth"] = data_group[
+                        "shower_sim_azimuth"
+                    ].attrs.get("units", None)
+                    self.units["shower_sim_altitude"] = data_group[
+                        "shower_sim_altitude"
+                    ].attrs.get("units", None)
+                    self.units["array_altitudes"] = data_group[
+                        "array_altitudes"
+                    ].attrs.get("units", None)
+                    self.units["array_azimuths"] = data_group[
+                        "array_azimuths"
+                    ].attrs.get("units", None)
+                except KeyError:
+                    # Units are optional
+                    pass
             else:
                 raise KeyError("data group is missing from the HDF5 file.")
 
@@ -233,7 +263,7 @@ class LimitCalculator:
         ground = GroundFrame(x=self.event_x_core * u.m, y=self.event_y_core * u.m, z=0 * u.m)
         shower_frame = ground.transform_to(TiltedGroundFrame(pointing_direction=pointing))
 
-        return shower_frame.x, shower_frame.y
+        return shower_frame.x.value, shower_frame.y.value
 
     def plot_data(self):
         """Plot the core distances and energies of triggered events."""
