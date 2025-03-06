@@ -244,7 +244,7 @@ jobs:
 
       - name: Set sim_telarray path
         run: |
-          echo "PATH=\$PATH:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+          echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
