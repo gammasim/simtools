@@ -20,9 +20,9 @@ def hdf5_file(tmp_path):
             "file_names", data=np.array(["file1", "file2"], dtype=h5py.string_dtype())
         )
         grp.create_dataset("shower_sim_azimuth", data=np.array([0.1, 0.5, 1.0, 1.5, 2.0, 2.5]))
-        grp.create_dataset("shower_sim_altitude", data=np.array([0.1, 0.4, 0.8, 1.2, 1.6, 2.0]))
-        grp.create_dataset("array_azimuth", data=np.array([0.1, 0.5, 1.0, 1.5, 2.0, 2.5]))
-        grp.create_dataset("array_altitude", data=np.array([0.2, 0.6, 1.0, 1.4, 1.8, 2.2]))
+        grp.create_dataset("shower_sim_altitude", data=np.array([0.3, 0.4, 1.1, 1.3, 1.4, 1.5]))
+        grp.create_dataset("array_azimuths", data=np.array([0.1, 0.5, 1.0, 1.5, 2.0, 2.5]))
+        grp.create_dataset("array_altitudes", data=np.array([0.2, 0.6, 1.0, 1.2, 1.3, 1.4]))
         grp.create_dataset(
             "trigger_telescope_list_list",
             (6,),
@@ -37,8 +37,6 @@ def hdf5_file(tmp_path):
             ],
         )
     return file_path
-
-
 
 
 @pytest.fixture
@@ -113,9 +111,10 @@ def hdf5_file_missing_datasets(tmp_path):
 
 
 def test_read_event_data_missing_datasets(hdf5_file_missing_datasets):
-    with pytest.raises(KeyError, match="One or more required datasets are missing from the 'data' group."):
+    with pytest.raises(
+        KeyError, match="One or more required datasets are missing from the 'data' group."
+    ):
         LimitCalculator(hdf5_file_missing_datasets)
-
 
 
 @pytest.fixture
@@ -130,3 +129,14 @@ def hdf5_file_missing_datagroup(tmp_path):
 def test_read_event_data_missing_datagroup(hdf5_file_missing_datagroup):
     with pytest.raises(KeyError, match="data group is missing from the HDF5 file."):
         LimitCalculator(hdf5_file_missing_datagroup)
+
+
+def test_adjust_shower_ids_across_files():
+    shower_id_triggered = np.array([0, 1, 2, 0, 1, 2, 0, 1, 2])
+    num_files = 3
+    showers_per_file = 3
+    expected_adjusted_ids = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
+    adjusted_ids = LimitCalculator.adjust_shower_ids_across_files(
+        shower_id_triggered, num_files, showers_per_file
+    )
+    assert np.all(adjusted_ids == expected_adjusted_ids)
