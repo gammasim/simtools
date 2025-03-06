@@ -144,22 +144,31 @@ class SinglePhotonElectronSpectrum:
 
     def _get_input_data(self, input_file, frequency_column):
         """
-        Return input data for norm_spe command.
+        Return input data in the format required by the norm_spe tool as temporary file.
 
-        Input data need to be space separated values of the amplitude spectrum.
+        The norm_spe tool requires the data to be space separated values of the amplitude spectrum,
+        with two columns: amplitude and frequency.
+        Input is validated using the single_pe_spectrum schema (legacy input is not validated).
+
+        Parameters
+        ----------
+        input_file : str
+            Input file with amplitude spectrum.
+        frequency_column : str
+            Column name of the frequency data.
         """
-        input_data = ""
         if not input_file:
             return None
         input_file = Path(input_file)
 
+        input_data = ""
         if input_file.suffix == ".ecsv":
             data_validator = validate_data.DataValidator(
                 schema_file=self.input_schema, data_file=input_file
             )
             table = data_validator.validate_and_transform()
             input_data = "\n".join(f"{row['amplitude']} {row[frequency_column]}" for row in table)
-        else:
+        else:  # legacy format
             with open(input_file, encoding="utf-8") as f:
                 input_data = (
                     f.read().replace(",", " ")
