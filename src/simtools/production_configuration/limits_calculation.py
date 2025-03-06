@@ -69,31 +69,24 @@ class LimitCalculator:
                         "One or more required datasets are missing from the 'data' group."
                     ) from exc
                 try:
-
-                    self.units["core_x"] = data_group["core_x"].attrs.get(
+                    self.units["core_x"] = data_group["core_x"].attrs.get("units", None)
+                    self.units["core_y"] = data_group["core_y"].attrs.get("units", None)
+                    self.units["simulated"] = data_group["simulated"].attrs.get("units", None)
+                    self.units["shower_id_triggered"] = data_group["shower_id_triggered"].attrs.get(
                         "units", None
                     )
-                    self.units["core_y"] = data_group["core_y"].attrs.get(
+                    self.units["shower_sim_azimuth"] = data_group["shower_sim_azimuth"].attrs.get(
                         "units", None
                     )
-                    self.units["simulated"] = data_group["simulated"].attrs.get(
+                    self.units["shower_sim_altitude"] = data_group["shower_sim_altitude"].attrs.get(
                         "units", None
                     )
-                    self.units["shower_id_triggered"] = data_group[
-                        "shower_id_triggered"
-                    ].attrs.get("units", None)
-                    self.units["shower_sim_azimuth"] = data_group[
-                        "shower_sim_azimuth"
-                    ].attrs.get("units", None)
-                    self.units["shower_sim_altitude"] = data_group[
-                        "shower_sim_altitude"
-                    ].attrs.get("units", None)
-                    self.units["array_altitudes"] = data_group[
-                        "array_altitudes"
-                    ].attrs.get("units", None)
-                    self.units["array_azimuths"] = data_group[
-                        "array_azimuths"
-                    ].attrs.get("units", None)
+                    self.units["array_altitudes"] = data_group["array_altitudes"].attrs.get(
+                        "units", None
+                    )
+                    self.units["array_azimuths"] = data_group["array_azimuths"].attrs.get(
+                        "units", None
+                    )
                 except KeyError:
                     # Units are optional
                     pass
@@ -120,9 +113,7 @@ class LimitCalculator:
         float
             Bin edge value corresponding to the threshold.
         """
-        cumulative_sum = (
-            np.cumsum(hist) if limit_type == "upper" else np.cumsum(hist[::-1])
-        )
+        cumulative_sum = np.cumsum(hist) if limit_type == "upper" else np.cumsum(hist[::-1])
         total_events = np.sum(hist)
         threshold = (1 - loss_fraction) * total_events
         bin_index = np.searchsorted(cumulative_sum, threshold)
@@ -159,8 +150,9 @@ class LimitCalculator:
         event_x_core_shower, event_y_core_shower = self._transform_to_shower_coordinates()
         core_distances_all = np.sqrt(event_x_core_shower**2 + event_y_core_shower**2)
         core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
-        core_bins = np.linspace(core_distances_triggered.min(),
-                                core_distances_triggered.max(), 1000)
+        core_bins = np.linspace(
+            core_distances_triggered.min(), core_distances_triggered.max(), 1000
+        )
 
         return core_distances_triggered, triggered_energies, core_bins, energy_bins
 
@@ -178,9 +170,7 @@ class LimitCalculator:
         astropy.units.Quantity
             Lower energy limit.
         """
-        _, triggered_energies, _, energy_bins = (
-            self._prepare_data_for_limits()
-        )
+        _, triggered_energies, _, energy_bins = self._prepare_data_for_limits()
 
         hist, _ = np.histogram(triggered_energies, bins=energy_bins)
         lower_bin_edge_value = self._compute_limits(
@@ -202,9 +192,7 @@ class LimitCalculator:
         astropy.units.Quantity
             Upper radial distance in m.
         """
-        core_distances_triggered, _, core_bins, _ = (
-            self._prepare_data_for_limits()
-        )
+        core_distances_triggered, _, core_bins, _ = self._prepare_data_for_limits()
 
         hist, _ = np.histogram(core_distances_triggered, bins=core_bins)
         upper_bin_edge_value = self._compute_limits(
@@ -286,12 +274,10 @@ class LimitCalculator:
         core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
         triggered_energies = self.simulated[shower_id_triggered_adjusted]
 
-        core_bins = np.linspace(
-                core_distances_triggered.min(), core_distances_triggered.max(), 400
-            )
+        core_bins = np.linspace(core_distances_triggered.min(), core_distances_triggered.max(), 400)
         energy_bins = np.logspace(
-                np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 400
-            )
+            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 400
+        )
         plt.figure(figsize=(8, 6))
         plt.hist2d(
             core_distances_triggered,
@@ -327,8 +313,5 @@ class LimitCalculator:
         np.ndarray
             Adjusted shower IDs.
         """
-        adjusted_ids = shower_id_triggered.copy()
-        for file_idx in range(1, num_files):
-            mask = shower_id_triggered >= file_idx * showers_per_file
-            adjusted_ids[mask] += file_idx * showers_per_file
-        return adjusted_ids
+        increment_list = [i * showers_per_file for i in range(num_files)]
+        return shower_id_triggered + np.repeat(increment_list, showers_per_file)
