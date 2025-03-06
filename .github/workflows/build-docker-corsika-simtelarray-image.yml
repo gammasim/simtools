@@ -207,7 +207,7 @@ jobs:
             BUILD_BRANCH=${{ env.BUILD_BRANCH }}
           push:
             ${{ github.event_name == 'release' || github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
-          file: ./docker/Dockerfile-prod
+          file: ./docker/Dockerfile-prod-opt
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}-prod
       - name: set image tag
