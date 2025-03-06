@@ -243,5 +243,4 @@ jobs:
 
       - name: Run test
         run: >
-          cd /workdir/external &&
-          simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml
+          simtools-simulate-prod --config ./tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml
