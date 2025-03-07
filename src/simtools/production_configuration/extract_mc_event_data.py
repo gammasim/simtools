@@ -79,14 +79,13 @@ class MCEventExtractor:
             return
 
         data_lists = self._initialize_data_lists()
-
+        self.shower_id_offset = 0
         # Process the first file in write mode
         self._logger.info(f"Processing file 1/{self.max_files}: {self.input_files[0]}")
         self._process_file(self.input_files[0], data_lists, str(self.input_files[0]))
         self._write_all_data(data_lists, mode="w")
+        self.shower_id_offset = len(data_lists["simulated"])
         self._reset_data_lists(data_lists)
-
-        self.shower_id_offset = self.n_use * len(data_lists["simulated"])
 
         # Process remaining files in append mode
         for i_file, file in enumerate(self.input_files[1 : self.max_files], start=2):
@@ -94,9 +93,8 @@ class MCEventExtractor:
             self._process_file(file, data_lists, str(file))
             if len(data_lists["simulated"]) >= 50000:
                 self._write_all_data(data_lists, mode="a")
+                self.shower_id_offset += len(data_lists["simulated"])
                 self._reset_data_lists(data_lists)
-
-            self.shower_id_offset += self.n_use * len(data_lists["simulated"])
 
         # Final write for any remaining data
         self._write_all_data(data_lists, mode="a")
@@ -109,6 +107,7 @@ class MCEventExtractor:
 
     def _write_file_names(self, file_names, mode="a"):
         """Write file names to HDF5 file."""
+        print("file_names", file_names)
         with HDF5TableWriter(
             self.output_file, group_name="data", mode=mode, filters=DEFAULT_FILTERS
         ) as writer:
@@ -165,7 +164,7 @@ class MCEventExtractor:
                     self._process_mc_event(eventio_object, data_lists)
                 elif isinstance(eventio_object, ArrayEvent):
                     self._process_array_event(eventio_object, data_lists)
-            data_lists["file_names"].extend([file_name] * self.n_use)
+            data_lists["file_names"].extend([file_name])
 
     def _process_mc_run_header(self, eventio_object, data_lists):
         """Process MC run header and update data lists."""
@@ -175,8 +174,6 @@ class MCEventExtractor:
         array_azimuth = np.mean(mc_head["az_range"])
         data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
         data_lists["array_azimuths"].extend(self.n_use * [array_azimuth])
-
-        self.shower_id_offset += mc_head["n_showers"] * self.n_use
 
     def _process_mc_shower(self, eventio_object, data_lists, array_altitude, array_azimuth):
         """Process MC shower and update data lists."""
