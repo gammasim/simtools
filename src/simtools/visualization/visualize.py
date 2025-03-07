@@ -421,13 +421,39 @@ def setup_plot(kwargs, plot_ratio, plot_difference):
 def plot_main_data(data_dict, kwargs, plot_args):
     """Plot the main data."""
     for label, data_now in data_dict.items():
-        assert len(data_now.dtype.names) == 2, "Input array must have two columns with titles."
+        assert len(data_now.dtype.names) >= 2, (
+            "Input array must have at least two columns with titles."
+        )
         x_column_name, y_column_name = data_now.dtype.names[0], data_now.dtype.names[1]
+        x_err_column_name, y_err_column_name = None, None
+        if len(data_now.dtype.names) == 4:
+            x_err_column_name, y_err_column_name = data_now.dtype.names[2], data_now.dtype.names[3]
+        if len(data_now.dtype.names) == 3:
+            x_err_column_name, y_err_column_name = None, data_now.dtype.names[2]
         x_title = kwargs["xtitle"] if kwargs.get("xtitle") else x_column_name
         y_title = kwargs["ytitle"] if kwargs.get("ytitle") else y_column_name
         x_title_unit = _add_unit(x_title, data_now[x_column_name])
         y_title_unit = _add_unit(y_title, data_now[y_column_name])
-        plt.plot(data_now[x_column_name], data_now[y_column_name], label=label, **plot_args)
+        (line,) = plt.plot(
+            data_now[x_column_name], data_now[y_column_name], label=label, **plot_args
+        )
+        if kwargs.get("error_type") == "fill_between" and y_err_column_name:
+            plt.fill_between(
+                data_now[x_column_name],
+                data_now[y_column_name] - data_now[y_err_column_name],
+                data_now[y_column_name] + data_now[y_err_column_name],
+                alpha=0.2,
+                color=line.get_color(),
+            )
+        if kwargs.get("error_type") == "errorbar" and (y_err_column_name or x_err_column_name):
+            plt.errorbar(
+                data_now[x_column_name],
+                data_now[y_column_name],
+                xerr=data_now[x_err_column_name] if x_err_column_name else None,
+                yerr=data_now[y_err_column_name] if y_err_column_name else None,
+                fmt=".",
+                color=line.get_color(),
+            )
 
     plt.xscale(kwargs["xscale"])
     plt.yscale(kwargs["yscale"])

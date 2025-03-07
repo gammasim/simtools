@@ -9,8 +9,14 @@ CTA_SIMPIPE:
     YSCALE: 'log'
     XLIM: [0., 40.]
     YLIM: [1.e-11, null]
+    ERROR_TYPE: fill_between
     TABLES:
       - FILE_NAME: tests/resources/spe_LST_2022-04-27_AP2.0e-4.ecsv
         LABEL: 'LST-ecsv'
         COLUMN_X: 'amplitude'
         COLUMN_Y: 'frequency (prompt+afterpulsing)'
+      - FILE_NAME: tests/resources/Afterpulsing-probability-with-errors.ecsv
+        LABEL: 'LST-Afterpulsing-with-Errors'
+        COLUMN_X: 'amplitude'
+        COLUMN_Y: 'frequency (afterpulsing)'
+        COLUMN_Y_ERR: 'frequency stdev (afterpulsing)'
