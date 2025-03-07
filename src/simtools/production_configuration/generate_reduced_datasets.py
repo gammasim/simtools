@@ -2,10 +2,39 @@
 
 import logging
 
-import h5py
 import numpy as np
+import tables
+from ctapipe.core import Container, Field
+from ctapipe.io import HDF5TableWriter
 from eventio import EventIOFile
 from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerInformation
+
+DEFAULT_FILTERS = tables.Filters(complevel=5, complib="zlib", shuffle=True, bitshuffle=False)
+
+
+class ReducedDatasetContainer(Container):
+    """Container for reduced dataset information."""
+
+    simulated = Field(None, "Simulated energy")
+    core_x = Field(None, "X-coordinate of the shower core")
+    core_y = Field(None, "Y-coordinate of the shower core")
+    shower_sim_azimuth = Field(None, "Simulated azimuth angle of the shower")
+    shower_sim_altitude = Field(None, "Simulated altitude angle of the shower")
+    array_altitudes = Field(None, "Altitudes for the array")
+    array_azimuths = Field(None, "Azimuths for the array")
+
+
+class TriggeredShowerContainer(Container):
+    """Container for triggered shower information."""
+
+    shower_id_triggered = Field(None, "Triggered shower ID")
+    triggered_energies = Field(None, "Triggered energies")
+
+
+class FileNamesContainer(Container):
+    """Container for file names."""
+
+    file_names = Field(None, "Input file names")
 
 
 class ReducedDatasetGenerator:
@@ -41,90 +70,62 @@ class ReducedDatasetGenerator:
         self.max_files = max_files
         self.shower = None
         self.n_use = None
+        self.shower_id_offset = 0
 
     def process_files(self):
         """Process the input files and store it in an HDF5 file."""
-        with h5py.File(self.output_file, "w") as hdf:
-            grp = hdf.create_group("data")
-            datasets = self._create_datasets(grp)
+        with HDF5TableWriter(
+            self.output_file, group_name="data", mode="w", filters=DEFAULT_FILTERS
+        ) as writer:
             data_lists = self._initialize_data_lists()
 
             for i_file, file in enumerate(self.input_files[: self.max_files]):
                 self._logger.info(f"Processing file {i_file + 1}/{self.max_files}: {file}")
-                data_lists["file_names"].append(str(file))
-                self._process_file(file, data_lists)
+                self._process_file(file, data_lists, str(file))
 
                 if len(data_lists["simulated"]) >= 50000:
-                    self._append_all_datasets(datasets, data_lists)
+                    self._write_data(writer, data_lists)
+                    # Write variable-length array data and file names separately
+                    self._write_variable_length_data(data_lists["trigger_telescope_list_list"])
+                    self._write_file_names(data_lists["file_names"])
                     self._reset_data_lists(data_lists)
 
-            self._append_all_datasets(datasets, data_lists)
+                # Apply shower_id_offset after processing the first file
+                if i_file == 0:
+                    self.shower_id_offset = 0
+                else:
+                    self.shower_id_offset += self.n_use * len(data_lists["simulated"])
 
-    def _create_datasets(self, grp):
-        """Create HDF5 datasets and add units as attributes."""
-        vlen_int_type = h5py.special_dtype(vlen=np.int16)
+            self._write_data(writer, data_lists)
+            self._write_variable_length_data(data_lists["trigger_telescope_list_list"])
+            self._write_file_names(data_lists["file_names"])
 
-        datasets = {
-            "simulated": grp.create_dataset(
-                "simulated", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            ),
-            "shower_id_triggered": grp.create_dataset(
-                "shower_id_triggered", (0,), maxshape=(None,), dtype="i4", compression="gzip"
-            ),
-            "triggered_energies": grp.create_dataset(
-                "triggered_energies", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            ),
-            "num_triggered_telescopes": grp.create_dataset(
-                "num_triggered_telescopes", (0,), maxshape=(None,), dtype="i4", compression="gzip"
-            ),
-            "trigger_telescope_list_list": grp.create_dataset(
-                "trigger_telescope_list_list",
-                (0,),
-                maxshape=(None,),
-                dtype=vlen_int_type,
-                chunks=True,
-                compression="gzip",
-            ),
-            "core_x": grp.create_dataset(
-                "core_x", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            ),
-            "core_y": grp.create_dataset(
-                "core_y", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            ),
-            "file_names": grp.create_dataset(
-                "file_names",
-                (0,),
-                maxshape=(None,),
-                dtype=h5py.string_dtype(encoding="utf-8"),
-                compression="gzip",
-            ),
-            "shower_sim_azimuth": grp.create_dataset(
-                "shower_sim_azimuth", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            ),
-            "shower_sim_altitude": grp.create_dataset(
-                "shower_sim_altitude", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            ),
-            "array_altitudes": grp.create_dataset(
-                "array_altitudes", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            ),
-            "array_azimuths": grp.create_dataset(
-                "array_azimuths", (0,), maxshape=(None,), dtype="f4", compression="gzip"
-            ),
-        }
+    def _write_file_names(self, file_names):
+        """Write file names to HDF5 file."""
+        with HDF5TableWriter(
+            self.output_file, group_name="data", mode="a", filters=DEFAULT_FILTERS
+        ) as writer:
+            file_names_container = FileNamesContainer()
+            for file_name in file_names:
+                file_names_container.file_names = file_name
+                writer.write(table_name="file_names", containers=[file_names_container])
 
-        datasets["simulated"].attrs["units"] = "TeV"
-        datasets["shower_id_triggered"].attrs["units"] = "ID"
-        datasets["triggered_energies"].attrs["units"] = "TeV"
-        datasets["num_triggered_telescopes"].attrs["units"] = "count"
-        datasets["trigger_telescope_list_list"].attrs["units"] = "ID"
-        datasets["core_x"].attrs["units"] = "m"
-        datasets["core_y"].attrs["units"] = "m"
-        datasets["shower_sim_azimuth"].attrs["units"] = "rad"
-        datasets["shower_sim_altitude"].attrs["units"] = "rad"
-        datasets["array_altitudes"].attrs["units"] = "m"
-        datasets["array_azimuths"].attrs["units"] = "rad"
+    def _write_variable_length_data(self, trigger_telescope_list_list):
+        """Write variable-length array data to HDF5 file."""
+        with tables.open_file(self.output_file, mode="a") as f:
+            if "trigger_telescope_list_list" in f.root.data:
+                vlarray = f.root.data.trigger_telescope_list_list
+            else:
+                vlarray = f.create_vlarray(
+                    f.root.data,
+                    "trigger_telescope_list_list",
+                    tables.Int16Atom(),
+                    "List of triggered telescope IDs",
+                )
 
-        return datasets
+            for item in trigger_telescope_list_list:
+                vlarray.append(item)
+            print("vlarray", vlarray)
 
     def _initialize_data_lists(self):
         """Initialize data lists."""
@@ -132,7 +133,6 @@ class ReducedDatasetGenerator:
             "simulated": [],
             "shower_id_triggered": [],
             "triggered_energies": [],
-            "num_triggered_telescopes": [],
             "core_x": [],
             "core_y": [],
             "trigger_telescope_list_list": [],
@@ -143,7 +143,7 @@ class ReducedDatasetGenerator:
             "array_azimuths": [],
         }
 
-    def _process_file(self, file, data_lists):
+    def _process_file(self, file, data_lists, file_name):
         """Process a single file and update data lists."""
         with EventIOFile(file) as f:
             array_altitude = None
@@ -159,6 +159,7 @@ class ReducedDatasetGenerator:
                     self._process_mc_event(eventio_object, data_lists)
                 elif isinstance(eventio_object, ArrayEvent):
                     self._process_array_event(eventio_object, data_lists)
+            data_lists["file_names"].extend([file_name] * self.n_use)
 
     def _process_mc_run_header(self, eventio_object, data_lists):
         """Process MC run header and update data lists."""
@@ -168,6 +169,8 @@ class ReducedDatasetGenerator:
         array_azimuth = np.mean(mc_head["az_range"])
         data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
         data_lists["array_azimuths"].extend(self.n_use * [array_azimuth])
+
+        self.shower_id_offset += mc_head["n_showers"] * self.n_use
 
     def _process_mc_shower(self, eventio_object, data_lists, array_altitude, array_azimuth):
         """Process MC shower and update data lists."""
@@ -195,39 +198,30 @@ class ReducedDatasetGenerator:
         trigger_info = trigger_info.parse()
         telescopes = trigger_info["telescopes_with_data"]
         if len(telescopes) > 0:
-            data_lists["shower_id_triggered"].append(self.shower["shower"])
+            data_lists["shower_id_triggered"].append(self.shower["shower"] + self.shower_id_offset)
             data_lists["triggered_energies"].append(self.shower["energy"])
-            data_lists["num_triggered_telescopes"].append(len(telescopes))
             data_lists["trigger_telescope_list_list"].append(np.array(telescopes, dtype=np.int16))
 
-    def _append_to_hdf5(self, dataset, data):
-        """
-        Append data to an HDF5 dataset, resizing it as needed.
+    def _write_data(self, writer, data_lists):
+        """Write data to HDF5 file using HDF5TableWriter."""
+        # Write reduced dataset container
+        reduced_container = ReducedDatasetContainer()
+        for i in range(len(data_lists["simulated"])):
+            reduced_container.simulated = data_lists["simulated"][i]
+            reduced_container.core_x = data_lists["core_x"][i]
+            reduced_container.core_y = data_lists["core_y"][i]
+            reduced_container.shower_sim_azimuth = data_lists["shower_sim_azimuth"][i]
+            reduced_container.shower_sim_altitude = data_lists["shower_sim_altitude"][i]
+            reduced_container.array_altitudes = data_lists["array_altitudes"][i]
+            reduced_container.array_azimuths = data_lists["array_azimuths"][i]
+            writer.write(table_name="reduced_data", containers=[reduced_container])
 
-        Parameters
-        ----------
-        dataset : h5py.Dataset
-            The dataset to append to.
-        data : list
-            The data to append.
-        """
-        if len(data) > 0:
-            dataset.resize((dataset.shape[0] + len(data),))
-            dataset[-len(data) :] = data
-
-    def _append_all_datasets(self, datasets, data_lists):
-        """
-        Append all data to the respective HDF5 datasets.
-
-        Parameters
-        ----------
-        datasets : dict
-            Dictionary containing HDF5 datasets.
-        data_lists : dict
-            Dictionary containing lists of data to append.
-        """
-        for key, dataset in datasets.items():
-            self._append_to_hdf5(dataset, data_lists[key])
+        # Write triggered shower container
+        triggered_container = TriggeredShowerContainer()
+        for i in range(len(data_lists["shower_id_triggered"])):
+            triggered_container.shower_id_triggered = data_lists["shower_id_triggered"][i]
+            triggered_container.triggered_energies = data_lists["triggered_energies"][i]
+            writer.write(table_name="triggered_data", containers=[triggered_container])
 
     def _reset_data_lists(self, data_lists):
         """Reset data lists during batch processing."""
@@ -237,17 +231,17 @@ class ReducedDatasetGenerator:
     def print_hdf5_file(self):
         """Print information about the datasets in the generated HDF5 file."""
         try:
-            with h5py.File(self.output_file, "r") as hdf:
+            with tables.open_file(self.output_file, mode="r") as reader:
                 print("Datasets in file:")
-                for key in hdf["data"].keys():
-                    dset = hdf["data"][key]
+                for key in reader.root.data._v_children.keys():  # pylint: disable=protected-access
+                    dset = reader.root.data._v_children[key]  # pylint: disable=protected-access
                     print(f"- {key}: shape={dset.shape}, dtype={dset.dtype}")
 
                     # Print first 5 values each
                     print(f"  First 5 values: {dset[:5]}")
 
                     # Print units if available
-                    units = dset.attrs.get("units", "N/A")
-                    print(f"  Units: {units}")
+                    # units = dset.attrs.get("units", "N/A")
+                    # print(f"  Units: {units}")
         except Exception as exc:
             raise ValueError("An error occurred while reading the HDF5 file") from exc
