@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Reduces and compiles event data from multiple input files into a structured dataset.
+Reduces and compiles event data from multiple input files into a structured dataset with event info.
 
 Command line arguments
 ----------------------
@@ -20,7 +20,7 @@ Generate a reduced dataset from input files and save the result.
 
 .. code-block:: console
 
-    simtools-production-generate-reduced-dataset \
+    simtools-production-extract-mc-event-data \
         --prefix path/to/input_files/ \
         --wildcard 'gamma_*dark*.simtel.zst' \
         --output_file output_file.hdf5 \
@@ -95,7 +95,7 @@ def main():
     args_dict, _ = _parse(
         label=label,
         description=(
-            "Process EventIO files and store reduced dataset with event information, "
+            "Process files and store reduced dataset with event information, "
             "array information and triggered telescopes."
         ),
     )

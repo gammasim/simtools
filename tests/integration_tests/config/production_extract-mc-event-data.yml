@@ -1,8 +1,8 @@
 ---
 CTA_SIMPIPE:
   APPLICATIONS:
-  - APPLICATION: simtools-production-generate-reduced-datasets
-    TEST_NAME: production_generate_reduced_datasets
+  - APPLICATION: simtools-production-extract-mc-event-data
+    TEST_NAME: production_extract_mc_event_data
     CONFIGURATION:
       PREFIX: tests/resources/
       WILDCARD: '*proton*.simtel.zst'
