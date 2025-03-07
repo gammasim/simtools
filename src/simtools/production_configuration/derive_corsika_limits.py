@@ -1,9 +1,9 @@
 """Calculate the thresholds for energy, radial distance, and viewcone."""
 
 import astropy.units as u
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+import tables
 from astropy.coordinates import AltAz
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
@@ -50,48 +50,25 @@ class LimitCalculator:
 
     def _read_event_data(self):
         """Read the event data from the HDF5 file."""
-        with h5py.File(self.event_data_file, "r") as f:
-            if "data" in f:
-                data_group = f["data"]
-                try:
-                    self.event_x_core = data_group["core_x"][:]
-                    self.event_y_core = data_group["core_y"][:]
-                    self.simulated = data_group["simulated"][:]
-                    self.shower_id_triggered = data_group["shower_id_triggered"][:]
-                    self.list_of_files = data_group["file_names"][:]
-                    self.shower_sim_azimuth = data_group["shower_sim_azimuth"][:]
-                    self.shower_sim_altitude = data_group["shower_sim_altitude"][:]
-                    self.array_altitude = data_group["array_altitudes"][:]
-                    self.array_azimuth = data_group["array_azimuths"][:]
-                    self.trigger_telescope_list_list = data_group["trigger_telescope_list_list"][:]
-                except KeyError as exc:
-                    raise KeyError(
-                        "One or more required datasets are missing from the 'data' group."
-                    ) from exc
-                try:
-                    self.units["core_x"] = data_group["core_x"].attrs.get("units", None)
-                    self.units["core_y"] = data_group["core_y"].attrs.get("units", None)
-                    self.units["simulated"] = data_group["simulated"].attrs.get("units", None)
-                    self.units["shower_id_triggered"] = data_group["shower_id_triggered"].attrs.get(
-                        "units", None
-                    )
-                    self.units["shower_sim_azimuth"] = data_group["shower_sim_azimuth"].attrs.get(
-                        "units", None
-                    )
-                    self.units["shower_sim_altitude"] = data_group["shower_sim_altitude"].attrs.get(
-                        "units", None
-                    )
-                    self.units["array_altitudes"] = data_group["array_altitudes"].attrs.get(
-                        "units", None
-                    )
-                    self.units["array_azimuths"] = data_group["array_azimuths"].attrs.get(
-                        "units", None
-                    )
-                except KeyError:
-                    # Units are optional
-                    pass
-            else:
-                raise KeyError("data group is missing from the HDF5 file.")
+        with tables.open_file(self.event_data_file, mode="r") as f:
+            reduced_data = f.root.data.reduced_data
+            triggered_data = f.root.data.triggered_data
+            file_names = f.root.data.file_names
+            trigger_telescope_list_list = f.root.data.trigger_telescope_list_list
+
+            self.event_x_core = reduced_data.col("core_x")
+            self.event_y_core = reduced_data.col("core_y")
+            self.simulated = reduced_data.col("simulated")
+            self.shower_id_triggered = triggered_data.col("shower_id_triggered")
+            self.list_of_files = file_names.col("file_names")
+            self.shower_sim_azimuth = reduced_data.col("shower_sim_azimuth")
+            self.shower_sim_altitude = reduced_data.col("shower_sim_altitude")
+            self.array_altitude = reduced_data.col("array_altitudes")
+            self.array_azimuth = reduced_data.col("array_azimuths")
+
+            self.trigger_telescope_list_list = [
+                [np.int16(tel) for tel in event] for event in trigger_telescope_list_list
+            ]
 
     def _compute_limits(self, hist, bin_edges, loss_fraction, limit_type="lower"):
         """
@@ -128,12 +105,7 @@ class LimitCalculator:
         tuple
             Tuple containing core distances, triggered energies, core bins, and energy bins.
         """
-        num_files = len(self.list_of_files)
-        showers_per_file = len(self.simulated) // num_files
-        shower_id_triggered_adjusted = self.adjust_shower_ids_across_files(
-            self.shower_id_triggered, num_files, showers_per_file
-        )
-
+        shower_id_triggered_masked = self.shower_id_triggered
         if self.telescope_list is not None:
             mask = np.array(
                 [
@@ -141,15 +113,15 @@ class LimitCalculator:
                     for event in self.trigger_telescope_list_list
                 ]
             )
-            shower_id_triggered_adjusted = shower_id_triggered_adjusted[mask]
+            shower_id_triggered_masked = self.shower_id_triggered[mask]
 
-        triggered_energies = self.simulated[shower_id_triggered_adjusted]
+        triggered_energies = self.simulated[shower_id_triggered_masked]
         energy_bins = np.logspace(
             np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 1000
         )
         event_x_core_shower, event_y_core_shower = self._transform_to_shower_coordinates()
         core_distances_all = np.sqrt(event_x_core_shower**2 + event_y_core_shower**2)
-        core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
+        core_distances_triggered = core_distances_all[shower_id_triggered_masked]
         core_bins = np.linspace(
             core_distances_triggered.min(), core_distances_triggered.max(), 1000
         )
@@ -227,17 +199,6 @@ class LimitCalculator:
         z_2 = x_1 * np.cos(array_altitude_rad) + z_1 * np.sin(array_altitude_rad)
         off_angles = np.arctan2(np.sqrt(x_2**2 + y_2**2), z_2) * (180.0 / np.pi)
 
-        # Convert to AltAz frame
-        array_altaz = AltAz(az=self.array_azimuth * u.rad, alt=self.array_altitude * u.rad)
-        shower_altaz = AltAz(
-            az=self.shower_sim_azimuth * u.rad, alt=self.shower_sim_altitude * u.rad
-        )
-
-        # Calculate the separation angle
-        off_angles2 = array_altaz.separation(shower_altaz).deg
-
-        print(np.all(off_angles == off_angles2))
-
         angle_bins = np.linspace(off_angles.min(), off_angles.max(), 400)
         hist, _ = np.histogram(off_angles, bins=angle_bins)
 
@@ -266,12 +227,7 @@ class LimitCalculator:
 
     def plot_data(self):
         """Plot the core distances and energies of triggered events."""
-        num_files = len(self.list_of_files)
-        showers_per_file = len(self.simulated) // num_files
-        shower_id_triggered_adjusted = self.adjust_shower_ids_across_files(
-            self.shower_id_triggered, num_files, showers_per_file
-        )
-
+        shower_id_triggered_masked = self.shower_id_triggered
         if self.telescope_list is not None:
             mask = np.array(
                 [
@@ -279,11 +235,11 @@ class LimitCalculator:
                     for event in self.trigger_telescope_list_list
                 ]
             )
-            shower_id_triggered_adjusted = shower_id_triggered_adjusted[mask]
+            shower_id_triggered_masked = self.shower_id_triggered[mask]
 
         core_distances_all = np.sqrt(self.event_x_core**2 + self.event_y_core**2)
-        core_distances_triggered = core_distances_all[shower_id_triggered_adjusted]
-        triggered_energies = self.simulated[shower_id_triggered_adjusted]
+        core_distances_triggered = core_distances_all[shower_id_triggered_masked]
+        triggered_energies = self.simulated[shower_id_triggered_masked]
 
         core_bins = np.linspace(core_distances_triggered.min(), core_distances_triggered.max(), 400)
         energy_bins = np.logspace(
@@ -304,25 +260,3 @@ class LimitCalculator:
         plt.yscale("log")
         plt.title("2D Histogram of Triggered Core Distance vs Energy")
         plt.show()
-
-    @staticmethod
-    def adjust_shower_ids_across_files(shower_id_triggered, num_files, showers_per_file):
-        """
-        Adjust shower_id_triggered by incrementing the IDs for each file so they don't repeat.
-
-        Parameters
-        ----------
-        shower_id_triggered : np.ndarray
-            Array of shower IDs for triggered events.
-        num_files : int
-            Number of files.
-        showers_per_file : int
-            Number of showers per file.
-
-        Returns
-        -------
-        np.ndarray
-            Adjusted shower IDs.
-        """
-        increment_list = [i * showers_per_file for i in range(num_files)]
-        return shower_id_triggered + np.repeat(increment_list, showers_per_file)
