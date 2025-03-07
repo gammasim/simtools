@@ -48,7 +48,7 @@ class ReducedDatasetGenerator:
     output_file : str
         Path to the output HDF5 file.
     max_files : int, optional
-        Maximum number of files to process (default is 100).
+        Maximum number of files to process.
     """
 
     def __init__(self, input_files, output_file, max_files=100):
@@ -125,7 +125,6 @@ class ReducedDatasetGenerator:
 
             for item in trigger_telescope_list_list:
                 vlarray.append(item)
-            print("vlarray", vlarray)
 
     def _initialize_data_lists(self):
         """Initialize data lists."""
