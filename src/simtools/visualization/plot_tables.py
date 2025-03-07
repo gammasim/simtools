@@ -2,6 +2,7 @@
 """Plot tabular data."""
 
 import numpy as np
+from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.io_operations import legacy_data_handler
@@ -50,11 +51,15 @@ def read_table_data(config, db_config):
         if "parameter" in _config:
             table = _read_table_from_model_database(_config, db_config)
         elif "file_name" in _config:
-            table = legacy_data_handler.read_legacy_data_as_table(
-                _config["file_name"], _config["type"]
-            )
+            if "legacy" in _config.get("type", ""):
+                table = legacy_data_handler.read_legacy_data_as_table(
+                    _config["file_name"], _config["type"]
+                )
+            else:
+                table = Table.read(_config["file_name"], format="ascii.ecsv")
         else:
             raise ValueError("No table data defined in configuration.")
+
         if _config.get("normalize_y"):
             table[_config["column_y"]] = (
                 table[_config["column_y"]] / table[_config["column_y"]].max()
@@ -66,7 +71,9 @@ def read_table_data(config, db_config):
                 _config["select_values"]["value"],
             )
         data[_config["label"]] = gen.get_structure_array_from_table(
-            table, [_config["column_x"], _config["column_y"]]
+            # table, [_config["column_x"], _config["column_y"], _config.get("column_y_err")]
+            table,
+            [_config["column_x"], _config["column_y"]],
         )
     return data
 
