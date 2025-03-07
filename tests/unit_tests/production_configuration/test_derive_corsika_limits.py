@@ -3,7 +3,7 @@ import h5py
 import numpy as np
 import pytest
 
-from simtools.production_configuration.limits_calculation import LimitCalculator
+from simtools.production_configuration.derive_corsika_limits import LimitCalculator
 
 
 @pytest.fixture

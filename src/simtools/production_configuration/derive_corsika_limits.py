@@ -227,6 +227,17 @@ class LimitCalculator:
         z_2 = x_1 * np.cos(array_altitude_rad) + z_1 * np.sin(array_altitude_rad)
         off_angles = np.arctan2(np.sqrt(x_2**2 + y_2**2), z_2) * (180.0 / np.pi)
 
+        # Convert to AltAz frame
+        array_altaz = AltAz(az=self.array_azimuth * u.rad, alt=self.array_altitude * u.rad)
+        shower_altaz = AltAz(
+            az=self.shower_sim_azimuth * u.rad, alt=self.shower_sim_altitude * u.rad
+        )
+
+        # Calculate the separation angle
+        off_angles2 = array_altaz.separation(shower_altaz).deg
+
+        print(np.all(off_angles == off_angles2))
+
         angle_bins = np.linspace(off_angles.min(), off_angles.max(), 400)
         hist, _ = np.histogram(off_angles, bins=angle_bins)
 

@@ -34,7 +34,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.production_configuration.generate_reduced_datasets import ReducedDatasetGenerator
+from simtools.production_configuration.extract_mc_event_data import MCEventExtractor
 
 
 def _parse(label, description):
@@ -114,7 +114,7 @@ def main():
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
 
     output_filepath.parent.mkdir(parents=True, exist_ok=True)
-    generator = ReducedDatasetGenerator(files, output_filepath, args_dict["max_files"])
+    generator = MCEventExtractor(files, output_filepath, args_dict["max_files"])
     generator.process_files()
     _logger.info(f"reduced dataset saved to: {output_filepath}")
     if args_dict["print_dataset_information"]:
