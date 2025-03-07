@@ -33,7 +33,7 @@ import logging
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.production_configuration.limits_calculation import LimitCalculator
+from simtools.production_configuration.derive_corsika_limits import LimitCalculator
 
 _logger = logging.getLogger(__name__)
 

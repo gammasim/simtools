@@ -37,7 +37,7 @@ class FileNamesContainer(Container):
     file_names = Field(None, "Input file names")
 
 
-class ReducedDatasetGenerator:
+class MCEventExtractor:
     """
     Generate a reduced dataset from given simulation event list and save the output to file.
 
@@ -53,7 +53,7 @@ class ReducedDatasetGenerator:
 
     def __init__(self, input_files, output_file, max_files=100):
         """
-        Initialize the ReducedDatasetGenerator with input files, output file, and max file limit.
+        Initialize the MCEventExtractor with input files, output file, and max file limit.
 
         Parameters
         ----------
