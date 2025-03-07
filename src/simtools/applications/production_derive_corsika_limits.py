@@ -23,7 +23,7 @@ Derive limits for a given file with a specified loss fraction.
 
 .. code-block:: console
 
-    simtools-production-derive-limits\\
+    simtools-production-derive-corsika-limits\\
         --event_data_file path/to/event_data_file.hdf5 \\
         --loss_fraction 1e-6 \\
         --telescope_ids 1 2 3
