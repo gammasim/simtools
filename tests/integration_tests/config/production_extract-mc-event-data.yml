@@ -1,0 +1,15 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-production-extract-mc-event-data
+    TEST_NAME: production_extract_mc_event_data
+    CONFIGURATION:
+      PREFIX: tests/resources/
+      WILDCARD: '*proton*.simtel.zst'
+      OUTPUT_PATH: simtools-output
+      OUTPUT_FILE: output_file.hdf5
+      MAX_FILES: 1
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: output_file.hdf5
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
