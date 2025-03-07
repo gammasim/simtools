@@ -73,46 +73,53 @@ class MCEventExtractor:
         self.shower_id_offset = 0
 
     def process_files(self):
-        """Process the input files and store it in an HDF5 file."""
-        with HDF5TableWriter(
-            self.output_file, group_name="data", mode="w", filters=DEFAULT_FILTERS
-        ) as writer:
-            data_lists = self._initialize_data_lists()
+        """Process the input files and store them in an HDF5 file."""
+        if not self.input_files:
+            self._logger.warning("No input files provided.")
+            return
 
-            for i_file, file in enumerate(self.input_files[: self.max_files]):
-                self._logger.info(f"Processing file {i_file + 1}/{self.max_files}: {file}")
-                self._process_file(file, data_lists, str(file))
+        data_lists = self._initialize_data_lists()
 
-                if len(data_lists["simulated"]) >= 50000:
-                    self._write_data(writer, data_lists)
-                    # Write variable-length array data and file names separately
-                    self._write_variable_length_data(data_lists["trigger_telescope_list_list"])
-                    self._write_file_names(data_lists["file_names"])
-                    self._reset_data_lists(data_lists)
+        # Process the first file in write mode
+        self._logger.info(f"Processing file 1/{self.max_files}: {self.input_files[0]}")
+        self._process_file(self.input_files[0], data_lists, str(self.input_files[0]))
+        self._write_all_data(data_lists, mode="w")
+        self._reset_data_lists(data_lists)
 
-                # Apply shower_id_offset after processing the first file
-                if i_file == 0:
-                    self.shower_id_offset = 0
-                else:
-                    self.shower_id_offset += self.n_use * len(data_lists["simulated"])
+        self.shower_id_offset = self.n_use * len(data_lists["simulated"])
 
-            self._write_data(writer, data_lists)
-            self._write_variable_length_data(data_lists["trigger_telescope_list_list"])
-            self._write_file_names(data_lists["file_names"])
+        # Process remaining files in append mode
+        for i_file, file in enumerate(self.input_files[1 : self.max_files], start=2):
+            self._logger.info(f"Processing file {i_file}/{self.max_files}: {file}")
+            self._process_file(file, data_lists, str(file))
+            if len(data_lists["simulated"]) >= 50000:
+                self._write_all_data(data_lists, mode="a")
+                self._reset_data_lists(data_lists)
 
-    def _write_file_names(self, file_names):
+            self.shower_id_offset += self.n_use * len(data_lists["simulated"])
+
+        # Final write for any remaining data
+        self._write_all_data(data_lists, mode="a")
+
+    def _write_all_data(self, data_lists, mode):
+        """Write all data sections at once helper method."""
+        self._write_data(data_lists, mode=mode)
+        self._write_variable_length_data(data_lists["trigger_telescope_list_list"], mode="a")
+        self._write_file_names(data_lists["file_names"], mode="a")
+
+    def _write_file_names(self, file_names, mode="a"):
         """Write file names to HDF5 file."""
         with HDF5TableWriter(
-            self.output_file, group_name="data", mode="a", filters=DEFAULT_FILTERS
+            self.output_file, group_name="data", mode=mode, filters=DEFAULT_FILTERS
         ) as writer:
             file_names_container = FileNamesContainer()
             for file_name in file_names:
                 file_names_container.file_names = file_name
                 writer.write(table_name="file_names", containers=[file_names_container])
 
-    def _write_variable_length_data(self, trigger_telescope_list_list):
+    def _write_variable_length_data(self, trigger_telescope_list_list, mode="a"):
         """Write variable-length array data to HDF5 file."""
-        with tables.open_file(self.output_file, mode="a") as f:
+        with tables.open_file(self.output_file, mode=mode) as f:
             if "trigger_telescope_list_list" in f.root.data:
                 vlarray = f.root.data.trigger_telescope_list_list
             else:
@@ -201,26 +208,29 @@ class MCEventExtractor:
             data_lists["triggered_energies"].append(self.shower["energy"])
             data_lists["trigger_telescope_list_list"].append(np.array(telescopes, dtype=np.int16))
 
-    def _write_data(self, writer, data_lists):
+    def _write_data(self, data_lists, mode="a"):
         """Write data to HDF5 file using HDF5TableWriter."""
-        # Write reduced dataset container
-        reduced_container = ReducedDatasetContainer()
-        for i in range(len(data_lists["simulated"])):
-            reduced_container.simulated = data_lists["simulated"][i]
-            reduced_container.core_x = data_lists["core_x"][i]
-            reduced_container.core_y = data_lists["core_y"][i]
-            reduced_container.shower_sim_azimuth = data_lists["shower_sim_azimuth"][i]
-            reduced_container.shower_sim_altitude = data_lists["shower_sim_altitude"][i]
-            reduced_container.array_altitudes = data_lists["array_altitudes"][i]
-            reduced_container.array_azimuths = data_lists["array_azimuths"][i]
-            writer.write(table_name="reduced_data", containers=[reduced_container])
+        with HDF5TableWriter(
+            self.output_file, group_name="data", mode=mode, filters=DEFAULT_FILTERS
+        ) as writer:
+            # Write reduced dataset container
+            reduced_container = ReducedDatasetContainer()
+            for i in range(len(data_lists["simulated"])):
+                reduced_container.simulated = data_lists["simulated"][i]
+                reduced_container.core_x = data_lists["core_x"][i]
+                reduced_container.core_y = data_lists["core_y"][i]
+                reduced_container.shower_sim_azimuth = data_lists["shower_sim_azimuth"][i]
+                reduced_container.shower_sim_altitude = data_lists["shower_sim_altitude"][i]
+                reduced_container.array_altitudes = data_lists["array_altitudes"][i]
+                reduced_container.array_azimuths = data_lists["array_azimuths"][i]
+                writer.write(table_name="reduced_data", containers=[reduced_container])
 
-        # Write triggered shower container
-        triggered_container = TriggeredShowerContainer()
-        for i in range(len(data_lists["shower_id_triggered"])):
-            triggered_container.shower_id_triggered = data_lists["shower_id_triggered"][i]
-            triggered_container.triggered_energies = data_lists["triggered_energies"][i]
-            writer.write(table_name="triggered_data", containers=[triggered_container])
+            # Write triggered shower container
+            triggered_container = TriggeredShowerContainer()
+            for i in range(len(data_lists["shower_id_triggered"])):
+                triggered_container.shower_id_triggered = data_lists["shower_id_triggered"][i]
+                triggered_container.triggered_energies = data_lists["triggered_energies"][i]
+                writer.write(table_name="triggered_data", containers=[triggered_container])
 
     def _reset_data_lists(self, data_lists):
         """Reset data lists during batch processing."""
