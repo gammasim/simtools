@@ -628,8 +628,8 @@ class CorsikaConfig:
             corsika_input_list += "TELESCOPE"
             for pos in positions:
                 corsika_input_list += f"\t {pos.to('cm').value:.3f}"
-            sphere_radius = telescope.get_parameter_value_with_unit("telescope_sphere_radius").to(
-                "cm"
+            sphere_radius = (
+                telescope.get_parameter_value_with_unit("telescope_sphere_radius").to("cm").value
             )
             corsika_input_list += f"\t {sphere_radius:.3f}"
             corsika_input_list += f"\t # {telescope_name}\n"

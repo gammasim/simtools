@@ -4,6 +4,7 @@ import logging
 import pathlib
 from unittest.mock import Mock, patch
 
+import astropy.units as u
 import pytest
 
 from simtools.corsika.corsika_config import CorsikaConfig
@@ -434,14 +435,6 @@ def test_write_seeds_use_test_seeds(corsika_config_mock_array_model):
         assert _call == (f"SEED {expected_seeds.pop(0)} 0 0\n")
 
 
-@pytest.mark.uses_model_database
-def test_get_corsika_telescope_list(corsika_config):
-    cc = corsika_config
-    telescope_list_str = cc.get_corsika_telescope_list()
-    assert telescope_list_str.count("TELESCOPE") > 0
-    assert telescope_list_str.count("LSTS") > 0
-
-
 def test_run_number(corsika_config_no_array_model):
     assert corsika_config_no_array_model.run_number is None
     corsika_config_no_array_model.run_number = 25
@@ -461,3 +454,55 @@ def test_validate_run_number(corsika_config_no_array_model):
         corsika_config_no_array_model.validate_run_number(-1)
     with pytest.raises(ValueError, match=invalid_run_number):
         corsika_config_no_array_model.validate_run_number(123456789)
+
+
+def test_get_corsika_telescope_list_with_mock_telescopes(corsika_config_mock_array_model):
+    """Test generation of CORSIKA telescope list format with mocked telescope data."""
+    # Create mock telescope model
+    mock_tel_model = {"LST": Mock(), "MST": Mock()}
+
+    mock_tel_model["LST"].get_parameter_value_with_unit.side_effect = lambda param: {
+        "array_element_position_ground": [1000 * u.cm, 2000 * u.cm, 0 * u.cm],
+        "telescope_sphere_radius": 1200 * u.cm,
+    }[param]
+
+    mock_tel_model["MST"].get_parameter_value_with_unit.side_effect = lambda param: {
+        "array_element_position_ground": [-1500 * u.cm, -2500 * u.cm, 0 * u.cm],
+        "telescope_sphere_radius": 900 * u.cm,
+    }[param]
+
+    corsika_config_mock_array_model.array_model.telescope_model = mock_tel_model
+
+    telescope_list = corsika_config_mock_array_model.get_corsika_telescope_list()
+    assert telescope_list == (
+        "TELESCOPE\t 1000.000\t 2000.000\t 0.000\t 1200.000\t # LST\n"
+        "TELESCOPE\t -1500.000\t -2500.000\t 0.000\t 900.000\t # MST\n"
+    )
+
+
+def test_get_corsika_telescope_list_empty(corsika_config_mock_array_model):
+    """Test generation of CORSIKA telescope list with no telescopes."""
+    corsika_config_mock_array_model.array_model.telescope_model = {}
+
+    telescope_list = corsika_config_mock_array_model.get_corsika_telescope_list()
+    assert telescope_list == ""
+
+
+def test_get_corsika_telescope_list_unit_conversion(corsika_config_mock_array_model):
+    """Test unit conversion in CORSIKA telescope list generation."""
+    mock_tel_model = {"TestTel": Mock()}
+
+    mock_tel_model["TestTel"].get_parameter_value_with_unit.side_effect = lambda param: {
+        "array_element_position_ground": [10 * u.m, 20 * u.m, 0 * u.m],
+        "telescope_sphere_radius": 12 * u.m,
+    }[param]
+
+    corsika_config_mock_array_model.array_model.telescope_model = mock_tel_model
+
+    telescope_list = corsika_config_mock_array_model.get_corsika_telescope_list()
+    assert telescope_list == "TELESCOPE\t 1000.000\t 2000.000\t 0.000\t 1200.000\t # TestTel\n"
+
+
+def test_primary(corsika_config_mock_array_model):
+    assert isinstance(corsika_config_mock_array_model.primary, str)
+    assert corsika_config_mock_array_model.primary == "proton"
