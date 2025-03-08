@@ -79,11 +79,18 @@ def test_plot_table(io_handler):
     assert plot_file.exists()
 
 
-def test_add_unit():
+def test_add_unit(caplog):
     value_with_unit = [30, 40] << u.nm
     assert visualize._add_unit("Wavelength", value_with_unit) == "Wavelength [nm]"
     value_without_unit = [30, 40]
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
+
+    with caplog.at_level(logging.WARNING):
+        assert visualize._add_unit("Wavelength [nm]", value_with_unit)
+    assert "Tried to add a unit from astropy.unit" in caplog.text
+
+    value_with_unit = [30, 40] * u.cm**2
+    assert visualize._add_unit("Area", value_with_unit) == "Area [$cm^2$]"
 
 
 def test_get_telescope_patch(io_handler):
