@@ -144,22 +144,23 @@ def _add_unit(title, array):
     str
         Title with units.
     """
-    unit = ""
-    if isinstance(array, u.Quantity):
-        unit = str(array[0].unit)
-        if len(unit) > 0:
-            unit = f" [{unit}]"
-        if re.search(r"\d", unit):
-            unit = re.sub(r"(\d)", r"^\1", unit)
-            unit = unit.replace("[", r"$[").replace("]", r"]$")
-        if "[" in title and "]" in title:
-            _logger.warning(
-                "Tried to add a unit from astropy.unit, "
-                "but axis already has an explicit unit. Left axis title as is."
-            )
-            unit = ""
+    if title and "[" in title and "]" in title:
+        _logger.warning(
+            "Tried to add a unit from astropy.unit, "
+            "but axis already has an explicit unit. Left axis title as is."
+        )
+        return title
 
-    return f"{title}{unit}"
+    if not isinstance(array, u.Quantity) or not str(array[0].unit):
+        return title
+
+    unit = str(array[0].unit)
+    unit_str = f" [{unit}]"
+    if re.search(r"\d", unit_str):
+        unit_str = re.sub(r"(\d)", r"^\1", unit_str)
+        unit_str = unit_str.replace("[", r"$[").replace("]", r"]$")
+
+    return f"{title}{unit_str}"
 
 
 def set_style(palette="default", big_plot=False):
@@ -421,38 +422,39 @@ def setup_plot(kwargs, plot_ratio, plot_difference):
 def plot_main_data(data_dict, kwargs, plot_args):
     """Plot the main data."""
     for label, data_now in data_dict.items():
-        assert len(data_now.dtype.names) >= 2, (
-            "Input array must have at least two columns with titles."
-        )
-        x_column_name, y_column_name = data_now.dtype.names[0], data_now.dtype.names[1]
-        x_err_column_name, y_err_column_name = None, None
-        if len(data_now.dtype.names) == 4:
-            x_err_column_name, y_err_column_name = data_now.dtype.names[2], data_now.dtype.names[3]
-        if len(data_now.dtype.names) == 3:
-            x_err_column_name, y_err_column_name = None, data_now.dtype.names[2]
-        x_title = kwargs["xtitle"] if kwargs.get("xtitle") else x_column_name
-        y_title = kwargs["ytitle"] if kwargs.get("ytitle") else y_column_name
-        x_title_unit = _add_unit(x_title, data_now[x_column_name])
-        y_title_unit = _add_unit(y_title, data_now[y_column_name])
-        (line,) = plt.plot(
-            data_now[x_column_name], data_now[y_column_name], label=label, **plot_args
-        )
-        if kwargs.get("error_type") == "fill_between" and y_err_column_name:
+        columns = data_now.dtype.names
+        assert len(columns) >= 2, "Input array must have at least two columns with titles."
+
+        x_col, y_col = columns[:2]
+        x_err_col = columns[2] if len(columns) == 4 else None
+        y_err_col = columns[-1] if len(columns) >= 3 else None
+
+        x_title = kwargs.get("xtitle", x_col)
+        y_title = kwargs.get("ytitle", y_col)
+
+        x_title_unit = _add_unit(x_title, data_now[x_col])
+        y_title_unit = _add_unit(y_title, data_now[y_col])
+
+        (line,) = plt.plot(data_now[x_col], data_now[y_col], label=label, **plot_args)
+        color = line.get_color()
+
+        if kwargs.get("error_type") == "fill_between" and y_err_col:
             plt.fill_between(
-                data_now[x_column_name],
-                data_now[y_column_name] - data_now[y_err_column_name],
-                data_now[y_column_name] + data_now[y_err_column_name],
+                data_now[x_col],
+                data_now[y_col] - data_now[y_err_col],
+                data_now[y_col] + data_now[y_err_col],
                 alpha=0.2,
-                color=line.get_color(),
+                color=color,
             )
-        if kwargs.get("error_type") == "errorbar" and (y_err_column_name or x_err_column_name):
+
+        if kwargs.get("error_type") == "errorbar" and (x_err_col or y_err_col):
             plt.errorbar(
-                data_now[x_column_name],
-                data_now[y_column_name],
-                xerr=data_now[x_err_column_name] if x_err_column_name else None,
-                yerr=data_now[y_err_column_name] if y_err_column_name else None,
+                data_now[x_col],
+                data_now[y_col],
+                xerr=data_now[x_err_col] if x_err_col else None,
+                yerr=data_now[y_err_col] if y_err_col else None,
                 fmt=".",
-                color=line.get_color(),
+                color=color,
             )
 
     plt.xscale(kwargs["xscale"])
@@ -460,11 +462,14 @@ def plot_main_data(data_dict, kwargs, plot_args):
     plt.xlim(kwargs["xlim"])
     plt.ylim(kwargs["ylim"])
     plt.ylabel(y_title_unit)
+
     if not (kwargs["plot_ratio"] or kwargs["plot_difference"]):
         plt.xlabel(x_title_unit)
+
     if kwargs["title"]:
         plt.title(kwargs["title"], y=1.02)
-    if "_default" not in list(data_dict.keys()) and not kwargs["no_legend"]:
+
+    if "_default" not in data_dict and not kwargs["no_legend"]:
         plt.legend()
 
 

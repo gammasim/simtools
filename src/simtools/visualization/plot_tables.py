@@ -71,7 +71,13 @@ def read_table_data(config, db_config):
                 _config["select_values"]["value"],
             )
         data[_config["label"]] = gen.get_structure_array_from_table(
-            table, [_config["column_x"], _config["column_y"], _config.get("column_y_err")]
+            table,
+            [
+                _config["column_x"],
+                _config["column_y"],
+                _config.get("column_x_err"),
+                _config.get("column_y_err"),
+            ],
         )
     return data
 
