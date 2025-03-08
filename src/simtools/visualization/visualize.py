@@ -158,7 +158,7 @@ def _add_unit(title, array):
     unit_str = f" [{unit}]"
     if re.search(r"\d", unit_str):
         unit_str = re.sub(r"(\d)", r"^\1", unit_str)
-        unit_str = unit_str.replace("[", r"$[").replace("]", r"]$")
+        unit_str = unit_str.replace("[", r"[$").replace("]", r"$]")
 
     return f"{title}{unit_str}"
 
