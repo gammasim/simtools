@@ -82,7 +82,7 @@ def test_read_table_data_from_file(
     result = plot_tables.read_table_data(config, None)
 
     mock_read_legacy_data_as_table.assert_called_once_with("test_file", "legacy_csv")
-    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y"])
+    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
     assert result == {"test_table": mock_structure_array}
 
 
@@ -114,7 +114,7 @@ def test_read_table_data_from_model_database(
     result = plot_tables.read_table_data(config, db_config)
 
     mock_read_table_from_model_database.assert_called_once_with(config["tables"][0], db_config)
-    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y"])
+    mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y", None, None])
     assert result == {"test_table": mock_structure_array}
 
 
