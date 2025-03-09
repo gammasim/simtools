@@ -52,6 +52,39 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
     return args_dict
 
 
+@pytest.fixture(autouse=True)
+def patch_simtools(mocker):
+    mocker.patch("simtools.simulator.ArrayModel", autospec=True)
+
+    mock_corsika_config = mocker.patch("simtools.simulator.CorsikaConfig", autospec=True)
+    mock_runner_service = mocker.patch(
+        "simtools.runners.runner_services.RunnerServices", autospec=True
+    )
+    mock_corsika_instance = mock_corsika_config.return_value
+    mock_runner_service_instance = mock_runner_service.return_value
+    mock_corsika_instance.array_model = mocker.Mock()
+    mock_corsika_instance.array_model.layout_name = "mock_layout"
+    mock_corsika_instance.array_model.site = "mock_site"
+    mock_corsika_instance.primary = "gamma"
+    mock_corsika_instance.zenith_angle = 20
+    mock_corsika_instance.azimuth_angle = 180
+    mock_corsika_instance.validate_run_number.return_value = 12345
+    mock_corsika_instance.config_file_path = mocker.MagicMock()
+    mock_corsika_instance.config_file_path.parent = "test"
+
+    def mock_get_config_parameter(param):
+        if param == "VIEWCONE":
+            return [0, 9.0]
+        if param == "THETAP":
+            return [0.0, 20.0]
+        return None
+
+    mock_corsika_instance.get_config_parameter.side_effect = mock_get_config_parameter
+    mock_runner_service_instance.get_file_name.return_value = "mock_output_file.fits"
+
+    return
+
+
 @pytest.fixture
 def array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
@@ -65,7 +98,7 @@ def array_simulator(io_handler, db_config, simulations_args_dict):
 
 
 @pytest.fixture
-def shower_simulator(io_handler, db_config, simulations_args_dict):
+def shower_simulator(io_handler, db_config, simulations_args_dict, mocker):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika"
     args_dict["label"] = "test-shower-simulator"
@@ -78,10 +111,11 @@ def shower_simulator(io_handler, db_config, simulations_args_dict):
 
 
 @pytest.fixture
-def shower_array_simulator(io_handler, db_config, simulations_args_dict):
+def shower_array_simulator(io_handler, db_config, simulations_args_dict, mocker):
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_simtel"
     args_dict["label"] = "test-shower-array-simulator"
+
     return Simulator(
         label=args_dict["label"],
         args_dict=args_dict,
