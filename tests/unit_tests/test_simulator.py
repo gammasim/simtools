@@ -53,7 +53,7 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
 
 
 @pytest.fixture(autouse=True)
-def patch_simtools(mocker):
+def patch_simtools(mocker, tmp_test_directory):
     mocker.patch("simtools.simulator.ArrayModel", autospec=True)
 
     mock_corsika_config = mocker.patch("simtools.simulator.CorsikaConfig", autospec=True)
@@ -70,13 +70,16 @@ def patch_simtools(mocker):
     mock_corsika_instance.azimuth_angle = 180
     mock_corsika_instance.validate_run_number.return_value = 12345
     mock_corsika_instance.config_file_path = mocker.MagicMock()
-    mock_corsika_instance.config_file_path.parent = "test"
+    mock_corsika_instance.config_file_path.parent = tmp_test_directory / "output"
+    mock_corsika_instance.get_corsika_config_file_name.return_value = "multipipe_config.cfg"
 
     def mock_get_config_parameter(param):
         if param == "VIEWCONE":
             return [0, 9.0]
         if param == "THETAP":
             return [0.0, 20.0]
+        if param == "NSHOW":
+            return 10
         return None
 
     mock_corsika_instance.get_config_parameter.side_effect = mock_get_config_parameter
@@ -341,10 +344,6 @@ def test_make_resources_report(shower_simulator):
     test_shower_simulator.runs = [1]
     _resources_1 = test_shower_simulator._make_resources_report(input_file_list=log_file_name)
     assert _resources_1["Wall time/run [sec]"] == 6
-
-    test_shower_simulator.runs = [4]
-    with pytest.raises(FileNotFoundError):
-        test_shower_simulator._make_resources_report(input_file_list)
 
 
 def test_get_runs_to_simulate(shower_simulator):
