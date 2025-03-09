@@ -123,13 +123,16 @@ def _split_value_is_quantity(value, is_integer=False):
 
 
 def _split_value_is_string(value, is_integer=False):
-    """Split vale and unit for a string."""
+    """Split value and unit for a string."""
     if value.isdigit():  # single integer value
         return int(value), None
     try:  # single value with/without unit
-        return int(u.Quantity(value).value) if is_integer else u.Quantity(value).value, str(
-            u.Quantity(value).unit
-        )
+        if is_integer:
+            return int(int(u.Quantity(value).value))
+        quantity = u.Quantity(value)
+        if str(quantity.unit).isdigit():  # cases where numbers are wrongly identified as units
+            raise ValueError
+        return quantity.value, str(quantity.unit)
     except ValueError:
         return _split_value_is_list(gen.convert_string_to_list(value), is_integer)
     except TypeError:  # string value (not numerical)
