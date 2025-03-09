@@ -15,15 +15,12 @@ logger = logging.getLogger()
 
 @pytest.fixture(autouse=True)
 def patch_models(mocker, north_layout_center_data_dict, south_layout_center_data_dict):
-    # Create mock for SiteModel that returns properly formatted reference point data
     site_model_mock = mocker.patch("simtools.layout.array_layout.SiteModel", autospec=True)
 
-    # Instead of modifying __init__, create a custom side effect for the mock constructor
     def site_model_side_effect(site=None, *args, **kwargs):
         mock_instance = mocker.MagicMock()
         mock_instance.site = site
 
-        # Set up different reference points based on site
         def get_reference_point():
             if site == "North":
                 return {
@@ -33,7 +30,6 @@ def patch_models(mocker, north_layout_center_data_dict, south_layout_center_data
                     "epsg_code": north_layout_center_data_dict["EPSG"],
                     "array_name": "test_layout",
                 }
-            # South
             return {
                 "center_easting": south_layout_center_data_dict["center_easting"],
                 "center_northing": south_layout_center_data_dict["center_northing"],
@@ -44,7 +40,6 @@ def patch_models(mocker, north_layout_center_data_dict, south_layout_center_data
 
         mock_instance.get_reference_point.return_value = get_reference_point()
 
-        # Set different CORSIKA observation levels based on site
         def get_corsika_site_parameters():
             if site == "North":
                 return {"corsika_observation_level": 2156.0 * u.m}
@@ -57,16 +52,13 @@ def patch_models(mocker, north_layout_center_data_dict, south_layout_center_data
 
     site_model_mock.side_effect = site_model_side_effect
 
-    # Create mock for TelescopeModel
     telescope_model_mock = mocker.patch(
         "simtools.layout.array_layout.TelescopeModel", autospec=True
     )
 
-    # Create a custom side effect for the TelescopeModel constructor
     def telescope_model_side_effect(*args, **kwargs):
         tel_instance = mocker.MagicMock()
 
-        # Mock the get_parameter_value_with_unit method to return proper values for telescope parameters
         def get_parameter_value_with_unit(param_name):
             if param_name == "telescope_axis_height":
                 return 16.0 * u.m
