@@ -149,6 +149,7 @@ def test_split_value_is_string():
     assert value_conversion._split_value_is_string("100 m") == (100, "m")
     assert value_conversion._split_value_is_string("hello") == ("hello", None)
     assert value_conversion._split_value_is_string("100 cm, 200 cm") == ([100, 200], ["cm", "cm"])
+    assert value_conversion._split_value_is_string("100 200") == ([100, 200], [None, None])
 
 
 def test_split_value_is_list():
