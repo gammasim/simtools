@@ -21,9 +21,9 @@ def patch_models(mocker):
         mock_instance = mocker.MagicMock()
         mock_instance.site = site
 
-        def get_array_elements_for_layout(layout_name):
-            if site == "North":
-                return [
+        site_data = {
+            "North": {
+                "elements": [
                     "LSTN-01",
                     "LSTN-02",
                     "LSTN-03",
@@ -33,38 +33,50 @@ def patch_models(mocker):
                     "MSTN-03",
                     "MSTN-04",
                     "MSTN-05",
-                ]
-            # South site
-            return [
-                "LSTS-01",
-                "LSTS-02",
-                "LSTS-03",
-                "LSTS-04",
-                "MSTS-01",
-                "MSTS-02",
-                "MSTS-03",
-                "MSTS-04",
-                "MSTS-05",
-                "SSTS-01",
-                "SSTS-02",
-                "SSTS-03",
-                "SSTS-04",
-            ]
-
-        mock_instance.get_array_elements_for_layout.side_effect = get_array_elements_for_layout
-
-        mock_instance.get_corsika_site_parameters.return_value = {
-            "corsika_observation_level": 2147.0 * u.m if site == "South" else 2156.0 * u.m
+                ],
+                "easting": 217611.227,
+                "northing": 3185066.278,
+                "altitude": 2177.0,
+                "obs_level": 2156.0,
+                "epsg": 32628,
+            },
+            "South": {
+                "elements": [
+                    "LSTS-01",
+                    "LSTS-02",
+                    "LSTS-03",
+                    "LSTS-04",
+                    "MSTS-01",
+                    "MSTS-02",
+                    "MSTS-03",
+                    "MSTS-04",
+                    "MSTS-05",
+                    "SSTS-01",
+                    "SSTS-02",
+                    "SSTS-03",
+                    "SSTS-04",
+                ],
+                "easting": 366822.017,
+                "northing": 7269466.999,
+                "altitude": 2162.35,
+                "obs_level": 2147.0,
+                "epsg": 32719,
+            },
         }
 
+        data = site_data.get(site, site_data["North"])
+
+        mock_instance.get_array_elements_for_layout.return_value = data["elements"]
+        mock_instance.get_corsika_site_parameters.return_value = {
+            "corsika_observation_level": data["obs_level"] * u.m
+        }
         mock_instance.get_reference_point.return_value = {
-            "center_easting": 366822.017 * u.m if site == "South" else 217611.227 * u.m,
-            "center_northing": 7269466.999 * u.m if site == "South" else 3185066.278 * u.m,
-            "center_altitude": 2162.35 * u.m if site == "South" else 2177.0 * u.m,
-            "epsg_code": 32719 if site == "South" else 32628,
+            "center_easting": data["easting"] * u.m,
+            "center_northing": data["northing"] * u.m,
+            "center_altitude": data["altitude"] * u.m,
+            "epsg_code": data["epsg"],
             "array_name": "test_layout",
         }
-
         return mock_instance
 
     site_model_mock.side_effect = site_model_side_effect
@@ -77,114 +89,76 @@ def patch_models(mocker):
         mock_instance.name = telescope_name
         mock_instance.extra_label = ""
 
-        # Capture tel_type for use in other functions
         tel_type = telescope_name[:4] if telescope_name else ""
+        tel_num = int(telescope_name[-2:]) if telescope_name and len(telescope_name) >= 3 else 0
 
-        # Mock position method
+        sphere_radii = {
+            "LSTN": 12.5,
+            "LSTS": 12.5,
+            "MSTN": 8.0,
+            "MSTS": 8.0,
+            "SSTN": 4.0,
+            "SSTS": 4.0,
+        }
+
         def position_side_effect(coordinate_system="ground"):
             if not telescope_name:
                 return [0.0 * u.m, 0.0 * u.m, 0.0 * u.m]
 
-            tel_num = int(telescope_name[-2:])
-
             if coordinate_system == "ground":
-                if tel_type in ["LSTN", "LSTS"]:
-                    return [tel_num * 50.0 * u.m, tel_num * 30.0 * u.m, 2177.0 * u.m]
-                if tel_type in ["MSTN", "MSTS"]:
-                    return [tel_num * -40.0 * u.m, tel_num * 20.0 * u.m, 2177.0 * u.m]
-                # SSTN or SSTS
-                return [tel_num * 20.0 * u.m, tel_num * -40.0 * u.m, 2177.0 * u.m]
+                coord_map = {
+                    "LST": (tel_num * 50.0, tel_num * 30.0, 2177.0),
+                    "MST": (tel_num * -40.0, tel_num * 20.0, 2177.0),
+                    "SST": (tel_num * 20.0, tel_num * -40.0, 2177.0),
+                }
+                base_type = tel_type[:3]
+                coords = coord_map.get(base_type, (0.0, 0.0, 0.0))
+                return [coords[0] * u.m, coords[1] * u.m, coords[2] * u.m]
+
             if coordinate_system == "utm":
-                if site == "North":
-                    return [
-                        217611.227 * u.m + tel_num * 50.0 * u.m,
-                        3185066.278 * u.m + tel_num * 30.0 * u.m,
-                        2177.0 * u.m,
-                    ]
+                center_easting = 366822.017 if site == "South" else 217611.227
+                center_northing = 7269466.999 if site == "South" else 3185066.278
+                altitude = 2162.35 if site == "South" else 2177.0
+
                 return [
-                    366822.017 * u.m + tel_num * 50.0 * u.m,
-                    7269466.999 * u.m + tel_num * 30.0 * u.m,
-                    2162.35 * u.m,
+                    (center_easting + tel_num * 50.0) * u.m,
+                    (center_northing + tel_num * 30.0) * u.m,
+                    altitude * u.m,
                 ]
+
             return [0.0 * u.m, 0.0 * u.m, 0.0 * u.m]
 
         mock_instance.position.side_effect = position_side_effect
 
-        # Mock get_parameter_value_with_unit method
         def get_parameter_value_with_unit(param_name):
             if param_name == "telescope_axis_height":
                 return 16.0 * u.m
             if param_name == "telescope_sphere_radius":
-                # Use the tel_type captured from the outer function scope
                 if not telescope_name:
                     return 8.0 * u.m
-                if tel_type in ["LSTN", "LSTS"]:
-                    return 12.5 * u.m
-                if tel_type in ["MSTN", "MSTS"]:
-                    return 8.0 * u.m
-                # SSTN or SSTS
-                return 4.0 * u.m
+                return sphere_radii.get(tel_type, 8.0) * u.m
             return None
 
         mock_instance.get_parameter_value_with_unit.side_effect = get_parameter_value_with_unit
-
-        # Mock export_config_file method
-        mock_instance.export_config_file.return_value = None
 
         return mock_instance
 
     telescope_model_mock.side_effect = telescope_model_side_effect
 
-    # Mock db_handler
     db_mock = mocker.patch("simtools.model.array_model.db_handler.DatabaseHandler", autospec=True)
     db_instance = db_mock.return_value
 
-    def get_array_elements_of_type(array_element_type, model_version, collection):
-        if array_element_type == "LSTN":
-            return ["LSTN-01", "LSTN-02", "LSTN-03", "LSTN-04"]
-        if array_element_type == "MSTN":
-            return [
-                "MSTN-01",
-                "MSTN-02",
-                "MSTN-03",
-                "MSTN-04",
-                "MSTN-05",
-                "MSTN-06",
-                "MSTN-07",
-                "MSTN-08",
-                "MSTN-09",
-                "MSTN-10",
-                "MSTN-11",
-                "MSTN-12",
-                "MSTN-13",
-                "MSTN-14",
-                "MSTN-15",
-            ]
-        if array_element_type == "LSTS":
-            return ["LSTS-01", "LSTS-02", "LSTS-03", "LSTS-04"]
-        if array_element_type == "MSTS":
-            return [
-                "MSTS-01",
-                "MSTS-02",
-                "MSTS-03",
-                "MSTS-04",
-                "MSTS-05",
-                "MSTS-06",
-                "MSTS-07",
-                "MSTS-08",
-                "MSTS-09",
-                "MSTS-10",
-                "MSTS-11",
-                "MSTS-12",
-                "MSTS-13",
-                "MSTS-14",
-                "MSTS-15",
-            ]
-        if array_element_type == "SSTS":
-            return ["SSTS-01", "SSTS-02", "SSTS-03", "SSTS-04"]
-        return []
+    telescope_lists = {
+        "LSTN": ["LSTN-01", "LSTN-02", "LSTN-03", "LSTN-04"],
+        "MSTN": ["MSTN-" + f"{i:02d}" for i in range(1, 16)],
+        "LSTS": ["LSTS-01", "LSTS-02", "LSTS-03", "LSTS-04"],
+        "MSTS": ["MSTS-" + f"{i:02d}" for i in range(1, 16)],
+        "SSTS": ["SSTS-01", "SSTS-02", "SSTS-03", "SSTS-04"],
+    }
 
-    db_instance.get_array_elements_of_type.side_effect = get_array_elements_of_type
+    db_instance.get_array_elements_of_type.side_effect = (
+        lambda array_element_type, *args, **kwargs: telescope_lists.get(array_element_type, [])
+    )
 
 
 @pytest.fixture

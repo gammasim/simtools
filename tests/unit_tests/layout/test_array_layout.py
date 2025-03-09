@@ -15,59 +15,51 @@ logger = logging.getLogger()
 
 @pytest.fixture(autouse=True)
 def patch_models(mocker, north_layout_center_data_dict, south_layout_center_data_dict):
+    # Mock SiteModel
     site_model_mock = mocker.patch("simtools.layout.array_layout.SiteModel", autospec=True)
 
+    # Create a more concise side effect function
     def site_model_side_effect(site=None, *args, **kwargs):
         mock_instance = mocker.MagicMock()
         mock_instance.site = site
 
-        def get_reference_point():
-            if site == "North":
-                return {
-                    "center_easting": north_layout_center_data_dict["center_easting"],
-                    "center_northing": north_layout_center_data_dict["center_northing"],
-                    "center_altitude": north_layout_center_data_dict["center_alt"],
-                    "epsg_code": north_layout_center_data_dict["EPSG"],
-                    "array_name": "test_layout",
-                }
-            return {
-                "center_easting": south_layout_center_data_dict["center_easting"],
-                "center_northing": south_layout_center_data_dict["center_northing"],
-                "center_altitude": south_layout_center_data_dict["center_alt"],
-                "epsg_code": south_layout_center_data_dict["EPSG"],
-                "array_name": "test_layout",
-            }
+        # Choose data based on site
+        layout_data = (
+            north_layout_center_data_dict if site == "North" else south_layout_center_data_dict
+        )
+        cors_level = 2156.0 if site == "North" else 2147.0
 
-        mock_instance.get_reference_point.return_value = get_reference_point()
+        # Configure mock instance with appropriate return values
+        mock_instance.get_reference_point.return_value = {
+            "center_easting": layout_data["center_easting"],
+            "center_northing": layout_data["center_northing"],
+            "center_altitude": layout_data["center_alt"],
+            "epsg_code": layout_data["EPSG"],
+            "array_name": "test_layout",
+        }
 
-        def get_corsika_site_parameters():
-            if site == "North":
-                return {"corsika_observation_level": 2156.0 * u.m}
-            # South
-            return {"corsika_observation_level": 2147.0 * u.m}
-
-        mock_instance.get_corsika_site_parameters.return_value = get_corsika_site_parameters()
+        mock_instance.get_corsika_site_parameters.return_value = {
+            "corsika_observation_level": cors_level * u.m
+        }
 
         return mock_instance
 
     site_model_mock.side_effect = site_model_side_effect
 
+    # Mock TelescopeModel
     telescope_model_mock = mocker.patch(
         "simtools.layout.array_layout.TelescopeModel", autospec=True
     )
 
+    # Simple side effect for telescope model that returns consistent values
     def telescope_model_side_effect(*args, **kwargs):
-        tel_instance = mocker.MagicMock()
+        mock_instance = mocker.MagicMock()
 
-        def get_parameter_value_with_unit(param_name):
-            if param_name == "telescope_axis_height":
-                return 16.0 * u.m
-            if param_name == "telescope_sphere_radius":
-                return 8.0 * u.m
-            return None
+        # Set up parameter values using a dictionary for cleaner code
+        params = {"telescope_axis_height": 16.0 * u.m, "telescope_sphere_radius": 8.0 * u.m}
 
-        tel_instance.get_parameter_value_with_unit.side_effect = get_parameter_value_with_unit
-        return tel_instance
+        mock_instance.get_parameter_value_with_unit.side_effect = lambda param: params.get(param)
+        return mock_instance
 
     telescope_model_mock.side_effect = telescope_model_side_effect
 
