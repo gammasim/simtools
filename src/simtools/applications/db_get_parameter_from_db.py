@@ -53,7 +53,6 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io_operations import io_handler
-from simtools.utils import names
 
 
 def _parse():
@@ -72,6 +71,18 @@ def _parse():
         type=str,
         required=False,
     )
+    config.parser.add_argument(
+        "--export_model_file",
+        help="Export model file (if parameter describes a file)",
+        action="store_true",
+        required=False,
+    )
+    config.parser.add_argument(
+        "--export_model_file_as_table",
+        help="Export model file as astropy table (if parameter describes a file)",
+        action="store_true",
+        required=False,
+    )
 
     return config.initialize(
         db_config=True, simulation_model=["telescope", "parameter_version", "model_version"]
@@ -86,26 +97,29 @@ def main():  # noqa: D103
 
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
-    # get parameter using 'parameter_version'
-    if args_dict["parameter_version"] is not None:
-        pars = db.get_model_parameter(
+    pars = db.get_model_parameter(
+        parameter=args_dict["parameter"],
+        site=args_dict["site"],
+        array_element_name=args_dict.get("telescope"),
+        parameter_version=args_dict.get("parameter_version"),
+        model_version=args_dict.get("model_version"),
+    )
+    if args_dict["export_model_file"]:
+        table = db.export_model_file(
             parameter=args_dict["parameter"],
-            parameter_version=args_dict["parameter_version"],
             site=args_dict["site"],
             array_element_name=args_dict["telescope"],
+            parameter_version=args_dict.get("parameter_version"),
+            model_version=args_dict.get("model_version"),
+            export_file_as_table=args_dict["export_model_file_as_table"],
         )
-    # get parameter using 'model_version'
-    elif args_dict["model_version"] is not None:
-        pars = db.get_model_parameters(
-            site=args_dict["site"],
-            array_element_name=args_dict.get("telescope"),
-            model_version=args_dict["model_version"],
-            collection=names.get_collection_name_from_parameter_name(args_dict["parameter"]),
-        )
-    else:
-        raise ValueError("Either 'parameter_version' or 'model_version' must be provided.")
-    if args_dict["parameter"] not in pars:
-        raise KeyError(f"The requested parameter, {args_dict['parameter']}, does not exist.")
+        param_value = pars[args_dict["parameter"]]["value"]
+        table_file = Path(io_handler.IOHandler().get_output_directory()) / f"{param_value}"
+        logger.info(f"Exported model file {param_value} to {table_file}")
+        if table and table_file.suffix != ".ecsv":
+            table.write(table_file.with_suffix(".ecsv"), format="ascii.ecsv", overwrite=True)
+            logger.info(f"Exported model file {param_value} to {table_file.with_suffix('.ecsv')}")
+
     if args_dict["output_file"] is not None:
         _output_file = (
             Path(io_handler.IOHandler().get_output_directory()) / args_dict["output_file"]

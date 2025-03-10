@@ -253,6 +253,9 @@ def read_simtel_table(parameter_name, file_path):
     Table
         Astropy table.
     """
+    if file_path.suffix == ".ecsv":  # table is already in correct format
+        return Table.read(file_path, format="ascii.ecsv")
+
     if parameter_name == "atmospheric_transmission":
         return _read_simtel_data_for_atmospheric_transmission(file_path)
 
