@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.value_conversion &#8212; simtools v0.1.dev1+g418eded Manual</title>
+    <title>utils.value_conversion &#8212; simtools v0.1.dev1+g0b7b000 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=5fdb821c"></script>
+    <script src="../../_static/documentation_options.js?v=0e69fb08"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g418eded Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g0b7b000 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -521,13 +521,15 @@ document.write(`
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_split_value_is_string</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">is_integer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split vale and unit for a string.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split value and unit for a string.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>  <span class="c1"># single integer value</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="kc">None</span>
     <span class="k">try</span><span class="p">:</span>  <span class="c1"># single value with/without unit</span>
-        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_integer</span> <span class="k">else</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">unit</span>
-        <span class="p">)</span>
+        <span class="n">quantity</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unit</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>  <span class="c1"># cases where numbers are wrongly identified as units</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">unit</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_integer</span> <span class="k">else</span> <span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_split_value_is_list</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">is_integer</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># string value (not numerical)</span>
