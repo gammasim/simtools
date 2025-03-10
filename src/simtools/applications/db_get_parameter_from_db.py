@@ -3,13 +3,21 @@
 r"""
     Get a parameter entry from DB for a specific telescope or a site.
 
-    The application receives a parameter name, a site, a telescope (if applicable) and \
-    a version. It then prints out the parameter entry.
+    The application receives a parameter name, a site, a telescope (if applicable) and
+    a version. Allow to print the parameter entry to screen or save it to a file.
+    Parameter describing a table file can be written to disk or exported as an astropy table
+    (if available).
 
     Command line arguments
     ----------------------
     parameter (str, required)
         Parameter name
+
+    parameter_version (str, optional)
+        Parameter version
+
+    model_version (str, required)
+        Model version
 
     site (str, required)
         South or North.
@@ -17,8 +25,14 @@ r"""
     telescope (str, optional)
         Telescope model name (e.g. LST-1, SST-D, ...)
 
-    log_level (str, optional)
-        Log level to print.
+    output_file (str, optional)
+        Output file name. If not given, print to stdout.
+
+    export_model_file (bool, optional)
+        Export model file (if parameter describes a file).
+
+    export_model_file_as_table (bool, optional)
+        Export model file as astropy table (if parameter describes a file).
 
     Raises
     ------
@@ -35,12 +49,14 @@ r"""
                 --model_version 5.0.0
 
     Get the mirror_list parameter using the parameter_version from the DB.
+    Write the mirror list to disk.
 
     .. code-block:: console
 
         simtools-db-get-parameter-from-db --parameter mirror_list \\
                 --site North --telescope LSTN-01 \\
-                --parameter_version 1.0.0
+                --parameter_version 1.0.0 \\
+                --export_model_file
 
 """
 
@@ -104,7 +120,7 @@ def main():  # noqa: D103
         parameter_version=args_dict.get("parameter_version"),
         model_version=args_dict.get("model_version"),
     )
-    if args_dict["export_model_file"]:
+    if args_dict["export_model_file"] or args_dict["export_model_file_as_table"]:
         table = db.export_model_file(
             parameter=args_dict["parameter"],
             site=args_dict["site"],
