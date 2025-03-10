@@ -3,10 +3,10 @@ name: CI-integrationtests
 # Integration tests for applications
 
 env:
-  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
-  SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
-  SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
-  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
+  SIMTOOLS_DB_SERVER: localhost
+  SIMTOOLS_DB_API_USER: api
+  SIMTOOLS_DB_API_PW: password
+  SIMTOOLS_DB_API_PORT: 27017
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
 
 on:
@@ -22,6 +22,20 @@ jobs:
     # Build the package and check if it is installable
     # (tests among others that all components are there)
     runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:latest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: api
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     defaults:
       run:
@@ -66,6 +80,11 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
+
+      - name: Upload data to MongoDB
+        run: |
+          cd database_scripts/
+          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
 
       - name: Run integration tests
         shell: bash -l {0}
