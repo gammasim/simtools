@@ -3,7 +3,7 @@ name: CI-integrationtests
 # Integration tests for applications
 
 env:
-  SIMTOOLS_DB_SERVER: localhost
+  SIMTOOLS_DB_SERVER: mongodb
   SIMTOOLS_DB_API_USER: api
   SIMTOOLS_DB_API_PW: password
   SIMTOOLS_DB_API_PORT: 27017
@@ -80,6 +80,14 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
 
+      - name: Create environment file
+        run: |
+          echo "SIMTOOLS_DB_SERVER=mongodb" > .env
+          echo "SIMTOOLS_DB_API_USER=api" >> .env
+          echo "SIMTOOLS_DB_API_PW=password" >> .env
+          echo "SIMTOOLS_DB_API_PORT=27017" >> .env
+          echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}" >> .env
+
       - name: Upload data to MongoDB
         run: |
           source /workdir/env/bin/activate
@@ -91,6 +99,7 @@ jobs:
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          SIMTOOLS_DB_SERVER: mongodb
         run: |
           source /workdir/env/bin/activate
           pip install -e '.[tests,dev,doc]'
