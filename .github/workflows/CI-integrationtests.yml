@@ -3,10 +3,6 @@ name: CI-integrationtests
 # Integration tests for applications
 
 env:
-  SIMTOOLS_DB_SERVER: mongodb
-  SIMTOOLS_DB_API_USER: api
-  SIMTOOLS_DB_API_PW: password
-  SIMTOOLS_DB_API_PORT: 27017
   SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
 
 on:
