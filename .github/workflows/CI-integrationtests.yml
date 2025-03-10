@@ -103,4 +103,4 @@ jobs:
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
-          pytest --model_version=${{ matrix.type }} --color=yes --durations=20 -n auto --dist loadscope --no-cov tests/integration_tests/
+          pytest --model_version=${{ matrix.type }} --color=yes --durations=20 -n 4 --dist loadscope --no-cov tests/integration_tests/
