@@ -78,11 +78,13 @@ jobs:
 
       - name: Create environment file
         run: |
-          echo "SIMTOOLS_DB_SERVER=mongodb" > .env
-          echo "SIMTOOLS_DB_API_USER=api" >> .env
-          echo "SIMTOOLS_DB_API_PW=password" >> .env
-          echo "SIMTOOLS_DB_API_PORT=27017" >> .env
-          echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}" >> .env
+          {
+            echo "SIMTOOLS_DB_SERVER=mongodb"
+            echo "SIMTOOLS_DB_API_USER=api"
+            echo "SIMTOOLS_DB_API_PW=password"
+            echo "SIMTOOLS_DB_API_PORT=27017"
+            echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
+          } > .env
 
       - name: Upload data to MongoDB
         run: |
