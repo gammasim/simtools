@@ -113,6 +113,7 @@ class DatabaseHandler:
         direct_connection = self.mongo_db_config["db_server"] in (
             "localhost",
             "simtools-mongodb",
+            "mongodb",
         )
         return MongoClient(
             self.mongo_db_config["db_server"],
