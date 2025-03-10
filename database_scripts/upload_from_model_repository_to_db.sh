@@ -4,6 +4,7 @@
 # Execute this scripts from the ./database_scripts directory.
 # Cover 'source .env': the script ensure that this file exists:
 # shellcheck disable=SC1091
+set -e
 
 DB_SIMULATION_MODEL_URL="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models.git"
 DB_SIMULATION_MODEL_BRANCH="main"
@@ -30,10 +31,14 @@ git clone --depth=1 -b $DB_SIMULATION_MODEL_BRANCH $DB_SIMULATION_MODEL_URL ./tm
 
 CURRENT_DIR=$(pwd)
 cd ./tmp_model_parameters/ || exit
-cp -f "$CURRENT_DIR"/../.env .env
+if [[ -e "$CURRENT_DIR"/../.env ]]; then
+    cp -f "$CURRENT_DIR"/../.env .env
+fi
 
 # ask for confirmation before uploading to remote DB
-source .env
+if [[ -e .env ]]; then
+    source .env
+fi
 regex='^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$'
 echo "DB_SERVER: $SIMTOOLS_DB_SERVER"
 if [[ $SIMTOOLS_DB_SERVER =~ $regex ]]; then
@@ -43,6 +48,11 @@ if [[ $SIMTOOLS_DB_SERVER =~ $regex ]]; then
       exit 1
   fi
 fi
+
+# Print connection details for debugging
+echo "MongoDB connection details:"
+echo "Server: $SIMTOOLS_DB_SERVER"
+echo "Port: $SIMTOOLS_DB_API_PORT"
 
 # upload model parameters to DB
 model_directory="./simulation-models/model_parameters/"
