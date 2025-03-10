@@ -48,7 +48,7 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: example
         ports:
           - 27017:27017
-        options: >
+        options: |
           --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
           --health-interval 10s
           --health-timeout 5s
