@@ -91,7 +91,7 @@ jobs:
       - name: Upload data to MongoDB
         run: |
           source /workdir/env/bin/activate
-          pip install -e '.[tests,dev,doc]'
+          pip install --no-cache-dir -e '.[tests,dev,doc]'
           cd database_scripts/
           ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
 
@@ -102,5 +102,5 @@ jobs:
           SIMTOOLS_DB_SERVER: mongodb
         run: |
           source /workdir/env/bin/activate
-          pip install -e '.[tests,dev,doc]'
+          pip install --no-cache-dir -e '.[tests,dev,doc]'
           pytest --model_version=${{ matrix.type }} --color=yes --durations=20 -n auto --dist loadscope --no-cov tests/integration_tests/
