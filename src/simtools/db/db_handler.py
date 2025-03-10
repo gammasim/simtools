@@ -13,6 +13,7 @@ from pymongo import MongoClient
 
 from simtools.data_model import validate_data
 from simtools.io_operations import io_handler
+from simtools.simtel import simtel_table_reader
 from simtools.utils import names, value_conversion
 
 __all__ = ["DatabaseHandler"]
@@ -175,29 +176,47 @@ class DatabaseHandler:
     def get_model_parameter(
         self,
         parameter,
-        parameter_version,
         site,
         array_element_name,
+        parameter_version=None,
+        model_version=None,
     ):
         """
-        Get a model parameter using the parameter version.
+        Get a single model parameter using model or parameter version.
+
+        Note that this function should not be called in a loop for many parameters,
+        as it each call queries the database.
 
         Parameters
         ----------
         parameter: str
             Name of the parameter.
-        parameter_version: str
-            Version of the parameter.
         site: str
             Site name.
         array_element_name: str
             Name of the array element model (e.g. MSTN, SSTS).
+        parameter_version: str
+            Version of the parameter.
+        model_version: str
+            Version of the model.
 
         Returns
         -------
         dict containing the parameter
 
         """
+        collection_name = names.get_collection_name_from_parameter_name(parameter)
+        if model_version:
+            production_table = self._read_production_table_from_mongo_db(
+                collection_name, model_version
+            )
+            try:
+                parameter_version = production_table["parameters"][array_element_name][parameter]
+            except KeyError as exc:
+                raise ValueError(
+                    f"Parameter {parameter} not found for {array_element_name} in {model_version}"
+                ) from exc
+
         query = {
             "parameter_version": parameter_version,
             "parameter": parameter,
@@ -207,7 +226,8 @@ class DatabaseHandler:
         if site is not None:
             query["site"] = site
         return self._read_mongo_db(
-            query=query, collection_name=names.get_collection_name_from_parameter_name(parameter)
+            query=query,
+            collection_name=collection_name,
         )
 
     def get_model_parameters(
@@ -329,9 +349,54 @@ class DatabaseHandler:
             return [collection for collection in collections if not collection.startswith("fs.")]
         return collections
 
+    def export_model_file(
+        self,
+        parameter,
+        site,
+        array_element_name,
+        model_version=None,
+        parameter_version=None,
+        export_file_as_table=False,
+    ):
+        """
+        Export single model file from the DB identified by the parameter name.
+
+        The parameter can be identified by model or parameter version.
+        Files can be exported as astropy tables (ecsv format).
+
+        Parameters
+        ----------
+        parameter: str
+            Name of the parameter.
+        site: str
+            Site name.
+        array_element_name: str
+            Name of the array element model (e.g. MSTN, SSTS).
+        parameter_version: str
+            Version of the parameter.
+        model_version: str
+            Version of the model.
+        export_file_as_table: bool
+            If True, export the file as an astropy table (ecsv format).
+        """
+        parameters = self.get_model_parameter(
+            parameter,
+            site,
+            array_element_name,
+            parameter_version=parameter_version,
+            model_version=model_version,
+        )
+        self.export_model_files(parameters=parameters, dest=self.io_handler.get_output_directory())
+        if export_file_as_table:
+            return simtel_table_reader.read_simtel_table(
+                parameter,
+                self.io_handler.get_output_directory().joinpath(parameters[parameter]["value"]),
+            )
+        return None
+
     def export_model_files(self, parameters=None, file_names=None, dest=None, db_name=None):
         """
-        Export files from the DB to the model directory.
+        Export models files from the DB to given directory.
 
         The files to be exported can be specified by file_name or retrieved from the database
         using the parameters dictionary.
