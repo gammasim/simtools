@@ -30,7 +30,9 @@ git clone --depth=1 -b $DB_SIMULATION_MODEL_BRANCH $DB_SIMULATION_MODEL_URL ./tm
 
 CURRENT_DIR=$(pwd)
 cd ./tmp_model_parameters/ || exit
-cp -f "$CURRENT_DIR"/../.env .env
+if [[ -e "$CURRENT_DIR"/../.env ]]; then
+    cp -f ../.env .env
+fi
 
 # ask for confirmation before uploading to remote DB
 source .env

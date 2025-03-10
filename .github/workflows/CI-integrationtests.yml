@@ -83,6 +83,8 @@ jobs:
 
       - name: Upload data to MongoDB
         run: |
+          source /workdir/env/bin/activate
+          pip install -e '.[tests,dev,doc]'
           cd database_scripts/
           ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
 
