@@ -36,7 +36,9 @@ if [[ -e "$CURRENT_DIR"/../.env ]]; then
 fi
 
 # ask for confirmation before uploading to remote DB
-source .env
+if [[ -e .env ]]; then
+    source .env
+fi
 regex='^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$'
 echo "DB_SERVER: $SIMTOOLS_DB_SERVER"
 if [[ $SIMTOOLS_DB_SERVER =~ $regex ]]; then
