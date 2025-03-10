@@ -22,37 +22,36 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: macos-latest
-          #  python-version: "3.11"
-          #  install-method: mamba
+          - os: macos-latest
+            python-version: "3.11"
+            install-method: mamba
 
-          # - os: ubuntu-latest
-          #  python-version: "3.11"
-          #  install-method: mamba
-          #  extra-args: ["codecov", "random-order"]
+          - os: ubuntu-latest
+            python-version: "3.11"
+            install-method: mamba
+            extra-args: ["codecov", "random-order"]
 
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: pip
-            extra-args: ["codecov"]
 
-          # - os: ubuntu-latest
-          #  python-version: "3.12"
-          #  install-method: mamba
+          - os: ubuntu-latest
+            python-version: "3.12"
+            install-method: mamba
 
     services:
-        mongodb:
-          image: mongo:latest
-          env:
-            MONGO_INITDB_ROOT_USERNAME: api
-            MONGO_INITDB_ROOT_PASSWORD: password
-          ports:
-            - 27017:27017
-          options: >-
-            --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
-            --health-interval 10s
-            --health-timeout 5s
-            --health-retries 5
+      mongodb:
+        image: mongo:latest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: api
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     defaults:
       run:
