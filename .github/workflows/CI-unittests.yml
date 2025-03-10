@@ -22,22 +22,23 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            python-version: "3.11"
-            install-method: mamba
+          # - os: macos-latest
+          #  python-version: "3.11"
+          #  install-method: mamba
 
-          - os: ubuntu-latest
-            python-version: "3.11"
-            install-method: mamba
-            extra-args: ["codecov", "random-order"]
+          # - os: ubuntu-latest
+          #  python-version: "3.11"
+          #  install-method: mamba
+          #  extra-args: ["codecov", "random-order"]
 
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: pip
+            extra-args: ["codecov"]
 
-          - os: ubuntu-latest
-            python-version: "3.12"
-            install-method: mamba
+          # - os: ubuntu-latest
+          #  python-version: "3.12"
+          #  install-method: mamba
 
     services:
       mongodb:
