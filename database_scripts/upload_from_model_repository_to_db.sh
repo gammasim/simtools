@@ -49,6 +49,11 @@ if [[ $SIMTOOLS_DB_SERVER =~ $regex ]]; then
   fi
 fi
 
+# Print connection details for debugging
+echo "MongoDB connection details:"
+echo "Server: $SIMTOOLS_DB_SERVER"
+echo "Port: $SIMTOOLS_DB_API_PORT"
+
 # upload model parameters to DB
 model_directory="./simulation-models/model_parameters/"
 simtools-db-add-simulation-model-from-repository-to-db \
