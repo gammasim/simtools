@@ -75,6 +75,13 @@ jobs:
         run: |
           sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
 
+
+      - name: Install Docker on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install --cask docker
+          open /Applications/Docker.app
+
       - name: Install mamba dependencies
         if: matrix.install-method == 'mamba'
         uses: mamba-org/setup-micromamba@v2
