@@ -210,20 +210,24 @@ class DatabaseHandler:
             production_table = self._read_production_table_from_mongo_db(
                 collection_name, model_version
             )
-            try:
-                parameter_version = production_table["parameters"][array_element_name][parameter]
-            except KeyError as exc:
-                raise ValueError(
-                    f"Parameter {parameter} not found for {array_element_name} in {model_version}"
-                ) from exc
+            array_element_list = self._get_array_element_list(
+                array_element_name, site, production_table, collection_name
+            )
+            for array_element in reversed(array_element_list):
+                parameter_version = (
+                    production_table["parameters"].get(array_element, {}).get(parameter)
+                )
+                if parameter_version:
+                    array_element_name = array_element
+                    break
 
         query = {
             "parameter_version": parameter_version,
             "parameter": parameter,
         }
-        if array_element_name is not None:
+        if array_element_name:
             query["instrument"] = array_element_name
-        if site is not None:
+        if site:
             query["site"] = site
         return self._read_mongo_db(
             query=query,

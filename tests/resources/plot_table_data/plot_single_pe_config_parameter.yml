@@ -13,14 +13,14 @@ CTA_SIMPIPE:
     TABLES:
       - PARAMETER: pm_photoelectron_spectrum
         TELESCOPE: LSTN-01
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN (prompt)'
         COLUMN_X: 'amplitude'
         COLUMN_Y: 'response'
       - PARAMETER: pm_photoelectron_spectrum
         TELESCOPE: LSTN-01
-        SITE: NORTH
+        SITE: North
         MODEL_VERSION: 6.0.0
         LABEL: 'LSTN (prompt + afterpulsing)'
         COLUMN_X: 'amplitude'

@@ -151,79 +151,6 @@ def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
     )
 
 
-def test_get_model_parameter(db, mocker):
-    """Test get_model_parameter method."""
-    mock_read_mongo_db = mocker.patch.object(
-        db, "_read_mongo_db", return_value={"parameter": "value"}
-    )
-
-    parameter = "camera_pixels"
-    parameter_version = "0.0.1"
-    site = "North"
-    array_element_name = "LSTN-01"
-    collection = "telescopes"
-
-    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
-
-    query = {
-        "parameter_version": parameter_version,
-        "parameter": parameter,
-        "instrument": array_element_name,
-        "site": site,
-    }
-
-    mock_read_mongo_db.assert_called_once_with(query=query, collection_name=collection)
-    assert result == {"parameter": "value"}
-
-
-def test_get_model_parameter_no_site(db, mocker):
-    """Test get_model_parameter method without site."""
-    mock_read_mongo_db = mocker.patch.object(
-        db, "_read_mongo_db", return_value={"parameter": "value"}
-    )
-
-    parameter = "mirror_list"
-    parameter_version = "1.0.0"
-    site = None
-    array_element_name = "LSTS-01"
-    collection = "telescopes"
-
-    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
-
-    query = {
-        "parameter_version": parameter_version,
-        "parameter": parameter,
-        "instrument": array_element_name,
-    }
-
-    mock_read_mongo_db.assert_called_once_with(query=query, collection_name=collection)
-    assert result == {"parameter": "value"}
-
-
-def test_get_model_parameter_no_array_element_name(db, mocker):
-    """Test get_model_parameter method without array element name."""
-    mock_read_mongo_db = mocker.patch.object(
-        db, "_read_mongo_db", return_value={"parameter": "value"}
-    )
-
-    parameter = "corsika_iact_io_buffer"
-    parameter_version = "10.11.12"
-    site = "South"
-    array_element_name = None
-    collection = "configuration_corsika"
-
-    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
-
-    query = {
-        "parameter_version": parameter_version,
-        "parameter": parameter,
-        "site": site,
-    }
-
-    mock_read_mongo_db.assert_called_once_with(query=query, collection_name=collection)
-    assert result == {"parameter": "value"}
-
-
 def test_get_model_parameters(db, mocker):
     """Test get_model_parameters method."""
     mock_get_production_table = mocker.patch.object(
@@ -1143,3 +1070,314 @@ def test_get_design_model(db):
     assert db.get_design_model("6.0.0", "LSTN-01") == "LSTN-design"
     assert db.get_design_model("5.0.0", "SSTS-03") == "SSTS-design"
     assert db.get_design_model("6.0.0", "LSTN-design") == "LSTN-design"
+
+
+def test_get_model_parameter_with_parameter_version(db, mocker):
+    """Test get_model_parameter with parameter version."""
+    mock_get_collection_name = mocker.patch(
+        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
+        return_value="telescopes",
+    )
+    mock_read_mongo_db = mocker.patch.object(
+        db,
+        "_read_mongo_db",
+        return_value={"test_param": {"value": "test_value"}},
+    )
+
+    result = db.get_model_parameter(
+        parameter="test_param",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version="1.0.0",
+    )
+
+    mock_get_collection_name.assert_called_once_with("test_param")
+    mock_read_mongo_db.assert_called_once_with(
+        query={
+            "parameter_version": "1.0.0",
+            "parameter": "test_param",
+            "instrument": "LSTN-01",
+            "site": "North",
+        },
+        collection_name="telescopes",
+    )
+    assert result == {"test_param": {"value": "test_value"}}
+
+
+def test_get_model_parameter_with_model_version(db, mocker):
+    """Test get_model_parameter with model version."""
+    mock_get_collection_name = mocker.patch(
+        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
+        return_value="telescopes",
+    )
+    mock_read_production_table = mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        return_value={
+            "parameters": {
+                "LSTN-design": {"test_param": "2.0.0"},
+                "LSTN-01": {"test_param": "1.0.0"},
+            }
+        },
+    )
+    mock_get_array_element_list = mocker.patch.object(
+        db,
+        "_get_array_element_list",
+        return_value=["LSTN-design", "LSTN-01"],
+    )
+    mock_read_mongo_db = mocker.patch.object(
+        db,
+        "_read_mongo_db",
+        return_value={"test_param": {"value": "test_value"}},
+    )
+
+    result = db.get_model_parameter(
+        parameter="test_param",
+        site="North",
+        array_element_name="LSTN-01",
+        model_version="1.0.0",
+    )
+
+    mock_get_collection_name.assert_called_once_with("test_param")
+    mock_read_production_table.assert_called_once_with("telescopes", "1.0.0")
+    mock_get_array_element_list.assert_called_once_with(
+        "LSTN-01", "North", mock_read_production_table.return_value, "telescopes"
+    )
+    mock_read_mongo_db.assert_called_once_with(
+        query={
+            "parameter_version": "1.0.0",
+            "parameter": "test_param",
+            "instrument": "LSTN-01",
+            "site": "North",
+        },
+        collection_name="telescopes",
+    )
+    assert result == {"test_param": {"value": "test_value"}}
+
+
+def test_get_model_parameter_with_no_site_no_instrument(db, mocker):
+    """Test get_model_parameter without site and instrument."""
+    mock_get_collection_name = mocker.patch(
+        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
+        return_value="telescopes",
+    )
+    mock_read_mongo_db = mocker.patch.object(
+        db,
+        "_read_mongo_db",
+        return_value={"test_param": {"value": "test_value"}},
+    )
+
+    result = db.get_model_parameter(
+        parameter="test_param",
+        site=None,
+        array_element_name=None,
+        parameter_version="1.0.0",
+    )
+
+    mock_get_collection_name.assert_called_once_with("test_param")
+    mock_read_mongo_db.assert_called_once_with(
+        query={
+            "parameter_version": "1.0.0",
+            "parameter": "test_param",
+        },
+        collection_name="telescopes",
+    )
+    assert result == {"test_param": {"value": "test_value"}}
+
+
+def test_get_model_parameter_parameter_version_from_design(db, mocker):
+    """Test get_model_parameter getting parameter version from design model."""
+    mock_get_collection_name = mocker.patch(
+        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
+        return_value="telescopes",
+    )
+    mock_read_production_table = mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        return_value={
+            "parameters": {
+                "LSTN-design": {"test_param": "2.0.0"},
+                "LSTN-01": {},
+            }
+        },
+    )
+    mock_get_array_element_list = mocker.patch.object(
+        db,
+        "_get_array_element_list",
+        return_value=["LSTN-design", "LSTN-01"],
+    )
+    mock_read_mongo_db = mocker.patch.object(
+        db,
+        "_read_mongo_db",
+        return_value={"test_param": {"value": "test_value"}},
+    )
+
+    result = db.get_model_parameter(
+        parameter="test_param",
+        site="North",
+        array_element_name="LSTN-01",
+        model_version="1.0.0",
+    )
+
+    mock_get_collection_name.assert_called_once_with("test_param")
+    mock_read_production_table.assert_called_once_with("telescopes", "1.0.0")
+    mock_get_array_element_list.assert_called_once_with(
+        "LSTN-01", "North", mock_read_production_table.return_value, "telescopes"
+    )
+    mock_read_mongo_db.assert_called_once_with(
+        query={
+            "parameter_version": "2.0.0",
+            "parameter": "test_param",
+            "instrument": "LSTN-design",
+            "site": "North",
+        },
+        collection_name="telescopes",
+    )
+    assert result == {"test_param": {"value": "test_value"}}
+
+
+def test_export_model_file_without_table(db, mocker, tmp_test_directory):
+    """Test export_model_file method without exporting as table."""
+    test_param = "test_param"
+    test_file = "test_file.dat"
+    mock_parameters = {test_param: {"value": test_file}}
+    mock_get_model_parameter = mocker.patch.object(
+        db, "get_model_parameter", return_value=mock_parameters
+    )
+    mock_export_model_files = mocker.patch.object(db, "export_model_files")
+    mock_get_output_directory = mocker.patch.object(
+        db.io_handler, "get_output_directory", return_value=tmp_test_directory
+    )
+    mock_read_simtel_table = mocker.patch(
+        "simtools.db.db_handler.simtel_table_reader.read_simtel_table"
+    )
+
+    result = db.export_model_file(
+        parameter=test_param,
+        site="North",
+        array_element_name="LSTN-01",
+        model_version="1.0.0",
+    )
+
+    mock_get_model_parameter.assert_called_once_with(
+        test_param,
+        "North",
+        "LSTN-01",
+        parameter_version=None,
+        model_version="1.0.0",
+    )
+    mock_get_output_directory.assert_called_once()
+    mock_export_model_files.assert_called_once_with(
+        parameters=mock_parameters, dest=tmp_test_directory
+    )
+    mock_read_simtel_table.assert_not_called()
+    assert result is None
+
+
+def test_export_model_file_with_table(db, mocker, tmp_test_directory):
+    """Test export_model_file method with table export."""
+    test_param = "test_param"
+    test_file = "test_file.dat"
+    test_table = "test_table"
+    mock_parameters = {test_param: {"value": test_file}}
+    mock_get_model_parameter = mocker.patch.object(
+        db, "get_model_parameter", return_value=mock_parameters
+    )
+    mock_export_model_files = mocker.patch.object(db, "export_model_files")
+    mock_get_output_directory = mocker.patch.object(
+        db.io_handler, "get_output_directory", return_value=tmp_test_directory
+    )
+    path_obj = mocker.Mock()
+    path_obj.joinpath.return_value = f"{tmp_test_directory}/{test_file}"
+    mock_get_output_directory.return_value = path_obj
+
+    mock_read_simtel_table = mocker.patch(
+        "simtools.db.db_handler.simtel_table_reader.read_simtel_table", return_value=test_table
+    )
+
+    result = db.export_model_file(
+        parameter=test_param,
+        site="North",
+        array_element_name="LSTN-01",
+        model_version="1.0.0",
+        export_file_as_table=True,
+    )
+
+    mock_get_model_parameter.assert_called_once_with(
+        test_param,
+        "North",
+        "LSTN-01",
+        parameter_version=None,
+        model_version="1.0.0",
+    )
+    mock_get_output_directory.assert_called_with()
+    assert mock_get_output_directory.call_count == 2
+    mock_export_model_files.assert_called_once_with(parameters=mock_parameters, dest=path_obj)
+    mock_read_simtel_table.assert_called_once_with(
+        test_param,
+        f"{tmp_test_directory}/{test_file}",
+    )
+    assert result == test_table
+
+
+def test_export_model_file_with_parameter_version(db, mocker, tmp_test_directory):
+    """Test export_model_file method with parameter version."""
+    test_param = "test_param"
+    test_file = "test_file.dat"
+    mock_parameters = {test_param: {"value": test_file}}
+    mock_get_model_parameter = mocker.patch.object(
+        db, "get_model_parameter", return_value=mock_parameters
+    )
+    mock_export_model_files = mocker.patch.object(db, "export_model_files")
+    mock_get_output_directory = mocker.patch.object(
+        db.io_handler, "get_output_directory", return_value=tmp_test_directory
+    )
+    mock_read_simtel_table = mocker.patch(
+        "simtools.db.db_handler.simtel_table_reader.read_simtel_table"
+    )
+
+    result = db.export_model_file(
+        parameter=test_param,
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version="1.0.0",
+    )
+
+    mock_get_model_parameter.assert_called_once_with(
+        test_param,
+        "North",
+        "LSTN-01",
+        parameter_version="1.0.0",
+        model_version=None,
+    )
+    mock_get_output_directory.assert_called_once()
+    mock_export_model_files.assert_called_once_with(
+        parameters=mock_parameters, dest=tmp_test_directory
+    )
+    mock_read_simtel_table.assert_not_called()
+    assert result is None
+
+
+def test_get_array_element_list_configuration_sim_telarray(db, mocker):
+    """Test _get_array_element_list method for configuration_sim_telarray collection."""
+    array_element_name = "LSTN-01"
+    site = "North"
+    model_version = "1.0.0"
+    production_table = {"model_version": model_version}
+    collection = "configuration_sim_telarray"
+
+    mock_read_production_table = mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        return_value={"design_model": {"LSTN-01": "LSTN-design"}},
+    )
+
+    result = db._get_array_element_list(array_element_name, site, production_table, collection)
+    mock_read_production_table.assert_called_once_with("telescopes", model_version)
+    assert result == ["LSTN-design", "LSTN-01"]
+
+    mock_read_production_table.return_value = {"design_model": {}}  # No design model for LSTN-01
+    with pytest.raises(
+        KeyError, match=r"Failed generated array element list for db query for LSTN-01"
+    ):
+        db._get_array_element_list(array_element_name, site, production_table, collection)
