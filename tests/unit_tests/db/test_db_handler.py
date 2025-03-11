@@ -691,7 +691,7 @@ def test_get_array_elements_of_type(db, mocker):
 
     # Test with different array element type
     array_element_type = "MSTS"
-    mock_get_production_table = mocker.patch.object(
+    mocker.patch.object(
         db,
         "_read_production_table_from_mongo_db",
         return_value={
