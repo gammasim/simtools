@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+g65180df Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+g115722f Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=37a3908b"></script>
+    <script src="../../_static/documentation_options.js?v=cac6bc14"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g65180df Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g115722f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -395,12 +395,10 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">simtel_table_reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_config_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelConfigWriter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
@@ -954,38 +952,6 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="n">pars_from_db</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">True</span></div>
-
-
-<div class="viewcode-block" id="ModelParameter.get_model_file_as_table">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_model_file_as_table">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_file_as_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return tabular data from file as astropy table.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        par_name: str</span>
-<span class="sd">            Name of the parameter.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Table</span>
-<span class="sd">            Astropy table.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_par_entry</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">_par_entry</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> not found in the model.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="n">_par_entry</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">_par_entry</span><span class="p">[</span><span class="n">par_name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;ecsv&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">_par_entry</span><span class="p">[</span><span class="n">par_name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]),</span>
-                <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">simtel_table_reader</span><span class="o">.</span><span class="n">read_simtel_table</span><span class="p">(</span>
-            <span class="n">par_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">_par_entry</span><span class="p">[</span><span class="n">par_name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
-        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ModelParameter.export_config_file">

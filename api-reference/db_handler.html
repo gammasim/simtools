@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Database support &#8212; simtools v0.1.dev1+g65180df Manual</title>
+    <title>Database support &#8212; simtools v0.1.dev1+g115722f Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=37a3908b"></script>
+    <script src="../_static/documentation_options.js?v=cac6bc14"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g65180df Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g115722f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -469,6 +469,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_production_table"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_production_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_file"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements_of_type()</span></code></a></li>
@@ -558,9 +559,35 @@ Parameter dictionaries are validated before submission using the corresponding s
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.export_model_file">
+<span class="sig-name descname"><span class="pre">export_model_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_file_as_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.export_model_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_model_file" title="Link to this definition">#</a></dt>
+<dd><p>Export single model file from the DB identified by the parameter name.</p>
+<p>The parameter can be identified by model or parameter version.
+Files can be exported as astropy tables (ecsv format).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>parameter: str</strong></dt><dd><p>Name of the parameter.</p>
+</dd>
+<dt><strong>site: str</strong></dt><dd><p>Site name.</p>
+</dd>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN, SSTS).</p>
+</dd>
+<dt><strong>parameter_version: str</strong></dt><dd><p>Version of the parameter.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
+</dd>
+<dt><strong>export_file_as_table: bool</strong></dt><dd><p>If True, export the file as an astropy table (ecsv format).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.export_model_files">
 <span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.export_model_files" title="Link to this definition">#</a></dt>
-<dd><p>Export files from the DB to the model directory.</p>
+<dd><p>Export models files from the DB to given directory.</p>
 <p>The files to be exported can be specified by file_name or retrieved from the database
 using the parameters dictionary.</p>
 <dl class="field-list simple">
@@ -703,18 +730,22 @@ i.e. telescopes, calibration_devices.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="db.db_handler.DatabaseHandler.get_model_parameter">
-<span class="sig-name descname"><span class="pre">get_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameter" title="Link to this definition">#</a></dt>
-<dd><p>Get a model parameter using the parameter version.</p>
+<span class="sig-name descname"><span class="pre">get_model_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/db/db_handler.html#DatabaseHandler.get_model_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#db.db_handler.DatabaseHandler.get_model_parameter" title="Link to this definition">#</a></dt>
+<dd><p>Get a single model parameter using model or parameter version.</p>
+<p>Note that this function should not be called in a loop for many parameters,
+as it each call queries the database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>parameter: str</strong></dt><dd><p>Name of the parameter.</p>
 </dd>
-<dt><strong>parameter_version: str</strong></dt><dd><p>Version of the parameter.</p>
-</dd>
 <dt><strong>site: str</strong></dt><dd><p>Site name.</p>
 </dd>
-<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model (e.g. MSTN, SSTS).</p>
+<dt><strong>array_element_name: str</strong></dt><dd><p>Name of the array element model.</p>
+</dd>
+<dt><strong>parameter_version: str</strong></dt><dd><p>Version of the parameter.</p>
+</dd>
+<dt><strong>model_version: str</strong></dt><dd><p>Version of the model.</p>
 </dd>
 </dl>
 </dd>
@@ -943,6 +974,7 @@ tables of all array elements, sites, and configuration parameters.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_new_parameter"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_new_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.add_production_table"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.add_production_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_file"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.export_model_files"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.export_model_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#db.db_handler.DatabaseHandler.get_array_elements_of_type"><code class="docutils literal notranslate"><span class="pre">DatabaseHandler.get_array_elements_of_type()</span></code></a></li>
