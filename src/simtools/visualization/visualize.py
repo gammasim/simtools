@@ -446,8 +446,15 @@ def _get_data_columns(data_now):
     columns = data_now.dtype.names
     assert len(columns) >= 2, "Input array must have at least two columns with titles."
     x_col, y_col = columns[:2]
-    x_err_col = columns[2] if len(columns) == 4 else None
-    y_err_col = columns[-1] if len(columns) >= 3 else None
+    if len(columns) == 3:
+        x_err_col = None
+        y_err_col = columns[2]
+    elif len(columns) == 4:
+        x_err_col = columns[2]
+        y_err_col = columns[3]
+    else:
+        x_err_col = None
+        y_err_col = None
     return x_col, y_col, x_err_col, y_err_col
 
 
