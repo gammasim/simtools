@@ -41,7 +41,7 @@ jsonschema_db_dict = {
         "db_api_user": {"type": "string", "description": "API username"},
         "db_api_pw": {"type": "string", "description": "Password for the API user"},
         "db_api_authentication_database": {
-            "type": "string",
+            "type": ["string", "null"],
             "default": "admin",
             "description": "DB with user info (optional)",
         },
@@ -120,7 +120,9 @@ class DatabaseHandler:
             port=self.mongo_db_config["db_api_port"],
             username=self.mongo_db_config["db_api_user"],
             password=self.mongo_db_config["db_api_pw"],
-            authSource=self.mongo_db_config.get("db_api_authentication_database", "admin"),
+            authSource=self.mongo_db_config.get("db_api_authentication_database")
+            if self.mongo_db_config.get("db_api_authentication_database")
+            else "admin",
             directConnection=direct_connection,
             ssl=not direct_connection,
             tlsallowinvalidhostnames=True,
