@@ -207,7 +207,7 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     args_dict["db_api_pw"] = "12345"
     args_dict["db_api_port"] = 42
     args_dict["db_server"] = "abc@def.de"
-    args_dict["db_api_authentication_database"] = "admin"
+    args_dict["db_api_authentication_database"] = None
     args_dict["db_simulation_model"] = "sim_model"
 
     # remove user defined parameters from comparison (depends on environment)
@@ -329,7 +329,7 @@ def test_get_db_parameters():
     configurator.default_config(add_db_config=True)
     db_params = configurator._get_db_parameters()
     assert db_params == {
-        "db_api_authentication_database": "admin",
+        "db_api_authentication_database": None,
         "db_api_port": None,
         "db_api_pw": None,
         "db_api_user": None,
