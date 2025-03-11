@@ -194,7 +194,7 @@ class DatabaseHandler:
         site: str
             Site name.
         array_element_name: str
-            Name of the array element model (e.g. MSTN, SSTS).
+            Name of the array element model.
         parameter_version: str
             Version of the parameter.
         model_version: str
@@ -229,10 +229,7 @@ class DatabaseHandler:
             query["instrument"] = array_element_name
         if site:
             query["site"] = site
-        return self._read_mongo_db(
-            query=query,
-            collection_name=collection_name,
-        )
+        return self._read_mongo_db(query=query, collection_name=collection_name)
 
     def get_model_parameters(
         self,

@@ -131,8 +131,6 @@ def test_export_model_file(mock_db_handler_class):
     mock_table = mock.MagicMock()
     mock_db_handler.export_model_file.return_value = mock_table
 
-    # This test replaces test_read_table_from_model_database
-    # We'll directly test the export_model_file functionality by calling read_table_data
     config = {"tables": [table_config]}
     table_config["label"] = "test_label"
     table_config["column_x"] = "x"
@@ -163,8 +161,6 @@ def test_export_model_file_site_only(mock_db_handler_class):
     mock_table = mock.MagicMock()
     mock_db_handler.export_model_file.return_value = mock_table
 
-    # This test replaces test_read_table_from_model_database_site
-    # We'll directly test the export_model_file functionality by calling read_table_data
     config = {"tables": [table_config]}
     table_config["label"] = "test_label"
     table_config["column_x"] = "x"
