@@ -6,12 +6,10 @@ import shutil
 from copy import copy
 
 import astropy.units as u
-from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.db import db_handler
 from simtools.io_operations import io_handler
-from simtools.simtel import simtel_table_reader
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 from simtools.utils import names
 
@@ -516,35 +514,6 @@ class ModelParameter:
 
         self.db.export_model_files(parameters=pars_from_db, dest=self.config_file_directory)
         self._is_exported_model_files_up_to_date = True
-
-    def get_model_file_as_table(self, par_name):
-        """
-        Return tabular data from file as astropy table.
-
-        Parameters
-        ----------
-        par_name: str
-            Name of the parameter.
-
-        Returns
-        -------
-        Table
-            Astropy table.
-        """
-        _par_entry = {}
-        try:
-            _par_entry[par_name] = self._parameters[par_name]
-        except KeyError as exc:
-            raise ValueError(f"Parameter {par_name} not found in the model.") from exc
-        self.db.export_model_files(parameters=_par_entry, dest=self.config_file_directory)
-        if _par_entry[par_name]["value"].endswith("ecsv"):
-            return Table.read(
-                self.config_file_directory.joinpath(_par_entry[par_name]["value"]),
-                format="ascii.ecsv",
-            )
-        return simtel_table_reader.read_simtel_table(
-            par_name, self.config_file_directory.joinpath(_par_entry[par_name]["value"])
-        )
 
     def export_config_file(self):
         """Export the config file used by sim_telarray."""
