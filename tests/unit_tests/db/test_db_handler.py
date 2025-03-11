@@ -167,6 +167,58 @@ def add_parameter_mocks(db, mocker, test_db, value_unit_type, validate_model_par
     }
 
 
+@pytest.fixture
+def common_mock_read_production_table(mocker, db):
+    """Common fixture for mocking _read_production_table_from_mongo_db."""
+    return mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
+    )
+
+
+@pytest.fixture
+def common_mock_get_array_element_list(mocker, db):
+    """Common fixture for mocking _get_array_element_list."""
+    return mocker.patch.object(
+        db, "_get_array_element_list", return_value=["LSTN-design", "LSTN-01"]
+    )
+
+
+@pytest.fixture
+def common_mock_read_cache(mocker, db):
+    """Common fixture for mocking _read_cache."""
+    return mocker.patch.object(db, "_read_cache", return_value=("cache_key", None))
+
+
+@pytest.fixture
+def common_mock_read_mongo_db(mocker, db):
+    """Common fixture for mocking _read_mongo_db."""
+    return mocker.patch.object(db, "_read_mongo_db", return_value={"param1": {"value": "value1"}})
+
+
+def assert_model_parameter_calls(
+    mock_get_collection_name,
+    mock_read_mongo_db,
+    test_param,
+    site,
+    array_element_name,
+    parameter_version,
+    collection="telescopes",
+):
+    """Helper function to verify common model parameter assertions."""
+    mock_get_collection_name.assert_called_once_with(test_param)
+    mock_read_mongo_db.assert_called_once_with(
+        query={
+            "parameter_version": parameter_version,
+            "parameter": test_param,
+            **({"instrument": array_element_name} if array_element_name else {}),
+            **({"site": site} if site else {}),
+        },
+        collection_name=collection,
+    )
+
+
 def test_set_up_connection_no_config():
     """Test _set_up_connection with no configuration."""
     db = db_handler.DatabaseHandler(mongo_db_config=None)
@@ -248,33 +300,27 @@ def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
     )
 
 
-def test_get_model_parameters(db, mocker, standard_test_params):
+def test_get_model_parameters(
+    db,
+    common_mock_read_production_table,
+    common_mock_get_array_element_list,
+    common_mock_read_cache,
+    common_mock_read_mongo_db,
+    standard_test_params,
+):
     """Test get_model_parameters method."""
     site = standard_test_params["site"]
     array_element_name = standard_test_params["array_element_name"]
     model_version = standard_test_params["model_version"]
     collection = standard_test_params["collection"]
 
-    mock_get_production_table = mocker.patch.object(
-        db,
-        "_read_production_table_from_mongo_db",
-        return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
-    )
-    mock_get_array_element_list = mocker.patch.object(
-        db, "_get_array_element_list", return_value=["LSTN-design", "LSTN-01"]
-    )
-    mock_read_cache = mocker.patch.object(db, "_read_cache", return_value=("cache_key", None))
-    mock_read_mongo_db = mocker.patch.object(
-        db, "_read_mongo_db", return_value={"param1": {"value": "value1"}}
-    )
-
     result = db.get_model_parameters(site, array_element_name, collection, model_version)
 
-    mock_get_production_table.assert_called_once_with(collection, model_version)
-    mock_get_array_element_list.assert_called_once_with(
+    common_mock_read_production_table.assert_called_once_with(collection, model_version)
+    common_mock_get_array_element_list.assert_called_once_with(
         array_element_name, site, {"parameters": {"LSTN-01": {"param1": "v1"}}}, collection
     )
-    mock_read_cache.assert_has_calls(
+    common_mock_read_cache.assert_has_calls(
         [
             call(
                 db_handler.DatabaseHandler.model_parameters_cached,
@@ -292,7 +338,7 @@ def test_get_model_parameters(db, mocker, standard_test_params):
             ),
         ]
     )
-    mock_read_mongo_db.assert_called_once_with(
+    common_mock_read_mongo_db.assert_called_once_with(
         query={
             "$or": [{"parameter": "param1", "parameter_version": "v1"}],
             "instrument": "LSTN-01",
@@ -1064,150 +1110,76 @@ def test_get_design_model(db):
     assert db.get_design_model("6.0.0", "LSTN-design") == "LSTN-design"
 
 
-def test_get_model_parameter_with_parameter_version(db, mocker, mock_get_collection_name):
-    """Test get_model_parameter with parameter version."""
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        {
+            "name": "with_parameter_version",
+            "params": {
+                "site": "North",
+                "array_element_name": "LSTN-01",
+                "parameter_version": "1.0.0",
+                "model_version": None,
+            },
+        },
+        {
+            "name": "with_model_version",
+            "params": {
+                "site": "North",
+                "array_element_name": "LSTN-01",
+                "parameter_version": None,
+                "model_version": "1.0.0",
+            },
+            "setup": {
+                "prod_table": {
+                    "parameters": {
+                        "LSTN-design": {"test_param": "2.0.0"},
+                        "LSTN-01": {"test_param": "1.0.0"},
+                    }
+                }
+            },
+        },
+        {
+            "name": "with_no_site_no_instrument",
+            "params": {
+                "site": None,
+                "array_element_name": None,
+                "parameter_version": "1.0.0",
+                "model_version": None,
+            },
+        },
+    ],
+)
+def test_get_model_parameter_variants(db, mocker, mock_get_collection_name, test_case):
+    """Test get_model_parameter variations."""
+    params = test_case["params"]
     mock_read_mongo_db = mocker.patch.object(
         db,
         "_read_mongo_db",
         return_value={"test_param": {"value": "test_value"}},
     )
 
-    result = db.get_model_parameter(
-        parameter="test_param",
-        site="North",
-        array_element_name="LSTN-01",
-        parameter_version="1.0.0",
-    )
+    if "setup" in test_case:
+        mocker.patch.object(
+            db,
+            "_read_production_table_from_mongo_db",
+            return_value=test_case["setup"]["prod_table"],
+        )
+        mocker.patch.object(
+            db,
+            "_get_array_element_list",
+            return_value=["LSTN-design", "LSTN-01"],
+        )
 
-    mock_get_collection_name.assert_called_once_with("test_param")
-    mock_read_mongo_db.assert_called_once_with(
-        query={
-            "parameter_version": "1.0.0",
-            "parameter": "test_param",
-            "instrument": "LSTN-01",
-            "site": "North",
-        },
-        collection_name="telescopes",
-    )
-    assert result == {"test_param": {"value": "test_value"}}
+    result = db.get_model_parameter(parameter="test_param", **params)
 
-
-def test_get_model_parameter_with_model_version(db, mocker, mock_get_collection_name):
-    """Test get_model_parameter with model version."""
-    mock_read_production_table = mocker.patch.object(
-        db,
-        "_read_production_table_from_mongo_db",
-        return_value={
-            "parameters": {
-                "LSTN-design": {"test_param": "2.0.0"},
-                "LSTN-01": {"test_param": "1.0.0"},
-            }
-        },
-    )
-    mock_get_array_element_list = mocker.patch.object(
-        db,
-        "_get_array_element_list",
-        return_value=["LSTN-design", "LSTN-01"],
-    )
-    mock_read_mongo_db = mocker.patch.object(
-        db,
-        "_read_mongo_db",
-        return_value={"test_param": {"value": "test_value"}},
-    )
-
-    result = db.get_model_parameter(
-        parameter="test_param",
-        site="North",
-        array_element_name="LSTN-01",
-        model_version="1.0.0",
-    )
-
-    mock_get_collection_name.assert_called_once_with("test_param")
-    mock_read_production_table.assert_called_once_with("telescopes", "1.0.0")
-    mock_get_array_element_list.assert_called_once_with(
-        "LSTN-01", "North", mock_read_production_table.return_value, "telescopes"
-    )
-    mock_read_mongo_db.assert_called_once_with(
-        query={
-            "parameter_version": "1.0.0",
-            "parameter": "test_param",
-            "instrument": "LSTN-01",
-            "site": "North",
-        },
-        collection_name="telescopes",
-    )
-    assert result == {"test_param": {"value": "test_value"}}
-
-
-def test_get_model_parameter_with_no_site_no_instrument(db, mocker, mock_get_collection_name):
-    """Test get_model_parameter without site and instrument."""
-    mock_read_mongo_db = mocker.patch.object(
-        db,
-        "_read_mongo_db",
-        return_value={"test_param": {"value": "test_value"}},
-    )
-
-    result = db.get_model_parameter(
-        parameter="test_param",
-        site=None,
-        array_element_name=None,
-        parameter_version="1.0.0",
-    )
-
-    mock_get_collection_name.assert_called_once_with("test_param")
-    mock_read_mongo_db.assert_called_once_with(
-        query={
-            "parameter_version": "1.0.0",
-            "parameter": "test_param",
-        },
-        collection_name="telescopes",
-    )
-    assert result == {"test_param": {"value": "test_value"}}
-
-
-def test_get_model_parameter_parameter_version_from_design(db, mocker, mock_get_collection_name):
-    """Test get_model_parameter getting parameter version from design model."""
-    mock_read_production_table = mocker.patch.object(
-        db,
-        "_read_production_table_from_mongo_db",
-        return_value={
-            "parameters": {
-                "LSTN-design": {"test_param": "2.0.0"},
-                "LSTN-01": {},
-            }
-        },
-    )
-    mock_get_array_element_list = mocker.patch.object(
-        db,
-        "_get_array_element_list",
-        return_value=["LSTN-design", "LSTN-01"],
-    )
-    mock_read_mongo_db = mocker.patch.object(
-        db,
-        "_read_mongo_db",
-        return_value={"test_param": {"value": "test_value"}},
-    )
-
-    result = db.get_model_parameter(
-        parameter="test_param",
-        site="North",
-        array_element_name="LSTN-01",
-        model_version="1.0.0",
-    )
-
-    mock_get_collection_name.assert_called_once_with("test_param")
-    mock_read_production_table.assert_called_once_with("telescopes", "1.0.0")
-    mock_get_array_element_list.assert_called_once_with(
-        "LSTN-01", "North", mock_read_production_table.return_value, "telescopes"
-    )
-    mock_read_mongo_db.assert_called_once_with(
-        query={
-            "parameter_version": "2.0.0",
-            "parameter": "test_param",
-            "instrument": "LSTN-design",
-            "site": "North",
-        },
-        collection_name="telescopes",
+    assert_model_parameter_calls(
+        mock_get_collection_name,
+        mock_read_mongo_db,
+        "test_param",
+        params["site"],
+        params["array_element_name"],
+        params["parameter_version"] or "1.0.0",
     )
     assert result == {"test_param": {"value": "test_value"}}
 
@@ -1232,96 +1204,63 @@ def export_model_file_mocks(db, mocker, tmp_test_directory, test_file):
     }
 
 
-def test_export_model_file_without_table(db, export_model_file_mocks, mock_read_simtel_table):
-    """Test export_model_file method without exporting as table."""
-    mocks = export_model_file_mocks
-
-    result = db.export_model_file(
-        parameter=mocks["test_param"],
-        site="North",
-        array_element_name="LSTN-01",
-        model_version="1.0.0",
-    )
-
-    mocks["get_model_parameter"].assert_called_once_with(
-        mocks["test_param"],
-        "North",
-        "LSTN-01",
-        parameter_version=None,
-        model_version="1.0.0",
-    )
-    mocks["get_output_directory"].assert_called_once()
-    mocks["export_model_files"].assert_called_once_with(
-        parameters=mocks["parameters"], dest=mocks["get_output_directory"].return_value
-    )
-    mock_read_simtel_table.assert_not_called()
-    assert result is None
-
-
-def test_export_model_file_with_table(
-    db, export_model_file_mocks, mock_read_simtel_table, mocker, tmp_test_directory
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        {
+            "name": "without_table",
+            "params": {
+                "export_file_as_table": False,
+                "parameter_version": None,
+                "model_version": "1.0.0",
+            },
+            "expected_result": None,
+        },
+        {
+            "name": "with_table",
+            "params": {
+                "export_file_as_table": True,
+                "parameter_version": None,
+                "model_version": "1.0.0",
+            },
+            "expected_result": "test_table",
+        },
+        {
+            "name": "with_parameter_version",
+            "params": {
+                "export_file_as_table": False,
+                "parameter_version": "1.0.0",
+                "model_version": None,
+            },
+            "expected_result": None,
+        },
+    ],
+)
+def test_export_model_file_variants(
+    db, export_model_file_mocks, mock_read_simtel_table, mocker, tmp_test_directory, test_case
 ):
-    """Test export_model_file method with table export."""
+    """Test export_model_file variations."""
     mocks = export_model_file_mocks
-    test_table = "test_table"
+    params = test_case["params"]
 
-    path_obj = mocker.Mock()
-    path_obj.joinpath.return_value = f"{tmp_test_directory}/{mocks['test_file']}"
-    mocks["get_output_directory"].return_value = path_obj
+    if params["export_file_as_table"]:
+        path_obj = mocker.Mock()
+        path_obj.joinpath.return_value = f"{tmp_test_directory}/{mocks['test_file']}"
+        mocks["get_output_directory"].return_value = path_obj
 
     result = db.export_model_file(
-        parameter=mocks["test_param"],
-        site="North",
-        array_element_name="LSTN-01",
-        model_version="1.0.0",
-        export_file_as_table=True,
+        parameter=mocks["test_param"], site="North", array_element_name="LSTN-01", **params
     )
 
     mocks["get_model_parameter"].assert_called_once_with(
         mocks["test_param"],
         "North",
         "LSTN-01",
-        parameter_version=None,
-        model_version="1.0.0",
-    )
-    mocks["get_output_directory"].assert_called_with()
-    assert mocks["get_output_directory"].call_count == 2
-    mocks["export_model_files"].assert_called_once_with(
-        parameters=mocks["parameters"], dest=path_obj
-    )
-    mock_read_simtel_table.assert_called_once_with(
-        mocks["test_param"],
-        f"{tmp_test_directory}/{mocks['test_file']}",
-    )
-    assert result == test_table
-
-
-def test_export_model_file_with_parameter_version(
-    db, export_model_file_mocks, mock_read_simtel_table
-):
-    """Test export_model_file method with parameter version."""
-    mocks = export_model_file_mocks
-
-    result = db.export_model_file(
-        parameter=mocks["test_param"],
-        site="North",
-        array_element_name="LSTN-01",
-        parameter_version="1.0.0",
+        parameter_version=params["parameter_version"],
+        model_version=params["model_version"],
     )
 
-    mocks["get_model_parameter"].assert_called_once_with(
-        mocks["test_param"],
-        "North",
-        "LSTN-01",
-        parameter_version="1.0.0",
-        model_version=None,
-    )
-    mocks["get_output_directory"].assert_called_once()
-    mocks["export_model_files"].assert_called_once_with(
-        parameters=mocks["parameters"], dest=mocks["get_output_directory"].return_value
-    )
-    mock_read_simtel_table.assert_not_called()
-    assert result is None
+    assert result == test_case["expected_result"]
 
 
 def test_get_array_element_list_configuration_sim_telarray(db, mocker):
