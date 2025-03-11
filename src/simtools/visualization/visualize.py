@@ -419,15 +419,42 @@ def setup_plot(kwargs, plot_ratio, plot_difference):
     return fig, ax1, gs
 
 
+def _plot_error_plots(kwargs, data_now, x_col, y_col, x_err_col, y_err_col, color):
+    """Plot error plots."""
+    if kwargs.get("error_type") == "fill_between" and y_err_col:
+        plt.fill_between(
+            data_now[x_col],
+            data_now[y_col] - data_now[y_err_col],
+            data_now[y_col] + data_now[y_err_col],
+            alpha=0.2,
+            color=color,
+        )
+
+    if kwargs.get("error_type") == "errorbar" and (x_err_col or y_err_col):
+        plt.errorbar(
+            data_now[x_col],
+            data_now[y_col],
+            xerr=data_now[x_err_col] if x_err_col else None,
+            yerr=data_now[y_err_col] if y_err_col else None,
+            fmt=".",
+            color=color,
+        )
+
+
+def _get_data_columns(data_now):
+    """Return data columns depending on availability."""
+    columns = data_now.dtype.names
+    assert len(columns) >= 2, "Input array must have at least two columns with titles."
+    x_col, y_col = columns[:2]
+    x_err_col = columns[2] if len(columns) == 4 else None
+    y_err_col = columns[-1] if len(columns) >= 3 else None
+    return x_col, y_col, x_err_col, y_err_col
+
+
 def plot_main_data(data_dict, kwargs, plot_args):
     """Plot the main data."""
     for label, data_now in data_dict.items():
-        columns = data_now.dtype.names
-        assert len(columns) >= 2, "Input array must have at least two columns with titles."
-
-        x_col, y_col = columns[:2]
-        x_err_col = columns[2] if len(columns) == 4 else None
-        y_err_col = columns[-1] if len(columns) >= 3 else None
+        x_col, y_col, x_err_col, y_err_col = _get_data_columns(data_now)
 
         x_title = kwargs.get("xtitle", x_col)
         y_title = kwargs.get("ytitle", y_col)
@@ -438,24 +465,7 @@ def plot_main_data(data_dict, kwargs, plot_args):
         (line,) = plt.plot(data_now[x_col], data_now[y_col], label=label, **plot_args)
         color = line.get_color()
 
-        if kwargs.get("error_type") == "fill_between" and y_err_col:
-            plt.fill_between(
-                data_now[x_col],
-                data_now[y_col] - data_now[y_err_col],
-                data_now[y_col] + data_now[y_err_col],
-                alpha=0.2,
-                color=color,
-            )
-
-        if kwargs.get("error_type") == "errorbar" and (x_err_col or y_err_col):
-            plt.errorbar(
-                data_now[x_col],
-                data_now[y_col],
-                xerr=data_now[x_err_col] if x_err_col else None,
-                yerr=data_now[y_err_col] if y_err_col else None,
-                fmt=".",
-                color=color,
-            )
+        _plot_error_plots(kwargs, data_now, x_col, y_col, x_err_col, y_err_col, color)
 
     plt.xscale(kwargs["xscale"])
     plt.yscale(kwargs["yscale"])
