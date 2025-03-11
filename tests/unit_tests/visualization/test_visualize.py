@@ -18,10 +18,15 @@ from simtools.visualization import visualize
 logger = logging.getLogger(__name__)
 
 
-def test_plot_1d(db, io_handler):
+@pytest.fixture
+def wavelength():
+    return "Wavelength [nm]"
+
+
+def test_plot_1d(db, io_handler, wavelength):
     logger.debug("Testing plot_1d")
 
-    x_title = "Wavelength [nm]"
+    x_title = wavelength
     y_title = "Mirror reflectivity [%]"
     headers_type = {"names": (x_title, y_title), "formats": ("f8", "f8")}
     title = "Test 1D plot"
@@ -79,14 +84,14 @@ def test_plot_table(io_handler):
     assert plot_file.exists()
 
 
-def test_add_unit(caplog):
+def test_add_unit(caplog, wavelength):
     value_with_unit = [30, 40] << u.nm
-    assert visualize._add_unit("Wavelength", value_with_unit) == "Wavelength [nm]"
+    assert visualize._add_unit("Wavelength", value_with_unit) == wavelength
     value_without_unit = [30, 40]
     assert visualize._add_unit("Wavelength", value_without_unit) == "Wavelength"
 
     with caplog.at_level(logging.WARNING):
-        assert visualize._add_unit("Wavelength [nm]", value_with_unit)
+        assert visualize._add_unit(wavelength, value_with_unit)
     assert "Tried to add a unit from astropy.unit" in caplog.text
 
     value_with_unit = [30, 40] * u.cm**2
