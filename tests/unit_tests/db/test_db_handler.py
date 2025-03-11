@@ -1236,116 +1236,113 @@ def test_get_model_parameter_parameter_version_from_design(db, mocker, mock_get_
     assert result == {"test_param": {"value": "test_value"}}
 
 
-def test_export_model_file_without_table(
-    db, mocker, tmp_test_directory, test_file, mock_read_simtel_table
-):
-    """Test export_model_file method without exporting as table."""
+@pytest.fixture
+def export_model_file_mocks(db, mocker, tmp_test_directory, test_file):
+    """Common setup for export_model_file tests."""
     test_param = "test_param"
     mock_parameters = {test_param: {"value": test_file}}
-    mock_get_model_parameter = mocker.patch.object(
-        db, "get_model_parameter", return_value=mock_parameters
-    )
-    mock_export_model_files = mocker.patch.object(db, "export_model_files")
-    mock_get_output_directory = mocker.patch.object(
-        db.io_handler, "get_output_directory", return_value=tmp_test_directory
-    )
+
+    return {
+        "test_param": test_param,
+        "test_file": test_file,
+        "parameters": mock_parameters,
+        "get_model_parameter": mocker.patch.object(
+            db, "get_model_parameter", return_value=mock_parameters
+        ),
+        "export_model_files": mocker.patch.object(db, "export_model_files"),
+        "get_output_directory": mocker.patch.object(
+            db.io_handler, "get_output_directory", return_value=tmp_test_directory
+        ),
+    }
+
+
+def test_export_model_file_without_table(db, export_model_file_mocks, mock_read_simtel_table):
+    """Test export_model_file method without exporting as table."""
+    mocks = export_model_file_mocks
 
     result = db.export_model_file(
-        parameter=test_param,
+        parameter=mocks["test_param"],
         site="North",
         array_element_name="LSTN-01",
         model_version="1.0.0",
     )
 
-    mock_get_model_parameter.assert_called_once_with(
-        test_param,
+    mocks["get_model_parameter"].assert_called_once_with(
+        mocks["test_param"],
         "North",
         "LSTN-01",
         parameter_version=None,
         model_version="1.0.0",
     )
-    mock_get_output_directory.assert_called_once()
-    mock_export_model_files.assert_called_once_with(
-        parameters=mock_parameters, dest=tmp_test_directory
+    mocks["get_output_directory"].assert_called_once()
+    mocks["export_model_files"].assert_called_once_with(
+        parameters=mocks["parameters"], dest=mocks["get_output_directory"].return_value
     )
     mock_read_simtel_table.assert_not_called()
     assert result is None
 
 
 def test_export_model_file_with_table(
-    db, mocker, tmp_test_directory, test_file, mock_read_simtel_table
+    db, export_model_file_mocks, mock_read_simtel_table, mocker, tmp_test_directory
 ):
     """Test export_model_file method with table export."""
-    test_param = "test_param"
+    mocks = export_model_file_mocks
     test_table = "test_table"
-    mock_parameters = {test_param: {"value": test_file}}
-    mock_get_model_parameter = mocker.patch.object(
-        db, "get_model_parameter", return_value=mock_parameters
-    )
-    mock_export_model_files = mocker.patch.object(db, "export_model_files")
-    mock_get_output_directory = mocker.patch.object(
-        db.io_handler, "get_output_directory", return_value=tmp_test_directory
-    )
+
     path_obj = mocker.Mock()
-    path_obj.joinpath.return_value = f"{tmp_test_directory}/{test_file}"
-    mock_get_output_directory.return_value = path_obj
+    path_obj.joinpath.return_value = f"{tmp_test_directory}/{mocks['test_file']}"
+    mocks["get_output_directory"].return_value = path_obj
 
     result = db.export_model_file(
-        parameter=test_param,
+        parameter=mocks["test_param"],
         site="North",
         array_element_name="LSTN-01",
         model_version="1.0.0",
         export_file_as_table=True,
     )
 
-    mock_get_model_parameter.assert_called_once_with(
-        test_param,
+    mocks["get_model_parameter"].assert_called_once_with(
+        mocks["test_param"],
         "North",
         "LSTN-01",
         parameter_version=None,
         model_version="1.0.0",
     )
-    mock_get_output_directory.assert_called_with()
-    assert mock_get_output_directory.call_count == 2
-    mock_export_model_files.assert_called_once_with(parameters=mock_parameters, dest=path_obj)
+    mocks["get_output_directory"].assert_called_with()
+    assert mocks["get_output_directory"].call_count == 2
+    mocks["export_model_files"].assert_called_once_with(
+        parameters=mocks["parameters"], dest=path_obj
+    )
     mock_read_simtel_table.assert_called_once_with(
-        test_param,
-        f"{tmp_test_directory}/{test_file}",
+        mocks["test_param"],
+        f"{tmp_test_directory}/{mocks['test_file']}",
     )
     assert result == test_table
 
 
 def test_export_model_file_with_parameter_version(
-    db, mocker, tmp_test_directory, test_file, mock_read_simtel_table
+    db, export_model_file_mocks, mock_read_simtel_table
 ):
     """Test export_model_file method with parameter version."""
-    test_param = "test_param"
-    mock_parameters = {test_param: {"value": test_file}}
-    mock_get_model_parameter = mocker.patch.object(
-        db, "get_model_parameter", return_value=mock_parameters
-    )
-    mock_export_model_files = mocker.patch.object(db, "export_model_files")
-    mock_get_output_directory = mocker.patch.object(
-        db.io_handler, "get_output_directory", return_value=tmp_test_directory
-    )
+    mocks = export_model_file_mocks
 
     result = db.export_model_file(
-        parameter=test_param,
+        parameter=mocks["test_param"],
         site="North",
         array_element_name="LSTN-01",
         parameter_version="1.0.0",
     )
 
-    mock_get_model_parameter.assert_called_once_with(
-        test_param,
+    mocks["get_model_parameter"].assert_called_once_with(
+        mocks["test_param"],
         "North",
         "LSTN-01",
         parameter_version="1.0.0",
         model_version=None,
     )
-    mock_get_output_directory.assert_called_once()
-    mock_export_model_files.assert_called_once_with(
-        parameters=mock_parameters, dest=tmp_test_directory
+    mocks["get_output_directory"].assert_called_once()
+    mocks["export_model_files"].assert_called_once_with(
+        parameters=mocks["parameters"], dest=mocks["get_output_directory"].return_value
     )
     mock_read_simtel_table.assert_not_called()
     assert result is None
