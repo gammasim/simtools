@@ -5,9 +5,8 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.db import db_handler
 from simtools.io_operations import legacy_data_handler
-from simtools.model.site_model import SiteModel
-from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import visualize
 
 
@@ -96,20 +95,15 @@ def _read_table_from_model_database(table_config, db_config):
     Table
         Astropy table.
     """
-    if "telescope" in table_config:
-        model = TelescopeModel(
-            site=table_config["site"],
-            telescope_name=table_config["telescope"],
-            model_version=table_config["model_version"],
-            mongo_db_config=db_config,
-        )
-    else:
-        model = SiteModel(
-            site=table_config["site"],
-            model_version=table_config["model_version"],
-            mongo_db_config=db_config,
-        )
-    return model.get_model_file_as_table(table_config["parameter"])
+    db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+    return db.export_model_file(
+        parameter=table_config["parameter"],
+        site=table_config["site"],
+        array_element_name=table_config.get("telescope"),
+        parameter_version=table_config.get("parameter_version"),
+        model_version=table_config.get("model_version"),
+        export_file_as_table=True,
+    )
 
 
 def _select_values_from_table(table, column_name, value):
