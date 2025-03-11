@@ -218,7 +218,7 @@ class CommandLineParser(argparse.ArgumentParser):
             help="database  with user info (optional)",
             type=str,
             required=False,
-            default="admin",
+            default=None,
         )
         _job_group.add_argument(
             "--db_simulation_model",
