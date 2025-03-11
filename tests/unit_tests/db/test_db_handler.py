@@ -61,6 +61,22 @@ def mock_open(mocker):
 
 
 @pytest.fixture
+def mock_get_collection_name(mocker):
+    return mocker.patch(
+        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
+        return_value="telescopes",
+    )
+
+
+@pytest.fixture
+def mock_read_simtel_table(mocker):
+    return mocker.patch(
+        "simtools.db.db_handler.simtel_table_reader.read_simtel_table",
+        return_value="test_table",
+    )
+
+
+@pytest.fixture
 def validate_model_parameter():
     return "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter"
 
@@ -1072,12 +1088,8 @@ def test_get_design_model(db):
     assert db.get_design_model("6.0.0", "LSTN-design") == "LSTN-design"
 
 
-def test_get_model_parameter_with_parameter_version(db, mocker):
+def test_get_model_parameter_with_parameter_version(db, mocker, mock_get_collection_name):
     """Test get_model_parameter with parameter version."""
-    mock_get_collection_name = mocker.patch(
-        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
-        return_value="telescopes",
-    )
     mock_read_mongo_db = mocker.patch.object(
         db,
         "_read_mongo_db",
@@ -1104,12 +1116,8 @@ def test_get_model_parameter_with_parameter_version(db, mocker):
     assert result == {"test_param": {"value": "test_value"}}
 
 
-def test_get_model_parameter_with_model_version(db, mocker):
+def test_get_model_parameter_with_model_version(db, mocker, mock_get_collection_name):
     """Test get_model_parameter with model version."""
-    mock_get_collection_name = mocker.patch(
-        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
-        return_value="telescopes",
-    )
     mock_read_production_table = mocker.patch.object(
         db,
         "_read_production_table_from_mongo_db",
@@ -1155,12 +1163,8 @@ def test_get_model_parameter_with_model_version(db, mocker):
     assert result == {"test_param": {"value": "test_value"}}
 
 
-def test_get_model_parameter_with_no_site_no_instrument(db, mocker):
+def test_get_model_parameter_with_no_site_no_instrument(db, mocker, mock_get_collection_name):
     """Test get_model_parameter without site and instrument."""
-    mock_get_collection_name = mocker.patch(
-        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
-        return_value="telescopes",
-    )
     mock_read_mongo_db = mocker.patch.object(
         db,
         "_read_mongo_db",
@@ -1185,12 +1189,8 @@ def test_get_model_parameter_with_no_site_no_instrument(db, mocker):
     assert result == {"test_param": {"value": "test_value"}}
 
 
-def test_get_model_parameter_parameter_version_from_design(db, mocker):
+def test_get_model_parameter_parameter_version_from_design(db, mocker, mock_get_collection_name):
     """Test get_model_parameter getting parameter version from design model."""
-    mock_get_collection_name = mocker.patch(
-        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
-        return_value="telescopes",
-    )
     mock_read_production_table = mocker.patch.object(
         db,
         "_read_production_table_from_mongo_db",
@@ -1236,10 +1236,11 @@ def test_get_model_parameter_parameter_version_from_design(db, mocker):
     assert result == {"test_param": {"value": "test_value"}}
 
 
-def test_export_model_file_without_table(db, mocker, tmp_test_directory):
+def test_export_model_file_without_table(
+    db, mocker, tmp_test_directory, test_file, mock_read_simtel_table
+):
     """Test export_model_file method without exporting as table."""
     test_param = "test_param"
-    test_file = "test_file.dat"
     mock_parameters = {test_param: {"value": test_file}}
     mock_get_model_parameter = mocker.patch.object(
         db, "get_model_parameter", return_value=mock_parameters
@@ -1247,9 +1248,6 @@ def test_export_model_file_without_table(db, mocker, tmp_test_directory):
     mock_export_model_files = mocker.patch.object(db, "export_model_files")
     mock_get_output_directory = mocker.patch.object(
         db.io_handler, "get_output_directory", return_value=tmp_test_directory
-    )
-    mock_read_simtel_table = mocker.patch(
-        "simtools.db.db_handler.simtel_table_reader.read_simtel_table"
     )
 
     result = db.export_model_file(
@@ -1274,10 +1272,11 @@ def test_export_model_file_without_table(db, mocker, tmp_test_directory):
     assert result is None
 
 
-def test_export_model_file_with_table(db, mocker, tmp_test_directory):
+def test_export_model_file_with_table(
+    db, mocker, tmp_test_directory, test_file, mock_read_simtel_table
+):
     """Test export_model_file method with table export."""
     test_param = "test_param"
-    test_file = "test_file.dat"
     test_table = "test_table"
     mock_parameters = {test_param: {"value": test_file}}
     mock_get_model_parameter = mocker.patch.object(
@@ -1290,10 +1289,6 @@ def test_export_model_file_with_table(db, mocker, tmp_test_directory):
     path_obj = mocker.Mock()
     path_obj.joinpath.return_value = f"{tmp_test_directory}/{test_file}"
     mock_get_output_directory.return_value = path_obj
-
-    mock_read_simtel_table = mocker.patch(
-        "simtools.db.db_handler.simtel_table_reader.read_simtel_table", return_value=test_table
-    )
 
     result = db.export_model_file(
         parameter=test_param,
@@ -1320,10 +1315,11 @@ def test_export_model_file_with_table(db, mocker, tmp_test_directory):
     assert result == test_table
 
 
-def test_export_model_file_with_parameter_version(db, mocker, tmp_test_directory):
+def test_export_model_file_with_parameter_version(
+    db, mocker, tmp_test_directory, test_file, mock_read_simtel_table
+):
     """Test export_model_file method with parameter version."""
     test_param = "test_param"
-    test_file = "test_file.dat"
     mock_parameters = {test_param: {"value": test_file}}
     mock_get_model_parameter = mocker.patch.object(
         db, "get_model_parameter", return_value=mock_parameters
@@ -1331,9 +1327,6 @@ def test_export_model_file_with_parameter_version(db, mocker, tmp_test_directory
     mock_export_model_files = mocker.patch.object(db, "export_model_files")
     mock_get_output_directory = mocker.patch.object(
         db.io_handler, "get_output_directory", return_value=tmp_test_directory
-    )
-    mock_read_simtel_table = mocker.patch(
-        "simtools.db.db_handler.simtel_table_reader.read_simtel_table"
     )
 
     result = db.export_model_file(
