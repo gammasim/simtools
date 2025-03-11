@@ -148,3 +148,156 @@ def test_save_figure(tmp_test_directory, io_handler):
         logger.debug(f"Saved plot to {file_path}")
 
     plt.close(fig)
+
+
+def test_plot_error_plots():
+    """Test the _plot_error_plots function for both error types."""
+    x = np.array([1, 2, 3])
+    y = np.array([10, 20, 30])
+    y_err = np.array([1, 2, 1])
+    x_err = np.array([0.1, 0.2, 0.1])
+
+    data_y_err = np.zeros(3, dtype=[("x", float), ("y", float), ("y_err", float)])
+    data_y_err["x"] = x
+    data_y_err["y"] = y
+    data_y_err["y_err"] = y_err
+
+    data_xy_err = np.zeros(
+        3, dtype=[("x", float), ("y", float), ("x_err", float), ("y_err", float)]
+    )
+    data_xy_err["x"] = x
+    data_xy_err["y"] = y
+    data_xy_err["x_err"] = x_err
+    data_xy_err["y_err"] = y_err
+
+    fig1, ax1 = plt.subplots()
+    kwargs_fill = {"error_type": "fill_between"}
+    visualize._plot_error_plots(kwargs_fill, data_y_err, "x", "y", None, "y_err", "blue")
+    assert len(ax1.collections) > 0
+    plt.close(fig1)
+
+    fig2, ax2 = plt.subplots()
+    kwargs_errorbar = {"error_type": "errorbar"}
+    visualize._plot_error_plots(kwargs_errorbar, data_xy_err, "x", "y", "x_err", "y_err", "red")
+    assert len(ax2.containers) > 0
+    plt.close(fig2)
+
+    fig3, ax3 = plt.subplots()
+    kwargs_none = {}
+    visualize._plot_error_plots(kwargs_none, data_y_err, "x", "y", None, "y_err", "green")
+    assert len(ax3.collections) == 0
+    assert len(ax3.containers) == 0
+    plt.close(fig3)
+
+
+def test_get_data_columns():
+    """Test the _get_data_columns function with different column configurations."""
+    # Test with 2 columns
+    data_2col = np.zeros(3, dtype=[("x", float), ("y", float)])
+    x_col, y_col, x_err_col, y_err_col = visualize._get_data_columns(data_2col)
+    assert x_col == "x"
+    assert y_col == "y"
+    assert x_err_col is None
+    assert y_err_col is None
+
+    # Test with 3 columns (y error)
+    data_3col = np.zeros(3, dtype=[("x", float), ("y", float), ("y_err", float)])
+    x_col, y_col, x_err_col, y_err_col = visualize._get_data_columns(data_3col)
+    assert x_col == "x"
+    assert y_col == "y"
+    assert x_err_col is None
+    assert y_err_col == "y_err"
+
+    # Test with 4 columns (x and y errors)
+    data_4col = np.zeros(3, dtype=[("x", float), ("y", float), ("x_err", float), ("y_err", float)])
+    x_col, y_col, x_err_col, y_err_col = visualize._get_data_columns(data_4col)
+    assert x_col == "x"
+    assert y_col == "y"
+    assert x_err_col == "x_err"
+    assert y_err_col == "y_err"
+
+    # Test the assertion for minimum columns
+    data_1col = np.zeros(3, dtype=[("x", float)])
+    with pytest.raises(
+        AssertionError, match="Input array must have at least two columns with titles."
+    ):
+        visualize._get_data_columns(data_1col)
+
+
+def test_plot_ratio_difference():
+    """Test the plot_ratio_difference function for both ratio and difference plots."""
+    # Create test data
+    x = np.array([1, 2, 3])
+    y1 = np.array([10, 20, 30])
+    y2 = np.array([15, 25, 35])
+    y3 = np.array([12, 22, 32])
+
+    # Create structured arrays
+    dtype = [("x", float), ("y", float)]
+    data1 = np.zeros(3, dtype=dtype)
+    data1["x"] = x
+    data1["y"] = y1
+
+    data2 = np.zeros(3, dtype=dtype)
+    data2["x"] = x
+    data2["y"] = y2
+
+    data3 = np.zeros(3, dtype=dtype)
+    data3["x"] = x
+    data3["y"] = y3
+
+    data_dict = {"reference": data1, "test1": data2, "test2": data3}
+
+    # Test ratio plot
+    fig1 = plt.figure()
+    gs1 = plt.GridSpec(2, 1, height_ratios=[3, 1])
+    ax1 = plt.subplot(gs1[0])
+    plot_args = {"marker": "o"}
+
+    visualize.plot_ratio_difference(ax1, data_dict, True, gs1, plot_args)
+
+    ratio_ax = plt.gcf().axes[-1]
+    assert len(ratio_ax.lines) == 3  # One empty line for cycler + two ratio lines
+    # Check ratio values for first dataset
+    expected_ratio = y2 / y1
+    np.testing.assert_array_almost_equal(ratio_ax.lines[1].get_ydata(), expected_ratio)
+    plt.close(fig1)
+
+    # Test difference plot
+    fig2 = plt.figure()
+    gs2 = plt.GridSpec(2, 1, height_ratios=[3, 1])
+    ax2 = plt.subplot(gs2[0])
+
+    visualize.plot_ratio_difference(ax2, data_dict, False, gs2, plot_args)
+
+    diff_ax = plt.gcf().axes[-1]
+    assert len(diff_ax.lines) == 3  # One empty line for cycler + two difference lines
+    # Check difference values for first dataset
+    expected_diff = y2 - y1
+    np.testing.assert_array_almost_equal(diff_ax.lines[1].get_ydata(), expected_diff)
+    plt.close(fig2)
+
+    # Test long reference name handling
+    data_dict_long = {"very_long_reference_name_that_exceeds_twenty_chars": data1, "test1": data2}
+
+    fig3 = plt.figure()
+    gs3 = plt.GridSpec(2, 1, height_ratios=[3, 1])
+    ax3 = plt.subplot(gs3[0])
+
+    visualize.plot_ratio_difference(ax3, data_dict_long, True, gs3, plot_args)
+
+    ratio_ax = plt.gcf().axes[-1]
+    assert ratio_ax.get_ylabel() == "Ratio"  # Should be shortened
+    plt.close(fig3)
+
+    # Test y-axis bins
+    fig4 = plt.figure()
+    gs4 = plt.GridSpec(2, 1, height_ratios=[3, 1])
+    ax4 = plt.subplot(gs4[0])
+
+    visualize.plot_ratio_difference(ax4, data_dict, True, gs4, plot_args)
+
+    ratio_ax = plt.gcf().axes[-1]
+    yticks = len(ratio_ax.get_yticks())
+    assert yticks <= 7
+    plt.close(fig4)
