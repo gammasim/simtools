@@ -7,6 +7,14 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.12.0](https://github.com/gammasim/simtools/tree/0.12.0) - 2025-03-11
+
+### Bugfixes
+
+- Bugfix in database-upload related string to list conversion. ([#1423](https://github.com/gammasim/simtools/pull/1423))
+- Fix setting of `db_api_authentication_database` through env variable. ([#1425](https://github.com/gammasim/simtools/pull/1425))
+
+
 ## [0.11.0](https://github.com/gammasim/simtools/tree/0.11.0) - 2025-03-05
 
 ### Bugfixes
