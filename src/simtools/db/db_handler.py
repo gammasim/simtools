@@ -296,7 +296,7 @@ class DatabaseHandler:
 
         Returns
         -------
-        dict containing the parameters
+        dict containing the parameters with model version as first key
         """
         pars = defaultdict(dict)
         for _model_version in self.get_model_versions(collection):
@@ -308,9 +308,7 @@ class DatabaseHandler:
                 parameter_data = self._get_parameter_for_model_version(
                     array_element, _model_version, site, collection, production_table
                 )
-
                 pars[_model_version].update(parameter_data)
-        print("pars: ", pars)
         return pars
 
     def _get_parameter_for_model_version(
