@@ -880,8 +880,8 @@ def get_structure_array_from_table(table, column_names):
         Structured array containing the table data.
     """
     return np.array(
-        list(zip(*[np.array(table[col]) for col in column_names])),
-        dtype=[(col, np.array(table[col]).dtype) for col in column_names],
+        list(zip(*[np.array(table[col]) for col in column_names if col in table.colnames])),
+        dtype=[(col, np.array(table[col]).dtype) for col in column_names if col in table.colnames],
     )
 
 
