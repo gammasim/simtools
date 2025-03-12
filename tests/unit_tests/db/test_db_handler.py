@@ -363,14 +363,32 @@ def test_get_model_parameters_for_all_model_versions(
         db, "get_model_versions", return_value=["versionA", "versionB"]
     )
 
-    # Mock the production table return values for both versions
+    # Mock the production table to return the parameters for each version and array element
     mock_get_production_table = mocker.patch.object(
         db,
         "_read_production_table_from_mongo_db",
         side_effect=lambda collection, version: {
-            "parameters": {"param1": "value1", "param2": "value2", "param3": "value3"}
+            "parameters": {
+                "array_element_design": {
+                    "param1": "val1",
+                    "param2": "val2",
+                    "param3": "val3",
+                },
+                "array_element": {
+                    "param2": "val4",  # This will overwrite param2
+                },
+            }
             if version == "versionA"
-            else {"parameters": {"param1": "value4", "param2": "value2", "param3": "value3"}}
+            else {
+                "array_element_design": {
+                    "param1": "val5",
+                    "param2": "val2",
+                    "param3": "val3",
+                },
+                "array_element": {
+                    "param3": "val6",  # This will overwrite param3
+                },
+            }
         },
     )
 
@@ -378,21 +396,23 @@ def test_get_model_parameters_for_all_model_versions(
         db, "_get_array_element_list", return_value=["array_element_design", "array_element"]
     )
 
-    # Mock the method to get parameters for each model version and array element.
-    # Instead of returning version-specific values, return whole dictionaries for each version.
+    # Mock the method to get parameters for each version and array element
     mock_get_parameter_for_model_version = mocker.patch.object(
         db,
         "_get_parameter_for_model_version",
         side_effect=lambda array_element, version, site, collection, table: {
-            "param1": "value1",
-            "param2": "value2",
-            "param3": "value3",
+            # Values for array_element_design
+            "param1": "val1"
+            if version == "versionA"
+            else "val5",  # val1 for versionA, val5 for versionB
+            "param2": "val2",
+            "param3": "val3",
         }
-        if version == "versionA"
+        if array_element == "array_element_design"
         else {
-            "param1": "value4",
-            "param2": "updated_value2",
-            "param3": "value3",
+            # Values for array_element (updates)
+            "param2": "val4" if version == "versionA" else "val2",  # Overwrite param2 for versionA
+            "param3": "val6" if version == "versionB" else "val3",  # Overwrite param3 for versionB
         },
     )
 
@@ -406,10 +426,18 @@ def test_get_model_parameters_for_all_model_versions(
     )  # Two elements: "array_element_design", "array_element"
     assert mock_get_parameter_for_model_version.call_count == 4  # 2 versions * 2 array elements
 
-    # Expected result: dictionary with version as key and parameter dictionary as value
+    # Expected result: Merge the dictionaries and overwrite values as needed
     expected = {
-        "versionA": {"param1": "value1", "param2": "value2", "param3": "value3"},
-        "versionB": {"param1": "value4", "param2": "updated_value2", "param3": "value3"},
+        "versionA": {
+            "param1": "val1",  # From array_element_design
+            "param2": "val4",  # Overwritten by array_element
+            "param3": "val3",  # From array_element_design
+        },
+        "versionB": {
+            "param1": "val5",  # From array_element_design
+            "param2": "val2",  # From array_element_design
+            "param3": "val6",  # Overwritten by array_element
+        },
     }
 
     # Assert that the result matches the expected dictionary
