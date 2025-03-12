@@ -17,6 +17,8 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.constants import PLOT_CONFIG_SCHEMA
+from simtools.data_model import schema
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io_operations import io_handler
 from simtools.visualization import plot_tables
@@ -71,7 +73,10 @@ def main():
     io_handler_instance = io_handler.IOHandler()
 
     plot_config = gen.convert_keys_in_dict_to_lowercase(
-        gen.collect_data_from_file(args_dict["plot_config"])
+        schema.validate_dict_using_schema(
+            gen.collect_data_from_file(args_dict["plot_config"]),
+            PLOT_CONFIG_SCHEMA,
+        )
     )
 
     plot_tables.plot(
