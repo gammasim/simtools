@@ -349,6 +349,52 @@ def test_get_model_parameters(
     assert result == {"param1": {"value": "value1"}}
 
 
+def test_get_model_parameters_for_all_model_versions(
+    db,
+    mocker,
+    standard_test_params,
+):
+    """Test get_model_parameters_for_all_model_versions method."""
+    site = standard_test_params["site"]
+    array_element_name = standard_test_params["array_element_name"]
+    collection = standard_test_params["collection"]
+
+    mock_get_model_versions = mocker.patch.object(
+        db, "get_model_versions", return_value=["5.0.0", "6.0.0"]
+    )
+
+    mock_get_parameter = mocker.patch.object(
+        db,
+        "get_model_parameters",
+        side_effect=lambda site, array_element_name, collection, version: {
+            "param1": "val1" if version == "5.0.0" else "val5",
+            "param2": "val4" if version == "5.0.0" else "val2",
+            "param3": "val3" if version == "5.0.0" else "val6",
+        },
+    )
+
+    result = db.get_model_parameters_for_all_model_versions(site, array_element_name, collection)
+
+    # Verify that the mocks were called correctly
+    mock_get_model_versions.assert_called_once_with(collection)
+    assert mock_get_parameter.call_count == 2  # Called once for each version
+
+    expected = {
+        "5.0.0": {
+            "param1": "val1",
+            "param2": "val4",
+            "param3": "val3",
+        },
+        "6.0.0": {
+            "param1": "val5",
+            "param2": "val2",
+            "param3": "val6",
+        },
+    }
+
+    assert result == expected
+
+
 def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
     """Test get_model_parameters method with cache."""
     site = standard_test_params["site"]
