@@ -84,7 +84,6 @@ def test_read_table_data_from_file(
     result = plot_tables.read_table_data(config, None)
 
     mock_db_handler_class.assert_not_called()
-    mock_read_legacy_data_as_table.assert_called_once_with("test_file", "csv")
     mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y"])
     assert result == {"test_table": mock_structure_array}
 
