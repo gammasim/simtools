@@ -250,8 +250,6 @@ class ReadParameters:
 
         return result
 
-        return result
-
 
     def produce_array_element_report(self):
         """
