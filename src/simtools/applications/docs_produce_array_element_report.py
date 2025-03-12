@@ -12,7 +12,6 @@ import logging
 
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.model.telescope_model import TelescopeModel
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import general as gen
 
@@ -46,17 +45,9 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
 
-    telescope_model = TelescopeModel(
-        site=args["site"],
-        telescope_name=args["telescope"],
-        model_version=args["model_version"],
-        label=label_name,
-        mongo_db_config=db_config,
-    )
-
     ReadParameters(
         db_config,
-        telescope_model,
+        args,
         output_path,
     ).produce_array_element_report()
 

@@ -26,9 +26,9 @@ class ReadParameters:
         self._logger = logging.getLogger(__name__)
         self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
         self.db_config = db_config
-        self.array_element = args.get('telescope')
-        self.site = args.get('site')
-        self.model_version = args.get('model_version', None)
+        self.array_element = args.get("telescope")
+        self.site = args.get("site")
+        self.model_version = args.get("model_version", None)
         self.output_path = output_path
 
     def _convert_to_md(self, input_file):
@@ -111,7 +111,7 @@ class ReadParameters:
             site=telescope_model.site,
             array_element_name=telescope_model.name,
             collection=collection,
-            model_version="6.0.0",
+            model_version=telescope_model.model_version,
         )
 
         telescope_model.export_model_files()
@@ -148,8 +148,6 @@ class ReadParameters:
 
         return data
 
-
-
     def _compare_parameter_across_versions(self, all_param_data, all_parameter_names):
         """
         Compare a parameter's value across different model versions.
@@ -174,7 +172,7 @@ class ReadParameters:
         def format_value(value_data, unit, file_flag):
             """Format parameter value based on type and parameter name."""
             if file_flag:
-                input_file_name = f'{self.output_path}/model/{value_data}'
+                input_file_name = f"{self.output_path}/model/{value_data}"
                 output_file_name = self._convert_to_md(input_file_name)
                 return f"[{Path(value_data).name}]({output_file_name})"
             if isinstance(value_data, (str | int | float)):
@@ -184,24 +182,22 @@ class ReadParameters:
             return (
                 ", ".join(f"{v:.2f} {u}" for v, u in zip(value_data, unit))
                 if isinstance(unit, list)
-                else ", ".join(f"{v:.2f} {unit}" for v in value_data)
+                else ", ".join(f"{v} {unit}" for v in value_data)
             )
 
         # Iterate over each model version
         for version in all_versions:
-
-            Path(f'{self.output_path}/model').mkdir(parents=True, exist_ok=True)
+            Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
 
             # Export model files (assuming '6.0.0' is the version you want)
             self.db.export_model_files(
-                parameters=all_param_data.get(version),
-                dest=f'{self.output_path}/model'
+                parameters=all_param_data.get(version), dest=f"{self.output_path}/model"
             )
+
+            parameter_dict = all_param_data.get(version, {})
 
             # Iterate over each parameter name
             for parameter_name in all_parameter_names:
-                parameter_dict = all_param_data.get(version, {})
-
                 # Skip if parameter_name is not present
                 if parameter_name not in parameter_dict:
                     continue
@@ -212,45 +208,54 @@ class ReadParameters:
                 if parameter_data.get("instrument") != self.array_element:
                     continue
 
-                unit = parameter_data.get("unit", '')
+                unit = parameter_data.get("unit") or ""
                 value_data = parameter_data.get("value")
 
                 if not value_data:
                     continue
 
-                file_flag = parameter_data.get('file', False)
+                file_flag = parameter_data.get("file", False)
                 value = format_value(value_data, unit, file_flag)
                 parameter_version = parameter_data.get("parameter_version")
                 model_version = version
 
                 # Group the data by parameter version and store model versions as a list
-                grouped_data[parameter_name].append({
-                    "value": value.strip(),
-                    "parameter_version": parameter_version,
-                    "model_version": model_version,
-                    "file_flag": file_flag
-                })
+                grouped_data[parameter_name].append(
+                    {
+                        "value": value.strip(),
+                        "parameter_version": parameter_version,
+                        "model_version": model_version,
+                        "file_flag": file_flag,
+                    }
+                )
 
+            result = {}
+            for parameter_name, items in grouped_data.items():
+                # Group model versions by parameter version and track the correct values
+                version_grouped = defaultdict(
+                    lambda: {"model_versions": [], "value": None, "file_flag": None}
+                )
 
-        result = {}
-        for parameter_name, items in grouped_data.items():
-            # Group model versions by parameter version
-            version_grouped = defaultdict(list)
-            for item in items:
-                version_grouped[item['parameter_version']].append(item['model_version'])
+                for item in items:
+                    param_version = item["parameter_version"]
+                    version_grouped[param_version]["model_versions"].append(item["model_version"])
 
-            result[parameter_name] = []
-            for param_version, model_versions in version_grouped.items():
-                result[parameter_name].append({
-                    # All the values for a specific parameter version should be the same
-                    "value": items[0]["value"],
-                    "parameter_version": param_version,
-                    "file_flag": file_flag,
-                    "model_version": ", ".join(model_versions)
-                })
+                    # Ensure the correct value is taken for this specific parameter version
+                    if version_grouped[param_version]["value"] is None:
+                        version_grouped[param_version]["value"] = item["value"]
+                        version_grouped[param_version]["file_flag"] = item["file_flag"]
+
+                result[parameter_name] = [
+                    {
+                        "value": data["value"],
+                        "parameter_version": param_version,
+                        "file_flag": data["file_flag"],
+                        "model_version": ", ".join(data["model_versions"]),
+                    }
+                    for param_version, data in version_grouped.items()
+                ]
 
         return result
-
 
     def produce_array_element_report(self):
         """
@@ -263,7 +268,7 @@ class ReadParameters:
             site=self.site,
             telescope_name=self.array_element,
             model_version=self.model_version,
-            label='reports',
+            label="reports",
             mongo_db_config=self.db_config,
         )
 
@@ -336,19 +341,13 @@ class ReadParameters:
         )
 
         all_parameter_names = names.model_parameters(None).keys()
-        all_parameter_data = self.db.get_model_parameters(
-            site=self.site,
-            array_element_name=self.array_element,
-            collection="telescopes",
-
-            model_version="6.0.0",
+        all_parameter_data = self.db.get_model_parameters_for_all_model_versions(
+            site=self.site, array_element_name=self.array_element, collection="telescopes"
         )
 
         comparison_data = self._compare_parameter_across_versions(
-        all_parameter_data,
-        all_parameter_names
+            all_parameter_data, all_parameter_names
         )
-
 
         for parameter in all_parameter_names:
             parameter_data = comparison_data.get(parameter)
@@ -383,8 +382,5 @@ class ReadParameters:
                     )
 
                 file.write("\n")
-                if comparison_data.get(parameter)[0]['file_flag']:
-                    file.write(
-                        f"![Parameter plot.](_images/"
-                        f"{self.array_element}_{parameter}.png)"
-                    )
+                if comparison_data.get(parameter)[0]["file_flag"]:
+                    file.write(f"![Parameter plot.](_images/{self.array_element}_{parameter}.png)")
