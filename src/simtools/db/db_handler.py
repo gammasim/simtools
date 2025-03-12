@@ -2,6 +2,7 @@
 
 import logging
 import re
+from collections import defaultdict
 from pathlib import Path
 from threading import Lock
 
@@ -233,13 +234,7 @@ class DatabaseHandler:
             query["site"] = site
         return self._read_mongo_db(query=query, collection_name=collection_name)
 
-    def get_model_parameters(
-        self,
-        site,
-        array_element_name,
-        collection,
-        model_version=None,
-    ):
+    def get_model_parameters(self, site, array_element_name, collection, model_version):
         """
         Get model parameters using the model version.
 
@@ -260,22 +255,44 @@ class DatabaseHandler:
         -------
         dict containing the parameters
         """
-        model_versions = (
-            self.get_model_versions(collection) if model_version is None else [model_version]
-        )
-
         pars = {}
-        for _model_version in model_versions:
-            production_table = self._read_production_table_from_mongo_db(collection, _model_version)
-            array_element_list = self._get_array_element_list(
-                array_element_name, site, production_table, collection
-            )
-            for array_element in array_element_list:
-                pars.update(
-                    self._get_parameter_for_model_version(
-                        array_element, _model_version, site, collection, production_table
-                    )
+        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        array_element_list = self._get_array_element_list(
+            array_element_name, site, production_table, collection
+        )
+        for array_element in array_element_list:
+            pars.update(
+                self._get_parameter_for_model_version(
+                    array_element, model_version, site, collection, production_table
                 )
+            )
+        return pars
+
+    def get_model_parameters_for_all_model_versions(self, site, array_element_name, collection):
+        """
+        Get model parameters for all model versions.
+
+        Queries parameters for design and for the specified array element (if necessary).
+
+        Parameters
+        ----------
+        site: str
+            Site name.
+        array_element_name: str
+            Name of the array element model (e.g. LSTN-01, MSTx-FlashCam, ILLN-01).
+        collection: str
+            Collection of array element (e.g. telescopes, calibration_devices).
+
+        Returns
+        -------
+        dict containing the parameters with model version as first key
+        """
+        pars = defaultdict(dict)
+        for _model_version in self.get_model_versions(collection):
+            parameter_data = self.get_model_parameters(
+                site, array_element_name, collection, _model_version
+            )
+            pars[_model_version].update(parameter_data)
         return pars
 
     def _get_parameter_for_model_version(

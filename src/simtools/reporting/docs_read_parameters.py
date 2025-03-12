@@ -104,6 +104,7 @@ class ReadParameters:
             site=telescope_model.site,
             array_element_name=telescope_model.name,
             collection=collection,
+            model_version="6.0.0",
         )
 
         telescope_model.export_model_files()
@@ -267,6 +268,7 @@ class ReadParameters:
             site=self.telescope_model.site,
             array_element_name=self.telescope_model.name,
             collection="telescopes",
+            model_version="6.0.0",
         )
 
         for parameter in all_params:
