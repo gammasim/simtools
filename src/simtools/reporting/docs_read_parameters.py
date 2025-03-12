@@ -19,7 +19,7 @@ logger = logging.getLogger()
 
 
 class ReadParameters:
-    """Read and manage model parameter data."""
+    """Read and manage model parameter data for report generation."""
 
     def __init__(self, db_config, args, output_path):
         """Initialise class."""
@@ -93,9 +93,9 @@ class ReadParameters:
 
     def get_array_element_parameter_data(self, telescope_model, collection="telescopes"):
         """
-        Get model parameter data for a given array element.
+        Get model parameter data and descriptions for a given array element.
 
-        Currently only configures for telescope.
+        Currently only configured for telescope.
 
         Parameters
         ----------
@@ -257,9 +257,7 @@ class ReadParameters:
         """
         Produce a markdown report of all model parameters per array element.
 
-        Output
-        ----------
-        One markdown report of a given array element listing parameter values,
+        Outputs one markdown report of a given array element listing parameter values,
         versions, and descriptions.
         """
 
@@ -327,9 +325,7 @@ class ReadParameters:
         """
         Produce a markdown report per parameter for a given array element.
 
-        Output
-        ----------
-        One markdown report per model parameter of a given array element comparing
+        Outputs one markdown report per model parameter of a given array element comparing
         values across model versions.
         """
         logger.info(
