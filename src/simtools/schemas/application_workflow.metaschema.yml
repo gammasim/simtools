@@ -60,6 +60,12 @@ definitions:
               type: array
               items:
                 "$ref": "#/definitions/IntegrationTest"
+            TEST_REQUIREMENT:
+              type: string
+              description: "Requirement ID of the test."
+            TEST_USE_CASE:
+              type: string
+              description: "Use case ID of the test."
           required:
             - APPLICATION
             - CONFIGURATION

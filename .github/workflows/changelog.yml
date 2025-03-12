@@ -1,3 +1,4 @@
+---
 name: Changelog
 # Require a changelog entry for each pull request
 # from: https://github.com/cta-observatory/ctapipe/blob/main/.github/workflows/changelog.yml
@@ -5,7 +6,7 @@ name: Changelog
 on:
   pull_request:
     # should also be re-run when changing labels
-    types: [opened, reopened, labeled, unlabeled, synchronize]
+    types: [opened, reopened, labeled, unlabeled, synchronize, ready_for_review]
     branches:
       - 'main'
 
@@ -15,6 +16,7 @@ env:
 jobs:
   changelog:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
