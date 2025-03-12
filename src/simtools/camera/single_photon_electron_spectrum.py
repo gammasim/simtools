@@ -119,13 +119,14 @@ class SinglePhotonElectronSpectrum:
             f"{self.args_dict['simtel_path']}/sim_telarray/bin/norm_spe",
             "-r",
             f"{self.args_dict['step_size']},{self.args_dict['max_amplitude']}",
-            tmp_input_file.name,
         ]
         if tmp_ap_file:
-            command.insert(1, "-a")
-            command.insert(2, f"{tmp_ap_file.name}")
+            command.extend(["-a", f"{tmp_ap_file.name}"])
+            command.extend(["-s", f"{self.args_dict.get('scale_afterpulse_spectrum', 1.0)}"])
+            command.extend(["-t", f"{self.args_dict.get('threshold_afterpulse_spectrum', 4.0)}"])
+        command.append(tmp_input_file.name)
 
-        self._logger.debug(f"Running norm_spe command: {' '.join(command)}")
+        self._logger.info(f"Running norm_spe command: {' '.join(command)}")
         try:
             result = subprocess.run(command, capture_output=True, text=True, check=True)
         except subprocess.CalledProcessError as exc:
