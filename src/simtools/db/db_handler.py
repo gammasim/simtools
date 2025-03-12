@@ -234,13 +234,7 @@ class DatabaseHandler:
             query["site"] = site
         return self._read_mongo_db(query=query, collection_name=collection_name)
 
-    def get_model_parameters(
-        self,
-        site,
-        array_element_name,
-        collection,
-        model_version=None,
-    ):
+    def get_model_parameters(self, site, array_element_name, collection, model_version):
         """
         Get model parameters using the model version.
 
@@ -261,22 +255,17 @@ class DatabaseHandler:
         -------
         dict containing the parameters
         """
-        model_versions = (
-            self.get_model_versions(collection) if model_version is None else [model_version]
-        )
-
         pars = {}
-        for _model_version in model_versions:
-            production_table = self._read_production_table_from_mongo_db(collection, _model_version)
-            array_element_list = self._get_array_element_list(
-                array_element_name, site, production_table, collection
-            )
-            for array_element in array_element_list:
-                pars.update(
-                    self._get_parameter_for_model_version(
-                        array_element, _model_version, site, collection, production_table
-                    )
+        production_table = self._read_production_table_from_mongo_db(collection, model_version)
+        array_element_list = self._get_array_element_list(
+            array_element_name, site, production_table, collection
+        )
+        for array_element in array_element_list:
+            pars.update(
+                self._get_parameter_for_model_version(
+                    array_element, model_version, site, collection, production_table
                 )
+            )
         return pars
 
     def get_model_parameters_for_all_model_versions(self, site, array_element_name, collection):
