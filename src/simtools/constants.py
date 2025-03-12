@@ -6,6 +6,8 @@ from importlib.resources import files
 SCHEMA_PATH = files("simtools") / "schemas"
 # Path to metadata jsonschema
 METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
+# Path to plotting configuration json schema
+PLOT_CONFIG_SCHEMA = SCHEMA_PATH / "plot_configuration.metaschema.yml"
 # Path to model parameter metaschema
 MODEL_PARAMETER_METASCHEMA = SCHEMA_PATH / "model_parameter.metaschema.yml"
 # Path to model parameter description metaschema

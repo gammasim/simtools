@@ -7,6 +7,51 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.12.0](https://github.com/gammasim/simtools/tree/0.12.0) - 2025-03-11
+
+### Bugfixes
+
+- Bugfix in database-upload related string to list conversion. ([#1423](https://github.com/gammasim/simtools/pull/1423))
+- Fix setting of `db_api_authentication_database` through env variable. ([#1425](https://github.com/gammasim/simtools/pull/1425))
+
+
+## [0.11.0](https://github.com/gammasim/simtools/tree/0.11.0) - 2025-03-05
+
+### Bugfixes
+
+- Fix yamllint options in pre-commit (was essentially switched off). Fix syntax in many YAML files. ([#1404](https://github.com/gammasim/simtools/pull/1404))
+- Fix date writing to ensure  RFC 3339-conform date format. ([#1411](https://github.com/gammasim/simtools/pull/1411))
+- Fix reading of combined units from model parameter unit string. ([#1415](https://github.com/gammasim/simtools/pull/1415))
+
+### New Features
+
+- Adding two new applications for generating model parameter documentation reports for a given array element either for a given production, or across multiple productions. ([#1185](https://github.com/gammasim/simtools/pull/1185))
+- Add building of optimized corsika binaries (e.g., avx2, avx512) and building of images for different corsika versions. ([#1355](https://github.com/gammasim/simtools/pull/1355))
+- Add a simtool to derive limits for energy, viewcone and radius for a simulation. ([#1356](https://github.com/gammasim/simtools/pull/1356))
+- Add generic `simtools-run-application` to run one or several simtools using a single configuration file. ([#1379](https://github.com/gammasim/simtools/pull/1379))
+- Add reading of database collections from model parameter schemas. ([#1380](https://github.com/gammasim/simtools/pull/1380))
+- Add module for simtools dependency management. Allows to retrieve e.g. sim_telarray and CORSIKA versions. ([#1383](https://github.com/gammasim/simtools/pull/1383))
+- Expanded functionality of application configuration workflows based on the integration test configurations. ([#1389](https://github.com/gammasim/simtools/pull/1389))
+- Set user in docker images and add possibility to add user information from env/command line. ([#1400](https://github.com/gammasim/simtools/pull/1400))
+- Allow to mark integration tests in their use case config with a corresponding CTAO use case or requirement ID. ([#1405](https://github.com/gammasim/simtools/pull/1405))
+- Run check for changelog entry only on PRs ready for review. ([#1416](https://github.com/gammasim/simtools/pull/1416))
+
+### Maintenance
+
+- Maintenance in production configuration removing not needed flags and only use metric files. ([#1376](https://github.com/gammasim/simtools/pull/1376))
+- Rename derive-limits application to production-derive-limits. ([#1378](https://github.com/gammasim/simtools/pull/1378))
+- Add YAML file with build opts into CORSIKA/sim_telarray images. ([#1382](https://github.com/gammasim/simtools/pull/1382))
+- Add unit tests for version.py. ([#1384](https://github.com/gammasim/simtools/pull/1384))
+- Improve function naming and unit test coverage in `simtools.utils.names`. ([#1390](https://github.com/gammasim/simtools/pull/1390))
+- Change checks for software updates from weekly to monthly. ([#1394](https://github.com/gammasim/simtools/pull/1394))
+- Remove duplication in converting sim_telarray string-lists (values, units) to python lists. ([#1395](https://github.com/gammasim/simtools/pull/1395))
+- Improve reading of design models; refactoring and improved docstrings for `simtools.utils.names`. ([#1396](https://github.com/gammasim/simtools/pull/1396))
+
+### Simulation model
+
+- Introduce MSTx-NectarCam and MSTx-FlashCam design models for MSTs (allow both sites). ([#1362](https://github.com/gammasim/simtools/pull/1362))
+
+
 ## [0.10.0](https://github.com/gammasim/simtools/tree/0.10.0) - 2025-02-17
 
 ### Bugfixes

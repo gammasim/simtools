@@ -7,7 +7,6 @@ from simtools.reporting.docs_read_parameters import ReadParameters
 
 
 def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_config):
-
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(
         db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
@@ -22,7 +21,6 @@ def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_conf
 
 
 def test_get_telescope_parameter_data(telescope_model_lst, io_handler, db_config):
-
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(
         db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path

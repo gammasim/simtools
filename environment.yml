@@ -1,3 +1,4 @@
+---
 # A conda environment with all useful package for simtools developers
 name: simtools-dev
 channels:
@@ -37,6 +38,7 @@ dependencies:
   - toml
   - pip:
       - pytest-random-order
+      - pytest-requirements
 
 # cheatsheet
 # create: conda env create -f environment.yml

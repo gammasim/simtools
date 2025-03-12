@@ -1,8 +1,9 @@
+---
 name: Software updates
 # Run regularly to update software dependencies
 
 on:
-   # Run on the first day of each month at midnight
+  # Run on the first day of each month at midnight
   schedule:
     - cron: "0 0 1 * *"
   workflow_dispatch:

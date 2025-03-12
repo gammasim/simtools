@@ -84,7 +84,6 @@ def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, simtel_path):
 
 
 def test_ray_tracing_init(simtel_path, telescope_model_lst_mock, caplog):
-
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
@@ -203,7 +202,6 @@ def test_analyze(ray_tracing_lst, mocker, export, force, read_called, store_call
 
 
 def test_process_off_axis_and_mirror(ray_tracing_lst, mocker):
-
     mock_generate_file_name = mocker.patch.object(
         ray_tracing_lst, "_generate_file_name", return_value="photons_file"
     )

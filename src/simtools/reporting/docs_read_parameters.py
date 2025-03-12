@@ -55,7 +55,6 @@ class ReadParameters:
                 input_file.open("r", encoding="utf-8") as infile,
                 output_file.open("w", encoding="utf-8") as outfile,
             ):
-
                 outfile.write(f"# {input_file.stem}")
                 outfile.write("\n")
                 outfile.write("```")
@@ -112,6 +111,7 @@ class ReadParameters:
             site=telescope_model.site,
             array_element_name=telescope_model.name,
             collection=collection,
+            model_version="6.0.0",
         )
 
         telescope_model.export_model_files()
@@ -340,7 +340,8 @@ class ReadParameters:
             site=self.site,
             array_element_name=self.array_element,
             collection="telescopes",
-            model_version=None,
+
+            model_version="6.0.0",
         )
 
         comparison_data = self._compare_parameter_across_versions(
