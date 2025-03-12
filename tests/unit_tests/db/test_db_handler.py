@@ -349,6 +349,73 @@ def test_get_model_parameters(
     assert result == {"param1": {"value": "value1"}}
 
 
+def test_get_model_parameters_for_all_model_versions(
+    db,
+    mocker,
+    standard_test_params,
+):
+    """Test get_model_parameters_for_all_model_versions method."""
+    site = standard_test_params["site"]
+    array_element_name = standard_test_params["array_element_name"]
+    collection = standard_test_params["collection"]
+
+    mock_get_model_versions = mocker.patch.object(
+        db, "get_model_versions", return_value=["versionA", "versionB"]
+    )
+
+    # Mock the production table return values for both versions
+    mock_get_production_table = mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        side_effect=lambda collection, version: {
+            "parameters": {"param1": "value1", "param2": "value2", "param3": "value3"}
+            if version == "versionA"
+            else {"parameters": {"param1": "value4", "param2": "value2", "param3": "value3"}}
+        },
+    )
+
+    mock_get_array_element_list = mocker.patch.object(
+        db, "_get_array_element_list", return_value=["array_element_design", "array_element"]
+    )
+
+    # Mock the method to get parameters for each model version and array element.
+    # Instead of returning version-specific values, return whole dictionaries for each version.
+    mock_get_parameter_for_model_version = mocker.patch.object(
+        db,
+        "_get_parameter_for_model_version",
+        side_effect=lambda array_element, version, site, collection, table: {
+            "param1": "value1",
+            "param2": "value2",
+            "param3": "value3",
+        }
+        if version == "versionA"
+        else {
+            "param1": "value4",
+            "param2": "updated_value2",
+            "param3": "value3",
+        },
+    )
+
+    result = db.get_model_parameters_for_all_model_versions(site, array_element_name, collection)
+
+    # Verify that the mocks were called correctly
+    mock_get_model_versions.assert_called_once_with(collection)
+    assert mock_get_production_table.call_count == 2  # Called once for each version
+    assert (
+        mock_get_array_element_list.call_count == 2
+    )  # Two elements: "array_element_design", "array_element"
+    assert mock_get_parameter_for_model_version.call_count == 4  # 2 versions * 2 array elements
+
+    # Expected result: dictionary with version as key and parameter dictionary as value
+    expected = {
+        "versionA": {"param1": "value1", "param2": "value2", "param3": "value3"},
+        "versionB": {"param1": "value4", "param2": "updated_value2", "param3": "value3"},
+    }
+
+    # Assert that the result matches the expected dictionary
+    assert result == expected
+
+
 def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
     """Test get_model_parameters method with cache."""
     site = standard_test_params["site"]
