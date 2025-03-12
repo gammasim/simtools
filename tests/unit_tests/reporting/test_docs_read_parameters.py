@@ -7,11 +7,13 @@ from simtools.reporting.docs_read_parameters import ReadParameters
 
 
 def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_config):
+    args = {
+        "telescope": telescope_model_lst.name,
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+    }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(
-        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
-    )
-
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
     # Call get_all_parameter_descriptions
     descriptions, short_descriptions, inst_class = read_parameters.get_all_parameter_descriptions()
 
@@ -20,11 +22,14 @@ def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_conf
     assert isinstance(inst_class.get("focal_length"), str)
 
 
-def test_get_telescope_parameter_data(telescope_model_lst, io_handler, db_config):
+def test_get_array_element_parameter_data(telescope_model_lst, io_handler, db_config):
+    args = {
+        "telescope": telescope_model_lst.name,
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+    }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(
-        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
-    )
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     result = read_parameters.get_array_element_parameter_data(telescope_model_lst)
 
@@ -36,10 +41,13 @@ def test_get_telescope_parameter_data(telescope_model_lst, io_handler, db_config
 
 
 def test_produce_array_element_report(telescope_model_lst, io_handler, db_config):
+    args = {
+        "telescope": telescope_model_lst.name,
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+    }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(
-        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
-    )
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     read_parameters.produce_array_element_report()
 
@@ -47,13 +55,12 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
     assert file_path.exists()
 
 
-def test_produce_model_parameter_reports(telescope_model_lst, io_handler, db_config):
+def test_produce_model_parameter_reports(io_handler, db_config):
+    args = {"site": "North", "telescope": "LSTN-01"}
     output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{telescope_model_lst.name}"
+        label="reports", sub_dir=f"parameters/{args['telescope']}"
     )
-    read_parameters = ReadParameters(
-        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
-    )
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     read_parameters.produce_model_parameter_reports()
 
@@ -62,10 +69,13 @@ def test_produce_model_parameter_reports(telescope_model_lst, io_handler, db_con
 
 
 def test__convert_to_md(telescope_model_lst, io_handler, db_config):
+    args = {
+        "telescope": telescope_model_lst.name,
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+    }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(
-        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
-    )
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     # testing with invalid file
     with pytest.raises(FileNotFoundError, match="Data file not found: "):
@@ -77,34 +87,58 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     assert Path(output_path / new_file).exists()
 
 
-def test__compare_parameter_across_versions(telescope_model_lst, io_handler, db_config):
-    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
-    read_parameters = ReadParameters(
-        db_config=db_config, telescope_model=telescope_model_lst, output_path=output_path
+def test__compare_parameter_across_versions(io_handler, db_config):
+    args = {"site": "North", "telescope": "LSTN-01"}
+    output_path = io_handler.get_output_directory(
+        label="reports", sub_dir=f"parameters/{args['telescope']}"
     )
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
-    qe_comparison = read_parameters._compare_parameter_across_versions("quantum_efficiency")
+    mock_data = {
+        "5.0.0": {
+            "quantum_efficiency": {
+                "instrument": "LSTN-01",
+                "site": "North",
+                "parameter_version": "1.0.0",
+                "value": "qe_lst1_20200318_high+low.dat",
+                "unit": None,
+                "file": True,
+            },
+            "array_element_position_ground": {
+                "instrument": "LSTN-01",
+                "site": "North",
+                "parameter_version": "1.0.0",
+                "value": [-70.93, -52.07, 43.0],
+                "unit": "m",
+                "file": False,
+            },
+        },
+        "6.0.0": {
+            "quantum_efficiency": {
+                "instrument": "LSTN-01",
+                "site": "North",
+                "parameter_version": "1.0.0",
+                "value": "qe_lst1_20200318_high+low.dat",
+                "unit": None,
+                "file": True,
+            },
+            "array_element_position_ground": {
+                "instrument": "LSTN-01",
+                "site": "North",
+                "parameter_version": "2.0.0",
+                "value": [-70.91, -52.35, 45.0],
+                "unit": "m",
+                "file": False,
+            },
+        },
+    }
+
+    comparison_data = read_parameters._compare_parameter_across_versions(
+        mock_data, ["quantum_efficiency", "array_element_position_ground"]
+    )
+    qe_comparison = comparison_data.get("quantum_efficiency")
     assert qe_comparison["parameter_version" == "1.0.0"]["model_version"] == "6.0.0, 5.0.0"
 
-    nsb_comparison = read_parameters._compare_parameter_across_versions("nsb_pixel_rate")
-    assert nsb_comparison[0]["model_version"] != nsb_comparison[1]["model_version"]
-    assert nsb_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
-
-
-def test__compare_parameter_across_versions_sst(telescope_model_sst, io_handler, db_config):
-    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_sst.model_version}")
-    read_parameters = ReadParameters(
-        db_config=db_config, telescope_model=telescope_model_sst, output_path=output_path
-    )
-
-    # parameter value set to null, function should return empty list
-    asum_shaping_comparison = read_parameters._compare_parameter_across_versions("asum_shaping")
-    assert len(asum_shaping_comparison) == 0
-
-    # value defined for only one model version
-    adjust_gain_comparison = read_parameters._compare_parameter_across_versions("adjust_gain")
-    assert len(adjust_gain_comparison) == 1
-
-    # should return empty list for invalid parameters
-    invalid_parameter = read_parameters._compare_parameter_across_versions("invalid_parameter")
-    assert len(invalid_parameter) == 0
+    position_comparison = comparison_data.get("array_element_position_ground")
+    assert position_comparison[0]["model_version"] != position_comparison[1]["model_version"]
+    assert position_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
