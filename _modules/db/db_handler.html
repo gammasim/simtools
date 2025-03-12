@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+ged6e7bd Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+gc80fab9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=e34b2807"></script>
+    <script src="../../_static/documentation_options.js?v=ce5750ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ged6e7bd Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc80fab9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -391,6 +391,7 @@ document.write(`
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Lock</span>
 
@@ -629,13 +630,7 @@ document.write(`
 
 <div class="viewcode-block" id="DatabaseHandler.get_model_parameters">
 <a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_model_parameters">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_parameters</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">site</span><span class="p">,</span>
-        <span class="n">array_element_name</span><span class="p">,</span>
-        <span class="n">collection</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_element_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get model parameters using the model version.</span>
 
@@ -656,22 +651,47 @@ document.write(`
 <span class="sd">        -------</span>
 <span class="sd">        dict containing the parameters</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">model_versions</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span> <span class="k">if</span> <span class="n">model_version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">model_version</span><span class="p">]</span>
-        <span class="p">)</span>
-
         <span class="n">pars</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">_model_version</span> <span class="ow">in</span> <span class="n">model_versions</span><span class="p">:</span>
-            <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">_model_version</span><span class="p">)</span>
-            <span class="n">array_element_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_element_list</span><span class="p">(</span>
-                <span class="n">array_element_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">production_table</span><span class="p">,</span> <span class="n">collection</span>
-            <span class="p">)</span>
-            <span class="k">for</span> <span class="n">array_element</span> <span class="ow">in</span> <span class="n">array_element_list</span><span class="p">:</span>
-                <span class="n">pars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_for_model_version</span><span class="p">(</span>
-                        <span class="n">array_element</span><span class="p">,</span> <span class="n">_model_version</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">production_table</span>
-                    <span class="p">)</span>
+        <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="n">array_element_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_array_element_list</span><span class="p">(</span>
+            <span class="n">array_element_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">production_table</span><span class="p">,</span> <span class="n">collection</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">array_element</span> <span class="ow">in</span> <span class="n">array_element_list</span><span class="p">:</span>
+            <span class="n">pars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameter_for_model_version</span><span class="p">(</span>
+                    <span class="n">array_element</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">production_table</span>
                 <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pars</span></div>
+
+
+<div class="viewcode-block" id="DatabaseHandler.get_model_parameters_for_all_model_versions">
+<a class="viewcode-back" href="../../api-reference/db_handler.html#db.db_handler.DatabaseHandler.get_model_parameters_for_all_model_versions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_parameters_for_all_model_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">array_element_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get model parameters for all model versions.</span>
+
+<span class="sd">        Queries parameters for design and for the specified array element (if necessary).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        site: str</span>
+<span class="sd">            Site name.</span>
+<span class="sd">        array_element_name: str</span>
+<span class="sd">            Name of the array element model (e.g. LSTN-01, MSTx-FlashCam, ILLN-01).</span>
+<span class="sd">        collection: str</span>
+<span class="sd">            Collection of array element (e.g. telescopes, calibration_devices).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict containing the parameters with model version as first key</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_model_version</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection</span><span class="p">):</span>
+            <span class="n">parameter_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
+                <span class="n">site</span><span class="p">,</span> <span class="n">array_element_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">_model_version</span>
+            <span class="p">)</span>
+            <span class="n">pars</span><span class="p">[</span><span class="n">_model_version</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parameter_data</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pars</span></div>
 
 
