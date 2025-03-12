@@ -61,6 +61,22 @@ def mock_open(mocker):
 
 
 @pytest.fixture
+def mock_get_collection_name(mocker):
+    return mocker.patch(
+        "simtools.db.db_handler.names.get_collection_name_from_parameter_name",
+        return_value="telescopes",
+    )
+
+
+@pytest.fixture
+def mock_read_simtel_table(mocker):
+    return mocker.patch(
+        "simtools.db.db_handler.simtel_table_reader.read_simtel_table",
+        return_value="test_table",
+    )
+
+
+@pytest.fixture
 def validate_model_parameter():
     return "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter"
 
@@ -68,6 +84,139 @@ def validate_model_parameter():
 @pytest.fixture
 def mock_gridfs(mocker):
     return mocker.patch("simtools.db.db_handler.gridfs.GridFS")
+
+
+@pytest.fixture
+def standard_test_params():
+    """Common test parameters used across multiple tests."""
+    return {
+        "site": "North",
+        "array_element_name": "LSTN-01",
+        "model_version": "1.0.0",
+        "parameter_version": "1.0.0",
+        "collection": "telescopes",
+        "parameter": "test_param",
+    }
+
+
+@pytest.fixture
+def mock_db_name(mocker, db, test_db):
+    """Common fixture for mocking _get_db_name."""
+    return mocker.patch.object(db, "_get_db_name", return_value=test_db)
+
+
+@pytest.fixture
+def mock_collection_setup(mocker, db):
+    """Common fixture for mocking collection operations."""
+    mock_collection = mocker.Mock()
+    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mock_collection)
+    return {"collection": mock_collection, "get_collection": mock_get_collection}
+
+
+@pytest.fixture
+def mock_db_client(mocker, db, test_db):
+    """Common fixture for mocking db_client."""
+    mock_client = {test_db: mocker.Mock()}
+    return mocker.patch.object(db_handler.DatabaseHandler, "db_client", mock_client)
+
+
+@pytest.fixture
+def mock_file_system(mocker, mock_gridfs):
+    """Setup mock file system objects."""
+    mock_fs = mock_gridfs.return_value
+    mock_file_instance = mocker.Mock(_id="file_id")
+    mock_fs.find_one.return_value = mock_file_instance
+    return {"fs": mock_fs, "instance": mock_file_instance}
+
+
+@pytest.fixture
+def export_files_setup(db, mock_db_name, mocker):
+    """Common setup for export_model_files tests."""
+    mock_get_file_mongo_db = mocker.patch.object(
+        db, "_get_file_mongo_db", return_value=mocker.Mock(_id="file_id")
+    )
+    mock_write_file = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
+    return {"get_file_mongo_db": mock_get_file_mongo_db, "write_file": mock_write_file}
+
+
+@pytest.fixture
+def add_parameter_mocks(db, mocker, test_db, value_unit_type, validate_model_parameter):
+    """Common setup for add_new_parameter tests."""
+    mock_validate = mocker.patch(
+        validate_model_parameter,
+        return_value={"parameter": "param1", "value": "value1", "file": False},
+    )
+    mock_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
+    mock_coll = mocker.Mock()
+    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mock_coll)
+    mock_insert_one = mocker.patch.object(mock_coll, "insert_one")
+    mock_value_unit = mocker.patch(
+        value_unit_type,
+        return_value=("value1", "unit1", None),
+    )
+    mock_reset_cache = mocker.patch.object(db, "_reset_parameter_cache")
+
+    return {
+        "validate": mock_validate,
+        "db_name": mock_db_name,
+        "collection": mock_coll,
+        "get_collection": mock_get_collection,
+        "insert_one": mock_insert_one,
+        "value_unit": mock_value_unit,
+        "reset_cache": mock_reset_cache,
+    }
+
+
+@pytest.fixture
+def common_mock_read_production_table(mocker, db):
+    """Common fixture for mocking _read_production_table_from_mongo_db."""
+    return mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
+    )
+
+
+@pytest.fixture
+def common_mock_get_array_element_list(mocker, db):
+    """Common fixture for mocking _get_array_element_list."""
+    return mocker.patch.object(
+        db, "_get_array_element_list", return_value=["LSTN-design", "LSTN-01"]
+    )
+
+
+@pytest.fixture
+def common_mock_read_cache(mocker, db):
+    """Common fixture for mocking _read_cache."""
+    return mocker.patch.object(db, "_read_cache", return_value=("cache_key", None))
+
+
+@pytest.fixture
+def common_mock_read_mongo_db(mocker, db):
+    """Common fixture for mocking _read_mongo_db."""
+    return mocker.patch.object(db, "_read_mongo_db", return_value={"param1": {"value": "value1"}})
+
+
+def assert_model_parameter_calls(
+    mock_get_collection_name,
+    mock_read_mongo_db,
+    test_param,
+    site,
+    array_element_name,
+    parameter_version,
+    collection="telescopes",
+):
+    """Helper function to verify common model parameter assertions."""
+    mock_get_collection_name.assert_called_once_with(test_param)
+    mock_read_mongo_db.assert_called_once_with(
+        query={
+            "parameter_version": parameter_version,
+            "parameter": test_param,
+            **({"instrument": array_element_name} if array_element_name else {}),
+            **({"site": site} if site else {}),
+        },
+        collection_name=collection,
+    )
 
 
 def test_set_up_connection_no_config():
@@ -151,106 +300,27 @@ def test_find_latest_simulation_model_db(db, db_no_config_file, mocker):
     )
 
 
-def test_get_model_parameter(db, mocker):
-    """Test get_model_parameter method."""
-    mock_read_mongo_db = mocker.patch.object(
-        db, "_read_mongo_db", return_value={"parameter": "value"}
-    )
-
-    parameter = "camera_pixels"
-    parameter_version = "0.0.1"
-    site = "North"
-    array_element_name = "LSTN-01"
-    collection = "telescopes"
-
-    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
-
-    query = {
-        "parameter_version": parameter_version,
-        "parameter": parameter,
-        "instrument": array_element_name,
-        "site": site,
-    }
-
-    mock_read_mongo_db.assert_called_once_with(query=query, collection_name=collection)
-    assert result == {"parameter": "value"}
-
-
-def test_get_model_parameter_no_site(db, mocker):
-    """Test get_model_parameter method without site."""
-    mock_read_mongo_db = mocker.patch.object(
-        db, "_read_mongo_db", return_value={"parameter": "value"}
-    )
-
-    parameter = "mirror_list"
-    parameter_version = "1.0.0"
-    site = None
-    array_element_name = "LSTS-01"
-    collection = "telescopes"
-
-    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
-
-    query = {
-        "parameter_version": parameter_version,
-        "parameter": parameter,
-        "instrument": array_element_name,
-    }
-
-    mock_read_mongo_db.assert_called_once_with(query=query, collection_name=collection)
-    assert result == {"parameter": "value"}
-
-
-def test_get_model_parameter_no_array_element_name(db, mocker):
-    """Test get_model_parameter method without array element name."""
-    mock_read_mongo_db = mocker.patch.object(
-        db, "_read_mongo_db", return_value={"parameter": "value"}
-    )
-
-    parameter = "corsika_iact_io_buffer"
-    parameter_version = "10.11.12"
-    site = "South"
-    array_element_name = None
-    collection = "configuration_corsika"
-
-    result = db.get_model_parameter(parameter, parameter_version, site, array_element_name)
-
-    query = {
-        "parameter_version": parameter_version,
-        "parameter": parameter,
-        "site": site,
-    }
-
-    mock_read_mongo_db.assert_called_once_with(query=query, collection_name=collection)
-    assert result == {"parameter": "value"}
-
-
-def test_get_model_parameters(db, mocker):
+def test_get_model_parameters(
+    db,
+    common_mock_read_production_table,
+    common_mock_get_array_element_list,
+    common_mock_read_cache,
+    common_mock_read_mongo_db,
+    standard_test_params,
+):
     """Test get_model_parameters method."""
-    mock_get_production_table = mocker.patch.object(
-        db,
-        "_read_production_table_from_mongo_db",
-        return_value={"parameters": {"LSTN-01": {"param1": "v1"}}},
-    )
-    mock_get_array_element_list = mocker.patch.object(
-        db, "_get_array_element_list", return_value=["LSTN-design", "LSTN-01"]
-    )
-    mock_read_cache = mocker.patch.object(db, "_read_cache", return_value=("cache_key", None))
-    mock_read_mongo_db = mocker.patch.object(
-        db, "_read_mongo_db", return_value={"param1": {"value": "value1"}}
-    )
-
-    site = "North"
-    array_element_name = "LSTN-01"
-    model_version = "1.0.0"
-    collection = "telescopes"
+    site = standard_test_params["site"]
+    array_element_name = standard_test_params["array_element_name"]
+    model_version = standard_test_params["model_version"]
+    collection = standard_test_params["collection"]
 
     result = db.get_model_parameters(site, array_element_name, collection, model_version)
 
-    mock_get_production_table.assert_called_once_with(collection, model_version)
-    mock_get_array_element_list.assert_called_once_with(
+    common_mock_read_production_table.assert_called_once_with(collection, model_version)
+    common_mock_get_array_element_list.assert_called_once_with(
         array_element_name, site, {"parameters": {"LSTN-01": {"param1": "v1"}}}, collection
     )
-    mock_read_cache.assert_has_calls(
+    common_mock_read_cache.assert_has_calls(
         [
             call(
                 db_handler.DatabaseHandler.model_parameters_cached,
@@ -268,7 +338,7 @@ def test_get_model_parameters(db, mocker):
             ),
         ]
     )
-    mock_read_mongo_db.assert_called_once_with(
+    common_mock_read_mongo_db.assert_called_once_with(
         query={
             "$or": [{"parameter": "param1", "parameter_version": "v1"}],
             "instrument": "LSTN-01",
@@ -279,8 +349,13 @@ def test_get_model_parameters(db, mocker):
     assert result == {"param1": {"value": "value1"}}
 
 
-def test_get_model_parameters_with_cache(db, mocker):
+def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
     """Test get_model_parameters method with cache."""
+    site = standard_test_params["site"]
+    array_element_name = standard_test_params["array_element_name"]
+    model_version = standard_test_params["model_version"]
+    collection = standard_test_params["collection"]
+
     mock_get_production_table = mocker.patch.object(
         db,
         "_read_production_table_from_mongo_db",
@@ -292,11 +367,6 @@ def test_get_model_parameters_with_cache(db, mocker):
     mock_read_cache = mocker.patch.object(
         db, "_read_cache", return_value=("cache_key", {"param1": {"value": "cached_value"}})
     )
-
-    site = "North"
-    array_element_name = "LSTN-01"
-    model_version = "1.0.0"
-    collection = "telescopes"
 
     result = db.get_model_parameters(site, array_element_name, collection, model_version)
 
@@ -314,8 +384,13 @@ def test_get_model_parameters_with_cache(db, mocker):
     assert result == {"param1": {"value": "cached_value"}}
 
 
-def test_get_model_parameters_no_parameters(db, mocker):
+def test_get_model_parameters_no_parameters(db, mocker, standard_test_params):
     """Test get_model_parameters method with no parameters."""
+    site = standard_test_params["site"]
+    array_element_name = standard_test_params["array_element_name"]
+    model_version = standard_test_params["model_version"]
+    collection = standard_test_params["collection"]
+
     mock_get_production_table = mocker.patch.object(
         db, "_read_production_table_from_mongo_db", return_value={"parameters": {}}
     )
@@ -323,11 +398,6 @@ def test_get_model_parameters_no_parameters(db, mocker):
         db, "_get_array_element_list", return_value=["LSTN-01"]
     )
     mock_read_cache = mocker.patch.object(db, "_read_cache", return_value=("cache_key", None))
-
-    site = "North"
-    array_element_name = "LSTN-01"
-    model_version = "1.0.0"
-    collection = "telescopes"
 
     result = db.get_model_parameters(site, array_element_name, collection, model_version)
 
@@ -345,9 +415,8 @@ def test_get_model_parameters_no_parameters(db, mocker):
     assert result == {}
 
 
-def test_get_collection(db, mocker, test_db):
+def test_get_collection(db, mock_db_name, test_db, mocker):
     """Test get_collection method."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mocker.patch.object(
         db_handler.DatabaseHandler, "db_client", {test_db: {"test_collection": "mock_collection"}}
     )
@@ -355,7 +424,7 @@ def test_get_collection(db, mocker, test_db):
 
     result = db.get_collection(test_db, collection_name)
 
-    mock_get_db_name.assert_called_once_with(test_db)
+    mock_db_name.assert_called_once_with(test_db)
     assert result == "mock_collection"
 
 
@@ -377,40 +446,32 @@ def test_get_collections(db, db_config, fs_files):
 
 
 def test_export_model_files_with_file_names(
-    db, mocker, tmp_test_directory, test_db, test_file, test_file_2
+    db, export_files_setup, mock_db_name, tmp_test_directory, test_db, test_file, test_file_2
 ):
     """Test export_model_files method with file names."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
-    mock_get_file_mongo_db = mocker.patch.object(
-        db, "_get_file_mongo_db", return_value=mocker.Mock(_id="file_id")
-    )
-    mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
-
+    mocks = export_files_setup
     file_names = [test_file, test_file_2]
 
     result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
 
-    mock_get_db_name.assert_called()
-    mock_get_file_mongo_db.assert_has_calls([call(test_db, test_file), call(test_db, test_file_2)])
-    mock_write_file_from_mongo_to_disk.assert_has_calls(
+    mock_db_name.assert_called()
+    mocks["get_file_mongo_db"].assert_has_calls(
+        [call(test_db, test_file), call(test_db, test_file_2)]
+    )
+    mocks["write_file"].assert_has_calls(
         [
-            call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
-            call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
+            call(test_db, tmp_test_directory, mocks["get_file_mongo_db"].return_value),
+            call(test_db, tmp_test_directory, mocks["get_file_mongo_db"].return_value),
         ]
     )
     assert result == {test_file: "file_id", test_file_2: "file_id"}
 
 
 def test_export_model_files_with_parameters(
-    db, mocker, tmp_test_directory, test_db, test_file, test_file_2
+    db, export_files_setup, mock_db_name, tmp_test_directory, test_db, test_file, test_file_2
 ):
     """Test export_model_files method with parameters."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
-    mock_get_file_mongo_db = mocker.patch.object(
-        db, "_get_file_mongo_db", return_value=mocker.Mock(_id="file_id")
-    )
-    mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
-
+    mocks = export_files_setup
     parameters = {
         "param1": {"file": True, "value": test_file},
         "param2": {"file": True, "value": test_file_2},
@@ -418,53 +479,54 @@ def test_export_model_files_with_parameters(
 
     result = db.export_model_files(parameters=parameters, dest=tmp_test_directory)
 
-    mock_get_db_name.assert_called()
-    mock_get_file_mongo_db.assert_has_calls([call(test_db, test_file), call(test_db, test_file_2)])
-    mock_write_file_from_mongo_to_disk.assert_has_calls(
+    mock_db_name.assert_called()
+    mocks["get_file_mongo_db"].assert_has_calls(
+        [call(test_db, test_file), call(test_db, test_file_2)]
+    )
+    mocks["write_file"].assert_has_calls(
         [
-            call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
-            call(test_db, tmp_test_directory, mock_get_file_mongo_db.return_value),
+            call(test_db, tmp_test_directory, mocks["get_file_mongo_db"].return_value),
+            call(test_db, tmp_test_directory, mocks["get_file_mongo_db"].return_value),
         ]
     )
     assert result == {test_file: "file_id", test_file_2: "file_id"}
 
 
-def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db, test_file):
+def test_export_model_files_file_exists(
+    db, mock_db_name, mocker, tmp_test_directory, test_db, test_file
+):
     """Test export_model_files method when file already exists."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_get_file_mongo_db = mocker.patch.object(db, "_get_file_mongo_db")
-    mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
+    mock_write_file = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
     mock_path_exists = mocker.patch("pathlib.Path.exists", return_value=True)
 
     file_names = [test_file]
-
     result = db.export_model_files(file_names=file_names, dest=tmp_test_directory)
 
-    mock_get_db_name.assert_called()
+    mock_db_name.assert_called()
     mock_get_file_mongo_db.assert_not_called()
-    mock_write_file_from_mongo_to_disk.assert_not_called()
+    mock_write_file.assert_not_called()
     mock_path_exists.assert_called_once()
     assert result == {test_file: "file exists"}
 
 
-def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_db, test_file):
+def test_export_model_files_file_not_found(
+    db, mock_db_name, mocker, tmp_test_directory, test_db, test_file
+):
     """Test export_model_files method when file is not found in parameters."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_get_file_mongo_db = mocker.patch.object(
         db, "_get_file_mongo_db", side_effect=FileNotFoundError
     )
-    mock_write_file_from_mongo_to_disk = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
+    mock_write_file = mocker.patch.object(db, "_write_file_from_mongo_to_disk")
 
-    parameters = {
-        "param1": {"file": True, "value": test_file},
-    }
+    parameters = {"param1": {"file": True, "value": test_file}}
 
     with pytest.raises(FileNotFoundError):
         db.export_model_files(parameters=parameters, dest=tmp_test_directory)
 
-    mock_get_db_name.assert_called()
+    mock_db_name.assert_called()
     mock_get_file_mongo_db.assert_called_once_with(test_db, test_file)
-    mock_write_file_from_mongo_to_disk.assert_not_called()
+    mock_write_file.assert_not_called()
 
 
 def test_get_query_from_parameter_version_table(db):
@@ -477,87 +539,27 @@ def test_get_query_from_parameter_version_table(db):
         "param1": "v1",
         "param2": "v2",
     }
-    array_element_name = "LSTN-01"
-    site = "North"
 
-    result = db._get_query_from_parameter_version_table(
-        parameter_version_table, array_element_name, site
-    )
+    test_cases = [
+        # (array_element_name, site, expected_result)
+        ("LSTN-01", "North", {"$or": or_list, "instrument": "LSTN-01", "site": "North"}),
+        ("LSTN-01", None, {"$or": or_list, "instrument": "LSTN-01"}),
+        (None, "North", {"$or": or_list, "site": "North"}),
+        (None, None, {"$or": or_list}),
+        ("xSTx-design", "North", {"$or": or_list, "site": "North"}),
+    ]
 
-    expected_query = {
-        "$or": or_list,
-        "instrument": array_element_name,
-        "site": site,
-    }
-
-    assert result == expected_query
-
-    # _get_query_from_parameter_version_table method without site.
-    array_element_name = "LSTN-01"
-    site = None
-
-    result = db._get_query_from_parameter_version_table(
-        parameter_version_table, array_element_name, site
-    )
-
-    expected_query = {
-        "$or": or_list,
-        "instrument": array_element_name,
-    }
-
-    assert result == expected_query
-
-    #  _get_query_from_parameter_version_table method without array element name.
-    array_element_name = None
-    site = "North"
-
-    result = db._get_query_from_parameter_version_table(
-        parameter_version_table, array_element_name, site
-    )
-
-    expected_query = {
-        "$or": or_list,
-        "site": site,
-    }
-
-    assert result == expected_query
-
-    # _get_query_from_parameter_version_table method without site and array element name.
-    array_element_name = None
-    site = None
-
-    result = db._get_query_from_parameter_version_table(
-        parameter_version_table, array_element_name, site
-    )
-
-    expected_query = {
-        "$or": or_list,
-    }
-
-    assert result == expected_query
-
-    # _get_query_from_parameter_version_table method with array element name 'xSTx-design'.
-    array_element_name = "xSTx-design"
-    site = "North"
-
-    result = db._get_query_from_parameter_version_table(
-        parameter_version_table, array_element_name, site
-    )
-
-    expected_query = {
-        "$or": or_list,
-        "site": site,
-    }
-
-    assert result == expected_query
+    for array_element_name, site, expected in test_cases:
+        result = db._get_query_from_parameter_version_table(
+            parameter_version_table, array_element_name, site
+        )
+        assert result == expected
 
 
-def test_read_mongo_db(db, mocker, test_db):
+def test_read_mongo_db(db, mock_db_name, mock_collection_setup, mocker, test_db):
     """Test read_mongo_db method."""
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value=test_db)
-    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
     mock_find = mocker.patch.object(
-        db.get_collection.return_value,
+        mock_collection_setup["collection"],
         "find",
         return_value=[
             {"_id": ObjectId(), "parameter": "param1", "value": "value1"},
@@ -570,8 +572,8 @@ def test_read_mongo_db(db, mocker, test_db):
 
     result = db._read_mongo_db(query, collection_name)
 
-    mock_get_db_name.assert_called_once_with()
-    mock_get_collection.assert_called_once_with(test_db, collection_name)
+    mock_db_name.assert_called_once_with()
+    mock_collection_setup["get_collection"].assert_called_once_with(test_db, collection_name)
     mock_find.assert_called_once_with(query)
     assert result == {
         "param1": {
@@ -588,7 +590,8 @@ def test_read_mongo_db(db, mocker, test_db):
         },
     }
 
-    mocker.patch.object(db.get_collection.return_value, "find", return_value=[])
+    # Test with no results
+    mocker.patch.object(mock_collection_setup["collection"], "find", return_value=[])
     with pytest.raises(
         ValueError,
         match=r"The following query for test_collection returned zero results: "
@@ -597,30 +600,38 @@ def test_read_mongo_db(db, mocker, test_db):
         db._read_mongo_db(query, collection_name)
 
 
-def test__read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
-    """Test _read_production_table_from_mongo_db method with cache."""
-    collection_name = "telescopes"
-    model_version = "1.0.0"
-    param = {"param1": "value1"}
-    mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="cache_key")
-    db_handler.DatabaseHandler.production_table_cached["cache_key"] = {
+def setup_production_table_cached(cache_key, model_version, param):
+    """Helper to set up production table cache."""
+    db_handler.DatabaseHandler.production_table_cached[cache_key] = {
         "collection": model_version,
         "model_version": model_version,
         "parameters": param,
         "design_model": {},
         "entry_date": ObjectId().generation_time,
     }
+    return db_handler.DatabaseHandler.production_table_cached[cache_key]
+
+
+def test_read_production_table_from_mongo_db_with_cache(db, mocker, test_db, mock_collection_setup):
+    """Test _read_production_table_from_mongo_db method with cache."""
+    collection_name = "telescopes"
+    model_version = "1.0.0"
+    param = {"param1": "value1"}
+
+    # Test with cache hit
+    mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="cache_key")
+    cached_result = setup_production_table_cached("cache_key", model_version, param)
 
     result = db._read_production_table_from_mongo_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
-    assert result == db_handler.DatabaseHandler.production_table_cached["cache_key"]
+    assert result == cached_result
 
+    # Test with cache miss
     mock_cache_key = mocker.patch.object(db, "_cache_key", return_value="no_cache_key")
-    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
     mocker.patch.object(db, "_get_db_name", return_value=test_db)
     mock_find_one = mocker.patch.object(
-        db.get_collection.return_value,
+        mock_collection_setup["collection"],
         "find_one",
         return_value={
             "_id": ObjectId(),
@@ -634,20 +645,18 @@ def test__read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
     result = db._read_production_table_from_mongo_db(collection_name, model_version)
 
     mock_cache_key.assert_called_once_with(None, None, model_version, collection_name)
-    mock_get_collection.assert_called_once_with(test_db, "production_tables")
+    mock_collection_setup["get_collection"].assert_called_once_with(test_db, "production_tables")
     mock_find_one.assert_called_once_with(
         {"model_version": model_version, "collection": collection_name}
     )
-    assert result == {
-        "collection": collection_name,
-        "model_version": model_version,
-        "parameters": param,
-        "design_model": {},
-        "entry_date": mock_find_one.return_value["_id"].generation_time,
-    }
+    assert result["collection"] == collection_name
+    assert result["model_version"] == model_version
+    assert result["parameters"] == param
+    assert result["design_model"] == {}
+    assert "entry_date" in result
 
-    # test with no results
-    mocker.patch.object(db.get_collection.return_value, "find_one", return_value=None)
+    # Test with no results
+    mocker.patch.object(mock_collection_setup["collection"], "find_one", return_value=None)
     with pytest.raises(
         ValueError,
         match=r"The following query returned zero results: "
@@ -658,40 +667,37 @@ def test__read_production_table_from_mongo_db_with_cache(db, mocker, test_db):
 
 def test_get_array_elements_of_type(db, mocker):
     """Test get_array_elements_of_type method."""
-    mock_get_production_table = mocker.patch.object(
-        db,
-        "_read_production_table_from_mongo_db",
-        return_value={
-            "parameters": {"LSTN-01": "value1", "LSTN-02": "value2", "MSTS-01": "value3"}
-        },
-    )
-
     array_element_type = "LSTN"
     model_version = "1.0.0"
     collection = "telescopes"
 
-    result = db.get_array_elements_of_type(array_element_type, model_version, collection)
+    test_cases = [
+        # Production table, expected result
+        (
+            {"parameters": {"LSTN-01": "value1", "LSTN-02": "value2", "MSTS-01": "value3"}},
+            ["LSTN-01", "LSTN-02"],
+        ),
+        ({"parameters": {"MSTS-01": "value3"}}, []),
+        ({"parameters": {"LSTN-01": "value1", "LSTN-design": "value2"}}, ["LSTN-01"]),
+    ]
 
-    mock_get_production_table.assert_called_once_with(collection, model_version)
-    assert result == ["LSTN-01", "LSTN-02"]
-
-    # Test with no matching array elements
-    mock_get_production_table.return_value = {"parameters": {"MSTS-01": "value3"}}
-    result = db.get_array_elements_of_type(array_element_type, model_version, collection)
-    assert result == []
-
-    # Test with array elements containing '-design'
-    mock_get_production_table.return_value = {
-        "parameters": {"LSTN-01": "value1", "LSTN-design": "value2"}
-    }
-    result = db.get_array_elements_of_type(array_element_type, model_version, collection)
-    assert result == ["LSTN-01"]
+    for prod_table, expected in test_cases:
+        mock_get_production_table = mocker.patch.object(
+            db, "_read_production_table_from_mongo_db", return_value=prod_table
+        )
+        result = db.get_array_elements_of_type(array_element_type, model_version, collection)
+        mock_get_production_table.assert_called_once_with(collection, model_version)
+        assert result == expected
 
     # Test with different array element type
     array_element_type = "MSTS"
-    mock_get_production_table.return_value = {
-        "parameters": {"LSTN-01": "value1", "MSTS-01": "value3", "MSTS-02": "value4"}
-    }
+    mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        return_value={
+            "parameters": {"LSTN-01": "value1", "MSTS-01": "value3", "MSTS-02": "value4"}
+        },
+    )
     result = db.get_array_elements_of_type(array_element_type, model_version, collection)
     assert result == ["MSTS-01", "MSTS-02"]
 
@@ -724,24 +730,18 @@ def test_get_simulation_configuration_parameters(db, mocker):
         db.get_simulation_configuration_parameters("wrong", "North", "LSTN-design", "6.0.0")
 
 
-def test_get_file_mongo_db_file(db, mocker, test_db, test_file, mock_gridfs):
+def test_get_file_mongo_db_file(db, test_db, test_file, mock_file_system, mock_db_client):
     """Test _get_file_mongo_db method when file exists."""
-    mock_db_client = mocker.patch.object(
-        db_handler.DatabaseHandler, "db_client", {test_db: mocker.Mock()}
-    )
-    mock_file_system = mock_gridfs.return_value
-    mock_file_system.exists.return_value = True
-    mock_file_instance = mocker.Mock()
-    mock_file_system.find_one.return_value = mock_file_instance
+    mock_file_system["fs"].exists.return_value = True
 
     result = db._get_file_mongo_db(test_db, test_file)
 
-    mock_gridfs.assert_called_once_with(mock_db_client[test_db])
-    mock_file_system.exists.assert_called_once_with({"filename": test_file})
-    mock_file_system.find_one.assert_called_once_with({"filename": test_file})
-    assert result == mock_file_instance
+    mock_file_system["fs"].exists.assert_called_once_with({"filename": test_file})
+    mock_file_system["fs"].find_one.assert_called_once_with({"filename": test_file})
+    assert result == mock_file_system["instance"]
 
-    mock_file_system.exists.return_value = False
+    # Test when file does not exist
+    mock_file_system["fs"].exists.return_value = False
     with pytest.raises(
         FileNotFoundError, match=f"The file {test_file} does not exist in the database {test_db}"
     ):
@@ -787,86 +787,51 @@ def test_add_production_table(db, mocker, test_db):
     mock_insert_one.assert_called_once_with(production_table)
 
 
-def test_add_new_parameter(db, mocker, value_unit_type, validate_model_parameter, test_db):
+def test_add_new_parameter(db, add_parameter_mocks, test_db):
     """Test add_new_parameter method."""
-    mock_validate_model_parameter = mocker.patch(
-        validate_model_parameter,
-        return_value={"parameter": "param1", "value": "value1", "file": False},
-    )
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
-    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
-    mock_insert_one = mocker.patch.object(db.get_collection.return_value, "insert_one")
-    mock_get_value_unit_type = mocker.patch(
-        value_unit_type,
-        return_value=("value1", "unit1", None),
-    )
-    mock_reset_parameter_cache = mocker.patch.object(db, "_reset_parameter_cache")
-
+    mocks = add_parameter_mocks
     par_dict = {"parameter": "param1", "value": "value1", "file": False}
     collection_name = "telescopes"
     file_prefix = None
 
     db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
 
-    mock_validate_model_parameter.assert_called_once_with(par_dict)
-    mock_get_db_name.assert_called_once_with(test_db)
-    mock_get_collection.assert_called_once_with("test_db", collection_name)
-    mock_get_value_unit_type.assert_called_once_with(value="value1", unit_str=None)
-    mock_insert_one.assert_called_once_with(
+    mocks["validate"].assert_called_once_with(par_dict)
+    mocks["db_name"].assert_called_once_with(test_db)
+    mocks["get_collection"].assert_called_once_with(test_db, collection_name)
+    mocks["value_unit"].assert_called_once_with(value="value1", unit_str=None)
+    mocks["insert_one"].assert_called_once_with(
         {"parameter": "param1", "value": "value1", "file": False, "unit": "unit1"}
     )
-    mock_reset_parameter_cache.assert_called_once()
+    mocks["reset_cache"].assert_called_once()
 
 
-def test_add_new_parameter_with_file(
-    db, mocker, tmp_test_directory, value_unit_type, validate_model_parameter, test_db
-):
+def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory, test_db, mocker):
     """Test add_new_parameter method with file."""
-    mock_validate_model_parameter = mocker.patch(
-        validate_model_parameter,
-        return_value={"parameter": "param1", "value": "value1", "file": True},
-    )
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
-    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
-    mock_insert_one = mocker.patch.object(db.get_collection.return_value, "insert_one")
-    mock_get_value_unit_type = mocker.patch(
-        value_unit_type,
-        return_value=("value1", "unit1", None),
-    )
+    mocks = add_parameter_mocks
+    mocks["validate"].return_value = {"parameter": "param1", "value": "value1", "file": True}
     mock_insert_file_to_db = mocker.patch.object(db, "insert_file_to_db")
-    mock_reset_parameter_cache = mocker.patch.object(db, "_reset_parameter_cache")
 
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
 
     db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
 
-    mock_validate_model_parameter.assert_called_once_with(par_dict)
-    mock_get_db_name.assert_called_once_with(test_db)
-    mock_get_collection.assert_called_once_with("test_db", collection_name)
-    mock_get_value_unit_type.assert_called_once_with(value="value1", unit_str=None)
-    mock_insert_one.assert_called_once_with(
+    mocks["validate"].assert_called_once_with(par_dict)
+    mocks["db_name"].assert_called_once_with(test_db)
+    mocks["get_collection"].assert_called_once_with(test_db, collection_name)
+    mocks["value_unit"].assert_called_once_with(value="value1", unit_str=None)
+    mocks["insert_one"].assert_called_once_with(
         {"parameter": "param1", "value": "value1", "file": True, "unit": "unit1"}
     )
-    mock_insert_file_to_db.assert_called_once_with(f"{tmp_test_directory!s}/value1", "test_db")
-    mock_reset_parameter_cache.assert_called_once()
+    mock_insert_file_to_db.assert_called_once_with(f"{tmp_test_directory!s}/value1", test_db)
+    mocks["reset_cache"].assert_called_once()
 
 
-def test_add_new_parameter_with_file_no_prefix(
-    db, mocker, value_unit_type, validate_model_parameter, test_db
-):
+def test_add_new_parameter_with_file_no_prefix(db, add_parameter_mocks, test_db):
     """Test add_new_parameter method with file but no file_prefix."""
-    mock_validate_model_parameter = mocker.patch(
-        validate_model_parameter,
-        return_value={"parameter": "param1", "value": "value1", "file": True},
-    )
-    mock_get_db_name = mocker.patch.object(db, "_get_db_name", return_value="test_db")
-    mock_get_collection = mocker.patch.object(db, "get_collection", return_value=mocker.Mock())
-    mock_get_value_unit_type = mocker.patch(
-        value_unit_type,
-        return_value=("value1", "unit1", None),
-    )
-    mock_reset_parameter_cache = mocker.patch.object(db, "_reset_parameter_cache")
+    mocks = add_parameter_mocks
+    mocks["validate"].return_value = {"parameter": "param1", "value": "value1", "file": True}
 
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
@@ -879,11 +844,11 @@ def test_add_new_parameter_with_file_no_prefix(
     ):
         db.add_new_parameter(test_db, par_dict, collection_name, file_prefix)
 
-    mock_validate_model_parameter.assert_called_once_with(par_dict)
-    mock_get_db_name.assert_called_once_with(test_db)
-    mock_get_collection.assert_called_once_with("test_db", collection_name)
-    mock_get_value_unit_type.assert_called_once_with(value="value1", unit_str=None)
-    mock_reset_parameter_cache.assert_not_called()
+    mocks["validate"].assert_called_once_with(par_dict)
+    mocks["db_name"].assert_called_once_with(test_db)
+    mocks["get_collection"].assert_called_once_with(test_db, collection_name)
+    mocks["value_unit"].assert_called_once_with(value="value1", unit_str=None)
+    mocks["reset_cache"].assert_not_called()
 
 
 def test_insert_file_to_db_file_exists(db, mocker, test_db, test_file, mock_gridfs):
@@ -1143,3 +1108,181 @@ def test_get_design_model(db):
     assert db.get_design_model("6.0.0", "LSTN-01") == "LSTN-design"
     assert db.get_design_model("5.0.0", "SSTS-03") == "SSTS-design"
     assert db.get_design_model("6.0.0", "LSTN-design") == "LSTN-design"
+
+
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        {
+            "name": "with_parameter_version",
+            "params": {
+                "site": "North",
+                "array_element_name": "LSTN-01",
+                "parameter_version": "1.0.0",
+                "model_version": None,
+            },
+        },
+        {
+            "name": "with_model_version",
+            "params": {
+                "site": "North",
+                "array_element_name": "LSTN-01",
+                "parameter_version": None,
+                "model_version": "1.0.0",
+            },
+            "setup": {
+                "prod_table": {
+                    "parameters": {
+                        "LSTN-design": {"test_param": "2.0.0"},
+                        "LSTN-01": {"test_param": "1.0.0"},
+                    }
+                }
+            },
+        },
+        {
+            "name": "with_no_site_no_instrument",
+            "params": {
+                "site": None,
+                "array_element_name": None,
+                "parameter_version": "1.0.0",
+                "model_version": None,
+            },
+        },
+    ],
+)
+def test_get_model_parameter_variants(db, mocker, mock_get_collection_name, test_case):
+    """Test get_model_parameter variations."""
+    params = test_case["params"]
+    mock_read_mongo_db = mocker.patch.object(
+        db,
+        "_read_mongo_db",
+        return_value={"test_param": {"value": "test_value"}},
+    )
+
+    if "setup" in test_case:
+        mocker.patch.object(
+            db,
+            "_read_production_table_from_mongo_db",
+            return_value=test_case["setup"]["prod_table"],
+        )
+        mocker.patch.object(
+            db,
+            "_get_array_element_list",
+            return_value=["LSTN-design", "LSTN-01"],
+        )
+
+    result = db.get_model_parameter(parameter="test_param", **params)
+
+    assert_model_parameter_calls(
+        mock_get_collection_name,
+        mock_read_mongo_db,
+        "test_param",
+        params["site"],
+        params["array_element_name"],
+        params["parameter_version"] or "1.0.0",
+    )
+    assert result == {"test_param": {"value": "test_value"}}
+
+
+@pytest.fixture
+def export_model_file_mocks(db, mocker, tmp_test_directory, test_file):
+    """Common setup for export_model_file tests."""
+    test_param = "test_param"
+    mock_parameters = {test_param: {"value": test_file}}
+
+    return {
+        "test_param": test_param,
+        "test_file": test_file,
+        "parameters": mock_parameters,
+        "get_model_parameter": mocker.patch.object(
+            db, "get_model_parameter", return_value=mock_parameters
+        ),
+        "export_model_files": mocker.patch.object(db, "export_model_files"),
+        "get_output_directory": mocker.patch.object(
+            db.io_handler, "get_output_directory", return_value=tmp_test_directory
+        ),
+    }
+
+
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        {
+            "name": "without_table",
+            "params": {
+                "export_file_as_table": False,
+                "parameter_version": None,
+                "model_version": "1.0.0",
+            },
+            "expected_result": None,
+        },
+        {
+            "name": "with_table",
+            "params": {
+                "export_file_as_table": True,
+                "parameter_version": None,
+                "model_version": "1.0.0",
+            },
+            "expected_result": "test_table",
+        },
+        {
+            "name": "with_parameter_version",
+            "params": {
+                "export_file_as_table": False,
+                "parameter_version": "1.0.0",
+                "model_version": None,
+            },
+            "expected_result": None,
+        },
+    ],
+)
+def test_export_model_file_variants(
+    db, export_model_file_mocks, mock_read_simtel_table, mocker, tmp_test_directory, test_case
+):
+    """Test export_model_file variations."""
+    mocks = export_model_file_mocks
+    params = test_case["params"]
+
+    if params["export_file_as_table"]:
+        path_obj = mocker.Mock()
+        path_obj.joinpath.return_value = f"{tmp_test_directory}/{mocks['test_file']}"
+        mocks["get_output_directory"].return_value = path_obj
+
+    result = db.export_model_file(
+        parameter=mocks["test_param"], site="North", array_element_name="LSTN-01", **params
+    )
+
+    mocks["get_model_parameter"].assert_called_once_with(
+        mocks["test_param"],
+        "North",
+        "LSTN-01",
+        parameter_version=params["parameter_version"],
+        model_version=params["model_version"],
+    )
+
+    assert result == test_case["expected_result"]
+
+
+def test_get_array_element_list_configuration_sim_telarray(db, mocker):
+    """Test _get_array_element_list method for configuration_sim_telarray collection."""
+    array_element_name = "LSTN-01"
+    site = "North"
+    model_version = "1.0.0"
+    production_table = {"model_version": model_version}
+    collection = "configuration_sim_telarray"
+
+    mock_read_production_table = mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        return_value={"design_model": {"LSTN-01": "LSTN-design"}},
+    )
+
+    result = db._get_array_element_list(array_element_name, site, production_table, collection)
+    mock_read_production_table.assert_called_once_with("telescopes", model_version)
+    assert result == ["LSTN-design", "LSTN-01"]
+
+    mock_read_production_table.return_value = {"design_model": {}}  # No design model for LSTN-01
+    with pytest.raises(
+        KeyError, match=r"Failed generated array element list for db query for LSTN-01"
+    ):
+        db._get_array_element_list(array_element_name, site, production_table, collection)

@@ -59,7 +59,9 @@ def test_read_astropy_table_data_from_file(
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
 @mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
+@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
 def test_read_table_data_from_file(
+    mock_db_handler_class,
     mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
@@ -81,15 +83,18 @@ def test_read_table_data_from_file(
 
     result = plot_tables.read_table_data(config, None)
 
-    mock_read_legacy_data_as_table.assert_called_once_with("test_file", "legacy_csv")
+    mock_db_handler_class.assert_not_called()
+    mock_read_legacy_data_as_table.assert_called_once_with("test_file", "csv")
     mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y"])
     assert result == {"test_table": mock_structure_array}
 
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
-@mock.patch("simtools.visualization.plot_tables._read_table_from_model_database")
+@mock.patch("simtools.visualization.plot_tables.legacy_data_handler.read_legacy_data_as_table")
+@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
 def test_read_table_data_from_model_database(
-    mock_read_table_from_model_database,
+    mock_db_handler_class,
+    mock_read_legacy_data_as_table,
     mock_get_structure_array_from_table,
 ):
     config = {
@@ -106,14 +111,23 @@ def test_read_table_data_from_model_database(
         ]
     }
     db_config = None
+    mock_db_handler = mock_db_handler_class.return_value
     mock_table = mock.MagicMock()
-    mock_read_table_from_model_database.return_value = mock_table
+    mock_db_handler.export_model_file.return_value = mock_table
     mock_structure_array = mock.MagicMock()
     mock_get_structure_array_from_table.return_value = mock_structure_array
 
     result = plot_tables.read_table_data(config, db_config)
 
-    mock_read_table_from_model_database.assert_called_once_with(config["tables"][0], db_config)
+    mock_db_handler_class.assert_called_once_with(mongo_db_config=db_config)
+    mock_db_handler.export_model_file.assert_called_once_with(
+        parameter="test_parameter",
+        site="test_site",
+        array_element_name="test_telescope",
+        parameter_version=None,
+        model_version="test_version",
+        export_file_as_table=True,
+    )
     mock_get_structure_array_from_table.assert_called_once_with(mock_table, ["x", "y"])
     assert result == {"test_table": mock_structure_array}
 
@@ -126,8 +140,8 @@ def test_read_table_data_no_table_data_defined():
         plot_tables.read_table_data(config, db_config)
 
 
-@mock.patch("simtools.visualization.plot_tables.TelescopeModel")
-def test_read_table_from_model_database(mock_telescope_model_class):
+@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
+def test_export_model_file(mock_db_handler_class):
     table_config = {
         "site": "test_site",
         "telescope": "test_telescope",
@@ -135,40 +149,55 @@ def test_read_table_from_model_database(mock_telescope_model_class):
         "parameter": "test_parameter",
     }
     db_config = None
-    mock_telescope_model = mock_telescope_model_class.return_value
+    mock_db_handler = mock_db_handler_class.return_value
     mock_table = mock.MagicMock()
-    mock_telescope_model.get_model_file_as_table.return_value = mock_table
+    mock_db_handler.export_model_file.return_value = mock_table
 
-    result = plot_tables._read_table_from_model_database(table_config, db_config)
+    config = {"tables": [table_config]}
+    table_config["label"] = "test_label"
+    table_config["column_x"] = "x"
+    table_config["column_y"] = "y"
 
-    mock_telescope_model_class.assert_called_once_with(
+    plot_tables.read_table_data(config, db_config)
+
+    mock_db_handler_class.assert_called_once_with(mongo_db_config=db_config)
+    mock_db_handler.export_model_file.assert_called_once_with(
+        parameter="test_parameter",
         site="test_site",
-        telescope_name="test_telescope",
+        array_element_name="test_telescope",
+        parameter_version=None,
         model_version="test_version",
-        mongo_db_config=db_config,
+        export_file_as_table=True,
     )
-    mock_telescope_model.get_model_file_as_table.assert_called_once_with("test_parameter")
-    assert result == mock_table
 
 
-@mock.patch("simtools.visualization.plot_tables.SiteModel")
-def test_read_table_from_model_database_site(mock_site_model_class):
+@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
+def test_export_model_file_site_only(mock_db_handler_class):
     table_config = {
         "site": "test_site",
         "model_version": "test_version",
         "parameter": "test_parameter",
     }
     db_config = None
-    mock_site_model = mock_site_model_class.return_value
+    mock_db_handler = mock_db_handler_class.return_value
     mock_table = mock.MagicMock()
-    mock_site_model.get_model_file_as_table.return_value = mock_table
+    mock_db_handler.export_model_file.return_value = mock_table
 
-    plot_tables._read_table_from_model_database(table_config, db_config)
+    config = {"tables": [table_config]}
+    table_config["label"] = "test_label"
+    table_config["column_x"] = "x"
+    table_config["column_y"] = "y"
 
-    mock_site_model_class.assert_called_once_with(
+    plot_tables.read_table_data(config, db_config)
+
+    mock_db_handler_class.assert_called_once_with(mongo_db_config=db_config)
+    mock_db_handler.export_model_file.assert_called_once_with(
+        parameter="test_parameter",
         site="test_site",
+        array_element_name=None,
+        parameter_version=None,
         model_version="test_version",
-        mongo_db_config=db_config,
+        export_file_as_table=True,
     )
 
 
