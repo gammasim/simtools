@@ -11,8 +11,8 @@ from pathlib import Path
 import numpy as np
 
 from simtools.db import db_handler
-from simtools.model.telescope_model import TelescopeModel
 from simtools.io_operations import io_handler
+from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
 logger = logging.getLogger()
@@ -25,6 +25,7 @@ class ReadParameters:
         """Initialise class."""
         self._logger = logging.getLogger(__name__)
         self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
+        self.db_config = db_config
         self.array_element = args.get('telescope')
         self.site = args.get('site')
         self.model_version = args.get('model_version', None)
@@ -176,7 +177,7 @@ class ReadParameters:
                 input_file_name = f'{self.output_path}/model/{value_data}'
                 output_file_name = self._convert_to_md(input_file_name)
                 return f"[{Path(value_data).name}]({output_file_name})"
-            if isinstance(value_data, (str, int, float)):
+            if isinstance(value_data, (str | int | float)):
                 return f"{value_data} {unit}"
             if len(value_data) > 5 and np.allclose(value_data, value_data[0]):
                 return f"all: {value_data[0]} {unit}"
@@ -231,7 +232,6 @@ class ReadParameters:
                 })
 
 
-        # Prepare the result with parameter names as keys and list of version-specific dictionaries as values
         result = {}
         for parameter_name, items in grouped_data.items():
             # Group model versions by parameter version
@@ -242,7 +242,8 @@ class ReadParameters:
             result[parameter_name] = []
             for param_version, model_versions in version_grouped.items():
                 result[parameter_name].append({
-                    "value": items[0]["value"],  # All the values for a specific parameter version should be the same
+                    # All the values for a specific parameter version should be the same
+                    "value": items[0]["value"],
                     "parameter_version": param_version,
                     "file_flag": file_flag,
                     "model_version": ", ".join(model_versions)
@@ -258,13 +259,12 @@ class ReadParameters:
         Outputs one markdown report of a given array element listing parameter values,
         versions, and descriptions.
         """
-
         telescope_model = TelescopeModel(
             site=self.site,
             telescope_name=self.array_element,
             model_version=self.model_version,
             label='reports',
-            mongo_db_config=db_config,
+            mongo_db_config=self.db_config,
         )
 
         output_filename = Path(self.output_path / (telescope_model.name + ".md"))
@@ -343,7 +343,11 @@ class ReadParameters:
             model_version=None,
         )
 
-        comparison_data = self._compare_parameter_across_versions(all_parameter_data, all_parameter_names)
+        comparison_data = self._compare_parameter_across_versions(
+        all_parameter_data,
+        all_parameter_names
+        )
+
 
         for parameter in all_parameter_names:
             parameter_data = comparison_data.get(parameter)
