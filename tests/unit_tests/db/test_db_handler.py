@@ -360,59 +360,16 @@ def test_get_model_parameters_for_all_model_versions(
     collection = standard_test_params["collection"]
 
     mock_get_model_versions = mocker.patch.object(
-        db, "get_model_versions", return_value=["versionA", "versionB"]
+        db, "get_model_versions", return_value=["5.0.0", "6.0.0"]
     )
 
-    # Mock the production table to return the parameters for each version and array element
-    mock_get_production_table = mocker.patch.object(
+    mock_get_parameter = mocker.patch.object(
         db,
-        "_read_production_table_from_mongo_db",
-        side_effect=lambda collection, version: {
-            "parameters": {
-                "array_element_design": {
-                    "param1": "val1",
-                    "param2": "val2",
-                    "param3": "val3",
-                },
-                "array_element": {
-                    "param2": "val4",  # This will overwrite param2
-                },
-            }
-            if version == "versionA"
-            else {
-                "array_element_design": {
-                    "param1": "val5",
-                    "param2": "val2",
-                    "param3": "val3",
-                },
-                "array_element": {
-                    "param3": "val6",  # This will overwrite param3
-                },
-            }
-        },
-    )
-
-    mock_get_array_element_list = mocker.patch.object(
-        db, "_get_array_element_list", return_value=["array_element_design", "array_element"]
-    )
-
-    # Mock the method to get parameters for each version and array element
-    mock_get_parameter_for_model_version = mocker.patch.object(
-        db,
-        "_get_parameter_for_model_version",
-        side_effect=lambda array_element, version, site, collection, table: {
-            # Values for array_element_design
-            "param1": "val1"
-            if version == "versionA"
-            else "val5",  # val1 for versionA, val5 for versionB
-            "param2": "val2",
-            "param3": "val3",
-        }
-        if array_element == "array_element_design"
-        else {
-            # Values for array_element (updates)
-            "param2": "val4" if version == "versionA" else "val2",  # Overwrite param2 for versionA
-            "param3": "val6" if version == "versionB" else "val3",  # Overwrite param3 for versionB
+        "get_model_parameters",
+        side_effect=lambda site, array_element_name, collection, version: {
+            "param1": "val1" if version == "5.0.0" else "val5",
+            "param2": "val4" if version == "5.0.0" else "val2",
+            "param3": "val3" if version == "5.0.0" else "val6",
         },
     )
 
@@ -420,27 +377,21 @@ def test_get_model_parameters_for_all_model_versions(
 
     # Verify that the mocks were called correctly
     mock_get_model_versions.assert_called_once_with(collection)
-    assert mock_get_production_table.call_count == 2  # Called once for each version
-    assert (
-        mock_get_array_element_list.call_count == 2
-    )  # Two elements: "array_element_design", "array_element"
-    assert mock_get_parameter_for_model_version.call_count == 4  # 2 versions * 2 array elements
+    assert mock_get_parameter.call_count == 2  # Called once for each version
 
-    # Expected result: Merge the dictionaries and overwrite values as needed
     expected = {
-        "versionA": {
-            "param1": "val1",  # From array_element_design
-            "param2": "val4",  # Overwritten by array_element
-            "param3": "val3",  # From array_element_design
+        "5.0.0": {
+            "param1": "val1",
+            "param2": "val4",
+            "param3": "val3",
         },
-        "versionB": {
-            "param1": "val5",  # From array_element_design
-            "param2": "val2",  # From array_element_design
-            "param3": "val6",  # Overwritten by array_element
+        "6.0.0": {
+            "param1": "val5",
+            "param2": "val2",
+            "param3": "val6",
         },
     }
 
-    # Assert that the result matches the expected dictionary
     assert result == expected
 
 

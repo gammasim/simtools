@@ -289,15 +289,11 @@ class DatabaseHandler:
         """
         pars = defaultdict(dict)
         for _model_version in self.get_model_versions(collection):
-            production_table = self._read_production_table_from_mongo_db(collection, _model_version)
-            array_element_list = self._get_array_element_list(
-                array_element_name, site, production_table, collection
+            parameter_data = self.get_model_parameters(
+                site, array_element_name, collection, _model_version
             )
-            for array_element in array_element_list:
-                parameter_data = self._get_parameter_for_model_version(
-                    array_element, _model_version, site, collection, production_table
-                )
-                pars[_model_version].update(parameter_data)
+            pars[_model_version].update(parameter_data)
+        print("pars: ", pars)
         return pars
 
     def _get_parameter_for_model_version(
