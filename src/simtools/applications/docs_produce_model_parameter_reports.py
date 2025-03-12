@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-Produce one file per model parameter for a given array element.
+Produce a model parameter report per array element.
 
 The markdown reports include detailed information on each parameter,
 comparing their values over various model versions.
