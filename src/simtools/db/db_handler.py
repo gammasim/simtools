@@ -293,7 +293,6 @@ class DatabaseHandler:
                 site, array_element_name, collection, _model_version
             )
             pars[_model_version].update(parameter_data)
-        print("pars: ", pars)
         return pars
 
     def _get_parameter_for_model_version(
