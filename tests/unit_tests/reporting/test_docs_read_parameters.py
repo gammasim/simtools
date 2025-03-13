@@ -105,7 +105,7 @@ def test__format_parameter_value(io_handler, db_config):
         False,
     ]
     result_3 = read_parameters._format_parameter_value(*mock_data_3)
-    assert result_3 == "all: 0.0.2 GHz"
+    assert result_3 == "all: 0.2 GHz"
 
     mock_data_4 = [[1, 2, 3, 4], "m", None]
     result_4 = read_parameters._format_parameter_value(*mock_data_4)
