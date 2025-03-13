@@ -40,6 +40,10 @@ jobs:
             python-version: "3.12"
             install-method: mamba
 
+          - os: ubuntu-latest
+            python-version: "3.13"
+            install-method: mamba
+
     defaults:
       run:
         shell: bash -leo pipefail {0}
