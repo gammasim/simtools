@@ -186,7 +186,7 @@ def test_submit_gridengine(mock_gen, job_submitter, mocker, output_log, logfile_
         "output.out",
         "-e",
         "output.err",
-        "script.sh",
+        str(script_file),
     ]
     mock_execute.assert_called_with("gridengine", expected_command)
 
@@ -232,7 +232,7 @@ def test_submit_local_real_failure(
 
     # Mock subprocess.run to raise a CalledProcessError
     mock_subprocess = mocker.patch(subprocess_run)
-    mock_subprocess.side_effect = subprocess.CalledProcessError(1, "script.sh")
+    mock_subprocess.side_effect = subprocess.CalledProcessError(1, str(script_file))
 
     with pytest.raises(JobExecutionError, match="See excerpt from log file above"):
         job_submitter_real.submit(script_file, output_log, logfile_log)
