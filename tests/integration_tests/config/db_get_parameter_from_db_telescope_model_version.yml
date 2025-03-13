@@ -6,7 +6,13 @@ CTA_SIMPIPE:
     CONFIGURATION:
       SITE: North
       TELESCOPE: LSTN-01
-      PARAMETER: mirror_list
+      PARAMETER: mirror_reflectivity
       MODEL_VERSION: 6.0.0
+      EXPORT_MODEL_FILE: true
+      EXPORT_MODEL_FILE_AS_TABLE: true
+      OUTPUT_PATH: simtools-output
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: ref_LST1_2022_04_01.dat
+    - OUTPUT_FILE: ref_LST1_2022_04_01.ecsv
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

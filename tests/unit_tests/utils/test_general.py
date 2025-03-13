@@ -699,10 +699,10 @@ def test_get_structure_array_from_table():
     column_names = []
     assert gen.get_structure_array_from_table(table, column_names).size == 0
 
-    # Test with a non-existent column
+    # Test with a non-existent column (no error thrown)
     column_names = ["col1", "non_existent_col"]
-    with pytest.raises(KeyError):
-        gen.get_structure_array_from_table(table, column_names)
+    structured_array = gen.get_structure_array_from_table(table, column_names)
+    assert structured_array.dtype.names == ("col1",)
 
 
 def test_convert_keys_in_dict_to_lowercase():

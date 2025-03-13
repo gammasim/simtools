@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-submit-model-parameter-from-external
     TEST_NAME: submit_reference_point_altitude
+    TEST_USE_CASE: UC-150-2.1.1
     CONFIGURATION:
       PARAMETER: reference_point_altitude
       VALUE: 2.177 km

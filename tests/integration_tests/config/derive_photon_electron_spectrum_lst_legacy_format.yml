@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-derive-photon-electron-spectrum
     TEST_NAME: LST_legacy_format
+    TEST_USE_CASE: UC-150-2.1.2
     CONFIGURATION:
       INPUT_SPECTRUM: ./tests/resources/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
       AFTERPULSE_SPECTRUM: ./tests/resources/LST_afterpulses.dat

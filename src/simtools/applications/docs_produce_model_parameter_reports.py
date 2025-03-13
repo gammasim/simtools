@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-Produce one file per model parameter for a given array element.
+Produce a model parameter report per array element.
 
 The markdown reports include detailed information on each parameter,
 comparing their values over various model versions.
@@ -12,7 +12,6 @@ import logging
 
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.model.telescope_model import TelescopeModel
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import general as gen
 
@@ -24,9 +23,7 @@ def _parse(label):
         description=("Produce a markdown report for model parameters."),
     )
 
-    return config.initialize(
-        db_config=True, simulation_model=["site", "telescope", "model_version"]
-    )
+    return config.initialize(db_config=True, simulation_model=["site", "telescope"])
 
 
 def main():  # noqa: D103
@@ -38,24 +35,14 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
 
-    telescope_model = TelescopeModel(
-        site=args["site"],
-        telescope_name=args["telescope"],
-        model_version=args["model_version"],
-        label=label_name,
-        mongo_db_config=db_config,
-    )
-
     ReadParameters(
         db_config,
-        telescope_model,
+        args,
         output_path,
     ).produce_model_parameter_reports()
 
     logger.info(
-        f"Markdown report generated for {args['site']}"
-        f" Telescope {args['telescope']} (v{args['model_version']}):"
-        f" {output_path}"
+        f"Markdown report generated for {args['site']} Telescope {args['telescope']}: {output_path}"
     )
 
 

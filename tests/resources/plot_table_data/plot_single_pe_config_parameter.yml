@@ -12,23 +12,23 @@ CTA_SIMPIPE:
     NO_MARKERS: true
     TABLES:
       - PARAMETER: pm_photoelectron_spectrum
-        TELESCOPE: LSTN-01
-        SITE: NORTH
-        MODEL_VERSION: 6.0.0
+        TELESCOPE: LSTN-design
+        SITE: North
+        PARAMETER_VERSION: 1.0.0
         LABEL: 'LSTN (prompt)'
         COLUMN_X: 'amplitude'
         COLUMN_Y: 'response'
       - PARAMETER: pm_photoelectron_spectrum
-        TELESCOPE: LSTN-01
-        SITE: NORTH
-        MODEL_VERSION: 6.0.0
+        TELESCOPE: LSTN-design
+        SITE: North
+        PARAMETER_VERSION: 1.0.0
         LABEL: 'LSTN (prompt + afterpulsing)'
         COLUMN_X: 'amplitude'
         COLUMN_Y: 'response_with_ap'
       - PARAMETER: pm_photoelectron_spectrum
         TELESCOPE: MSTx-FlashCam
         SITE: South
-        MODEL_VERSION: 6.0.0
+        PARAMETER_VERSION: 1.0.0
         LABEL: 'MSTS (prompt + afterpulsing)'
         COLUMN_X: 'amplitude'
         COLUMN_Y: 'response_with_ap'

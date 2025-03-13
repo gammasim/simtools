@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CITATION.cff
+include pyproject.toml
+
+recursive-include src *.py
+recursive-include docs *
+
+prune src/simtools/_dev_version
+prune docs/build
+prune tests/
