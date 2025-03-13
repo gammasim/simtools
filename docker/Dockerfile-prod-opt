@@ -84,6 +84,7 @@ RUN echo "build_opt: $BUILD_OPT" > /workdir/sim_telarray/build_opts.yml && \
 FROM almalinux:9.5-minimal
 WORKDIR /workdir
 ARG BUILD_BRANCH=main
+ARG PYTHON_VERSION="3.12"
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
 RUN microdnf update -y && microdnf install -y \
