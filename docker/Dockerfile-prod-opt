@@ -8,7 +8,7 @@ ARG AVX_FLAG="avx2"
 ARG CORSIKA_VERSION="77550"
 ARG BERNLOHR_VERSION="1.68"
 ARG BUILD_BRANCH=main
-ARG PYTHON_VERSION="3.13"
+ARG PYTHON_VERSION="3.12"
 
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
