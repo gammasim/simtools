@@ -87,6 +87,31 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     assert Path(output_path / new_file).exists()
 
 
+def test__format_parameter_value(io_handler, db_config):
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
+
+    mock_data_1 = [[24.74, 9.0, 350.0, 1066.0], ["ns", "ns", "V", "V"], False]
+    result_1 = read_parameters._format_parameter_value(*mock_data_1)
+    assert result_1 == "24.74 ns, 9.0 ns, 350.0 V, 1066.0 V"
+
+    mock_data_2 = [4.0, " ", None]
+    result_2 = read_parameters._format_parameter_value(*mock_data_2)
+    assert result_2 == "4.0"
+
+    mock_data_3 = [
+        [0.233591, 0.233591, 0.233591, 0.233591, 0.233591, 0.233591, 0.233591],
+        "GHz",
+        False,
+    ]
+    result_3 = read_parameters._format_parameter_value(*mock_data_3)
+    assert result_3 == "all: 0.233591 GHz"
+
+    mock_data_4 = [[1, 2, 3, 4], "m", None]
+    result_4 = read_parameters._format_parameter_value(*mock_data_4)
+    assert result_4 == "1 m, 2 m, 3 m, 4 m"
+
+
 def test__compare_parameter_across_versions(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
     output_path = io_handler.get_output_directory(
