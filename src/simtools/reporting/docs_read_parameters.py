@@ -164,6 +164,35 @@ class ReadParameters:
             else ", ".join(f"{v} {unit}" for v in value_data)
         ).strip()
 
+    def _group_model_versions_by_parameter_version(self, grouped_data):
+        """Group model versions by parameter version and track the parameter values."""
+        result = {}
+
+        for parameter_name, items in grouped_data.items():
+            version_grouped = defaultdict(
+                lambda: {"model_versions": [], "value": None, "file_flag": None}
+            )
+
+            for item in items:
+                param_version = item["parameter_version"]
+                version_grouped[param_version]["model_versions"].append(item["model_version"])
+
+                if version_grouped[param_version]["value"] is None:
+                    version_grouped[param_version]["value"] = item["value"]
+                    version_grouped[param_version]["file_flag"] = item["file_flag"]
+
+            result[parameter_name] = [
+                {
+                    "value": data["value"],
+                    "parameter_version": param_version,
+                    "file_flag": data["file_flag"],
+                    "model_version": ", ".join(data["model_versions"]),
+                }
+                for param_version, data in version_grouped.items()
+            ]
+
+        return result
+
     def _compare_parameter_across_versions(self, all_param_data, all_parameter_names):
         """
         Compare a parameter's value across different model versions.
@@ -189,19 +218,13 @@ class ReadParameters:
         for version in all_versions:
             Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
 
-            # Export model files (assuming '6.0.0' is the version you want)
             self.db.export_model_files(
                 parameters=all_param_data.get(version), dest=f"{self.output_path}/model"
             )
 
             parameter_dict = all_param_data.get(version, {})
 
-            # Iterate over each parameter name
-            for parameter_name in all_parameter_names:
-                # Skip if parameter_name is not present
-                if parameter_name not in parameter_dict:
-                    continue
-
+            for parameter_name in filter(parameter_dict.__contains__, all_parameter_names):
                 parameter_data = parameter_dict.get(parameter_name)
 
                 # Skip if instrument doesn't match
@@ -229,33 +252,7 @@ class ReadParameters:
                     }
                 )
 
-            result = {}
-            for parameter_name, items in grouped_data.items():
-                # Group model versions by parameter version and track the correct values
-                version_grouped = defaultdict(
-                    lambda: {"model_versions": [], "value": None, "file_flag": None}
-                )
-
-                for item in items:
-                    param_version = item["parameter_version"]
-                    version_grouped[param_version]["model_versions"].append(item["model_version"])
-
-                    # Ensure the correct value is taken for this specific parameter version
-                    if version_grouped[param_version]["value"] is None:
-                        version_grouped[param_version]["value"] = item["value"]
-                        version_grouped[param_version]["file_flag"] = item["file_flag"]
-
-                result[parameter_name] = [
-                    {
-                        "value": data["value"],
-                        "parameter_version": param_version,
-                        "file_flag": data["file_flag"],
-                        "model_version": ", ".join(data["model_versions"]),
-                    }
-                    for param_version, data in version_grouped.items()
-                ]
-
-        return result
+        return self._group_model_versions_by_parameter_version(grouped_data)
 
     def produce_array_element_report(self):
         """

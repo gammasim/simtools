@@ -112,6 +112,71 @@ def test__format_parameter_value(io_handler, db_config):
     assert result_4 == "1 m, 2 m, 3 m, 4 m"
 
 
+def test__group_model_versions_by_parameter_version(io_handler, db_config):
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
+
+    mock_data = {
+        "nsb_pixel_rate": [
+            {
+                "value": "all: 0.233591 GHz",
+                "parameter_version": "2.0.0",
+                "model_version": "6.0.0",
+                "file_flag": False,
+            },
+            {
+                "value": "all: 0.238006 GHz",
+                "parameter_version": "1.0.0",
+                "model_version": "5.0.0",
+                "file_flag": False,
+            },
+        ],
+        "pm_gain_index": [
+            {
+                "value": "4.5",
+                "parameter_version": "1.0.0",
+                "model_version": "6.0.0",
+                "file_flag": False,
+            },
+            {
+                "value": "4.5",
+                "parameter_version": "1.0.0",
+                "model_version": "5.0.0",
+                "file_flag": False,
+            },
+        ],
+    }
+
+    expected = {
+        "nsb_pixel_rate": [
+            {
+                "value": "all: 0.233591 GHz",
+                "parameter_version": "2.0.0",
+                "file_flag": False,
+                "model_version": "6.0.0",
+            },
+            {
+                "value": "all: 0.238006 GHz",
+                "parameter_version": "1.0.0",
+                "file_flag": False,
+                "model_version": "5.0.0",
+            },
+        ],
+        "pm_gain_index": [
+            {
+                "value": "4.5",
+                "parameter_version": "1.0.0",
+                "file_flag": False,
+                "model_version": "6.0.0, 5.0.0",
+            }
+        ],
+    }
+
+    result = read_parameters._group_model_versions_by_parameter_version(mock_data)
+
+    assert result == expected
+
+
 def test__compare_parameter_across_versions(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
     output_path = io_handler.get_output_directory(
@@ -155,11 +220,33 @@ def test__compare_parameter_across_versions(io_handler, db_config):
                 "unit": "m",
                 "file": False,
             },
+            "only_prod6_param": {
+                "instrument": "LSTN-01",
+                "site": "North",
+                "parameter_version": "1.0.0",
+                "value": 70.45,
+                "unit": "m",
+                "file": False,
+            },
+            "none_valued_param": {
+                "instrument": "LSTN-01",
+                "site": "North",
+                "parameter_version": "1.0.0",
+                "value": None,
+                "unit": None,
+                "file": False,
+            },
         },
     }
 
     comparison_data = read_parameters._compare_parameter_across_versions(
-        mock_data, ["quantum_efficiency", "array_element_position_ground"]
+        mock_data,
+        [
+            "quantum_efficiency",
+            "array_element_position_ground",
+            "only_prod6_param",
+            "none_valued_param",
+        ],
     )
     qe_comparison = comparison_data.get("quantum_efficiency")
     assert qe_comparison["parameter_version" == "1.0.0"]["model_version"] == "6.0.0, 5.0.0"
@@ -167,3 +254,5 @@ def test__compare_parameter_across_versions(io_handler, db_config):
     position_comparison = comparison_data.get("array_element_position_ground")
     assert position_comparison[0]["model_version"] != position_comparison[1]["model_version"]
     assert position_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
+
+    assert len(comparison_data.get("only_prod6_param")) == 1
