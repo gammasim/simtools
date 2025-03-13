@@ -149,7 +149,7 @@ class ReadParameters:
         return data
 
     def _format_parameter_value(self, value_data, unit, file_flag):
-        """Format parameter value based on type and parameter name."""
+        """Format parameter value based on type."""
         if file_flag:
             input_file_name = f"{self.output_path}/model/{value_data}"
             output_file_name = self._convert_to_md(input_file_name)
