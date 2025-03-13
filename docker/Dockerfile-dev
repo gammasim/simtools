@@ -3,16 +3,17 @@ ARG HADRONIC_MODEL="qgs2"
 ARG SIMTEL_VERSION="240927"
 ARG CORSIKA_VERSION="77550"
 ARG BERNLOHR_VERSION="1.68"
+ARG PYTHON_VERSION="3.13"
 FROM ghcr.io/gammasim/simtools-corsika-sim-telarray-${SIMTEL_VERSION}-corsika-${CORSIKA_VERSION}-bernlohr-${BERNLOHR_VERSION}-${BUILD_OPT}-${HADRONIC_MODEL}
 WORKDIR /workdir
 
 RUN microdnf update -y && microdnf install -y \
     findutils gcc-c++ git \
-    python3.11-pip python3.11-devel wget && \
+    python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel wget && \
     microdnf clean all
 
 RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
-    python3.11 -m venv env && \
+    python${PYTHON_VERSION} -m venv env && \
     source env/bin/activate && \
     pip install -U pip && \
     pip install toml-to-requirements && \
