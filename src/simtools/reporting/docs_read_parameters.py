@@ -148,6 +148,22 @@ class ReadParameters:
 
         return data
 
+    def _format_parameter_value(self, value_data, unit, file_flag):
+        """Format parameter value based on type and parameter name."""
+        if file_flag:
+            input_file_name = f"{self.output_path}/model/{value_data}"
+            output_file_name = self._convert_to_md(input_file_name)
+            return f"[{Path(value_data).name}]({output_file_name})".strip()
+        if isinstance(value_data, (str | int | float)):
+            return f"{value_data} {unit}".strip()
+        if len(value_data) > 5 and np.allclose(value_data, value_data[0]):
+            return f"all: {value_data[0]} {unit}".strip()
+        return (
+            ", ".join(f"{v} {u}" for v, u in zip(value_data, unit))
+            if isinstance(unit, list)
+            else ", ".join(f"{v} {unit}" for v in value_data)
+        ).strip()
+
     def _compare_parameter_across_versions(self, all_param_data, all_parameter_names):
         """
         Compare a parameter's value across different model versions.
@@ -168,22 +184,6 @@ class ReadParameters:
         all_versions = self.db.get_model_versions()
         all_versions.reverse()  # latest first
         grouped_data = defaultdict(list)
-
-        def format_value(value_data, unit, file_flag):
-            """Format parameter value based on type and parameter name."""
-            if file_flag:
-                input_file_name = f"{self.output_path}/model/{value_data}"
-                output_file_name = self._convert_to_md(input_file_name)
-                return f"[{Path(value_data).name}]({output_file_name})"
-            if isinstance(value_data, (str | int | float)):
-                return f"{value_data} {unit}"
-            if len(value_data) > 5 and np.allclose(value_data, value_data[0]):
-                return f"all: {value_data[0]} {unit}"
-            return (
-                ", ".join(f"{v:.2f} {u}" for v, u in zip(value_data, unit))
-                if isinstance(unit, list)
-                else ", ".join(f"{v} {unit}" for v in value_data)
-            )
 
         # Iterate over each model version
         for version in all_versions:
@@ -208,21 +208,21 @@ class ReadParameters:
                 if parameter_data.get("instrument") != self.array_element:
                     continue
 
-                unit = parameter_data.get("unit") or ""
+                unit = parameter_data.get("unit") or " "
                 value_data = parameter_data.get("value")
 
                 if not value_data:
                     continue
 
                 file_flag = parameter_data.get("file", False)
-                value = format_value(value_data, unit, file_flag)
+                value = self._format_parameter_value(value_data, unit, file_flag)
                 parameter_version = parameter_data.get("parameter_version")
                 model_version = version
 
                 # Group the data by parameter version and store model versions as a list
                 grouped_data[parameter_name].append(
                     {
-                        "value": value.strip(),
+                        "value": value,
                         "parameter_version": parameter_version,
                         "model_version": model_version,
                         "file_flag": file_flag,
