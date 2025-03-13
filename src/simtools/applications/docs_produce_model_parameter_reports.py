@@ -42,9 +42,7 @@ def main():  # noqa: D103
     ).produce_model_parameter_reports()
 
     logger.info(
-        f"Markdown report generated for {args['site']}"
-        f" Telescope {args['telescope']}:"
-        f" {output_path}"
+        f"Markdown report generated for {args['site']} Telescope {args['telescope']}: {output_path}"
     )
 
 
