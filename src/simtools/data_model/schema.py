@@ -108,7 +108,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
     """
     if json_schema is None and schema_file is None:
         _logger.warning(f"No schema provided for validation of {data}")
-        return
+        return None
     if json_schema is None:
         json_schema = load_schema(
             schema_file,
@@ -131,6 +131,7 @@ def validate_dict_using_schema(data, schema_file=None, json_schema=None):
         raise FileNotFoundError(f"Meta schema URL does not exist: {data['meta_schema_url']}")
 
     _logger.debug(f"Successful validation of data using schema ({json_schema.get('name')})")
+    return data
 
 
 def load_schema(schema_file=None, schema_version=None):
