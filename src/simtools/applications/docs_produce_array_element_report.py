@@ -9,9 +9,11 @@ Currently only implemented for telescopes.
 """
 
 import logging
+from pathlib import Path
 
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
+from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import general as gen
 
@@ -24,9 +26,19 @@ def _parse(label):
     )
 
     config.parser.add_argument(
-        "--parameter",
+        "--all_telescopes",
         action="store_true",
-        help="Compare all parameters across model versions for one telescope.",
+        help="Produce reports for all telescopes. Defaults to False.",
+    )
+
+    config.parser.add_argument(
+        "--all_model_versions",
+        action="store_true",
+        help="Produce reports for all model versions. Defaults to False.",
+    )
+
+    config.parser.add_argument(
+        "--all_sites", action="store_true", help="Produce reports for all sites. Defaults to False."
     )
 
     return config.initialize(
@@ -37,25 +49,32 @@ def _parse(label):
 def main():  # noqa: D103
     label_name = "reports"
     args, db_config = _parse(label_name)
+
     io_handler_instance = io_handler.IOHandler()
-    output_path = io_handler_instance.get_output_directory(
-        label=label_name, sub_dir=f"productions/{args['model_version']}"
-    )
+    output_path = io_handler_instance.get_output_directory(label=label_name, sub_dir="productions")
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
 
-    ReadParameters(
-        db_config,
-        args,
-        output_path,
-    ).produce_array_element_report()
+    if any([args.get("all_telescopes"), args.get("all_sites"), args.get("all_model_versions")]):
+        ReportGenerator(
+            db_config,
+            args,
+            output_path,
+        ).auto_generate_array_element_reports()
 
-    logger.info(
-        f"Markdown report generated for {args['site']}"
-        f" Telescope {args['telescope']} (v{args['model_version']}):"
-        f" {output_path}"
-    )
+    else:
+        ReadParameters(
+            db_config,
+            args,
+            Path(output_path / f"{args['model_version']}"),
+        ).produce_array_element_report()
+
+        logger.info(
+            f"Markdown report generated for {args['site']}"
+            f" Telescope {args['telescope']} (v{args['model_version']}):"
+            f" {output_path}"
+        )
 
 
 if __name__ == "__main__":
