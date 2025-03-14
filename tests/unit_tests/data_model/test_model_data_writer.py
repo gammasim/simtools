@@ -10,6 +10,7 @@ import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
 
+import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
@@ -34,21 +35,24 @@ def num_gains_schema(num_gains_schema_file):
     return gen.collect_data_from_file(file_name=num_gains_schema_file)
 
 
-def test_write(tmp_test_directory):
+def test_write(tmp_test_directory, args_dict_site):
     # both none (no exception expected)
     w_1 = writer.ModelDataWriter(output_path=tmp_test_directory)
-    w_1.write(metadata=None, product_data=None)
+    assert w_1.write(metadata=None, product_data=None) is None
 
-    # metadata not none
-    _metadata = {"name": "test_metadata"}
+    # metadata not none; no data and metadata file
+    _metadata = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     w_1.product_data_file = tmp_test_directory.join("test_file.ecsv")
+    metadata_file = tmp_test_directory.join("test_file.meta.yml")
     w_1.write(metadata=_metadata, product_data=None)
+    assert not metadata_file.exists()
+    assert not Path(w_1.product_data_file).exists()
 
-    # product_data not none
+    # product_data not none - expect data file to be written; no metadata file
     empty_table = Table()
     w_1.write(metadata=None, product_data=empty_table)
-
     assert Path(w_1.product_data_file).exists()
+    assert not metadata_file.exists()
 
     # both not none
     data = {"pixel": [25, 30, 28]}
@@ -56,11 +60,14 @@ def test_write(tmp_test_directory):
     w_1.product_data_file = tmp_test_directory.join(test_file_2)
     w_1.write(metadata=_metadata, product_data=small_table)
     assert Path(w_1.product_data_file).exists()
+    assert (
+        (Path(tmp_test_directory) / test_file_2).with_suffix(".integration_test.meta.yml").exists()
+    )
 
     # check that table and metadata is good
     table = Table.read(w_1.product_data_file, format=ascii_format)
     assert "pixel" in table.colnames
-    assert "NAME" in table.meta.keys()
+    assert "CTA" in table.meta.keys()
 
     w_1.product_data_format = "not_an_astropy_format"
     with pytest.raises(IORegistryError):
@@ -87,8 +94,7 @@ def test_write_dict_to_model_parameter_json(tmp_test_directory):
         )
 
 
-def test_dump(args_dict, io_handler, tmp_test_directory):
-    _metadata = {"name": "test_metadata"}
+def test_dump(args_dict, io_handler):
     empty_table = Table()
 
     args_dict["use_plain_output_path"] = True
@@ -96,7 +102,7 @@ def test_dump(args_dict, io_handler, tmp_test_directory):
     args_dict["skip_output_validation"] = True
     writer.ModelDataWriter().dump(
         args_dict=args_dict,
-        metadata=_metadata,
+        metadata=None,
         product_data=empty_table,
         validate_schema_file=None,
     )
@@ -109,7 +115,7 @@ def test_dump(args_dict, io_handler, tmp_test_directory):
     with pytest.raises(KeyError):
         writer.ModelDataWriter().dump(
             args_dict=args_dict,
-            metadata=_metadata,
+            metadata=None,
             product_data=empty_table,
             validate_schema_file=SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml",
         )
@@ -118,7 +124,7 @@ def test_dump(args_dict, io_handler, tmp_test_directory):
     writer.ModelDataWriter().dump(
         args_dict=args_dict,
         output_file=test_file_2,
-        metadata=_metadata,
+        metadata=None,
         product_data=empty_table,
         validate_schema_file=None,
     )
@@ -160,33 +166,6 @@ def test_validate_and_transform(num_gains_schema_file):
         w_1.validate_and_transform(
             product_data_dict=num_gains,
             validate_schema_file=num_gains_schema_file,
-        )
-
-
-def test_write_metadata_to_yml(tmp_test_directory):
-    # test writer of metadata
-    _metadata = {"name": "test_metadata"}
-    w_1 = writer.ModelDataWriter()
-    with pytest.raises(TypeError):
-        w_1.write_metadata_to_yml(metadata=_metadata)
-
-    yml_file = w_1.write_metadata_to_yml(
-        metadata=_metadata, yml_file=tmp_test_directory.join("test_file.yml")
-    )
-    assert Path(yml_file).exists()
-
-    with pytest.raises(FileNotFoundError):
-        w_1.write_metadata_to_yml(
-            metadata=_metadata, yml_file="./this_directory_is_not_there/test_file.yml"
-        )
-
-    with pytest.raises(AttributeError):
-        w_1.write_metadata_to_yml(metadata=None, yml_file=tmp_test_directory.join("test_file.yml"))
-
-    with pytest.raises(TypeError):
-        w_1.write_metadata_to_yml(
-            metadata=_metadata,
-            yml_file=None,
         )
 
 
@@ -246,7 +225,7 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
     assert pytest.approx(value_list[0]) == 217659.6
     assert pytest.approx(value_list[1]) == 3184995.1
     assert pytest.approx(value_list[2]) == 2185.0
-    assert Path(tmp_test_directory / "array_element_position_utm.metadata.yml").is_file()
+    assert Path(tmp_test_directory / "array_element_position_utm.meta.yml").is_file()
 
     position_dict = writer.ModelDataWriter.dump_model_parameter(
         parameter_name="focus_offset",

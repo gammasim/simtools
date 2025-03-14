@@ -353,6 +353,8 @@ def get_array_element_type_from_name(array_element_name):
     """
     Get array element type from array element name (e.g "MSTN" from "MSTN-01").
 
+    For sites, return site name.
+
     Parameters
     ----------
     array_element_name: str
@@ -363,7 +365,10 @@ def get_array_element_type_from_name(array_element_name):
     str
         Array element type.
     """
-    return _validate_name(array_element_name.split("-")[0], array_elements())
+    try:  # e.g. instrument is 'North' as given for the site parameters
+        return validate_site_name(array_element_name)
+    except ValueError:  # any other telescope or calibration device
+        return _validate_name(array_element_name.split("-")[0], array_elements())
 
 
 def get_array_element_id_from_name(array_element_name):
@@ -460,7 +465,7 @@ def get_collection_name_from_array_element_name(array_element_name, array_elemen
     """
     try:
         return array_elements()[get_array_element_type_from_name(array_element_name)]["collection"]
-    except ValueError as exc:
+    except (ValueError, KeyError) as exc:
         if array_elements_only:
             raise ValueError(f"Invalid array element name {array_element_name}") from exc
     try:

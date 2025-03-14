@@ -16,3 +16,8 @@ MODEL_PARAMETER_DESCRIPTION_METASCHEMA = (
 )
 # Path to model parameter schema files
 MODEL_PARAMETER_SCHEMA_PATH = SCHEMA_PATH / "model_parameters"
+# URL to model parameter schema files
+MODEL_PARAMETER_SCHEMA_URL = (
+    "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/"
+    "/model_parameters"
+)
