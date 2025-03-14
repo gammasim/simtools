@@ -3,10 +3,10 @@ name: CI-unittests
 # Execute unit tests
 # (includes CTAO-DPPS-SonarQube)
 env:
-  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
-  SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
-  SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
-  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
+  SIMTOOLS_DB_SERVER: localhost
+  SIMTOOLS_DB_API_USER: api
+  SIMTOOLS_DB_API_PW: password
+  SIMTOOLS_DB_API_PORT: 27017
   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
 on:
@@ -17,16 +17,11 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
-
   unittests:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            python-version: "3.11"
-            install-method: mamba
-
           - os: ubuntu-latest
             python-version: "3.11"
             install-method: mamba
@@ -39,6 +34,20 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.12"
             install-method: mamba
+
+    services:
+      mongodb:
+        image: mongo:latest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: api
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     defaults:
       run:
@@ -60,7 +69,6 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          # setup correct python version
           sed -i -e "s/- python=.*/- python=$PYTHON_VERSION/g" environment.yml
 
       - name: Install mamba dependencies
@@ -78,12 +86,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           check-latest: true
 
-      - if: ${{ matrix.install-method == 'pip' && runner.os == 'macOS' }}
-        name: Fix Python PATH on macOS
-        # from https://github.com/cta-observatory/ctapipe/blob/cfacbe1eeb2d9a4634980e5f1ef39b944bca6a7a/.github/workflows/ci.yml#L100
-        run: |
-          tee -a "$HOME/.bash_profile" <<< "export PATH=$pythonLocation/bin:$PATH"
-
       - name: Python dependencies (pip)
         if: matrix.install-method == 'pip'
         run: |
@@ -100,12 +102,17 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
 
+      - name: Upload data to MongoDB
+        run: |
+          cd database_scripts/
+          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+
       - name: Unit tests
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
-          pytest --durations=10 --color=yes -n auto --dist loadscope \
+          pytest --durations=10 --color=yes -n 4 --dist loadscope \
             --cov=simtools --cov-report=xml
 
       # CTAO-DPPS-SonarQube
@@ -120,7 +127,7 @@ jobs:
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
         run: |
-          pytest --color=yes -n auto --dist loadscope --count 5 --random-order
+          pytest --color=yes -n 4 --dist loadscope --count 5 --random-order
 
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v5
