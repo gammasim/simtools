@@ -120,10 +120,14 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
     mock_subprocess_run.assert_called_with(
         [
             "/path/to/simtel/sim_telarray/bin/norm_spe",
-            "-a",
-            ANY,
             "-r",
             "0.1,1.0",
+            "-a",
+            ANY,
+            "-s",
+            "1.0",
+            "-t",
+            "4.0",
             ANY,
         ],
         capture_output=True,

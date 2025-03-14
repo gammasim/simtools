@@ -75,6 +75,20 @@ def _parse(label):
         required=False,
     )
     config.parser.add_argument(
+        "--scale_afterpulse_spectrum",
+        help="Scale afterpulse spectrum by the given factor",
+        type=float,
+        default=1.0,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--threshold_afterpulse_spectrum",
+        help="Threshold for afterpulse ratio calculation",
+        type=float,
+        default=4.0,
+        required=False,
+    )
+    config.parser.add_argument(
         "--use_norm_spe",
         help="Use sim_telarray tool 'norm_spe' to normalize the spectrum.",
         action="store_true",
