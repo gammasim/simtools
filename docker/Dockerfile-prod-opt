@@ -8,7 +8,8 @@ ARG AVX_FLAG="avx2"
 ARG CORSIKA_VERSION="77550"
 ARG BERNLOHR_VERSION="1.68"
 ARG BUILD_BRANCH=main
-ARG PYTHON_VERSION="3.12"
+ARG PYTHON_VERSION=3.12
+ARG SIMTOOLS_REQUIREMENT="git+https://github.com/gammasim/simtools.git"
 
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
@@ -28,7 +29,7 @@ RUN cd corsika-$CORSIKA_VERSION && \
     if [[ $CORSIKA_VERSION -eq 77550 ]]; then \
         (cd src && patch -b -p0 corsika.F < "../../corsika-77550.patch"); \
     fi && \
-    if [[ "$AVX_FLAG" == "noOpt" ]]; then \
+    if [[ "$AVX_FLAG" == "no_opt" ]]; then \
         ../corsika_build_script $HADRONIC_MODEL generic; \
     else \
         ./corsika_opt_patching.sh && \
@@ -40,10 +41,10 @@ RUN cd corsika-$CORSIKA_VERSION && \
 RUN make -C corsika-$CORSIKA_VERSION clean && rm -f */*.a lib/*/*.a && \
     AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
     CFLAGS="" && CXXFLAGS="" && FFLAGS="" && \
-    if [[ "$AVX_FLAG" == "noOpt" ]]; then \
-        CFLAGS="-g  -std=c99 -O3 -mavx2"; \
-        CXXFLAGS="-g  -std=c99 -O3 -mavx2"; \
-        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -std=c99 -O3 -mavx2"; \
+    if [[ "$AVX_FLAG" == "no_opt" ]]; then \
+        CFLAGS="-g  -std=c99 -O3"; \
+        CXXFLAGS="-g  -std=c99 -O3"; \
+        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -std=c99 -O3"; \
     else \
         CFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
         CXXFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
@@ -84,21 +85,21 @@ RUN echo "build_opt: $BUILD_OPT" > /workdir/sim_telarray/build_opts.yml && \
 FROM almalinux:9.5-minimal
 WORKDIR /workdir
 ARG BUILD_BRANCH=main
-ARG PYTHON_VERSION="3.12"
+ARG SIMTOOLS_REQUIREMENT="git+https://github.com/gammasim/simtools.git"
+ARG PYTHON_VERSION=3.12
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
 RUN microdnf update -y && microdnf install -y \
     bc findutils gcc-c++ git gsl-devel gcc-fortran libgfortran \
-    procps python${PYTHON_VERSION}-pip zstd && \
+    procps python${PYTHON_VERSION}-devel zstd && \
     microdnf clean all
 
-RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') && \
-    git clone -b $BUILD_BRANCH https://github.com/gammasim/simtools.git --depth 1 && \
-    python${PYTHON_VERSION} -m venv env && \
-    source env/bin/activate && \
-    pip install -U pip && \
-    pip install --no-cache-dir ./simtools && \
-    rm -rf simtools
+RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') \
+  && git clone -b $BUILD_BRANCH https://github.com/gammasim/simtools.git --depth 1 \
+  && python${PYTHON_VERSION} -m venv env \
+  && source env/bin/activate \
+  && pip install -U pip \
+  && pip install --no-cache-dir ${SIMTOOLS_REQUIREMENT}
 
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
 ENV PATH="/workdir/env/bin/:$PATH"
