@@ -696,8 +696,9 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     ):
         return True
 
-    if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
-        return True
+    if reference_dtype in ("boolean", "bool"):
+        if value in {0, 1} or np.issubdtype(dtype, np.bool_):
+            return True
 
     if np.issubdtype(dtype, np.integer) and (
         np.issubdtype(reference_dtype, np.integer) or np.issubdtype(reference_dtype, np.floating)
