@@ -233,7 +233,7 @@ def read_and_export_parameters(args_dict, logger):
     _simtel_parameters = get_list_of_simtel_parameters(args_dict["simtel_cfg_file"], logger)
 
     io_handler = IOHandler()
-    io_handler.set_paths(output_path=args_dict["output_path"], use_plain_output_path=True)
+    io_handler.set_paths(output_path=args_dict["output_path"])
 
     _camera_pixel = get_number_of_camera_pixel(args_dict, logger)
 
@@ -258,7 +258,11 @@ def read_and_export_parameters(args_dict, logger):
             value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
             instrument=args_dict["telescope"],
             parameter_version=args_dict["parameter_version"],
-            output_file=io_handler.get_output_file(f"{_parameter}.json"),
+            output_file=io_handler.get_output_file(
+                f"{_parameter}-{args_dict['parameter_version']}.json",
+                label=f"{args_dict['telescope']}",
+                sub_dir=f"{_parameter}",
+            ),
         )
 
         simtel_config_reader.compare_simtel_config_with_schema()
