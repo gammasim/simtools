@@ -548,6 +548,8 @@ def test_validate_data_type():
         ("string", "hello", None, True, True),
         ("file", None, "object", True, True),  # 'file' type with None value
         ("boolean", True, None, True, True),
+        ("boolean", 1, None, True, True),
+        ("boolean", 0, None, True, True),
         ("int", None, np.uint8, True, True),  # Subtype of 'int'
         ("float", None, int, True, True),  # 'int' can be converted to 'float'
     ]
@@ -566,6 +568,9 @@ def test_validate_data_type():
 
     with pytest.raises(ValueError, match=r"^Either value or dtype must be given"):
         gen.validate_data_type("int", None, None, False)
+
+    assert gen.validate_data_type("int", 5.0) is False
+    assert gen.validate_data_type("bool", 5) is False  # allow 0/1 to be booleans
 
 
 def test_convert_list_to_string():
