@@ -4,6 +4,7 @@
 import logging
 import re
 
+import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
@@ -26,7 +27,7 @@ class SimtelConfigReader:
             -C limits=no-internal -C initlist=no-internal -C list=no-internal\
             -C typelist=no-internal -C maximum_telescopes=30\
             -DNSB_AUTOSCALE -DNECTARCAM -DHYPER_LAYOUT\
-            -DNUM_TELESCOPES=30 /dev/null 2>|/dev/null | grep '(@cfg)'
+            -DNUM_TELESCOPES=30 /dev/null 2>|/dev/null | grep '(@cfg)' | sed 's/^(@cfg)
 
     Parameters
     ----------
@@ -61,6 +62,7 @@ class SimtelConfigReader:
             else None
         )
         self.parameter_name = self.schema_dict.get("name") if self.schema_dict else parameter_name
+        # TODO replace by names.get_simulation_software_name_from_parameter_name ??
         self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
         self.simtel_telescope_name = simtel_telescope_name
         self.camera_pixels = camera_pixels
@@ -73,7 +75,7 @@ class SimtelConfigReader:
         return data_type == "limits" and self.parameter_dict.get("type") == "bool"
 
     def _get_schema_values(self, data_type):
-        """Check schema values for limits and defaults."""
+        """Check schema values for limits, unit, and default."""
         try:
             if data_type == "limits":
                 _from_schema = [
@@ -82,8 +84,8 @@ class SimtelConfigReader:
                 ]
                 return _from_schema[0] if _from_schema[1] is None else _from_schema
             if len(self.schema_dict["data"]) == 1:
-                return self.schema_dict["data"][0]["default"]
-            return [data.get("default") for data in self.schema_dict["data"]]
+                return self.schema_dict["data"][0].get(data_type)
+            return [data.get(data_type) for data in self.schema_dict["data"]]
         except (KeyError, IndexError):
             return None
 
@@ -184,6 +186,7 @@ class SimtelConfigReader:
                     dtype=_para_dict.get("type"),
                     n_dim=_para_dict.get("dimension"),
                     default=_para_dict.get("default"),
+                    is_limit=(key == "limits"),
                 )
             except KeyError:
                 pass
@@ -232,7 +235,7 @@ class SimtelConfigReader:
 
         return column, except_from_all
 
-    def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None):
+    def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None, is_limit=False):
         """
         Extract value(s) from simtel configuration file columns.
 
@@ -276,7 +279,42 @@ class SimtelConfigReader:
         if dtype == "bool":
             column = np.array([bool(int(item)) for item in column])
 
-        return self._process_column(column, dtype)
+        column, ndim = self._process_column(column, dtype)
+        if not is_limit:
+            column = self._add_units(column)
+        return column, ndim
+
+    def _add_units(self, column):
+        """
+        Add units as given in schema file to column.
+
+        Take into account array types and dimensionless units.
+        Ensure that integer values are returned as integers (astropy converts
+        values to floats when multiplying them with units).
+
+        """
+        try:
+            unit = self._get_schema_values("unit")
+        except TypeError:  # no schema defined
+            return column
+        if unit is None or unit == "dimensionless":
+            return column
+
+        if isinstance(column, np.ndarray) and len(column) == len(unit):
+            return np.array(
+                [
+                    col * u.Unit(un) if un != "dimensionless" else col
+                    for col, un in zip(column, unit)
+                ],
+                dtype=object,
+            )
+        if isinstance(unit, str):
+            column_with_unit = column * u.Unit(unit)
+            if isinstance(column, int | np.integer):
+                return u.Quantity(int(column_with_unit.value), unit, dtype=type(column))
+            return column_with_unit
+
+        return None
 
     def _process_column(self, column, dtype):
         """
