@@ -11,7 +11,7 @@ description: Density, thickness, and index of refraction as function of altitude
 data:
   - type: file
     unit: dimensionless
-    default: None
+    default: null
 instrument:
   class: Site
   type:
