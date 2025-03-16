@@ -91,7 +91,20 @@ class SimtelConfigReader:
 
     @staticmethod
     def _values_match(_from_simtel, _from_schema):
-        """Check if values match (are close for floats)."""
+        """
+        Check if values match (are close for floats).
+
+        Convert where necessary astropy.Quantity to float.
+
+        """
+        if isinstance(_from_simtel, u.Quantity):
+            _from_simtel = _from_simtel.value
+        if (
+            isinstance(_from_simtel, np.ndarray)
+            and len(_from_simtel) > 0
+            and isinstance(_from_simtel[0], u.Quantity)
+        ):
+            _from_simtel = np.array([v.value for v in _from_simtel])
         try:
             if not isinstance(_from_schema, list | np.ndarray) and _from_simtel == _from_schema:
                 return True
