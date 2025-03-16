@@ -11,7 +11,7 @@ description: List of mirror positions, diameters, focal lengths, and shape codes
 data:
   - type: file
     unit: dimensionless
-    default: None
+    default: null
 instrument:
   class: Structure
   type:
