@@ -27,12 +27,12 @@ data:
 instrument:
   class: Camera
   type:
-    - None
+    - null
 activity:
   setting:
-    - None
+    - null
   validation:
-    - None
+    - null
 source:
   - Initial instrument setup
 simulation_software:
