@@ -20,7 +20,7 @@ short_description: Sky map (Az/Alt) of NSB enhancement factors.
 data:
   - type: file
     unit: dimensionless
-    default: None
+    default: null
 instrument:
   class: Site
   type:
