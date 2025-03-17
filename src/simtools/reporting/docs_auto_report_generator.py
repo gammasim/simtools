@@ -34,6 +34,16 @@ class ReportGenerator:
                 updated_telescopes.append(design_model)  # Add design model if not already present
         return updated_telescopes
 
+    def _filter_telescopes_by_site(self, telescopes, selected_sites):
+        """Filter telescopes by selected sites."""
+        filtered_telescopes = []
+        for telescope in telescopes:
+            sites = names.get_site_from_array_element_name(telescope)
+            sites = sites if isinstance(sites, list) else [sites]
+            if any(site in selected_sites for site in sites):
+                filtered_telescopes.append(telescope)
+        return filtered_telescopes
+
     def auto_generate_array_element_reports(self):
         """
         Generate all reports based on which --all_* flag is passed.
@@ -56,14 +66,7 @@ class ReportGenerator:
 
             # Add design models to the list of telescopes
             all_telescopes = self._add_design_models_to_telescopes(model_version, telescopes)
-
-            filtered_telescopes = []
-            for telescope in all_telescopes:
-                sites = names.get_site_from_array_element_name(telescope)
-                sites = sites if isinstance(sites, list) else [sites]
-
-                if any(site in selected_sites for site in sites):
-                    filtered_telescopes.append(telescope)
+            filtered_telescopes = self._filter_telescopes_by_site(all_telescopes, selected_sites)
 
             for telescope in filtered_telescopes:
                 sites = names.get_site_from_array_element_name(telescope)
