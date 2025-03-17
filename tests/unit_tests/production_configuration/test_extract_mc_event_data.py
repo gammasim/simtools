@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
-import h5py
 import pytest
+import tables
 from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerInformation
 
 from simtools.production_configuration.extract_mc_event_data import MCEventExtractor
@@ -44,45 +44,46 @@ def mock_eventio_objects():
     return [mc_run_header, mc_shower, mc_event, array_event]
 
 
-@patch("simtools.production_configuration.generate_reduced_datasets.EventIOFile", autospec=True)
+@patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
 def test_process_files(mock_eventio_class, lookup_table_generator):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
         mock_eventio_objects()
     )
     lookup_table_generator.process_files()
 
-    with h5py.File(lookup_table_generator.output_file, "r") as hdf:
-        data_group = hdf["data"]
-        print('data_group["simulated"]', data_group["simulated"])
-        assert "simulated" in data_group
-        assert "shower_id_triggered" in data_group
-        assert "triggered_energies" in data_group
-        assert "num_triggered_telescopes" in data_group
-        assert "trigger_telescope_list_list" in data_group
-        assert "core_x" in data_group
-        assert "core_y" in data_group
-        assert "file_names" in data_group
-        assert "shower_sim_azimuth" in data_group
-        assert "shower_sim_altitude" in data_group
-        assert "array_altitudes" in data_group
-        assert "array_azimuths" in data_group
+    with tables.open_file(lookup_table_generator.output_file, mode="r") as hdf:
+        data_group = hdf.root.data
+        reduced_data = data_group.reduced_data
+        triggered_data = data_group.triggered_data
+        file_names = data_group.file_names
+        trigger_telescope_list_list = data_group.trigger_telescope_list_list
+
+        assert "simulated" in reduced_data.colnames
+        assert "shower_id_triggered" in triggered_data.colnames
+        assert "triggered_energies" in triggered_data.colnames
+        assert "core_x" in reduced_data.colnames
+        assert "core_y" in reduced_data.colnames
+        assert "file_names" in file_names.colnames
+        assert "shower_sim_azimuth" in reduced_data.colnames
+        assert "shower_sim_altitude" in reduced_data.colnames
+        assert "array_altitudes" in reduced_data.colnames
+        assert "array_azimuths" in reduced_data.colnames
 
         # Check that datasets are not empty
-        assert len(data_group["simulated"]) > 0
-        assert len(data_group["shower_id_triggered"]) > 0
-        assert len(data_group["triggered_energies"]) > 0
-        assert len(data_group["num_triggered_telescopes"]) > 0
-        assert len(data_group["trigger_telescope_list_list"]) > 0
-        assert len(data_group["core_x"]) > 0
-        assert len(data_group["core_y"]) > 0
-        assert len(data_group["file_names"]) > 0
-        assert len(data_group["shower_sim_azimuth"]) > 0
-        assert len(data_group["shower_sim_altitude"]) > 0
-        assert len(data_group["array_altitudes"]) > 0
-        assert len(data_group["array_azimuths"]) > 0
+        assert len(reduced_data.col("simulated")) > 0
+        assert len(triggered_data.col("shower_id_triggered")) > 0
+        assert len(triggered_data.col("triggered_energies")) > 0
+        assert len(trigger_telescope_list_list) > 0
+        assert len(reduced_data.col("core_x")) > 0
+        assert len(reduced_data.col("core_y")) > 0
+        assert len(file_names.col("file_names")) > 0
+        assert len(reduced_data.col("shower_sim_azimuth")) > 0
+        assert len(reduced_data.col("shower_sim_altitude")) > 0
+        assert len(reduced_data.col("array_altitudes")) > 0
+        assert len(reduced_data.col("array_azimuths")) > 0
 
 
-@patch("simtools.production_configuration.generate_reduced_datasets.EventIOFile", autospec=True)
+@patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
 def test_print_hdf5_file(mock_eventio_class, lookup_table_generator, capsys):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
         mock_eventio_objects()
@@ -92,15 +93,56 @@ def test_print_hdf5_file(mock_eventio_class, lookup_table_generator, capsys):
 
     captured = capsys.readouterr()
     assert "Datasets in file:" in captured.out
-    assert "- simulated: shape=" in captured.out
-    assert "- shower_id_triggered: shape=" in captured.out
-    assert "- triggered_energies: shape=" in captured.out
-    assert "- num_triggered_telescopes: shape=" in captured.out
-    assert "- trigger_telescope_list_list: shape=" in captured.out
-    assert "- core_x: shape=" in captured.out
-    assert "- core_y: shape=" in captured.out
     assert "- file_names: shape=" in captured.out
-    assert "- shower_sim_azimuth: shape=" in captured.out
-    assert "- shower_sim_altitude: shape=" in captured.out
-    assert "- array_altitudes: shape=" in captured.out
-    assert "- array_azimuths: shape=" in captured.out
+    assert "- reduced_data: shape=" in captured.out
+    assert "- triggered_data: shape=" in captured.out
+    assert "- trigger_telescope_list_list: shape=" in captured.out
+    assert "simulated" in captured.out
+    assert "shower_sim_azimuth" in captured.out
+    assert "shower_sim_altitude" in captured.out
+    assert "array_altitudes" in captured.out
+    assert "array_azimuths" in captured.out
+    assert "shower_id_triggered" in captured.out
+    assert "triggered_energies" in captured.out
+
+
+@patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
+def test_no_input_files(mock_eventio_class, tmp_path):
+    output_file = tmp_path / "output.h5"
+    lookup_table_generator = MCEventExtractor([], output_file, max_files=1)
+    lookup_table_generator.process_files()
+
+    assert not output_file.exists()
+
+
+@patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
+def test_multiple_files(mock_eventio_class, tmp_path):
+    mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
+        mock_eventio_objects()
+    )
+    input_files = [tmp_path / f"mock_eventio_file_{i}.simtel.zst" for i in range(3)]
+    for file in input_files:
+        file.touch()
+
+    output_file = tmp_path / "output.h5"
+    lookup_table_generator = MCEventExtractor(input_files, output_file, max_files=3)
+    lookup_table_generator.process_files()
+
+    with tables.open_file(lookup_table_generator.output_file, mode="r") as hdf:
+        data_group = hdf.root.data
+        reduced_data = data_group.reduced_data
+        triggered_data = data_group.triggered_data
+        file_names = data_group.file_names
+        trigger_telescope_list_list = data_group.trigger_telescope_list_list
+
+        assert len(reduced_data.col("simulated")) > 0
+        assert len(triggered_data.col("shower_id_triggered")) > 0
+        assert len(triggered_data.col("triggered_energies")) > 0
+        assert len(trigger_telescope_list_list) > 0
+        assert len(reduced_data.col("core_x")) > 0
+        assert len(reduced_data.col("core_y")) > 0
+        assert len(file_names.col("file_names")) > 0
+        assert len(reduced_data.col("shower_sim_azimuth")) > 0
+        assert len(reduced_data.col("shower_sim_altitude")) > 0
+        assert len(reduced_data.col("array_altitudes")) > 0
+        assert len(reduced_data.col("array_azimuths")) > 0
