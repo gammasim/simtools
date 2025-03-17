@@ -115,6 +115,7 @@ definitions:
           - number
           - string
           - boolean
+          - "null"
       table_columns:
         type: array
         items:
@@ -265,12 +266,15 @@ definitions:
       - class
     title: Instrument
   InstrumentTypeElement:
-    type: string
+    type:
+      - string
+      - "null"
     description: "specific type of instrument"
     enum:
       - Atmosphere
       - Observatory
       - None
+      - null
     title: InstrumentTypeElement
   SimulationSoftware:
     type: object
@@ -297,7 +301,9 @@ definitions:
       - $ref: '#/definitions/DataClass'
     title: DataUnion
   Setting:
-    type: string
+    type:
+      - string
+      - "null"
     description: "list of setting workflows"
     enum:
       - SetArrayElementCoordinates
@@ -315,10 +321,12 @@ definitions:
       - SetTelescopeFiducialSphere
       - SetTelescopeShadowingParameters
       - SetTriggerThresholdsFromRateScan
-      - None
+      - null
     title: Setting
   Validation:
-    type: string
+    type:
+      - string
+      - "null"
     description: "list of validation workflows"
     enum:
       - ValidateArrayElementCoordinates
@@ -344,7 +352,7 @@ definitions:
       - ValidateTelescopeStructure
       - ValidateTriggerPerformance
       - ValidationWorkflowMissing
-      - None
+      - null
   TableColumnType:
     type: string
     enum:
