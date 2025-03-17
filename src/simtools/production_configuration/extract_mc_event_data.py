@@ -234,7 +234,7 @@ class MCEventExtractor:
         for key in data_lists:
             data_lists[key] = []
 
-    def print_hdf5_file(self):
+    def print_dataset_information(self):
         """Print information about the datasets in the generated HDF5 file."""
         try:
             with tables.open_file(self.output_file, mode="r") as reader:

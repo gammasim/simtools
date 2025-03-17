@@ -86,12 +86,12 @@ def test_process_files(mock_eventio_class, lookup_table_generator):
 
 
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
-def test_print_hdf5_file(mock_eventio_class, lookup_table_generator, capsys):
+def test_print_dataset_information(mock_eventio_class, lookup_table_generator, capsys):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
         mock_eventio_objects()
     )
     lookup_table_generator.process_files()
-    lookup_table_generator.print_hdf5_file()
+    lookup_table_generator.print_dataset_information()
 
     captured = capsys.readouterr()
     assert "Datasets in file:" in captured.out
