@@ -42,7 +42,7 @@ def _parse(label):
     )
 
     return config.initialize(
-        db_config=True, simulation_model=["site", "telescope", "model_version", "parameter_version"]
+        db_config=True, simulation_model=["site", "telescope", "model_version"]
     )
 
 
