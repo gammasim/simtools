@@ -65,7 +65,7 @@ repos:
       [
         "--strict",
         "-d",
-        '{extends: default, rules: {line-length: {max: 250}, indentation: {spaces: 2, indent-sequences: consistent}, truthy: {allowed-values: ["true", "false", "on", "off"]}}}'
+        '{extends: default, rules: {line-length: {max: 300}, indentation: {spaces: 2, indent-sequences: consistent}, truthy: {allowed-values: ["true", "false", "on", "off"]}}}'
       ]
 # towncrier
 - repo: https://github.com/twisted/towncrier
