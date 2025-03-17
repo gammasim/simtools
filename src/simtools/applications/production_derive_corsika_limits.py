@@ -7,11 +7,11 @@ The limits are derived based on the event loss fraction specified by the user.
 
 Command line arguments
 ----------------------
---event_data_file (str, required)
+event_data_file (str, required)
     Path to the file containing the event data.
---loss_fraction (float, required)
+loss_fraction (float, required)
     Fraction of events to be lost.
---telescope_ids (list of int, optional)
+telescope_ids (list of int, optional)
     List of telescope IDs to filter the events (default is None).
     Definition of the telescope IDs can be found
     in the telescope definition file used for simulations.
@@ -75,7 +75,7 @@ def _parse():
         "--telescope_ids",
         type=int,
         nargs="*",
-        help="List of telescope IDs to filter the events (default is None).",
+        help="List of telescope IDs to filter the events as used in sim_telarray.",
     )
     return config.initialize(db_config=False)
 

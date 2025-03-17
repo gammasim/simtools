@@ -5,13 +5,13 @@ Reduces and compiles event data from multiple input files into a structured data
 
 Command line arguments
 ----------------------
---prefix (str, required)
+prefix (str, required)
     Path prefix for the input files.
---output_file (str, required)
+output_file (str, required)
     Path to save the output file.
---max_files (int, optional, default=100)
+max_files (int, optional, default=100)
     Maximum number of files to process.
---print_dataset_information (flag)
+print_dataset_information (flag)
     Print information about the datasets in the generated reduced event dataset.
 
 Example

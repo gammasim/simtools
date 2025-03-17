@@ -91,7 +91,7 @@ class MCEventExtractor:
         for i_file, file in enumerate(self.input_files[1 : self.max_files], start=2):
             self._logger.info(f"Processing file {i_file}/{self.max_files}: {file}")
             self._process_file(file, data_lists, str(file))
-            if len(data_lists["simulated"]) >= 50000:
+            if len(data_lists["simulated"]) >= 1e7:
                 self._write_all_data(data_lists, mode="a")
                 self.shower_id_offset += len(data_lists["simulated"])
                 self._reset_data_lists(data_lists)

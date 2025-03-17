@@ -12,7 +12,7 @@ class LimitCalculator:
     """
     Compute thresholds/limits for energy, radial distance, and viewcone.
 
-    Event data is read from the generated HDF5 file.
+    Event data is read from the reduced MC event data file.
 
     Parameters
     ----------
@@ -29,7 +29,7 @@ class LimitCalculator:
         Parameters
         ----------
         event_data_file : str
-            Path to the HDF5 file containing the event data.
+            Path to the reduced MC event data file.
         telescope_list : list, optional
             List of telescope IDs to filter the events (default is None).
         """
@@ -49,7 +49,7 @@ class LimitCalculator:
         self._read_event_data()
 
     def _read_event_data(self):
-        """Read the event data from the HDF5 file."""
+        """Read the event data from the reduced MC event data file."""
         with tables.open_file(self.event_data_file, mode="r") as f:
             reduced_data = f.root.data.reduced_data
             triggered_data = f.root.data.triggered_data
@@ -191,6 +191,10 @@ class LimitCalculator:
         sim_altitude_rad = self.shower_sim_altitude  # * (np.pi / 180.0)
         array_altitude_rad = self.array_altitude  # * (np.pi / 180.0)
 
+        print("AAAA array_azimuth:", len(self.array_azimuth))
+        print("AAAA shower_sim_azimuth:", len(self.shower_sim_azimuth))
+        print("AAAA azimuth_diff:", len(azimuth_diff))
+
         x_1 = np.cos(azimuth_diff) * np.cos(sim_altitude_rad)
         y_1 = np.sin(azimuth_diff) * np.cos(sim_altitude_rad)
         z_1 = np.sin(sim_altitude_rad)
@@ -198,7 +202,7 @@ class LimitCalculator:
         y_2 = y_1
         z_2 = x_1 * np.cos(array_altitude_rad) + z_1 * np.sin(array_altitude_rad)
         off_angles = np.arctan2(np.sqrt(x_2**2 + y_2**2), z_2) * (180.0 / np.pi)
-
+        print("AAAA off angles:", off_angles)
         angle_bins = np.linspace(off_angles.min(), off_angles.max(), 400)
         hist, _ = np.histogram(off_angles, bins=angle_bins)
 
