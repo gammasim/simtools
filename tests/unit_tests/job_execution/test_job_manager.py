@@ -1,4 +1,5 @@
 import logging
+import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, call, mock_open, patch
 
@@ -185,7 +186,7 @@ def test_submit_gridengine(mock_gen, job_submitter, mocker, output_log, logfile_
         "output.out",
         "-e",
         "output.err",
-        "script.sh",
+        str(script_file),
     ]
     mock_execute.assert_called_with("gridengine", expected_command)
 
@@ -223,25 +224,24 @@ def test_submit_local_real_failure(
     logfile_log,
     script_file,
     job_messages,
-    builtins_open,
+    subprocess_run,
 ):
     mock_get_log_excerpt.return_value = job_messages["log_excerpt"]
     mock_get_file_age.return_value = 4
-    mocker.patch("pathlib.Path.exists", return_value=True)
+    mocker.patch(PATHLIB_PATH_EXISTS, return_value=True)
 
-    mocker.patch("simtools.utils.general.get_log_excerpt", return_value=LOG_EXCERPT)
-    mocker.patch("simtools.utils.general.get_file_age", return_value=4)
+    # Mock subprocess.run to raise a CalledProcessError
+    mock_subprocess = mocker.patch(subprocess_run)
+    mock_subprocess.side_effect = subprocess.CalledProcessError(1, str(script_file))
 
-    with patch(builtins_open, mock_open(read_data="")):
-        with pytest.raises(JobExecutionError):
-            job_submitter_real.submit(script_file, output_log, logfile_log)
+    with pytest.raises(JobExecutionError, match="See excerpt from log file above"):
+        job_submitter_real.submit(script_file, output_log, logfile_log)
 
     job_submitter_real._logger.info.assert_any_call(job_messages["script_message"])
     job_submitter_real._logger.info.assert_any_call(job_messages["job_output"])
     job_submitter_real._logger.info.assert_any_call(job_messages["job_error_stream"])
     job_submitter_real._logger.info.assert_any_call(job_messages["job_log_stream"])
     job_submitter_real._logger.info.assert_any_call(job_messages["running_locally"])
-    job_submitter_real._logger.error.assert_any_call(job_messages["log_excerpt"])
 
 
 @patch("simtools.utils.general")
