@@ -60,23 +60,16 @@ class ReportGenerator:
             filtered_telescopes = []
             for telescope in all_telescopes:
                 sites = names.get_site_from_array_element_name(telescope)
+                sites = sites if isinstance(sites, list) else [sites]
 
-                if isinstance(sites, list):
-                    is_telescope_for_selected_site = any(site in selected_sites for site in sites)
-                else:
-                    # If only one site is associated with the telescope, check for direct match
-                    is_telescope_for_selected_site = sites in selected_sites
-
-                if is_telescope_for_selected_site:
+                if any(site in selected_sites for site in sites):
                     filtered_telescopes.append(telescope)
 
             for telescope in filtered_telescopes:
                 sites = names.get_site_from_array_element_name(telescope)
+                sites = sites if isinstance(sites, list) else [sites]
 
-                if isinstance(sites, list):
-                    site = next((s for s in sites if s in selected_sites), None)
-                else:
-                    site = sites
+                site = next((s for s in sites if s in selected_sites), None)
 
                 if site:
                     self.args["telescope"], self.args["site"], self.args["model_version"] = (
