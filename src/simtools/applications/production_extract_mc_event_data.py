@@ -81,8 +81,8 @@ def main():
             (as in the telescope definition file used for simulations).
         - triggered_energies: List of energies for triggered events.
         - num_triggered_telescopes: Number of triggered telescopes for each event.
-        - core_x: X-coordinate of the shower core.
-        - core_y: Y-coordinate of the shower core.
+        - core_x: X-coordinate of the shower core (ground coordinates).
+        - core_y: Y-coordinate of the shower core (ground coordinates).
         - trigger_telescope_list_list: List of lists containing triggered telescope IDs.
         - file_names: List of input file names.
         - shower_sim_azimuth: Simulated azimuth angle of the shower.
