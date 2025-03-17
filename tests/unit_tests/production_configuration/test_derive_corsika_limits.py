@@ -1,7 +1,7 @@
 import astropy.units as u
-import h5py
 import numpy as np
 import pytest
+import tables
 
 from simtools.production_configuration.derive_corsika_limits import LimitCalculator
 
@@ -9,33 +9,50 @@ from simtools.production_configuration.derive_corsika_limits import LimitCalcula
 @pytest.fixture
 def hdf5_file(tmp_path):
     file_path = tmp_path / "test_data.h5"
-    vlen_int_type = h5py.special_dtype(vlen=np.int16)
-    with h5py.File(file_path, "w") as f:
-        grp = f.create_group("data")
-        grp.create_dataset("core_x", data=np.array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3]))
-        grp.create_dataset("core_y", data=np.array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3]))
-        grp.create_dataset("simulated", data=np.array([1.0, 2.0, 3.0, 1.0, 2.0, 3.0]))
-        grp.create_dataset("shower_id_triggered", data=np.array([0, 1, 2, 0, 1, 2]))
-        grp.create_dataset(
-            "file_names", data=np.array(["file1", "file2"], dtype=h5py.string_dtype())
+    with tables.open_file(file_path, mode="w") as f:
+        group = f.create_group("/", "data")
+        reduced_data = f.create_table(
+            group,
+            "reduced_data",
+            {
+                "core_x": tables.Float32Col(),
+                "core_y": tables.Float32Col(),
+                "simulated": tables.Float32Col(),
+                "shower_sim_azimuth": tables.Float32Col(),
+                "shower_sim_altitude": tables.Float32Col(),
+                "array_azimuths": tables.Float32Col(),
+                "array_altitudes": tables.Float32Col(),
+            },
         )
-        grp.create_dataset("shower_sim_azimuth", data=np.array([0.1, 0.5, 1.0, 1.5, 2.0, 2.5]))
-        grp.create_dataset("shower_sim_altitude", data=np.array([0.3, 0.4, 1.1, 1.3, 1.4, 1.5]))
-        grp.create_dataset("array_azimuths", data=np.array([0.1, 0.5, 1.0, 1.5, 2.0, 2.5]))
-        grp.create_dataset("array_altitudes", data=np.array([0.2, 0.6, 1.0, 1.2, 1.3, 1.4]))
-        grp.create_dataset(
+        triggered_data = f.create_table(
+            group, "triggered_data", {"shower_id_triggered": tables.Int32Col()}
+        )
+        file_names = f.create_table(group, "file_names", {"file_names": tables.StringCol(16)})
+
+        reduced_data.append(
+            [
+                (0.1, 0.1, 1.0, 0.1, 0.3, 0.1, 0.2),
+                (0.2, 0.2, 2.0, 0.5, 0.4, 0.5, 0.6),
+                (0.3, 0.3, 3.0, 1.0, 1.1, 1.0, 1.0),
+                (0.1, 0.1, 1.0, 1.5, 1.3, 1.5, 1.2),
+                (0.2, 0.2, 2.0, 2.0, 1.4, 2.0, 1.3),
+                (0.3, 0.3, 3.0, 2.5, 1.5, 2.5, 1.4),
+            ]
+        )
+        triggered_data.append([(0,), (1,), (2,), (0,), (1,), (2,)])
+        file_names.append([("file1",), ("file2",)])
+        f.create_vlarray(
+            group,
             "trigger_telescope_list_list",
-            (6,),
-            dtype=vlen_int_type,
-            data=[
-                np.array([1, 2, 3], dtype=np.int16),
-                np.array([1, 2], dtype=np.int16),
-                np.array([2, 3], dtype=np.int16),
-                np.array([1, 3], dtype=np.int16),
-                np.array([1, 2, 3], dtype=np.int16),
-                np.array([1, 2, 3], dtype=np.int16),
-            ],
+            tables.Int16Atom(),
+            "List of triggered telescope IDs",
         )
+        f.root.data.trigger_telescope_list_list.append(np.array([1, 2, 3], dtype=np.int16))
+        f.root.data.trigger_telescope_list_list.append(np.array([1, 2], dtype=np.int16))
+        f.root.data.trigger_telescope_list_list.append(np.array([2, 3], dtype=np.int16))
+        f.root.data.trigger_telescope_list_list.append(np.array([1, 3], dtype=np.int16))
+        f.root.data.trigger_telescope_list_list.append(np.array([1, 2, 3], dtype=np.int16))
+        f.root.data.trigger_telescope_list_list.append(np.array([1, 2, 3], dtype=np.int16))
     return file_path
 
 
@@ -104,15 +121,21 @@ def test_plot_data_with_telescopes(limit_calculator_with_telescopes):
 @pytest.fixture
 def hdf5_file_missing_datasets(tmp_path):
     file_path = tmp_path / "test_data_missing.h5"
-    with h5py.File(file_path, "w") as f:
-        grp = f.create_group("data")
-        grp.create_dataset("core_x", data=np.array([0.1, 0.2, 0.3]))
+    with tables.open_file(file_path, mode="w") as f:
+        group = f.create_group("/", "data")
+        reduced_data = f.create_table(group, "reduced_data", {"core_x": tables.Float32Col()})
+        reduced_data.append([(0.1,), (0.2,), (0.3,)])
+        # Add the triggered_data group but leave it empty
+        f.create_group(group, "triggered_data")
+        # Add the file_names group but leave it empty
+        f.create_group(group, "file_names")
     return file_path
 
 
 def test_read_event_data_missing_datasets(hdf5_file_missing_datasets):
     with pytest.raises(
-        KeyError, match="One or more required datasets are missing from the 'data' group."
+        tables.NoSuchNodeError,
+        match="group ``/data`` does not have a child named ``trigger_telescope_list_list``",
     ):
         LimitCalculator(hdf5_file_missing_datasets)
 
@@ -120,23 +143,15 @@ def test_read_event_data_missing_datasets(hdf5_file_missing_datasets):
 @pytest.fixture
 def hdf5_file_missing_datagroup(tmp_path):
     file_path = tmp_path / "test_datagroup_missing.h5"
-    with h5py.File(file_path, "w") as f:
-        grp = f.create_group("wrong_data")
-        grp.create_dataset("core_x", data=np.array([0.1, 0.2, 0.3]))
+    with tables.open_file(file_path, mode="w") as f:
+        group = f.create_group("/", "wrong_data")
+        reduced_data = f.create_table(group, "reduced_data", {"core_x": tables.Float32Col()})
+        reduced_data.append([(0.1,), (0.2,), (0.3,)])
     return file_path
 
 
 def test_read_event_data_missing_datagroup(hdf5_file_missing_datagroup):
-    with pytest.raises(KeyError, match="data group is missing from the HDF5 file."):
+    with pytest.raises(
+        tables.NoSuchNodeError, match="group ``/`` does not have a child named ``data``"
+    ):
         LimitCalculator(hdf5_file_missing_datagroup)
-
-
-def test_adjust_shower_ids_across_files():
-    shower_id_triggered = np.array([0, 1, 2, 0, 1, 2, 0, 1, 2])
-    num_files = 3
-    showers_per_file = 3
-    expected_adjusted_ids = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
-    adjusted_ids = LimitCalculator.adjust_shower_ids_across_files(
-        shower_id_triggered, num_files, showers_per_file
-    )
-    assert np.all(adjusted_ids == expected_adjusted_ids)
