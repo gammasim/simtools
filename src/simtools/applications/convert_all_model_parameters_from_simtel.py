@@ -108,7 +108,7 @@ def _parse(label=None, description=None):
         "--skip_parameter",
         help="List of parameters to be skipped.",
         type=str,
-        nargs="+",
+        nargs="*",
         default=[],
     )
     return config.initialize(simulation_model=["telescope", "parameter_version"])
