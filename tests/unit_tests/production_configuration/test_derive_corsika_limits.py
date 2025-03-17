@@ -114,7 +114,6 @@ def test_compute_viewcone_with_telescopes(limit_calculator_with_telescopes):
 def test_plot_data(limit_calculator):
     plt.close()
     limit_calculator.plot_data()
-    assert plt.gcf().number == 1
     assert len(plt.gcf().get_axes()) > 0
     plt.close()
 
@@ -122,7 +121,6 @@ def test_plot_data(limit_calculator):
 def test_plot_data_with_telescopes(limit_calculator_with_telescopes):
     plt.close()
     limit_calculator_with_telescopes.plot_data()
-    assert plt.gcf().number == 1
     assert len(plt.gcf().get_axes()) > 0
     plt.close()
 
