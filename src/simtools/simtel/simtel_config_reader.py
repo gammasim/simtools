@@ -8,8 +8,32 @@ import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
+from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]
+
+
+def get_list_of_simtel_parameters(simtel_config_file):
+    """
+    Return list of simtel parameters found in simtel configuration file.
+
+    Parameters
+    ----------
+    simtel_config_file: str
+        File name for sim_telarray configuration
+
+    Returns
+    -------
+    list
+        List of parameters found in simtel configuration file.
+
+    """
+    simtel_parameter_set = set()
+    with open(simtel_config_file, encoding="utf-8") as file:
+        for line in file:
+            parts_of_lines = re.split(r",\s*|\s+", line.strip())
+            simtel_parameter_set.add(parts_of_lines[1].lower())
+    return list(simtel_parameter_set)
 
 
 class SimtelConfigReader:
@@ -62,8 +86,12 @@ class SimtelConfigReader:
             else None
         )
         self.parameter_name = self.schema_dict.get("name") if self.schema_dict else parameter_name
-        # TODO replace by names.get_simulation_software_name_from_parameter_name ??
-        self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
+        try:
+            self.simtel_parameter_name = names.get_simulation_software_name_from_parameter_name(
+                self.parameter_name
+            ).upper()
+        except (KeyError, AttributeError):
+            self.simtel_parameter_name = self.parameter_name.upper()
         self.simtel_telescope_name = simtel_telescope_name
         self.camera_pixels = camera_pixels
         self.parameter_dict = self.read_simtel_config_file(
@@ -373,29 +401,3 @@ class SimtelConfigReader:
         if self.camera_pixels is not None and self.simtel_parameter_name in ["NIGHTSKY_BACKGROUND"]:
             return str(np.dtype(column[0].lower())), self.camera_pixels
         return str(np.dtype(column[0].lower())), int(column[1])
-
-    def _get_simtel_parameter_name(self, parameter_name):
-        """
-        Return parameter name as used in sim_telarray.
-
-        This is documented in the schema file.
-
-        Parameters
-        ----------
-        parameter_name: str
-            Model parameter name (as used in simtools)
-
-        Returns
-        -------
-        str
-            Parameter name as used in sim_telarray.
-
-        """
-        try:
-            for sim_soft in self.schema_dict["simulation_software"]:
-                if sim_soft["name"] == "sim_telarray":
-                    return sim_soft["internal_parameter_name"].upper()
-        except (KeyError, TypeError):
-            pass
-
-        return parameter_name.upper()

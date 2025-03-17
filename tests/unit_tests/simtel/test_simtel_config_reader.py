@@ -209,13 +209,3 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
     # no input / output
     assert _config._add_value_from_simtel_cfg([], dtype="double") == (None, None)
-
-
-def test_get_simtel_parameter_name(config_reader_num_gains):
-    _config = copy.deepcopy(config_reader_num_gains)
-    assert _config._get_simtel_parameter_name("num_gains") == "NUM_GAINS"
-    assert _config._get_simtel_parameter_name("telescope_transmission") == "TELESCOPE_TRANSMISSION"
-    assert _config._get_simtel_parameter_name("NUM_GAINS") == "NUM_GAINS"
-    # test pass on TypeError
-    _config.schema_dict = None
-    assert _config._get_simtel_parameter_name("num_gains") == "NUM_GAINS"
