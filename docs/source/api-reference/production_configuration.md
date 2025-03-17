@@ -24,12 +24,12 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(generate-reduced-datasets)=
+(extract-mc-event-data)=
 
-## generate_reduced_datasets
+## extract_mc_event_data
 
 ```{eval-rst}
-.. automodule:: production_configuration.generate_reduced_datasets
+.. automodule:: production_configuration.extract_mc_event_data
    :members:
 ```
 
@@ -51,11 +51,11 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(limits-calculation)=
+(derive-corsika-limits)=
 
-## limits_calculation
+## derive_corsika_limits
 
 ```{eval-rst}
-.. automodule:: production_configuration.limits_calculation
+.. automodule:: production_configuration.derive_corsika_limits
    :members:
 ```
