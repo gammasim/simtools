@@ -6,6 +6,8 @@ from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerIn
 
 from simtools.production_configuration.extract_mc_event_data import MCEventExtractor
 
+OUTPUT_FILE_NAME = "output.h5"
+
 
 @pytest.fixture
 def mock_eventio_file(tmp_path):
@@ -17,7 +19,7 @@ def mock_eventio_file(tmp_path):
 
 @pytest.fixture
 def lookup_table_generator(mock_eventio_file, tmp_path):
-    output_file = tmp_path / "output.h5"
+    output_file = tmp_path / OUTPUT_FILE_NAME
     return MCEventExtractor([mock_eventio_file], output_file, max_files=1)
 
 
@@ -108,7 +110,7 @@ def test_print_hdf5_file(mock_eventio_class, lookup_table_generator, capsys):
 
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
 def test_no_input_files(mock_eventio_class, tmp_path):
-    output_file = tmp_path / "output.h5"
+    output_file = tmp_path / OUTPUT_FILE_NAME
     lookup_table_generator = MCEventExtractor([], output_file, max_files=1)
     lookup_table_generator.process_files()
 
@@ -124,7 +126,7 @@ def test_multiple_files(mock_eventio_class, tmp_path):
     for file in input_files:
         file.touch()
 
-    output_file = tmp_path / "output.h5"
+    output_file = tmp_path / OUTPUT_FILE_NAME
     lookup_table_generator = MCEventExtractor(input_files, output_file, max_files=3)
     lookup_table_generator.process_files()
 
