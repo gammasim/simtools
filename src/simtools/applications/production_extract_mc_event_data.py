@@ -118,7 +118,7 @@ def main():
     generator.process_files()
     _logger.info(f"reduced dataset saved to: {output_filepath}")
     if args_dict["print_dataset_information"]:
-        generator.print_hdf5_file()
+        generator.print_dataset_information()
 
 
 if __name__ == "__main__":
