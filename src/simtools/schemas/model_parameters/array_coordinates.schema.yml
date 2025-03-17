@@ -12,7 +12,7 @@ description: |-
 data:
   - type: file
     unit: dimensionless
-    default: None
+    default: null
 instrument:
   class: Site
   type:
