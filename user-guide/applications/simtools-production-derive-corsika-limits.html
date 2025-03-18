@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-derive-limits &#8212; simtools v0.1.dev1+g05faa49 Manual</title>
+    <title>simtools-production-derive-corsika-limits &#8212; simtools v0.1.dev1+g5081d84 Manual</title>
   
   
   
@@ -36,11 +36,11 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c9396e0f"></script>
+    <script src="../../_static/documentation_options.js?v=4e8d0b23"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-derive-limits';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-derive-corsika-limits';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="simtools-production-generate-simulation-config" href="simtools-production-generate-simulation-config.html" />
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g05faa49 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5081d84 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -207,12 +207,13 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-array-config.html">simtools-generate-array-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-production-extract-mc-event-data.html">simtools-production-extract-mc-event-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-production-derive-limits</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
@@ -324,7 +325,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-production-derive-limits.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-production-derive-corsika-limits.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -341,7 +342,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-production-derive-limits.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-production-derive-corsika-limits.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -371,7 +372,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/simtools-production-derive-limits.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simtools-production-derive-corsika-limits.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -455,7 +456,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>simtools-production-derive-limits</h1>
+    <h1>simtools-production-derive-corsika-limits</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -467,7 +468,7 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -479,8 +480,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-production_derive_limits">
-<span id="simtools-production-derive-limits"></span><h1>simtools-production-derive-limits<a class="headerlink" href="#module-production_derive_limits" title="Link to this heading">#</a></h1>
+  <section id="module-production_derive_corsika_limits">
+<span id="simtools-production-derive-corsika-limits"></span><h1>simtools-production-derive-corsika-limits<a class="headerlink" href="#module-production_derive_corsika_limits" title="Link to this heading">#</a></h1>
 <p>Derives the limits for energy, radial distance, and viewcone to be used in CORSIKA simulations.</p>
 <p>The limits are derived based on the event loss fraction specified by the user.</p>
 <section id="command-line-arguments">
@@ -490,20 +491,25 @@ document.write(`
 </dd>
 <dt>loss_fraction (float, required)</dt><dd><p>Fraction of events to be lost.</p>
 </dd>
+<dt>telescope_ids (list of int, optional)</dt><dd><p>List of telescope IDs to filter the events (default is None).
+Definition of the telescope IDs can be found
+in the telescope definition file used for simulations.</p>
+</dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Derive limits for a given file with a specified loss fraction.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-limits\\</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-corsika-limits\\</span>
 <span class="go">    --event_data_file path/to/event_data_file.hdf5 \\</span>
-<span class="go">    --loss_fraction 1e-6</span>
+<span class="go">    --loss_fraction 1e-6 \\</span>
+<span class="go">    --telescope_ids 1 2 3</span>
 </pre></div>
 </div>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="production_derive_limits.main">
-<span class="sig-prename descclassname"><span class="pre">production_derive_limits.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_limits.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_limits.main" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="production_derive_corsika_limits.main">
+<span class="sig-prename descclassname"><span class="pre">production_derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_corsika_limits.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_corsika_limits.main" title="Link to this definition">#</a></dt>
 <dd><p>Derive limits for energy, radial distance, and viewcone.</p>
 </dd></dl>
 
@@ -556,7 +562,7 @@ document.write(`
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 
