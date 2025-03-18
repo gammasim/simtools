@@ -184,7 +184,7 @@ class MCEventExtractor:
         if (len(alt_range) > 1 or len(az_range) > 1) and (
             not np.allclose(alt_range, alt_range[0]) or not np.allclose(az_range, az_range[0])
         ):
-            self._logger.warning(
+            self._logger.info(
                 "The alt_range or az_range values are changing throughout the file. "
                 "Using the full range as is."
             )
