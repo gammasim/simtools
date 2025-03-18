@@ -155,7 +155,9 @@ class MCEventExtractor:
             array_azimuth = None
             for eventio_object in f:
                 if isinstance(eventio_object, MCRunHeader):
-                    self._process_mc_run_header(eventio_object, data_lists)
+                    array_altitude, array_azimuth = self._process_mc_run_header(
+                        eventio_object, data_lists
+                    )
                 elif isinstance(eventio_object, MCShower):
                     self._process_mc_shower(
                         eventio_object, data_lists, array_altitude, array_azimuth
@@ -170,10 +172,29 @@ class MCEventExtractor:
         """Process MC run header and update data lists."""
         mc_head = eventio_object.parse()
         self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
-        array_altitude = np.mean(mc_head["alt_range"])
-        array_azimuth = np.mean(mc_head["az_range"])
+
+        alt_range = mc_head["alt_range"]
+        az_range = mc_head["az_range"]
+
+        # Default to using just the first element
+        array_altitude = alt_range[0]
+        array_azimuth = az_range[0]
+
+        # Check if we need to use the full ranges instead
+        if (len(alt_range) > 1 or len(az_range) > 1) and (
+            not np.allclose(alt_range, alt_range[0]) or not np.allclose(az_range, az_range[0])
+        ):
+            self._logger.warning(
+                "The alt_range or az_range values are changing throughout the file. "
+                "Using the full range as is."
+            )
+            array_altitude = alt_range
+            array_azimuth = az_range
+
+        # Extend the data lists with the computed values
         data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
         data_lists["array_azimuths"].extend(self.n_use * [array_azimuth])
+        return array_altitude, array_azimuth
 
     def _process_mc_shower(self, eventio_object, data_lists, array_altitude, array_azimuth):
         """Process MC shower and update data lists."""
