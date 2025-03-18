@@ -50,6 +50,23 @@ def create_mock_eventio_objects(alt_range, az_range):
     return [mc_run_header, mc_shower, mc_event, array_event]
 
 
+def validate_datasets(reduced_data, triggered_data, file_names, trigger_telescope_list_list):
+    """
+    Helper function to validate that datasets are not empty.
+    """
+    assert len(reduced_data.col("simulated")) > 0
+    assert len(triggered_data.col("shower_id_triggered")) > 0
+    assert len(triggered_data.col("triggered_energies")) > 0
+    assert len(trigger_telescope_list_list) > 0
+    assert len(reduced_data.col("core_x")) > 0
+    assert len(reduced_data.col("core_y")) > 0
+    assert len(file_names.col("file_names")) > 0
+    assert len(reduced_data.col("shower_sim_azimuth")) > 0
+    assert len(reduced_data.col("shower_sim_altitude")) > 0
+    assert len(reduced_data.col("array_altitudes")) > 0
+    assert len(reduced_data.col("array_azimuths")) > 0
+
+
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
 def test_process_files(mock_eventio_class, lookup_table_generator):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
@@ -64,29 +81,8 @@ def test_process_files(mock_eventio_class, lookup_table_generator):
         file_names = data_group.file_names
         trigger_telescope_list_list = data_group.trigger_telescope_list_list
 
-        assert "simulated" in reduced_data.colnames
-        assert "shower_id_triggered" in triggered_data.colnames
-        assert "triggered_energies" in triggered_data.colnames
-        assert "core_x" in reduced_data.colnames
-        assert "core_y" in reduced_data.colnames
-        assert "file_names" in file_names.colnames
-        assert "shower_sim_azimuth" in reduced_data.colnames
-        assert "shower_sim_altitude" in reduced_data.colnames
-        assert "array_altitudes" in reduced_data.colnames
-        assert "array_azimuths" in reduced_data.colnames
-
-        # Check that datasets are not empty
-        assert len(reduced_data.col("simulated")) > 0
-        assert len(triggered_data.col("shower_id_triggered")) > 0
-        assert len(triggered_data.col("triggered_energies")) > 0
-        assert len(trigger_telescope_list_list) > 0
-        assert len(reduced_data.col("core_x")) > 0
-        assert len(reduced_data.col("core_y")) > 0
-        assert len(file_names.col("file_names")) > 0
-        assert len(reduced_data.col("shower_sim_azimuth")) > 0
-        assert len(reduced_data.col("shower_sim_altitude")) > 0
-        assert len(reduced_data.col("array_altitudes")) > 0
-        assert len(reduced_data.col("array_azimuths")) > 0
+        # Validate datasets using the helper function
+        validate_datasets(reduced_data, triggered_data, file_names, trigger_telescope_list_list)
 
 
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
@@ -141,17 +137,8 @@ def test_multiple_files(mock_eventio_class, tmp_path):
         file_names = data_group.file_names
         trigger_telescope_list_list = data_group.trigger_telescope_list_list
 
-        assert len(reduced_data.col("simulated")) > 0
-        assert len(triggered_data.col("shower_id_triggered")) > 0
-        assert len(triggered_data.col("triggered_energies")) > 0
-        assert len(trigger_telescope_list_list) > 0
-        assert len(reduced_data.col("core_x")) > 0
-        assert len(reduced_data.col("core_y")) > 0
-        assert len(file_names.col("file_names")) > 0
-        assert len(reduced_data.col("shower_sim_azimuth")) > 0
-        assert len(reduced_data.col("shower_sim_altitude")) > 0
-        assert len(reduced_data.col("array_altitudes")) > 0
-        assert len(reduced_data.col("array_azimuths")) > 0
+        # Validate datasets using the helper function
+        validate_datasets(reduced_data, triggered_data, file_names, trigger_telescope_list_list)
 
 
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
@@ -173,10 +160,9 @@ def test_process_files_with_different_alt_az_ranges(
     with tables.open_file(lookup_table_generator.output_file, mode="r") as hdf:
         data_group = hdf.root.data
         reduced_data = data_group.reduced_data
+        triggered_data = data_group.triggered_data
+        file_names = data_group.file_names
+        trigger_telescope_list_list = data_group.trigger_telescope_list_list
 
-        assert len(reduced_data.col("array_altitudes")) > 0
-        assert len(reduced_data.col("array_azimuths")) > 0
-        assert reduced_data.col("array_altitudes")[0][0] == 0.1
-        assert reduced_data.col("array_azimuths")[0][0] == 0.3
-        assert reduced_data.col("array_altitudes")[0][-1] == 0.2
-        assert reduced_data.col("array_azimuths")[0][-1] == 0.4
+        # Validate datasets using the helper function
+        validate_datasets(reduced_data, triggered_data, file_names, trigger_telescope_list_list)
