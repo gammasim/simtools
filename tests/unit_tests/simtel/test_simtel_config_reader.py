@@ -47,14 +47,14 @@ def config_reader_telescope_transmission(simtel_config_file, schema_telescope_tr
     )
 
 
-def test_simtel_config_reader_init():
+def test_simtel_config_reader_init(simtel_config_file):
     # test AttributeError
     with mock.patch.object(
         names, "get_simulation_software_name_from_parameter_name", return_value=None
     ):
         none_parameter = SimtelConfigReader(
             schema_file="tests/resources/num_gains.schema.yml",
-            simtel_config_file="tests/resources/simtel_config_test_la_palma.cfg",
+            simtel_config_file=simtel_config_file,
             simtel_telescope_name="CT2",
             parameter_name="num-gains",
         )
@@ -228,10 +228,8 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
     assert _config._add_value_from_simtel_cfg([], dtype="double") == (None, None)
 
 
-def test_get_list_of_simtel_parameters():
-    simtel_parameter_list = get_list_of_simtel_parameters(
-        "tests/resources/simtel_config_test_la_palma.cfg"
-    )
+def test_get_list_of_simtel_parameters(simtel_config_file):
+    simtel_parameter_list = get_list_of_simtel_parameters(simtel_config_file)
     assert isinstance(simtel_parameter_list, list)
     assert simtel_parameter_list == ["num_gains", "telescope_transmission"]
 
