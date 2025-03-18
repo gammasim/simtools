@@ -24,12 +24,15 @@ def lookup_table_generator(mock_eventio_file, tmp_path):
     return MCEventExtractor([mock_eventio_file], output_file, max_files=1)
 
 
-def mock_eventio_objects():
+def create_mock_eventio_objects(alt_range, az_range):
+    """
+    Helper function to create mock EventIO objects with specified alt_range and az_range.
+    """
     mc_run_header = MagicMock(spec=MCRunHeader)
     mc_run_header.parse.return_value = {
         "n_use": 1,
-        "alt_range": [0.1, 0.1],
-        "az_range": [0.1, 0.1],
+        "alt_range": alt_range,
+        "az_range": az_range,
     }
 
     mc_shower = MagicMock(spec=MCShower)
@@ -50,7 +53,7 @@ def mock_eventio_objects():
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
 def test_process_files(mock_eventio_class, lookup_table_generator):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
-        mock_eventio_objects()
+        create_mock_eventio_objects([0.1, 0.1], [0.1, 0.1])
     )
     lookup_table_generator.process_files()
 
@@ -89,7 +92,7 @@ def test_process_files(mock_eventio_class, lookup_table_generator):
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
 def test_print_dataset_information(mock_eventio_class, lookup_table_generator, capsys):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
-        mock_eventio_objects()
+        create_mock_eventio_objects([0.1, 0.1], [0.1, 0.1])
     )
     lookup_table_generator.process_files()
     lookup_table_generator.print_dataset_information()
@@ -121,7 +124,7 @@ def test_no_input_files(mock_eventio_class, tmp_path):
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
 def test_multiple_files(mock_eventio_class, tmp_path):
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
-        mock_eventio_objects()
+        create_mock_eventio_objects([0.1, 0.1], [0.1, 0.1])
     )
     input_files = [tmp_path / f"mock_eventio_file_{i}.simtel.zst" for i in range(3)]
     for file in input_files:
@@ -158,31 +161,8 @@ def test_process_files_with_different_alt_az_ranges(
     """
     Test processing files where alt_range and az_range are different and ensure logger info is generated.
     """
-
-    def mock_eventio_objects_with_different_ranges():
-        mc_run_header = MagicMock(spec=MCRunHeader)
-        mc_run_header.parse.return_value = {
-            "n_use": 1,
-            "alt_range": [0.1, 0.2],
-            "az_range": [0.3, 0.4],
-        }
-
-        mc_shower = MagicMock(spec=MCShower)
-        mc_shower.parse.return_value = {"energy": 1.0, "azimuth": 0.1, "altitude": 0.1, "shower": 0}
-
-        mc_event = MagicMock(spec=MCEvent)
-        mc_event.parse.return_value = {"xcore": 0.1, "ycore": 0.1}
-
-        trigger_info = MagicMock(spec=TriggerInformation)
-        trigger_info.parse.return_value = {"telescopes_with_data": [1, 2, 3]}
-
-        array_event = MagicMock(spec=ArrayEvent)
-        array_event.__iter__.return_value = iter([trigger_info])
-
-        return [mc_run_header, mc_shower, mc_event, array_event]
-
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
-        mock_eventio_objects_with_different_ranges()
+        create_mock_eventio_objects([0.1, 0.2], [0.3, 0.4])
     )
 
     with caplog.at_level(logging.INFO):
