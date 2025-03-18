@@ -24,6 +24,9 @@ data:
               type: string
               format: array_element
               description: Name of the array element.
+          comment:
+            type: string
+            description: Additional comment.
         required:
           - name
           - elements
