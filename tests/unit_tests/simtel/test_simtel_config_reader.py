@@ -2,11 +2,14 @@
 
 import copy
 import logging
+from unittest import mock
 
+import astropy.units as u
 import numpy as np
 import pytest
 
-from simtools.simtel.simtel_config_reader import SimtelConfigReader
+from simtools.simtel.simtel_config_reader import SimtelConfigReader, get_list_of_simtel_parameters
+from simtools.utils import names
 
 logger = logging.getLogger()
 
@@ -42,6 +45,20 @@ def config_reader_telescope_transmission(simtel_config_file, schema_telescope_tr
         simtel_config_file=simtel_config_file,
         simtel_telescope_name="CT2",
     )
+
+
+def test_simtel_config_reader_init():
+    # test AttributeError
+    with mock.patch.object(
+        names, "get_simulation_software_name_from_parameter_name", return_value=None
+    ):
+        none_parameter = SimtelConfigReader(
+            schema_file="tests/resources/num_gains.schema.yml",
+            simtel_config_file="tests/resources/simtel_config_test_la_palma.cfg",
+            simtel_telescope_name="CT2",
+            parameter_name="num-gains",
+        )
+    assert none_parameter.simtel_parameter_name == "NUM_GAINS"
 
 
 def test_simtel_config_reader_num_gains(config_reader_num_gains):
@@ -209,3 +226,61 @@ def test_add_value_from_simtel_cfg(config_reader_num_gains):
 
     # no input / output
     assert _config._add_value_from_simtel_cfg([], dtype="double") == (None, None)
+
+
+def test_get_list_of_simtel_parameters():
+    simtel_parameter_list = get_list_of_simtel_parameters(
+        "tests/resources/simtel_config_test_la_palma.cfg"
+    )
+    assert isinstance(simtel_parameter_list, list)
+    assert simtel_parameter_list == ["num_gains", "telescope_transmission"]
+
+
+def test_get_schema_values(config_reader_num_gains):
+    assert config_reader_num_gains._get_schema_values("type") == "int"
+    assert config_reader_num_gains._get_schema_values("unit") == "dimensionless"
+    assert config_reader_num_gains._get_schema_values("limits") == [1, 2]
+
+
+def test_values_match(config_reader_num_gains):
+    # covers cases only not included in other tests (especially astropy.quuantities)
+    assert config_reader_num_gains._values_match(1, 1)
+    assert config_reader_num_gains._values_match(1 * u.m, 1)
+
+
+def test_add_units(config_reader_num_gains):
+    _config = config_reader_num_gains
+
+    # Test return column when no schema defined
+    _config.schema_dict = None
+    assert _config._add_units(5) == 5
+
+    # Test dimensionless units
+    _config.schema_dict = {"data": [{"unit": "dimensionless"}]}
+    assert _config._add_units(5) == 5
+
+    # Test None units
+    _config.schema_dict = {"data": [{"unit": None}]}
+    assert _config._add_units(5) == 5
+
+    # Test single string unit
+    _config.schema_dict = {"data": [{"unit": "m"}]}
+    assert _config._add_units(5) == 5 * u.m
+    assert _config._add_units(5.0) == 5.0 * u.m
+    # Test integer preservation
+    result = _config._add_units(5)
+    assert np.issubdtype(result.value.dtype, np.integer)
+
+    # Test array with matching unit array
+    _config.schema_dict = {"data": [{"unit": "m"}, {"unit": "dimensionless"}, {"unit": "deg"}]}
+    test_array = np.array([1.0, 2.0, 3.0])
+    result = _config._add_units(test_array)
+    assert isinstance(result, np.ndarray)
+    assert isinstance(result[0], u.Quantity)
+    assert result[0].unit == u.m
+    assert result[1] == 2.0  # dimensionless stays as is
+    assert result[2].unit == u.deg
+
+    # Test return None for invalid cases
+    _config.schema_dict = {"data": [{"unit": ["invalid", "case"]}]}
+    assert _config._add_units(5) is None
