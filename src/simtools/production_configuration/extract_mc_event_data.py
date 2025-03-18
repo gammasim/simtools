@@ -239,8 +239,8 @@ class MCEventExtractor:
                 reduced_container.core_y = data_lists["core_y"][i]
                 reduced_container.shower_sim_azimuth = data_lists["shower_sim_azimuth"][i]
                 reduced_container.shower_sim_altitude = data_lists["shower_sim_altitude"][i]
-                reduced_container.array_altitudes = data_lists["array_altitudes"][i]
-                reduced_container.array_azimuths = data_lists["array_azimuths"][i]
+                reduced_container.array_altitudes = np.array(data_lists["array_altitudes"][i])
+                reduced_container.array_azimuths = np.array(data_lists["array_azimuths"][i])
                 writer.write(table_name="reduced_data", containers=[reduced_container])
 
             # Write triggered shower container
