@@ -199,7 +199,7 @@ class LimitCalculator:
         z_2 = x_1 * np.cos(array_altitude_rad) + z_1 * np.sin(array_altitude_rad)
         off_angles = np.arctan2(np.sqrt(x_2**2 + y_2**2), z_2) * (180.0 / np.pi)
 
-        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 400)
+        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 1000)
         hist, _ = np.histogram(off_angles, bins=angle_bins)
 
         upper_bin_edge_value = self._compute_limits(
@@ -241,9 +241,11 @@ class LimitCalculator:
         core_distances_triggered = core_distances_all[shower_id_triggered_masked]
         triggered_energies = self.simulated[shower_id_triggered_masked]
 
-        core_bins = np.linspace(core_distances_triggered.min(), core_distances_triggered.max(), 400)
+        core_bins = np.linspace(
+            core_distances_triggered.min(), core_distances_triggered.max(), 1000
+        )
         energy_bins = np.logspace(
-            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 400
+            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 1000
         )
         plt.figure(figsize=(8, 6))
         plt.hist2d(
