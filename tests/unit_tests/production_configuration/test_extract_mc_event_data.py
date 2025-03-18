@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,8 +28,8 @@ def mock_eventio_objects():
     mc_run_header = MagicMock(spec=MCRunHeader)
     mc_run_header.parse.return_value = {
         "n_use": 1,
-        "alt_range": [0.1, 0.2, 0.3],
-        "az_range": [0.1, 0.2, 0.3],
+        "alt_range": [0.1, 0.1],
+        "az_range": [0.1, 0.1],
     }
 
     mc_shower = MagicMock(spec=MCShower)
@@ -148,3 +149,54 @@ def test_multiple_files(mock_eventio_class, tmp_path):
         assert len(reduced_data.col("shower_sim_altitude")) > 0
         assert len(reduced_data.col("array_altitudes")) > 0
         assert len(reduced_data.col("array_azimuths")) > 0
+
+
+@patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
+def test_process_files_with_different_alt_az_ranges(
+    mock_eventio_class, lookup_table_generator, caplog
+):
+    """
+    Test processing files where alt_range and az_range are different and ensure logger info is generated.
+    """
+
+    def mock_eventio_objects_with_different_ranges():
+        mc_run_header = MagicMock(spec=MCRunHeader)
+        mc_run_header.parse.return_value = {
+            "n_use": 1,
+            "alt_range": [0.1, 0.2],
+            "az_range": [0.3, 0.4],
+        }
+
+        mc_shower = MagicMock(spec=MCShower)
+        mc_shower.parse.return_value = {"energy": 1.0, "azimuth": 0.1, "altitude": 0.1, "shower": 0}
+
+        mc_event = MagicMock(spec=MCEvent)
+        mc_event.parse.return_value = {"xcore": 0.1, "ycore": 0.1}
+
+        trigger_info = MagicMock(spec=TriggerInformation)
+        trigger_info.parse.return_value = {"telescopes_with_data": [1, 2, 3]}
+
+        array_event = MagicMock(spec=ArrayEvent)
+        array_event.__iter__.return_value = iter([trigger_info])
+
+        return [mc_run_header, mc_shower, mc_event, array_event]
+
+    mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = (
+        mock_eventio_objects_with_different_ranges()
+    )
+
+    with caplog.at_level(logging.INFO):
+        lookup_table_generator.process_files()
+
+    assert "The alt_range or az_range values are changing throughout the file." in caplog.text
+
+    with tables.open_file(lookup_table_generator.output_file, mode="r") as hdf:
+        data_group = hdf.root.data
+        reduced_data = data_group.reduced_data
+
+        assert len(reduced_data.col("array_altitudes")) > 0
+        assert len(reduced_data.col("array_azimuths")) > 0
+        assert reduced_data.col("array_altitudes")[0][0] == 0.1
+        assert reduced_data.col("array_azimuths")[0][0] == 0.3
+        assert reduced_data.col("array_altitudes")[0][-1] == 0.2
+        assert reduced_data.col("array_azimuths")[0][-1] == 0.4
