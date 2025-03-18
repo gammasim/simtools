@@ -33,7 +33,7 @@ def get_list_of_simtel_parameters(simtel_config_file):
         for line in file:
             parts_of_lines = re.split(r",\s*|\s+", line.strip())
             simtel_parameter_set.add(parts_of_lines[1].lower())
-    return list(simtel_parameter_set)
+    return sorted(simtel_parameter_set)
 
 
 class SimtelConfigReader:
