@@ -342,14 +342,14 @@ class MetadataCollector:
         )
 
         try:
-            metadata_files = gen.generate_list_of_files(metadata_file_names)
+            metadata_files = gen.resolve_file_patterns(metadata_file_names)
         except ValueError:
             self._logger.debug("No input metadata file defined.")
             return None
 
         metadata = []
         for metadata_file in metadata_files:
-            self._logger.debug("Reading meta data from %s", metadata_file)
+            self._logger.debug(f"Reading meta data from {metadata_file}")
             if Path(metadata_file).suffix in (".yaml", ".yml", ".json"):
                 _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file)
             elif Path(metadata_file).suffix == ".ecsv":

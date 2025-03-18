@@ -456,7 +456,7 @@ def find_file(name, loc):
     raise FileNotFoundError(msg)
 
 
-def generate_list_of_files(file_names):
+def resolve_file_patterns(file_names):
     """
     Return a list of files names from string, list, or wildcard pattern.
 
