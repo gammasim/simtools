@@ -25,7 +25,7 @@ r"""
     Example
     -------
 
-    The export of the model parameters from sim_telarray first copy and unpack the configuration
+    To export the model parameters from sim_telarray, first copy and unpack the configuration
     tar ball from sim_telarray (usually called 'sim_telarray_config.tar.gz') to the sim_telarray
     working directory. Extract the configuration using the following command:
 
@@ -45,9 +45,9 @@ r"""
 
 
     Extract then model parameters from the simtel_array configuration file for LSTN-01
-    (telescopes are named CT1, CT2, ... in the sim_telarray configuration file and must be
-    provided as simtel_telescope_name) and write json files in the same format as the model
-    parameter database:
+    (telescopes are named CT1, CT2, ..., in the sim_telarray configuration file and must be
+    provided in the "simtel_telescope_name" command line argument) 
+    and write json files in the same format as the model parameter database:
 
     .. code-block:: console
 
