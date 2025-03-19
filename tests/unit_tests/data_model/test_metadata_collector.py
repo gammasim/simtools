@@ -4,6 +4,7 @@ import copy
 import getpass
 import json
 import logging
+import re
 import time
 import uuid
 from pathlib import Path
@@ -52,9 +53,9 @@ def test_get_data_model_schema_file_name():
     assert Path(schema_file) == (schema.get_model_parameter_schema_file(_collector.data_model_name))
 
     # from input metadata
-    _collector.input_metadata = {
-        "cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}
-    }
+    _collector.input_metadata = [
+        {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}}
+    ]
     _collector.data_model_name = None
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == "from_input_meta"
@@ -78,7 +79,6 @@ def test_get_top_level_metadata(args_dict_site):
     )
 
     # no update when activity cannot be found in the metadata
-    time.sleep(1)
     collector.observatory = "not_cta"
     top_level_meta = collector.get_top_level_metadata()
     assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
@@ -121,14 +121,12 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
 
-    assert metadata_1._read_input_metadata_from_file() == {}
+    assert metadata_1._read_input_metadata_from_file() is None
 
     metadata_1.args_dict["input_meta"] = "./file_does_not_exist.yml"
-    with pytest.raises(FileNotFoundError):
-        metadata_1._read_input_metadata_from_file()
-
-    metadata_1.args_dict["input_meta"] = "./file_does_not_exist.not_a_good_suffix"
-    with pytest.raises(gen.InvalidConfigDataError):
+    with pytest.raises(
+        FileNotFoundError, match=re.escape("No files found: ['./file_does_not_exist.yml']")
+    ):
         metadata_1._read_input_metadata_from_file()
 
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
@@ -136,6 +134,12 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
 
     metadata_1.args_dict["input_meta"] = "tests/resources/reference_point_altitude.json"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
+
+    metadata_1.args_dict["input_meta"] = [
+        "tests/resources/MLTdata-preproduction.meta.yml",
+        "tests/resources/reference_point_altitude.json",
+    ]
+    assert len(metadata_1._read_input_metadata_from_file()) == 2
 
     test_dict = {
         "metadata": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
@@ -153,8 +157,22 @@ def test_read_input_metadata_from_file(args_dict_site, tmp_test_directory, caplo
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(FileNotFoundError, match=r"^No files found:"):
         metadata_1._read_input_metadata_from_file()
+
+    metadata_1.args_dict["input_meta"] = (
+        "tests/resources/run202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst"
+    )
+    with pytest.raises(gen.InvalidConfigDataError, match=r"^Unknown metadata file format:"):
+        metadata_1._read_input_metadata_from_file()
+
+
+def test_read_input_metadata_from_ecsv(args_dict_site, caplog):
+    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(FileNotFoundError):
+            metadata_1._read_input_metadata_from_ecsv("file_not_there.ecsv")
+    assert "Failed reading metadata for" in caplog.text
 
 
 def test_fill_product_meta(args_dict_site):
@@ -176,7 +194,7 @@ def test_fill_product_meta(args_dict_site):
     except ValueError:
         pytest.fail("Invalid UUID format in metadata")
 
-    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] is None
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
 
     # read product metadata from schema file
     metadata_1.args_dict["schema"] = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
@@ -475,6 +493,131 @@ def test_clean_meta_data():
 
     collector = metadata_collector.MetadataCollector({})
     assert collector.clean_meta_data(pre_clean) == post_clean
+
+
+def test_fill_context_meta(args_dict_site, caplog):
+    context_dict = {"associated_data": []}
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    # Case 1: input_metadata is None
+    collector.input_metadata = None
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == []
+
+    # Case 2: input_metadata is an empty list
+    collector.input_metadata = []
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == []
+
+    test_product = "Test product"
+    test_id = "1234"
+    # Case 3: input_metadata with valid product metadata
+    collector.input_metadata = [
+        {
+            "cta": {
+                "product": {
+                    "description": test_product,
+                    "id": test_id,
+                    "creation_time": "2023-01-01T00:00:00",
+                    "valid": "2023-12-31T23:59:59",
+                    "format": "json",
+                    "filename": "test_product.json",
+                },
+                "activity": {
+                    "name": "test_activity",
+                },
+            }
+        }
+    ]
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == [
+        {
+            "description": test_product,
+            "id": test_id,
+            "creation_time": "2023-01-01T00:00:00",
+            "valid": "2023-12-31T23:59:59",
+            "format": "json",
+            "filename": "test_product.json",
+            "activity_name": "test_activity",
+        }
+    ]
+
+    # Case 4: input_metadata with missing product metadata
+    collector.input_metadata = [
+        {
+            "cta": {
+                "product": {
+                    "description": test_product,
+                    "id": test_id,
+                }
+            }
+        }
+    ]
+    context_dict = {"associated_data": []}
+    collector._fill_context_meta(context_dict)
+    assert context_dict["associated_data"] == [
+        {
+            "description": test_product,
+            "id": test_id,
+        }
+    ]
+
+    # Case 5: input_metadata with invalid structure
+    collector.input_metadata = [
+        {
+            "cta": {
+                "invalid_product": {
+                    "description": test_product,
+                    "id": test_id,
+                }
+            }
+        }
+    ]
+    context_dict = {"associated_data": []}
+    with caplog.at_level(logging.DEBUG):
+        collector._fill_context_meta(context_dict)
+    assert "No input product metadata appended to associated data." in caplog.text
+    assert context_dict["associated_data"] == []
+
+
+def test_write_metadata_to_yml(args_dict_site, tmp_test_directory, caplog):
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    with pytest.raises(TypeError, match="No output file for metadata defined"):
+        collector.write(yml_file=None)
+
+    with caplog.at_level(logging.INFO):
+        yml_file = collector.write(yml_file=tmp_test_directory.join("test_file.yml"))
+    assert "Writing metadata to" in caplog.text
+    assert Path(yml_file).exists()
+
+    yml_file = collector.write(
+        yml_file=tmp_test_directory.join("test_file.yml"), add_activity_name=True
+    )
+    assert Path(yml_file).exists()
+    assert yml_file.name == "test_file.integration_test.meta.yml"
+
+    with pytest.raises(FileNotFoundError, match=r"^Error writing metadata"):
+        collector.write(yml_file="./this_directory_is_not_there/test_file.yml")
+
+    with pytest.raises(TypeError, match="No output file for metadata defined"):
+        collector.write(yml_file=None)
+
+
+def test_dump(args_dict_site, tmp_test_directory, caplog):
+    output_file = tmp_test_directory.join("test_dump.yml")
+
+    with caplog.at_level(logging.INFO):
+        metadata_collector.MetadataCollector.dump(args_dict=args_dict_site, output_file=output_file)
+    assert "Writing metadata to" in caplog.text
+    assert Path(output_file).with_suffix(".meta.yml").exists()
+
+    output_file_with_activity = tmp_test_directory.join("test_dump_with_activity.yml")
+    with caplog.at_level(logging.INFO):
+        metadata_collector.MetadataCollector.dump(
+            args_dict=args_dict_site, output_file=output_file_with_activity, add_activity_name=True
+        )
+    assert Path(output_file_with_activity).with_suffix(".integration_test.meta.yml").exists()
 
 
 def test_fill_contact_meta_from_system(args_dict_site, caplog):
