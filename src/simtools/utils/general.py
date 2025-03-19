@@ -696,16 +696,28 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     ):
         return True
 
-    if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
-        return True
+    if reference_dtype in ("boolean", "bool"):
+        return _is_valid_boolean_type(dtype, value)
 
-    if np.issubdtype(dtype, np.integer) and (
-        np.issubdtype(reference_dtype, np.integer) or np.issubdtype(reference_dtype, np.floating)
-    ):
-        return True
+    return _is_valid_numeric_type(dtype, reference_dtype)
 
-    if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
+
+def _is_valid_boolean_type(dtype, value):
+    """Check if dtype or value is a valid boolean type."""
+    if value in {0, 1}:
         return True
+    return np.issubdtype(dtype, np.bool_)
+
+
+def _is_valid_numeric_type(dtype, reference_dtype):
+    """Check if dtype is a valid numeric type compared to reference_dtype."""
+    if np.issubdtype(dtype, np.integer):
+        return np.issubdtype(reference_dtype, np.integer) or np.issubdtype(
+            reference_dtype, np.floating
+        )
+
+    if np.issubdtype(dtype, np.floating):
+        return np.issubdtype(reference_dtype, np.floating)
 
     return False
 
