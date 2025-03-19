@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 r"""
-    Convert all simulation model parameters exported from sim_telarray format using schema files.
+    Convert all simulation model parameters exported from sim_telarray format.
 
-    Check value, type, and range, convert units, and write json files
+    Check value, type, and range, convert units using schema files. Write json files
     ready to be submitted to the model database. Prints out parameters which are not found
     in simtel configuration file and parameters which are not found in simtools schema files.
 
@@ -19,22 +19,15 @@ r"""
     telescope (str, optional)
         Telescope model name (e.g. LST-1, SST-D, ...)
 
+    skip_parameter (str, optional)
+        List of parameters to be skipped (use sim_telarray names).
+
     Example
     -------
 
-    Extract model parameters with schema files from simtel configuration file
-    (requires access to the model parameter repository)
-
-    .. code-block:: console
-
-       simtools-convert-all-model-parameters-from-simtel \\
-          --schema_directory ../model_parameters/schema\\
-          --simtel_cfg_file all_telescope_config_la_palma.cfg\\
-          --simtel_telescope_name CT1\\
-          --telescope LSTN-01\\
-          --parameter_version "1.0.0"
-
-    The export of the model parameters from sim_telarray for 6.0.0 can be done e.g., as follows:
+    To export the model parameters from sim_telarray, first copy and unpack the configuration
+    tar ball from sim_telarray (usually called 'sim_telarray_config.tar.gz') to the sim_telarray
+    working directory. Extract the configuration using the following command:
 
     .. code-block:: console
 
@@ -42,18 +35,32 @@ r"""
             -C limits=no-internal -C initlist=no-internal -C list=no-internal \\
             -C typelist=no-internal -C maximum_telescopes=30 -DNSB_AUTOSCALE \\
             -DNECTARCAM -DHYPER_LAYOUT -DNUM_TELESCOPES=30 /dev/null \\
-            2>|/dev/null | grep '(@cfg)'  >| all_telescope_config_la_palma.cfg
+            2>|/dev/null | grep '(@cfg)' | sed 's/^(@cfg) //' >| all_telescope_config_la_palma.cfg
 
         ./sim_telarray/bin/sim_telarray -c sim_telarray/cfg/CTA/CTA-PROD6-Paranal.cfg \\
             -C limits=no-internal -C initlist=no-internal -C list=no-internal \\
             -C typelist=no-internal -C maximum_telescopes=87 -DNSB_AUTOSCALE \\
             -DFLASHCAM -DHYPER_LAYOUT -DNUM_TELESCOPES=87 /dev/null \\
-            2>|/dev/null | grep '(@cfg)'  >| all_telescope_config_paranal.cfg
+            2>|/dev/null | grep '(@cfg)' | sed 's/^(@cfg) //' >| all_telescope_config_paranal.cfg
+
+
+    Extract then model parameters from the simtel_array configuration file for LSTN-01
+    (telescopes are named CT1, CT2, ..., in the sim_telarray configuration file and must be
+    provided in the "simtel_telescope_name" command line argument)
+    and write json files in the same format as the model parameter database:
+
+    .. code-block:: console
+
+       simtools-convert-all-model-parameters-from-simtel \\
+          --simtel_cfg_file all_telescope_config_la_palma.cfg\\
+          --simtel_telescope_name CT1\\
+          --telescope LSTN-01\\
+          --parameter_version "1.0.0"\\
+          --output_path /path/to/output
 
 """
 
 import logging
-import re
 from pathlib import Path
 
 import numpy as np
@@ -63,7 +70,7 @@ import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.data_model import schema
 from simtools.io_operations.io_handler import IOHandler
-from simtools.simtel.simtel_config_reader import SimtelConfigReader
+from simtools.simtel import simtel_config_reader
 
 
 def _parse(label=None, description=None):
@@ -86,14 +93,6 @@ def _parse(label=None, description=None):
     config = configurator.Configurator(label=label, description=description)
 
     config.parser.add_argument(
-        "--schema_directory",
-        help=(
-            "Directory with schema files for model parameter validation "
-            "(default: simtools schema directory)"
-        ),
-        required=False,
-    )
-    config.parser.add_argument(
         "--simtel_cfg_file",
         help="File name for simtel_array configuration",
         type=str,
@@ -105,36 +104,17 @@ def _parse(label=None, description=None):
         type=str,
         required=True,
     )
+    config.parser.add_argument(
+        "--skip_parameter",
+        help="List of parameters to be skipped.",
+        type=str,
+        nargs="*",
+        default=[],
+    )
     return config.initialize(simulation_model=["telescope", "parameter_version"])
 
 
-def get_list_of_simtel_parameters(simtel_config_file, logger):
-    """
-    Return list of simtel parameters found in simtel configuration file.
-
-    Parameters
-    ----------
-    simtel_config_file: str
-        File name for sim_telarray configuration
-    logger: logging.Logger
-        Logger object
-
-    Returns
-    -------
-    list
-        List of parameters found in simtel configuration file.
-
-    """
-    simtel_parameter_set = set()
-    with open(simtel_config_file, encoding="utf-8") as file:
-        for line in file:
-            parts_of_lines = re.split(r",\s*|\s+", line.strip())
-            simtel_parameter_set.add(parts_of_lines[1].lower())
-    logger.info(f"Found {len(simtel_parameter_set)} parameters in simtel configuration file.")
-    return list(simtel_parameter_set)
-
-
-def read_simtel_config_file(args_dict, logger, schema_file, camera_pixels=None):
+def read_simtel_config_file(args_dict, schema_file, camera_pixels=None):
     """
     Read the simtel configuration file.
 
@@ -142,25 +122,26 @@ def read_simtel_config_file(args_dict, logger, schema_file, camera_pixels=None):
     ----------
     args_dict: dict
         Dictionary with command line arguments.
-    logger: logging.Logger
-        Logger object
     schema_file: str
         Schema path name.
     camera_pixels: int
         Number of camera pixels.
 
+    Returns
+    -------
+    SimtelConfigReader, None
+        SimtelConfigReader object (None if parameter not found)
+
     """
-    simtel_config_reader = SimtelConfigReader(
+    config_reader = simtel_config_reader.SimtelConfigReader(
         schema_file=schema_file,
         simtel_config_file=args_dict["simtel_cfg_file"],
         simtel_telescope_name=args_dict["simtel_telescope_name"],
         camera_pixels=camera_pixels,
     )
-    logger.info(f"Simtel parameter: {simtel_config_reader.parameter_dict}")
-
-    if simtel_config_reader.parameter_dict is None or len(simtel_config_reader.parameter_dict) == 0:
+    if config_reader.parameter_dict is None or len(config_reader.parameter_dict) == 0:
         return None
-    return simtel_config_reader
+    return config_reader
 
 
 def get_number_of_camera_pixel(args_dict, logger):
@@ -184,12 +165,10 @@ def get_number_of_camera_pixel(args_dict, logger):
 
     """
     try:
-        simtel_config_reader = SimtelConfigReader(
-            schema_file=schema.get_model_parameter_schema_file("camera_pixels"),
-            simtel_config_file=args_dict["simtel_cfg_file"],
-            simtel_telescope_name=args_dict["simtel_telescope_name"],
+        config_reader = read_simtel_config_file(
+            args_dict, schema.get_model_parameter_schema_file("camera_pixels")
         )
-        _camera_pixel = simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
+        _camera_pixel = config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
     except (FileNotFoundError, AttributeError):
         logger.warning("Failed to read camera pixel parameter.")
         _camera_pixel = None
@@ -219,13 +198,14 @@ def read_and_export_parameters(args_dict, logger):
         List of simtools parameter not found in simtel configuration file.
 
     """
-    _parameters, _schema_files = schema.get_get_model_parameter_schema_files(
-        args_dict.get("schema_directory")
+    _parameters, _schema_files = schema.get_get_model_parameter_schema_files()
+    _simtel_parameters = simtel_config_reader.get_list_of_simtel_parameters(
+        args_dict["simtel_cfg_file"]
     )
-    _simtel_parameters = get_list_of_simtel_parameters(args_dict["simtel_cfg_file"], logger)
+    logger.info(f"Found {len(_simtel_parameters)} parameters in simtel configuration file.")
 
     io_handler = IOHandler()
-    io_handler.set_paths(output_path=args_dict["output_path"], use_plain_output_path=True)
+    io_handler.set_paths(output_path=args_dict["output_path"])
 
     _camera_pixel = get_number_of_camera_pixel(args_dict, logger)
 
@@ -233,27 +213,34 @@ def read_and_export_parameters(args_dict, logger):
 
     for _parameter, _schema_file in zip(_parameters, _schema_files):
         logger.info(f"Parameter: {_parameter} Schema file: {_schema_file}")
-        simtel_config_reader = read_simtel_config_file(
-            args_dict, logger, _schema_file, _camera_pixel
-        )
+        if _parameter in args_dict["skip_parameter"]:
+            logger.info(f"Skipping {_parameter}")
+            continue
+        config_reader = read_simtel_config_file(args_dict, _schema_file, _camera_pixel)
 
-        if simtel_config_reader is None:
+        if config_reader is None:
             logger.info("Parameter not found in sim_telarray configuration file.")
             _parameters_not_in_simtel.append(_parameter)
             continue
 
+        logger.info(f"Simtel parameter: {config_reader.parameter_dict}")
+
         _json_dict = writer.ModelDataWriter.dump_model_parameter(
             parameter_name=_parameter,
-            value=simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
+            value=config_reader.parameter_dict.get(args_dict["simtel_telescope_name"]),
             instrument=args_dict["telescope"],
             parameter_version=args_dict["parameter_version"],
-            output_file=io_handler.get_output_file(f"{_parameter}.json"),
+            output_file=io_handler.get_output_file(
+                f"{_parameter}-{args_dict['parameter_version']}.json",
+                label=f"{args_dict['telescope']}",
+                sub_dir=f"{_parameter}",
+            ),
         )
 
-        simtel_config_reader.compare_simtel_config_with_schema()
+        config_reader.compare_simtel_config_with_schema()
 
-        if simtel_config_reader.simtel_parameter_name.lower() in _simtel_parameters:
-            _simtel_parameters.remove(simtel_config_reader.simtel_parameter_name.lower())
+        if config_reader.simtel_parameter_name.lower() in _simtel_parameters:
+            _simtel_parameters.remove(config_reader.simtel_parameter_name.lower())
 
         if _json_dict["file"]:
             logger.info(f"File name for {_parameter} is {_json_dict['value']}")
@@ -263,7 +250,7 @@ def read_and_export_parameters(args_dict, logger):
 
 def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, args_dict, logger):
     """
-    Print simtel/simtools parameter not found in schema and ocnfiguration files.
+    Print simtel/simtools parameter not found in schema and configuration files.
 
     For simtel parameters not found, check if the setting for the chose
     telescope is different from the default values.
@@ -289,29 +276,31 @@ def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, ar
     logger.info(f"Simtel parameters not found in schema files ({len(_simtel_parameters)}):")
     for para in sorted(_simtel_parameters):
         logger.info(f"Simtel parameter: {para}")
-        simtel_config_reader = SimtelConfigReader(
+        config_reader = simtel_config_reader.SimtelConfigReader(
             schema_file=None,
             simtel_config_file=args_dict["simtel_cfg_file"],
             simtel_telescope_name=args_dict["simtel_telescope_name"],
             parameter_name=para,
         )
-        _default = simtel_config_reader.parameter_dict.get("default")
-        _tel_value = simtel_config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
+        _default = config_reader.parameter_dict.get("default")
+        _tel_value = config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
         # simple comparison of default value and telescope values, does not work for lists
         try:
             if _default == _tel_value or np.isclose(_default, _tel_value):
-                logger.info(f"    Default and telescope values are equal: {_default}")
+                logger.info(f"    Default and telescope values for {para} are equal: {_default}")
                 continue
         except (ValueError, TypeError):
             pass
         if isinstance(_default, np.ndarray):
-            logger.warning(f"    Default value: {_default} (length: {_default.size})")
+            logger.warning(f"    Default value ({para}): {_default} (length: {_default.size})")
         else:
-            logger.warning(f"    Default value: {_default}")
+            logger.warning(f"    Default value ({para}): {_default}")
         if isinstance(_tel_value, np.ndarray):
-            logger.warning(f"    Telescope value: {_tel_value} (length: {_tel_value.size})")
+            logger.warning(
+                f"    Telescope value ({para}): {_tel_value} (length: {_tel_value.size})"
+            )
         else:
-            logger.warning(f"    Telescope value: {_tel_value}")
+            logger.warning(f"    Telescope value ({para}): {_tel_value}")
 
 
 def print_list_of_files(args_dict, logger):
