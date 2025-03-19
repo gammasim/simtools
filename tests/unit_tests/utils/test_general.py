@@ -548,6 +548,8 @@ def test_validate_data_type():
         ("string", "hello", None, True, True),
         ("file", None, "object", True, True),  # 'file' type with None value
         ("boolean", True, None, True, True),
+        ("boolean", 1, None, True, True),
+        ("boolean", 0, None, True, True),
         ("int", None, np.uint8, True, True),  # Subtype of 'int'
         ("float", None, int, True, True),  # 'int' can be converted to 'float'
     ]
@@ -566,6 +568,9 @@ def test_validate_data_type():
 
     with pytest.raises(ValueError, match=r"^Either value or dtype must be given"):
         gen.validate_data_type("int", None, None, False)
+
+    assert gen.validate_data_type("int", 5.0) is False
+    assert gen.validate_data_type("bool", 5) is False  # allow 0/1 to be booleans
 
 
 def test_convert_list_to_string():
@@ -834,3 +839,48 @@ def test_now_date_time_in_isoformat():
     assert now[13] == ":"
     assert now[16] == ":"
     assert datetime.datetime.fromisoformat(now) is not None
+
+
+def test_is_valid_numeric_type():
+    """Test _is_valid_numeric_type function."""
+    # Test integer dtypes
+    assert gen._is_valid_numeric_type(np.int32, np.int64)
+    assert gen._is_valid_numeric_type(np.uint8, np.integer)
+    assert gen._is_valid_numeric_type(np.int64, np.floating)
+    assert not gen._is_valid_numeric_type(np.int32, np.str_)
+    assert not gen._is_valid_numeric_type(np.int32, np.bool_)
+
+    # Test float dtypes
+    assert gen._is_valid_numeric_type(np.float32, np.float64)
+    assert gen._is_valid_numeric_type(np.float64, np.floating)
+    assert not gen._is_valid_numeric_type(np.float32, np.integer)
+    assert not gen._is_valid_numeric_type(np.float32, np.str_)
+    assert not gen._is_valid_numeric_type(np.float32, np.bool_)
+
+    # Test non-numeric dtypes
+    assert not gen._is_valid_numeric_type(np.str_, np.integer)
+    assert not gen._is_valid_numeric_type(np.bool_, np.floating)
+    assert not gen._is_valid_numeric_type(np.object_, np.integer)
+
+
+def test_is_valid_boolean_type():
+    """Test _is_valid_boolean_type function."""
+    # Test values 0 and 1
+    assert gen._is_valid_boolean_type(np.int32, 0)
+    assert gen._is_valid_boolean_type(np.int32, 1)
+    assert gen._is_valid_boolean_type(np.float32, 0)
+    assert gen._is_valid_boolean_type(np.float32, 1)
+
+    # Test boolean dtype
+    assert gen._is_valid_boolean_type(np.bool_, None)
+    assert gen._is_valid_boolean_type(bool, None)
+
+    # Test non-boolean dtypes with values other than 0/1
+    assert not gen._is_valid_boolean_type(np.int32, 2)
+    assert not gen._is_valid_boolean_type(np.float32, 0.5)
+    assert not gen._is_valid_boolean_type(np.str_, "True")
+
+    # Test non-boolean dtypes with None value
+    assert not gen._is_valid_boolean_type(np.int32, None)
+    assert not gen._is_valid_boolean_type(np.float32, None)
+    assert not gen._is_valid_boolean_type(np.str_, None)

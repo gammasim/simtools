@@ -4,11 +4,36 @@
 import logging
 import re
 
+import astropy.units as u
 import numpy as np
 
 import simtools.utils.general as gen
+from simtools.utils import names
 
 __all__ = ["SimtelConfigReader"]
+
+
+def get_list_of_simtel_parameters(simtel_config_file):
+    """
+    Return list of simtel parameters found in simtel configuration file.
+
+    Parameters
+    ----------
+    simtel_config_file: str
+        File name for sim_telarray configuration
+
+    Returns
+    -------
+    list
+        List of parameters found in simtel configuration file.
+
+    """
+    simtel_parameter_set = set()
+    with open(simtel_config_file, encoding="utf-8") as file:
+        for line in file:
+            parts_of_lines = re.split(r",\s*|\s+", line.strip())
+            simtel_parameter_set.add(parts_of_lines[1].lower())
+    return sorted(simtel_parameter_set)
 
 
 class SimtelConfigReader:
@@ -26,7 +51,7 @@ class SimtelConfigReader:
             -C limits=no-internal -C initlist=no-internal -C list=no-internal\
             -C typelist=no-internal -C maximum_telescopes=30\
             -DNSB_AUTOSCALE -DNECTARCAM -DHYPER_LAYOUT\
-            -DNUM_TELESCOPES=30 /dev/null 2>|/dev/null | grep '(@cfg)'
+            -DNUM_TELESCOPES=30 /dev/null 2>|/dev/null | grep '(@cfg)' | sed 's/^(@cfg)
 
     Parameters
     ----------
@@ -61,7 +86,12 @@ class SimtelConfigReader:
             else None
         )
         self.parameter_name = self.schema_dict.get("name") if self.schema_dict else parameter_name
-        self.simtel_parameter_name = self._get_simtel_parameter_name(self.parameter_name)
+        try:
+            self.simtel_parameter_name = names.get_simulation_software_name_from_parameter_name(
+                self.parameter_name
+            ).upper()
+        except (KeyError, AttributeError):
+            self.simtel_parameter_name = self.parameter_name.upper()
         self.simtel_telescope_name = simtel_telescope_name
         self.camera_pixels = camera_pixels
         self.parameter_dict = self.read_simtel_config_file(
@@ -73,7 +103,7 @@ class SimtelConfigReader:
         return data_type == "limits" and self.parameter_dict.get("type") == "bool"
 
     def _get_schema_values(self, data_type):
-        """Check schema values for limits and defaults."""
+        """Check schema values for limits, unit, and default."""
         try:
             if data_type == "limits":
                 _from_schema = [
@@ -82,14 +112,25 @@ class SimtelConfigReader:
                 ]
                 return _from_schema[0] if _from_schema[1] is None else _from_schema
             if len(self.schema_dict["data"]) == 1:
-                return self.schema_dict["data"][0]["default"]
-            return [data.get("default") for data in self.schema_dict["data"]]
+                return self.schema_dict["data"][0].get(data_type)
+            return [data.get(data_type) for data in self.schema_dict["data"]]
         except (KeyError, IndexError):
             return None
 
     @staticmethod
     def _values_match(_from_simtel, _from_schema):
-        """Check if values match (are close for floats)."""
+        """
+        Check if values match (are close for floats).
+
+        Convert where necessary astropy.Quantity to float.
+
+        """
+        if isinstance(_from_simtel, u.Quantity):
+            _from_simtel = _from_simtel.value
+        if isinstance(_from_simtel, np.ndarray) and len(_from_simtel) > 0:
+            _from_simtel = np.array(
+                [v.value if isinstance(v, u.Quantity) else v for v in _from_simtel]
+            )
         try:
             if not isinstance(_from_schema, list | np.ndarray) and _from_simtel == _from_schema:
                 return True
@@ -184,6 +225,7 @@ class SimtelConfigReader:
                     dtype=_para_dict.get("type"),
                     n_dim=_para_dict.get("dimension"),
                     default=_para_dict.get("default"),
+                    is_limit=(key == "limits"),
                 )
             except KeyError:
                 pass
@@ -232,7 +274,7 @@ class SimtelConfigReader:
 
         return column, except_from_all
 
-    def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None):
+    def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None, is_limit=False):
         """
         Extract value(s) from simtel configuration file columns.
 
@@ -276,7 +318,42 @@ class SimtelConfigReader:
         if dtype == "bool":
             column = np.array([bool(int(item)) for item in column])
 
-        return self._process_column(column, dtype)
+        column, ndim = self._process_column(column, dtype)
+        if not is_limit:
+            column = self._add_units(column)
+        return column, ndim
+
+    def _add_units(self, column):
+        """
+        Add units as given in schema file to column.
+
+        Take into account array types and dimensionless units.
+        Ensure that integer values are returned as integers (astropy converts
+        values to floats when multiplying them with units).
+
+        """
+        try:
+            unit = self._get_schema_values("unit")
+        except TypeError:  # no schema defined
+            return column
+        if unit is None or unit == "dimensionless":
+            return column
+
+        if isinstance(column, np.ndarray) and len(column) == len(unit):
+            return np.array(
+                [
+                    col * u.Unit(un) if un != "dimensionless" else col
+                    for col, un in zip(column, unit)
+                ],
+                dtype=object,
+            )
+        if isinstance(unit, str):
+            column_with_unit = column * u.Unit(unit)
+            if isinstance(column, int | np.integer):
+                return u.Quantity(int(column_with_unit.value), unit, dtype=type(column))
+            return column_with_unit
+
+        return None
 
     def _process_column(self, column, dtype):
         """
@@ -324,29 +401,3 @@ class SimtelConfigReader:
         if self.camera_pixels is not None and self.simtel_parameter_name in ["NIGHTSKY_BACKGROUND"]:
             return str(np.dtype(column[0].lower())), self.camera_pixels
         return str(np.dtype(column[0].lower())), int(column[1])
-
-    def _get_simtel_parameter_name(self, parameter_name):
-        """
-        Return parameter name as used in sim_telarray.
-
-        This is documented in the schema file.
-
-        Parameters
-        ----------
-        parameter_name: str
-            Model parameter name (as used in simtools)
-
-        Returns
-        -------
-        str
-            Parameter name as used in sim_telarray.
-
-        """
-        try:
-            for sim_soft in self.schema_dict["simulation_software"]:
-                if sim_soft["name"] == "sim_telarray":
-                    return sim_soft["internal_parameter_name"].upper()
-        except (KeyError, TypeError):
-            pass
-
-        return parameter_name.upper()

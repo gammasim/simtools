@@ -258,7 +258,9 @@ def test_open_mongo_db_direct_connection(mocker, db, db_config):
         port=db_config["db_api_port"],
         username=db_config["db_api_user"],
         password=db_config["db_api_pw"],
-        authSource=db_config.get("db_api_authentication_database", "admin"),
+        authSource=db_config.get("db_api_authentication_database")
+        if db_config.get("db_api_authentication_database")
+        else "admin",
         directConnection=True,
         ssl=False,
         tlsallowinvalidhostnames=True,
