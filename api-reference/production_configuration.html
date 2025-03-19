@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Production Configuration &#8212; simtools v0.1.dev1+g3f6c440 Manual</title>
+    <title>Production Configuration &#8212; simtools v0.1.dev1+gc72b7e9 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=c96d0ed2"></script>
+    <script src="../_static/documentation_options.js?v=3818b1bf"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3f6c440 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc72b7e9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -849,10 +849,6 @@ a u.Quantity.</p>
 </dd>
 <dt><strong>shower_sim_altitude</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Simulated altitude angle of the shower</p>
 </dd>
-<dt><strong>array_altitudes</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Altitudes for the array</p>
-</dd>
-<dt><strong>array_azimuths</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Azimuths for the array</p>
-</dd>
 <dt><strong>meta</strong><span class="classifier">dict</span></dt><dd><p>dict of attached metadata</p>
 </dd>
 <dt><strong>prefix</strong><span class="classifier">str</span></dt><dd><p>Prefix attached to column names when saved to a table or file</p>
@@ -872,6 +868,10 @@ a u.Quantity.</p>
 <dt><strong>shower_id_triggered</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Triggered shower ID</p>
 </dd>
 <dt><strong>triggered_energies</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Triggered energies</p>
+</dd>
+<dt><strong>array_altitudes</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Altitudes for the array</p>
+</dd>
+<dt><strong>array_azimuths</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Azimuths for the array</p>
 </dd>
 <dt><strong>meta</strong><span class="classifier">dict</span></dt><dd><p>dict of attached metadata</p>
 </dd>
@@ -1066,6 +1066,9 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone">
 <span class="sig-name descname"><span class="pre">compute_viewcone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.compute_viewcone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone" title="Link to this definition">#</a></dt>
 <dd><p>Compute the viewcone based on the event loss fraction.</p>
+<p>The shower IDs of triggered events are used to create a mask for the
+azimuth and altitude of the triggered events. A mapping is created
+between the triggered events and the simulated events using the shower IDs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">

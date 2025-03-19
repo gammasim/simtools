@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_configuration.derive_corsika_limits &#8212; simtools v0.1.dev1+g3f6c440 Manual</title>
+    <title>production_configuration.derive_corsika_limits &#8212; simtools v0.1.dev1+gc72b7e9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c96d0ed2"></script>
+    <script src="../../_static/documentation_options.js?v=3818b1bf"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3f6c440 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc72b7e9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -443,20 +443,22 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="nf">_read_event_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the event data from the reduced MC event data file.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">tables</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">file_names</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">file_names</span>
             <span class="n">reduced_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">reduced_data</span>
             <span class="n">triggered_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">triggered_data</span>
-            <span class="n">file_names</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">file_names</span>
             <span class="n">trigger_telescope_list_list</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">trigger_telescope_list_list</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">list_of_files</span> <span class="o">=</span> <span class="n">file_names</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;file_names&quot;</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">event_x_core</span> <span class="o">=</span> <span class="n">reduced_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;core_x&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">event_y_core</span> <span class="o">=</span> <span class="n">reduced_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;core_y&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">simulated</span> <span class="o">=</span> <span class="n">reduced_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;simulated&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">shower_id_triggered</span> <span class="o">=</span> <span class="n">triggered_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;shower_id_triggered&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">list_of_files</span> <span class="o">=</span> <span class="n">file_names</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;file_names&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">shower_sim_azimuth</span> <span class="o">=</span> <span class="n">reduced_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;shower_sim_azimuth&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">shower_sim_altitude</span> <span class="o">=</span> <span class="n">reduced_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;shower_sim_altitude&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array_altitude</span> <span class="o">=</span> <span class="n">reduced_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array_azimuth</span> <span class="o">=</span> <span class="n">reduced_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">array_altitude</span> <span class="o">=</span> <span class="n">triggered_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array_azimuth</span> <span class="o">=</span> <span class="n">triggered_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shower_id_triggered</span> <span class="o">=</span> <span class="n">triggered_data</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;shower_id_triggered&quot;</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">trigger_telescope_list_list</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">(</span><span class="n">tel</span><span class="p">)</span> <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="n">event</span><span class="p">]</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">trigger_telescope_list_list</span>
@@ -576,6 +578,10 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the viewcone based on the event loss fraction.</span>
 
+<span class="sd">        The shower IDs of triggered events are used to create a mask for the</span>
+<span class="sd">        azimuth and altitude of the triggered events. A mapping is created</span>
+<span class="sd">        between the triggered events and the simulated events using the shower IDs.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        loss_fraction : float</span>
@@ -586,10 +592,33 @@ document.write(`
 <span class="sd">        astropy.units.Quantity</span>
 <span class="sd">            Viewcone radius in degrees.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># already in radians</span>
-        <span class="n">azimuth_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_azimuth</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_sim_azimuth</span>  <span class="c1"># * (np.pi / 180.0)</span>
-        <span class="n">sim_altitude_rad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_sim_altitude</span>  <span class="c1"># * (np.pi / 180.0)</span>
-        <span class="n">array_altitude_rad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_altitude</span>  <span class="c1"># * (np.pi / 180.0)</span>
+        <span class="c1"># Create an index array to create the mapping for the triggered events</span>
+        <span class="n">triggered_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shower_id_triggered</span><span class="p">))</span>
+
+        <span class="c1"># Apply the telescope mask if provided</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="nb">all</span><span class="p">(</span><span class="n">tel</span> <span class="ow">in</span> <span class="n">event</span> <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_list</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_telescope_list_list</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">shower_id_triggered_filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_id_triggered</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+            <span class="n">triggered_indices</span> <span class="o">=</span> <span class="n">triggered_indices</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shower_id_triggered_filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_id_triggered</span>
+
+        <span class="n">array_azimuth_filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_azimuth</span><span class="p">[</span><span class="n">triggered_indices</span><span class="p">]</span>
+        <span class="n">array_altitude_filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_altitude</span><span class="p">[</span><span class="n">triggered_indices</span><span class="p">]</span>
+
+        <span class="n">sim_azimuth_filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_sim_azimuth</span><span class="p">[</span><span class="n">shower_id_triggered_filtered</span><span class="p">]</span>
+        <span class="n">sim_altitude_filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shower_sim_altitude</span><span class="p">[</span><span class="n">shower_id_triggered_filtered</span><span class="p">]</span>
+
+        <span class="n">azimuth_diff</span> <span class="o">=</span> <span class="n">array_azimuth_filtered</span> <span class="o">-</span> <span class="n">sim_azimuth_filtered</span>
+        <span class="n">sim_altitude_rad</span> <span class="o">=</span> <span class="n">sim_altitude_filtered</span>
+        <span class="n">array_altitude_rad</span> <span class="o">=</span> <span class="n">array_altitude_filtered</span>
+
         <span class="n">x_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">azimuth_diff</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sim_altitude_rad</span><span class="p">)</span>
         <span class="n">y_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">azimuth_diff</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sim_altitude_rad</span><span class="p">)</span>
         <span class="n">z_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">sim_altitude_rad</span><span class="p">)</span>
@@ -597,7 +626,8 @@ document.write(`
         <span class="n">y_2</span> <span class="o">=</span> <span class="n">y_1</span>
         <span class="n">z_2</span> <span class="o">=</span> <span class="n">x_1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">array_altitude_rad</span><span class="p">)</span> <span class="o">+</span> <span class="n">z_1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">array_altitude_rad</span><span class="p">)</span>
         <span class="n">off_angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x_2</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y_2</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">z_2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">180.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
-        <span class="n">angle_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">off_angles</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">off_angles</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">400</span><span class="p">)</span>
+
+        <span class="n">angle_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">off_angles</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">off_angles</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">1000</span><span class="p">)</span>
         <span class="n">hist</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">off_angles</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">angle_bins</span><span class="p">)</span>
 
         <span class="n">upper_bin_edge_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_limits</span><span class="p">(</span>
@@ -642,9 +672,11 @@ document.write(`
         <span class="n">core_distances_triggered</span> <span class="o">=</span> <span class="n">core_distances_all</span><span class="p">[</span><span class="n">shower_id_triggered_masked</span><span class="p">]</span>
         <span class="n">triggered_energies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulated</span><span class="p">[</span><span class="n">shower_id_triggered_masked</span><span class="p">]</span>
 
-        <span class="n">core_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">core_distances_triggered</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">core_distances_triggered</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">400</span><span class="p">)</span>
+        <span class="n">core_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+            <span class="n">core_distances_triggered</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">core_distances_triggered</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">1000</span>
+        <span class="p">)</span>
         <span class="n">energy_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">triggered_energies</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">triggered_energies</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="mi">400</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">triggered_energies</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">triggered_energies</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="mi">1000</span>
         <span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">hist2d</span><span class="p">(</span>

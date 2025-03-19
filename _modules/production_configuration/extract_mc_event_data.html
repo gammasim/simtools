@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_configuration.extract_mc_event_data &#8212; simtools v0.1.dev1+g3f6c440 Manual</title>
+    <title>production_configuration.extract_mc_event_data &#8212; simtools v0.1.dev1+gc72b7e9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c96d0ed2"></script>
+    <script src="../../_static/documentation_options.js?v=3818b1bf"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3f6c440 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc72b7e9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -397,7 +397,14 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">ctapipe.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ctapipe.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDF5TableWriter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayEvent</span><span class="p">,</span> <span class="n">MCEvent</span><span class="p">,</span> <span class="n">MCRunHeader</span><span class="p">,</span> <span class="n">MCShower</span><span class="p">,</span> <span class="n">TriggerInformation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ArrayEvent</span><span class="p">,</span>
+    <span class="n">MCEvent</span><span class="p">,</span>
+    <span class="n">MCRunHeader</span><span class="p">,</span>
+    <span class="n">MCShower</span><span class="p">,</span>
+    <span class="n">TrackingPosition</span><span class="p">,</span>
+    <span class="n">TriggerInformation</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">DEFAULT_FILTERS</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">Filters</span><span class="p">(</span><span class="n">complevel</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">complib</span><span class="o">=</span><span class="s2">&quot;zlib&quot;</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitshuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
@@ -411,9 +418,7 @@ document.write(`
     <span class="n">core_x</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;X-coordinate of the shower core&quot;</span><span class="p">)</span>
     <span class="n">core_y</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Y-coordinate of the shower core&quot;</span><span class="p">)</span>
     <span class="n">shower_sim_azimuth</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Simulated azimuth angle of the shower&quot;</span><span class="p">)</span>
-    <span class="n">shower_sim_altitude</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Simulated altitude angle of the shower&quot;</span><span class="p">)</span>
-    <span class="n">array_altitudes</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Altitudes for the array&quot;</span><span class="p">)</span>
-    <span class="n">array_azimuths</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Azimuths for the array&quot;</span><span class="p">)</span></div>
+    <span class="n">shower_sim_altitude</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Simulated altitude angle of the shower&quot;</span><span class="p">)</span></div>
 
 
 
@@ -423,7 +428,9 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for triggered shower information.&quot;&quot;&quot;</span>
 
     <span class="n">shower_id_triggered</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Triggered shower ID&quot;</span><span class="p">)</span>
-    <span class="n">triggered_energies</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Triggered energies&quot;</span><span class="p">)</span></div>
+    <span class="n">triggered_energies</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Triggered energies&quot;</span><span class="p">)</span>
+    <span class="n">array_altitudes</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Altitudes for the array&quot;</span><span class="p">)</span>
+    <span class="n">array_azimuths</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Azimuths for the array&quot;</span><span class="p">)</span></div>
 
 
 
@@ -555,38 +562,28 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process a single file and update data lists.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">array_altitude</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">array_azimuth</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">for</span> <span class="n">eventio_object</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">MCRunHeader</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_run_header</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_run_header</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">MCShower</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_shower</span><span class="p">(</span>
-                        <span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">,</span> <span class="n">array_altitude</span><span class="p">,</span> <span class="n">array_azimuth</span>
-                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_shower</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">MCEvent</span><span class="p">):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_process_mc_event</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">ArrayEvent</span><span class="p">):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_process_array_event</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">)</span>
             <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;file_names&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">file_name</span><span class="p">])</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_run_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_run_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process MC run header and update data lists.&quot;&quot;&quot;</span>
         <span class="n">mc_head</span> <span class="o">=</span> <span class="n">eventio_object</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">=</span> <span class="n">mc_head</span><span class="p">[</span><span class="s2">&quot;n_use&quot;</span><span class="p">]</span>  <span class="c1"># reuse factor n_use needed to extend the values below</span>
-        <span class="n">array_altitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mc_head</span><span class="p">[</span><span class="s2">&quot;alt_range&quot;</span><span class="p">])</span>
-        <span class="n">array_azimuth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mc_head</span><span class="p">[</span><span class="s2">&quot;az_range&quot;</span><span class="p">])</span>
-        <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">*</span> <span class="p">[</span><span class="n">array_altitude</span><span class="p">])</span>
-        <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">*</span> <span class="p">[</span><span class="n">array_azimuth</span><span class="p">])</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_shower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">,</span> <span class="n">array_altitude</span><span class="p">,</span> <span class="n">array_azimuth</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_shower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process MC shower and update data lists.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shower</span> <span class="o">=</span> <span class="n">eventio_object</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
         <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">*</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shower</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]])</span>
         <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;shower_sim_azimuth&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">*</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shower</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]])</span>
         <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;shower_sim_altitude&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">*</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shower</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">]])</span>
-        <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">*</span> <span class="p">[</span><span class="n">array_altitude</span><span class="p">])</span>
-        <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_use</span> <span class="o">*</span> <span class="p">[</span><span class="n">array_azimuth</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_mc_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process MC event and update data lists.&quot;&quot;&quot;</span>
@@ -596,9 +593,57 @@ document.write(`
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_array_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eventio_object</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process array event and update data lists.&quot;&quot;&quot;</span>
+        <span class="n">tracking_positions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">previous_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eventio_object</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">TriggerInformation</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">TriggerInformation</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_process_trigger_information</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">TrackingPosition</span><span class="p">):</span>
+                <span class="n">tracking_position</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+                <span class="n">tracking_positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;altitude&quot;</span><span class="p">:</span> <span class="n">tracking_position</span><span class="p">[</span><span class="s2">&quot;altitude_raw&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">tracking_position</span><span class="p">[</span><span class="s2">&quot;azimuth_raw&quot;</span><span class="p">],</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">previous_index</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_process_tracking_positions</span><span class="p">(</span><span class="n">tracking_positions</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">)</span>
+                <span class="n">tracking_positions</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Reset for the next shower</span>
+
+            <span class="n">previous_index</span> <span class="o">=</span> <span class="n">i</span>
+
+        <span class="k">if</span> <span class="n">tracking_positions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_tracking_positions</span><span class="p">(</span><span class="n">tracking_positions</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_tracking_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracking_positions</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process the collected tracking positions and update data lists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tracking_positions : list of dict</span>
+<span class="sd">            List of tracking positions with &quot;altitude&quot; and &quot;azimuth&quot; keys.</span>
+<span class="sd">        data_lists : dict</span>
+<span class="sd">            Data lists to update.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">altitudes</span> <span class="o">=</span> <span class="p">[</span><span class="n">pos</span><span class="p">[</span><span class="s2">&quot;altitude&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">tracking_positions</span><span class="p">]</span>
+        <span class="n">azimuths</span> <span class="o">=</span> <span class="p">[</span><span class="n">pos</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">tracking_positions</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">altitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">altitudes</span> <span class="o">=</span> <span class="n">altitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">azimuths</span> <span class="o">=</span> <span class="n">azimuths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Check if all tracking positions are the same</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">altitudes</span><span class="p">,</span> <span class="n">altitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span>
+            <span class="n">azimuths</span><span class="p">,</span> <span class="n">azimuths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span>
+        <span class="p">):</span>
+            <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">altitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">azimuths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># append the mean telescope tracking positions for each triggered event</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Telescopes have different tracking positions, applying mean.&quot;</span><span class="p">)</span>
+            <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">altitudes</span><span class="p">))</span>
+            <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">azimuths</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_trigger_information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger_info</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process trigger information and update data lists.&quot;&quot;&quot;</span>
@@ -616,21 +661,24 @@ document.write(`
         <span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
             <span class="c1"># Write reduced dataset container</span>
             <span class="n">reduced_container</span> <span class="o">=</span> <span class="n">ReducedDatasetContainer</span><span class="p">()</span>
+
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">])):</span>
                 <span class="n">reduced_container</span><span class="o">.</span><span class="n">simulated</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;simulated&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
                 <span class="n">reduced_container</span><span class="o">.</span><span class="n">core_x</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;core_x&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
                 <span class="n">reduced_container</span><span class="o">.</span><span class="n">core_y</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;core_y&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
                 <span class="n">reduced_container</span><span class="o">.</span><span class="n">shower_sim_azimuth</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;shower_sim_azimuth&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
                 <span class="n">reduced_container</span><span class="o">.</span><span class="n">shower_sim_altitude</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;shower_sim_altitude&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
-                <span class="n">reduced_container</span><span class="o">.</span><span class="n">array_altitudes</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
-                <span class="n">reduced_container</span><span class="o">.</span><span class="n">array_azimuths</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+
                 <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;reduced_data&quot;</span><span class="p">,</span> <span class="n">containers</span><span class="o">=</span><span class="p">[</span><span class="n">reduced_container</span><span class="p">])</span>
 
             <span class="c1"># Write triggered shower container</span>
             <span class="n">triggered_container</span> <span class="o">=</span> <span class="n">TriggeredShowerContainer</span><span class="p">()</span>
+
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;shower_id_triggered&quot;</span><span class="p">])):</span>
                 <span class="n">triggered_container</span><span class="o">.</span><span class="n">shower_id_triggered</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;shower_id_triggered&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
                 <span class="n">triggered_container</span><span class="o">.</span><span class="n">triggered_energies</span> <span class="o">=</span> <span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;triggered_energies&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">triggered_container</span><span class="o">.</span><span class="n">array_altitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_altitudes&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">triggered_container</span><span class="o">.</span><span class="n">array_azimuths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_lists</span><span class="p">[</span><span class="s2">&quot;array_azimuths&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
                 <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;triggered_data&quot;</span><span class="p">,</span> <span class="n">containers</span><span class="o">=</span><span class="p">[</span><span class="n">triggered_container</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_reset_data_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_lists</span><span class="p">):</span>
