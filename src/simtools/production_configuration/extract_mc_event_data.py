@@ -227,15 +227,19 @@ class MCEventExtractor:
         """
         altitudes = [pos["altitude"] for pos in tracking_positions]
         azimuths = [pos["azimuth"] for pos in tracking_positions]
-
+        if isinstance(altitudes[0], list):
+            altitudes = altitudes[0]
+            azimuths = azimuths[0]
         # Check if all tracking positions are the same
-        if np.allclose(altitudes, altitudes[0]) and np.allclose(azimuths, azimuths[0]):
+        if np.allclose(altitudes, altitudes[0], atol=1e-5) and np.allclose(
+            azimuths, azimuths[0], atol=1e-5
+        ):
             data_lists["array_altitudes"].append(altitudes[0])
             data_lists["array_azimuths"].append(azimuths[0])
-        else:  # append the list of telescope tracking positions for each triggered event
-            self._logger.info("Telescopes have different tracking positions")
-            data_lists["array_altitudes"].append(altitudes)
-            data_lists["array_azimuths"].append(azimuths)
+        else:  # append the mean telescope tracking positions for each triggered event
+            self._logger.info("Telescopes have different tracking positions, applying mean.")
+            data_lists["array_altitudes"].append(np.mean(altitudes))
+            data_lists["array_azimuths"].append(np.mean(azimuths))
 
     def _process_trigger_information(self, trigger_info, data_lists):
         """Process trigger information and update data lists."""
@@ -265,7 +269,6 @@ class MCEventExtractor:
 
             # Write triggered shower container
             triggered_container = TriggeredShowerContainer()
-            print("len(data_lists['array_altitudes'])", len(data_lists["array_altitudes"]))
 
             for i in range(len(data_lists["shower_id_triggered"])):
                 triggered_container.shower_id_triggered = data_lists["shower_id_triggered"][i]
