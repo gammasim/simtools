@@ -51,20 +51,22 @@ class LimitCalculator:
     def _read_event_data(self):
         """Read the event data from the reduced MC event data file."""
         with tables.open_file(self.event_data_file, mode="r") as f:
+            file_names = f.root.data.file_names
             reduced_data = f.root.data.reduced_data
             triggered_data = f.root.data.triggered_data
-            file_names = f.root.data.file_names
             trigger_telescope_list_list = f.root.data.trigger_telescope_list_list
+
+            self.list_of_files = file_names.col("file_names")
 
             self.event_x_core = reduced_data.col("core_x")
             self.event_y_core = reduced_data.col("core_y")
             self.simulated = reduced_data.col("simulated")
-            self.shower_id_triggered = triggered_data.col("shower_id_triggered")
-            self.list_of_files = file_names.col("file_names")
             self.shower_sim_azimuth = reduced_data.col("shower_sim_azimuth")
             self.shower_sim_altitude = reduced_data.col("shower_sim_altitude")
-            self.array_altitude = reduced_data.col("array_altitudes")
-            self.array_azimuth = reduced_data.col("array_azimuths")
+
+            self.array_altitude = triggered_data.col("array_altitudes")
+            self.array_azimuth = triggered_data.col("array_azimuths")
+            self.shower_id_triggered = triggered_data.col("shower_id_triggered")
 
             self.trigger_telescope_list_list = [
                 [np.int16(tel) for tel in event] for event in trigger_telescope_list_list
@@ -176,6 +178,10 @@ class LimitCalculator:
         """
         Compute the viewcone based on the event loss fraction.
 
+        The shower IDs of triggered events are used to create a mask for the
+        azimuth and altitude of the triggered events. A mapping is created
+        between the triggered events and the simulated events using the shower IDs.
+
         Parameters
         ----------
         loss_fraction : float
@@ -186,10 +192,33 @@ class LimitCalculator:
         astropy.units.Quantity
             Viewcone radius in degrees.
         """
-        # already in radians
-        azimuth_diff = self.array_azimuth - self.shower_sim_azimuth  # * (np.pi / 180.0)
-        sim_altitude_rad = self.shower_sim_altitude  # * (np.pi / 180.0)
-        array_altitude_rad = self.array_altitude  # * (np.pi / 180.0)
+        # Create an index array to create the mapping for the triggered events
+        triggered_indices = np.arange(len(self.shower_id_triggered))
+        print("triggered_indices", triggered_indices)
+
+        # Apply the telescope mask if provided
+        if self.telescope_list is not None:
+            mask = np.array(
+                [
+                    all(tel in event for tel in self.telescope_list)
+                    for event in self.trigger_telescope_list_list
+                ]
+            )
+            shower_id_triggered_filtered = self.shower_id_triggered[mask]
+
+            triggered_indices = triggered_indices[mask]
+        else:
+            shower_id_triggered_filtered = self.shower_id_triggered
+
+        array_azimuth_filtered = self.array_azimuth[triggered_indices]
+        array_altitude_filtered = self.array_altitude[triggered_indices]
+
+        sim_azimuth_filtered = self.shower_sim_azimuth[shower_id_triggered_filtered]
+        sim_altitude_filtered = self.shower_sim_altitude[shower_id_triggered_filtered]
+
+        azimuth_diff = array_azimuth_filtered - sim_azimuth_filtered
+        sim_altitude_rad = sim_altitude_filtered
+        array_altitude_rad = array_altitude_filtered
 
         x_1 = np.cos(azimuth_diff) * np.cos(sim_altitude_rad)
         y_1 = np.sin(azimuth_diff) * np.cos(sim_altitude_rad)
