@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+gc4ffb72 Manual</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+ge1d39f1 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=0c170244"></script>
+    <script src="../../_static/documentation_options.js?v=3c882afc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc4ffb72 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge1d39f1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -754,6 +754,8 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get array element type from array element name (e.g &quot;MSTN&quot; from &quot;MSTN-01&quot;).</span>
 
+<span class="sd">    For sites, return site name.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    array_element_name: str</span>
@@ -764,7 +766,10 @@ document.write(`
 <span class="sd">    str</span>
 <span class="sd">        Array element type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array_elements</span><span class="p">())</span></div>
+    <span class="k">try</span><span class="p">:</span>  <span class="c1"># e.g. instrument is &#39;North&#39; as given for the site parameters</span>
+        <span class="k">return</span> <span class="n">validate_site_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># any other telescope or calibration device</span>
+        <span class="k">return</span> <span class="n">_validate_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array_elements</span><span class="p">())</span></div>
 
 
 
@@ -865,7 +870,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">array_elements</span><span class="p">()[</span><span class="n">get_array_element_type_from_name</span><span class="p">(</span><span class="n">array_element_name</span><span class="p">)][</span><span class="s2">&quot;collection&quot;</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">array_elements_only</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid array element name </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
     <span class="k">try</span><span class="p">:</span>

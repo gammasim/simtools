@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera.single_photon_electron_spectrum &#8212; simtools v0.1.dev1+gc4ffb72 Manual</title>
+    <title>camera.single_photon_electron_spectrum &#8212; simtools v0.1.dev1+ge1d39f1 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=0c170244"></script>
+    <script src="../../_static/documentation_options.js?v=3c882afc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc4ffb72 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge1d39f1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -400,7 +400,7 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">writer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCHEMA_PATH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">MODEL_PARAMETER_SCHEMA_URL</span><span class="p">,</span> <span class="n">SCHEMA_PATH</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_data</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
@@ -436,6 +436,10 @@ document.write(`
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># Single photon electron spectrum data (as string)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;metadata_product_data_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;single_pe_spectrum&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;metadata_product_data_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">MODEL_PARAMETER_SCHEMA_URL</span> <span class="o">+</span> <span class="s2">&quot;/pm_photoelectron_spectrum.schema.yml&quot;</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">MetadataCollector</span><span class="p">(</span><span class="n">args_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SinglePhotonElectronSpectrum.derive_single_pe_spectrum">
@@ -480,7 +484,7 @@ document.write(`
 
         <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
             <span class="n">args_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">,</span>
-            <span class="n">metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">top_level_meta</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span>
             <span class="n">product_data</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
             <span class="n">validate_schema_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span></div>

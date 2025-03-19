@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>plot_tabular_data &#8212; simtools v0.1.dev1+gc4ffb72 Manual</title>
+    <title>plot_tabular_data &#8212; simtools v0.1.dev1+ge1d39f1 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=0c170244"></script>
+    <script src="../_static/documentation_options.js?v=3c882afc"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc4ffb72 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge1d39f1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -409,6 +409,7 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">PLOT_CONFIG_SCHEMA</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">schema</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_tables</span>
 
@@ -446,7 +447,7 @@ document.write(`
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_model</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">])</span>
 
 
 <div class="viewcode-block" id="main">
@@ -474,6 +475,12 @@ document.write(`
         <span class="n">config</span><span class="o">=</span><span class="n">plot_config</span><span class="p">[</span><span class="s2">&quot;cta_simpipe&quot;</span><span class="p">][</span><span class="s2">&quot;plot&quot;</span><span class="p">],</span>
         <span class="n">output_file</span><span class="o">=</span><span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]),</span>
         <span class="n">db_config</span><span class="o">=</span><span class="n">db_config_</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">MetadataCollector</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="p">,</span>
+        <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]),</span>
+        <span class="n">add_activity_name</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
