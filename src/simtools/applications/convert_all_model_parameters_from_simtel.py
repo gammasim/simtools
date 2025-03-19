@@ -20,7 +20,7 @@ r"""
         Telescope model name (e.g. LST-1, SST-D, ...)
 
     skip_parameter (str, optional)
-        List of parameters (use sim_telarray names) to be skipped.
+        List of parameters to be skipped (use sim_telarray names).
 
     Example
     -------
