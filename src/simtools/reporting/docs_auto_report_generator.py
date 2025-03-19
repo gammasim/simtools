@@ -44,12 +44,8 @@ class ReportGenerator:
                 filtered_telescopes.append(telescope)
         return filtered_telescopes
 
-    def auto_generate_array_element_reports(self):
-        """
-        Generate all reports based on which --all_* flag is passed.
-
-        Expands 'all' options to iterate over multiple values.
-        """
+    def _get_report_parameters(self):
+        """Generate parameters for report generation."""
         all_model_versions = self.db.get_model_versions()
         all_sites = {"North", "South"}
 
@@ -60,34 +56,46 @@ class ReportGenerator:
         )
         selected_sites = all_sites if self.args.get("all_sites") else {self.args["site"]}
 
-        # Loop through each model version
-        for model_version in model_versions:
+        def get_telescopes(model_version):
+            if not self.args.get("all_telescopes"):
+                return [self.args["telescope"]]
             telescopes = self.db.get_array_elements(model_version)
-
-            # Add design models to the list of telescopes
             all_telescopes = self._add_design_models_to_telescopes(model_version, telescopes)
-            filtered_telescopes = self._filter_telescopes_by_site(all_telescopes, selected_sites)
+            return self._filter_telescopes_by_site(all_telescopes, selected_sites)
 
-            for telescope in filtered_telescopes:
-                sites = names.get_site_from_array_element_name(telescope)
-                sites = sites if isinstance(sites, list) else [sites]
+        def get_valid_sites(telescope):
+            sites = names.get_site_from_array_element_name(telescope)
+            sites = sites if isinstance(sites, list) else [sites]
+            return [site for site in sites if site in selected_sites]
 
-                site = next((s for s in sites if s in selected_sites), None)
+        def generate_combinations():
+            for version in model_versions:
+                telescopes = get_telescopes(version)
+                for telescope in telescopes:
+                    for site in get_valid_sites(telescope):
+                        yield version, telescope, site
 
-                if site:
-                    self.args["telescope"], self.args["site"], self.args["model_version"] = (
-                        telescope,
-                        site,
-                        model_version,
-                    )
+        return generate_combinations()
 
-                    output_path = Path(self.output_path / f"{self.args['model_version']}")
+    def _generate_single_array_element_report(self, model_version, telescope, site):
+        """Generate a single report with given parameters."""
+        self.args.update(
+            {
+                "telescope": telescope,
+                "site": site,
+                "model_version": model_version,
+            }
+        )
 
-                    ReadParameters(
-                        self.db_config, self.args, output_path
-                    ).produce_array_element_report()
+        output_path = Path(self.output_path) / str(model_version)
+        ReadParameters(self.db_config, self.args, output_path).produce_array_element_report()
 
-                    logger.info(
-                        f"Markdown report generated for {site} "
-                        f"Telescope {telescope} (v{model_version}): {output_path}"
-                    )
+        logger.info(
+            f"Markdown report generated for {site} "
+            f"Telescope {telescope} (v{model_version}): {output_path}"
+        )
+
+    def auto_generate_array_element_reports(self):
+        """Generate all reports based on which --all_* flag is passed."""
+        for params in self._get_report_parameters():
+            self._generate_single_array_element_report(*params)
