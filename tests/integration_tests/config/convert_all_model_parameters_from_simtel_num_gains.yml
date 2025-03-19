@@ -8,10 +8,9 @@ CTA_SIMPIPE:
       SIMTEL_TELESCOPE_NAME: CT1
       TELESCOPE: LSTN-01
       PARAMETER_VERSION: 0.0.1
-      SCHEMA_DIRECTORY: ./tests/resources/
       OUTPUT_PATH: simtools-output
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: num_gains.json
-    - OUTPUT_FILE: telescope_transmission.json
+    - OUTPUT_FILE: LSTN-01/num_gains/num_gains-0.0.1.json
+    - OUTPUT_FILE: LSTN-01/telescope_transmission/telescope_transmission-0.0.1.json
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

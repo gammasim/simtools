@@ -241,6 +241,7 @@ def test_get_array_element_type_from_name(invalid_name):
     for _name in ["", "01", "Not_a_telescope", "LST", "MST"]:
         with pytest.raises(ValueError, match=rf"^{invalid_name}"):
             names.get_array_element_type_from_name(_name)
+    assert names.get_array_element_type_from_name("South") == "South"
 
 
 def test_get_array_element_id_from_name(invalid_name):
