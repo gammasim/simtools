@@ -7,7 +7,14 @@ import tables
 from ctapipe.core import Container, Field
 from ctapipe.io import HDF5TableWriter
 from eventio import EventIOFile
-from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerInformation
+from eventio.simtel import (
+    ArrayEvent,
+    MCEvent,
+    MCRunHeader,
+    MCShower,
+    TrackingPosition,
+    TriggerInformation,
+)
 
 DEFAULT_FILTERS = tables.Filters(complevel=5, complib="zlib", shuffle=True, bitshuffle=False)
 
@@ -20,8 +27,6 @@ class ReducedDatasetContainer(Container):
     core_y = Field(None, "Y-coordinate of the shower core")
     shower_sim_azimuth = Field(None, "Simulated azimuth angle of the shower")
     shower_sim_altitude = Field(None, "Simulated altitude angle of the shower")
-    array_altitudes = Field(None, "Altitudes for the array")
-    array_azimuths = Field(None, "Azimuths for the array")
 
 
 class TriggeredShowerContainer(Container):
@@ -29,6 +34,8 @@ class TriggeredShowerContainer(Container):
 
     shower_id_triggered = Field(None, "Triggered shower ID")
     triggered_energies = Field(None, "Triggered energies")
+    array_altitudes = Field(None, "Altitudes for the array")
+    array_azimuths = Field(None, "Azimuths for the array")
 
 
 class FileNamesContainer(Container):
@@ -151,38 +158,28 @@ class MCEventExtractor:
     def _process_file(self, file, data_lists, file_name):
         """Process a single file and update data lists."""
         with EventIOFile(file) as f:
-            array_altitude = None
-            array_azimuth = None
             for eventio_object in f:
                 if isinstance(eventio_object, MCRunHeader):
-                    self._process_mc_run_header(eventio_object, data_lists)
+                    self._process_mc_run_header(eventio_object)
                 elif isinstance(eventio_object, MCShower):
-                    self._process_mc_shower(
-                        eventio_object, data_lists, array_altitude, array_azimuth
-                    )
+                    self._process_mc_shower(eventio_object, data_lists)
                 elif isinstance(eventio_object, MCEvent):
                     self._process_mc_event(eventio_object, data_lists)
                 elif isinstance(eventio_object, ArrayEvent):
                     self._process_array_event(eventio_object, data_lists)
             data_lists["file_names"].extend([file_name])
 
-    def _process_mc_run_header(self, eventio_object, data_lists):
+    def _process_mc_run_header(self, eventio_object):
         """Process MC run header and update data lists."""
         mc_head = eventio_object.parse()
         self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
-        array_altitude = np.mean(mc_head["alt_range"])
-        array_azimuth = np.mean(mc_head["az_range"])
-        data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
-        data_lists["array_azimuths"].extend(self.n_use * [array_azimuth])
 
-    def _process_mc_shower(self, eventio_object, data_lists, array_altitude, array_azimuth):
+    def _process_mc_shower(self, eventio_object, data_lists):
         """Process MC shower and update data lists."""
         self.shower = eventio_object.parse()
         data_lists["simulated"].extend(self.n_use * [self.shower["energy"]])
         data_lists["shower_sim_azimuth"].extend(self.n_use * [self.shower["azimuth"]])
         data_lists["shower_sim_altitude"].extend(self.n_use * [self.shower["altitude"]])
-        data_lists["array_altitudes"].extend(self.n_use * [array_altitude])
-        data_lists["array_azimuths"].extend(self.n_use * [array_azimuth])
 
     def _process_mc_event(self, eventio_object, data_lists):
         """Process MC event and update data lists."""
@@ -192,9 +189,57 @@ class MCEventExtractor:
 
     def _process_array_event(self, eventio_object, data_lists):
         """Process array event and update data lists."""
+        tracking_positions = []
+        previous_index = -1
+
         for i, obj in enumerate(eventio_object):
-            if i == 0 and isinstance(obj, TriggerInformation):
+            if isinstance(obj, TriggerInformation):
                 self._process_trigger_information(obj, data_lists)
+
+            if isinstance(obj, TrackingPosition):
+                tracking_position = obj.parse()
+                tracking_positions.append(
+                    {
+                        "altitude": tracking_position["altitude_raw"],
+                        "azimuth": tracking_position["azimuth_raw"],
+                    }
+                )
+
+            if i < previous_index:
+                self._process_tracking_positions(tracking_positions, data_lists)
+                tracking_positions = []  # Reset for the next shower
+
+            previous_index = i
+
+        if tracking_positions:
+            self._process_tracking_positions(tracking_positions, data_lists)
+
+    def _process_tracking_positions(self, tracking_positions, data_lists):
+        """
+        Process the collected tracking positions and update data lists.
+
+        Parameters
+        ----------
+        tracking_positions : list of dict
+            List of tracking positions with "altitude" and "azimuth" keys.
+        data_lists : dict
+            Data lists to update.
+        """
+        altitudes = [pos["altitude"] for pos in tracking_positions]
+        azimuths = [pos["azimuth"] for pos in tracking_positions]
+        if isinstance(altitudes[0], list):
+            altitudes = altitudes[0]
+            azimuths = azimuths[0]
+        # Check if all tracking positions are the same
+        if np.allclose(altitudes, altitudes[0], atol=1e-5) and np.allclose(
+            azimuths, azimuths[0], atol=1e-5
+        ):
+            data_lists["array_altitudes"].append(altitudes[0])
+            data_lists["array_azimuths"].append(azimuths[0])
+        else:  # append the mean telescope tracking positions for each triggered event
+            self._logger.info("Telescopes have different tracking positions, applying mean.")
+            data_lists["array_altitudes"].append(np.mean(altitudes))
+            data_lists["array_azimuths"].append(np.mean(azimuths))
 
     def _process_trigger_information(self, trigger_info, data_lists):
         """Process trigger information and update data lists."""
@@ -212,21 +257,24 @@ class MCEventExtractor:
         ) as writer:
             # Write reduced dataset container
             reduced_container = ReducedDatasetContainer()
+
             for i in range(len(data_lists["simulated"])):
                 reduced_container.simulated = data_lists["simulated"][i]
                 reduced_container.core_x = data_lists["core_x"][i]
                 reduced_container.core_y = data_lists["core_y"][i]
                 reduced_container.shower_sim_azimuth = data_lists["shower_sim_azimuth"][i]
                 reduced_container.shower_sim_altitude = data_lists["shower_sim_altitude"][i]
-                reduced_container.array_altitudes = data_lists["array_altitudes"][i]
-                reduced_container.array_azimuths = data_lists["array_azimuths"][i]
+
                 writer.write(table_name="reduced_data", containers=[reduced_container])
 
             # Write triggered shower container
             triggered_container = TriggeredShowerContainer()
+
             for i in range(len(data_lists["shower_id_triggered"])):
                 triggered_container.shower_id_triggered = data_lists["shower_id_triggered"][i]
                 triggered_container.triggered_energies = data_lists["triggered_energies"][i]
+                triggered_container.array_altitudes = np.array(data_lists["array_altitudes"][i])
+                triggered_container.array_azimuths = np.array(data_lists["array_azimuths"][i])
                 writer.write(table_name="triggered_data", containers=[triggered_container])
 
     def _reset_data_lists(self, data_lists):
