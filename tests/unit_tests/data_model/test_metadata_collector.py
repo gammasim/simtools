@@ -472,3 +472,33 @@ def test_clean_meta_data():
 
     collector = metadata_collector.MetadataCollector({})
     assert collector.clean_meta_data(pre_clean) == post_clean
+
+
+def test_fill_contact_meta_from_system(args_dict_site, caplog):
+    """Test filling contact metadata from system when no name is provided"""
+    contact_dict = {}
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    with caplog.at_level(logging.WARNING):
+        collector._fill_contact_meta(contact_dict)
+
+    assert "No user name provided, take user info from system level." in caplog.text
+    assert contact_dict["name"] == getpass.getuser()
+
+
+def test_fill_contact_meta_failed_system(args_dict_site, caplog, monkeypatch):
+    """Test filling contact metadata when system username lookup fails"""
+
+    def mock_getuser():
+        raise Exception("Failed to get username")
+
+    monkeypatch.setattr(getpass, "getuser", mock_getuser)
+
+    contact_dict = {}
+    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+
+    with caplog.at_level(logging.WARNING):
+        collector._fill_contact_meta(contact_dict)
+
+    assert "Failed to get user name" in caplog.text
+    assert contact_dict["name"] == "UNKNOWN_USER"
