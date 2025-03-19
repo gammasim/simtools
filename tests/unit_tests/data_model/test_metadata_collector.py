@@ -490,7 +490,7 @@ def test_fill_contact_meta_failed_system(args_dict_site, caplog, monkeypatch):
     """Test filling contact metadata when system username lookup fails"""
 
     def mock_getuser():
-        raise Exception("Failed to get username")
+        raise KeyError("Failed to get username")
 
     monkeypatch.setattr(getpass, "getuser", mock_getuser)
 
