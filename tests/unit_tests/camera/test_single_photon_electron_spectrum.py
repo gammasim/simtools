@@ -53,7 +53,12 @@ def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
 def test_derive_single_pe_spectrum(mock_derive_spectrum_norm_spe, spe_spectrum):
     spe_spectrum.args_dict["use_norm_spe"] = True
     spe_spectrum.derive_single_pe_spectrum()
-    mock_derive_spectrum_norm_spe.assert_called_once()
+
+    # Check that _derive_spectrum_norm_spe is called with the correct parameters
+    mock_derive_spectrum_norm_spe.assert_called_once_with(
+        input_spectrum=spe_spectrum.args_dict["input_spectrum"],
+        afterpulse_spectrum=spe_spectrum.args_dict.get("afterpulse_spectrum"),
+    )
 
     spe_spectrum.args_dict["use_norm_spe"] = False
     with pytest.raises(
@@ -101,7 +106,9 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
     mock_subprocess_run.return_value.stdout = spe_data
     mock_subprocess_run.return_value.returncode = 0
 
-    return_code = spe_spectrum._derive_spectrum_norm_spe()
+    return_code = spe_spectrum._derive_spectrum_norm_spe(
+        input_spectrum=spe_spectrum.args_dict["input_spectrum"], afterpulse_spectrum=None
+    )
 
     assert mock_get_input_data.call_count == 2
     mock_subprocess_run.assert_called_once_with(
@@ -113,10 +120,17 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
     assert return_code == 0
     assert spe_spectrum.data == spe_data
 
+    mock_get_input_data.reset_mock()
+    mock_subprocess_run.reset_mock()
+
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
-    tmp_spe_spectrum.args_dict["afterpulse_spectrum"] = "afterpulse_spectrum"
     mock_get_input_data.side_effect = [tmpfile, tmpfile]
-    tmp_spe_spectrum._derive_spectrum_norm_spe()
+
+    return_code = tmp_spe_spectrum._derive_spectrum_norm_spe(
+        input_spectrum=tmp_spe_spectrum.args_dict["input_spectrum"],
+        afterpulse_spectrum="afterpulse_spectrum",
+    )
+
     mock_subprocess_run.assert_called_with(
         [
             "/path/to/simtel/sim_telarray/bin/norm_spe",
@@ -134,15 +148,23 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
         text=True,
         check=True,
     )
+    assert return_code == 0
 
-    # test error handling
+    # Reset mocks again
+    mock_get_input_data.reset_mock()
+    mock_subprocess_run.reset_mock()
+
+    # Test error handling
     spe_spectrum = copy.deepcopy(spe_spectrum)
     mock_get_input_data.side_effect = [tmpfile, None]
     mock_subprocess_run.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd="norm_spe", output="Error", stderr="Error message"
     )
+
     with pytest.raises(subprocess.CalledProcessError):
-        spe_spectrum._derive_spectrum_norm_spe()
+        spe_spectrum._derive_spectrum_norm_spe(
+            input_spectrum=spe_spectrum.args_dict["input_spectrum"], afterpulse_spectrum=None
+        )
 
 
 @patch("builtins.open", new_callable=MagicMock)
