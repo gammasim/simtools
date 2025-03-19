@@ -220,7 +220,7 @@ class DataValidator:
                 json_schema=self._get_data_description(index).get("json_schema"),
             )
         else:
-            self._check_data_type(np.array(value).dtype, index)
+            self._check_data_type(np.array(value).dtype, index, value)
 
         if self.data_dict.get("type") not in ("string", "dict", "file"):
             self._check_for_not_a_number(value, index)
@@ -436,7 +436,7 @@ class DataValidator:
 
         return u.Unit(reference_unit)
 
-    def _check_data_type(self, dtype, column_name):
+    def _check_data_type(self, dtype, column_name, value=None):
         """
         Check column data type.
 
@@ -446,6 +446,8 @@ class DataValidator:
             data type
         column_name: str
             column name
+        value: value
+            value to be tested (optional)
 
         Raises
         ------
@@ -456,7 +458,7 @@ class DataValidator:
         reference_dtype = self._get_data_description(column_name).get("type", None)
         if not gen.validate_data_type(
             reference_dtype=reference_dtype,
-            value=None,
+            value=value,
             dtype=dtype,
             allow_subtypes=(not self.check_exact_data_type),
         ):

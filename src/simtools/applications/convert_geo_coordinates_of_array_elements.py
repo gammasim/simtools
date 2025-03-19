@@ -178,7 +178,7 @@ def main():
         )
         writer.ModelDataWriter.dump(
             args_dict=args_dict,
-            metadata=metadata.get_top_level_metadata() if metadata else None,
+            metadata=metadata,
             product_data=product_data,
             validate_schema_file=validate_schema_file,
         )
