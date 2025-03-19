@@ -11,6 +11,8 @@ import logging
 import uuid
 from pathlib import Path
 
+import yaml
+
 import simtools.constants
 import simtools.utils.general as gen
 import simtools.version
@@ -68,9 +70,7 @@ class MetadataCollector:
         self.top_level_meta = gen.change_dict_keys_case(
             data_dict=metadata_model.get_default_metadata_dict(), lower_case=True
         )
-        self.input_metadata = self._read_input_metadata_from_file(
-            metadata_file_name=metadata_file_name
-        )
+        self.input_metadata = self._read_input_metadata_from_file(metadata_file_name)
         self.collect_meta_data()
         if clean_meta:
             self.top_level_meta = self.clean_meta_data(self.top_level_meta)
@@ -102,6 +102,74 @@ class MetadataCollector:
         except KeyError:
             pass
         return self.top_level_meta
+
+    @staticmethod
+    def dump(args_dict, output_file, add_activity_name=False):
+        """
+        Write metadata to file (static method).
+
+        Parameters
+        ----------
+        args_dict: dict
+            Command line parameters
+        output_file: str or Path
+            Name of output file.
+        add_activity_name: bool
+            Add activity name to file name.
+        """
+        collector = MetadataCollector(args_dict)
+        collector.write(output_file, add_activity_name=add_activity_name)
+
+    def write(self, yml_file=None, keys_lower_case=False, add_activity_name=False):
+        """
+        Write toplevel metadata to file (yaml file format).
+
+        Parameters
+        ----------
+        metadata: dict
+            Metadata to be stored
+        yml_file: str
+            Name of output file.
+        keys_lower_case: bool
+            Write yaml keys in lower case.
+        add_activity_name: bool
+            Add activity name to file name.
+
+        Returns
+        -------
+        str
+            Name of output file
+
+        Raises
+        ------
+        FileNotFoundError
+            If yml_file not found.
+        TypeError
+            If yml_file is not defined.
+        """
+        metadata = self.get_top_level_metadata()
+        activity_name = metadata.get("cta", {}).get("activity", {}).get("name", "").rstrip(".")
+        suffix = f".{activity_name}.meta.yml" if add_activity_name else ".meta.yml"
+
+        if yml_file is None:
+            raise TypeError("No output file for metadata defined")
+
+        try:
+            yml_file = names.file_name_with_version(yml_file, suffix)
+            with open(yml_file, "w", encoding="UTF-8") as file:
+                yaml.safe_dump(
+                    gen.change_dict_keys_case(
+                        gen.remove_substring_recursively_from_dict(metadata, substring="\n"),
+                        keys_lower_case,
+                    ),
+                    file,
+                    sort_keys=False,
+                    explicit_start=True,
+                )
+            self._logger.info(f"Writing metadata to {yml_file}")
+            return yml_file
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Error writing metadata to {yml_file}") from exc
 
     def get_data_model_schema_file_name(self):
         """
@@ -136,12 +204,12 @@ class MetadataCollector:
             self._logger.debug(f"Schema file from data model name: {self.data_model_name}")
             return str(schema.get_model_parameter_schema_file(self.data_model_name))
 
-        # from input metadata
+        # from first entry in input metadata (least preferred)
         try:
-            url = self.input_metadata[self.observatory]["product"]["data"]["model"]["url"]
+            url = self.input_metadata[0][self.observatory]["product"]["data"]["model"]["url"]
             self._logger.debug(f"Schema file from input metadata: {url}")
             return url
-        except KeyError:
+        except (KeyError, TypeError):
             pass
 
         self._logger.warning("No schema file found.")
@@ -170,7 +238,7 @@ class MetadataCollector:
         Parameters
         ----------
         from_input_meta: bool
-            Get site from input metadata (default: False)
+            Get site from first entry of input metadata (default: False)
 
         Returns
         -------
@@ -182,11 +250,11 @@ class MetadataCollector:
             _site = (
                 self.top_level_meta[self.observatory]["instrument"]["site"]
                 if not from_input_meta
-                else self.input_metadata[self.observatory]["instrument"]["site"]
+                else self.input_metadata[0][self.observatory]["instrument"]["site"]
             )
             if _site is not None:
                 return names.validate_site_name(_site)
-        except KeyError:
+        except (KeyError, TypeError):
             pass
         return None
 
@@ -202,7 +270,13 @@ class MetadataCollector:
         contact_dict["name"] = contact_dict.get("name") or self.args_dict.get("user_name")
         if contact_dict["name"] is None:
             self._logger.warning("No user name provided, take user info from system level.")
-            contact_dict["name"] = getpass.getuser()
+            try:
+                contact_dict["name"] = getpass.getuser()
+            except Exception as exc:  # pylint: disable=broad-except
+                contact_dict["name"] = "UNKNOWN_USER"
+                self._logger.warning(
+                    f"Failed to get user name: {exc}, setting it to {contact_dict['name']} "
+                )
         meta_dict = {
             "email": "user_mail",
             "orcid": "user_orcid",
@@ -221,17 +295,28 @@ class MetadataCollector:
             Dictionary for context metadata fields.
 
         """
-        try:  # wide try..except as for some cases we expect that there is no product metadata
-            reduced_product_meta = {
-                key: value
-                for key, value in self.input_metadata[self.observatory]["product"].items()
-                if key in {"description", "id", "creation_time", "valid", "format", "filename"}
-            }
-            self._fill_context_sim_list(context_dict["associated_data"], reduced_product_meta)
-        except (KeyError, TypeError):
-            self._logger.debug("No input product metadata appended to associated data.")
+        input_metadata = (
+            self.input_metadata if isinstance(self.input_metadata, list) else [self.input_metadata]
+        )
 
-    def _read_input_metadata_from_file(self, metadata_file_name=None):
+        for metadata in input_metadata:
+            try:  # wide try..except as for some cases we expect that there is no product metadata
+                reduced_product_meta = {
+                    key: value
+                    for key, value in metadata[self.observatory]["product"].items()
+                    if key in {"description", "id", "creation_time", "valid", "format", "filename"}
+                }
+                if metadata[self.observatory].get("activity", {}).get("name"):
+                    reduced_product_meta["activity_name"] = metadata[self.observatory][
+                        "activity"
+                    ].get("name")
+                context_dict["associated_data"] = self._fill_context_sim_list(
+                    context_dict["associated_data"], reduced_product_meta
+                )
+            except (KeyError, TypeError):
+                self._logger.debug("No input product metadata appended to associated data.")
+
+    def _read_input_metadata_from_file(self, metadata_file_name_expression=None):
         """
         Read and validate input metadata from file.
 
@@ -240,8 +325,8 @@ class MetadataCollector:
 
         Parameter
         ---------
-        metadata_file_name: str or Path
-            Name of metadata file.
+        metadata_file_name_expression: str or Path
+            Name of metadata file (regular expressions allowed).
 
         Returns
         -------
@@ -256,31 +341,32 @@ class MetadataCollector:
             if metadata does not exist
 
         """
-        metadata_file_name = (
-            self.args_dict.get("input_meta", None) or self.args_dict.get("input", None)
-            if metadata_file_name is None
-            else metadata_file_name
+        metadata_file_names = (
+            metadata_file_name_expression
+            or self.args_dict.get("input_meta")
+            or self.args_dict.get("input")
         )
 
-        if metadata_file_name is None:
+        try:
+            metadata_files = gen.resolve_file_patterns(metadata_file_names)
+        except ValueError:
             self._logger.debug("No input metadata file defined.")
-            return {}
+            return None
 
-        self._logger.debug("Reading meta data from %s", metadata_file_name)
-        if Path(metadata_file_name).suffix in (".yaml", ".yml", ".json"):
-            _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file_name)
-        elif Path(metadata_file_name).suffix == ".ecsv":
-            _input_metadata = self._read_input_metadata_from_ecsv(metadata_file_name)
-        else:
-            self._logger.error("Unknown metadata file format: %s", metadata_file_name)
-            raise gen.InvalidConfigDataError
+        metadata = []
+        for metadata_file in metadata_files:
+            self._logger.debug(f"Reading meta data from {metadata_file}")
+            if Path(metadata_file).suffix in (".yaml", ".yml", ".json"):
+                _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file)
+            elif Path(metadata_file).suffix == ".ecsv":
+                _input_metadata = self._read_input_metadata_from_ecsv(metadata_file)
+            else:
+                raise gen.InvalidConfigDataError(f"Unknown metadata file format: {metadata_file}")
 
-        schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
+            schema.validate_dict_using_schema(_input_metadata, schema_file=METADATA_JSON_SCHEMA)
+            metadata.append(gen.change_dict_keys_case(_input_metadata, lower_case=True))
 
-        return gen.change_dict_keys_case(
-            self._process_metadata_from_file(_input_metadata),
-            lower_case=True,
-        )
+        return metadata
 
     def _read_input_metadata_from_ecsv(self, metadata_file_name):
         """Read input metadata from ecsv file."""
@@ -348,13 +434,23 @@ class MetadataCollector:
             pass
 
         # DATA:MODEL
-        helper_dict = {"name": "name", "version": "version", "type": "meta_schema"}
-        for key, value in helper_dict.items():
-            product_dict["data"]["model"][key] = self.schema_dict.get(value, None)
-        product_dict["data"]["model"]["url"] = self.schema_file
+        product_dict["data"]["model"]["name"] = (
+            self.schema_dict.get("name")
+            or self.args_dict.get("metadata_product_data_name")
+            or "undefined_model_name"
+        )
+        product_dict["data"]["model"]["version"] = self.schema_dict.get("version", "0.0.0")
+        product_dict["data"]["model"]["type"] = self.schema_dict.get("meta_schema", None)
+        product_dict["data"]["model"]["url"] = self.schema_file or self.args_dict.get(
+            "metadata_product_data_url"
+        )
 
-        product_dict["format"] = self.args_dict.get("output_file_format", None)
-        product_dict["filename"] = str(self.args_dict.get("output_file", None))
+        product_dict["filename"] = str(self.args_dict.get("output_file", ""))
+        product_dict["format"] = (
+            self.args_dict.get("output_file_format")
+            or Path(product_dict["filename"]).suffix.lstrip(".")
+            or None
+        )
 
     def _fill_instrument_meta(self, instrument_dict):
         """
@@ -369,13 +465,16 @@ class MetadataCollector:
             Dictionary for instrument metadata fields.
 
         """
-        instrument_dict["site"] = self.args_dict.get("site", None)
-        instrument_dict["ID"] = self.args_dict.get("instrument") or self.args_dict.get(
-            "telescope", None
-        )
+        instrument_dict["site"] = self.args_dict.get("site")
+        instrument_dict["ID"] = self.args_dict.get("instrument") or self.args_dict.get("telescope")
         if instrument_dict["ID"]:
             instrument_dict["class"] = names.get_collection_name_from_array_element_name(
                 instrument_dict["ID"], False
+            )
+            instrument_dict["type"] = (
+                names.get_array_element_type_from_name(instrument_dict["ID"])
+                if not instrument_dict.get("type")
+                else instrument_dict["type"]
             )
 
     def _fill_process_meta(self, process_dict):
@@ -460,15 +559,14 @@ class MetadataCollector:
             Updated meta list.
 
         """
-        if len(new_entry_dict) == 0:
+        if not new_entry_dict:
             return []
-        try:
-            if self._all_values_none(meta_list[0]):
-                meta_list[0] = new_entry_dict
-            else:
-                meta_list.append(new_entry_dict)
-        except (TypeError, IndexError):
-            meta_list = [new_entry_dict]
+        if meta_list is None or not meta_list:
+            return [new_entry_dict]
+        if self._all_values_none(meta_list[0]):
+            meta_list[0] = new_entry_dict
+        else:
+            meta_list.append(new_entry_dict)
         return meta_list
 
     def _process_metadata_from_file(self, meta_dict):
@@ -533,7 +631,7 @@ class MetadataCollector:
         """
         try:
             for document in _input_metadata["context"][key]:
-                self._fill_context_sim_list(context_dict[key], document)
+                context_dict[key] = self._fill_context_sim_list(context_dict[key], document)
         except KeyError:
             pass
 
