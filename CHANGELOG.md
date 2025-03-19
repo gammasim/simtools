@@ -7,6 +7,30 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.13.0](https://github.com/gammasim/simtools/tree/0.13.0) - 2025-03-19
+
+### Bugfixes
+
+- Fix `null` values in YAML-style model parameter schema files. ([#1437](https://github.com/gammasim/simtools/pull/1437))
+
+### New Features
+
+- Improvements for single pe setting workflow including plotting and metadata handling. ([#1398](https://github.com/gammasim/simtools/pull/1398))
+- Add an application that allows to extract array and shower data and to save them in hdf5 format for the later calculation of production configuration limits. ([#1402](https://github.com/gammasim/simtools/pull/1402))
+- Add integration tests to production image generation. ([#1420](https://github.com/gammasim/simtools/pull/1420))
+- Improve reading of single parameter and files from database. Add plotting of tabular data using `parameter_version`. ([#1426](https://github.com/gammasim/simtools/pull/1426))
+- Improved plotting of tabular data; adding error bars and schema validation for plotting configuration. ([#1429](https://github.com/gammasim/simtools/pull/1429))
+- Add function to get all model parameter data for all model versions. ([#1432](https://github.com/gammasim/simtools/pull/1432))
+
+### Maintenance
+
+- Run unit and integration test on database setup in local test environment. ([#1424](https://github.com/gammasim/simtools/pull/1424))
+- Remove tests from pypi package. Remove obsolete `__init__.py` files. ([#1430](https://github.com/gammasim/simtools/pull/1430))
+- Change base python version from 3.11 to 3.12. ([#1433](https://github.com/gammasim/simtools/pull/1433))
+- Update exporting of sim_telarray model to simtools taking into account the updated file naming (included parameter versions). ([#1438](https://github.com/gammasim/simtools/pull/1438))
+- Robust getting of username in metadata collector in case no user is defined on system level. ([#1442](https://github.com/gammasim/simtools/pull/1442))
+
+
 ## [0.12.0](https://github.com/gammasim/simtools/tree/0.12.0) - 2025-03-11
 
 ### Bugfixes

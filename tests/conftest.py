@@ -142,6 +142,7 @@ def db_config():
         "db_api_user",
         "db_api_pw",
         "db_api_port",
+        "db_api_authentication_database",
         "db_server",
         "db_simulation_model",
     )

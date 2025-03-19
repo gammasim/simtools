@@ -85,8 +85,9 @@ def _parse(label, description):
     )
     config.parser.add_argument(
         "--input_meta",
-        help="meta data file associated to input data",
+        help="meta data file(s) associated to input data (wildcards or list of files allowed)",
         type=str,
+        nargs="+",
         required=False,
     )
     config.parser.add_argument(
