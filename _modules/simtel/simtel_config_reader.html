@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g97405e9 Manual</title>
+    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+gc4ffb72 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=e5034897"></script>
+    <script src="../../_static/documentation_options.js?v=0c170244"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g97405e9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc4ffb72 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -394,11 +394,36 @@ document.write(`
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimtelConfigReader&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_simtel_parameters</span><span class="p">(</span><span class="n">simtel_config_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return list of simtel parameters found in simtel configuration file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    simtel_config_file: str</span>
+<span class="sd">        File name for sim_telarray configuration</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of parameters found in simtel configuration file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">simtel_parameter_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">parts_of_lines</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;,\s*|\s+&quot;</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+            <span class="n">simtel_parameter_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">parts_of_lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">simtel_parameter_set</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="SimtelConfigReader">
@@ -418,7 +443,7 @@ document.write(`
 <span class="sd">            -C limits=no-internal -C initlist=no-internal -C list=no-internal\</span>
 <span class="sd">            -C typelist=no-internal -C maximum_telescopes=30\</span>
 <span class="sd">            -DNSB_AUTOSCALE -DNECTARCAM -DHYPER_LAYOUT\</span>
-<span class="sd">            -DNUM_TELESCOPES=30 /dev/null 2&gt;|/dev/null | grep &#39;(@cfg)&#39;</span>
+<span class="sd">            -DNUM_TELESCOPES=30 /dev/null 2&gt;|/dev/null | grep &#39;(@cfg)&#39; | sed &#39;s/^(@cfg)</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -453,7 +478,12 @@ document.write(`
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span> <span class="k">else</span> <span class="n">parameter_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_telescope_name</span> <span class="o">=</span> <span class="n">simtel_telescope_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span> <span class="o">=</span> <span class="n">camera_pixels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_simtel_config_file</span><span class="p">(</span>
@@ -465,7 +495,7 @@ document.write(`
         <span class="k">return</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;limits&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_schema_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check schema values for limits and defaults.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check schema values for limits, unit, and default.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;limits&quot;</span><span class="p">:</span>
                 <span class="n">_from_schema</span> <span class="o">=</span> <span class="p">[</span>
@@ -474,14 +504,25 @@ document.write(`
                 <span class="p">]</span>
                 <span class="k">return</span> <span class="n">_from_schema</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">_from_schema</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_from_schema</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]]</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data_type</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">data_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]]</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_values_match</span><span class="p">(</span><span class="n">_from_simtel</span><span class="p">,</span> <span class="n">_from_schema</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if values match (are close for floats).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if values match (are close for floats).</span>
+
+<span class="sd">        Convert where necessary astropy.Quantity to float.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_from_simtel</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+            <span class="n">_from_simtel</span> <span class="o">=</span> <span class="n">_from_simtel</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_from_simtel</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">_from_simtel</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_from_simtel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_from_simtel</span><span class="p">]</span>
+            <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_from_schema</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_from_simtel</span> <span class="o">==</span> <span class="n">_from_schema</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
@@ -581,6 +622,7 @@ document.write(`
                     <span class="n">dtype</span><span class="o">=</span><span class="n">_para_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">),</span>
                     <span class="n">n_dim</span><span class="o">=</span><span class="n">_para_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dimension&quot;</span><span class="p">),</span>
                     <span class="n">default</span><span class="o">=</span><span class="n">_para_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">),</span>
+                    <span class="n">is_limit</span><span class="o">=</span><span class="p">(</span><span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;limits&quot;</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
                 <span class="k">pass</span>
@@ -630,7 +672,7 @@ document.write(`
 
         <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="n">except_from_all</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_add_value_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_value_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_limit</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract value(s) from simtel configuration file columns.</span>
 
@@ -674,7 +716,42 @@ document.write(`
         <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span><span class="p">:</span>
             <span class="n">column</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">item</span><span class="p">))</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_column</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="n">column</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_column</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_limit</span><span class="p">:</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_units</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="n">ndim</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add units as given in schema file to column.</span>
+
+<span class="sd">        Take into account array types and dimensionless units.</span>
+<span class="sd">        Ensure that integer values are returned as integers (astropy converts</span>
+<span class="sd">        values to floats when multiplying them with units).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_schema_values</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># no schema defined</span>
+            <span class="k">return</span> <span class="n">column</span>
+        <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&quot;dimensionless&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">column</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">col</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">un</span><span class="p">)</span> <span class="k">if</span> <span class="n">un</span> <span class="o">!=</span> <span class="s2">&quot;dimensionless&quot;</span> <span class="k">else</span> <span class="n">col</span>
+                    <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">un</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+                <span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">column_with_unit</span> <span class="o">=</span> <span class="n">column</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">column_with_unit</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">unit</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">column_with_unit</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -721,33 +798,7 @@ document.write(`
             <span class="k">return</span> <span class="s2">&quot;bool&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;NIGHTSKY_BACKGROUND&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())),</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())),</span> <span class="nb">int</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_simtel_parameter_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return parameter name as used in sim_telarray.</span>
-
-<span class="sd">        This is documented in the schema file.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        parameter_name: str</span>
-<span class="sd">            Model parameter name (as used in simtools)</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str</span>
-<span class="sd">            Parameter name as used in sim_telarray.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">sim_soft</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_dict</span><span class="p">[</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">sim_soft</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">sim_soft</span><span class="p">[</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-            <span class="k">pass</span>
-
-        <span class="k">return</span> <span class="n">parameter_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())),</span> <span class="nb">int</span><span class="p">(</span><span class="n">column</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
 </pre></div>
 
