@@ -112,7 +112,7 @@ def main():  # noqa: D103
 
     writer.ModelDataWriter.dump(
         args_dict=args_dict,
-        metadata=_metadata.get_top_level_metadata() if _metadata else None,
+        metadata=_metadata,
         product_data=data_validator.validate_and_transform(),
     )
 
