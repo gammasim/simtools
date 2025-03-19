@@ -202,7 +202,13 @@ class MetadataCollector:
         contact_dict["name"] = contact_dict.get("name") or self.args_dict.get("user_name")
         if contact_dict["name"] is None:
             self._logger.warning("No user name provided, take user info from system level.")
-            contact_dict["name"] = getpass.getuser()
+            try:
+                contact_dict["name"] = getpass.getuser()
+            except Exception as exc:  # pylint: disable=broad-except
+                contact_dict["name"] = "UNKNOWN_USER"
+                self._logger.warning(
+                    f"Failed to get user name: {exc}, setting it to {contact_dict['name']} "
+                )
         meta_dict = {
             "email": "user_mail",
             "orcid": "user_orcid",
