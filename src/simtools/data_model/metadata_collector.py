@@ -270,7 +270,13 @@ class MetadataCollector:
         contact_dict["name"] = contact_dict.get("name") or self.args_dict.get("user_name")
         if contact_dict["name"] is None:
             self._logger.warning("No user name provided, take user info from system level.")
-            contact_dict["name"] = getpass.getuser()
+            try:
+                contact_dict["name"] = getpass.getuser()
+            except Exception as exc:  # pylint: disable=broad-except
+                contact_dict["name"] = "UNKNOWN_USER"
+                self._logger.warning(
+                    f"Failed to get user name: {exc}, setting it to {contact_dict['name']} "
+                )
         meta_dict = {
             "email": "user_mail",
             "orcid": "user_orcid",
@@ -342,14 +348,14 @@ class MetadataCollector:
         )
 
         try:
-            metadata_files = gen.generate_list_of_files(metadata_file_names)
+            metadata_files = gen.resolve_file_patterns(metadata_file_names)
         except ValueError:
             self._logger.debug("No input metadata file defined.")
             return None
 
         metadata = []
         for metadata_file in metadata_files:
-            self._logger.debug("Reading meta data from %s", metadata_file)
+            self._logger.debug(f"Reading meta data from {metadata_file}")
             if Path(metadata_file).suffix in (".yaml", ".yml", ".json"):
                 _input_metadata = self._read_input_metadata_from_yml_or_json(metadata_file)
             elif Path(metadata_file).suffix == ".ecsv":
