@@ -205,9 +205,6 @@ definitions:
       _id:
         type: string
         description: "DB unique identifier"
-      applicable:
-        type: boolean
-        description: "Model parameter to be used for this telescope and site"
       entry_date:
         type: string
         description: "Value entry data"
@@ -257,7 +254,6 @@ definitions:
           - type: "null"
         description: "Model version."
     required:
-      - applicable
       - file
       - instrument
       - site
