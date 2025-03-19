@@ -2,6 +2,7 @@
 
 import copy
 import datetime
+import glob
 import json
 import logging
 import os
@@ -455,6 +456,34 @@ def find_file(name, loc):
     raise FileNotFoundError(msg)
 
 
+def resolve_file_patterns(file_names):
+    """
+    Return a list of files names from string, list, or wildcard pattern.
+
+    Parameters
+    ----------
+    file_names: str, list
+        File names to be searched for (wildcards allowed).
+
+    Returns
+    -------
+    list
+        List of file names found.
+    """
+    if file_names is None:
+        raise ValueError("No file list provided.")
+    if not isinstance(file_names, list):
+        file_names = [file_names]
+
+    _files = []
+    for file_name in file_names:
+        # use glob (and not Path.glob) for easier wildcard handling
+        _files.extend(Path(f) for f in glob.glob(str(file_name), recursive=True))  # noqa: PTH207
+    if not _files:
+        raise FileNotFoundError(f"No files found: {file_names}")
+    return _files
+
+
 def get_log_excerpt(log_file, n_last_lines=30):
     """
     Get an excerpt from a log file, namely the n_last_lines of the file.
@@ -696,16 +725,28 @@ def validate_data_type(reference_dtype, value=None, dtype=None, allow_subtypes=T
     ):
         return True
 
-    if np.issubdtype(dtype, np.bool_) and reference_dtype in ("boolean", "bool"):
-        return True
+    if reference_dtype in ("boolean", "bool"):
+        return _is_valid_boolean_type(dtype, value)
 
-    if np.issubdtype(dtype, np.integer) and (
-        np.issubdtype(reference_dtype, np.integer) or np.issubdtype(reference_dtype, np.floating)
-    ):
-        return True
+    return _is_valid_numeric_type(dtype, reference_dtype)
 
-    if np.issubdtype(dtype, np.floating) and np.issubdtype(reference_dtype, np.floating):
+
+def _is_valid_boolean_type(dtype, value):
+    """Check if dtype or value is a valid boolean type."""
+    if value in {0, 1}:
         return True
+    return np.issubdtype(dtype, np.bool_)
+
+
+def _is_valid_numeric_type(dtype, reference_dtype):
+    """Check if dtype is a valid numeric type compared to reference_dtype."""
+    if np.issubdtype(dtype, np.integer):
+        return np.issubdtype(reference_dtype, np.integer) or np.issubdtype(
+            reference_dtype, np.floating
+        )
+
+    if np.issubdtype(dtype, np.floating):
+        return np.issubdtype(reference_dtype, np.floating)
 
     return False
 
