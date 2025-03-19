@@ -41,12 +41,13 @@ simtools-docs-produce-array-element-report <applications/simtools-docs-produce-a
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
+simtools-production-extract-mc-event-data <applications/simtools-production-extract-mc-event-data>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-array-histograms <applications/simtools-generate-simtel-array-histograms>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
-simtools-production-derive-limits <applications/simtools-production-derive-limits>
+simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
 simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
 simtools-production-scale-events <applications/simtools-production-scale-events>
 simtools-run-application <applications/simtools-run-application>
