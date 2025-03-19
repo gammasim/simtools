@@ -46,7 +46,7 @@ r"""
 
     Extract then model parameters from the simtel_array configuration file for LSTN-01
     (telescopes are named CT1, CT2, ..., in the sim_telarray configuration file and must be
-    provided in the "simtel_telescope_name" command line argument) 
+    provided in the "simtel_telescope_name" command line argument)
     and write json files in the same format as the model parameter database:
 
     .. code-block:: console
