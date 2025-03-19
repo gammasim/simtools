@@ -194,7 +194,6 @@ class LimitCalculator:
         """
         # Create an index array to create the mapping for the triggered events
         triggered_indices = np.arange(len(self.shower_id_triggered))
-        print("triggered_indices", triggered_indices)
 
         # Apply the telescope mask if provided
         if self.telescope_list is not None:
