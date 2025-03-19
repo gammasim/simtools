@@ -11,7 +11,6 @@ from pathlib import Path
 import numpy as np
 
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
@@ -138,13 +137,14 @@ class ReadParameters:
 
         # Iterate over each model version
         for version in all_versions:
-            Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
+            parameter_dict = all_param_data.get(version, {})
+            if not parameter_dict:
+                continue
 
+            Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
             self.db.export_model_files(
                 parameters=all_param_data.get(version), dest=f"{self.output_path}/model"
             )
-
-            parameter_dict = all_param_data.get(version, {})
 
             for parameter_name in filter(parameter_dict.__contains__, all_parameter_names):
                 parameter_data = parameter_dict.get(parameter_name)
@@ -333,10 +333,8 @@ class ReadParameters:
             f"Comparing parameters across model versions for Telescope: {self.array_element}"
             f" and Site: {self.site}."
         )
-        io_handler_instance = io_handler.IOHandler()
-        output_path = io_handler_instance.get_output_directory(
-            label="reports", sub_dir=f"parameters/{self.array_element}"
-        )
+        output_path = self.output_path / f"{self.array_element}"
+        Path(output_path).mkdir(parents=True, exist_ok=True)
 
         all_parameter_names = names.model_parameters(None).keys()
         all_parameter_data = self.db.get_model_parameters_for_all_model_versions(

@@ -12,6 +12,7 @@ import logging
 
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
+from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 from simtools.utils import general as gen
 
@@ -21,6 +22,16 @@ def _parse(label):
     config = configurator.Configurator(
         label=label,
         description=("Produce a markdown report for model parameters."),
+    )
+
+    config.parser.add_argument(
+        "--all_telescopes",
+        action="store_true",
+        help="Produce reports for all telescopes. Defaults to False.",
+    )
+
+    config.parser.add_argument(
+        "--all_sites", action="store_true", help="Produce reports for all sites. Defaults to False."
     )
 
     return config.initialize(db_config=True, simulation_model=["site", "telescope"])
@@ -35,15 +46,24 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
 
-    ReadParameters(
-        db_config,
-        args,
-        output_path,
-    ).produce_model_parameter_reports()
+    if any([args.get("all_telescopes"), args.get("all_sites")]):
+        ReportGenerator(
+            db_config,
+            args,
+            output_path,
+        ).auto_generate_parameter_reports()
 
-    logger.info(
-        f"Markdown report generated for {args['site']} Telescope {args['telescope']}: {output_path}"
-    )
+    else:
+        ReadParameters(
+            db_config,
+            args,
+            output_path,
+        ).produce_model_parameter_reports()
+
+        logger.info(
+            f"Markdown report generated for {args['site']}"
+            f"Telescope {args['telescope']}: {output_path}"
+        )
 
 
 if __name__ == "__main__":

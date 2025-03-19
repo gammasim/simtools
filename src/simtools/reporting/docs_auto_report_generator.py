@@ -3,6 +3,7 @@
 r"""Class to automate generation of all reports according to command line inputs."""
 
 import logging
+from collections.abc import Generator
 from pathlib import Path
 
 from simtools.db import db_handler
@@ -99,3 +100,63 @@ class ReportGenerator:
         """Generate all reports based on which --all_* flag is passed."""
         for params in self._get_report_parameters():
             self._generate_single_array_element_report(*params)
+
+    def _get_telescopes_from_layout(self, site: str) -> set[str]:
+        """Get unique telescopes for a given site across all versions."""
+        if not self.args.get("all_telescopes"):
+            return {self.args["telescope"]}
+
+        # Get layouts for all versions for this site
+        layouts = self.db.get_model_parameters_for_all_model_versions(
+            site=site, array_element_name=f"OBS-{site}", collection="sites"
+        )
+
+        # Collect all telescopes from hyper array layouts
+        all_telescopes = set()
+        for key, version_data in layouts.items():
+            layout = version_data.get("array_layouts", {}).get("value", [])
+            hyper_array = next(
+                (layout["elements"] for layout in layout if layout["name"] == "hyper_array"), []
+            )
+            all_telescopes.update(hyper_array)
+            all_telescopes.update(self._add_design_models_to_telescopes(key, list(all_telescopes)))
+
+        return all_telescopes
+
+    def _get_valid_sites_for_telescope(self, telescope: str) -> list[str]:
+        """Get valid sites for a given telescope."""
+        sites = names.get_site_from_array_element_name(telescope)
+        return [sites] if not isinstance(sites, list) else sites
+
+    def _generate_parameter_report_combinations(self) -> Generator[tuple[str, str], None, None]:
+        """Generate combinations of telescopes and sites for report generation."""
+        if not self.args.get("all_telescopes"):
+            # For a specific telescope, get its valid sites regardless of --all_sites
+            telescope = self.args["telescope"]
+            for site in self._get_valid_sites_for_telescope(telescope):
+                yield telescope, site
+        else:
+            # For --all_telescopes, use selected sites to get telescopes
+            all_sites = {"North", "South"}
+            selected_sites = all_sites if self.args.get("all_sites") else {self.args["site"]}
+
+            for site in selected_sites:
+                telescopes = self._get_telescopes_from_layout(site)
+                yield from ((telescope, site) for telescope in telescopes)
+
+    def auto_generate_parameter_reports(self):
+        """Generate parameter reports for all telescope-site combinations."""
+        for telescope, site in self._generate_parameter_report_combinations():
+            self.args.update(
+                {
+                    "telescope": telescope,
+                    "site": site,
+                }
+            )
+
+            output_path = Path(self.output_path) / site
+            ReadParameters(self.db_config, self.args, output_path).produce_model_parameter_reports()
+
+            logger.info(
+                f"Markdown report generated for {site} Telescope {telescope}: {output_path}"
+            )
