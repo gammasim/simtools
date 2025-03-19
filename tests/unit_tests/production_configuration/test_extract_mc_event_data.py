@@ -3,7 +3,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import tables
-from eventio.simtel import ArrayEvent, MCEvent, MCRunHeader, MCShower, TriggerInformation
+from eventio.simtel import (
+    ArrayEvent,
+    MCEvent,
+    MCRunHeader,
+    MCShower,
+    TrackingPosition,
+    TriggerInformation,
+)
 
 from simtools.production_configuration.extract_mc_event_data import MCEventExtractor
 
@@ -31,8 +38,6 @@ def create_mock_eventio_objects(alt_range, az_range):
     mc_run_header = MagicMock(spec=MCRunHeader)
     mc_run_header.parse.return_value = {
         "n_use": 1,
-        "alt_range": alt_range,
-        "az_range": az_range,
     }
 
     mc_shower = MagicMock(spec=MCShower)
@@ -44,8 +49,14 @@ def create_mock_eventio_objects(alt_range, az_range):
     trigger_info = MagicMock(spec=TriggerInformation)
     trigger_info.parse.return_value = {"telescopes_with_data": [1, 2, 3]}
 
+    tracking_position = MagicMock(spec=TrackingPosition)
+    tracking_position.parse.return_value = {
+        "altitude_raw": alt_range,
+        "azimuth_raw": az_range,
+    }
+
     array_event = MagicMock(spec=ArrayEvent)
-    array_event.__iter__.return_value = iter([trigger_info])
+    array_event.__iter__.return_value = iter([trigger_info, tracking_position])
 
     return [mc_run_header, mc_shower, mc_event, array_event]
 
@@ -57,14 +68,14 @@ def validate_datasets(reduced_data, triggered_data, file_names, trigger_telescop
     assert len(reduced_data.col("simulated")) > 0
     assert len(triggered_data.col("shower_id_triggered")) > 0
     assert len(triggered_data.col("triggered_energies")) > 0
+    assert len(triggered_data.col("array_altitudes")) > 0
+    assert len(triggered_data.col("array_azimuths")) > 0
     assert len(trigger_telescope_list_list) > 0
     assert len(reduced_data.col("core_x")) > 0
     assert len(reduced_data.col("core_y")) > 0
     assert len(file_names.col("file_names")) > 0
     assert len(reduced_data.col("shower_sim_azimuth")) > 0
     assert len(reduced_data.col("shower_sim_altitude")) > 0
-    assert len(reduced_data.col("array_altitudes")) > 0
-    assert len(reduced_data.col("array_azimuths")) > 0
 
 
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)
@@ -155,7 +166,7 @@ def test_process_files_with_different_alt_az_ranges(
     with caplog.at_level(logging.INFO):
         lookup_table_generator.process_files()
 
-    assert "The alt_range or az_range values are changing throughout the file." in caplog.text
+    assert "Telescopes have different tracking positions, applying mean." in caplog.text
 
     with tables.open_file(lookup_table_generator.output_file, mode="r") as hdf:
         data_group = hdf.root.data
