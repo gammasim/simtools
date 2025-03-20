@@ -10,7 +10,7 @@ description: |-
   The amplitude level above which an analog sum leads to a telescope
   trigger.
 data:
-  - type: double
+  - type: float64
     default: 0.0
     unit: mV
     allowed_range:

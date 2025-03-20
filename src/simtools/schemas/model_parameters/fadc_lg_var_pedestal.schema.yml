@@ -11,7 +11,7 @@ description: |-
   time slice (low-gain channels). Value is the r.m.s. of the randomly chosen pedestal values
   around the FADC pedestal.
 data:
-  - type: double
+  - type: float64
     description: |-
       Pedestal variations
       (for low-gain channel in case of dual-readout chain).

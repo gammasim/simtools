@@ -10,7 +10,7 @@ description: |-
   Gaussian r.m.s. spread of random fluctuations in the aligned mirror
   distance from the focus.
 data:
-  - type: double
+  - type: float64
     unit: cm
     default: 2.0
     condition: mirror_class==1

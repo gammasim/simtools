@@ -16,7 +16,7 @@ description: |-
 short_description: |-
   Mirror degradation factor for the secondary mirror (wavelength independent).
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 1.
     allowed_range:

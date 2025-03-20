@@ -11,7 +11,7 @@ description: |-
 data:
   - name: primary_hole_diameter
     description: Diameter of central hole in primary mirror.
-    type: double
+    type: float64
     default: 0.
     unit: cm
     condition: mirror_class==2
