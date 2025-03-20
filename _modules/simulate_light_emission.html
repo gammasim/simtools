@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulate_light_emission &#8212; simtools v0.1.dev1+g0b1fc20 Manual</title>
+    <title>simulate_light_emission &#8212; simtools v0.1.dev1+gf5301e9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=febf806b"></script>
+    <script src="../_static/documentation_options.js?v=7d2f44e1"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0b1fc20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf5301e9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -421,34 +421,26 @@ document.write(`
 
 <span class="sd">    Command Line Arguments</span>
 <span class="sd">    ----------------------</span>
-
-<span class="sd">    --telescope (str, required)</span>
+<span class="sd">    telescope (str, required)</span>
 <span class="sd">        Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)</span>
-
-<span class="sd">    --site (str, required)</span>
+<span class="sd">    site (str, required)</span>
 <span class="sd">        Site name (North or South).</span>
-
-<span class="sd">    --illuminator (str, optional)</span>
+<span class="sd">    illuminator (str, optional)</span>
 <span class="sd">        Illuminator in array, e.g., ILLN-01.</span>
-
-<span class="sd">    --light_source_setup (str, optional)</span>
+<span class="sd">    light_source_setup (str, optional)</span>
 <span class="sd">        Select calibration light source positioning/setup:</span>
 <span class="sd">        - &quot;variable&quot; for varying distances.</span>
 <span class="sd">        - &quot;layout&quot; for actual telescope positions.</span>
-
-<span class="sd">    --model_version (str, optional)</span>
+<span class="sd">    model_version (str, optional)</span>
 <span class="sd">        Version of the simulation model.</span>
-
-<span class="sd">    --light_source_type (str, optional)</span>
+<span class="sd">    light_source_type (str, optional)</span>
 <span class="sd">        Select calibration light source type: led (default) or laser.</span>
 <span class="sd">        This changes the pre-compiled (simtel_array) application that is used to run the</span>
 <span class="sd">        light emission package with. Currently we use xyzls (laser), and ls-beam can be</span>
 <span class="sd">        accessed by using the laser option.</span>
-
-<span class="sd">    --off_axis_angle (float, optional)</span>
+<span class="sd">    off_axis_angle (float, optional)</span>
 <span class="sd">        Off axis angle for light source direction.</span>
-
-<span class="sd">    --plot (flag, optional)</span>
+<span class="sd">    plot (flag, optional)</span>
 <span class="sd">        Produce a multiple pages pdf file with the image plots.</span>
 
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_scale_events &#8212; simtools v0.1.dev1+g0b1fc20 Manual</title>
+    <title>production_scale_events &#8212; simtools v0.1.dev1+gf5301e9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=febf806b"></script>
+    <script src="../_static/documentation_options.js?v=7d2f44e1"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0b1fc20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf5301e9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -394,8 +394,8 @@ document.write(`
 <span class="sd">Application to run the StatisticalErrorEvaluator and interpolate results.</span>
 
 <span class="sd">This application evaluates statistical uncertainties from DL2 MC event files</span>
-<span class="sd">based on input parameters like zenith angles and offsets, and can perform interpolation</span>
-<span class="sd">for a specified grid point.</span>
+<span class="sd">based on input parameters like zenith angles and offsets, and performs interpolation</span>
+<span class="sd">for a specified query point.</span>
 
 <span class="sd">Command line arguments</span>
 <span class="sd">----------------------</span>
@@ -405,10 +405,20 @@ document.write(`
 <span class="sd">    List of zenith angles to consider.</span>
 <span class="sd">offsets (list of int, required)</span>
 <span class="sd">    List of offsets in degrees.</span>
-<span class="sd">interpolate (bool, optional)</span>
-<span class="sd">    If set, performs interpolation for a specific grid point.</span>
-<span class="sd">query_point (list of int, optional)</span>
-<span class="sd">    Grid point for interpolation (energy, azimuth, zenith, NSB, offset).</span>
+<span class="sd">query_point (list of float, required)</span>
+<span class="sd">    Query point for interpolation. The query point must contain exactly 5 values:</span>
+<span class="sd">        - Energy (TeV)</span>
+<span class="sd">        - Azimuth (degrees)</span>
+<span class="sd">        - Zenith (degrees)</span>
+<span class="sd">        - NSB (MHz)</span>
+<span class="sd">        - Offset (degrees)</span>
+<span class="sd">output_file (str, optional)</span>
+<span class="sd">    Output file to store the results. Default: &#39;interpolated_scaled_events.json&#39;.</span>
+<span class="sd">metrics_file (str, optional)</span>
+<span class="sd">    Path to the metrics definition file. Default: &#39;production_simulation_config_metrics.yml&#39;.</span>
+<span class="sd">file_name_template (str, optional)</span>
+<span class="sd">    Template for the file name. Default:</span>
+<span class="sd">    &#39;prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&#39;.</span>
 
 <span class="sd">Example</span>
 <span class="sd">-------</span>
@@ -416,14 +426,16 @@ document.write(`
 
 <span class="sd">.. code-block:: console</span>
 
-<span class="sd">    simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \</span>
-<span class="sd">        --zeniths 20 52 40 60 --offsets 0 --interpolate --query_point 1 180 30 0 0 \</span>
-<span class="sd">        --metrics_file &quot;path/to/metrics.yaml&quot;</span>
+<span class="sd">    simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \\</span>
+<span class="sd">        --zeniths 20 40 52 60 --offsets 0 --query_point 1 180 30 0 0 \\</span>
+<span class="sd">        --metrics_file &quot;path/to/metrics.yaml&quot; \\</span>
+<span class="sd">        --output_file &quot;output.json&quot;</span>
 
-
-<span class="sd">The output will display the scaled events for the specified grid point.</span>
+<span class="sd">The output will display the scaled events for the specified query point and save</span>
+<span class="sd"> the results to the specified output file.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -459,32 +471,46 @@ document.write(`
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the DL2 MC event files for interpolation.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--zeniths&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of zenith angles.&quot;</span>
+        <span class="s2">&quot;--zeniths&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">CommandLineParser</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of zenith angles.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--offsets&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of offsets in degrees.&quot;</span>
+        <span class="s2">&quot;--offsets&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of offsets in degrees.&quot;</span>
     <span class="p">)</span>
 
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--interpolate&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Interpolate results for a specific grid point.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--query_point&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">nargs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Grid point for interpolation (energy, azimuth, zenith, NSB, offset).&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--output_file&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;interpolated_scaled_events.json&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file to store the results. (default: &#39;interpolated_scaled_events.json&#39;).&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--metrics_file&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;production_simulation_config_metrics.yml&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Metrics definition file. (default: production_simulation_config_metrics.yml)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--file_name_template&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;prod6_LaPalma-</span><span class="si">{zenith}</span><span class="s2">deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&quot;</span><span class="p">),</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Template for the file name. (default: &quot;</span>
+            <span class="s2">&quot;&#39;prod6_LaPalma-</span><span class="si">{zenith}</span><span class="s2">deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&#39;)&quot;</span>
+        <span class="p">),</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
@@ -507,27 +533,25 @@ document.write(`
 
     <span class="n">evaluator_instances</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="n">metrics</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;metrics_file&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="s2">&quot;metrics_file&quot;</span> <span class="ow">in</span> <span class="n">args_dict</span> <span class="k">else</span> <span class="p">{}</span>
-    <span class="p">)</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;metrics_file&quot;</span><span class="p">])</span>
 
     <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;base_path&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zeniths&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;offsets&quot;</span><span class="p">]:</span>
-        <span class="k">for</span> <span class="n">zenith</span> <span class="ow">in</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zeniths&quot;</span><span class="p">]:</span>
-            <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;offsets&quot;</span><span class="p">]:</span>
-                <span class="c1"># Build file path based on base_path, zenith, and offset</span>
-                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;prod6_LaPalma-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">zenith</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">deg_&quot;</span>
-                <span class="n">file_name</span> <span class="o">+=</span> <span class="s2">&quot;gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits&quot;</span>
-                <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;base_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">zenith</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zeniths&quot;</span><span class="p">],</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;offsets&quot;</span><span class="p">]):</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_name_template&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">zenith</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">zenith</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;base_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 
-                <span class="n">evaluator</span> <span class="o">=</span> <span class="n">StatisticalErrorEvaluator</span><span class="p">(</span>
-                    <span class="n">file_path</span><span class="p">,</span>
-                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;Gamma-cone&quot;</span><span class="p">,</span>
-                    <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
-                    <span class="n">grid_point</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">zenith</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">offset</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
-                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File not found: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">. Skipping.&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
 
-                <span class="n">evaluator</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">()</span>
-                <span class="n">evaluator_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluator</span><span class="p">)</span>
+            <span class="n">evaluator</span> <span class="o">=</span> <span class="n">StatisticalErrorEvaluator</span><span class="p">(</span>
+                <span class="n">file_path</span><span class="p">,</span>
+                <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;Gamma-cone&quot;</span><span class="p">,</span>
+                <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+                <span class="n">grid_point</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">zenith</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">offset</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">evaluator</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">()</span>
+            <span class="n">evaluator_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluator</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No files read&quot;</span><span class="p">)</span>
@@ -535,7 +559,6 @@ document.write(`
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Zeniths: </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;zeniths&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Offsets: </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;offsets&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Perform interpolation for the given query point</span>
     <span class="n">interpolation_handler</span> <span class="o">=</span> <span class="n">InterpolationHandler</span><span class="p">(</span><span class="n">evaluator_instances</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">)</span>
     <span class="n">query_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;query_point&quot;</span><span class="p">]])</span>
     <span class="n">scaled_events</span> <span class="o">=</span> <span class="n">interpolation_handler</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">query_points</span><span class="p">)</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-scale-events &#8212; simtools v0.1.dev1+g0b1fc20 Manual</title>
+    <title>simtools-production-scale-events &#8212; simtools v0.1.dev1+gf5301e9 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=febf806b"></script>
+    <script src="../../_static/documentation_options.js?v=7d2f44e1"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0b1fc20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf5301e9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -484,8 +484,8 @@ document.write(`
 <span id="simtools-production-scale-events"></span><h1>simtools-production-scale-events<a class="headerlink" href="#module-production_scale_events" title="Link to this heading">#</a></h1>
 <p>Application to run the StatisticalErrorEvaluator and interpolate results.</p>
 <p>This application evaluates statistical uncertainties from DL2 MC event files
-based on input parameters like zenith angles and offsets, and can perform interpolation
-for a specified grid point.</p>
+based on input parameters like zenith angles and offsets, and performs interpolation
+for a specified query point.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
@@ -495,21 +495,39 @@ for a specified grid point.</p>
 </dd>
 <dt>offsets (list of int, required)</dt><dd><p>List of offsets in degrees.</p>
 </dd>
-<dt>interpolate (bool, optional)</dt><dd><p>If set, performs interpolation for a specific grid point.</p>
+<dt>query_point (list of float, required)</dt><dd><dl class="simple">
+<dt>Query point for interpolation. The query point must contain exactly 5 values:</dt><dd><ul class="simple">
+<li><p>Energy (TeV)</p></li>
+<li><p>Azimuth (degrees)</p></li>
+<li><p>Zenith (degrees)</p></li>
+<li><p>NSB (MHz)</p></li>
+<li><p>Offset (degrees)</p></li>
+</ul>
 </dd>
-<dt>query_point (list of int, optional)</dt><dd><p>Grid point for interpolation (energy, azimuth, zenith, NSB, offset).</p>
+</dl>
+</dd>
+<dt>output_file (str, optional)</dt><dd><p>Output file to store the results. Default: ‘interpolated_scaled_events.json’.</p>
+</dd>
+<dt>metrics_file (str, optional)</dt><dd><p>Path to the metrics definition file. Default: ‘production_simulation_config_metrics.yml’.</p>
+</dd>
+<dt>file_name_template (str, optional)</dt><dd><p>Template for the file name. Default:
+‘prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits’.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>To evaluate statistical uncertainties and perform interpolation, run the command line script:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \</span>
-<span class="go">    --zeniths 20 52 40 60 --offsets 0 --interpolate --query_point 1 180 30 0 0 \</span>
-<span class="go">    --metrics_file &quot;path/to/metrics.yaml&quot;</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \\</span>
+<span class="go">    --zeniths 20 40 52 60 --offsets 0 --query_point 1 180 30 0 0 \\</span>
+<span class="go">    --metrics_file &quot;path/to/metrics.yaml&quot; \\</span>
+<span class="go">    --output_file &quot;output.json&quot;</span>
 </pre></div>
 </div>
-<p>The output will display the scaled events for the specified grid point.</p>
+<dl class="simple">
+<dt>The output will display the scaled events for the specified query point and save</dt><dd><p>the results to the specified output file.</p>
+</dd>
+</dl>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="production_scale_events.main">

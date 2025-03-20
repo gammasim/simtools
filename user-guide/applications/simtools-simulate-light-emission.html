@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-simulate-light-emission &#8212; simtools v0.1.dev1+g0b1fc20 Manual</title>
+    <title>simtools-simulate-light-emission &#8212; simtools v0.1.dev1+gf5301e9 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=febf806b"></script>
+    <script src="../../_static/documentation_options.js?v=7d2f44e1"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0b1fc20 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gf5301e9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -520,26 +520,26 @@ There are two ways this application can be executed:</p>
 <section id="command-line-arguments">
 <h2>Command Line Arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>–telescope (str, required)</dt><dd><p>Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, …)</p>
+<dt>telescope (str, required)</dt><dd><p>Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, …)</p>
 </dd>
-<dt>–site (str, required)</dt><dd><p>Site name (North or South).</p>
+<dt>site (str, required)</dt><dd><p>Site name (North or South).</p>
 </dd>
-<dt>–illuminator (str, optional)</dt><dd><p>Illuminator in array, e.g., ILLN-01.</p>
+<dt>illuminator (str, optional)</dt><dd><p>Illuminator in array, e.g., ILLN-01.</p>
 </dd>
-<dt>–light_source_setup (str, optional)</dt><dd><p>Select calibration light source positioning/setup:
+<dt>light_source_setup (str, optional)</dt><dd><p>Select calibration light source positioning/setup:
 - “variable” for varying distances.
 - “layout” for actual telescope positions.</p>
 </dd>
-<dt>–model_version (str, optional)</dt><dd><p>Version of the simulation model.</p>
+<dt>model_version (str, optional)</dt><dd><p>Version of the simulation model.</p>
 </dd>
-<dt>–light_source_type (str, optional)</dt><dd><p>Select calibration light source type: led (default) or laser.
+<dt>light_source_type (str, optional)</dt><dd><p>Select calibration light source type: led (default) or laser.
 This changes the pre-compiled (simtel_array) application that is used to run the
 light emission package with. Currently we use xyzls (laser), and ls-beam can be
 accessed by using the laser option.</p>
 </dd>
-<dt>–off_axis_angle (float, optional)</dt><dd><p>Off axis angle for light source direction.</p>
+<dt>off_axis_angle (float, optional)</dt><dd><p>Off axis angle for light source direction.</p>
 </dd>
-<dt>–plot (flag, optional)</dt><dd><p>Produce a multiple pages pdf file with the image plots.</p>
+<dt>plot (flag, optional)</dt><dd><p>Produce a multiple pages pdf file with the image plots.</p>
 </dd>
 </dl>
 </section>
