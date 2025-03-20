@@ -106,6 +106,14 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
 
+      - name: Print DB connection variables
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "DB Server: $SIMTOOLS_DB_SERVER"
+          echo "DB API User: $SIMTOOLS_DB_API_USER"
+          echo "DB API Port: $SIMTOOLS_DB_API_PORT"
+          echo "DB Simulation Model: $SIMTOOLS_DB_SIMULATION_MODEL"
+
       - name: Upload data to MongoDB
         if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
         run: |
