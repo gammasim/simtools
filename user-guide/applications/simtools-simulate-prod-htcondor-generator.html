@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-simulate-prod-htcondor-generator &#8212; simtools v0.1.dev1+gc72b7e9 Manual</title>
+    <title>simtools-simulate-prod-htcondor-generator &#8212; simtools v0.1.dev1+g0b1fc20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=3818b1bf"></script>
+    <script src="../../_static/documentation_options.js?v=febf806b"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc72b7e9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g0b1fc20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -494,8 +494,8 @@ using the Apptainer image specified in the command line (’–apptainer_image�
 to the ‘output_path’ directory, with ‘simtools-output’ and ‘logs’ subdirectories.</p>
 <p>Requirements for the ‘simtools-simulate-prod-htcondor-generator’ application:</p>
 <ul class="simple">
-<li><p>Availability of an Apptainer image ‘simtools-prod’ (obtainable from the package registry on
-GitHub, e.g., via ‘apptainer pull –force docker://ghcr.io/gammasim/simtools-prod:latest’).</p></li>
+<li><p>Availability of an Apptainer image for production (obtainable from the package registry on
+GitHub, e.g., via ‘apptainer pull –force docker://ghcr.io/gammasim/simtools-&lt;tag&gt;:latest’).</p></li>
 <li><p>Environment parameters required to run CORSIKA and sim_telarray, as well as DB access
 credentials.  These should be listed similarly to a ‘.env’ file and copied to
 ‘output_path/env.txt’.  Ensure that the path to the simulation software is correctly set to

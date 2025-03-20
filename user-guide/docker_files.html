@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Containers (docker files) &#8212; simtools v0.1.dev1+gc72b7e9 Manual</title>
+    <title>Containers (docker files) &#8212; simtools v0.1.dev1+g0b1fc20 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=3818b1bf"></script>
+    <script src="../_static/documentation_options.js?v=febf806b"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc72b7e9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g0b1fc20 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -467,9 +467,8 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools-package-registry">Simtools package registry</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users-simtools-prod">Container for simtools users (simtools-prod)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-simtools-prod-container">Run a simtools-prod container</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-simtools-prod-container">Building a simtools-prod container</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users-no-opt-images">Container for simtools users (‘no opt’ images)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-simtools-user-container">Run a simtools user container</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-developers-simtools-dev">Container for simtools developers (simtools-dev)</a><ul class="nav section-nav flex-column">
@@ -499,35 +498,35 @@ document.write(`
 <p><a class="reference external" href="https://www.docker.com/community-edition#/download">Docker</a> or any compatible software (e.g., <a class="reference external" href="https://podman.io/">podman</a>, <a class="reference external" href="https://apptainer.org/">apptainer</a>) are required to run or build these images.</p>
 <p>Types of docker files and containers available:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#container-for-simtools-users"><span class="xref myst">simtools users</span></a>: a container with all software installed (CORSIKA, sim_telarray, simtools python environment, simtools). Pull latest release with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-prod:latest</span></code></p></li>
+<li><p><a class="reference internal" href="#container-for-simtools-users"><span class="xref myst">simtools users</span></a>: a container with all software installed (CORSIKA, sim_telarray, simtools python environment, simtools). Pull one of the images from the <a class="reference external" href="https://github.com/orgs/gammasim/packages?tab=packages&amp;amp;q=no_opt">page registry (non-vector-code optimized images)</a>, e.g., <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest</span></code></p></li>
 <li><p><a class="reference internal" href="#container-for-simtools-developers"><span class="xref myst">simtools developers</span></a>: a container with CORSIKA, sim_telarray, and simtools conda environment installed. Pull latest release with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">pull</span> <span class="pre">ghcr.io/gammasim/simtools-dev:latest</span></code></p></li>
+<li><p>containers with vector-code optimized CORSIKA compilation are available from the <a class="reference external" href="https://github.com/orgs/gammasim/packages">simtools package registry</a> page</p></li>
 <li><p><a class="reference internal" href="#container-for-corsika-and-simtelarray">CORSIKA and sim_telarray</a>: provides containers with the CORSIKA and sim_telarray installed (for different sim_telarray version, hadronic interaction models, CTAO MC productions).
-This provides a base image for the previously listed containers.</p></li>
+This provides a base image for the development container.</p></li>
 </ul>
-<p>See the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools container repository</a> for image prepared for different versions of the simulation software.</p>
 <section id="simtools-package-registry">
 <h2>Simtools package registry<a class="headerlink" href="#simtools-package-registry" title="Link to this heading">#</a></h2>
 <p>Pre-built container images are available through the <a class="reference external" href="https://github.com/orgs/gammasim/packages?repo_name=simtools">simtools package registry</a>.</p>
 <p>Follow the <a class="reference external" href="https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry">instruction</a> (<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">login</span></code>) to authenticate with the GitHub package registry before pulling the first image.</p>
 <p>Note: if the docker image already exists in your system, this same image will be used to run the container. This might especially be an issue when using the <code class="docutils literal notranslate"><span class="pre">latest</span></code> tag, which might not be the latest version available in the registry. To force a pull of the latest image, use the <code class="docutils literal notranslate"><span class="pre">--pull</span></code> option, e.g.:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--pull<span class="w"> </span>always<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>ghcr.io/gammasim/simtools-prod:latest<span class="w"> </span>bash
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--pull<span class="w"> </span>always<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>ghcr.io/gammasim/simtools-dev:latest<span class="w"> </span>bash
 </pre></div>
 </div>
 <p>Alternatively, delete the image first and pull the latest version from the registry.</p>
 </section>
-<section id="container-for-simtools-users-simtools-prod">
-<h2>Container for simtools users (simtools-prod)<a class="headerlink" href="#container-for-simtools-users-simtools-prod" title="Link to this heading">#</a></h2>
+<section id="container-for-simtools-users-no-opt-images">
+<h2>Container for simtools users (‘no opt’ images)<a class="headerlink" href="#container-for-simtools-users-no-opt-images" title="Link to this heading">#</a></h2>
 <p>Provides a container for simtools users, which includes:</p>
 <ul class="simple">
 <li><p>corsika and sim_telarray</p></li>
 <li><p>packages required by simtools</p></li>
 <li><p>simtools (main branch)</p></li>
 </ul>
-<section id="run-a-simtools-prod-container">
-<h3>Run a simtools-prod container<a class="headerlink" href="#run-a-simtools-prod-container" title="Link to this heading">#</a></h3>
+<section id="run-a-simtools-user-container">
+<h3>Run a simtools user container<a class="headerlink" href="#run-a-simtools-user-container" title="Link to this heading">#</a></h3>
 <p>Prerequisite: configure the simulation model database access (see simtools documentation) similar to the <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/.env_template">template example</a>.</p>
 <p>To startup a container to use bash</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--env-file<span class="w"> </span>.env<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/workdir/external&quot;</span><span class="w"> </span>ghcr.io/gammasim/simtools-prod:latest<span class="w"> </span>bash
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--env-file<span class="w"> </span>.env<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/workdir/external&quot;</span><span class="w"> </span>ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest<span class="w"> </span>bash
 </pre></div>
 </div>
 <p>In the container, simtools applications are installed and can be called directly (e.g., <code class="docutils literal notranslate"><span class="pre">simtools-convert-geo-coordinates-of-array-elements</span> <span class="pre">-h</span></code>).
@@ -535,7 +534,7 @@ This example uses the docker syntax to mount your local directory for file acces
 <p>The following example runs an application inside the container and writes the output into a directory of the local files system,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--env-file<span class="w"> </span>.env<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/workdir/external&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>ghcr.io/gammasim/simtools-prod:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>simtools-convert-geo-coordinates-of-array-elements<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--array_element_list<span class="w"> </span>./simtools/tests/resources/telescope_positions-North-utm.ecsv<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--export<span class="w"> </span>corsika<span class="w"> </span>--use_corsika_telescope_height<span class="w"> </span><span class="se">\</span>
@@ -543,14 +542,6 @@ This example uses the docker syntax to mount your local directory for file acces
 </pre></div>
 </div>
 <p>Output files can be found <code class="docutils literal notranslate"><span class="pre">./simtools-output/</span></code>.</p>
-</section>
-<section id="building-a-simtools-prod-container">
-<h3>Building a simtools-prod container<a class="headerlink" href="#building-a-simtools-prod-container" title="Link to this heading">#</a></h3>
-<p>To build a new container locally run in the <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/docker">docker</a> directory::</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile-prod<span class="w">  </span>-t<span class="w"> </span>simtools-prod<span class="w"> </span>.
-</pre></div>
-</div>
-<p>Building will take a while and the image is large (~2.1 GB). For using images build on your own, replace in all examples <code class="docutils literal notranslate"><span class="pre">ghcr.io/gammasim/simtools-prod:latest</span></code> by the local image name <code class="docutils literal notranslate"><span class="pre">simtools-prod</span></code>.</p>
 </section>
 </section>
 <section id="container-for-simtools-developers-simtools-dev">
@@ -614,7 +605,7 @@ git<span class="w"> </span>clone<span class="w"> </span>git@github.com:gammasim/
 </div>
 <p>Building expects that a tar ball of corsika/sim_telarray (named corsika7.7_simtelarray.tar.gz) is available in the building directory.
 Download the tar package from MPIK (password applies) with</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./download_simulationsoftware.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./download_simulation_software.sh
 </pre></div>
 </div>
 <p>Run the newly build container:</p>
@@ -670,9 +661,8 @@ Download the tar package from MPIK (password applies) with</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtools-package-registry">Simtools package registry</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users-simtools-prod">Container for simtools users (simtools-prod)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-simtools-prod-container">Run a simtools-prod container</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-simtools-prod-container">Building a simtools-prod container</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-users-no-opt-images">Container for simtools users (‘no opt’ images)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-simtools-user-container">Run a simtools user container</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-for-simtools-developers-simtools-dev">Container for simtools developers (simtools-dev)</a><ul class="nav section-nav flex-column">
