@@ -16,31 +16,44 @@ def hdf5_file(tmp_path):
             group,
             "reduced_data",
             {
-                "core_x": tables.Float32Col(),
-                "core_y": tables.Float32Col(),
-                "simulated": tables.Float32Col(),
-                "shower_sim_azimuth": tables.Float32Col(),
-                "shower_sim_altitude": tables.Float32Col(),
-                "array_azimuths": tables.Float32Col(),
-                "array_altitudes": tables.Float32Col(),
+                "core_x": tables.Float32Col(pos=1),
+                "core_y": tables.Float32Col(pos=2),
+                "simulated": tables.Float32Col(pos=3),
+                "shower_sim_azimuth": tables.Float32Col(pos=4),
+                "shower_sim_altitude": tables.Float32Col(pos=5),
             },
         )
+        reduced_data.append(
+            [
+                (0.1, 0.1, 1.0, 0.1, 0.4),
+                (0.2, 0.3, 2.0, 0.5, 0.4),
+                (0.3, 0.4, 3.0, 1.0, 1.1),
+                (0.1, 0.1, 4.0, 1.5, 1.3),
+                (0.2, 0.3, 5.0, 2.0, 1.4),
+                (0.3, 0.4, 6.0, 2.5, 1.5),
+            ]
+        )
         triggered_data = f.create_table(
-            group, "triggered_data", {"shower_id_triggered": tables.Int32Col()}
+            group,
+            "triggered_data",
+            {
+                "shower_id_triggered": tables.Int32Col(pos=1),
+                "array_altitudes": tables.Float32Col(pos=2),
+                "array_azimuths": tables.Float32Col(pos=3),
+            },
+        )
+        triggered_data.append(
+            [
+                (0, 0.1, 0.2),
+                (1, 0.5, 0.6),
+                (2, 1.0, 0.7),
+                (0, 1.5, 1.2),
+                (1, 1.0, 1.3),
+                (2, 1.5, 1.4),
+            ]
         )
         file_names = f.create_table(group, "file_names", {"file_names": tables.StringCol(16)})
 
-        reduced_data.append(
-            [
-                (0.1, 0.1, 1.0, 0.1, 0.3, 0.1, 0.2),
-                (0.2, 0.2, 2.0, 0.5, 0.4, 0.5, 0.6),
-                (0.3, 0.3, 3.0, 1.0, 1.1, 1.0, 1.0),
-                (0.1, 0.1, 1.0, 1.5, 1.3, 1.5, 1.2),
-                (0.2, 0.2, 2.0, 2.0, 1.4, 2.0, 1.3),
-                (0.3, 0.3, 3.0, 2.5, 1.5, 2.5, 1.4),
-            ]
-        )
-        triggered_data.append([(0,), (1,), (2,), (0,), (1,), (2,)])
         file_names.append([("file1",), ("file2",)])
         f.create_vlarray(
             group,

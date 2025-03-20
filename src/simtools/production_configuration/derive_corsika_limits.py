@@ -51,20 +51,22 @@ class LimitCalculator:
     def _read_event_data(self):
         """Read the event data from the reduced MC event data file."""
         with tables.open_file(self.event_data_file, mode="r") as f:
+            file_names = f.root.data.file_names
             reduced_data = f.root.data.reduced_data
             triggered_data = f.root.data.triggered_data
-            file_names = f.root.data.file_names
             trigger_telescope_list_list = f.root.data.trigger_telescope_list_list
+
+            self.list_of_files = file_names.col("file_names")
 
             self.event_x_core = reduced_data.col("core_x")
             self.event_y_core = reduced_data.col("core_y")
             self.simulated = reduced_data.col("simulated")
-            self.shower_id_triggered = triggered_data.col("shower_id_triggered")
-            self.list_of_files = file_names.col("file_names")
             self.shower_sim_azimuth = reduced_data.col("shower_sim_azimuth")
             self.shower_sim_altitude = reduced_data.col("shower_sim_altitude")
-            self.array_altitude = reduced_data.col("array_altitudes")
-            self.array_azimuth = reduced_data.col("array_azimuths")
+
+            self.array_altitude = triggered_data.col("array_altitudes")
+            self.array_azimuth = triggered_data.col("array_azimuths")
+            self.shower_id_triggered = triggered_data.col("shower_id_triggered")
 
             self.trigger_telescope_list_list = [
                 [np.int16(tel) for tel in event] for event in trigger_telescope_list_list
@@ -176,6 +178,10 @@ class LimitCalculator:
         """
         Compute the viewcone based on the event loss fraction.
 
+        The shower IDs of triggered events are used to create a mask for the
+        azimuth and altitude of the triggered events. A mapping is created
+        between the triggered events and the simulated events using the shower IDs.
+
         Parameters
         ----------
         loss_fraction : float
@@ -186,10 +192,33 @@ class LimitCalculator:
         astropy.units.Quantity
             Viewcone radius in degrees.
         """
-        # already in radians
-        azimuth_diff = self.array_azimuth - self.shower_sim_azimuth  # * (np.pi / 180.0)
-        sim_altitude_rad = self.shower_sim_altitude  # * (np.pi / 180.0)
-        array_altitude_rad = self.array_altitude  # * (np.pi / 180.0)
+        # Create an index array to create the mapping for the triggered events
+        triggered_indices = np.arange(len(self.shower_id_triggered))
+
+        # Apply the telescope mask if provided
+        if self.telescope_list is not None:
+            mask = np.array(
+                [
+                    all(tel in event for tel in self.telescope_list)
+                    for event in self.trigger_telescope_list_list
+                ]
+            )
+            shower_id_triggered_filtered = self.shower_id_triggered[mask]
+
+            triggered_indices = triggered_indices[mask]
+        else:
+            shower_id_triggered_filtered = self.shower_id_triggered
+
+        array_azimuth_filtered = self.array_azimuth[triggered_indices]
+        array_altitude_filtered = self.array_altitude[triggered_indices]
+
+        sim_azimuth_filtered = self.shower_sim_azimuth[shower_id_triggered_filtered]
+        sim_altitude_filtered = self.shower_sim_altitude[shower_id_triggered_filtered]
+
+        azimuth_diff = array_azimuth_filtered - sim_azimuth_filtered
+        sim_altitude_rad = sim_altitude_filtered
+        array_altitude_rad = array_altitude_filtered
+
         x_1 = np.cos(azimuth_diff) * np.cos(sim_altitude_rad)
         y_1 = np.sin(azimuth_diff) * np.cos(sim_altitude_rad)
         z_1 = np.sin(sim_altitude_rad)
@@ -197,7 +226,8 @@ class LimitCalculator:
         y_2 = y_1
         z_2 = x_1 * np.cos(array_altitude_rad) + z_1 * np.sin(array_altitude_rad)
         off_angles = np.arctan2(np.sqrt(x_2**2 + y_2**2), z_2) * (180.0 / np.pi)
-        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 400)
+
+        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 1000)
         hist, _ = np.histogram(off_angles, bins=angle_bins)
 
         upper_bin_edge_value = self._compute_limits(
@@ -239,9 +269,11 @@ class LimitCalculator:
         core_distances_triggered = core_distances_all[shower_id_triggered_masked]
         triggered_energies = self.simulated[shower_id_triggered_masked]
 
-        core_bins = np.linspace(core_distances_triggered.min(), core_distances_triggered.max(), 400)
+        core_bins = np.linspace(
+            core_distances_triggered.min(), core_distances_triggered.max(), 1000
+        )
         energy_bins = np.logspace(
-            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 400
+            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 1000
         )
         plt.figure(figsize=(8, 6))
         plt.hist2d(
