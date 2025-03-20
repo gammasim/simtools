@@ -2,12 +2,6 @@
 name: CI-unittests
 # Execute unit tests
 # (includes CTAO-DPPS-SonarQube)
-env:
-  SIMTOOLS_DB_SERVER: localhost
-  SIMTOOLS_DB_API_USER: api
-  SIMTOOLS_DB_API_PW: password
-  SIMTOOLS_DB_API_PORT: 27017
-  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
 on:
   workflow_dispatch:
@@ -18,6 +12,12 @@ on:
 
 jobs:
   unittests:
+    env:
+      # For pull_request and workflow_dispatch: use local MongoDB
+      SIMTOOLS_DB_SERVER: ${{ github.event_name != 'workflow_dispatch' && 'localhost' || secrets.DB_SERVER }}
+      SIMTOOLS_DB_API_USER: ${{ github.event_name != 'workflow_dispatch' && 'api' || secrets.DB_API_USER }}
+      SIMTOOLS_DB_API_PW: ${{ github.event_name != 'workflow_dispatch' && 'password' || secrets.DB_API_PW }}
+      SIMTOOLS_DB_API_PORT: ${{ github.event_name != 'workflow_dispatch' && '27017' || secrets.DB_API_PORT }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
