@@ -18,7 +18,6 @@ CTA_SIMPIPE:
       - 30
       - 0
       - 0
-      INTERPOLATE: true
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: interpolated_scaled_events.json
       METRICS_FILE: tests/resources/production_simulation_config_metrics.yml
