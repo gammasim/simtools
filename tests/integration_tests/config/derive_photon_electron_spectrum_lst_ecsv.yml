@@ -19,7 +19,7 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test_single_pe_lst.dat
     - OUTPUT_FILE: test_single_pe_lst.ecsv
-    - REFERENCE_OUTPUT_FILE: 'tests/resources/spe_LST_2022-04-27_AP2.0e-4.ecsv
+    - REFERENCE_OUTPUT_FILE: 'tests/resources/spe_LST_2025-02-15-used.ecsv
 
         '
       TOLERANCE: 0.0001
