@@ -17,8 +17,8 @@ to the 'output_path' directory, with 'simtools-output' and 'logs' subdirectories
 
 Requirements for the 'simtools-simulate-prod-htcondor-generator' application:
 
-- Availability of an Apptainer image 'simtools-prod' (obtainable from the package registry on
-  GitHub, e.g., via 'apptainer pull --force docker://ghcr.io/gammasim/simtools-prod:latest').
+- Availability of an Apptainer image for production (obtainable from the package registry on
+  GitHub, e.g., via 'apptainer pull --force docker://ghcr.io/gammasim/simtools-<tag>:latest').
 - Environment parameters required to run CORSIKA and sim_telarray, as well as DB access
   credentials.  These should be listed similarly to a '.env' file and copied to
   'output_path/env.txt'.  Ensure that the path to the simulation software is correctly set to
