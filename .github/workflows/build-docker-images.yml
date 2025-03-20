@@ -1,5 +1,5 @@
 ---
-name: docker-simtools
+name: docker-simtools-dev
 # Build simtools images for developers based on CORSIKA / sim_telarray images (no optimizations)
 
 on:
@@ -18,10 +18,6 @@ on:
     - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC (build only)
 
 env:
-  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
-  SIMTOOLS_DB_API_USER: ${{ secrets.DB_READ_USER }}
-  SIMTOOLS_DB_API_PW: ${{ secrets.DB_READ_PW }}
-  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   TEST_TAG: user/app:test
@@ -77,6 +73,12 @@ jobs:
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
+        with:
+          context: .
+          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
+          load: true
+          file: ./docker/Dockerfile-${{ matrix.type }}
+          tags: ${{ env.TEST_TAG }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
