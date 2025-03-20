@@ -11,13 +11,13 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
-  unittests:
+  unit_tests:
     env:
-      # For pull_request and workflow_dispatch: use local MongoDB
-      SIMTOOLS_DB_SERVER: ${{ github.event_name != 'workflow_dispatch' && 'localhost' || secrets.DB_SERVER }}
-      SIMTOOLS_DB_API_USER: ${{ github.event_name != 'workflow_dispatch' && 'api' || secrets.DB_API_USER }}
-      SIMTOOLS_DB_API_PW: ${{ github.event_name != 'workflow_dispatch' && 'password' || secrets.DB_API_PW }}
-      SIMTOOLS_DB_API_PORT: ${{ github.event_name != 'workflow_dispatch' && '27017' || secrets.DB_API_PORT }}
+      # For scheduled runs, use production DB
+      SIMTOOLS_DB_SERVER: ${{ github.event_name != 'schedule' && 'localhost' || secrets.DB_SERVER }}
+      SIMTOOLS_DB_API_USER: ${{ github.event_name != 'schedule' && 'api' || secrets.DB_API_USER }}
+      SIMTOOLS_DB_API_PW: ${{ github.event_name != 'schedule' && 'password' || secrets.DB_API_PW }}
+      SIMTOOLS_DB_API_PORT: ${{ github.event_name != 'schedule' && '27017' || secrets.DB_API_PORT }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -115,7 +115,7 @@ jobs:
           echo "DB Simulation Model: $SIMTOOLS_DB_SIMULATION_MODEL"
 
       - name: Upload data to MongoDB
-        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'schedule'
         run: |
           cd database_scripts/
           ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
