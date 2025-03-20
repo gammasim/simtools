@@ -2,13 +2,6 @@
 name: CI-integrationtests
 # Integration tests for applications
 
-env:
-  SIMTOOLS_DB_SERVER: ${{ secrets.DB_SERVER }}
-  SIMTOOLS_DB_API_USER: ${{ secrets.DB_API_USER }}
-  SIMTOOLS_DB_API_PW: ${{ secrets.DB_API_PW }}
-  SIMTOOLS_DB_API_PORT: ${{ secrets.DB_API_PORT }}
-  SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
-
 on:
   workflow_dispatch:
   pull_request:
@@ -74,6 +67,14 @@ jobs:
       - name: Set PATH
         run: |
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+
+      - name: Set DB Environment Variables (workflow_dispatch only)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          echo "SIMTOOLS_DB_SERVER=${{ secrets.DB_SERVER }}" >> "$GITHUB_ENV"
+          echo "SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}" >> "$GITHUB_ENV"
+          echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}" >> "$GITHUB_ENV"
+          echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}" >> "$GITHUB_ENV"
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
