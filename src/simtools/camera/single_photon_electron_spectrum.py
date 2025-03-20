@@ -217,8 +217,8 @@ class SinglePhotonElectronSpectrum:
 
         Returns
         -------
-        str
-            Afterpulse spectrum data.
+        astro.Table
+            Table with fitted afterpulse spectrum data.
         """
         ap_min = self.args_dict["afterpulse_amplitude_range"][0]
         fix_k = self.args_dict.get("fit_afterpulse_decay_factor")
