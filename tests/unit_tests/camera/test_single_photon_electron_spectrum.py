@@ -32,6 +32,11 @@ def spe_data():
     return "0.0,0.4694\n0.02,0.46378\n0.04,0.45267\n0.06,0.44172"
 
 
+@pytest.fixture
+def afterpulse_column():
+    return "frequency (afterpulsing)"
+
+
 @patch("simtools.io_operations.io_handler.IOHandler")
 @patch("simtools.camera.single_photon_electron_spectrum.MetadataCollector")
 def test_init(mock_metadata_collector, mock_io_handler, spe_spectrum):
@@ -215,10 +220,10 @@ def test_get_input_data(mock_open, spe_spectrum, spe_data):
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.Table")
-def test_read_afterpulse_spectrum_for_fit(mock_table, spe_spectrum):
+def test_read_afterpulse_spectrum_for_fit(mock_table, spe_spectrum, afterpulse_column):
     mock_data = Table()
     mock_data["amplitude"] = [1.0, 2.0, 3.0, 4.0, 5.0]
-    mock_data["frequency (afterpulsing)"] = [0.1, 0.2, 0.0, 0.4, 0.5]
+    mock_data[afterpulse_column] = [0.1, 0.2, 0.0, 0.4, 0.5]
     mock_data["frequency stdev (afterpulsing)"] = [0.01, 0.02, 0.03, 0.04, 0.05]
     mock_table.read.return_value = mock_data
 
@@ -316,7 +321,7 @@ def test_afterpulse_fit_function(spe_spectrum):
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.curve_fit")
-def test_fit_afterpulse_spectrum(mock_curve_fit, spe_spectrum):
+def test_fit_afterpulse_spectrum(mock_curve_fit, spe_spectrum, afterpulse_column):
     # Mock input data
     spe_spectrum.args_dict["afterpulse_amplitude_range"] = [4.0, 42.0]
     spe_spectrum.args_dict["step_size"] = 0.1
@@ -338,7 +343,7 @@ def test_fit_afterpulse_spectrum(mock_curve_fit, spe_spectrum):
 
         assert isinstance(result, Table)
         assert "amplitude" in result.colnames
-        assert "frequency (afterpulsing)" in result.colnames
+        assert afterpulse_column in result.colnames
         assert len(result) > 0
 
         # Test case 2: with fixed k
@@ -351,7 +356,7 @@ def test_fit_afterpulse_spectrum(mock_curve_fit, spe_spectrum):
 
         assert isinstance(result, Table)
         assert "amplitude" in result.colnames
-        assert "frequency (afterpulsing)" in result.colnames
+        assert afterpulse_column in result.colnames
         assert len(result) > 0
 
         # Test case 3: curve_fit raises RuntimeError

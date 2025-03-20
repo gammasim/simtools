@@ -239,7 +239,7 @@ class SinglePhotonElectronSpectrum:
             ap_min, self.args_dict["afterpulse_amplitude_range"][1], self.args_dict["step_size"]
         )
         y_fit = fit_func(x_fit, *params)
-        return Table([x_fit, y_fit], names=["amplitude", "frequency (afterpulsing)"])
+        return Table([x_fit, y_fit], names=["amplitude", self.afterpulse_column])
 
     def afterpulse_fit_function(self, fix_k):
         """
@@ -312,7 +312,7 @@ class SinglePhotonElectronSpectrum:
         """
         table = Table.read(afterpulse_spectrum, format="ascii.ecsv")
         x = table["amplitude"]
-        y = table["frequency (afterpulsing)"]
+        y = table[self.afterpulse_column]
         y_err = table["frequency stdev (afterpulsing)"]
         mask = (x >= fit_min_pe) & (y > 0)
         x_fit, y_fit, y_err_fit = x[mask], y[mask], y_err[mask]
