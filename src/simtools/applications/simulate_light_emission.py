@@ -31,34 +31,26 @@ r"""
 
     Command Line Arguments
     ----------------------
-
-    --telescope (str, required)
+    telescope (str, required)
         Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
-
-    --site (str, required)
+    site (str, required)
         Site name (North or South).
-
-    --illuminator (str, optional)
+    illuminator (str, optional)
         Illuminator in array, e.g., ILLN-01.
-
-    --light_source_setup (str, optional)
+    light_source_setup (str, optional)
         Select calibration light source positioning/setup:
         - "variable" for varying distances.
         - "layout" for actual telescope positions.
-
-    --model_version (str, optional)
+    model_version (str, optional)
         Version of the simulation model.
-
-    --light_source_type (str, optional)
+    light_source_type (str, optional)
         Select calibration light source type: led (default) or laser.
         This changes the pre-compiled (simtel_array) application that is used to run the
         light emission package with. Currently we use xyzls (laser), and ls-beam can be
         accessed by using the laser option.
-
-    --off_axis_angle (float, optional)
+    off_axis_angle (float, optional)
         Off axis angle for light source direction.
-
-    --plot (flag, optional)
+    plot (flag, optional)
         Produce a multiple pages pdf file with the image plots.
 
 
