@@ -4,8 +4,8 @@ r"""
 Application to run the StatisticalErrorEvaluator and interpolate results.
 
 This application evaluates statistical uncertainties from DL2 MC event files
-based on input parameters like zenith angles and offsets, and can perform interpolation
-for a specified grid point.
+based on input parameters like zenith angles and offsets, and performs interpolation
+for a specified query point.
 
 Command line arguments
 ----------------------
@@ -15,10 +15,20 @@ zeniths (list of int, required)
     List of zenith angles to consider.
 offsets (list of int, required)
     List of offsets in degrees.
-interpolate (bool, optional)
-    If set, performs interpolation for a specific grid point.
-query_point (list of int, optional)
-    Grid point for interpolation (energy, azimuth, zenith, NSB, offset).
+query_point (list of float, required)
+    Query point for interpolation. The query point must contain exactly 5 values:
+        - Energy (TeV)
+        - Azimuth (degrees)
+        - Zenith (degrees)
+        - NSB
+        - Offset (degrees)
+output_file (str, optional)
+    Output file to store the results. Default: 'interpolated_scaled_events.json'.
+metrics_file (str, optional)
+    Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
+file_name_template (str, optional)
+    Template for the file name. Default:
+    'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'.
 
 Example
 -------
@@ -26,12 +36,13 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 
 .. code-block:: console
 
-    simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \
-        --zeniths 20 52 40 60 --offsets 0 --interpolate --query_point 1 180 30 0 0 \
-        --metrics_file "path/to/metrics.yaml"
+    simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \\
+        --zeniths 20 40 52 60 --offsets 0 --query_point 1 180 30 0 0 \\
+        --metrics_file "path/to/metrics.yaml" \\
+        --output_file "output.json"
 
-
-The output will display the scaled events for the specified grid point.
+The output will display the scaled events for the specified query point and save
+ the results to the specified output file.
 """
 
 import itertools
