@@ -15,7 +15,7 @@ short_description: |-
   Pixel p.e. rate at which the gain drops to half the nominal value due to
   bias resistance and cell capacitance (SiPM cameras).
 data:
-  - type: double
+  - type: float64
     unit: GHz
     default: 0.0
     allowed_range:

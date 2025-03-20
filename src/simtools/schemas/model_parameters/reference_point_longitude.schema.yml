@@ -11,7 +11,7 @@ description: |-
   Not to be used for coordinate transformations (use UTM coordinates for this).
 short_description: Longitude of site reference point.
 data:
-  - type: double
+  - type: float64
     unit: deg
     allowed_range:
       min: -180.0

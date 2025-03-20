@@ -17,7 +17,7 @@ short_description: |-
   Offset of mirror back plane from fixed point of telescope mount or
   from the altitude rotation axis, along the direction of the optical axis.
 data:
-  - type: double
+  - type: float64
     unit: cm
     default: 130.0
 instrument:

@@ -10,13 +10,13 @@ description: |-
   Position and altitude of an array element (e.g., a telescope) in UTM coordinates.
 short_description: UTM coordinate position of an array element.
 data:
-  - type: double
+  - type: float64
     unit: m
     description: Array element position in UTM East.
-  - type: double
+  - type: float64
     unit: m
     description: Array element position in UTM North.
-  - type: double
+  - type: float64
     unit: m
     description: Array element altitude above sea level.
 instrument:

@@ -11,7 +11,7 @@ description: |-
 short_description: |-
   Number of laser photons at each photo detector.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 500
     allowed_range:
