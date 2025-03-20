@@ -57,14 +57,12 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
 
 def test_produce_model_parameter_reports(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{args['telescope']}"
-    )
+    output_path = io_handler.get_output_directory(label="reports", sub_dir="parameters")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     read_parameters.produce_model_parameter_reports()
 
-    file_path = output_path / "quantum_efficiency.md"
+    file_path = output_path / args["telescope"] / "quantum_efficiency.md"
     assert file_path.exists()
 
 

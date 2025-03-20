@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -5,7 +6,7 @@ import pytest
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
 
-def test_add_design_models_to_telescopes(io_handler, db_config):
+def test__add_design_models_to_telescopes(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(db_config, args, output_path)
@@ -25,7 +26,7 @@ def test_add_design_models_to_telescopes(io_handler, db_config):
     assert "LSTN-02" in result
 
 
-def test_filter_telescopes_by_site(io_handler, db_config):
+def test__filter_telescopes_by_site(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(db_config, args, output_path)
@@ -49,7 +50,7 @@ def test_filter_telescopes_by_site(io_handler, db_config):
         ({"all_telescopes": False, "all_sites": False, "all_model_versions": False}, 1),
     ],
 )
-def test_get_report_parameters(io_handler, db_config, all_flags, expected_count):
+def test__get_report_parameters(io_handler, db_config, all_flags, expected_count):
     args = {"site": "North", "telescope": "LSTN-01", "model_version": "6.0.0", **all_flags}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(db_config, args, output_path)
@@ -69,58 +70,120 @@ def test_get_report_parameters(io_handler, db_config, all_flags, expected_count)
         assert site == "North"
 
 
-def test_get_telescopes_from_layout(io_handler, db_config):
-    args = {"all_telescopes": True, "site": "North"}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+def test__get_telescopes_from_layout(io_handler, db_config):
+    """Test getting telescopes from layout for both all_telescopes=True and False cases."""
+    test_cases = [
+        # Test case 1: all_telescopes=True
+        {
+            "args": {"all_telescopes": True, "site": "North"},
+            "mock_layouts": {
+                "6.0.0": {
+                    "array_layouts": {
+                        "value": [
+                            {"name": "hyper_array", "elements": ["LSTN-01", "LSTN-02"]},
+                            {"name": "other_layout", "elements": ["MSTN-01"]},
+                        ]
+                    }
+                }
+            },
+            "mock_design_model": "LSTN-design",
+            "expected_telescopes": {"LSTN-01", "LSTN-02", "LSTN-design"},
+        },
+        # Test case 2: all_telescopes=False
+        {
+            "args": {"all_telescopes": False, "site": "North", "telescope": "LSTN-01"},
+            "mock_layouts": {},  # Not used in this case
+            "mock_design_model": None,  # Not used in this case
+            "expected_telescopes": {"LSTN-01"},
+        },
+    ]
 
-    mock_layouts = {
-        "6.0.0": {
-            "array_layouts": {
-                "value": [
-                    {"name": "hyper_array", "elements": ["LSTN-01", "LSTN-02"]},
-                    {"name": "other_layout", "elements": ["MSTN-01"]},
-                ]
-            }
-        }
-    }
+    for case in test_cases:
+        output_path = io_handler.get_output_directory()
+        report_generator = ReportGenerator(db_config, case["args"], output_path)
 
-    with patch.multiple(
-        report_generator.db,
-        get_model_parameters_for_all_model_versions=MagicMock(return_value=mock_layouts),
-        get_design_model=MagicMock(return_value="LSTN-design"),
-    ):
-        result = report_generator._get_telescopes_from_layout("North")
-
-    assert len(result) == 3  # LSTN-01, LSTN-02, LSTN-design
-    assert all(tel in result for tel in ["LSTN-01", "LSTN-02", "LSTN-design"])
-
-
-def test_generate_parameter_report_combinations(io_handler, db_config):
-    args = {"all_telescopes": True, "all_sites": True}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
-
-    mock_telescopes = {"LSTN-01", "LSTN-02", "LSTN-design"}
-
-    # Mock both the site selection and telescope layout retrieval
-    with (
-        patch(
-            "simtools.utils.names.get_site_from_array_element_name",
-            side_effect=lambda x: ["North"] if x[3] == "N" else ["South"],
-        ),
-        patch.multiple(
-            report_generator,
-            _get_telescopes_from_layout=MagicMock(
-                side_effect=lambda site: mock_telescopes if site == "North" else set()
+        with patch.multiple(
+            report_generator.db,
+            get_model_parameters_for_all_model_versions=MagicMock(
+                return_value=case["mock_layouts"]
             ),
-        ),
-    ):
-        result = list(report_generator._generate_parameter_report_combinations())
+            get_design_model=MagicMock(return_value=case["mock_design_model"]),
+        ):
+            result = report_generator._get_telescopes_from_layout("North")
 
-    expected_combinations = {("LSTN-01", "North"), ("LSTN-02", "North"), ("LSTN-design", "North")}
-    assert set(result) == expected_combinations
-    assert len(result) == 3
+            # Verify the result
+            assert result == case["expected_telescopes"]
+
+            # Verify DB methods were called correctly based on all_telescopes flag
+            if case["args"]["all_telescopes"]:
+                report_generator.db.get_model_parameters_for_all_model_versions.assert_called_once()
+                assert len(result) == len(case["expected_telescopes"])
+            else:
+                # Verify DB methods were not called when all_telescopes=False
+                report_generator.db.get_model_parameters_for_all_model_versions.assert_not_called()
+                report_generator.db.get_design_model.assert_not_called()
+                assert result == {case["args"]["telescope"]}
+
+
+def test__generate_parameter_report_combinations(io_handler, db_config):
+    """Test parameter report combinations generation for both specific and all telescopes."""
+
+    test_cases = [
+        # Test case 1: Specific telescope (all_telescopes=False)
+        {
+            "args": {"all_telescopes": False, "all_sites": True, "telescope": "LSTN-01"},
+            "mock_valid_sites": ["North"],
+            "expected_combinations": [("LSTN-01", "North")],
+        },
+        # Test case 2: All telescopes
+        {
+            "args": {"all_telescopes": True, "all_sites": True},
+            "mock_telescopes_north": {"LSTN-01", "LSTN-02", "LSTN-design"},
+            "mock_telescopes_south": {"MSTS-01", "MSTS-02"},
+            "expected_combinations": [
+                ("LSTN-01", "North"),
+                ("LSTN-02", "North"),
+                ("LSTN-design", "North"),
+                ("MSTS-01", "South"),
+                ("MSTS-02", "South"),
+            ],
+        },
+    ]
+
+    for case in test_cases:
+        output_path = io_handler.get_output_directory()
+        report_generator = ReportGenerator(db_config, case["args"], output_path)
+
+        with (
+            patch(
+                "simtools.utils.names.get_site_from_array_element_name",
+                side_effect=lambda x: ["North"]
+                if x[3] == "N"
+                else ["South"]
+                if not case["args"].get("all_telescopes")
+                else case.get("mock_valid_sites", []),
+            ),
+            patch.multiple(
+                report_generator,
+                _get_telescopes_from_layout=MagicMock(
+                    side_effect=lambda site: (
+                        case.get("mock_telescopes_north", set())
+                        if site == "North"
+                        else case.get("mock_telescopes_south", set())
+                    )
+                ),
+            ),
+        ):
+            result = list(report_generator._generate_parameter_report_combinations())
+            expected = case["expected_combinations"]
+
+            # Verify combinations
+            assert len(result) == len(expected)
+            assert set(result) == set(expected)
+
+            # For specific telescope case, verify _get_valid_sites_for_telescope was used
+            if not case["args"].get("all_telescopes"):
+                assert all(combo[0] == case["args"]["telescope"] for combo in result)
 
 
 def test_auto_generate_array_element_reports(io_handler, db_config):
@@ -204,3 +267,79 @@ def test_auto_generate_parameter_reports(io_handler, db_config):
         # Check that each telescope-site combination was processed with correct args
         expected_calls = [call() for _ in mock_combinations]
         mock_produce.assert_has_calls(expected_calls, any_order=True)
+
+
+def test__generate_single_array_element_report(io_handler, db_config):
+    """Test generation of a single array element report."""
+    # Initialize ReportGenerator with basic args
+    args = {"all_telescopes": True, "all_sites": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    # Test parameters
+    model_version = "6.0.0"
+    telescope = "LSTN-01"
+    site = "North"
+
+    # Mock ReadParameters and its produce_array_element_report method
+    mock_read_params = MagicMock()
+
+    with patch(
+        "simtools.reporting.docs_auto_report_generator.ReadParameters",
+        return_value=mock_read_params,
+    ) as mock_read_params_class:
+        # Call the method under test
+        report_generator._generate_single_array_element_report(model_version, telescope, site)
+
+        # Verify ReadParameters was instantiated with correct arguments
+        expected_args = {
+            "all_telescopes": True,
+            "all_sites": True,
+            "telescope": telescope,
+            "site": site,
+            "model_version": model_version,
+        }
+        expected_output_path = Path(output_path) / str(model_version)
+
+        mock_read_params_class.assert_called_once_with(
+            db_config, expected_args, expected_output_path
+        )
+
+        # Verify produce_array_element_report was called
+        mock_read_params.produce_array_element_report.assert_called_once()
+
+
+def test__get_valid_sites_for_telescope(io_handler, db_config):
+    """Test getting valid sites for different telescope types."""
+    args = {"all_telescopes": True, "all_sites": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    test_cases = [
+        # Test single site telescope (LST North)
+        {"telescope": "LSTN-01", "mock_return": "North", "expected": ["North"]},
+        # Test multi-site telescope (MST)
+        {
+            "telescope": "MST-FlashCam",
+            "mock_return": ["North", "South"],
+            "expected": ["North", "South"],
+        },
+        # Test South site telescope
+        {"telescope": "MSTS-01", "mock_return": "South", "expected": ["South"]},
+    ]
+
+    for case in test_cases:
+        with patch(
+            "simtools.utils.names.get_site_from_array_element_name",
+            return_value=case["mock_return"],
+        ) as mock_get_site:
+            result = report_generator._get_valid_sites_for_telescope(case["telescope"])
+
+            # Verify get_site_from_array_element_name was called with correct telescope
+            mock_get_site.assert_called_once_with(case["telescope"])
+
+            # Verify returned sites match expected
+            assert result == case["expected"]
+
+            # Verify result is always a list
+            assert isinstance(result, list)
