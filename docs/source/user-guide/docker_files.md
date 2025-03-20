@@ -6,12 +6,11 @@ Docker files are available for [simtools](https://github.com/gammasim/simtools) 
 
 Types of docker files and containers available:
 
-- [simtools users](#container-for-simtools-users): a container with all software installed (CORSIKA, sim\_telarray, simtools python environment, simtools). Pull latest release with: `docker pull ghcr.io/gammasim/simtools-prod:latest`
+- [simtools users](#container-for-simtools-users): a container with all software installed (CORSIKA, sim\_telarray, simtools python environment, simtools). Pull one of the images from the [page registry (non-vector-code optimized images)](https://github.com/orgs/gammasim/packages?tab=packages&q=no_opt)
 - [simtools developers](#container-for-simtools-developers): a container with CORSIKA, sim\_telarray, and simtools conda environment installed. Pull latest release with: `docker pull ghcr.io/gammasim/simtools-dev:latest`
+- containers with vector-code optimized optimized CORSIKA compilation are available from the [simtools package registry](https://github.com/orgs/gammasim/packages) page
 - [CORSIKA and sim_telarray](#container-for-corsika-and-simtelarray): provides containers with the CORSIKA and sim\_telarray installed (for different sim\_telarray version, hadronic interaction models, CTAO MC productions).
-This provides a base image for the previously listed containers.
-
-See the [simtools container repository](https://github.com/orgs/gammasim/packages?repo_name=simtools) for image prepared for different versions of the simulation software.
+This provides a base image for the development container.
 
 ## Simtools package registry
 
@@ -22,12 +21,12 @@ Follow the [instruction](https://docs.github.com/en/packages/working-with-a-gith
 Note: if the docker image already exists in your system, this same image will be used to run the container. This might especially be an issue when using the `latest` tag, which might not be the latest version available in the registry. To force a pull of the latest image, use the `--pull` option, e.g.:
 
 ```bash
-docker run --pull always --rm -it ghcr.io/gammasim/simtools-prod:latest bash
+docker run --pull always --rm -it ghcr.io/gammasim/simtools-dev:latest bash
 ```
 
 Alternatively, delete the image first and pull the latest version from the registry.
 
-## Container for simtools users (simtools-prod)
+## Container for simtools users ('no opt' images)
 
 Provides a container for simtools users, which includes:
 
@@ -35,14 +34,14 @@ Provides a container for simtools users, which includes:
 - packages required by simtools
 - simtools (main branch)
 
-### Run a simtools-prod container
+### Run a simtools user container
 
 Prerequisite: configure the simulation model database access (see simtools documentation) similar to the [template example](https://github.com/gammasim/simtools/blob/main/.env_template).
 
 To startup a container to use bash
 
 ```bash
-docker run --rm -it --env-file .env -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod:latest bash
+docker run --rm -it --env-file .env -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt::latest bash
 ```
 
 In the container, simtools applications are installed and can be called directly (e.g., `simtools-convert-geo-coordinates-of-array-elements -h`).
@@ -53,7 +52,7 @@ The following example runs an application inside the container and writes the ou
 ```bash
 docker run --rm -it --env-file .env \
     -v "$(pwd):/workdir/external" \
-    ghcr.io/gammasim/simtools-prod:latest \
+    ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
     simtools-convert-geo-coordinates-of-array-elements \
     --array_element_list ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
     --export corsika --use_corsika_telescope_height \
@@ -61,16 +60,6 @@ docker run --rm -it --env-file .env \
 ```
 
 Output files can be found `./simtools-output/`.
-
-### Building a simtools-prod container
-
-To build a new container locally run in the [docker](https://github.com/gammasim/simtools/tree/main/docker) directory::
-
-```bash
-docker build -f Dockerfile-prod  -t simtools-prod .
-```
-
-Building will take a while and the image is large (~2.1 GB). For using images build on your own, replace in all examples `ghcr.io/gammasim/simtools-prod:latest` by the local image name `simtools-prod`.
 
 ## Container for simtools developers (simtools-dev)
 
@@ -149,7 +138,7 @@ Building expects that a tar ball of corsika/sim\_telarray (named corsika7.7\_sim
 Download the tar package from MPIK (password applies) with
 
 ```bash
-./download_simulationsoftware.sh
+./download_simulation_software.sh
 ```
 
 Run the newly build container:
