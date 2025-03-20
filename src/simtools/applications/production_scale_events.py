@@ -20,7 +20,7 @@ query_point (list of float, required)
         - Energy (TeV)
         - Azimuth (degrees)
         - Zenith (degrees)
-        - NSB
+        - NSB (MHz)
         - Offset (degrees)
 output_file (str, optional)
     Output file to store the results. Default: 'interpolated_scaled_events.json'.
