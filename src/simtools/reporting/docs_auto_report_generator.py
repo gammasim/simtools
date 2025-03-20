@@ -152,9 +152,10 @@ class ReportGenerator:
                 }
             )
 
-            output_path = Path(self.output_path) / site
-            ReadParameters(self.db_config, self.args, output_path).produce_model_parameter_reports()
+            ReadParameters(
+                self.db_config, self.args, self.output_path
+            ).produce_model_parameter_reports()
 
             logger.info(
-                f"Markdown report generated for {site} Telescope {telescope}: {output_path}"
+                f"Markdown report generated for {site} Telescope {telescope}: {self.output_path}"
             )
