@@ -1,6 +1,6 @@
 ---
 name: docker-simtools
-# Build simtools dev and prod images based on CORSIKA / sim_telarray images (no optimizations)
+# Build simtools images for developers based on CORSIKA / sim_telarray images (no optimizations)
 
 on:
   workflow_dispatch:
@@ -35,7 +35,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        type: ['dev', 'prod']
+        type: ['dev']
 
     steps:
       - name: Checkout repository
@@ -77,42 +77,6 @@ jobs:
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
-        if: matrix.type == 'prod'
-        with:
-          context: .
-          build-args: BUILD_BRANCH=${{ env.BUILD_BRANCH }}
-          load: true
-          file: ./docker/Dockerfile-${{ matrix.type }}
-          tags: ${{ env.TEST_TAG }}
-
-      # test the prod image with one application using the database
-      # and the sim_telarray installation
-      - name: Test Docker image
-        if: matrix.type == 'prod'
-        run: >
-          # run docker
-          docker run --rm
-          -e "SIMTOOLS_SIMTEL_PATH='/workdir/sim_telarray'"
-          -e "SIMTOOLS_DB_API_PORT=${{ env.SIMTOOLS_DB_API_PORT }}"
-          -e "SIMTOOLS_DB_API_USER=${{ env.SIMTOOLS_DB_API_USER }}"
-          -e "SIMTOOLS_DB_API_PW=${{ env.SIMTOOLS_DB_API_PW }}"
-          -e "SIMTOOLS_DB_SERVER=${{ env.SIMTOOLS_DB_SERVER }}"
-          -v "$(pwd):/workdir/external" ${{ env.TEST_TAG }}
-          bash -c "cd /workdir/external && simtools-simulate-prod --config /workdir/external/tests/integration_tests/config/simulate_prod_gamma_20_deg_pack_for_grid.yml"
-        shell: /usr/bin/bash -e {0}
-
-      - name: Test Command Line Tools
-        if: matrix.type == 'prod'
-        run: |
-          set -e
-          echo "Reading scripts defined in pyproject.toml"
-          ls -l pyproject.toml
-          scripts=$(grep 'scripts.simtools-' pyproject.toml | sed -e 's/^scripts\.//' -e 's/ =.*$//')
-          for script in $scripts; do
-            echo "Testing command: $script --help"
-            docker run --rm ${{ env.TEST_TAG }} $script --help
-          done
-        shell: /usr/bin/bash -e {0}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
