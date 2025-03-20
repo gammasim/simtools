@@ -101,6 +101,16 @@ def _parse(label, description):
         default="production_simulation_config_metrics.yml",
         help="Metrics definition file. (default: production_simulation_config_metrics.yml)",
     )
+    config.parser.add_argument(
+        "--file_name_template",
+        required=False,
+        type=str,
+        default=("prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"),
+        help=(
+            "Template for the file name. (default: "
+            "'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits')"
+        ),
+    )
     return config.initialize(db_config=False)
 
 
@@ -120,15 +130,11 @@ def main():
 
     evaluator_instances = []
 
-    metrics = (
-        gen.collect_data_from_file(args_dict["metrics_file"]) if "metrics_file" in args_dict else {}
-    )
+    metrics = gen.collect_data_from_file(args_dict["metrics_file"])
 
     if args_dict["base_path"] and args_dict["zeniths"] and args_dict["offsets"]:
         for zenith, offset in itertools.product(args_dict["zeniths"], args_dict["offsets"]):
-            file_name = (
-                f"prod6_LaPalma-{int(zenith.value)}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
-            )
+            file_name = args_dict["file_name_template"].format(zenith=int(zenith.value))
             file_path = Path(args_dict["base_path"]).joinpath(file_name)
 
             if not file_path.exists():
@@ -150,7 +156,6 @@ def main():
         logger.warning(f"Zeniths: {args_dict['zeniths']}")
         logger.warning(f"Offsets: {args_dict['offsets']}")
 
-    # Perform interpolation for the given query point
     interpolation_handler = InterpolationHandler(evaluator_instances, metrics=metrics)
     query_points = np.array([args_dict["query_point"]])
     scaled_events = interpolation_handler.interpolate(query_points)
