@@ -191,7 +191,7 @@ def collect_data_from_file(file_name, yaml_document=None):
     # broad exception to catch all possible errors in reading the file
     except Exception as exc:  # pylint: disable=broad-except
         _logger.error(f"Failed to read file {file_name}: {exc}")
-        raise exc
+        raise type(exc)(f"Failed to read file {file_name}: {exc}") from exc
     return None
 
 
