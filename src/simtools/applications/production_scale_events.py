@@ -34,6 +34,7 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 The output will display the scaled events for the specified grid point.
 """
 
+import itertools
 import json
 import logging
 from pathlib import Path
@@ -69,29 +70,33 @@ def _parse(label, description):
         help="Path to the DL2 MC event files for interpolation.",
     )
     config.parser.add_argument(
-        "--zeniths", nargs="+", type=CommandLineParser.zenith_angle, help="List of zenith angles."
+        "--zeniths",
+        required=True,
+        nargs="+",
+        type=CommandLineParser.zenith_angle,
+        help="List of zenith angles.",
     )
     config.parser.add_argument(
-        "--offsets", nargs="+", type=float, help="List of offsets in degrees."
+        "--offsets", required=True, nargs="+", type=float, help="List of offsets in degrees."
     )
 
     config.parser.add_argument(
-        "--interpolate", action="store_true", help="Interpolate results for a specific grid point."
-    )
-    config.parser.add_argument(
         "--query_point",
+        required=True,
         nargs=5,
         type=float,
         help="Grid point for interpolation (energy, azimuth, zenith, NSB, offset).",
     )
     config.parser.add_argument(
         "--output_file",
+        required=False,
         type=str,
         default="interpolated_scaled_events.json",
         help="Output file to store the results. (default: 'interpolated_scaled_events.json').",
     )
     config.parser.add_argument(
         "--metrics_file",
+        required=False,
         type=str,
         default="production_simulation_config_metrics.yml",
         help="Metrics definition file. (default: production_simulation_config_metrics.yml)",
@@ -120,22 +125,24 @@ def main():
     )
 
     if args_dict["base_path"] and args_dict["zeniths"] and args_dict["offsets"]:
-        for zenith in args_dict["zeniths"]:
-            for offset in args_dict["offsets"]:
-                # Build file path based on base_path, zenith, and offset
-                file_name = f"prod6_LaPalma-{int(zenith.value)}deg_"
-                file_name += "gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
-                file_path = Path(args_dict["base_path"]).joinpath(file_name)
+        for zenith, offset in itertools.product(args_dict["zeniths"], args_dict["offsets"]):
+            file_name = (
+                f"prod6_LaPalma-{int(zenith.value)}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
+            )
+            file_path = Path(args_dict["base_path"]).joinpath(file_name)
 
-                evaluator = StatisticalErrorEvaluator(
-                    file_path,
-                    file_type="Gamma-cone",
-                    metrics=metrics,
-                    grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
-                )
+            if not file_path.exists():
+                logger.warning(f"File not found: {file_path}. Skipping.")
+                continue
 
-                evaluator.calculate_metrics()
-                evaluator_instances.append(evaluator)
+            evaluator = StatisticalErrorEvaluator(
+                file_path,
+                file_type="Gamma-cone",
+                metrics=metrics,
+                grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
+            )
+            evaluator.calculate_metrics()
+            evaluator_instances.append(evaluator)
 
     else:
         logger.warning("No files read")
