@@ -8,7 +8,7 @@ Types of docker files and containers available:
 
 - [simtools users](#container-for-simtools-users): a container with all software installed (CORSIKA, sim\_telarray, simtools python environment, simtools). Pull one of the images from the [page registry (non-vector-code optimized images)](https://github.com/orgs/gammasim/packages?tab=packages&q=no_opt)
 - [simtools developers](#container-for-simtools-developers): a container with CORSIKA, sim\_telarray, and simtools conda environment installed. Pull latest release with: `docker pull ghcr.io/gammasim/simtools-dev:latest`
-- containers with vector-code optimized optimized CORSIKA compilation are available from the [simtools package registry](https://github.com/orgs/gammasim/packages) page
+- containers with vector-code optimized CORSIKA compilation are available from the [simtools package registry](https://github.com/orgs/gammasim/packages) page
 - [CORSIKA and sim_telarray](#container-for-corsika-and-simtelarray): provides containers with the CORSIKA and sim\_telarray installed (for different sim\_telarray version, hadronic interaction models, CTAO MC productions).
 This provides a base image for the development container.
 
