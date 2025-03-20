@@ -225,12 +225,18 @@ def test_submit_local_real_failure(
     script_file,
     job_messages,
     subprocess_run,
+    builtins_open,
 ):
     mock_get_log_excerpt.return_value = job_messages["log_excerpt"]
     mock_get_file_age.return_value = 4
     mocker.patch(PATHLIB_PATH_EXISTS, return_value=True)
 
-    # Mock subprocess.run to raise a CalledProcessError
+    # Mock file operations to prevent actual file creation
+    mock_file = mocker.mock_open()
+    mocker.patch(builtins_open, mock_file)
+
+    # Mock subprocess.run to raise a CalledProcessError but also provide
+    # a mock for stdout and stderr file handles
     mock_subprocess = mocker.patch(subprocess_run)
     mock_subprocess.side_effect = subprocess.CalledProcessError(1, str(script_file))
 
