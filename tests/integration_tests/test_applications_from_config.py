@@ -4,7 +4,6 @@
 import copy
 import logging
 import subprocess
-from io import StringIO
 from pathlib import Path
 
 import pytest
@@ -59,11 +58,6 @@ def test_applications_from_config(tmp_test_directory, test_config, monkeypatch, 
     if skip_message:
         pytest.skip(skip_message)
 
-    # The db_add_file_to_db.py application requires a user confirmation.
-    # With this line we mock the user confirmation to be y for the test
-    # Notice this is done for all tests, so keep in mind if in the future we add tests with input.
-    monkeypatch.setattr("sys.stdin", StringIO("y\n"))
-
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {request.config.getoption('--model_version')}")
     logger.info(f"Application configuration: {tmp_config}")
@@ -77,7 +71,7 @@ def test_applications_from_config(tmp_test_directory, test_config, monkeypatch, 
         pytest.skip(str(exc))
 
     logger.info(f"Running application: {cmd}")
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=True, input="y\n", capture_output=True, text=True)
     assert result.returncode == 0, f"Application failed: {cmd}"
 
     validate_output.validate_application_output(
