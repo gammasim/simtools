@@ -180,13 +180,18 @@ def collect_data_from_file(file_name, yaml_document=None):
         return collect_data_from_http(file_name)
 
     suffix = Path(file_name).suffix.lower()
-    with open(file_name, encoding="utf-8") as file:
-        if suffix == ".json":
-            return json.load(file)
-        if suffix == ".list":
-            return [line.strip() for line in file.readlines()]
-        if suffix in [".yml", ".yaml"]:
-            return _collect_data_from_yaml_file(file, file_name, yaml_document)
+    try:
+        with open(file_name, encoding="utf-8") as file:
+            if suffix == ".json":
+                return json.load(file)
+            if suffix == ".list":
+                return [line.strip() for line in file.readlines()]
+            if suffix in [".yml", ".yaml"]:
+                return _collect_data_from_yaml_file(file, file_name, yaml_document)
+    # broad exception to catch all possible errors in reading the file
+    except Exception as exc:  # pylint: disable=broad-except
+        _logger.error(f"Failed to read file {file_name}: {exc}")
+        raise exc
     return None
 
 
