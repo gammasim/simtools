@@ -13,8 +13,6 @@ from simtools.utils import names
 logger = logging.getLogger()
 
 
-# temporary setting during development
-# pylint: disable=too-few-public-methods
 class ReportGenerator:
     """Automate report generation."""
 
