@@ -1,119 +1,110 @@
 #!/usr/bin/python3
 
 r"""
-    Simulate calibration devices using the light emission package.
+Simulate calibration devices using the light emission package.
 
-    Run the application in the command line.
-    There are two ways this application can be executed:
+Run the application in the command line.
+There are two ways this application can be executed:
 
-    1. Illuminator at varying distances.
-    2. Illuminator and telescopes at fixed positions as defined in the layout.
+1. Illuminator at varying distances.
+2. Illuminator and telescopes at fixed positions as defined in the layout.
 
-    Example Usage
-    -------------
+Example Usage
+-------------
 
-    1. Simulate light emission with varying distances:
-
-        .. code-block:: console
-
-            simtools-simulate-light-emission --telescope MSTN-04 --site North \
-            --illuminator ILLN-01 --light_source_setup variable \
-            --model_version 6.0.0 --light_source_type led
-
-    2. Simulate light emission with telescopes at fixed positions according to the layout:
-
-        .. code-block:: console
-
-            simtools-simulate-light-emission --telescope MSTN-04 --site North \
-            --illuminator ILLN-01 --light_source_setup layout \
-            --model_version 6.0.0 \
-            --light_source_type led
-
-    Command Line Arguments
-    ----------------------
-
-    --telescope (str, required)
-        Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
-
-    --site (str, required)
-        Site name (North or South).
-
-    --illuminator (str, optional)
-        Illuminator in array, e.g., ILLN-01.
-
-    --light_source_setup (str, optional)
-        Select calibration light source positioning/setup:
-        - "variable" for varying distances.
-        - "layout" for actual telescope positions.
-
-    --model_version (str, optional)
-        Version of the simulation model.
-
-    --light_source_type (str, optional)
-        Select calibration light source type: led (default) or laser.
-        This changes the pre-compiled (simtel_array) application that is used to run the
-        light emission package with. Currently we use xyzls (laser), and ls-beam can be
-        accessed by using the laser option.
-
-    --off_axis_angle (float, optional)
-        Off axis angle for light source direction.
-
-    --plot (flag, optional)
-        Produce a multiple pages pdf file with the image plots.
-
-
-    Example
-    -------
-
-    Simulate isotropic light source at different distances for the MSTN-04:
+1. Simulate light emission with varying distances:
 
     .. code-block:: console
 
         simtools-simulate-light-emission --telescope MSTN-04 --site North \
         --illuminator ILLN-01 --light_source_setup variable \
-        --model_version 6.0.0 --light_source_type led    ```
+        --model_version 6.0.0 --light_source_type led
 
-    Expected Output:
+2. Simulate light emission with telescopes at fixed positions according to the layout:
 
     .. code-block:: console
 
-        light-emission package stage:
-        File '/workdir/external/simtools/simtools-output/light_emission/model/
-            atmprof_ecmwf_north_winter_fixed.dat' registered for atmospheric profile 99.
-        Atmospheric profile 99 to be read from file '/workdir/external/simtools/
-            simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat'.
-        Atmospheric profile 99 with 55 levels read from file /workdir/external/
-            simtools/simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat
-        Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.
-        IACT control parameter line: print_events 999 10 100 1000 0
-        Case 1: 1 event with 1e+10 photons.
-        Using IACT/ATMO package version 1.67 (2023-11-10) for CORSIKA 6.999
-        Output file /workdir/external/simtools/simtools-output/light_emission/xyzls.iact.gz
-            not yet created.
-        Telescope output file: '/workdir/external/simtools/simtools-output/
-            light_emission/xyzls.iact.gz'
-        ....
-        ....
-        Sim_telarray stage:
-        Telescope 1 triggered (1/0/0/0, mask 1), summation from 36 to 95 of 105
-        Event end data has been found.
-        Shower of 0.0000 TeV energy was seen in 1 of 1 cases.
-        Photon statistics:
-        All photons:               928518
-        Used photons:              928518
-        Not absorbed/max. Q.E.:    189560
-        Reflected on mirror:        26815
-        Camera hit:                 25574
-        Pixel hit:                  25574
-        Detected:                   20998
-        Trigger statistics:
-        Tel. triggered:             1
-        Tel. + array:               1
-        Early readout:              0
-        Late readout:               0
-        Finish data conversion ...
-        Writing 13 histograms to output file.
+        simtools-simulate-light-emission --telescope MSTN-04 --site North \
+        --illuminator ILLN-01 --light_source_setup layout \
+        --model_version 6.0.0 \
+        --light_source_type led
 
+Command Line Arguments
+----------------------
+telescope (str, required)
+    Telescope model name (e.g. LSTN-01, SSTS-design, SSTS-25, ...)
+site (str, required)
+    Site name (North or South).
+illuminator (str, optional)
+    Illuminator in array, e.g., ILLN-01.
+light_source_setup (str, optional)
+    Select calibration light source positioning/setup:
+    - "variable" for varying distances.
+    - "layout" for actual telescope positions.
+model_version (str, optional)
+    Version of the simulation model.
+light_source_type (str, optional)
+    Select calibration light source type: led (default) or laser.
+    This changes the pre-compiled (simtel_array) application that is used to run the
+    light emission package with. Currently we use xyzls (laser), and ls-beam can be
+    accessed by using the laser option.
+off_axis_angle (float, optional)
+    Off axis angle for light source direction.
+plot (flag, optional)
+    Produce a multiple pages pdf file with the image plots.
+
+
+Example
+-------
+
+Simulate isotropic light source at different distances for the MSTN-04:
+
+.. code-block:: console
+
+    simtools-simulate-light-emission --telescope MSTN-04 --site North \
+    --illuminator ILLN-01 --light_source_setup variable \
+    --model_version 6.0.0 --light_source_type led    ```
+
+Expected Output:
+
+.. code-block:: console
+
+    light-emission package stage:
+    File '/workdir/external/simtools/simtools-output/light_emission/model/
+        atmprof_ecmwf_north_winter_fixed.dat' registered for atmospheric profile 99.
+    Atmospheric profile 99 to be read from file '/workdir/external/simtools/
+        simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat'.
+    Atmospheric profile 99 with 55 levels read from file /workdir/external/
+        simtools/simtools-output/light_emission/model/atmprof_ecmwf_north_winter_fixed.dat
+    Initialize atmosphere ranging from 0.000 to 120.000 km a.s.l.
+    IACT control parameter line: print_events 999 10 100 1000 0
+    Case 1: 1 event with 1e+10 photons.
+    Using IACT/ATMO package version 1.67 (2023-11-10) for CORSIKA 6.999
+    Output file /workdir/external/simtools/simtools-output/light_emission/xyzls.iact.gz
+        not yet created.
+    Telescope output file: '/workdir/external/simtools/simtools-output/
+        light_emission/xyzls.iact.gz'
+    ....
+    ....
+    Sim_telarray stage:
+    Telescope 1 triggered (1/0/0/0, mask 1), summation from 36 to 95 of 105
+    Event end data has been found.
+    Shower of 0.0000 TeV energy was seen in 1 of 1 cases.
+    Photon statistics:
+    All photons:               928518
+    Used photons:              928518
+    Not absorbed/max. Q.E.:    189560
+    Reflected on mirror:        26815
+    Camera hit:                 25574
+    Pixel hit:                  25574
+    Detected:                   20998
+    Trigger statistics:
+    Tel. triggered:             1
+    Tel. + array:               1
+    Early readout:              0
+    Late readout:               0
+    Finish data conversion ...
+    Writing 13 histograms to output file.
 
 """
 
@@ -168,6 +159,7 @@ def _parse(label):
         type=str,
         choices=["layout", "variable"],
         default=None,
+        required=True,
     )
     config.parser.add_argument(
         "--distances_ls",
@@ -180,12 +172,7 @@ def _parse(label):
         help="Illuminator in array, i.e. ILLN-design",
         type=str,
         default=None,
-    )
-    config.parser.add_argument(
-        "--telescope_file",
-        help="Telescope position file (temporary)",
-        type=str,
-        default=None,
+        required=True,
     )
     config.parser.add_argument(
         "--return_cleaned",
@@ -285,18 +272,8 @@ def default_le_configs(le_application, args_dict):
     """
     if le_application in ("xyzls", "ls-beam") and args_dict["light_source_setup"] == "variable":
         return {
-            "x_pos": {
-                "len": 1,
-                "unit": u.Unit("cm"),
-                "default": 0 * u.cm,
-                "names": ["x_position"],
-            },
-            "y_pos": {
-                "len": 1,
-                "unit": u.Unit("cm"),
-                "default": 0 * u.cm,
-                "names": ["y_position"],
-            },
+            "x_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["x_position"]},
+            "y_pos": {"len": 1, "unit": u.Unit("cm"), "default": 0 * u.cm, "names": ["y_position"]},
             "z_pos": {
                 "len": 1,
                 "unit": u.Unit("cm"),
@@ -310,7 +287,6 @@ def default_le_configs(le_application, args_dict):
                 "names": ["direction", "cx,cy,cz"],
             },
         }
-
     return {}
 
 
@@ -328,13 +304,140 @@ def select_application(args_dict):
     le_application: str
         Light emission application.
     """
-    le_application = None
     if args_dict["light_source_type"] == "led":
-        le_application = "xyzls"
-    elif args_dict["light_source_type"] == "laser":
-        le_application = "ls-beam"
+        return "xyzls", args_dict["light_source_setup"]
+    if args_dict["light_source_type"] == "laser":
+        return "ls-beam", args_dict["light_source_setup"]
+    return None, args_dict["light_source_setup"]
 
-    return le_application, args_dict["light_source_setup"]
+
+def prepare_light_source(
+    args_dict, le_config, le_application, telescope_model, calibration_model, site_model
+):
+    """Prepare the SimulatorLightEmission object."""
+    return SimulatorLightEmission(
+        telescope_model=telescope_model,
+        calibration_model=calibration_model,
+        site_model=site_model,
+        default_le_config=le_config,
+        le_application=le_application,
+        simtel_path=args_dict["simtel_path"],
+        light_source_type=args_dict["light_source_type"],
+    )
+
+
+def run_light_emission_simulation(light_source, args_dict, figures, logger):
+    """Run the light emission simulation."""
+    run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
+    log_file = Path(light_source.output_directory) / "logfile.log"
+    with open(log_file, "w", encoding="utf-8") as log_file:
+        subprocess.run(
+            run_script,
+            shell=False,
+            check=False,
+            text=True,
+            stdout=log_file,
+            stderr=log_file,
+        )
+    process_simulation_output(light_source, args_dict, figures, logger)
+
+
+def process_simulation_output(light_source, args_dict, figures, logger):
+    """Process the simulation output, including plotting and saving figures."""
+    try:
+        filename = (
+            f"{light_source.output_directory}/"
+            f"{light_source.le_application[0]}_{light_source.le_application[1]}.simtel.gz"
+        )
+
+        try:
+            distance = light_source.default_le_config["z_pos"]["default"]
+        except KeyError:
+            distance = round(light_source.distance, 2)
+
+        fig = plot_simtel_ctapipe(
+            filename,
+            cleaning_args=[
+                args_dict["boundary_thresh"],
+                args_dict["picture_thresh"],
+                args_dict["min_neighbors"],
+            ],
+            distance=distance,
+            return_cleaned=args_dict["return_cleaned"],
+        )
+        figures.append(fig)
+
+    except AttributeError:
+        msg = (
+            f"Telescope not triggered at distance of "
+            f"{light_source.default_le_config['z_pos']['default']}"
+        )
+        logger.warning(msg)
+
+
+def save_figures_to_pdf(figures, output_directory, telescope, le_application):
+    """Save the generated figures to a PDF file."""
+    save_figs_to_pdf(
+        figures,
+        f"{output_directory}/{telescope}_{le_application[0]}_{le_application[1]}.pdf",
+    )
+
+
+def simulate_variable_distances(
+    args_dict,
+    default_le_config,
+    le_application,
+    telescope_model,
+    calibration_model,
+    site_model,
+    logger,
+):
+    """Simulate light emission for variable distances."""
+    if args_dict["distances_ls"] is not None:
+        default_le_config["z_pos"]["default"] = distance_list(args_dict["distances_ls"])
+    logger.info(f"Simulating for distances of {default_le_config['z_pos']['default']}")
+
+    figures = []
+    for distance in default_le_config["z_pos"]["default"]:
+        le_config = default_le_config.copy()
+        le_config["z_pos"]["default"] = distance
+        light_source = prepare_light_source(
+            args_dict,
+            le_config,
+            le_application,
+            telescope_model,
+            calibration_model,
+            site_model,
+        )
+        run_light_emission_simulation(light_source, args_dict, figures, logger)
+    save_figures_to_pdf(
+        figures, light_source.output_directory, args_dict["telescope"], le_application
+    )
+
+
+def simulate_layout_positions(
+    args_dict,
+    default_le_config,
+    le_application,
+    telescope_model,
+    calibration_model,
+    site_model,
+    logger,
+):
+    """Simulate light emission for layout positions."""
+    light_source = prepare_light_source(
+        args_dict,
+        default_le_config,
+        le_application,
+        telescope_model,
+        calibration_model,
+        site_model,
+    )
+    figures = []
+    run_light_emission_simulation(light_source, args_dict, figures, logger)
+    save_figures_to_pdf(
+        figures, light_source.output_directory, args_dict["telescope"], le_application
+    )
 
 
 def main():
@@ -370,103 +473,24 @@ def main():
     )
 
     if args_dict["light_source_setup"] == "variable":
-        if args_dict["distances_ls"] is not None:
-            default_le_config["z_pos"]["default"] = distance_list(args_dict["distances_ls"])
-        logger.info(f"Simulating for distances of {default_le_config['z_pos']['default']}")
-        figures = []
-        for distance in default_le_config["z_pos"]["default"]:
-            le_config = default_le_config.copy()
-            le_config["z_pos"]["default"] = distance
-            light_source = SimulatorLightEmission(
-                telescope_model=telescope_model,
-                calibration_model=calibration_model,
-                site_model=site_model,
-                default_le_config=le_config,
-                le_application=le_application,
-                simtel_path=args_dict["simtel_path"],
-                light_source_type=args_dict["light_source_type"],
-            )
-            run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
-            log_file = f"{light_source.output_directory}/logfile.log"
-            with open(log_file, "w", encoding="utf-8") as log_file:
-                subprocess.run(
-                    run_script,
-                    shell=False,
-                    check=False,
-                    text=True,
-                    stdout=log_file,
-                    stderr=log_file,
-                )
-
-                try:
-                    filename = (
-                        f"{light_source.output_directory}/"
-                        f"{light_source.le_application[0]}_"
-                        f"{light_source.le_application[1]}.simtel.gz"
-                    )
-                    fig = plot_simtel_ctapipe(
-                        filename,
-                        cleaning_args=[
-                            args_dict["boundary_thresh"],
-                            args_dict["picture_thresh"],
-                            args_dict["min_neighbors"],
-                        ],
-                        distance=light_source.default_le_config["z_pos"]["default"],
-                        return_cleaned=args_dict["return_cleaned"],
-                    )
-                    figures.append(fig)
-                except AttributeError:
-                    msg = "telescope not triggered at distance of"
-                    msg += f"{light_source.distance.to(u.meter)}"
-                    logger.warning(msg)
-
-                save_figs_to_pdf(
-                    figures,
-                    f"{light_source.output_directory}/{args_dict['telescope']}_"
-                    f"{light_source.le_application[0]}_"
-                    f"{light_source.le_application[1]}.pdf",
-                )
-
-    elif args_dict["light_source_setup"] == "layout":
-        light_source = SimulatorLightEmission(
-            telescope_model=telescope_model,
-            calibration_model=calibration_model,
-            site_model=site_model,
-            default_le_config=default_le_config,
-            le_application=le_application,
-            simtel_path=args_dict["simtel_path"],
-            light_source_type=args_dict["light_source_type"],
+        simulate_variable_distances(
+            args_dict,
+            default_le_config,
+            le_application,
+            telescope_model,
+            calibration_model,
+            site_model,
+            logger,
         )
-        run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
-        log_file = f"{light_source.output_directory}/logfile.log"
-        with open(log_file, "w", encoding="utf-8") as log_file:
-            subprocess.run(
-                run_script, shell=False, check=False, text=True, stdout=log_file, stderr=log_file
-            )
-            try:
-                filename = (
-                    f"{light_source.output_directory}/"
-                    f"{light_source.le_application[0]}_{light_source.le_application[1]}.simtel.gz"
-                )
-                fig = plot_simtel_ctapipe(
-                    filename,
-                    cleaning_args=[
-                        args_dict["boundary_thresh"],
-                        args_dict["picture_thresh"],
-                        args_dict["min_neighbors"],
-                    ],
-                    distance=light_source.distance,
-                    return_cleaned=args_dict["return_cleaned"],
-                )
-            except AttributeError:
-                msg = f"telescope not triggered at distance of {light_source.distance.to(u.meter)}"
-                logger.warning(msg)
-
-        save_figs_to_pdf(
-            [fig],
-            f"{light_source.output_directory}/{args_dict['telescope']}_"
-            f"{light_source.le_application[0]}_"
-            f"{light_source.le_application[1]}.pdf",
+    elif args_dict["light_source_setup"] == "layout":
+        simulate_layout_positions(
+            args_dict,
+            default_le_config,
+            le_application,
+            telescope_model,
+            calibration_model,
+            site_model,
+            logger,
         )
 
 
