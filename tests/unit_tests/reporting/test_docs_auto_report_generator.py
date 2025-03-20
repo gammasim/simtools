@@ -5,6 +5,8 @@ import pytest
 
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
+GET_SITE_FROM_NAME_PATH = "simtools.utils.names.get_site_from_array_element_name"
+
 
 def test__add_design_models_to_telescopes(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
@@ -34,7 +36,7 @@ def test__filter_telescopes_by_site(io_handler, db_config):
     telescopes = ["LSTN-01", "LSTN-02", "MSTS-01", "MSTN-01"]
     selected_sites = {"North"}
 
-    with patch("simtools.utils.names.get_site_from_array_element_name") as mock_get_site:
+    with patch(GET_SITE_FROM_NAME_PATH) as mock_get_site:
         mock_get_site.side_effect = [["North"], ["North"], ["South"], ["North"]]
         result = report_generator._filter_telescopes_by_site(telescopes, selected_sites)
 
@@ -60,7 +62,7 @@ def test__get_report_parameters(io_handler, db_config, all_flags, expected_count
         get_model_versions=MagicMock(return_value=["5.0.0", "6.0.0"]),
         get_array_elements=MagicMock(return_value=["LSTN-01", "LSTN-02", "LSTN-design"]),
     ):
-        with patch("simtools.utils.names.get_site_from_array_element_name", return_value=["North"]):
+        with patch(GET_SITE_FROM_NAME_PATH, return_value=["North"]):
             result = list(report_generator._get_report_parameters())
 
     assert len(result) == expected_count
@@ -156,10 +158,8 @@ def test__generate_parameter_report_combinations(io_handler, db_config):
 
         with (
             patch(
-                "simtools.utils.names.get_site_from_array_element_name",
-                side_effect=lambda x: ["North"]
-                if x[3] == "N"
-                else ["South"]
+                GET_SITE_FROM_NAME_PATH,
+                side_effect=lambda x, case=case: ["North"]
                 if not case["args"].get("all_telescopes")
                 else case.get("mock_valid_sites", []),
             ),
@@ -330,7 +330,7 @@ def test__get_valid_sites_for_telescope(io_handler, db_config):
 
     for case in test_cases:
         with patch(
-            "simtools.utils.names.get_site_from_array_element_name",
+            GET_SITE_FROM_NAME_PATH,
             return_value=case["mock_return"],
         ) as mock_get_site:
             result = report_generator._get_valid_sites_for_telescope(case["telescope"])
