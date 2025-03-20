@@ -71,10 +71,12 @@ jobs:
       - name: Set DB Environment Variables (workflow_dispatch only)
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
-          echo "SIMTOOLS_DB_SERVER=${{ secrets.DB_SERVER }}" >> "$GITHUB_ENV"
-          echo "SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}" >> "$GITHUB_ENV"
-          echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}" >> "$GITHUB_ENV"
-          echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}" >> "$GITHUB_ENV"
+          {
+            echo "SIMTOOLS_DB_SERVER=${{ secrets.DB_SERVER }}"
+            echo "SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}"
+            echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}"
+            echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}"
+          } >> "$GITHUB_ENV"
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
@@ -105,6 +107,7 @@ jobs:
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          SIMTOOLS_DB_SERVER: ${{ github.event_name == 'workflow_dispatch' && secrets.DB_SERVER || 'mongodb' }}
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
