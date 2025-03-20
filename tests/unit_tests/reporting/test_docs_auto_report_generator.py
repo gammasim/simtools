@@ -159,9 +159,9 @@ def test__generate_parameter_report_combinations(io_handler, db_config):
         with (
             patch(
                 GET_SITE_FROM_NAME_PATH,
-                side_effect=lambda x, case=case: ["North"]
-                if not case["args"].get("all_telescopes")
-                else case.get("mock_valid_sites", []),
+                side_effect=lambda x, parent_case=case: ["North"]
+                if not parent_case["args"].get("all_telescopes")
+                else parent_case.get("mock_valid_sites", []),
             ),
             patch.multiple(
                 report_generator,
