@@ -6,7 +6,7 @@ Docker files are available for [simtools](https://github.com/gammasim/simtools) 
 
 Types of docker files and containers available:
 
-- [simtools users](#container-for-simtools-users): a container with all software installed (CORSIKA, sim\_telarray, simtools python environment, simtools). Pull one of the images from the [page registry (non-vector-code optimized images)](https://github.com/orgs/gammasim/packages?tab=packages&q=no_opt)
+- [simtools users](#container-for-simtools-users): a container with all software installed (CORSIKA, sim\_telarray, simtools python environment, simtools). Pull one of the images from the [page registry (non-vector-code optimized images)](https://github.com/orgs/gammasim/packages?tab=packages&q=no_opt), e.g., `docker pull ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest`
 - [simtools developers](#container-for-simtools-developers): a container with CORSIKA, sim\_telarray, and simtools conda environment installed. Pull latest release with: `docker pull ghcr.io/gammasim/simtools-dev:latest`
 - containers with vector-code optimized CORSIKA compilation are available from the [simtools package registry](https://github.com/orgs/gammasim/packages) page
 - [CORSIKA and sim_telarray](#container-for-corsika-and-simtelarray): provides containers with the CORSIKA and sim\_telarray installed (for different sim\_telarray version, hadronic interaction models, CTAO MC productions).
@@ -41,7 +41,7 @@ Prerequisite: configure the simulation model database access (see simtools docum
 To startup a container to use bash
 
 ```bash
-docker run --rm -it --env-file .env -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt::latest bash
+docker run --rm -it --env-file .env -v "$(pwd):/workdir/external" ghcr.io/gammasim/simtools-prod-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest bash
 ```
 
 In the container, simtools applications are installed and can be called directly (e.g., `simtools-convert-geo-coordinates-of-array-elements -h`).
