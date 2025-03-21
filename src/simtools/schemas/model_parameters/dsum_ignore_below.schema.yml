@@ -13,7 +13,7 @@ description: |-
   gets applied.
 short_description: FADC signal minimum contribution to digital signal sum.
 data:
-  - type: uint
+  - type: uint64
     unit: count
     default: 0
     condition: default_trigger==DigitalSum

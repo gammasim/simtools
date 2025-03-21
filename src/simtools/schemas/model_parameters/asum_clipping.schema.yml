@@ -11,7 +11,7 @@ description: |-
   (after optional shaping) is clipped for its contribution
   to the analog sum trigger.
 data:
-  - type: double
+  - type: float64
     default: 0.0
     unit: mV
     allowed_range:

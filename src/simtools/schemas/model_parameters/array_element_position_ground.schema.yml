@@ -10,13 +10,13 @@ description: |-
   Position of an array element (e.g., a telescope) in ground coordinates.
 short_description: Ground coordinate position of an array element.
 data:
-  - type: double
+  - type: float64
     unit: m
     description: Array element position in x-direction (towards North)
-  - type: double
+  - type: float64
     unit: m
     description: Array element position in y-direction (towards West)
-  - type: double
+  - type: float64
     unit: m
     description: Array element altitude above reference_point_altitude
 instrument:

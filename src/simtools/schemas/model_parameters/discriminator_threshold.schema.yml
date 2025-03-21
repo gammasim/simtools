@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: discriminator_threshold
 description: Discriminator/comparator threshold.
 data:
-  - type: double
+  - type: float64
     unit: mV
     default: 4.0
     allowed_range:

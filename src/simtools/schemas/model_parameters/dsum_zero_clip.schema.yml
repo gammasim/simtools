@@ -16,7 +16,7 @@ description: |-
   for the final digital sum.
 short_description: Clipping of negative shaped signals.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: 0
     allowed_range:

@@ -15,7 +15,7 @@ description: |-
 short_description: |-
   Camera efficiency degradation factor (wavelength independent).
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 1.
     allowed_range:

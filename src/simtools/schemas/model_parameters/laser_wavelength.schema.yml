@@ -12,7 +12,7 @@ description: |-
 short_description: |-
   Wavelength of light-source.
 data:
-  - type: double
+  - type: float64
     unit: "nm"
     default: 400
     allowed_range:

@@ -15,7 +15,7 @@ description: |-
   r.m.s. spread of random voltage fluctuations,
   \texttt{V = RandGaus(1., pm_voltage_variation)}.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 0.03
     allowed_range:

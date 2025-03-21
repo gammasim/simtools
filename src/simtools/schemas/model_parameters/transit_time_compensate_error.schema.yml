@@ -11,7 +11,7 @@ description: |-
   transit time compensation can be determined before the
   compensation is applied.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 0.0
     allowed_range:
