@@ -122,8 +122,8 @@ class SinglePhotonElectronSpectrum:
         ]
         if tmp_ap_file:
             command.extend(["-a", f"{tmp_ap_file.name}"])
-            command.extend(["-s", f"{self.args_dict.get('scale_afterpulse_spectrum', 1.0)}"])
-            command.extend(["-t", f"{self.args_dict.get('threshold_afterpulse_spectrum', 4.0)}"])
+            command.extend(["-s", f"{self.args_dict['scale_afterpulse_spectrum']}"])
+            command.extend(["-t", f"{self.args_dict['threshold_afterpulse_spectrum']}"])
         command.append(tmp_input_file.name)
 
         self._logger.info(f"Running norm_spe command: {' '.join(command)}")
