@@ -10,7 +10,7 @@ description: |-
   Photo detector average gain. Used to determine the DC currents
   from night-sky background (NSB) pixel rates.
 data:
-  - type: double
+  - type: float64
     default: 40000.0
     allowed_range:
       min: 10000.0

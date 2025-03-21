@@ -14,7 +14,7 @@ short_description: |-
   Rise time of the discriminator output. The output signal rises linearly
   within time frame.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 1.0
     condition: default_trigger==Majority

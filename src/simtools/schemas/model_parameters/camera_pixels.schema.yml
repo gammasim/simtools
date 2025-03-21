@@ -10,7 +10,7 @@ description: Number of pixels in the camera.
 developer_note: |-
   Max limit depend on sim_telarray pre-compiler settings
 data:
-  - type: uint
+  - type: uint64
     default: 1
     allowed_range:
       min: 1

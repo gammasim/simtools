@@ -16,7 +16,7 @@ description: |-
 instrument:
   class: configuration_corsika
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: 15000000
 activity:

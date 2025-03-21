@@ -15,7 +15,7 @@ description: |-
   the overall focal length).
 short_description: Standard focal length of mirror tiles.
 data:
-  - type: double
+  - type: float64
     unit: cm
     default: 0.0
     allowed_range:

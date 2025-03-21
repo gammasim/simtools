@@ -17,7 +17,7 @@ short_description: |-
   Number of bins read out in sampled data or summed up in ADC sum data.
   Corresponds to the experimental length of the readout window.
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 0
     allowed_range:
