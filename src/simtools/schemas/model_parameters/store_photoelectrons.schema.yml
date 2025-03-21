@@ -15,7 +15,7 @@ description: |-
   in fewer than the given number of photo-electrons, as no attempt is made to trace photons through the telescope
   and produce any photo-electrons if there are too few photons in the first place.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: -1
     allowed_range:

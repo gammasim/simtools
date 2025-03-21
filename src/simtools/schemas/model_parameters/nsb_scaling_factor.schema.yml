@@ -11,7 +11,7 @@ description: |-
   reference setting.
 short_description: Global NSB scaling factor.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 1.0
     allowed_range:

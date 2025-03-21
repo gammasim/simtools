@@ -14,7 +14,7 @@ description: |-
   trigger_pixels.
 short_description: Number of pixels required for single telescope trigger.
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 4
     allowed_range:
