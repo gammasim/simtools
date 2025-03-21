@@ -166,10 +166,10 @@ def test__generate_parameter_report_combinations(io_handler, db_config):
             patch.multiple(
                 report_generator,
                 _get_telescopes_from_layout=MagicMock(
-                    side_effect=lambda site: (
-                        case.get("mock_telescopes_north", set())
+                    side_effect=lambda site, parent_case=case: (
+                        parent_case.get("mock_telescopes_north", set())
                         if site == "North"
-                        else case.get("mock_telescopes_south", set())
+                        else parent_case.get("mock_telescopes_south", set())
                     )
                 ),
             ),
