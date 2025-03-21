@@ -10,7 +10,7 @@ description: |-
   Relative pixel-to-pixel variation of the ratio of high-gain to
   low-gain amplitudes.
 data:
-  - type: double
+  - type: float64
     required: false
     condition: num_gains==2
     default: 0.0

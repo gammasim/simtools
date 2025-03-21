@@ -11,7 +11,7 @@ description: |-
 short_description: |-
   Relative variation of laser shots from shot to shot.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 0.05
     allowed_range:

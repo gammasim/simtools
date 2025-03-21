@@ -14,7 +14,7 @@ description: |-
   Used only when fadc_compensate_pedestal is activated.
 short_description: R.M.S. error on the pedestal evaluation for the compensation step.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: -1.
     allowed_range:

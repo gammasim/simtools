@@ -14,7 +14,7 @@ short_description: |-
   Number of time bins by which the discriminator simulation is ahead of
   the FADC readout.
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 0
     allowed_range:

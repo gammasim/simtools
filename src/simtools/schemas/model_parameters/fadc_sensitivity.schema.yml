@@ -17,7 +17,7 @@ description: |-
   (for high-gain channel for dual-gain readout).
 short_description: FADC counts per mV voltage.
 data:
-  - type: double
+  - type: float64
     description: |-
       FADC counts per mV voltage.
       (for high-gain channel in case of dual-readout chain).

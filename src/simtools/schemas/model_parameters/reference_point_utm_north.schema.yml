@@ -12,7 +12,7 @@ description: |-
   position.
 short_description: UTM north of site reference point.
 data:
-  - type: double
+  - type: float64
     unit: m
     allowed_range:
       min: 0.
