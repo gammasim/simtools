@@ -10,7 +10,7 @@ description: |-
   Accuracy with which the actual signal delay due to transit
   time variation and corresponding compensation can be determined.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 0.
     allowed_range:

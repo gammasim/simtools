@@ -13,7 +13,7 @@ description: |-
 short_description: |-
   Shift position of the signal in the read-out window.
 data:
-  - type: double
+  - type: float64
     unit: "ns"
     default: 0.0
 instrument:

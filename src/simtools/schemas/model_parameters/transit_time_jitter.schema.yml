@@ -10,7 +10,7 @@ description: |-
   Time jitter (Gaussian r.m.s. spread of random fluctuations) of individual
   photo-electrons.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 0.75
     allowed_range:

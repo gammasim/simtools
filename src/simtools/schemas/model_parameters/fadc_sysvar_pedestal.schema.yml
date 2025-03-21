@@ -13,7 +13,7 @@ description: |-
   (random) amount. Parameter determines the Gaussian r.m.s.
 short_description: Systematic common variations of pedestals.
 data:
-  - type: double
+  - type: float64
     description: |-
       Systematic common variations of pedestals.
       (for high-gain channel in case of dual-readout chain).

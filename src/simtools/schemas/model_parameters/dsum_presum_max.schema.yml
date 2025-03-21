@@ -13,7 +13,7 @@ description: |-
   A value of zero implies no maximum to be applied.
 short_description: Maximum of pre-sum in available number of bits.
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 0
     condition: default_trigger==DigitalSum

@@ -25,7 +25,7 @@ data:
         description: Wavelength
         required: true
         unit: nm
-        type: double
+        type: float64
         required_range:
           min: 300.0
           max: 700.0
@@ -36,7 +36,7 @@ data:
         description: Intensity of the night-sky background
         required: true
         unit: photons / arcsec**2 m**2 s** micron
-        type: double
+        type: float64
         required_range:
           min: 0.0
 activity:

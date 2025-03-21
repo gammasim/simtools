@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: fadc_lg_var_sensitivity
 description: Relative variations in sensitivity (even for FADCs of the same channel; low-gain channels).
 data:
-  - type: double
+  - type: float64
     description: |-
       Relative variations in sensitivity
       (for low-gain channel in case of dual-readout chain).

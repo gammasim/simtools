@@ -16,19 +16,19 @@ short_description: |-
   The delay applied to the trigger output to compensate for the different
   execution times of each trigger algorithm.
 data:
-  - type: double
+  - type: float64
     description: Delay applied for majority trigger.
     unit: ns
     default: 0.0
-  - type: double
+  - type: float64
     description: Delay applied for analog sum trigger.
     unit: ns
     default: 0.0
-  - type: double
+  - type: float64
     description: Delay applied for digital sum trigger.
     unit: ns
     default: 0.0
-  - type: double
+  - type: float64
     description: Delay (TODO this value is unclear)
     unit: ns
     default: 0.0
