@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-simulate-light-emission &#8212; simtools v0.1.dev1+gc8e37f9 Manual</title>
+    <title>simtools-simulate-light-emission &#8212; simtools v0.1.dev1+gad71a96 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=a0c44874"></script>
+    <script src="../../_static/documentation_options.js?v=48b18f7d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc8e37f9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gad71a96 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -469,8 +469,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command Line Arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.default_le_configs"><code class="docutils literal notranslate"><span class="pre">default_le_configs()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.distance_list"><code class="docutils literal notranslate"><span class="pre">distance_list()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.light_emission_configs"><code class="docutils literal notranslate"><span class="pre">light_emission_configs()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.select_application"><code class="docutils literal notranslate"><span class="pre">select_application()</span></code></a></li>
 </ul>
@@ -592,8 +591,8 @@ accessed by using the laser option.</p>
 </div>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="simulate_light_emission.default_le_configs">
-<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">default_le_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">le_application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_light_emission.html#default_le_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.default_le_configs" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="simulate_light_emission.light_emission_configs">
+<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">light_emission_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">le_application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_light_emission.html#light_emission_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.light_emission_configs" title="Link to this definition">#</a></dt>
 <dd><p>Define default light emission configurations.</p>
 <p>Predefined angular distribution names not requiring to read any table are
 “Isotropic”, “Gauss:&lt;rms&gt;”, “Rayleigh”, “Cone:&lt;angle&gt;”, and “FilledCone:&lt;angle&gt;”, “Parallel”,
@@ -613,26 +612,6 @@ in the given direction.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>default_config: dict</dt><dd><p>Default light emission configuration.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="simulate_light_emission.distance_list">
-<span class="sig-prename descclassname"><span class="pre">simulate_light_emission.</span></span><span class="sig-name descname"><span class="pre">distance_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/simulate_light_emission.html#distance_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulate_light_emission.distance_list" title="Link to this definition">#</a></dt>
-<dd><p>Convert distance list to astropy quantities.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>arg: list</strong></dt><dd><p>List of distances.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>values: list</dt><dd><p>List of distances as astropy quantities.</p>
 </dd>
 </dl>
 </dd>
@@ -715,8 +694,7 @@ in the given direction.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command Line Arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.default_le_configs"><code class="docutils literal notranslate"><span class="pre">default_le_configs()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.distance_list"><code class="docutils literal notranslate"><span class="pre">distance_list()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.light_emission_configs"><code class="docutils literal notranslate"><span class="pre">light_emission_configs()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate_light_emission.select_application"><code class="docutils literal notranslate"><span class="pre">select_application()</span></code></a></li>
 </ul>

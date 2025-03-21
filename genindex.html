@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+gc8e37f9 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+gad71a96 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=a0c44874"></script>
+    <script src="_static/documentation_options.js?v=48b18f7d"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc8e37f9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gad71a96 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -472,6 +472,8 @@ document.write(`
       <li><a href="api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.calc_tel_efficiency">calc_tel_efficiency() (camera.camera_efficiency.CameraEfficiency method)</a>
 </li>
       <li><a href="api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.calc_tot_efficiency">calc_tot_efficiency() (camera.camera_efficiency.CameraEfficiency method)</a>
+</li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_telescope_calibration_device">calculate_distance_telescope_calibration_device() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_energy_estimate">calculate_energy_estimate() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
@@ -840,8 +842,6 @@ document.write(`
       </ul></li>
       <li><a href="api-reference/configuration_module.html#configuration.configurator.Configurator.default_config">default_config() (configuration.configurator.Configurator method)</a>
 </li>
-      <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.default_le_configs">default_le_configs() (in module simulate_light_emission)</a>
-</li>
       <li>
     dependencies
 
@@ -878,7 +878,7 @@ document.write(`
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.dict_2d_distributions">dict_2d_distributions (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
-      <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.distance_list">distance_list() (in module simulate_light_emission)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.distance_list">distance_list() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
       <li>
     docs_produce_array_element_report
@@ -1473,6 +1473,8 @@ document.write(`
         <li><a href="api-reference/array_layout.html#module-layout.telescope_position">module</a>
 </li>
       </ul></li>
+      <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.light_emission_configs">light_emission_configs() (in module simulate_light_emission)</a>
+</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration">light_emission_default_configuration() (simtel.simulator_light_emission.SimulatorLightEmission static method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator">LimitCalculator (class in production_configuration.derive_corsika_limits)</a>
@@ -2030,6 +2032,8 @@ document.write(`
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.process_photon_list">process_photon_list() (ray_tracing.psf_analysis.PSFImage method)</a>
 </li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.process_simulation_output">process_simulation_output() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
+</li>
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.produce_array_element_report">produce_array_element_report() (reporting.docs_read_parameters.ReadParameters method)</a>
 </li>
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.produce_model_parameter_reports">produce_model_parameter_reports() (reporting.docs_read_parameters.ReadParameters method)</a>
@@ -2171,10 +2175,10 @@ document.write(`
 </li>
       <li><a href="api-reference/data_model.html#data_model.data_reader.read_value_from_file">read_value_from_file() (in module data_model.data_reader)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters">ReadParameters (class in reporting.docs_read_parameters)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/production_configuration.html#production_configuration.extract_mc_event_data.ReducedDatasetContainer">ReducedDatasetContainer (class in production_configuration.extract_mc_event_data)</a>
 </li>
       <li><a href="api-reference/utils.html#utils.general.remove_substring_recursively_from_dict">remove_substring_recursively_from_dict() (in module utils.general)</a>
@@ -2206,6 +2210,8 @@ document.write(`
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.run_number">run_number (corsika.corsika_config.CorsikaConfig property)</a>
 </li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.run_pars">run_pars() (in module derive_psf_parameters)</a>
+</li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.run_simulation">run_simulation() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.run_simulations_and_analysis">run_simulations_and_analysis() (ray_tracing.mirror_panel_psf.MirrorPanelPSF method)</a>
 </li>
@@ -2250,6 +2256,8 @@ document.write(`
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms_visualize.save_figs_to_pdf">save_figs_to_pdf() (in module corsika.corsika_histograms_visualize)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.visualize.save_figure">save_figure() (in module visualization.visualize)</a>
+</li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.save_figures_to_pdf">save_figures_to_pdf() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.save_file_lists">save_file_lists() (simulator.Simulator method)</a>
 </li>
@@ -2385,6 +2393,8 @@ document.write(`
         <li><a href="api-reference/simulators.html#simulator.Simulator.simulate">(simulator.Simulator method)</a>
 </li>
       </ul></li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate_layout_positions">simulate_layout_positions() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
+</li>
       <li>
     simulate_light_emission
 
@@ -2406,6 +2416,8 @@ document.write(`
         <li><a href="user-guide/applications/simtools-simulate-prod-htcondor-generator.html#module-simulate_prod_htcondor_generator">module</a>
 </li>
       </ul></li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate_variable_distances">simulate_variable_distances() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
+</li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.simulation_software">simulation_software (simulator.Simulator property)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.generate_simulation_config.SimulationConfig">SimulationConfig (class in production_configuration.generate_simulation_config)</a>
@@ -2481,8 +2493,6 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.telescope">telescope() (configuration.commandline_parser.CommandLineParser static method)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.telescope_calibration_device_distance">telescope_calibration_device_distance() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
-</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.telescope_indices">telescope_indices (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.telescope_positions">telescope_positions (corsika.corsika_histograms.CorsikaHistograms property)</a>
@@ -2539,6 +2549,8 @@ document.write(`
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.update_light_emission_config">update_light_emission_config() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
+</li>
       <li>
     utils.general
 

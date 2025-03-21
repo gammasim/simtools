@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_light_emission &#8212; simtools v0.1.dev1+gc8e37f9 Manual</title>
+    <title>simtel.simulator_light_emission &#8212; simtools v0.1.dev1+gad71a96 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=a0c44874"></script>
+    <script src="../../_static/documentation_options.js?v=48b18f7d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc8e37f9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gad71a96 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -392,14 +392,17 @@ document.write(`
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">stat</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.corsika_histograms_visualize</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_figs_to_pdf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelRunner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">clear_default_sim_telarray_cfg_directories</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization.visualize</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_simtel_ctapipe</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulatorLightEmission&quot;</span><span class="p">]</span>
 
@@ -410,36 +413,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Interface with sim_telarray to perform light emission package simulations.</span>
 
-<span class="sd">    The light emission package is used to simulate a artificial light source, used for calibration.</span>
-
-<span class="sd">    The angle and pointing vector calculations use the convention north (x) towards</span>
-<span class="sd">    east (-y).</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    telescope_model:</span>
-<span class="sd">        Instance of the TelescopeModel class.</span>
-<span class="sd">    calibration_model:</span>
-<span class="sd">        CalibrationModel instance to define calibration device.</span>
-<span class="sd">    site_model:</span>
-<span class="sd">        SiteModel instance to define the site specific parameters.</span>
-<span class="sd">    default_le_config: dict</span>
-<span class="sd">        defines parameters for running the sim_telarray light emission application.</span>
-<span class="sd">    le_application: str</span>
-<span class="sd">        Name of the application. Default sim_telarray application running</span>
-<span class="sd">        the sim_telarray LightEmission package is xyzls.</span>
-<span class="sd">    simtel_path: str or Path</span>
-<span class="sd">        Location of sim_telarray installation.</span>
-<span class="sd">    light_source_type: str</span>
-<span class="sd">        The light source type.</span>
-<span class="sd">    label: str</span>
-<span class="sd">        Label for output directory.</span>
-<span class="sd">    config_data: dict</span>
-<span class="sd">        Dict containing the configurable parameters.</span>
-<span class="sd">    config_file: str or Path</span>
-<span class="sd">        Path of the yaml file containing the configurable parameters.</span>
-<span class="sd">    test: bool</span>
-<span class="sd">        Test flag.</span>
+<span class="sd">    The light emission package is used to simulate an artificial light source, used for calibration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -447,7 +421,7 @@ document.write(`
         <span class="n">telescope_model</span><span class="p">,</span>
         <span class="n">calibration_model</span><span class="p">,</span>
         <span class="n">site_model</span><span class="p">,</span>
-        <span class="n">default_le_config</span><span class="p">,</span>
+        <span class="n">light_emission_config</span><span class="p">,</span>
         <span class="n">le_application</span><span class="p">,</span>
         <span class="n">simtel_path</span><span class="p">,</span>
         <span class="n">light_source_type</span><span class="p">,</span>
@@ -478,8 +452,8 @@ document.write(`
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">le_application</span> <span class="o">=</span> <span class="n">le_application</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span> <span class="o">=</span> <span class="n">default_le_config</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_calibration_device_distance</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span> <span class="o">=</span> <span class="n">light_emission_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">=</span> <span class="n">light_source_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">export_config_file</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="n">test</span>
@@ -577,39 +551,6 @@ document.write(`
         <span class="k">return</span> <span class="n">pointing_vector</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="p">[</span><span class="n">tel_theta</span><span class="p">,</span> <span class="n">tel_phi</span><span class="p">,</span> <span class="n">laser_theta</span><span class="p">,</span> <span class="n">laser_phi</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="SimulatorLightEmission.telescope_calibration_device_distance">
-<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.telescope_calibration_device_distance">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">telescope_calibration_device_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculate the distance between the telescope and the calibration device.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        astropy Quantity</span>
-<span class="sd">            The distance between the telescope and the calibration device.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">:</span>
-            <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span>
-                <span class="s2">&quot;array_element_position_ground&quot;</span>
-            <span class="p">)</span>
-            <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span>
-                <span class="s2">&quot;array_element_position_ground&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s2">&quot;x_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-            <span class="n">y_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s2">&quot;y_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-            <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s2">&quot;z_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
-
-            <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
-
-        <span class="n">tel_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span><span class="p">])</span>
-        <span class="n">cal_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span><span class="p">])</span>
-        <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cal_vect</span> <span class="o">-</span> <span class="n">tel_vect</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">distance</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span></div>
-
-
     <span class="k">def</span><span class="w"> </span><span class="nf">_make_light_emission_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create the light emission script to run the light emission package.</span>
@@ -636,11 +577,11 @@ document.write(`
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_source_type</span> <span class="o">==</span> <span class="s2">&quot;led&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;variable&quot;</span><span class="p">:</span>
-                <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -x </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s1">&#39;x_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -y </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s1">&#39;y_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -z </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s1">&#39;z_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -x </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;x_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -y </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;y_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -z </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;z_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="n">command</span> <span class="o">+=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot; -d </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">default_le_config</span><span class="p">[</span><span class="s1">&#39;direction&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]))</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; -d </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;direction&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]))</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
                 <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -n </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">photons_per_run</span><span class="si">}</span><span class="s2">&quot;</span>
 
@@ -873,6 +814,200 @@ document.write(`
 
         <span class="n">_script_file</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">_script_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IXUSR</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IXGRP</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_script_file</span></div>
+
+
+<div class="viewcode-block" id="SimulatorLightEmission.process_simulation_output">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.process_simulation_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_simulation_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">figures</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process the simulation output, including plotting and saving figures.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simulation_output_filename</span><span class="p">()</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_distance_for_plotting</span><span class="p">()</span>
+
+            <span class="n">fig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot_simulation_output</span><span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;boundary_thresh&quot;</span><span class="p">],</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;picture_thresh&quot;</span><span class="p">],</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;min_neighbors&quot;</span><span class="p">],</span>
+                <span class="n">distance</span><span class="p">,</span>
+                <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;return_cleaned&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">figures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Telescope not triggered at distance of &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;z_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_simulation_output_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the filename of the simulation output.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.simtel.gz&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_distance_for_plotting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the distance to be used for plotting.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;z_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_plot_simulation_output</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">boundary_thresh</span><span class="p">,</span> <span class="n">picture_thresh</span><span class="p">,</span> <span class="n">min_neighbors</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">return_cleaned</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot the simulation output.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">plot_simtel_ctapipe</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">cleaning_args</span><span class="o">=</span><span class="p">[</span><span class="n">boundary_thresh</span><span class="p">,</span> <span class="n">picture_thresh</span><span class="p">,</span> <span class="n">min_neighbors</span><span class="p">],</span>
+            <span class="n">distance</span><span class="o">=</span><span class="n">distance</span><span class="p">,</span>
+            <span class="n">return_cleaned</span><span class="o">=</span><span class="n">return_cleaned</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="SimulatorLightEmission.save_figures_to_pdf">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.save_figures_to_pdf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_figures_to_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">figures</span><span class="p">,</span> <span class="n">telescope</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the generated figures to a PDF file.&quot;&quot;&quot;</span>
+        <span class="n">save_figs_to_pdf</span><span class="p">(</span>
+            <span class="n">figures</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="si">}</span><span class="s2">/&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">telescope</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">le_application</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.pdf&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimulatorLightEmission.run_simulation">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.run_simulation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">figures</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the light emission simulation.&quot;&quot;&quot;</span>
+        <span class="n">run_script</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_script</span><span class="p">(</span><span class="n">generate_postscript</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">args_dict</span><span class="p">)</span>
+        <span class="n">log_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_directory</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;logfile.log&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">run_script</span><span class="p">,</span>
+                <span class="n">shell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">log_file</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">log_file</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_simulation_output</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">figures</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimulatorLightEmission.distance_list">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.distance_list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">distance_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert distance list to astropy quantities.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arg: list</span>
+<span class="sd">            List of distances.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        values: list</span>
+<span class="sd">            List of distances as astropy quantities.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Distances must be numeric values&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+
+<div class="viewcode-block" id="SimulatorLightEmission.update_light_emission_config">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.update_light_emission_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_light_emission_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the light emission configuration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            The key in the configuration to update.</span>
+<span class="sd">        value : Any</span>
+<span class="sd">            The new value to set for the key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Key &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; not found in light emission configuration.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimulatorLightEmission.calculate_distance_telescope_calibration_device">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.calculate_distance_telescope_calibration_device">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_distance_telescope_calibration_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the distance(s) between the telescope and the calibration device.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of astropy.Quantity</span>
+<span class="sd">            A list of distances for variable positions or a single distance for layout positions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">:</span>
+            <span class="c1"># Layout positions: Use DB coordinates</span>
+            <span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calibration_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span>
+                <span class="s2">&quot;array_element_position_ground&quot;</span>
+            <span class="p">)</span>
+            <span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span>
+                <span class="s2">&quot;array_element_position_ground&quot;</span>
+            <span class="p">)</span>
+            <span class="n">tel_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z_tel</span><span class="p">])</span>
+            <span class="n">cal_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_cal</span><span class="p">,</span> <span class="n">y_cal</span><span class="p">,</span> <span class="n">z_cal</span><span class="p">])</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cal_vect</span> <span class="o">-</span> <span class="n">tel_vect</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">distance</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">]</span>
+
+        <span class="c1"># Variable positions: Calculate distances for all positions</span>
+        <span class="n">x_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;x_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">y_tel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;y_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">z_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;z_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+
+        <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">z_positions</span><span class="p">:</span>
+            <span class="n">tel_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_tel</span><span class="p">,</span> <span class="n">y_tel</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">])</span>
+            <span class="n">cal_vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># Calibration device at origin</span>
+            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cal_vect</span> <span class="o">-</span> <span class="n">tel_vect</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">distances</span></div>
+
+
+<div class="viewcode-block" id="SimulatorLightEmission.simulate_variable_distances">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate_variable_distances">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_variable_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulate light emission for variable distances.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;distances_ls&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_light_emission_config</span><span class="p">(</span>
+                <span class="s2">&quot;z_pos&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">distance_list</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;distances_ls&quot;</span><span class="p">])</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Simulating for distances: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s1">&#39;z_pos&#39;</span><span class="p">][</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">figures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_distance_telescope_calibration_device</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">current_distance</span><span class="p">,</span> <span class="n">z_pos</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">distances</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">light_emission_config</span><span class="p">[</span><span class="s2">&quot;z_pos&quot;</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_light_emission_config</span><span class="p">(</span><span class="s2">&quot;z_pos&quot;</span><span class="p">,</span> <span class="n">z_pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="n">current_distance</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">figures</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_figures_to_pdf</span><span class="p">(</span><span class="n">figures</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="SimulatorLightEmission.simulate_layout_positions">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.simulate_layout_positions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_layout_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulate light emission for layout positions.&quot;&quot;&quot;</span>
+        <span class="n">figures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_distance_telescope_calibration_device</span><span class="p">()[</span>
+            <span class="mi">0</span>
+        <span class="p">]</span>  <span class="c1"># Single distance for layout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">figures</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_figures_to_pdf</span><span class="p">(</span><span class="n">figures</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">])</span></div>
 </div>
 
 </pre></div>
