@@ -12,7 +12,7 @@ description: |-
   Minimum number of detected photoelectrons required in a camera before running the
   more CPU-intense electronics simulation.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: -1
 instrument:

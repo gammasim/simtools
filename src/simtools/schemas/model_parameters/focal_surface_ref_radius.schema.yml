@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: focal_surface_ref_radius
 description: The length scale to which the focal_surface_parameters apply.
 data:
-  - type: double
+  - type: float64
     condition: mirror_class==2
     unit: cm
     default: 1.0

@@ -22,7 +22,7 @@ instrument:
     - SSTS
     - SCTS
 data:
-  - type: double
+  - type: float64
     unit: pct
     default: 10.0
     condition: default_trigger==Majority

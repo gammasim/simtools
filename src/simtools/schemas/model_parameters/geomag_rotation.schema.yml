@@ -11,7 +11,7 @@ description: |-
    Rotation angle between geographic South and geomagnetic North direction
    (corresponds to CORSIKA ARRANG parameter).
 data:
-  - type: double
+  - type: float64
     unit: deg
     allowed_range:
       min: -180.0

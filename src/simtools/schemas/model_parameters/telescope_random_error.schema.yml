@@ -11,7 +11,7 @@ description: |-
   (Gaussian r.m.s.). The resulting telescope pointing including
   this misalignment is not saved to the simulation output.
 data:
-  - type: double
+  - type: float64
     unit: deg
     default: 0.001
 instrument:

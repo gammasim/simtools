@@ -12,7 +12,7 @@ description: |-
 short_description: |-
   Gaussian sigma LED pulse width.
 data:
-  - type: double
+  - type: float64
     unit: "ns"
     default: 0.0
     allowed_range:

@@ -1,6 +1,6 @@
 ---
 name: docker-corsika-simtelarray
-# Build and push vanilla CORSIKA / sim_telarray image and simtools-prod images for different CPU architectures.
+# Build and push vanilla CORSIKA / sim_telarray image and simtools images for different CPU architectures.
 # Integration tests are running on the non-optimized ('no_opt') image.
 
 on:
