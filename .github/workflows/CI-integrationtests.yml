@@ -68,8 +68,8 @@ jobs:
         run: |
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
 
-      - name: Set DB Environment Variables (workflow_dispatch only)
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+      - name: Create environment file (remote DB; schedule only)
+        if: ${{ github.event_name == 'schedule' }}
         run: |
           {
             echo "SIMTOOLS_DB_SERVER=${{ secrets.DB_SERVER }}"
@@ -86,7 +86,7 @@ jobs:
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
 
       - name: Create environment file (local DB)
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'schedule'
         run: |
           {
             echo "SIMTOOLS_DB_SERVER=mongodb"
@@ -98,7 +98,7 @@ jobs:
           } > .env
 
       - name: Upload data to MongoDB
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'schedule'
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
@@ -109,7 +109,7 @@ jobs:
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
-          SIMTOOLS_DB_SERVER: ${{ github.event_name == 'workflow_dispatch' && secrets.DB_SERVER || 'mongodb' }}
+          SIMTOOLS_DB_SERVER: ${{ github.event_name == 'schedule' && secrets.DB_SERVER || 'mongodb' }}
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
