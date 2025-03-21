@@ -294,7 +294,6 @@ class DatabaseHandler:
                 )
                 pars[_model_version].update(parameter_data)
             except KeyError:
-                # Skip versions where array_element doesn't exist
                 self._logger.debug(
                     f"Skipping model version {_model_version} - {array_element_name} not found"
                 )
