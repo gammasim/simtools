@@ -16,7 +16,7 @@ short_description: |-
   The maximum value of a pulse sum produced by hardware pulse summation,
   in sum mode rather than recording pulse samples.
 data:
-  - type: uint
+  - type: uint64
     description: |-
       Maximum value of a pulse sum
       (for high-gain channel in case of dual-readout chain)

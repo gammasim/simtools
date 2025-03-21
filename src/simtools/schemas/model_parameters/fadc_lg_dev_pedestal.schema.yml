@@ -13,7 +13,7 @@ developer_note: |-
 description: |-
   Deviation of (F)ADCs pedestals in a single channel (low-gain channels).
 data:
-  - type: double
+  - type: float64
     description: |-
       Deviation of (F)ADCs pedestals (for low-gain channels).
     unit: dimensionless

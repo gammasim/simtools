@@ -11,7 +11,7 @@ description: |-
   This only takes effect if nsb_scaling_factor is exactly 1.0
 short_description: NSB scaling as function of airmass (zenith angle).
 data:
-  - type: double
+  - type: float64
     description: |-
       Zenith-level fraction of NSB resulting from airglow.
       Value should be on the order of 0.7.
@@ -20,7 +20,7 @@ data:
     allowed_range:
       min: 0.0
       max: 1.0
-  - type: double
+  - type: float64
     description: |-
       Effective extinction coefficient applicable for NSB light
       (due to scattering it should be smaller than extinction

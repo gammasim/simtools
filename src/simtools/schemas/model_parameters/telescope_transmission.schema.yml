@@ -40,7 +40,7 @@ short_description: |-
   shadowing by masts.
 data:
   - name: constant_p0
-    type: double
+    type: float64
     description: |
       Constant transmission factor $p_0$.
     required: true
@@ -51,7 +51,7 @@ data:
       max: 1.0
   - name: transmission_function
     required: false
-    type: double
+    type: float64
     description: |
       Transmission function identifier.
     default: 0
@@ -63,28 +63,28 @@ data:
     description: |
       Transmission factor $p_2$.
     required: false
-    type: double
+    type: float64
     default: 0.0
     unit: dimensionless
   - name: transmission_p3
     description: |
       Transmission factor $p_3$.
     required: false
-    type: double
+    type: float64
     default: 0.0
     unit: dimensionless
   - name: transmission_p4
     description: |
       Transmission factor $p_4$.
     required: false
-    type: double
+    type: float64
     default: 0.0
     unit: dimensionless
   - name: transmission_p5
     description: |
       Transmission factor $p_5.
     required: false
-    type: double
+    type: float64
     default: 0.0
     unit: dimensionless
 instrument:

@@ -14,7 +14,7 @@ description: |-
   system, and Earth ellipsoids at the site.
 short_description: Site EPSG code
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     allowed_range:
       min: 1024

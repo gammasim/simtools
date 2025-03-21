@@ -13,7 +13,7 @@ description: |-
   are fully contained.
 short_description: Telescope fiducial sphere radius.
 data:
-  - type: double
+  - type: float64
     unit: m
 instrument:
   class: Structure

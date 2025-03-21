@@ -15,7 +15,7 @@ description: |-
 short_description: Peak amplitude above pedestal for a photo electron with average
   signal.
 data:
-  - type: double
+  - type: float64
     description: FADC amplitude (for high-gain channel in case of dual-readout chain).
     unit: count
     default: 14.0
