@@ -16,7 +16,7 @@ description: |-
   This shape is used only for the estimation of the shadowing.
 short_description: Camera body shape parameter (used to account for effects of shadowing).
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 0
     allowed_range:

@@ -14,7 +14,7 @@ short_description: The length scale to which the primary_mirror_parameters apply
 data:
   - name: primary_ref_radius
     description: The length scale to which the primary_mirror_parameters apply.
-    type: double
+    type: float64
     unit: cm
     default: 1.0
     condition: mirror_class==2

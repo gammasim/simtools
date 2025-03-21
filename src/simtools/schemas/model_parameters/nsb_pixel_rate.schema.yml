@@ -17,7 +17,7 @@ short_description: |-
   Number of photo-electrons per nanosecond per pixel due to nightsky
   background.
 data:
-  - type: double
+  - type: float64
     unit: GHz
     default: 0.218
     allowed_range:

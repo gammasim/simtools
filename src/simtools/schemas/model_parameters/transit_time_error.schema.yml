@@ -19,7 +19,7 @@ description: |-
   compensation if used, is reported in the calibration data block, but only
   up to a random accuracy defined by par:transit-time-calib-error.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 0.
     allowed_range:

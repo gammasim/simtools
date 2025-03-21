@@ -9,14 +9,14 @@ name: pm_transit_time
 description: Total transit time of the photodetector at the average voltage.
 data:
   - name: pm_transit_time_at_average_voltage
-    type: double
+    type: float64
     description: Total transit time of the PMT at the average voltage.
     unit: ns
     default: 20.
     allowed_range:
       min: 0.0
   - name: pm_transit_time_to_first_dynode
-    type: double
+    type: float64
     description: |-
       Fixed transit time between cathode and first dynode, in case of
       the first dynode being stabilized. Use zero for a passive divider.
@@ -25,7 +25,7 @@ data:
     allowed_range:
       min: 0.0
   - name: fixed_voltage_first_dynode
-    type: double
+    type: float64
     description: |-
       The fixed voltage (or fraction of total nominal voltage) applied to
       a stabilized first dynode. Use zero for a passive divider.
@@ -36,7 +36,7 @@ data:
     developer_note: "This parameter can describe in sim_telarray the fraction of total\n\
       nominal voltage in case total nominal voltage is set to zero."
   - name: total_nominal_voltage
-    type: double
+    type: float64
     default: 1100.
     description: Total nominal voltage.
     unit: V
