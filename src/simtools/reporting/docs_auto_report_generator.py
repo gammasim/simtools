@@ -43,19 +43,31 @@ class ReportGenerator:
                 filtered_telescopes.append(telescope)
         return filtered_telescopes
 
-    def _get_report_parameters(self):
-        """Generate parameters for report generation."""
-        all_model_versions = self.db.get_model_versions()
-        all_sites = {"North", "South"}
+    def _generate_array_element_report_combinations(self):
+        """Generate combinations of model versions, telescopes, and sites for array element reports.
+
+        This generator function yields tuples of (model_version, telescope, site) for array element
+        report generation based on the input arguments and flags.
+
+        The function filters telescopes by site and ensures that design models are included
+        when necessary.
+
+        Yields
+        ------
+            tuple[str, str, str]: A tuple containing (model_version, telescope, site) for each
+                valid combination based on the input arguments.
+        """
+        all_sites = names.site_names()
 
         model_versions = (
-            all_model_versions
+            self.db.get_model_versions()
             if self.args.get("all_model_versions")
             else [self.args["model_version"]]
         )
         selected_sites = all_sites if self.args.get("all_sites") else {self.args["site"]}
 
         def get_telescopes(model_version):
+            """Get list of telescopes depending on input arguments."""
             if not self.args.get("all_telescopes"):
                 return [self.args["telescope"]]
             telescopes = self.db.get_array_elements(model_version)
@@ -96,7 +108,7 @@ class ReportGenerator:
 
     def auto_generate_array_element_reports(self):
         """Generate all reports based on which --all_* flag is passed."""
-        for params in self._get_report_parameters():
+        for params in self._generate_array_element_report_combinations():
             self._generate_single_array_element_report(*params)
 
     def _get_telescopes_from_layout(self, site: str) -> set[str]:
@@ -135,7 +147,7 @@ class ReportGenerator:
                 yield telescope, site
         else:
             # For --all_telescopes, use selected sites to get telescopes
-            all_sites = {"North", "South"}
+            all_sites = names.site_names()
             selected_sites = all_sites if self.args.get("all_sites") else {self.args["site"]}
 
             for site in selected_sites:

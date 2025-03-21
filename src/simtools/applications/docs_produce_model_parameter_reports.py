@@ -27,11 +27,11 @@ def _parse(label):
     config.parser.add_argument(
         "--all_telescopes",
         action="store_true",
-        help="Produce reports for all telescopes. Defaults to False.",
+        help="Produce reports for all telescopes.",
     )
 
     config.parser.add_argument(
-        "--all_sites", action="store_true", help="Produce reports for all sites. Defaults to False."
+        "--all_sites", action="store_true", help="Produce reports for all sites."
     )
 
     return config.initialize(db_config=True, simulation_model=["site", "telescope"])
