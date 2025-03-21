@@ -9,7 +9,7 @@ name: fadc_var_sensitivity
 description: |-
   Relative variations in sensitivity (even for FADCs of the same channel).
 data:
-  - type: double
+  - type: float64
     description: |-
       Relative variations in sensitivity
       (for high-gain channel in case of dual-readout chain).

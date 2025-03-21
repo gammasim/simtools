@@ -68,9 +68,9 @@ class EventScaler:
             The scaling factor.
         """
         metric_results = self.evaluator.calculate_metrics()
-        uncertainty_effective_area = metric_results.get("uncertainty_effective_area", {})
+        uncertainty_effective_area = metric_results.get("uncertainty_effective_area")
         current_max_error = uncertainty_effective_area.get("max_error")
-        target_max_error = self.metrics.get("uncertainty_effective_area", {}).get("target_error")[
+        target_max_error = self.metrics.get("uncertainty_effective_area").get("target_error")[
             "value"
         ]
 

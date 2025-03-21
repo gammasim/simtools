@@ -15,12 +15,12 @@ description: |-
   No such scaling is applied if first and second value are equal.
 short_description: Scaling of shaped signals.
 data:
-  - type: uint
+  - type: uint64
     description: multiplier
     default: 0
     unit: dimensionless
     condition: default_trigger==DigitalSum
-  - type: uint
+  - type: uint64
     description: divider
     default: 0
     unit: dimensionless
