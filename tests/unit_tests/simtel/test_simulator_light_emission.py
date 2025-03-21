@@ -74,7 +74,7 @@ def mock_simulator(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        default_le_config=default_config,
+        light_emission_config=default_config,
         le_application=le_application,
         simtel_path=simtel_path,
         light_source_type=light_source_type,
@@ -108,7 +108,7 @@ def mock_simulator_variable(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        default_le_config=default_config,
+        light_emission_config=default_config,
         le_application=le_application,
         simtel_path=simtel_path,
         light_source_type=light_source_type,
@@ -142,7 +142,7 @@ def mock_simulator_laser(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        default_le_config=default_config,
+        light_emission_config=default_config,
         le_application=le_application,
         simtel_path=simtel_path,
         light_source_type=light_source_type,
@@ -171,7 +171,7 @@ def test_initialization(mock_simulator, default_config):
     assert isinstance(mock_simulator, SimulatorLightEmission)
     assert mock_simulator.le_application[0] == "xyzls"
     assert mock_simulator.light_source_type == "led"
-    assert mock_simulator.default_le_config == default_config
+    assert mock_simulator.light_emission_config == default_config
 
 
 def test_runs(mock_simulator):
