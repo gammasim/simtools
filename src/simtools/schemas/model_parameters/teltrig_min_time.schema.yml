@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: teltrig_min_time
 description: Minimum time of sector trigger over threshold.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 1.5
     allowed_range:

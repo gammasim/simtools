@@ -11,7 +11,7 @@ description: |-
   Used only in case mirror_list is not defined (i.e., mirror_list=none).
 data:
   - name: primary_mirror_diameter
-    type: double
+    type: float64
     unit: cm
     condition: mirror_list==None&&mirror_class==2
     default: 0.

@@ -16,7 +16,7 @@ short_description: |-
   The diameter of any non-reflective but not transparent (black)
   central part of the secondary mirror in a dual-mirror telescope.
 data:
-  - type: double
+  - type: float64
     unit: cm
     condition: mirror_class==2
     default: -1.

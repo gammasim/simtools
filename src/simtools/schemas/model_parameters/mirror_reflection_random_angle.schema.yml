@@ -16,21 +16,21 @@ short_description: |-
   Gaussian r.m.s. spread of random fluctuations of microscopic reflection
   angles due to small-scale surface deviations.
 data:
-  - type: double
+  - type: float64
     description: Projected Gaussian r.m.s. of the first component.
     unit: deg
     default: 0.0066
     allowed_range:
       min: 0.0
       max: 2.0
-  - type: double
+  - type: float64
     description: Fractional amplitude of second component.
     unit: dimensionless
     default: 0.0
     allowed_range:
       min: 0.0
       max: 1.0
-  - type: double
+  - type: float64
     description: Projected Gaussian r.m.s. of the second component.
     unit: deg
     default: 0.0

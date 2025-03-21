@@ -13,7 +13,7 @@ description: |-
   of these values being non-zero should be sufficient.
 short_description: Minimum signal sum at sector trigger over threshold.
 data:
-  - type: double
+  - type: float64
     unit: mV * ns
     default: 7.8
     allowed_range:

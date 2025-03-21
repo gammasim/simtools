@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: telescope_axis_height
 description: Height of telescope elevation axis above ground level.
 data:
-  - type: double
+  - type: float64
     unit: m
 instrument:
   class: Structure

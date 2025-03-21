@@ -13,7 +13,7 @@ description: |-
 short_description: |-
   Additional calibration-type events.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: 0
     allowed_range:

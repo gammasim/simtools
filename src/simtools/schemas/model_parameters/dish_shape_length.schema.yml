@@ -15,7 +15,7 @@ description: |-
   intermediate shapes between parabolic and Davies-Cotton.
 short_description: Dish curvature length, best equal to focal length.
 data:
-  - type: double
+  - type: float64
     unit: cm
     default: 0.0
     allowed_range:

@@ -12,7 +12,7 @@ description: |-
   FADC signals.
 short_description: Number of time bins used for the discriminator simulation.
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 20
     allowed_range:
