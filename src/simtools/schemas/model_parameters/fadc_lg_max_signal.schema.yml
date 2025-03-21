@@ -11,7 +11,7 @@ description: |-
   For a typical 12-bit ADC this would be 4095.
 short_description: Maximum value of digitized signal per sample (low-gain channels).
 data:
-  - type: int
+  - type: int64
     description: |-
       Maximum FADC signal
       (for low-gain channel in case of dual-readout chain).

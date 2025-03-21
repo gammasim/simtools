@@ -20,7 +20,7 @@ short_description: |-
   Assumed error in initial calibration of pedestal
   (low-gain channels; affects only the reported pedestal).
 data:
-  - type: double
+  - type: float64
     description: |-
       Error in pedestal calibration
       (for low-gain channel in case of dual-readout chain).

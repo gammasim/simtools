@@ -18,7 +18,7 @@ description: |-
   focal length.
 short_description: Nominal overall focal length of the entire telescope.
 data:
-  - type: double
+  - type: float64
     unit: cm
     default: 1500.0
     allowed_range:

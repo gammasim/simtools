@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: asum_offset
 description: Offset in time where shaping convolution is done.
 data:
-  - type: double
+  - type: float64
     default: 0.0
     unit: ns
     allowed_range:
