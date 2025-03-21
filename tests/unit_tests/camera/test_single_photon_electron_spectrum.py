@@ -115,15 +115,21 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
     tmp_spe_spectrum.args_dict["afterpulse_spectrum"] = "afterpulse_spectrum"
+    tmp_spe_spectrum.args_dict["scale_afterpulse_spectrum"] = 1.0
+    tmp_spe_spectrum.args_dict["threshold_afterpulse_spectrum"] = 4.0
     mock_get_input_data.side_effect = [tmpfile, tmpfile]
     tmp_spe_spectrum._derive_spectrum_norm_spe()
     mock_subprocess_run.assert_called_with(
         [
             "/path/to/simtel/sim_telarray/bin/norm_spe",
-            "-a",
-            ANY,
             "-r",
             "0.1,1.0",
+            "-a",
+            ANY,
+            "-s",
+            "1.0",
+            "-t",
+            "4.0",
             ANY,
         ],
         capture_output=True,
