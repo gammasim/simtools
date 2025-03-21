@@ -10,7 +10,7 @@ description: |-
   Pixel-to-pixel variation of the time over threshold required before logic
   response switches to true.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 0.1
     condition: default_trigger==Majority

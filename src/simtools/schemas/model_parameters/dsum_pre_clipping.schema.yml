@@ -14,7 +14,7 @@ description: |-
   Any such clipping is usually not a good idea, with FADC maximum
   value defined by fadc_max_signal anyway.
 data:
-  - type: uint
+  - type: uint64
     unit: count
     default: 0
     condition: default_trigger==DigitalSum

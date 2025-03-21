@@ -31,7 +31,7 @@ short_description: |-
   Parameter controlling the orientation of the pixels, setting it to be
   aligned with the optical axis or the focal surface normal.
 data:
-  - type: uint
+  - type: uint64
     default: 1
     allowed_range:
       min: 0

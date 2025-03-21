@@ -17,7 +17,7 @@ description: |-
 short_description: Amplitude level above which a digital sum leads to a telescope
   trigger.
 data:
-  - type: double
+  - type: float64
     unit: count
     default: 0.0
     allowed_range:

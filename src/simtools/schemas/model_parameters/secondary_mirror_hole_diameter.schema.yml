@@ -14,7 +14,7 @@ description: |-
 data:
   - name: secondary_hole_diameter
     description: Diameter of any non-reflective part of the secondary mirror.
-    type: double
+    type: float64
     default: 0.
     unit: cm
     condition: mirror_class==2

@@ -16,7 +16,7 @@ short_description: |-
   Geometric offsets to be used in case that the azimuth, altitude,
   and optical axes do not intersect at the reference point.
 data:
-  - type: double
+  - type: float64
     unit: cm
     default: 0.
     description: |-
@@ -24,7 +24,7 @@ data:
       (horizontal) altitude rotation axis. A positive value corresponds
       to an altitude axis towards the reflector. Altitude axis is on
       the optical axis, if the second parameter is zero.
-  - type: double
+  - type: float64
     unit: cm
     default: 0.
     description: |-

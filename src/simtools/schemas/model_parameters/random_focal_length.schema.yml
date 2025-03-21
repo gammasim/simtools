@@ -16,12 +16,12 @@ description: |-
   random focal length value does not get applied.
 short_description: The spread of random fluctuations in mirror focal lengths.
 data:
-  - type: double
+  - type: float64
     description: Width (r.m.s.) of Gaussian distribution for random focal lengths.
     unit: cm
     default: 7.4
     condition: mirror_class==1
-  - type: double
+  - type: float64
     description: Width of top-hat distribution for random focal lengths.
     unit: cm
     default: 0.0

@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: fadc_mhz
 description: FADC sampling rate.
 data:
-  - type: double
+  - type: float64
     default: 1000.
     unit: MHz
 instrument:

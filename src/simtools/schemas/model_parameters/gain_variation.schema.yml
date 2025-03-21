@@ -15,7 +15,7 @@ description: |-
   The parameter sets the Gaussian r.m.s. spread of random fluctuations, used
   as \texttt{amplitude *= RandGaus(1., gain_variation)}.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 0.02
     allowed_range:
