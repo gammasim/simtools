@@ -11,7 +11,7 @@ description: |-
 short_description: |-
   Pedestal events at start of run closed lid.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: 0
     allowed_range:

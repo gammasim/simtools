@@ -11,7 +11,7 @@ description: |-
 short_description: |-
   Number of pedestal events at start of run with camera lid open (same NSB as for normal events).
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: 0
     allowed_range:

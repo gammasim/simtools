@@ -10,17 +10,18 @@ CTA_SIMPIPE:
       - 40
       - 52
       - 60
-      OFFSETS: 0
+      OFFSETS:
+      - 0
       QUERY_POINT:
       - 1
       - 180
       - 30
       - 0
       - 0
-      INTERPOLATE: true
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: interpolated_scaled_events.json
-      METRIC: tests/resources/production_simulation_config_metrics.yml
+      METRICS_FILE: tests/resources/production_simulation_config_metrics.yml
+      FILE_NAME_TEMPLATE: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
     INTEGRATION_TESTS:
     - OUTPUT_FILE: interpolated_scaled_events.json
 SCHEMA_NAME: application_workflow.metaschema

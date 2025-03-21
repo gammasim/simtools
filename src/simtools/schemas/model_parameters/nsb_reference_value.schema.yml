@@ -12,7 +12,7 @@ description: |-
   night sky background level during astronomical darkness)
 short_description: Reference value for night-sky background flux.
 data:
-  - type: double
+  - type: float64
     unit: 1/(sr*ns*cm**2)
     default: 0.24
 instrument:

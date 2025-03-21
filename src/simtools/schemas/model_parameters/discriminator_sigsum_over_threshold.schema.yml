@@ -17,7 +17,7 @@ description: |-
   accordingly.
 short_description: Integrated signal required over threshold.
 data:
-  - type: double
+  - type: float64
     unit: mV * ns
     condition: default_trigger==Majority
     default: 0.0

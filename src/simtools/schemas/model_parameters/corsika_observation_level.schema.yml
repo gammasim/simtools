@@ -11,7 +11,7 @@ description: |-
   This should be lower than the lowest altitude of any telescope.
 short_description: Observation altitude above see level assumed in the air-shower code.
 data:
-  - type: double
+  - type: float64
     unit: m
     allowed_range:
       min: 0.0

@@ -12,7 +12,7 @@ description: |-
   discriminator_var_time_over_threshold.
 short_description: Variation of gate length (Gaussian r.m.s).
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 0.1
     condition: default_trigger==Majority

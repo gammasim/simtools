@@ -12,7 +12,7 @@ description: |-
   for the various levels of confidence that a pixel actually belongs to the shower image.
   Instead of making them individually configurable, a common scale factor can be applied to all of them.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 1
     allowed_range:

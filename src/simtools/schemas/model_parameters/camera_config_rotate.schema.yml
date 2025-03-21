@@ -12,7 +12,7 @@ description: |-
   the given angle.
 short_description: Camera rotation angle.
 data:
-  - type: double
+  - type: float64
     unit: deg
 instrument:
   class: Camera

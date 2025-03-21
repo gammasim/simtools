@@ -9,7 +9,7 @@ name: min_photons
 description: |-
   Minimum number of photons required before doing simulation.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: -1
 instrument:

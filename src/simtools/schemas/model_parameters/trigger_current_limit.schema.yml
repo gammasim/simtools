@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: trigger_current_limit
 description: Pixels above this limit are excluded from the trigger.
 data:
-  - type: double
+  - type: float64
     unit: uA
     default: 20.0
 instrument:
