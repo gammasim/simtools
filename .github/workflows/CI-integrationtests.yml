@@ -76,7 +76,8 @@ jobs:
             echo "SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}"
             echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}"
             echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}"
-          } >> "$GITHUB_ENV"
+            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
+          } > .env
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
@@ -93,6 +94,7 @@ jobs:
             echo "SIMTOOLS_DB_API_PW=password"
             echo "SIMTOOLS_DB_API_PORT=27017"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
+            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
           } > .env
 
       - name: Upload data to MongoDB
