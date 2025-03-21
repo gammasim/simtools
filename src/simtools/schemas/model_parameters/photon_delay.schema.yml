@@ -13,7 +13,7 @@ description: |-
   Additional delay added to the arrival times
   of all photons at the photo sensors.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 0.0
 instrument:

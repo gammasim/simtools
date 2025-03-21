@@ -16,7 +16,7 @@ description: |-
   amplitude of a single photo-electron.
 short_description: FADC counts per mV voltage (for low-gain channels).
 data:
-  - type: double
+  - type: float64
     description: |-
       FADC counts per mV voltage.
       (for low-gain channel in case of dual-readout chain).

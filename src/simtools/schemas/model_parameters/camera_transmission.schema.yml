@@ -14,7 +14,7 @@ short_description: |-
   Global wavelength-independent transmission factor of the camera,
   including any plexiglass window.
 data:
-  - type: double
+  - type: float64
     default: 1.0
     allowed_range:
       min: 0.01

@@ -362,8 +362,10 @@ definitions:
       - double
       - float64
       - int
+      - int64
       - string
       - uint
+      - uint64
       - file
     title: TableColumnType
   Unit:

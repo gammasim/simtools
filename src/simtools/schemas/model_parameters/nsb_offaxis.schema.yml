@@ -22,7 +22,7 @@ short_description: |-
 data:
   - name: nsb_offaxis_function
     required: false
-    type: double
+    type: float64
     description: |
       Function identifier.
     default: 0
@@ -34,28 +34,28 @@ data:
     description: |
       NSB off-axis factor $p_1$.
     required: false
-    type: double
+    type: float64
     default: 0.0
     unit: dimensionless
   - name: reference_radius_p2
     description: |
       Camera reference radius $p_2$.
     required: false
-    type: double
+    type: float64
     default: 0.0
     unit: cm
   - name: nsb_offaxis_p3
     description: |
       NSB off-axis factor $p_3$.
     required: false
-    type: double
+    type: float64
     default: 0.0
     unit: dimensionless
   - name: nsb_offaxis_p4
     description: |
       NSB off-axis factor $p_4$.
     required: false
-    type: double
+    type: float64
     default: 0.0
     unit: dimensionless
 instrument:

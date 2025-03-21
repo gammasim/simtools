@@ -11,7 +11,7 @@ description: |-
   the PMT gain index p through $g \propto U^{p}$.
   Used only for PMT timing.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 4.0
     allowed_range:

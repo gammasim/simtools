@@ -16,7 +16,7 @@ short_description: |-
   Number of bins before telescope trigger where summing or reading of
   sampled data starts.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: 0
     allowed_range:
