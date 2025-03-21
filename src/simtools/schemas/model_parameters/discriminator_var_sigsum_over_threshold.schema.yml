@@ -14,7 +14,7 @@ description: |-
   Gaussian r.m.s. spread of discriminator_sigsum_over_threshold
   (Pixel-to-pixel variation).
 data:
-  - type: double
+  - type: float64
     unit: mV * ns
     default: 0.0
     condition: default_trigger==Majority

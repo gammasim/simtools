@@ -28,7 +28,7 @@ data:
       - name: utm_east
         description: |-
           UTM East coordinate of the array element.
-        type: double
+        type: float64
         required: true
         unit: m
         input_processing:
@@ -36,7 +36,7 @@ data:
       - name: utm_north
         description: |-
           UTM North coordinate of the array element.
-        type: double
+        type: float64
         required: true
         unit: m
         input_processing:
@@ -45,7 +45,7 @@ data:
         description: |-
           Altitude of the array element.
         required: true
-        type: double
+        type: float64
         unit: m
         allowed_range:
           min: 0.

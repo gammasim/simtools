@@ -19,7 +19,7 @@ short_description: |-
   Actual threshold of the telescope trigger, adjusted relative to the
   number of required pixels.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: -0.5
     allowed_range:

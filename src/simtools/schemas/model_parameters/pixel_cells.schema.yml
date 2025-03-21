@@ -13,7 +13,7 @@ description: |-
   The presence of a non-zero value does not imply any microscopic model
   of the pixel structure.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: 0
     allowed_range:

@@ -35,7 +35,7 @@ short_description: |-
 data:
   - description: |-
       Mean effective length for all directions of incidence.
-    type: double
+    type: float64
     unit: cm
     default: 0.0
     allowed_range:
@@ -44,7 +44,7 @@ data:
   - description: |-
       Effective length for incidence directions in mirror/camera x-z plane
       (if non-zero).
-    type: double
+    type: float64
     unit: cm
     default: 0.0
     allowed_range:
@@ -53,7 +53,7 @@ data:
   - description: |-
       Effective length for incidence directions in mirror/camera y-z plane
       (if non-zero).
-    type: double
+    type: float64
     unit: cm
     default: 0.0
     allowed_range:
@@ -61,12 +61,12 @@ data:
       max: 10000.0
   - description: |-
       Any displacement along x in the focal plane from asymmetric PSF behavior.
-    type: double
+    type: float64
     unit: cm
     default: 0.0
   - description: |-
       Any displacement along y in the focal plane from asymmetric PSF behavior.
-    type: double
+    type: float64
     unit: cm
     default: 0.0
 instrument:

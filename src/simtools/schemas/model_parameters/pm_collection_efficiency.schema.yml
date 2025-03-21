@@ -16,7 +16,7 @@ description: |-
   photo-electrons are included in the amplitude distribution of the
   single-p.e. spectrum.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     allowed_range:
       min: 0.01

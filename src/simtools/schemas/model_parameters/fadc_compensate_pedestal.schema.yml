@@ -22,7 +22,7 @@ description: |-
   they are clipped at zero.
 short_description: Emulation of FADC pedestal compensation.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: -1
     allowed_range:
