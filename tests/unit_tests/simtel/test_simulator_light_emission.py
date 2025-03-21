@@ -506,3 +506,67 @@ def test_simulate_layout_positions(mock_save_figures, mock_run_simulation, mock_
     mock_run_simulation.assert_called_once()
 
     mock_save_figures.assert_called_once()
+
+
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission._plot_simulation_output")
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_distance_for_plotting")
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_simulation_output_filename"
+)
+def test_process_simulation_output(
+    mock_get_simulation_output_filename,
+    mock_get_distance_for_plotting,
+    mock_plot_simulation_output,
+    mock_simulator_variable,
+):
+    """Test the process_simulation_output method."""
+    args_dict = {
+        "boundary_thresh": 5,
+        "picture_thresh": 3,
+        "min_neighbors": 2,
+        "return_cleaned": True,
+    }
+    figures = []
+
+    # Mock return values
+    mock_get_simulation_output_filename.return_value = "mock_filename.simtel.gz"
+    mock_get_distance_for_plotting.return_value = 1000 * u.m
+    mock_figure = Mock()
+    mock_plot_simulation_output.return_value = mock_figure
+
+    # Call the method
+    mock_simulator_variable.process_simulation_output(args_dict, figures)
+
+    # Assertions
+    mock_get_simulation_output_filename.assert_called_once()
+    mock_get_distance_for_plotting.assert_called_once()
+    mock_plot_simulation_output.assert_called_once_with(
+        "mock_filename.simtel.gz",
+        5,
+        3,
+        2,
+        1000 * u.m,
+        True,
+    )
+    assert len(figures) == 1
+    assert figures[0] == mock_figure
+
+
+def test_get_simulation_output_filename(mock_simulator_variable):
+    """Test the _get_simulation_output_filename method."""
+    mock_simulator_variable.output_directory = "./tests/resources/"
+    mock_simulator_variable.le_application = ("xyzls", "variable")
+
+    filename = mock_simulator_variable._get_simulation_output_filename()
+
+    expected_filename = "./tests/resources//xyzls_variable.simtel.gz"
+    assert filename == expected_filename
+
+
+def test_get_distance_for_plotting_with_z_pos(mock_simulator_variable):
+    """Test _get_distance_for_plotting when z_pos is available."""
+    mock_simulator_variable.light_emission_config = {"z_pos": {"default": 1000 * u.m}}
+
+    distance = mock_simulator_variable._get_distance_for_plotting()
+
+    assert distance == 1000 * u.m
