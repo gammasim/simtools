@@ -109,19 +109,16 @@ Expected Output:
 """
 
 import logging
-import subprocess
 from pathlib import Path
 
 import astropy.units as u
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.corsika.corsika_histograms_visualize import save_figs_to_pdf
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
-from simtools.visualization.visualize import plot_simtel_ctapipe
 
 
 def _parse(label):
@@ -226,27 +223,7 @@ def _parse(label):
     )
 
 
-def distance_list(arg):
-    """
-    Convert distance list to astropy quantities.
-
-    Parameters
-    ----------
-    arg: list
-        List of distances.
-
-    Returns
-    -------
-    values: list
-        List of distances as astropy quantities.
-    """
-    try:
-        return [float(x) * u.m for x in arg]
-    except ValueError as exc:
-        raise ValueError("Distances must be numeric values") from exc
-
-
-def default_le_configs(le_application, args_dict):
+def light_emission_configs(le_application, args_dict):
     """
     Define default light emission configurations.
 
@@ -311,141 +288,13 @@ def select_application(args_dict):
     return None, args_dict["light_source_setup"]
 
 
-def prepare_light_source(
-    args_dict, le_config, le_application, telescope_model, calibration_model, site_model
-):
-    """Prepare the SimulatorLightEmission object."""
-    return SimulatorLightEmission(
-        telescope_model=telescope_model,
-        calibration_model=calibration_model,
-        site_model=site_model,
-        default_le_config=le_config,
-        le_application=le_application,
-        simtel_path=args_dict["simtel_path"],
-        light_source_type=args_dict["light_source_type"],
-    )
-
-
-def run_light_emission_simulation(light_source, args_dict, figures, logger):
-    """Run the light emission simulation."""
-    run_script = light_source.prepare_script(generate_postscript=True, **args_dict)
-    log_file = Path(light_source.output_directory) / "logfile.log"
-    with open(log_file, "w", encoding="utf-8") as log_file:
-        subprocess.run(
-            run_script,
-            shell=False,
-            check=False,
-            text=True,
-            stdout=log_file,
-            stderr=log_file,
-        )
-    process_simulation_output(light_source, args_dict, figures, logger)
-
-
-def process_simulation_output(light_source, args_dict, figures, logger):
-    """Process the simulation output, including plotting and saving figures."""
-    try:
-        filename = (
-            f"{light_source.output_directory}/"
-            f"{light_source.le_application[0]}_{light_source.le_application[1]}.simtel.gz"
-        )
-
-        try:
-            distance = light_source.default_le_config["z_pos"]["default"]
-        except KeyError:
-            distance = round(light_source.distance, 2)
-
-        fig = plot_simtel_ctapipe(
-            filename,
-            cleaning_args=[
-                args_dict["boundary_thresh"],
-                args_dict["picture_thresh"],
-                args_dict["min_neighbors"],
-            ],
-            distance=distance,
-            return_cleaned=args_dict["return_cleaned"],
-        )
-        figures.append(fig)
-
-    except AttributeError:
-        msg = (
-            f"Telescope not triggered at distance of "
-            f"{light_source.default_le_config['z_pos']['default']}"
-        )
-        logger.warning(msg)
-
-
-def save_figures_to_pdf(figures, output_directory, telescope, le_application):
-    """Save the generated figures to a PDF file."""
-    save_figs_to_pdf(
-        figures,
-        f"{output_directory}/{telescope}_{le_application[0]}_{le_application[1]}.pdf",
-    )
-
-
-def simulate_variable_distances(
-    args_dict,
-    default_le_config,
-    le_application,
-    telescope_model,
-    calibration_model,
-    site_model,
-    logger,
-):
-    """Simulate light emission for variable distances."""
-    if args_dict["distances_ls"] is not None:
-        default_le_config["z_pos"]["default"] = distance_list(args_dict["distances_ls"])
-    logger.info(f"Simulating for distances of {default_le_config['z_pos']['default']}")
-
-    figures = []
-    for distance in default_le_config["z_pos"]["default"]:
-        le_config = default_le_config.copy()
-        le_config["z_pos"]["default"] = distance
-        light_source = prepare_light_source(
-            args_dict,
-            le_config,
-            le_application,
-            telescope_model,
-            calibration_model,
-            site_model,
-        )
-        run_light_emission_simulation(light_source, args_dict, figures, logger)
-    save_figures_to_pdf(
-        figures, light_source.output_directory, args_dict["telescope"], le_application
-    )
-
-
-def simulate_layout_positions(
-    args_dict,
-    default_le_config,
-    le_application,
-    telescope_model,
-    calibration_model,
-    site_model,
-    logger,
-):
-    """Simulate light emission for layout positions."""
-    light_source = prepare_light_source(
-        args_dict,
-        default_le_config,
-        le_application,
-        telescope_model,
-        calibration_model,
-        site_model,
-    )
-    figures = []
-    run_light_emission_simulation(light_source, args_dict, figures, logger)
-    save_figures_to_pdf(
-        figures, light_source.output_directory, args_dict["telescope"], le_application
-    )
-
-
 def main():
     """Simulate light emission."""
     label = Path(__file__).stem
     args_dict, db_config = _parse(label)
     le_application = select_application(args_dict)
-    default_le_config = default_le_configs(le_application[0], args_dict)
+    light_emission_config = light_emission_configs(le_application[0], args_dict)
+
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
@@ -472,26 +321,21 @@ def main():
         label=label,
     )
 
+    light_source = SimulatorLightEmission(
+        telescope_model=telescope_model,
+        calibration_model=calibration_model,
+        site_model=site_model,
+        light_emission_config=light_emission_config,
+        le_application=le_application,
+        simtel_path=args_dict["simtel_path"],
+        light_source_type=args_dict["light_source_type"],
+        label=label,
+    )
+
     if args_dict["light_source_setup"] == "variable":
-        simulate_variable_distances(
-            args_dict,
-            default_le_config,
-            le_application,
-            telescope_model,
-            calibration_model,
-            site_model,
-            logger,
-        )
+        light_source.simulate_variable_distances(args_dict)
     elif args_dict["light_source_setup"] == "layout":
-        simulate_layout_positions(
-            args_dict,
-            default_le_config,
-            le_application,
-            telescope_model,
-            calibration_model,
-            site_model,
-            logger,
-        )
+        light_source.simulate_layout_positions(args_dict)
 
 
 if __name__ == "__main__":
