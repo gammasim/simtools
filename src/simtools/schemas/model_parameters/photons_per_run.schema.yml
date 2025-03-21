@@ -11,7 +11,7 @@ description: |-
 short_description: |-
   Number of photons per run.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 1e10
     allowed_range:

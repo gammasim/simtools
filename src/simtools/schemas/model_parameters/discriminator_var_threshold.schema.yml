@@ -11,7 +11,7 @@ description: |-
   discriminator/comparator threshold.
 short_description: Channel-to-channel variation of discriminator threshold.
 data:
-  - type: double
+  - type: float64
     unit: mV
     default: 0.2
     condition: default_trigger==Majority

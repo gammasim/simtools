@@ -146,7 +146,7 @@ class SinglePhotonElectronSpectrum:
         ]
         if tmp_ap_file:
             command.extend(["-a", f"{tmp_ap_file.name}"])
-            command.extend(["-s", f"{self.args_dict.get('scale_afterpulse_spectrum', 1.0)}"])
+            command.extend(["-s", f"{self.args_dict['scale_afterpulse_spectrum']}"])
             command.extend(["-t", f"{self.args_dict['afterpulse_amplitude_range'][0]}"])
         command.append(tmp_input_file.name)
 

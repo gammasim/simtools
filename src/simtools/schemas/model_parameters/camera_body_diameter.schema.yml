@@ -10,7 +10,7 @@ description: |-
   Diameter of camera body (used to account for effects of shadowing).
   Flat-to-flat for square and hexagonal shapes.
 data:
-  - type: double
+  - type: float64
     unit: cm
     default: 160.0
     allowed_range:

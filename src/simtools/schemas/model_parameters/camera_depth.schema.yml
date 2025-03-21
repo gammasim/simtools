@@ -12,7 +12,7 @@ description: |-
   and the camera depth.
 short_description: Depth of the camera body (used to account for effects of shadowing).
 data:
-  - type: double
+  - type: float64
     unit: cm
     default: 0.
     allowed_range:

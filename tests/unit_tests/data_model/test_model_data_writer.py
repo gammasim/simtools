@@ -273,7 +273,7 @@ def test_get_validated_parameter_dict():
         "unique_id": None,
         "value": 2,
         "unit": u.Unit(""),
-        "type": "int",
+        "type": "int64",
         "file": False,
     }
 
@@ -291,7 +291,7 @@ def test_get_validated_parameter_dict():
         "unique_id": None,
         "value": 5,
         "unit": u.Unit("ns"),
-        "type": "double",
+        "type": "float64",
         "file": False,
     }
 
@@ -309,7 +309,7 @@ def test_get_validated_parameter_dict():
         "unique_id": None,
         "value": 2700.0,
         "unit": u.Unit("m"),
-        "type": "double",
+        "type": "float64",
         "file": False,
     }
 

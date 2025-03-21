@@ -134,6 +134,8 @@ def test_derive_spectrum_norm_spe(mock_get_input_data, mock_subprocess_run, spe_
     mock_subprocess_run.reset_mock()
 
     tmp_spe_spectrum = copy.deepcopy(spe_spectrum)
+    tmp_spe_spectrum.args_dict["afterpulse_spectrum"] = "afterpulse_spectrum"
+    tmp_spe_spectrum.args_dict["scale_afterpulse_spectrum"] = 1.0
     mock_get_input_data.side_effect = [tmpfile, tmpfile]
 
     return_code = tmp_spe_spectrum._derive_spectrum_norm_spe(

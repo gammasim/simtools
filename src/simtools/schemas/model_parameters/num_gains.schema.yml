@@ -8,7 +8,7 @@ meta_schema_version: 0.1.0
 name: num_gains
 description: Number of different gains the input signal gets digitized.
 data:
-  - type: int
+  - type: int64
     unit: dimensionless
     default: 2
     allowed_range:
