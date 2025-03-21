@@ -137,7 +137,7 @@ def read_application_configuration(configuration_file, steps, logger):
     application_config = gen.collect_data_from_file(configuration_file).get("CTA_SIMPIPE")
     place_holder = "__SETTING_WORKFLOW__"
     workflow_dir, setting_workflow = get_subdirectory_name(configuration_file)
-    output_path = Path(str(workflow_dir).replace("input", "output") + "/" + setting_workflow)
+    output_path = Path(str(workflow_dir).replace("input", "output")) / Path(setting_workflow)
     output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Setting workflow output path to {output_path}")
     log_file = output_path / "simtools.log"
