@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>run_application &#8212; simtools v0.1.dev1+g1798987 Manual</title>
+    <title>run_application &#8212; simtools v0.1.dev1+g85f82fe Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=9b3b47e0"></script>
+    <script src="../_static/documentation_options.js?v=49e8d0f5"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1798987 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g85f82fe Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -535,9 +535,7 @@ document.write(`
     <span class="n">application_config</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">configuration_file</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CTA_SIMPIPE&quot;</span><span class="p">)</span>
     <span class="n">place_holder</span> <span class="o">=</span> <span class="s2">&quot;__SETTING_WORKFLOW__&quot;</span>
     <span class="n">workflow_dir</span><span class="p">,</span> <span class="n">setting_workflow</span> <span class="o">=</span> <span class="n">get_subdirectory_name</span><span class="p">(</span><span class="n">configuration_file</span><span class="p">)</span>
-    <span class="n">output_path</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">workflow_dir</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">workflow_dir</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">))</span> <span class="o">/</span> <span class="n">setting_workflow</span>
-    <span class="p">)</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">workflow_dir</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">))</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">setting_workflow</span><span class="p">)</span>
     <span class="n">output_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting workflow output path to </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">log_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="s2">&quot;simtools.log&quot;</span>
@@ -549,7 +547,8 @@ document.write(`
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">place_holder</span><span class="p">,</span> <span class="n">setting_workflow</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">item</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">place_holder</span><span class="p">,</span> <span class="n">setting_workflow</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span>
+                    <span class="n">item</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">place_holder</span><span class="p">,</span> <span class="n">setting_workflow</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span>
+                    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span>
                 <span class="p">]</span>
         <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">][</span><span class="s2">&quot;USE_PLAIN_OUTPUT_PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">][</span><span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera.single_photon_electron_spectrum &#8212; simtools v0.1.dev1+g1798987 Manual</title>
+    <title>camera.single_photon_electron_spectrum &#8212; simtools v0.1.dev1+g85f82fe Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=9b3b47e0"></script>
+    <script src="../../_static/documentation_options.js?v=49e8d0f5"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1798987 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g85f82fe Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -397,7 +397,9 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">curve_fit</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">writer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">MODEL_PARAMETER_SCHEMA_URL</span><span class="p">,</span> <span class="n">SCHEMA_PATH</span>
@@ -446,8 +448,16 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/camera.html#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.derive_single_pe_spectrum">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">derive_single_pe_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Derive single photon electron spectrum.&quot;&quot;&quot;</span>
+        <span class="n">afterpulse_fitted_spectrum</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit_afterpulse_spectrum</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fit_afterpulse&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;use_norm_spe&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive_spectrum_norm_spe</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive_spectrum_norm_spe</span><span class="p">(</span>
+                <span class="n">input_spectrum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_spectrum&quot;</span><span class="p">],</span>
+                <span class="n">afterpulse_spectrum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;afterpulse_spectrum&quot;</span><span class="p">),</span>
+                <span class="n">afterpulse_fitted_spectrum</span><span class="o">=</span><span class="n">afterpulse_fitted_spectrum</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="s2">&quot;Derivation of single photon electron spectrum using a simtool is not yet implemented.&quot;</span>
@@ -490,9 +500,21 @@ document.write(`
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_derive_spectrum_norm_spe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_derive_spectrum_norm_spe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">input_spectrum</span><span class="p">,</span> <span class="n">afterpulse_spectrum</span><span class="p">,</span> <span class="n">afterpulse_fitted_spectrum</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Derive single photon electron spectrum using sim_telarray tool &#39;norm_spe&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_spectrum : str</span>
+<span class="sd">            Input file with amplitude spectrum</span>
+<span class="sd">            (prompt spectrum only if afterpulse spectrum is given).</span>
+<span class="sd">        afterpulse_spectrum : str</span>
+<span class="sd">            Input file with afterpulse spectrum.</span>
+<span class="sd">        afterpulse_fitted_spectrum : astro.Table</span>
+<span class="sd">            Fitted afterpulse spectrum data.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -505,11 +527,13 @@ document.write(`
 <span class="sd">            If the command execution fails.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tmp_input_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_input_data</span><span class="p">(</span>
-            <span class="n">input_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;input_spectrum&quot;</span><span class="p">],</span>
+            <span class="n">input_file</span><span class="o">=</span><span class="n">input_spectrum</span><span class="p">,</span>
+            <span class="n">input_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">frequency_column</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prompt_column</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">tmp_ap_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_input_data</span><span class="p">(</span>
-            <span class="n">input_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;afterpulse_spectrum&quot;</span><span class="p">),</span>
+            <span class="n">input_file</span><span class="o">=</span><span class="n">afterpulse_spectrum</span><span class="p">,</span>
+            <span class="n">input_table</span><span class="o">=</span><span class="n">afterpulse_fitted_spectrum</span><span class="p">,</span>
             <span class="n">frequency_column</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">afterpulse_column</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -521,7 +545,7 @@ document.write(`
         <span class="k">if</span> <span class="n">tmp_ap_file</span><span class="p">:</span>
             <span class="n">command</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-a&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp_ap_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">])</span>
             <span class="n">command</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;scale_afterpulse_spectrum&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">])</span>
-            <span class="n">command</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;threshold_afterpulse_spectrum&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">])</span>
+            <span class="n">command</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;afterpulse_amplitude_range&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">])</span>
         <span class="n">command</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_input_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running norm_spe command: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -541,7 +565,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span>
         <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_input_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file</span><span class="p">,</span> <span class="n">frequency_column</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_input_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file</span><span class="p">,</span> <span class="n">input_table</span><span class="p">,</span> <span class="n">frequency_column</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return input data in the format required by the norm_spe tool as temporary file.</span>
 
@@ -553,6 +577,8 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        input_file : str</span>
 <span class="sd">            Input file with amplitude spectrum.</span>
+<span class="sd">        input_table : astro.Table</span>
+<span class="sd">            Input table with amplitude spectrum.</span>
 <span class="sd">        frequency_column : str</span>
 <span class="sd">            Column name of the frequency data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -561,9 +587,11 @@ document.write(`
         <span class="n">input_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
 
         <span class="n">input_data</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">input_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.ecsv&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">input_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.ecsv&quot;</span> <span class="ow">or</span> <span class="n">input_table</span><span class="p">:</span>
             <span class="n">data_validator</span> <span class="o">=</span> <span class="n">validate_data</span><span class="o">.</span><span class="n">DataValidator</span><span class="p">(</span>
-                <span class="n">schema_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">data_file</span><span class="o">=</span><span class="n">input_file</span>
+                <span class="n">schema_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span>
+                <span class="n">data_table</span><span class="o">=</span><span class="n">input_table</span><span class="p">,</span>
+                <span class="n">data_file</span><span class="o">=</span><span class="n">input_file</span> <span class="k">if</span> <span class="n">input_table</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">table</span> <span class="o">=</span> <span class="n">data_validator</span><span class="o">.</span><span class="n">validate_and_transform</span><span class="p">()</span>
             <span class="n">input_data</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;amplitude&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="n">frequency_column</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="p">)</span>
@@ -577,7 +605,123 @@ document.write(`
 
         <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmpfile</span><span class="p">:</span>
             <span class="n">tmpfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">tmpfile</span></div>
+        <span class="k">return</span> <span class="n">tmpfile</span>
+
+<div class="viewcode-block" id="SinglePhotonElectronSpectrum.fit_afterpulse_spectrum">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.fit_afterpulse_spectrum">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_afterpulse_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit afterpulse spectrum with a exponential decay function.</span>
+
+<span class="sd">        Assume input to be in ecsv format with columns &#39;amplitude&#39;, &#39;frequency (afterpulsing)&#39;,</span>
+<span class="sd">        and &#39;frequency stdev (afterpulsing)&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        astro.Table</span>
+<span class="sd">            Table with fitted afterpulse spectrum data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ap_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;afterpulse_amplitude_range&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fix_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;afterpulse_decay_factor_fixed_value&quot;</span><span class="p">)</span>
+
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_afterpulse_spectrum_for_fit</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;afterpulse_spectrum&quot;</span><span class="p">),</span> <span class="n">ap_min</span>
+        <span class="p">)</span>
+        <span class="n">fit_func</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="n">bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">afterpulse_fit_function</span><span class="p">(</span><span class="n">fix_k</span><span class="o">=</span><span class="n">fix_k</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">fit_func</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">y_err</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="n">p0</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">absolute_sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">params</span><span class="p">,</span> <span class="n">covariance</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">param_errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">covariance</span><span class="p">))</span>
+        <span class="n">predicted</span> <span class="o">=</span> <span class="n">fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_afterpulse_fit_statistics</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_err</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">param_errors</span><span class="p">,</span> <span class="n">predicted</span><span class="p">,</span> <span class="n">fix_k</span><span class="p">)</span>
+
+        <span class="c1"># table with fitted afterpulse spectrum</span>
+        <span class="n">x_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="n">ap_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;afterpulse_amplitude_range&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;step_size&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">y_fit</span> <span class="o">=</span> <span class="n">fit_func</span><span class="p">(</span><span class="n">x_fit</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Table</span><span class="p">([</span><span class="n">x_fit</span><span class="p">,</span> <span class="n">y_fit</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;amplitude&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">afterpulse_column</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="SinglePhotonElectronSpectrum.afterpulse_fit_function">
+<a class="viewcode-back" href="../../api-reference/camera.html#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.afterpulse_fit_function">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">afterpulse_fit_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fix_k</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Afterpulse fit function: exponential decay with linear term in the exponent.</span>
+
+<span class="sd">        Starting values and bounds are set for the other parameters using values typical</span>
+<span class="sd">        for LSTN-design. Allows to fix the K parameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fix_K : float</span>
+<span class="sd">            Fixed value for K parameter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        function</span>
+<span class="sd">            Exponential decay function with linear term in the exponent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">exp_decay</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">/</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">k</span><span class="p">)))</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="n">p0</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">]</span>  <span class="c1"># Initial guess for [A, B] typical LSTN values</span>
+        <span class="n">bounds_lower</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">bounds_upper</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">fix_k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">p0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">25.0</span><span class="p">)</span>
+            <span class="n">bounds_lower</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span>
+            <span class="n">bounds_upper</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">35.0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">exp_decay</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="p">(</span><span class="n">bounds_lower</span><span class="p">,</span> <span class="n">bounds_upper</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">exp_decay_fixed_k</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">exp_decay</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">fix_k</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">exp_decay_fixed_k</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="p">(</span><span class="n">bounds_lower</span><span class="p">,</span> <span class="n">bounds_upper</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_afterpulse_fit_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_err</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">param_errors</span><span class="p">,</span> <span class="n">predicted</span><span class="p">,</span> <span class="n">fix_k</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print and return afterpulse fit statistics.&quot;&quot;&quot;</span>
+        <span class="n">chi2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(((</span><span class="n">y</span> <span class="o">-</span> <span class="n">predicted</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_err</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">ndf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">params</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="n">param_errors</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="s2">&quot;chi2_ndf&quot;</span><span class="p">:</span> <span class="n">chi2</span> <span class="o">/</span> <span class="n">ndf</span> <span class="k">if</span> <span class="n">ndf</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">fix_k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fix_k</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fit results: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_afterpulse_spectrum_for_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">afterpulse_spectrum</span><span class="p">,</span> <span class="n">fit_min_pe</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read afterpulse spectrum data for fitting.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        afterpulse_spectrum : str</span>
+<span class="sd">            Afterpulse spectrum data file.</span>
+<span class="sd">        fit_min_pe : float</span>
+<span class="sd">            Minimum amplitude for fitting.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Tuple with x, y, y_err data for fitting.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">afterpulse_spectrum</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;amplitude&quot;</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">afterpulse_column</span><span class="p">]</span>
+        <span class="n">y_err</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;frequency stdev (afterpulsing)&quot;</span><span class="p">]</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">fit_min_pe</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">x_fit</span><span class="p">,</span> <span class="n">y_fit</span><span class="p">,</span> <span class="n">y_err_fit</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">y_err</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">x_fit</span><span class="p">,</span> <span class="n">y_fit</span><span class="p">,</span> <span class="n">y_err_fit</span></div>
 
 </pre></div>
 

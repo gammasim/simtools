@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Camera &#8212; simtools v0.1.dev1+g1798987 Manual</title>
+    <title>Camera &#8212; simtools v0.1.dev1+g85f82fe Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=9b3b47e0"></script>
+    <script src="../_static/documentation_options.js?v=49e8d0f5"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1798987 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g85f82fe Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -486,7 +486,9 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-photon-electron-spectral-analysis">Single photon-electron spectral analysis</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#module-camera.single_photon_electron_spectrum">single_photon_electron_spectrum</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.afterpulse_fit_function"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum.afterpulse_fit_function()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.derive_single_pe_spectrum"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum.derive_single_pe_spectrum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.fit_afterpulse_spectrum"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum.fit_afterpulse_spectrum()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.write_single_pe_spectrum"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum.write_single_pe_spectrum()</span></code></a></li>
 </ul>
 </li>
@@ -697,9 +699,47 @@ The summary includes the various CTAO requirements and the final expected NSB pi
 </dd>
 </dl>
 <dl class="py method">
+<dt class="sig sig-object py" id="camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.afterpulse_fit_function">
+<span class="sig-name descname"><span class="pre">afterpulse_fit_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fix_k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/single_photon_electron_spectrum.html#SinglePhotonElectronSpectrum.afterpulse_fit_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.afterpulse_fit_function" title="Link to this definition">#</a></dt>
+<dd><p>Afterpulse fit function: exponential decay with linear term in the exponent.</p>
+<p>Starting values and bounds are set for the other parameters using values typical
+for LSTN-design. Allows to fix the K parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fix_K</strong><span class="classifier">float</span></dt><dd><p>Fixed value for K parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>function</dt><dd><p>Exponential decay function with linear term in the exponent.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.derive_single_pe_spectrum">
 <span class="sig-name descname"><span class="pre">derive_single_pe_spectrum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/single_photon_electron_spectrum.html#SinglePhotonElectronSpectrum.derive_single_pe_spectrum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.derive_single_pe_spectrum" title="Link to this definition">#</a></dt>
 <dd><p>Derive single photon electron spectrum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.fit_afterpulse_spectrum">
+<span class="sig-name descname"><span class="pre">fit_afterpulse_spectrum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/camera/single_photon_electron_spectrum.html#SinglePhotonElectronSpectrum.fit_afterpulse_spectrum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.fit_afterpulse_spectrum" title="Link to this definition">#</a></dt>
+<dd><p>Fit afterpulse spectrum with a exponential decay function.</p>
+<p>Assume input to be in ecsv format with columns ‘amplitude’, ‘frequency (afterpulsing)’,
+and ‘frequency stdev (afterpulsing)’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>astro.Table</dt><dd><p>Table with fitted afterpulse spectrum data.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -780,7 +820,9 @@ The summary includes the various CTAO requirements and the final expected NSB pi
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-photon-electron-spectral-analysis">Single photon-electron spectral analysis</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#module-camera.single_photon_electron_spectrum">single_photon_electron_spectrum</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.afterpulse_fit_function"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum.afterpulse_fit_function()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.derive_single_pe_spectrum"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum.derive_single_pe_spectrum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.fit_afterpulse_spectrum"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum.fit_afterpulse_spectrum()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.write_single_pe_spectrum"><code class="docutils literal notranslate"><span class="pre">SinglePhotonElectronSpectrum.write_single_pe_spectrum()</span></code></a></li>
 </ul>
 </li>
