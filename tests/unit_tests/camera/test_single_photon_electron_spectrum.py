@@ -347,7 +347,7 @@ def test_fit_afterpulse_spectrum(mock_curve_fit, spe_spectrum, afterpulse_column
         assert len(result) > 0
 
         # Test case 2: with fixed k
-        spe_spectrum.args_dict["fit_afterpulse_decay_factor"] = 15.0
+        spe_spectrum.args_dict["afterpulse_decay_factor_fixed_value"] = 15.0
         mock_params = np.array([1e-5, 8.0])
         mock_covariance = np.array([[1e-10, 0], [0, 1]])
         mock_curve_fit.return_value = (mock_params, mock_covariance)

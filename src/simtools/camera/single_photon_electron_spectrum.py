@@ -111,7 +111,8 @@ class SinglePhotonElectronSpectrum:
         Parameters
         ----------
         input_spectrum : str
-            Input file with amplitude spectrum.
+            Input file with amplitude spectrum
+            (prompt spectrum only if afterpulse spectrum is given).
         afterpulse_spectrum : str
             Input file with afterpulse spectrum.
         afterpulse_fitted_spectrum : astro.Table
@@ -221,7 +222,7 @@ class SinglePhotonElectronSpectrum:
             Table with fitted afterpulse spectrum data.
         """
         ap_min = self.args_dict["afterpulse_amplitude_range"][0]
-        fix_k = self.args_dict.get("fit_afterpulse_decay_factor")
+        fix_k = self.args_dict.get("afterpulse_decay_factor_fixed_value")
 
         x, y, y_err = self._read_afterpulse_spectrum_for_fit(
             self.args_dict.get("afterpulse_spectrum"), ap_min
