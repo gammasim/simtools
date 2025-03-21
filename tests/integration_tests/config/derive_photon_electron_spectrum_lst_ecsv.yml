@@ -9,6 +9,9 @@ CTA_SIMPIPE:
       AFTERPULSE_SPECTRUM: ./tests/resources/LST_afterpulses.ecsv
       STEP_SIZE: 0.02
       USE_NORM_SPE: true
+      FIT_AFTERPULSE: true
+      AFTERPULSE_DECAY_FACTOR_FIXED_VALUE: 15
+      AFTERPULSE_AMPLITUDE_RANGE: [1, 42]
       OUTPUT_PATH: simtools-output
       OUTPUT_FILE: test_single_pe_lst.ecsv
       USE_PLAIN_OUTPUT_PATH: true
@@ -16,7 +19,7 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - OUTPUT_FILE: test_single_pe_lst.dat
     - OUTPUT_FILE: test_single_pe_lst.ecsv
-    - REFERENCE_OUTPUT_FILE: 'tests/resources/spe_LST_2022-04-27_AP2.0e-4.ecsv
+    - REFERENCE_OUTPUT_FILE: 'tests/resources/spe_LST_2025-02-15-used.ecsv
 
         '
       TOLERANCE: 0.0001
