@@ -418,25 +418,16 @@ class SimulatorLightEmission(SimtelRunner):
     def process_simulation_output(self, args_dict, figures):
         """Process the simulation output, including plotting and saving figures."""
         try:
-            filename = (
-                f"{self.output_directory}/"
-                f"{self.le_application[0]}_{self.le_application[1]}.simtel.gz"
-            )
+            filename = self._get_simulation_output_filename()
+            distance = self._get_distance_for_plotting()
 
-            try:
-                distance = self.light_emission_config["z_pos"]["default"]
-            except KeyError:
-                distance = round(self.distance, 2)
-
-            fig = plot_simtel_ctapipe(
+            fig = self._plot_simulation_output(
                 filename,
-                cleaning_args=[
-                    args_dict["boundary_thresh"],
-                    args_dict["picture_thresh"],
-                    args_dict["min_neighbors"],
-                ],
-                distance=distance,
-                return_cleaned=args_dict["return_cleaned"],
+                args_dict["boundary_thresh"],
+                args_dict["picture_thresh"],
+                args_dict["min_neighbors"],
+                distance,
+                args_dict["return_cleaned"],
             )
             figures.append(fig)
 
@@ -446,6 +437,30 @@ class SimulatorLightEmission(SimtelRunner):
                 f"{self.light_emission_config['z_pos']['default']}"
             )
             self._logger.warning(msg)
+
+    def _get_simulation_output_filename(self):
+        """Get the filename of the simulation output."""
+        return (
+            f"{self.output_directory}/{self.le_application[0]}_{self.le_application[1]}.simtel.gz"
+        )
+
+    def _get_distance_for_plotting(self):
+        """Get the distance to be used for plotting."""
+        try:
+            return self.light_emission_config["z_pos"]["default"]
+        except KeyError:
+            return round(self.distance, 2)
+
+    def _plot_simulation_output(
+        self, filename, boundary_thresh, picture_thresh, min_neighbors, distance, return_cleaned
+    ):
+        """Plot the simulation output."""
+        return plot_simtel_ctapipe(
+            filename,
+            cleaning_args=[boundary_thresh, picture_thresh, min_neighbors],
+            distance=distance,
+            return_cleaned=return_cleaned,
+        )
 
     def save_figures_to_pdf(self, figures, telescope):
         """Save the generated figures to a PDF file."""
