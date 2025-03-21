@@ -13,7 +13,7 @@ description: |-
 short_description: |-
   Exponentially decaying pulse shape time.
 data:
-  - type: double
+  - type: float64
     unit: "ns"
     default: 0
     allowed_range:

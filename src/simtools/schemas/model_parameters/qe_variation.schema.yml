@@ -16,7 +16,7 @@ description: |-
   the average quantum or photon detection efficiency; the variation
   is applied independent of the wavelength.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 0.035
     allowed_range:

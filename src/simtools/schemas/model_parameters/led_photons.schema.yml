@@ -13,7 +13,7 @@ description: |-
 short_description: |-
   LED intensity in the camera lid in front of each pixel.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 4.0
     allowed_range:

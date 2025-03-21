@@ -17,7 +17,7 @@ description: |-
 short_description: Time over threshold required before logic response switches to
   true.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 1.5
     condition: default_trigger==Majority

@@ -11,7 +11,7 @@ description: |-
   This location is typically identical or close to the site center.
 short_description: Altitude above sea level of site reference point.
 data:
-  - type: double
+  - type: float64
     unit: m
     allowed_range:
       min: 0.0
