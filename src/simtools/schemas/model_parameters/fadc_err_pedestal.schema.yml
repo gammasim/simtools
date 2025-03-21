@@ -21,7 +21,7 @@ short_description: |-
   Assumed error in initial calibration of pedestal
   (affects only the reported pedestal).
 data:
-  - type: double
+  - type: float64
     default: 0.08
     description: |-
       Error in pedestal calibration

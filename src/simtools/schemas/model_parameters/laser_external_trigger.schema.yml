@@ -13,7 +13,7 @@ description: |-
 short_description: |-
   Use external trigger for calibration.
 data:
-  - type: int
+  - type: int64
     default: 0
     allowed_range:
       min: 0

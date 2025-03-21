@@ -11,7 +11,7 @@ description: |-
    Vertical component in downwards direction of the geomagnetic
    field at given site.
 data:
-  - type: double
+  - type: float64
     unit: uT
 instrument:
   class: Site

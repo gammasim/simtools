@@ -14,7 +14,7 @@ description: |-
   FADC bins read out.
 short_description: Number of FADC bins to be simulated.
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 20
     allowed_range:

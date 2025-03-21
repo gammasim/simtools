@@ -11,7 +11,7 @@ description: |-
   (for high-gain channel, if different gains are used).
 short_description: Gaussian r.m.s. spread of white noise per time bin in digitization.
 data:
-  - type: double
+  - type: float64
     description: |-
       Gaussian r.m.s. spread of white noise per time bin in digitization
       (for high-gain channel in case of dual-readout chain)

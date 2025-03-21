@@ -9,7 +9,7 @@ name: iobuf_output_maximum
 description: |-
   The maximum size of the I/O buffer for output data, including raw data for all telescopes.
 data:
-  - type: int
+  - type: int64
     unit: byte
     default: 20000000
     allowed_range:

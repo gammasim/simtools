@@ -15,7 +15,7 @@ description: |-
 short_description: Parameter to control the type of mirror used (DC, parabolic or
   SC).
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 0
     allowed_range:
