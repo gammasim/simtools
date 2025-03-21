@@ -12,7 +12,7 @@ description: |-
   (taking `telescope_axes_height` into account).
 short_description: Altitude above sea level of site centre.
 data:
-  - type: double
+  - type: float64
     unit: m
     default: 1800.
     allowed_range:

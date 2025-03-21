@@ -12,7 +12,7 @@ description: |-
 short_description: |-
   Average amplitude variation of LED in front of each pixel.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 0.0
     allowed_range:

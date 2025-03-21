@@ -21,7 +21,7 @@ data:
       primary center, which means a z value of par:secondary_ref_radius
       times the first par:secondary_mirror_parameters value is at the
       height of the center of the secondary.
-    type: double
+    type: float64
     unit: cm
     required: true
     condition: mirror_class==2
@@ -32,14 +32,14 @@ data:
       primary center, which means a z value of par:secondary_ref_radius
       times the first par:secondary_mirror_parameters value is at the
       height of the center of the secondary.
-    type: double
+    type: float64
     unit: cm
     required: true
     condition: mirror_class==2
     default: 0.
   - name: radius_r1
     description: Radius of open cylinder shape or cone shape at baffle_z1.
-    type: double
+    type: float64
     unit: cm
     required: true
     condition: mirror_class==2
@@ -48,14 +48,14 @@ data:
     description: |-
       Wall thickness of the baffle. The radius radius_r1 and radius_r2
       are the inner radii in case of finite wall thickness.
-    type: double
+    type: float64
     unit: cm
     required: false
     condition: mirror_class==2
     default: 0.
   - name: radius_r2
     description: Radius of open cylinder shape or cone shape at baffle_z2.
-    type: double
+    type: float64
     unit: cm
     required: false
     condition: mirror_class==2

@@ -13,7 +13,7 @@ description: |-
 short_description: |-
   Length of a coincidence window of the default stereo trigger.
 data:
-  - type: double
+  - type: float64
     unit: ns
     default: 1000.
 instrument:

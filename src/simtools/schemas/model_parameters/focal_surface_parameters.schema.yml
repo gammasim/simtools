@@ -21,121 +21,121 @@ short_description: |-
   off-axis shape.
 data:
   - name: p0
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p1
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p2
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p3
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p4
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p5
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p6
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p7
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p8
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p9
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p10
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p11
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p12
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p13
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p14
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p15
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p16
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p17
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p18
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm
     default: 0.
   - name: p19
-    type: double
+    type: float64
     description: coefficient describing focal surface
     required: true
     unit: cm

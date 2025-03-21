@@ -9,7 +9,7 @@ name: fadc_pedestal
 description: |-
   (F)ADC pedestal value per time slice (for high-gain channel for dual-gain readout).
 data:
-  - type: double
+  - type: float64
     description: |-
       (F)ADC pedestal value per time slice
       (for high-gain channel in case of dual-readout chain).

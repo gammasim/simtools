@@ -11,7 +11,7 @@ description: |-
   Potentially useful for cross-talk calculations.
 short_description: Number of channels per readout chip.
 data:
-  - type: uint
+  - type: uint64
     unit: dimensionless
     default: 4
     allowed_range:

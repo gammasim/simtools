@@ -20,21 +20,21 @@ short_description: |-
   Gaussian r.m.s. spread of random fluctuations of the mirror alignment
   angle with respect to nominal alignment in the vertical component.
 data:
-  - type: double
+  - type: float64
     description: Constant value $\sigma_0$.
     unit: deg
     default: 0.0034
-  - type: double
+  - type: float64
     description: Zenith angle $\theta_0$ at which minimum is reached.
     unit: deg
     default: 28.0
-  - type: double
+  - type: float64
     description: |-
       Scaling term $k_c$ in
       $\sigma_c = (\cos(\theta)-\cos(\theta_0)) / k_c$.
     unit: dimensionless
     default: 0.01
-  - type: double
+  - type: float64
     description: |-
       Scaling term $k_s$ in
       $\sigma_s = (\sin(\theta)-\sin(\theta_0)) / k_s$.

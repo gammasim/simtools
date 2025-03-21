@@ -12,7 +12,7 @@ description: |-
 short_description: |-
   Gain adjustment for amplitudes and PMT gain.
 data:
-  - type: double
+  - type: float64
     unit: dimensionless
     default: 1.0
     allowed_range:

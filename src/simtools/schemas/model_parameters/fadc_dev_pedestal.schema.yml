@@ -14,7 +14,7 @@ description: |-
   Deviation of (F)ADCs pedestals in a single channel.
   (for high-gain channel in case of dual-readout chain).
 data:
-  - type: double
+  - type: float64
     description: |-
       Deviation of (F)ADCs pedestals
       (for high-gain channel in case of dual-readout chain).
