@@ -71,7 +71,7 @@ def _parse(label, description, usage):
         "--steps",
         type=int,
         nargs="+",
-        help="List of steps to be execution (e.g., '--steps 7 8 9'; ignore to run all).",
+        help="List of steps to be execution (e.g., '--steps 7 8 9'; do not specify to run all).",
     )
     return config.initialize(db_config=True)
 
