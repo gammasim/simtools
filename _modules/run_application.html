@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>run_application &#8212; simtools v0.1.dev1+g539b57f Manual</title>
+    <title>run_application &#8212; simtools v0.1.dev1+g1798987 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=a77d0d88"></script>
+    <script src="../_static/documentation_options.js?v=9b3b47e0"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g539b57f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1798987 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -391,12 +391,30 @@ document.write(`
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Run simtools applications from configuration files for setting workflows.</span>
+<span class="sd">Run several simtools applications using a configuration file.</span>
 
 <span class="sd">Allows to run several simtools applications with a single configuration file, which includes</span>
 <span class="sd">both the name of the simtools application and the configuration for the application.</span>
 
-<span class="sd">Strong assumption on the directory structure for input and output files of applications.</span>
+<span class="sd">This application is used for model parameter setting workflows.</span>
+<span class="sd">Strong assumptions are applied on the directory structure for input and output files of</span>
+<span class="sd">applications.</span>
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+
+<span class="sd">Run the application with the configuration file &#39;config_file_name&#39;:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-run-application --configuration_file config_file_name</span>
+
+<span class="sd">Run the application with the configuration file &#39;config_file_name&#39;, but skipping all steps except</span>
+<span class="sd">step 2 and 3 (useful for debugging):</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">    simtools-run-application --configuration_file config_file_name --steps 2 3</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 
@@ -439,6 +457,12 @@ document.write(`
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--steps&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of steps to be execution (e.g., &#39;--steps 7 8 9&#39;; do not specify to run all).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
@@ -479,7 +503,7 @@ document.write(`
 
 <div class="viewcode-block" id="read_application_configuration">
 <a class="viewcode-back" href="../user-guide/applications/simtools-run-application.html#run_application.read_application_configuration">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">read_application_configuration</span><span class="p">(</span><span class="n">configuration_file</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_application_configuration</span><span class="p">(</span><span class="n">configuration_file</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read application configuration from file and modify for setting workflows.</span>
 
@@ -495,6 +519,8 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    configuration_file : str</span>
 <span class="sd">        Configuration file name.</span>
+<span class="sd">    steps : list</span>
+<span class="sd">        List of steps to be executed (None: all steps).</span>
 <span class="sd">    logger : Logger</span>
 <span class="sd">        Logger object.</span>
 
@@ -516,7 +542,8 @@ document.write(`
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting workflow output path to </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">log_file</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="s2">&quot;simtools.log&quot;</span>
     <span class="n">configurations</span> <span class="o">=</span> <span class="n">application_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;APPLICATIONS&quot;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">configurations</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">step_count</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">configurations</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;RUN_APPLICATION&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">step_count</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="n">steps</span> <span class="k">else</span> <span class="kc">True</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">place_holder</span><span class="p">,</span> <span class="n">setting_workflow</span><span class="p">)</span>
@@ -534,21 +561,25 @@ document.write(`
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>  <span class="c1"># noqa: D103</span>
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
         <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Run simtools applications from configuration file.&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Run simtools applications using a configuration file.&quot;</span><span class="p">,</span>
         <span class="n">usage</span><span class="o">=</span><span class="s2">&quot;simtools-run-application --config_file config_file_name&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_log_level_from_user</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;log_level&quot;</span><span class="p">]))</span>
 
     <span class="n">configurations</span><span class="p">,</span> <span class="n">log_file</span> <span class="o">=</span> <span class="n">read_application_configuration</span><span class="p">(</span>
-        <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;configuration_file&quot;</span><span class="p">],</span> <span class="n">logger</span>
+        <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;configuration_file&quot;</span><span class="p">],</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">],</span> <span class="n">logger</span>
     <span class="p">)</span>
 
     <span class="k">with</span> <span class="n">log_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Running simtools applications</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dependencies</span><span class="o">.</span><span class="n">get_version_string</span><span class="p">(</span><span class="n">db_config</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">configurations</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running application: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;APPLICATION&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;RUN_APPLICATION&quot;</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running application: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;APPLICATION&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping application: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;APPLICATION&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
             <span class="n">config</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">change_dict_keys_case</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
             <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">run_application</span><span class="p">(</span>
                 <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;APPLICATION&quot;</span><span class="p">),</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">),</span> <span class="n">logger</span>
