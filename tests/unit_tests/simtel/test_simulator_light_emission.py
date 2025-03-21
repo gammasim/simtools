@@ -570,3 +570,95 @@ def test_get_distance_for_plotting_with_z_pos(mock_simulator_variable):
     distance = mock_simulator_variable._get_distance_for_plotting()
 
     assert distance == 1000 * u.m
+
+
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_simulation_output_filename"
+)
+def test_process_simulation_output_attribute_error(
+    mock_get_simulation_output_filename, mock_simulator_variable
+):
+    """Test process_simulation_output handles AttributeError and logs a warning."""
+    args_dict = {
+        "boundary_thresh": 5,
+        "picture_thresh": 3,
+        "min_neighbors": 2,
+        "return_cleaned": True,
+    }
+    figures = []
+
+    # Simulate AttributeError
+    mock_get_simulation_output_filename.side_effect = AttributeError
+
+    with patch.object(mock_simulator_variable._logger, "warning") as mock_warning:
+        mock_simulator_variable.process_simulation_output(args_dict, figures)
+
+        # Assert the warning was logged
+        mock_warning.assert_called_once_with(
+            "Telescope not triggered at distance of "
+            f"{mock_simulator_variable.light_emission_config['z_pos']['default']}"
+        )
+
+
+def test_get_distance_for_plotting(mock_simulator_variable):
+    """Test the _get_distance_for_plotting method."""
+    mock_simulator_variable.light_emission_config = {"z_pos": {"default": 1000 * u.m}}
+    distance = mock_simulator_variable._get_distance_for_plotting()
+    assert distance == 1000 * u.m
+
+    mock_simulator_variable.light_emission_config = {}
+    mock_simulator_variable.distance = 1500.0001 * u.m
+
+    with patch.object(mock_simulator_variable._logger, "warning"):
+        distance = mock_simulator_variable._get_distance_for_plotting()
+        assert distance == 1500 * u.m
+
+
+@patch("simtools.simtel.simulator_light_emission.save_figs_to_pdf")
+def test_save_figures_to_pdf(mock_save_figs_to_pdf, mock_simulator_variable):
+    """Test the save_figures_to_pdf method."""
+    figures = [Mock(), Mock()]  # Mock figures
+    telescope = "LSTN-01"
+
+    mock_simulator_variable.save_figures_to_pdf(figures, telescope)
+
+    # Assert save_figs_to_pdf was called with the correct arguments
+    mock_save_figs_to_pdf.assert_called_once_with(
+        figures,
+        f"{mock_simulator_variable.output_directory}/"
+        f"{telescope}_{mock_simulator_variable.le_application[0]}_{mock_simulator_variable.le_application[1]}.pdf",
+    )
+
+
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.process_simulation_output")
+@patch("subprocess.run")
+@patch("builtins.open", new_callable=mock_open)
+def test_run_simulation(
+    mock_open, mock_subprocess_run, mock_process_simulation_output, mock_simulator_variable
+):
+    """Test the run_simulation method."""
+    args_dict = {
+        "boundary_thresh": 5,
+        "picture_thresh": 3,
+        "min_neighbors": 2,
+        "return_cleaned": True,
+    }
+    figures = []
+
+    mock_simulator_variable.prepare_script = Mock(return_value="dummy_script.sh")
+    mock_simulator_variable.run_simulation(args_dict, figures)
+
+    mock_open.assert_called_once_with(
+        Path(mock_simulator_variable.output_directory) / "logfile.log", "w", encoding="utf-8"
+    )
+    mock_subprocess_run.assert_called_once_with(
+        "dummy_script.sh",
+        shell=False,
+        check=False,
+        text=True,
+        stdout=mock_open.return_value.__enter__.return_value,
+        stderr=mock_open.return_value.__enter__.return_value,
+    )
+
+    # Assert process_simulation_output was called
+    mock_process_simulation_output.assert_called_once_with(args_dict, figures)
