@@ -337,7 +337,7 @@ class LimitCalculator:
             },
             "energy_distribution": {
                 "x_data": self.event_data.simulated,
-                "bins": np.logspace(-3, 5.5, 100),
+                "bins": np.logspace(-3, 0.0, 100),
                 "plot_type": "histogram",
                 "plot_params": {"histtype": "step", "color": "k", "lw": 2},
                 "x_label": "Energy [TeV]",
