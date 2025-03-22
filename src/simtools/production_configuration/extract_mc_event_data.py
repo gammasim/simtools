@@ -74,7 +74,7 @@ class MCEventExtractor:
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
         self.output_file = output_file
-        self.max_files = max_files
+        self.max_files = max_files if max_files < len(input_files) else len(input_files)
         self.shower = None
         self.n_use = None
         self.shower_id_offset = 0
