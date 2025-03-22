@@ -1,11 +1,40 @@
 """Calculate the thresholds for energy, radial distance, and viewcone."""
 
+import logging
+from dataclasses import dataclass, field
+
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 import tables
-from astropy.coordinates import AltAz
+from astropy.coordinates import AltAz, angular_separation
 from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
+
+
+@dataclass
+class EventData:
+    """Shower event data."""
+
+    event_x_core: np.ndarray = field(default_factory=lambda: np.array([]))
+    event_y_core: np.ndarray = field(default_factory=lambda: np.array([]))
+    simulated: np.ndarray = field(default_factory=lambda: np.array([]))
+    shower_sim_azimuth: np.ndarray = field(default_factory=lambda: np.array([]))
+    shower_sim_altitude: np.ndarray = field(default_factory=lambda: np.array([]))
+
+    event_x_core_shower: np.ndarray = field(default_factory=lambda: np.array([]))
+    event_y_core_shower: np.ndarray = field(default_factory=lambda: np.array([]))
+    core_distance_shower: np.ndarray = field(default_factory=lambda: np.array([]))
+
+
+@dataclass
+class TriggeredEventData:
+    """Triggered event data."""
+
+    shower_id_triggered: np.ndarray = field(default_factory=lambda: np.array([]))
+    array_azimuth: np.ndarray = field(default_factory=lambda: np.array([]))
+    array_altitude: np.ndarray = field(default_factory=lambda: np.array([]))
+    trigger_telescope_list_list: list = field(default_factory=list)
+    angular_distance: np.ndarray = field(default_factory=lambda: np.array([]))
 
 
 class LimitCalculator:
@@ -23,54 +52,122 @@ class LimitCalculator:
     """
 
     def __init__(self, event_data_file, telescope_list=None):
-        """
-        Initialize the LimitCalculator with the given event data file.
-
-        Parameters
-        ----------
-        event_data_file : str
-            Path to the reduced MC event data file.
-        telescope_list : list, optional
-            List of telescope IDs to filter the events (default is None).
-        """
+        """Initialize the LimitCalculator with the given event data file."""
+        self._logger = logging.getLogger(__name__)
         self.event_data_file = event_data_file
         self.telescope_list = telescope_list
-        self.event_x_core = None
-        self.event_y_core = None
-        self.simulated = None
-        self.shower_id_triggered = None
-        self.list_of_files = None
-        self.shower_sim_azimuth = None
-        self.shower_sim_altitude = None
-        self.array_azimuth = None
-        self.array_altitude = None
-        self.trigger_telescope_list_list = None
-        self.units = {}
-        self._read_event_data()
+
+        self.event_data, self.triggered_data = self._read_event_data()
+        self._derived_event_data()
 
     def _read_event_data(self):
-        """Read the event data from the reduced MC event data file."""
+        """
+        Read the event data from the reduced MC event data file and apply triggered mask.
+
+        Apply the triggered mask to the event data to filter out events that did not trigger.
+        All arrays are of the same length.
+
+        Returns
+        -------
+        EventData, TriggeredEventData
+            Event data and triggered event data.
+        """
+        event_data = EventData()
+        triggered_event_data = TriggeredEventData()
         with tables.open_file(self.event_data_file, mode="r") as f:
-            file_names = f.root.data.file_names
             reduced_data = f.root.data.reduced_data
             triggered_data = f.root.data.triggered_data
             trigger_telescope_list_list = f.root.data.trigger_telescope_list_list
 
-            self.list_of_files = file_names.col("file_names")
-
-            self.event_x_core = reduced_data.col("core_x")
-            self.event_y_core = reduced_data.col("core_y")
-            self.simulated = reduced_data.col("simulated")
-            self.shower_sim_azimuth = reduced_data.col("shower_sim_azimuth")
-            self.shower_sim_altitude = reduced_data.col("shower_sim_altitude")
-
-            self.array_altitude = triggered_data.col("array_altitudes")
-            self.array_azimuth = triggered_data.col("array_azimuths")
-            self.shower_id_triggered = triggered_data.col("shower_id_triggered")
-
-            self.trigger_telescope_list_list = [
+            event_data.event_x_core = reduced_data.col("core_x")
+            event_data.event_y_core = reduced_data.col("core_y")
+            event_data.simulated = reduced_data.col("simulated")
+            event_data.shower_sim_azimuth = reduced_data.col("shower_sim_azimuth")
+            event_data.shower_sim_altitude = reduced_data.col("shower_sim_altitude")
+            triggered_event_data.array_altitude = triggered_data.col("array_altitudes")
+            triggered_event_data.array_azimuth = triggered_data.col("array_azimuths")
+            triggered_event_data.shower_id_triggered = triggered_data.col("shower_id_triggered")
+            triggered_event_data.trigger_telescope_list_list = [
                 [np.int16(tel) for tel in event] for event in trigger_telescope_list_list
             ]
+        return self._reduce_to_triggered_events(event_data, triggered_event_data)
+
+    def _reduce_to_triggered_events(self, event_data, triggered_data):
+        """Reduce event data to triggered events only."""
+        filtered_shower_ids, triggered_indices = self._get_mask_triggered_telescopes(
+            self.telescope_list,
+            triggered_data.shower_id_triggered,
+            triggered_data.trigger_telescope_list_list,
+        )
+        filtered_event_data = EventData(
+            event_x_core=event_data.event_x_core[filtered_shower_ids],
+            event_y_core=event_data.event_y_core[filtered_shower_ids],
+            simulated=event_data.simulated[filtered_shower_ids],
+            shower_sim_azimuth=event_data.shower_sim_azimuth[filtered_shower_ids],
+            shower_sim_altitude=event_data.shower_sim_altitude[filtered_shower_ids],
+        )
+
+        filtered_telescope_list = [
+            triggered_data.trigger_telescope_list_list[i] for i in triggered_indices
+        ]
+
+        filtered_triggered_data = TriggeredEventData(
+            array_azimuth=triggered_data.array_azimuth[triggered_indices],
+            array_altitude=triggered_data.array_altitude[triggered_indices],
+            trigger_telescope_list_list=filtered_telescope_list,
+        )
+        self._logger.info(
+            f"Events reduced to triggered events: {len(filtered_event_data.simulated)}"
+        )
+        return filtered_event_data, filtered_triggered_data
+
+    def _derived_event_data(self):
+        """Calculate core positions in shower coordinates and angular distances."""
+        self.event_data.event_x_core_shower, self.event_data.event_y_core_shower = (
+            self._transform_to_shower_coordinates()
+        )
+        self.event_data.core_distance_shower = np.sqrt(
+            self.event_data.event_x_core_shower**2 + self.event_data.event_y_core_shower**2
+        )
+
+        self.triggered_data.angular_distance = (
+            angular_separation(
+                self.event_data.shower_sim_azimuth,
+                self.event_data.shower_sim_altitude,
+                self.triggered_data.array_azimuth,
+                self.triggered_data.array_altitude,
+            )
+            * 180
+            / np.pi
+        )
+
+    def _get_mask_triggered_telescopes(
+        self, telescope_list, shower_id_triggered, trigger_telescope_list_list
+    ):
+        """
+        Return indices of events that triggered the specified telescopes.
+
+        Parameters
+        ----------
+        telescope_list : list
+            List of telescope IDs to filter the events
+
+        Returns
+        -------
+        np.ndarray
+            Array of indices for triggered events.
+        """
+        triggered_indices = np.arange(len(shower_id_triggered))
+        if telescope_list is not None:
+            mask = np.array(
+                [
+                    all(tel in event for tel in telescope_list)
+                    for event in trigger_telescope_list_list
+                ]
+            )
+            triggered_indices = triggered_indices[mask]
+            return shower_id_triggered[mask], triggered_indices
+        return shower_id_triggered, triggered_indices
 
     def _compute_limits(self, hist, bin_edges, loss_fraction, limit_type="lower"):
         """
@@ -96,39 +193,37 @@ class LimitCalculator:
         total_events = np.sum(hist)
         threshold = (1 - loss_fraction) * total_events
         bin_index = np.searchsorted(cumulative_sum, threshold)
+
         return bin_edges[bin_index] if limit_type == "upper" else bin_edges[-bin_index]
 
-    def _prepare_data_for_limits(self):
+    def _transform_to_shower_coordinates(self):
         """
-        Prepare the data required for computing limits.
+        Transform core positions from ground coordinates to shower coordinates.
 
         Returns
         -------
         tuple
-            Tuple containing core distances, triggered energies, core bins, and energy bins.
+            Core positions in shower coordinates (x, y).
         """
-        shower_id_triggered_masked = self.shower_id_triggered
-        if self.telescope_list is not None:
-            mask = np.array(
-                [
-                    all(tel in event for tel in self.telescope_list)
-                    for event in self.trigger_telescope_list_list
-                ]
-            )
-            shower_id_triggered_masked = self.shower_id_triggered[mask]
-
-        triggered_energies = self.simulated[shower_id_triggered_masked]
-        energy_bins = np.logspace(
-            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 1000
+        pointing = AltAz(
+            az=self.event_data.shower_sim_azimuth * u.rad,
+            alt=self.event_data.shower_sim_altitude * u.rad,
         )
-        event_x_core_shower, event_y_core_shower = self._transform_to_shower_coordinates()
-        core_distances_all = np.sqrt(event_x_core_shower**2 + event_y_core_shower**2)
-        core_distances_triggered = core_distances_all[shower_id_triggered_masked]
-        core_bins = np.linspace(
-            core_distances_triggered.min(), core_distances_triggered.max(), 1000
+        ground = GroundFrame(
+            x=self.event_data.event_x_core * u.m, y=self.event_data.event_y_core * u.m, z=0 * u.m
         )
+        shower_frame = ground.transform_to(TiltedGroundFrame(pointing_direction=pointing))
 
-        return core_distances_triggered, triggered_energies, core_bins, energy_bins
+        return shower_frame.x.value, shower_frame.y.value
+
+    @property
+    def energy_bins(self):
+        """Return bins for the energy histogram."""
+        return np.logspace(
+            np.log10(self.event_data.simulated.min()),
+            np.log10(self.event_data.simulated.max()),
+            1000,
+        )
 
     def compute_lower_energy_limit(self, loss_fraction):
         """
@@ -144,13 +239,19 @@ class LimitCalculator:
         astropy.units.Quantity
             Lower energy limit.
         """
-        _, triggered_energies, _, energy_bins = self._prepare_data_for_limits()
-
-        hist, _ = np.histogram(triggered_energies, bins=energy_bins)
-        lower_bin_edge_value = self._compute_limits(
-            hist, energy_bins, loss_fraction, limit_type="lower"
+        hist, _ = np.histogram(self.event_data.simulated, bins=self.energy_bins)
+        return (
+            self._compute_limits(hist, self.energy_bins, loss_fraction, limit_type="lower") * u.TeV
         )
-        return lower_bin_edge_value * u.TeV
+
+    @property
+    def core_distance_bins(self):
+        """Return bins for the core distance histogram."""
+        return np.linspace(
+            self.event_data.core_distance_shower.min(),
+            self.event_data.core_distance_shower.max(),
+            1000,
+        )
 
     def compute_upper_radial_distance(self, loss_fraction):
         """
@@ -166,13 +267,20 @@ class LimitCalculator:
         astropy.units.Quantity
             Upper radial distance in m.
         """
-        core_distances_triggered, _, core_bins, _ = self._prepare_data_for_limits()
-
-        hist, _ = np.histogram(core_distances_triggered, bins=core_bins)
-        upper_bin_edge_value = self._compute_limits(
-            hist, core_bins, loss_fraction, limit_type="upper"
+        hist, _ = np.histogram(self.event_data.core_distance_shower, bins=self.core_distance_bins)
+        return (
+            self._compute_limits(hist, self.core_distance_bins, loss_fraction, limit_type="upper")
+            * u.m
         )
-        return upper_bin_edge_value * u.m
+
+    @property
+    def view_cone_bins(self):
+        """Return bins for the viewcone histogram."""
+        return np.linspace(
+            self.triggered_data.angular_distance.min(),
+            self.triggered_data.angular_distance.max(),
+            1000,
+        )
 
     def compute_viewcone(self, loss_fraction):
         """
@@ -192,101 +300,185 @@ class LimitCalculator:
         astropy.units.Quantity
             Viewcone radius in degrees.
         """
-        # Create an index array to create the mapping for the triggered events
-        triggered_indices = np.arange(len(self.shower_id_triggered))
-
-        # Apply the telescope mask if provided
-        if self.telescope_list is not None:
-            mask = np.array(
-                [
-                    all(tel in event for tel in self.telescope_list)
-                    for event in self.trigger_telescope_list_list
-                ]
-            )
-            shower_id_triggered_filtered = self.shower_id_triggered[mask]
-
-            triggered_indices = triggered_indices[mask]
-        else:
-            shower_id_triggered_filtered = self.shower_id_triggered
-
-        array_azimuth_filtered = self.array_azimuth[triggered_indices]
-        array_altitude_filtered = self.array_altitude[triggered_indices]
-
-        sim_azimuth_filtered = self.shower_sim_azimuth[shower_id_triggered_filtered]
-        sim_altitude_filtered = self.shower_sim_altitude[shower_id_triggered_filtered]
-
-        azimuth_diff = array_azimuth_filtered - sim_azimuth_filtered
-        sim_altitude_rad = sim_altitude_filtered
-        array_altitude_rad = array_altitude_filtered
-
-        x_1 = np.cos(azimuth_diff) * np.cos(sim_altitude_rad)
-        y_1 = np.sin(azimuth_diff) * np.cos(sim_altitude_rad)
-        z_1 = np.sin(sim_altitude_rad)
-        x_2 = x_1 * np.sin(array_altitude_rad) - z_1 * np.cos(array_altitude_rad)
-        y_2 = y_1
-        z_2 = x_1 * np.cos(array_altitude_rad) + z_1 * np.sin(array_altitude_rad)
-        off_angles = np.arctan2(np.sqrt(x_2**2 + y_2**2), z_2) * (180.0 / np.pi)
-
-        angle_bins = np.linspace(off_angles.min(), off_angles.max(), 1000)
-        hist, _ = np.histogram(off_angles, bins=angle_bins)
-
-        upper_bin_edge_value = self._compute_limits(
-            hist, angle_bins, loss_fraction, limit_type="upper"
+        hist, _ = np.histogram(self.triggered_data.angular_distance, bins=self.view_cone_bins)
+        return (
+            self._compute_limits(hist, self.view_cone_bins, loss_fraction, limit_type="upper")
+            * u.deg
         )
-        return upper_bin_edge_value * u.deg
 
-    def _transform_to_shower_coordinates(self):
+    def plot_data(self, lower_energy_limit, upper_radial_distance, viewcone, output_path=None):
         """
-        Transform core positions from ground coordinates to shower coordinates.
+        Plot the core distances and energies of triggered events.
+
+        Parameters
+        ----------
+        lower_energy_limit: astropy.units.Quantity
+            Lower energy limit to display on plots.
+        upper_radial_distance: astropy.units.Quantity
+            Upper radial distance limit to display on plots.
+        viewcone: astropy.units.Quantity
+            Viewcone radius to display on plots.
+        output_path: Path or str, optional
+            Directory to save plots. If None, plots will be displayed.
+        """
+        plots = {
+            "core_vs_energy": {
+                "x_data": self.event_data.core_distance_shower,
+                "y_data": self.event_data.simulated,
+                "bins": [self.core_distance_bins, self.energy_bins],
+                "plot_type": "histogram2d",
+                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "x_label": "Core Distance [m]",
+                "y_label": "Energy [TeV]",
+                "title": "Triggered events: core distance vs energy",
+                "y_scale": "log",
+                "colorbar_label": "Event Count",
+                "filename": "core_vs_energy_distribution.png",
+            },
+            "energy_distribution": {
+                "x_data": self.event_data.simulated,
+                "bins": np.logspace(-3, 5.5, 100),
+                "plot_type": "histogram",
+                "plot_params": {"histtype": "step", "color": "k", "lw": 2},
+                "x_label": "Energy [TeV]",
+                "y_label": "Event Count",
+                "title": "Triggered events: energy distribution",
+                "x_scale": "log",
+                "y_scale": "log",
+                "x_line": lower_energy_limit.value,
+                "filename": "energy_distribution.png",
+            },
+            "core_distance": {
+                "x_data": self.event_data.core_distance_shower,
+                "bins": self.core_distance_bins,
+                "plot_type": "histogram",
+                "plot_params": {"histtype": "step", "color": "k", "lw": 2},
+                "x_label": "Core Distance [m]",
+                "y_label": "Event Count",
+                "title": "Triggered events: core distance distribution",
+                "x_line": upper_radial_distance.value,
+                "filename": "core_distance_distribution.png",
+            },
+            "core_xy": {
+                "x_data": self.event_data.event_x_core_shower,
+                "y_data": self.event_data.event_y_core_shower,
+                "bins": 100,
+                "plot_type": "histogram2d",
+                "plot_params": {"norm": "log", "cmap": "viridis"},
+                "x_label": "Core X [m]",
+                "y_label": "Core Y [m]",
+                "title": "Triggered events: core x vs core y",
+                "colorbar_label": "Event Count",
+                "x_line": upper_radial_distance.value,
+                "y_line": upper_radial_distance.value,
+                "filename": "core_xy_distribution.png",
+            },
+            "view-cone": {
+                "x_data": self.triggered_data.angular_distance,
+                "bins": self.view_cone_bins,
+                "plot_type": "histogram",
+                "plot_params": {"histtype": "step", "color": "k", "lw": 2},
+                "x_label": "Distance to pointing direction [deg]",
+                "y_label": "Event Count",
+                "title": "Triggered events: viewcone distribution",
+                "x_line": viewcone.value,
+                "filename": "viewcone_distribution.png",
+            },
+        }
+
+        for _, plot_args in plots.items():
+            filename = plot_args.pop("filename")
+            output_file = output_path / filename if output_path else None
+            self._create_plot(**plot_args, output_file=output_file)
+
+    def _create_plot(
+        self,
+        x_data,
+        y_data=None,
+        bins=None,
+        plot_type="histogram",
+        plot_params=None,
+        x_label="",
+        y_label="",
+        title="",
+        x_scale=None,
+        y_scale=None,
+        colorbar_label=None,
+        output_file=None,
+        x_line=None,
+        y_line=None,
+    ):
+        """
+        Create and save a plot with the given parameters.
+
+        Parameters
+        ----------
+        x_data : array-like
+            Data for the x-axis or primary data for histograms.
+        y_data : array-like, optional
+            Data for the y-axis in scatter or 2D histograms.
+        bins : int, array-like, or list, optional
+            Bins specification for histograms.
+        plot_type : str, optional
+            Type of plot: 'histogram', 'histogram2d', or 'scatter'.
+        plot_params : dict, optional
+            Additional parameters to pass to the plotting function.
+        x_label : str, optional
+            Label for the x-axis.
+        y_label : str, optional
+            Label for the y-axis.
+        title : str, optional
+            Title for the plot.
+        x_scale : str, optional
+            Scale for x-axis ('log' or 'linear').
+        y_scale : str, optional
+            Scale for y-axis ('log' or 'linear').
+        colorbar_label : str, optional
+            Label for the colorbar in 2D histograms.
+        output_file : Path, optional
+            File path to save the plot. If not provided, the plot will be displayed.
+        x_line : float, optional
+            Value for vertical line on the plot.
+        y_line : float, optional
+            Value for horizontal line on the plot.
 
         Returns
         -------
-        tuple
-            Core positions in shower coordinates (x, y).
+        matplotlib.figure.Figure
+            The created figure object.
         """
-        pointing_az = self.shower_sim_azimuth * u.rad
-        pointing_alt = self.shower_sim_altitude * u.rad
+        fig = plt.figure(figsize=(8, 6))
+        plot_params = plot_params or {}
 
-        pointing = AltAz(az=pointing_az, alt=pointing_alt)
-        ground = GroundFrame(x=self.event_x_core * u.m, y=self.event_y_core * u.m, z=0 * u.m)
-        shower_frame = ground.transform_to(TiltedGroundFrame(pointing_direction=pointing))
+        if plot_type == "histogram":
+            plt.hist(x_data, bins=bins, **plot_params)
+        elif plot_type == "histogram2d":
+            plt.hist2d(x_data, y_data, bins=bins, **plot_params)
+            if colorbar_label:
+                plt.colorbar(label=colorbar_label)
+        elif plot_type == "scatter":
+            plt.scatter(x_data, y_data, **plot_params)
 
-        return shower_frame.x.value, shower_frame.y.value
+        if x_line:
+            plt.axvline(x_line, color="r", linestyle="--")
+        if y_line:
+            plt.axhline(y_line, color="r", linestyle="--")
 
-    def plot_data(self):
-        """Plot the core distances and energies of triggered events."""
-        shower_id_triggered_masked = self.shower_id_triggered
-        if self.telescope_list is not None:
-            mask = np.array(
-                [
-                    all(tel in event for tel in self.telescope_list)
-                    for event in self.trigger_telescope_list_list
-                ]
-            )
-            shower_id_triggered_masked = self.shower_id_triggered[mask]
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.title(title)
 
-        core_distances_all = np.sqrt(self.event_x_core**2 + self.event_y_core**2)
-        core_distances_triggered = core_distances_all[shower_id_triggered_masked]
-        triggered_energies = self.simulated[shower_id_triggered_masked]
+        if x_scale:
+            plt.xscale(x_scale)
+        if y_scale:
+            plt.yscale(y_scale)
 
-        core_bins = np.linspace(
-            core_distances_triggered.min(), core_distances_triggered.max(), 1000
-        )
-        energy_bins = np.logspace(
-            np.log10(triggered_energies.min()), np.log10(triggered_energies.max()), 1000
-        )
-        plt.figure(figsize=(8, 6))
-        plt.hist2d(
-            core_distances_triggered,
-            triggered_energies,
-            bins=[core_bins, energy_bins],
-            norm="log",
-            cmap="viridis",
-        )
+        if output_file:
+            self._logger.info(f"Saving plot to {output_file}")
+            plt.savefig(output_file, dpi=300, bbox_inches="tight")
+            plt.close()
+        else:
+            plt.tight_layout()
+            plt.show()
 
-        plt.colorbar(label="Event Count")
-        plt.xlabel("Core Distance [m]")
-        plt.ylabel("Energy [TeV]")
-        plt.yscale("log")
-        plt.title("2D Histogram of Triggered Core Distance vs Energy")
-        plt.show()
+        return fig
