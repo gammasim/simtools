@@ -8,5 +8,6 @@ CTA_SIMPIPE:
       - ./tests/resources/MLTdata-preproduction.meta.yml
       - ./tests/resources/MLTdata-preproduction.ecsv
       DB: sandbox
+      TEST_DB: true
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
