@@ -1,12 +1,30 @@
 #!/usr/bin/python3
 
 """
-Run simtools applications from configuration files for setting workflows.
+Run several simtools applications using a configuration file.
 
 Allows to run several simtools applications with a single configuration file, which includes
 both the name of the simtools application and the configuration for the application.
 
-Strong assumption on the directory structure for input and output files of applications.
+This application is used for model parameter setting workflows.
+Strong assumptions are applied on the directory structure for input and output files of
+applications.
+
+Example
+-------
+
+Run the application with the configuration file 'config_file_name':
+
+.. code-block:: console
+
+    simtools-run-application --configuration_file config_file_name
+
+Run the application with the configuration file 'config_file_name', but skipping all steps except
+step 2 and 3 (useful for debugging):
+
+.. code-block:: console
+
+    simtools-run-application --configuration_file config_file_name --steps 2 3
 
 """
 
@@ -49,6 +67,12 @@ def _parse(label, description, usage):
         required=True,
         default=None,
     )
+    config.parser.add_argument(
+        "--steps",
+        type=int,
+        nargs="+",
+        help="List of steps to be execution (e.g., '--steps 7 8 9'; do not specify to run all).",
+    )
     return config.initialize(db_config=True)
 
 
@@ -81,7 +105,7 @@ def get_subdirectory_name(path):
         raise ValueError(f"Could not find subdirectory under 'input': {exc}") from exc
 
 
-def read_application_configuration(configuration_file, logger):
+def read_application_configuration(configuration_file, steps, logger):
     """
     Read application configuration from file and modify for setting workflows.
 
@@ -97,6 +121,8 @@ def read_application_configuration(configuration_file, logger):
     ----------
     configuration_file : str
         Configuration file name.
+    steps : list
+        List of steps to be executed (None: all steps).
     logger : Logger
         Logger object.
 
@@ -111,20 +137,20 @@ def read_application_configuration(configuration_file, logger):
     application_config = gen.collect_data_from_file(configuration_file).get("CTA_SIMPIPE")
     place_holder = "__SETTING_WORKFLOW__"
     workflow_dir, setting_workflow = get_subdirectory_name(configuration_file)
-    output_path = (
-        workflow_dir.with_name(workflow_dir.name.replace("input", "output")) / setting_workflow
-    )
+    output_path = Path(str(workflow_dir).replace("input", "output")) / Path(setting_workflow)
     output_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Setting workflow output path to {output_path}")
     log_file = output_path / "simtools.log"
     configurations = application_config.get("APPLICATIONS")
-    for config in configurations:
+    for step_count, config in enumerate(configurations, start=1):
+        config["RUN_APPLICATION"] = step_count in steps if steps else True
         for key, value in config.get("CONFIGURATION", {}).items():
             if isinstance(value, str):
                 config["CONFIGURATION"][key] = value.replace(place_holder, setting_workflow)
             if isinstance(value, list):
                 config["CONFIGURATION"][key] = [
-                    item.replace(place_holder, setting_workflow) for item in value
+                    item.replace(place_holder, setting_workflow) if isinstance(item, str) else item
+                    for item in value
                 ]
         config["CONFIGURATION"]["USE_PLAIN_OUTPUT_PATH"] = True
         config["CONFIGURATION"]["OUTPUT_PATH"] = str(output_path)
@@ -135,21 +161,25 @@ def read_application_configuration(configuration_file, logger):
 def main():  # noqa: D103
     args_dict, db_config = _parse(
         Path(__file__).stem,
-        description="Run simtools applications from configuration file.",
+        description="Run simtools applications using a configuration file.",
         usage="simtools-run-application --config_file config_file_name",
     )
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
     configurations, log_file = read_application_configuration(
-        args_dict["configuration_file"], logger
+        args_dict["configuration_file"], args_dict["steps"], logger
     )
 
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         file.write(dependencies.get_version_string(db_config))
         for config in configurations:
-            logger.info(f"Running application: {config.get('APPLICATION')}")
+            if config.get("RUN_APPLICATION"):
+                logger.info(f"Running application: {config.get('APPLICATION')}")
+            else:
+                logger.info(f"Skipping application: {config.get('APPLICATION')}")
+                continue
             config = gen.change_dict_keys_case(config, False)
             stdout, stderr = run_application(
                 config.get("APPLICATION"), config.get("CONFIGURATION"), logger
