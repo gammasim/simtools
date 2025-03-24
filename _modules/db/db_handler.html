@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+gad71a96 Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+gdcd8327 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=48b18f7d"></script>
+    <script src="../../_static/documentation_options.js?v=4c5c765c"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gad71a96 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gdcd8327 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -673,8 +673,6 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get model parameters for all model versions.</span>
 
-<span class="sd">        Queries parameters for design and for the specified array element (if necessary).</span>
-
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        site: str</span>
@@ -690,10 +688,16 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pars</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">_model_version</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_versions</span><span class="p">(</span><span class="n">collection</span><span class="p">):</span>
-            <span class="n">parameter_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
-                <span class="n">site</span><span class="p">,</span> <span class="n">array_element_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">_model_version</span>
-            <span class="p">)</span>
-            <span class="n">pars</span><span class="p">[</span><span class="n">_model_version</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parameter_data</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">parameter_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
+                    <span class="n">site</span><span class="p">,</span> <span class="n">array_element_name</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">_model_version</span>
+                <span class="p">)</span>
+                <span class="n">pars</span><span class="p">[</span><span class="n">_model_version</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parameter_data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Skipping model version </span><span class="si">{</span><span class="n">_model_version</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">array_element_name</span><span class="si">}</span><span class="s2"> not found&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
         <span class="k">return</span> <span class="n">pars</span></div>
 
 

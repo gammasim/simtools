@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+gad71a96 Manual</title>
+    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+gdcd8327 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=48b18f7d"></script>
+    <script src="../../_static/documentation_options.js?v=4c5c765c"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gad71a96 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gdcd8327 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -401,7 +401,6 @@ document.write(`
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">db_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.telescope_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelescopeModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 
@@ -461,90 +460,6 @@ document.write(`
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data file not found: </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;_data_files/</span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">&quot;</span>
-
-<div class="viewcode-block" id="ReadParameters.get_all_parameter_descriptions">
-<a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.get_all_parameter_descriptions">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_parameter_descriptions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get descriptions for all model parameters.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">            tuple: A tuple containing two dictionaries:</span>
-<span class="sd">                - parameter_description: Maps parameter names to their descriptions.</span>
-<span class="sd">                - short_description: Maps parameter names to their short descriptions.</span>
-<span class="sd">                - inst_class: Maps parameter names to their respective class.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parameter_description</span><span class="p">,</span> <span class="n">short_description</span><span class="p">,</span> <span class="n">inst_class</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
-
-        <span class="k">for</span> <span class="n">instrument_class</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">db_collection_to_instrument_class_key</span><span class="p">(</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">details</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">(</span><span class="n">instrument_class</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">parameter_description</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
-                <span class="n">short_description</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;short_description&quot;</span><span class="p">)</span>
-                <span class="n">inst_class</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">instrument_class</span>
-
-        <span class="k">return</span> <span class="n">parameter_description</span><span class="p">,</span> <span class="n">short_description</span><span class="p">,</span> <span class="n">inst_class</span></div>
-
-
-<div class="viewcode-block" id="ReadParameters.get_array_element_parameter_data">
-<a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.get_array_element_parameter_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_parameter_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get model parameter data and descriptions for a given array element.</span>
-
-<span class="sd">        Currently only configured for telescope.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        telescope_model : TelescopeModel</span>
-<span class="sd">            The telescope model instance.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        list: A list of lists containing parameter names, values with units,</span>
-<span class="sd">                descriptions, and short descriptions.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">all_params</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
-            <span class="n">array_element_name</span><span class="o">=</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
-            <span class="n">model_version</span><span class="o">=</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">telescope_model</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">()</span>
-        <span class="n">parameter_descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">()</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">all_params</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">all_params</span><span class="p">[</span><span class="n">parameter</span><span class="p">][</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">parameter_version</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_version</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_file_flag</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="p">:</span>
-                <span class="n">input_file_name</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-                <span class="n">output_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_md</span><span class="p">(</span><span class="n">input_file_name</span><span class="p">)</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">](</span><span class="si">{</span><span class="n">output_file_name</span><span class="si">}</span><span class="s2">)&quot;</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-            <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="n">short_description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
-            <span class="n">inst_class</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="n">inst_class</span><span class="p">,</span>
-                    <span class="n">parameter</span><span class="p">,</span>
-                    <span class="n">parameter_version</span><span class="p">,</span>
-                    <span class="n">value</span><span class="p">,</span>
-                    <span class="n">description</span><span class="p">,</span>
-                    <span class="n">short_description</span><span class="p">,</span>
-                <span class="p">]</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">data</span></div>
-
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_parameter_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">file_flag</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Format parameter value based on type.&quot;&quot;&quot;</span>
@@ -614,13 +529,14 @@ document.write(`
 
         <span class="c1"># Iterate over each model version</span>
         <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">all_versions</span><span class="p">:</span>
-            <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="si">}</span><span class="s2">/model&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">parameter_dict</span> <span class="o">=</span> <span class="n">all_param_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">parameter_dict</span><span class="p">:</span>
+                <span class="k">continue</span>
 
+            <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="si">}</span><span class="s2">/model&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span>
                 <span class="n">parameters</span><span class="o">=</span><span class="n">all_param_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">version</span><span class="p">),</span> <span class="n">dest</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="si">}</span><span class="s2">/model&quot;</span>
             <span class="p">)</span>
-
-            <span class="n">parameter_dict</span> <span class="o">=</span> <span class="n">all_param_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="p">{})</span>
 
             <span class="k">for</span> <span class="n">parameter_name</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">parameter_dict</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">,</span> <span class="n">all_parameter_names</span><span class="p">):</span>
                 <span class="n">parameter_data</span> <span class="o">=</span> <span class="n">parameter_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">)</span>
@@ -632,7 +548,7 @@ document.write(`
                 <span class="n">unit</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot; &quot;</span>
                 <span class="n">value_data</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">value_data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">value_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">continue</span>
 
                 <span class="n">file_flag</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -651,6 +567,91 @@ document.write(`
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_model_versions_by_parameter_version</span><span class="p">(</span><span class="n">grouped_data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReadParameters.get_all_parameter_descriptions">
+<a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.get_all_parameter_descriptions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_parameter_descriptions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get descriptions for all model parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            tuple: A tuple containing two dictionaries:</span>
+<span class="sd">                - parameter_description: Maps parameter names to their descriptions.</span>
+<span class="sd">                - short_description: Maps parameter names to their short descriptions.</span>
+<span class="sd">                - inst_class: Maps parameter names to their respective class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parameter_description</span><span class="p">,</span> <span class="n">short_description</span><span class="p">,</span> <span class="n">inst_class</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">instrument_class</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">db_collection_to_instrument_class_key</span><span class="p">(</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">details</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">(</span><span class="n">instrument_class</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">parameter_description</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
+                <span class="n">short_description</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;short_description&quot;</span><span class="p">)</span>
+                <span class="n">inst_class</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">instrument_class</span>
+
+        <span class="k">return</span> <span class="n">parameter_description</span><span class="p">,</span> <span class="n">short_description</span><span class="p">,</span> <span class="n">inst_class</span></div>
+
+
+<div class="viewcode-block" id="ReadParameters.get_array_element_parameter_data">
+<a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.get_array_element_parameter_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_array_element_parameter_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get model parameter data and descriptions for a given array element.</span>
+
+<span class="sd">        Currently only configured for telescope.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        telescope_model : TelescopeModel</span>
+<span class="sd">            The telescope model instance.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list: A list of lists containing parameter names, values with units,</span>
+<span class="sd">                descriptions, and short descriptions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_parameter_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+            <span class="n">array_element_name</span><span class="o">=</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="si">}</span><span class="s2">/model&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="n">all_parameter_data</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="si">}</span><span class="s2">/model&quot;</span><span class="p">)</span>
+        <span class="n">parameter_descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">all_parameter_data</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">,</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">parameter_data</span> <span class="o">=</span> <span class="n">all_parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">parameter_data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">parameter_version</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_version</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot; &quot;</span>
+            <span class="n">value_data</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">value_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">file_flag</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_parameter_value</span><span class="p">(</span><span class="n">value_data</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">file_flag</span><span class="p">)</span>
+
+            <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="n">short_description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+            <span class="n">inst_class</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">inst_class</span><span class="p">,</span>
+                    <span class="n">parameter</span><span class="p">,</span>
+                    <span class="n">parameter_version</span><span class="p">,</span>
+                    <span class="n">value</span><span class="p">,</span>
+                    <span class="n">description</span><span class="p">,</span>
+                    <span class="n">short_description</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
 
 <div class="viewcode-block" id="ReadParameters.produce_array_element_report">
 <a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.produce_array_element_report">[docs]</a>
@@ -735,10 +736,8 @@ document.write(`
             <span class="sa">f</span><span class="s2">&quot;Comparing parameters across model versions for Telescope: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_element</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot; and Site: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="p">)</span>
-        <span class="n">io_handler_instance</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
-        <span class="n">output_path</span> <span class="o">=</span> <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span>
-            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;reports&quot;</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;parameters/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_element</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_element</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">all_parameter_names</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="n">all_parameter_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters_for_all_model_versions</span><span class="p">(</span>
