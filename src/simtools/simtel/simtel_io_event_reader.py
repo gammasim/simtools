@@ -13,9 +13,9 @@ from simtools.simtel.simtel_io_event_writer import ShowerEventData, TriggeredEve
 
 class SimtelIOEventDataReader:
     """
-    Read a reduced MC data set from file.
+    Read reduced MC data set from file.
 
-    Calculate some standard derivation of the data set like the core position in shower coordinates.
+    Calculate some standard derivation like core position in shower coordinates.
 
     Parameters
     ----------
