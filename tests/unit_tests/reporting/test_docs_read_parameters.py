@@ -5,6 +5,9 @@ import pytest
 
 from simtools.reporting.docs_read_parameters import ReadParameters
 
+# Test constants
+QE_FILE_NAME = "qe_lst1_20200318_high+low.dat"
+
 
 def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_config):
     args = {
@@ -188,7 +191,7 @@ def test__compare_parameter_across_versions(io_handler, db_config):
                 "instrument": "LSTN-01",
                 "site": "North",
                 "parameter_version": "1.0.0",
-                "value": "qe_lst1_20200318_high+low.dat",
+                "value": QE_FILE_NAME,
                 "unit": None,
                 "file": True,
             },
@@ -206,7 +209,7 @@ def test__compare_parameter_across_versions(io_handler, db_config):
                 "instrument": "LSTN-01",
                 "site": "North",
                 "parameter_version": "1.0.0",
-                "value": "qe_lst1_20200318_high+low.dat",
+                "value": QE_FILE_NAME,
                 "unit": None,
                 "file": True,
             },
@@ -273,7 +276,7 @@ def test__compare_parameter_across_versions_empty_param_dict(io_handler, db_conf
                 "instrument": "LSTN-01",
                 "site": "North",
                 "parameter_version": "1.0.0",
-                "value": "qe_lst1_20200318_high+low.dat",
+                "value": QE_FILE_NAME,
                 "unit": None,
                 "file": True,
             }
