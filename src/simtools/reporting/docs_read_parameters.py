@@ -156,7 +156,7 @@ class ReadParameters:
                 unit = parameter_data.get("unit") or " "
                 value_data = parameter_data.get("value")
 
-                if not value_data:
+                if value_data is None:
                     continue
 
                 file_flag = parameter_data.get("file", False)
@@ -233,7 +233,7 @@ class ReadParameters:
             unit = parameter_data.get("unit") or " "
             value_data = parameter_data.get("value")
 
-            if not value_data:
+            if value_data is None:
                 continue
 
             file_flag = parameter_data.get("file", False)

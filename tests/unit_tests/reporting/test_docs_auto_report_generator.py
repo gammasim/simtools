@@ -46,30 +46,99 @@ def test__filter_telescopes_by_site(io_handler, db_config):
 
 
 @pytest.mark.parametrize(
-    ("all_flags", "expected_count"),
+    "test_case",
     [
-        ({"all_telescopes": True, "all_sites": True, "all_model_versions": True}, 6),
-        ({"all_telescopes": False, "all_sites": False, "all_model_versions": False}, 1),
+        # Case 1: All flags True - should return all combinations
+        {
+            "args": {
+                "all_telescopes": True,
+                "all_sites": True,
+                "all_model_versions": True,
+                "site": "North",
+                "telescope": "LSTN-01",
+                "model_version": "6.0.0",
+            },
+            "mock_model_versions": ["5.0.0", "6.0.0"],
+            "mock_array_elements": ["LSTN-01", "LSTN-02", "LSTN-design"],
+            "mock_sites": ["North"],
+            "expected_combinations": [
+                ("5.0.0", "LSTN-01", "North"),
+                ("5.0.0", "LSTN-02", "North"),
+                ("5.0.0", "LSTN-design", "North"),
+                ("6.0.0", "LSTN-01", "North"),
+                ("6.0.0", "LSTN-02", "North"),
+                ("6.0.0", "LSTN-design", "North"),
+            ],
+        },
+        # Case 2: Specific telescope, model version, and site
+        {
+            "args": {
+                "all_telescopes": False,
+                "all_sites": False,
+                "all_model_versions": False,
+                "site": "North",
+                "telescope": "LSTN-01",
+                "model_version": "6.0.0",
+            },
+            "mock_model_versions": ["6.0.0"],
+            "mock_array_elements": ["LSTN-01"],
+            "mock_sites": ["North"],
+            "expected_combinations": [("6.0.0", "LSTN-01", "North")],
+        },
+        # Case 3: All telescopes but specific site and version
+        {
+            "args": {
+                "all_telescopes": True,
+                "all_sites": False,
+                "all_model_versions": False,
+                "site": "North",
+                "telescope": "LSTN-01",
+                "model_version": "6.0.0",
+            },
+            "mock_model_versions": ["6.0.0"],
+            "mock_array_elements": ["LSTN-01", "LSTN-02", "LSTN-design"],
+            "mock_sites": ["North"],
+            "expected_combinations": [
+                ("6.0.0", "LSTN-01", "North"),
+                ("6.0.0", "LSTN-02", "North"),
+                ("6.0.0", "LSTN-design", "North"),
+            ],
+        },
     ],
 )
-def test__get_report_parameters(io_handler, db_config, all_flags, expected_count):
-    args = {"site": "North", "telescope": "LSTN-01", "model_version": "6.0.0", **all_flags}
-    output_path = io_handler.get_output_directory()
-    report_generator = ReportGenerator(db_config, args, output_path)
+def test__generate_array_element_report_combinations(io_handler, db_config, test_case):
+    """Test array element report combinations generation with different flag combinations."""
+    report_generator = ReportGenerator(
+        db_config, test_case["args"], io_handler.get_output_directory()
+    )
 
-    with patch.multiple(
-        report_generator.db,
-        get_model_versions=MagicMock(return_value=["5.0.0", "6.0.0"]),
-        get_array_elements=MagicMock(return_value=["LSTN-01", "LSTN-02", "LSTN-design"]),
+    with (
+        patch.multiple(
+            report_generator.db,
+            get_model_versions=MagicMock(return_value=test_case["mock_model_versions"]),
+            get_array_elements=MagicMock(return_value=test_case["mock_array_elements"]),
+        ),
+        patch(GET_SITE_FROM_NAME_PATH, return_value=test_case["mock_sites"]),
     ):
-        with patch(GET_SITE_FROM_NAME_PATH, return_value=["North"]):
-            result = list(report_generator._get_report_parameters())
+        result = list(report_generator._generate_array_element_report_combinations())
 
-    assert len(result) == expected_count
-    for version, telescope, site in result:
-        assert version in ["5.0.0", "6.0.0"]
-        assert telescope in ["LSTN-01", "LSTN-02", "LSTN-design"]
-        assert site == "North"
+        assert set(result) == set(test_case["expected_combinations"])
+
+        # Test that each combination is a tuple of 3 strings
+        for combo in result:
+            assert isinstance(combo, tuple)
+            assert len(combo) == 3
+            assert all(isinstance(item, str) for item in combo)
+
+        # Test specific values based on flags
+        if not test_case["args"]["all_model_versions"]:
+            assert all(combo[0] == test_case["args"]["model_version"] for combo in result)
+
+        if not test_case["args"]["all_telescopes"]:
+            assert all(combo[1] == test_case["args"]["telescope"] for combo in result)
+
+        if not test_case["args"]["all_sites"]:
+            assert all(combo[2] == test_case["args"]["site"] for combo in result)
 
 
 def test__get_telescopes_from_layout(io_handler, db_config):
@@ -208,7 +277,11 @@ def test_auto_generate_array_element_reports(io_handler, db_config):
     mock_report_gen = MagicMock()
 
     with (
-        patch.object(report_generator, "_get_report_parameters", return_value=mock_params),
+        patch.object(
+            report_generator,
+            "_generate_array_element_report_combinations",
+            return_value=mock_params,
+        ),
         patch.object(
             report_generator, "_generate_single_array_element_report", side_effect=mock_report_gen
         ),
