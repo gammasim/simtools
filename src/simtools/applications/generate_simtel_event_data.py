@@ -35,6 +35,7 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
+from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
 from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 
@@ -107,6 +108,9 @@ def main():
     _logger.info(f"reduced dataset saved to: {output_filepath}")
     if args_dict["print_dataset_information"]:
         generator.print_dataset_information()
+
+    reader = SimtelIOEventDataReader(output_filepath, telescope_list=[7, 12])
+    reader.print_dataset_information()
 
 
 if __name__ == "__main__":
