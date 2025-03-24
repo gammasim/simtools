@@ -802,7 +802,7 @@ class DatabaseHandler:
             files_to_add_to_db.add(f"{file_path}")
 
         self._logger.info(
-            f"Adding a new entry to DB {db_name} and collection {db_name}:\n{par_dict}"
+            f"Adding a new entry to DB {db_name} and collection {collection_name}:\n{par_dict}"
         )
         collection.insert_one(par_dict)
 
