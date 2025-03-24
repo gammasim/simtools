@@ -64,7 +64,6 @@ class SimtelIOEventDataReader:
 
             triggered_data = f.root.data.triggered_data
             triggered_event_data.triggered_id = triggered_data.col("triggered_id")
-            triggered_event_data.triggered_energy = triggered_data.col("triggered_energy")
             triggered_event_data.array_altitudes = triggered_data.col("array_altitudes")
             triggered_event_data.array_azimuths = triggered_data.col("array_azimuths")
 
@@ -234,4 +233,30 @@ class SimtelIOEventDataReader:
         print_event_data(
             self.triggered_data.angular_distance, "Angular distance to pointing direction (deg)"
         )
+        print("")
+
+    def print_event_table(self, lines_per_page=20):
+        """Print event table with pagination.
+
+        Parameters
+        ----------
+        lines_per_page : int
+            Number of lines to display before pausing (default: 20)
+        """
+        print(
+            f"{'Counter':<10} {'Simulated Energy (TeV)':<20} {'Triggered Telescopes':<20} "
+            f"{'Core distance shower (m)':<20}"
+        )
+
+        for i, telescope_list in enumerate(self.triggered_data.trigger_telescope_list_list):
+            if i > 0 and i % lines_per_page == 0:
+                response = input("Press Enter to continue or 'q' to quit...")
+                if response.lower() == "q":
+                    break
+
+            print(
+                f"{i:<10} {self.triggered_shower_data.simulated_energy[i]:<20.3f}"
+                f"{telescope_list} "
+                f"{self.triggered_shower_data.core_distance_shower[i]:<20.3f}"
+            )
         print("")
