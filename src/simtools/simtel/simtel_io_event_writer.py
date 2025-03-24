@@ -42,7 +42,6 @@ class TriggeredEventData:
     """Triggered event data."""
 
     triggered_id: list = field(default_factory=list)
-    triggered_energy: list = field(default_factory=list)
     array_altitudes: list = field(default_factory=list)
     array_azimuths: list = field(default_factory=list)
     trigger_telescope_list_list: list = field(default_factory=list)
@@ -192,11 +191,10 @@ class SimtelIOEventDataWriter:
     def _process_trigger_information(self, trigger_info):
         """Process trigger information and update triggered event list."""
         trigger_info = trigger_info.parse()
-        telescopes = trigger_info["telescopes_with_data"]
+        telescopes = trigger_info["triggered_telescopes"]
         if len(telescopes) > 0:
             # add offset to obtained unique shower IDs among all files
             self.triggered_data.triggered_id.append(self.shower["shower"] + self.shower_id_offset)
-            self.triggered_data.triggered_energy.append(self.shower["energy"])
             self.triggered_data.trigger_telescope_list_list.append(
                 np.array(telescopes, dtype=np.int16)
             )
@@ -214,7 +212,6 @@ class SimtelIOEventDataWriter:
         }
         triggered_data_desc = {
             "triggered_id": tables.Int32Col(),
-            "triggered_energy": tables.Float32Col(),
             "array_altitudes": tables.Float32Col(),
             "array_azimuths": tables.Float32Col(),
             "telescope_list_index": tables.Int32Col(),  # Index into VLArray
@@ -271,7 +268,6 @@ class SimtelIOEventDataWriter:
         start_idx = vlarray.nrows
         for i, triggered_id in enumerate(self.triggered_data.triggered_id):
             row["triggered_id"] = triggered_id
-            row["triggered_energy"] = self.triggered_data.triggered_energy[i]
             row["array_altitudes"] = self.triggered_data.array_altitudes[i]
             row["array_azimuths"] = self.triggered_data.array_azimuths[i]
             row["telescope_list_index"] = start_idx + i  # Index into the VLArray
