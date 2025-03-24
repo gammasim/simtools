@@ -22,9 +22,11 @@ DEFAULT_FILTERS = tables.Filters(complevel=5, complib="zlib", shuffle=True, bits
 class ReducedDatasetContainer(Container):
     """Container for reduced dataset information."""
 
-    simulated = Field(None, "Simulated energy")
+    shower_id = Field(None, "Shower ID")
+    sim_energy = Field(None, "Simulated energy")
     core_x = Field(None, "X-coordinate of the shower core")
     core_y = Field(None, "Y-coordinate of the shower core")
+    area_weight = Field(None, "Area weighting factor")
     shower_sim_azimuth = Field(None, "Simulated azimuth angle of the shower")
     shower_sim_altitude = Field(None, "Simulated altitude angle of the shower")
 
@@ -32,8 +34,8 @@ class ReducedDatasetContainer(Container):
 class TriggeredShowerContainer(Container):
     """Container for triggered shower information."""
 
-    shower_id_triggered = Field(None, "Triggered shower ID")
-    triggered_energies = Field(None, "Triggered energies")
+    triggered_id = Field(None, "Event ID for triggered event")
+    triggered_energy = Field(None, "Shower energy for triggered event")
     array_altitudes = Field(None, "Altitudes for the array")
     array_azimuths = Field(None, "Azimuths for the array")
 
@@ -91,16 +93,16 @@ class MCEventExtractor:
         self._logger.info(f"Processing file 1/{self.max_files}: {self.input_files[0]}")
         self._process_file(self.input_files[0], data_lists, str(self.input_files[0]))
         self._write_all_data(data_lists, mode="w")
-        self.shower_id_offset = len(data_lists["simulated"])
+        self.shower_id_offset = len(data_lists["sim_energy"])
         self._reset_data_lists(data_lists)
 
         # Process remaining files in append mode
         for i_file, file in enumerate(self.input_files[1 : self.max_files], start=2):
             self._logger.info(f"Processing file {i_file}/{self.max_files}: {file}")
             self._process_file(file, data_lists, str(file))
-            if len(data_lists["simulated"]) >= 1e7:
+            if len(data_lists["sim_energy"]) >= 1e7:
                 self._write_all_data(data_lists, mode="a")
-                self.shower_id_offset += len(data_lists["simulated"])
+                self.shower_id_offset += len(data_lists["sim_energy"])
                 self._reset_data_lists(data_lists)
 
         # Final write for any remaining data
@@ -142,15 +144,17 @@ class MCEventExtractor:
     def _initialize_data_lists(self):
         """Initialize data lists."""
         return {
-            "simulated": [],
-            "shower_id_triggered": [],
-            "triggered_energies": [],
+            "shower_id": [],
+            "sim_energy": [],
+            "triggered_id": [],
+            "triggered_energy": [],
             "core_x": [],
             "core_y": [],
-            "trigger_telescope_list_list": [],
-            "file_names": [],
+            "area_weight": [],
             "shower_sim_azimuth": [],
             "shower_sim_altitude": [],
+            "trigger_telescope_list_list": [],
+            "file_names": [],
             "array_altitudes": [],
             "array_azimuths": [],
         }
@@ -173,19 +177,27 @@ class MCEventExtractor:
         """Process MC run header and update data lists."""
         mc_head = eventio_object.parse()
         self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
+        self._logger.info(f"Shower reuse factor: {self.n_use}")
 
     def _process_mc_shower(self, eventio_object, data_lists):
-        """Process MC shower and update data lists."""
+        """
+        Process MC shower and update data lists.
+
+        Duplicated entries 'self.n_use' times to match the number simulated events with
+        different core positions.
+        """
         self.shower = eventio_object.parse()
-        data_lists["simulated"].extend(self.n_use * [self.shower["energy"]])
+        data_lists["sim_energy"].extend(self.n_use * [self.shower["energy"]])
         data_lists["shower_sim_azimuth"].extend(self.n_use * [self.shower["azimuth"]])
         data_lists["shower_sim_altitude"].extend(self.n_use * [self.shower["altitude"]])
 
     def _process_mc_event(self, eventio_object, data_lists):
         """Process MC event and update data lists."""
         event = eventio_object.parse()
+        data_lists["shower_id"].append(event["shower_num"])
         data_lists["core_x"].append(event["xcore"])
         data_lists["core_y"].append(event["ycore"])
+        data_lists["area_weight"].append(event["aweight"])
 
     def _process_array_event(self, eventio_object, data_lists):
         """Process array event and update data lists."""
@@ -218,6 +230,9 @@ class MCEventExtractor:
         """
         Process the collected tracking positions and update data lists.
 
+        For events with telescopes pointing in different directions, append
+        mean pointing directions.
+
         Parameters
         ----------
         tracking_positions : list of dict
@@ -239,6 +254,7 @@ class MCEventExtractor:
         else:  # append the mean telescope tracking positions for each triggered event
             self._logger.info("Telescopes have different tracking positions, applying mean.")
             data_lists["array_altitudes"].append(np.mean(altitudes))
+            # TODO fix mean of azimuth values?
             data_lists["array_azimuths"].append(np.mean(azimuths))
 
     def _process_trigger_information(self, trigger_info, data_lists):
@@ -246,8 +262,9 @@ class MCEventExtractor:
         trigger_info = trigger_info.parse()
         telescopes = trigger_info["telescopes_with_data"]
         if len(telescopes) > 0:
-            data_lists["shower_id_triggered"].append(self.shower["shower"] + self.shower_id_offset)
-            data_lists["triggered_energies"].append(self.shower["energy"])
+            # add offset to obtained unique shower IDs among all files
+            data_lists["triggered_id"].append(self.shower["shower"] + self.shower_id_offset)
+            data_lists["triggered_energy"].append(self.shower["energy"])
             data_lists["trigger_telescope_list_list"].append(np.array(telescopes, dtype=np.int16))
 
     def _write_data(self, data_lists, mode="a"):
@@ -258,10 +275,12 @@ class MCEventExtractor:
             # Write reduced dataset container
             reduced_container = ReducedDatasetContainer()
 
-            for i in range(len(data_lists["simulated"])):
-                reduced_container.simulated = data_lists["simulated"][i]
+            for i in range(len(data_lists["sim_energy"])):
+                reduced_container.shower_id = data_lists["shower_id"][i]
+                reduced_container.sim_energy = data_lists["sim_energy"][i]
                 reduced_container.core_x = data_lists["core_x"][i]
                 reduced_container.core_y = data_lists["core_y"][i]
+                reduced_container.area_weight = data_lists["area_weight"][i]
                 reduced_container.shower_sim_azimuth = data_lists["shower_sim_azimuth"][i]
                 reduced_container.shower_sim_altitude = data_lists["shower_sim_altitude"][i]
 
@@ -270,32 +289,25 @@ class MCEventExtractor:
             # Write triggered shower container
             triggered_container = TriggeredShowerContainer()
 
-            for i in range(len(data_lists["shower_id_triggered"])):
-                triggered_container.shower_id_triggered = data_lists["shower_id_triggered"][i]
-                triggered_container.triggered_energies = data_lists["triggered_energies"][i]
+            for i in range(len(data_lists["triggered_id"])):
+                triggered_container.triggered_id = data_lists["triggered_id"][i]
+                triggered_container.triggered_energy = data_lists["triggered_energy"][i]
                 triggered_container.array_altitudes = np.array(data_lists["array_altitudes"][i])
                 triggered_container.array_azimuths = np.array(data_lists["array_azimuths"][i])
                 writer.write(table_name="triggered_data", containers=[triggered_container])
 
     def _reset_data_lists(self, data_lists):
         """Reset data lists during batch processing."""
-        for key in data_lists:
-            data_lists[key] = []
+        data_lists.update({key: [] for key in data_lists})
 
-    def print_dataset_information(self):
+    def print_dataset_information(self, n_events=5):
         """Print information about the datasets in the generated HDF5 file."""
         try:
             with tables.open_file(self.output_file, mode="r") as reader:
                 print("Datasets in file:")
-                for key in reader.root.data._v_children.keys():  # pylint: disable=protected-access
-                    dset = reader.root.data._v_children[key]  # pylint: disable=protected-access
-                    print(f"- {key}: shape={dset.shape}, dtype={dset.dtype}")
-
-                    # Print first 5 values each
-                    print(f"  First 5 values: {dset[:5]}")
-
-                    # Print units if available
-                    # units = dset.attrs.get("units", "N/A")
-                    # print(f"  Units: {units}")
+                for name, dataset in reader.root.data._v_children.items():  # pylint: disable=protected-access
+                    print(f"- {name}: shape={dataset.shape}, dtype={dataset.dtype}")
+                    print(f"  Length of dataset: {len(dataset)}")
+                    print(f"  First {n_events} values: {dataset[:n_events]}")
         except Exception as exc:
             raise ValueError("An error occurred while reading the HDF5 file") from exc

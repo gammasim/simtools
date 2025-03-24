@@ -77,9 +77,9 @@ def main():
 
     The reduced dataset contains the following information:
         - simulated: List of simulated events.
-        - shower_id_triggered: List of triggered shower IDs
+        - triggered_id: List of triggered shower IDs
             (as in the telescope definition file used for simulations).
-        - triggered_energies: List of energies for triggered events.
+        - triggered_energy: List of energies for triggered events.
         - num_triggered_telescopes: Number of triggered telescopes for each event.
         - core_x: X-coordinate of the shower core (ground coordinates).
         - core_y: Y-coordinate of the shower core (ground coordinates).
