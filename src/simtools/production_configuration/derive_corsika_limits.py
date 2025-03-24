@@ -1,45 +1,17 @@
-"""Calculate the thresholds for energy, radial distance, and viewcone."""
+"""Calculate CORSIKA thresholds for energy, radial distance, and viewcone."""
 
 import logging
-from dataclasses import dataclass, field
 
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-import tables
-from astropy.coordinates import AltAz, angular_separation
-from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
 
-
-@dataclass
-class EventData:
-    """Shower event data."""
-
-    event_x_core: np.ndarray = field(default_factory=lambda: np.array([]))
-    event_y_core: np.ndarray = field(default_factory=lambda: np.array([]))
-    simulated: np.ndarray = field(default_factory=lambda: np.array([]))
-    shower_sim_azimuth: np.ndarray = field(default_factory=lambda: np.array([]))
-    shower_sim_altitude: np.ndarray = field(default_factory=lambda: np.array([]))
-
-    event_x_core_shower: np.ndarray = field(default_factory=lambda: np.array([]))
-    event_y_core_shower: np.ndarray = field(default_factory=lambda: np.array([]))
-    core_distance_shower: np.ndarray = field(default_factory=lambda: np.array([]))
-
-
-@dataclass
-class TriggeredEventData:
-    """Triggered event data."""
-
-    shower_id_triggered: np.ndarray = field(default_factory=lambda: np.array([]))
-    array_azimuth: np.ndarray = field(default_factory=lambda: np.array([]))
-    array_altitude: np.ndarray = field(default_factory=lambda: np.array([]))
-    trigger_telescope_list_list: list = field(default_factory=list)
-    angular_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
 
 
 class LimitCalculator:
     """
-    Compute thresholds/limits for energy, radial distance, and viewcone.
+    Compute thresholds for CORSIKA configuration for energy, radial distance, and viewcone.
 
     Event data is read from the reduced MC event data file.
 
@@ -57,117 +29,9 @@ class LimitCalculator:
         self.event_data_file = event_data_file
         self.telescope_list = telescope_list
 
-        self.event_data, self.triggered_data = self._read_event_data()
-        self._derived_event_data()
-
-    def _read_event_data(self):
-        """
-        Read the event data from the reduced MC event data file and apply triggered mask.
-
-        Apply the triggered mask to the event data to filter out events that did not trigger.
-        All arrays are of the same length.
-
-        Returns
-        -------
-        EventData, TriggeredEventData
-            Event data and triggered event data.
-        """
-        event_data = EventData()
-        triggered_event_data = TriggeredEventData()
-        with tables.open_file(self.event_data_file, mode="r") as f:
-            reduced_data = f.root.data.reduced_data
-            triggered_data = f.root.data.triggered_data
-            trigger_telescope_list_list = f.root.data.trigger_telescope_list_list
-
-            event_data.event_x_core = reduced_data.col("core_x")
-            event_data.event_y_core = reduced_data.col("core_y")
-            event_data.simulated = reduced_data.col("simulated")
-            event_data.shower_sim_azimuth = reduced_data.col("shower_sim_azimuth")
-            event_data.shower_sim_altitude = reduced_data.col("shower_sim_altitude")
-            triggered_event_data.array_altitude = triggered_data.col("array_altitudes")
-            triggered_event_data.array_azimuth = triggered_data.col("array_azimuths")
-            triggered_event_data.shower_id_triggered = triggered_data.col("shower_id_triggered")
-            triggered_event_data.trigger_telescope_list_list = [
-                [np.int16(tel) for tel in event] for event in trigger_telescope_list_list
-            ]
-        return self._reduce_to_triggered_events(event_data, triggered_event_data)
-
-    def _reduce_to_triggered_events(self, event_data, triggered_data):
-        """Reduce event data to triggered events only."""
-        filtered_shower_ids, triggered_indices = self._get_mask_triggered_telescopes(
-            self.telescope_list,
-            triggered_data.shower_id_triggered,
-            triggered_data.trigger_telescope_list_list,
-        )
-        filtered_event_data = EventData(
-            event_x_core=event_data.event_x_core[filtered_shower_ids],
-            event_y_core=event_data.event_y_core[filtered_shower_ids],
-            simulated=event_data.simulated[filtered_shower_ids],
-            shower_sim_azimuth=event_data.shower_sim_azimuth[filtered_shower_ids],
-            shower_sim_altitude=event_data.shower_sim_altitude[filtered_shower_ids],
-        )
-
-        filtered_telescope_list = [
-            triggered_data.trigger_telescope_list_list[i] for i in triggered_indices
-        ]
-
-        filtered_triggered_data = TriggeredEventData(
-            array_azimuth=triggered_data.array_azimuth[triggered_indices],
-            array_altitude=triggered_data.array_altitude[triggered_indices],
-            trigger_telescope_list_list=filtered_telescope_list,
-        )
-        self._logger.info(
-            f"Events reduced to triggered events: {len(filtered_event_data.simulated)}"
-        )
-        return filtered_event_data, filtered_triggered_data
-
-    def _derived_event_data(self):
-        """Calculate core positions in shower coordinates and angular distances."""
-        self.event_data.event_x_core_shower, self.event_data.event_y_core_shower = (
-            self._transform_to_shower_coordinates()
-        )
-        self.event_data.core_distance_shower = np.sqrt(
-            self.event_data.event_x_core_shower**2 + self.event_data.event_y_core_shower**2
-        )
-
-        self.triggered_data.angular_distance = (
-            angular_separation(
-                self.event_data.shower_sim_azimuth,
-                self.event_data.shower_sim_altitude,
-                self.triggered_data.array_azimuth,
-                self.triggered_data.array_altitude,
-            )
-            * 180
-            / np.pi
-        )
-
-    def _get_mask_triggered_telescopes(
-        self, telescope_list, shower_id_triggered, trigger_telescope_list_list
-    ):
-        """
-        Return indices of events that triggered the specified telescopes.
-
-        Parameters
-        ----------
-        telescope_list : list
-            List of telescope IDs to filter the events
-
-        Returns
-        -------
-        np.ndarray
-            Array of indices for triggered events.
-        """
-        triggered_indices = np.arange(len(shower_id_triggered))
-        if telescope_list is not None:
-            mask = np.array(
-                [
-                    all(tel in event for tel in telescope_list)
-                    for event in trigger_telescope_list_list
-                ]
-            )
-            triggered_indices = triggered_indices[mask]
-            return shower_id_triggered[mask], triggered_indices
-        return shower_id_triggered, triggered_indices
+        self.reader = SimtelIOEventDataReader(event_data_file, telescope_list=[7, 12])
+        self.event_data = self.reader.triggered_shower_data
+        self.triggered_data = self.reader.triggered_data
 
     def _compute_limits(self, hist, bin_edges, loss_fraction, limit_type="lower"):
         """
@@ -196,32 +60,12 @@ class LimitCalculator:
 
         return bin_edges[bin_index] if limit_type == "upper" else bin_edges[-bin_index]
 
-    def _transform_to_shower_coordinates(self):
-        """
-        Transform core positions from ground coordinates to shower coordinates.
-
-        Returns
-        -------
-        tuple
-            Core positions in shower coordinates (x, y).
-        """
-        pointing = AltAz(
-            az=self.event_data.shower_sim_azimuth * u.rad,
-            alt=self.event_data.shower_sim_altitude * u.rad,
-        )
-        ground = GroundFrame(
-            x=self.event_data.event_x_core * u.m, y=self.event_data.event_y_core * u.m, z=0 * u.m
-        )
-        shower_frame = ground.transform_to(TiltedGroundFrame(pointing_direction=pointing))
-
-        return shower_frame.x.value, shower_frame.y.value
-
     @property
     def energy_bins(self):
         """Return bins for the energy histogram."""
         return np.logspace(
-            np.log10(self.event_data.simulated.min()),
-            np.log10(self.event_data.simulated.max()),
+            np.log10(self.event_data.simulated_energy.min()),
+            np.log10(self.event_data.simulated_energy.max()),
             1000,
         )
 
@@ -239,7 +83,7 @@ class LimitCalculator:
         astropy.units.Quantity
             Lower energy limit.
         """
-        hist, _ = np.histogram(self.event_data.simulated, bins=self.energy_bins)
+        hist, _ = np.histogram(self.event_data.simulated_energy, bins=self.energy_bins)
         return (
             self._compute_limits(hist, self.energy_bins, loss_fraction, limit_type="lower") * u.TeV
         )
@@ -324,7 +168,7 @@ class LimitCalculator:
         plots = {
             "core_vs_energy": {
                 "x_data": self.event_data.core_distance_shower,
-                "y_data": self.event_data.simulated,
+                "y_data": self.event_data.simulated_energy,
                 "bins": [self.core_distance_bins, self.energy_bins],
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis"},
@@ -336,7 +180,7 @@ class LimitCalculator:
                 "filename": "core_vs_energy_distribution.png",
             },
             "energy_distribution": {
-                "x_data": self.event_data.simulated,
+                "x_data": self.event_data.simulated_energy,
                 "bins": np.logspace(-3, 0.0, 100),
                 "plot_type": "histogram",
                 "plot_params": {"histtype": "step", "color": "k", "lw": 2},
@@ -360,8 +204,8 @@ class LimitCalculator:
                 "filename": "core_distance_distribution.png",
             },
             "core_xy": {
-                "x_data": self.event_data.event_x_core_shower,
-                "y_data": self.event_data.event_y_core_shower,
+                "x_data": self.event_data.x_core_shower,
+                "y_data": self.event_data.y_core_shower,
                 "bins": 100,
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis"},
