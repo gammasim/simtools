@@ -211,24 +211,27 @@ class SimtelIOEventDataReader:
 
         return shower_frame.x.value, shower_frame.y.value
 
-    def print_dataset_information(self, n_events=10):
+    def print_dataset_information(self, n_events=1):
         """Print information about the datasets."""
 
         def print_event_data(data, name):
             """Print event data."""
             print(f"{name}: {data[:n_events]}")
 
-        print_event_data(self.shower_data.simulated_energy, "Simulated energy")
-        print_event_data(self.shower_data.x_core, "Core x")
-        print_event_data(self.shower_data.y_core, "Core y")
-        print_event_data(self.shower_data.shower_azimuth, "Shower azimuth")
-        print_event_data(self.shower_data.shower_altitude, "Shower altitude")
-        print_event_data(self.shower_data.x_core_shower, "Core x shower")
-        print_event_data(self.shower_data.y_core_shower, "Core y shower")
-        print_event_data(self.shower_data.core_distance_shower, "Core distance shower")
-        print_event_data(self.triggered_data.array_azimuths, "Array azimuth")
-        print_event_data(self.triggered_data.array_altitudes, "Array altitude")
-        print_event_data(self.triggered_data.triggered_id, "Triggered ID")
+        print_event_data(self.triggered_shower_data.simulated_energy, "Simulated energy (TeV)")
+        print_event_data(self.triggered_shower_data.x_core, "Core x (m)")
+        print_event_data(self.triggered_shower_data.y_core, "Core y (m)")
+        print_event_data(self.triggered_shower_data.shower_azimuth, "Shower azimuth (rad)")
+        print_event_data(self.triggered_shower_data.shower_altitude, "Shower altitude (rad)")
+        print_event_data(self.triggered_shower_data.x_core_shower, "Core x shower (m)")
+        print_event_data(self.triggered_shower_data.y_core_shower, "Core y shower (m)")
+        print_event_data(
+            self.triggered_shower_data.core_distance_shower, "Core distance shower (m)"
+        )
+        print_event_data(self.triggered_data.array_azimuths, "Array azimuth (rad)")
+        print_event_data(self.triggered_data.array_altitudes, "Array altitude (rad)")
         print_event_data(self.triggered_data.trigger_telescope_list_list, "Triggered telescopes")
-        print_event_data(self.triggered_data.angular_distance, "Angular distance")
+        print_event_data(
+            self.triggered_data.angular_distance, "Angular distance to pointing direction (deg)"
+        )
         print("")

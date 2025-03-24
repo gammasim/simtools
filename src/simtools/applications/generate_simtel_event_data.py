@@ -66,8 +66,8 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--print_dataset_information",
-        action="store_true",
-        help="Print information about the datasets in the generated reduced event dataset.",
+        type=int,
+        help="Print given number of rows of the dataset.",
     )
 
     return config.initialize(db_config=False)
@@ -106,11 +106,10 @@ def main():
     generator = SimtelIOEventDataWriter(files, output_filepath, args_dict["max_files"])
     generator.process_files()
     _logger.info(f"reduced dataset saved to: {output_filepath}")
-    if args_dict["print_dataset_information"]:
-        generator.print_dataset_information()
 
-    reader = SimtelIOEventDataReader(output_filepath, telescope_list=[7, 12])
-    reader.print_dataset_information()
+    if args_dict.get("print_dataset_information", 0) > 0:
+        reader = SimtelIOEventDataReader(output_filepath)
+        reader.print_dataset_information(args_dict.get("print_dataset_information"))
 
 
 if __name__ == "__main__":
