@@ -15,6 +15,8 @@ from eventio.simtel import (
     TriggerInformation,
 )
 
+from simtools.utils.geometry import calculate_circular_mean
+
 DEFAULT_FILTERS = tables.Filters(complevel=5, complib="zlib", shuffle=True, bitshuffle=False)
 
 
@@ -22,29 +24,29 @@ DEFAULT_FILTERS = tables.Filters(complevel=5, complib="zlib", shuffle=True, bits
 class ShowerEventData:
     """Shower event data."""
 
-    simulated_energy: np.ndarray = field(default_factory=lambda: np.array([]))
-    x_core: np.ndarray = field(default_factory=lambda: np.array([]))
-    y_core: np.ndarray = field(default_factory=lambda: np.array([]))
-    shower_azimuth: np.ndarray = field(default_factory=lambda: np.array([]))
-    shower_altitude: np.ndarray = field(default_factory=lambda: np.array([]))
-    shower_id: np.ndarray = field(default_factory=lambda: np.array([]))
-    area_weight: np.ndarray = field(default_factory=lambda: np.array([]))
+    simulated_energy: list = field(default_factory=list)
+    x_core: list = field(default_factory=list)
+    y_core: list = field(default_factory=list)
+    shower_azimuth: list = field(default_factory=list)
+    shower_altitude: list = field(default_factory=list)
+    shower_id: list = field(default_factory=list)
+    area_weight: list = field(default_factory=list)
 
-    x_core_shower: np.ndarray = field(default_factory=lambda: np.array([]))
-    y_core_shower: np.ndarray = field(default_factory=lambda: np.array([]))
-    core_distance_shower: np.ndarray = field(default_factory=lambda: np.array([]))
+    x_core_shower: list = field(default_factory=list)
+    y_core_shower: list = field(default_factory=list)
+    core_distance_shower: list = field(default_factory=list)
 
 
 @dataclass
 class TriggeredEventData:
     """Triggered event data."""
 
-    triggered_id: np.ndarray = field(default_factory=lambda: np.array([]))
-    triggered_energy: np.ndarray = field(default_factory=lambda: np.array([]))
-    array_altitudes: np.ndarray = field(default_factory=lambda: np.array([]))
-    array_azimuths: np.ndarray = field(default_factory=lambda: np.array([]))
+    triggered_id: list = field(default_factory=list)
+    triggered_energy: list = field(default_factory=list)
+    array_altitudes: list = field(default_factory=list)
+    array_azimuths: list = field(default_factory=list)
     trigger_telescope_list_list: list = field(default_factory=list)
-    angular_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    angular_distance: list = field(default_factory=list)
 
 
 class SimtelIOEventDataWriter:
@@ -93,7 +95,14 @@ class SimtelIOEventDataWriter:
         self._write_data(mode="a")
 
     def get_event_data(self):
-        """Return the shower and triggered event data."""
+        """
+        Return shower and triggered event data.
+
+        Returns
+        -------
+        ShowerEventData, TriggeredEventData
+            Shower and triggered event data.
+        """
         return self.event_data, self.triggered_data
 
     def _process_file(self, file):
@@ -125,27 +134,18 @@ class SimtelIOEventDataWriter:
         """
         self.shower = eventio_object.parse()
 
-        self.event_data.simulated_energy = np.append(
-            self.event_data.simulated_energy,
-            np.full(self.n_use, self.shower["energy"]),
-        )
-        self.event_data.shower_azimuth = np.append(
-            self.event_data.shower_azimuth,
-            np.full(self.n_use, self.shower["azimuth"]),
-        )
-        self.event_data.shower_altitude = np.append(
-            self.event_data.shower_altitude,
-            np.full(self.n_use, self.shower["altitude"]),
-        )
+        self.event_data.simulated_energy.extend([self.shower["energy"]] * self.n_use)
+        self.event_data.shower_azimuth.extend([self.shower["azimuth"]] * self.n_use)
+        self.event_data.shower_altitude.extend([self.shower["altitude"]] * self.n_use)
 
     def _process_mc_event(self, eventio_object):
         """Process MC event and update shower event list."""
         event = eventio_object.parse()
 
-        self.event_data.shower_id = np.append(self.event_data.shower_id, event["shower_num"])
-        self.event_data.x_core = np.append(self.event_data.x_core, event["xcore"])
-        self.event_data.y_core = np.append(self.event_data.y_core, event["ycore"])
-        self.event_data.area_weight = np.append(self.event_data.area_weight, event["aweight"])
+        self.event_data.shower_id.append(event["shower_num"])
+        self.event_data.x_core.append(event["xcore"])
+        self.event_data.y_core.append(event["ycore"])
+        self.event_data.area_weight.append(event["aweight"])
 
     def _process_array_event(self, eventio_object):
         """Process array event and update triggered event list."""
@@ -175,26 +175,19 @@ class SimtelIOEventDataWriter:
             self._process_tracking_positions(tracking_positions)
 
     def _process_tracking_positions(self, tracking_positions):
-        """Process the collected tracking positions and update triggered event list."""
+        """
+        Process collected tracking positions and update triggered event list.
+
+        Use mean telescope tracking positions, averaged over all triggered telescopes.
+        """
         altitudes = [pos["altitude"] for pos in tracking_positions]
         azimuths = [pos["azimuth"] for pos in tracking_positions]
-        if isinstance(altitudes[0], list):
-            altitudes, azimuths = altitudes[0], azimuths[0]
+        # TODO understand when this is the case
+        # if isinstance(altitudes[0], list):
+        #    altitudes, azimuths = altitudes[0], azimuths[0]
 
-        # Check if all tracking positions are the same
-        if np.allclose(altitudes, altitudes[0], atol=1e-5) and np.allclose(
-            azimuths, azimuths[0], atol=1e-5
-        ):
-            alt_value, az_value = altitudes[0], azimuths[0]
-        else:  # Use the mean telescope tracking positions
-            self._logger.info("Telescopes have different tracking positions, applying mean.")
-            self._logger.warning("Incorrect calculation of az mean")
-            alt_value, az_value = np.mean(altitudes), np.mean(azimuths)
-
-        self.triggered_data.array_altitudes = np.append(
-            self.triggered_data.array_altitudes, alt_value
-        )
-        self.triggered_data.array_azimuths = np.append(self.triggered_data.array_azimuths, az_value)
+        self.triggered_data.array_altitudes.append(np.mean(altitudes))
+        self.triggered_data.array_azimuths.append(calculate_circular_mean(azimuths))
 
     def _process_trigger_information(self, trigger_info):
         """Process trigger information and update triggered event list."""
@@ -202,12 +195,8 @@ class SimtelIOEventDataWriter:
         telescopes = trigger_info["telescopes_with_data"]
         if len(telescopes) > 0:
             # add offset to obtained unique shower IDs among all files
-            self.triggered_data.triggered_id = np.append(
-                self.triggered_data.triggered_id, self.shower["shower"] + self.shower_id_offset
-            )
-            self.triggered_data.triggered_energy = np.append(
-                self.triggered_data.triggered_energy, self.shower["energy"]
-            )
+            self.triggered_data.triggered_id.append(self.shower["shower"] + self.shower_id_offset)
+            self.triggered_data.triggered_energy.append(self.shower["energy"])
             self.triggered_data.trigger_telescope_list_list.append(
                 np.array(telescopes, dtype=np.int16)
             )
@@ -236,38 +225,22 @@ class SimtelIOEventDataWriter:
         return shower_data_desc, triggered_data_desc, file_names_desc
 
     def _tables(self, hdf5_file, data_group, mode="a"):
-        """Create or get HD5 tables."""
-        shower_data_desc, triggered_data_desc, file_names_desc = self._table_descriptions()
+        """Create or get HDF5 tables."""
+        descriptions = self._table_descriptions()
+        table_names = ["reduced_data", "triggered_data", "file_names"]
 
-        if mode == "w" or "/data/reduced_data" not in hdf5_file:
-            reduced_table = hdf5_file.create_table(
-                data_group,
-                "reduced_data",
-                shower_data_desc,
-                "Reduced Shower Data",
-                filters=DEFAULT_FILTERS,
+        table_dict = {}
+        for name, desc in zip(table_names, descriptions):
+            path = f"/data/{name}"
+            table_dict[name] = (
+                hdf5_file.create_table(
+                    data_group, name, desc, name.replace("_", " ").title(), filters=DEFAULT_FILTERS
+                )
+                if mode == "w" or path not in hdf5_file
+                else hdf5_file.get_node(path)
             )
-        else:
-            reduced_table = hdf5_file.get_node("/data/reduced_data")
 
-        if mode == "w" or "/data/triggered_data" not in hdf5_file:
-            triggered_table = hdf5_file.create_table(
-                data_group,
-                "triggered_data",
-                triggered_data_desc,
-                "Triggered Data",
-                filters=DEFAULT_FILTERS,
-            )
-        else:
-            triggered_table = hdf5_file.get_node("/data/triggered_data")
-
-        if mode == "w" or "/data/file_names" not in hdf5_file:
-            file_names_table = hdf5_file.create_table(
-                data_group, "file_names", file_names_desc, "File Names", filters=DEFAULT_FILTERS
-            )
-        else:
-            file_names_table = hdf5_file.get_node("/data/file_names")
-        return reduced_table, triggered_table, file_names_table
+        return table_dict["reduced_data"], table_dict["triggered_data"], table_dict["file_names"]
 
     def _write_event_data(self, reduced_table):
         """Fill event data tables."""
@@ -309,31 +282,29 @@ class SimtelIOEventDataWriter:
     def _write_data(self, mode="a"):
         """Write data to HDF5 file."""
         with tables.open_file(self.output_file, mode=mode) as f:
-            if mode == "w" or "/data" not in f:
-                data_group = f.create_group("/", "data", "Data group")
-            else:
-                data_group = f.get_node("/data")
+            data_group = (
+                f.create_group("/", "data", "Data group")
+                if mode == "w" or "/data" not in f
+                else f.get_node("/data")
+            )
 
             reduced_table, triggered_table, file_names_table = self._tables(f, data_group, mode)
-
             self._write_event_data(reduced_table)
-            if mode == "w" or "/data/trigger_telescope_list_list" not in f:
-                vlarray = f.create_vlarray(
+
+            vlarray = (
+                f.create_vlarray(
                     data_group,
                     "trigger_telescope_list_list",
                     tables.Int16Atom(),
                     "List of triggered telescope IDs",
                 )
-            else:
-                vlarray = f.get_node("/data/trigger_telescope_list_list")
+                if mode == "w" or "/data/trigger_telescope_list_list" not in f
+                else f.get_node("/data/trigger_telescope_list_list")
+            )
             self._writer_triggered_data(triggered_table, vlarray)
 
-            # Write file names
             if self.file_names:
-                row = file_names_table.row
-                for name in self.file_names:
-                    row["file_names"] = name
-                    row.append()
+                file_names_table.append([[name] for name in self.file_names])
                 file_names_table.flush()
 
     def _reset_data(self):
