@@ -92,6 +92,10 @@ class SimtelIOEventDataWriter:
 
         self._write_data(mode="a")
 
+    def get_event_data(self):
+        """Return the shower and triggered event data."""
+        return self.event_data, self.triggered_data
+
     def _process_file(self, file):
         """Process a single file and update data lists."""
         with EventIOFile(file) as f:
@@ -176,8 +180,6 @@ class SimtelIOEventDataWriter:
         azimuths = [pos["azimuth"] for pos in tracking_positions]
         if isinstance(altitudes[0], list):
             altitudes, azimuths = altitudes[0], azimuths[0]
-
-        print("FFF", altitudes, azimuths)
 
         # Check if all tracking positions are the same
         if np.allclose(altitudes, altitudes[0], atol=1e-5) and np.allclose(
@@ -339,23 +341,3 @@ class SimtelIOEventDataWriter:
         self.event_data = ShowerEventData()
         self.triggered_data = TriggeredEventData()
         self.file_names = []
-
-    def print_dataset_information(self, n_events=10):
-        """Print information about the datasets in the generated HDF5 file."""
-        try:
-            with tables.open_file(self.output_file, mode="r") as reader:
-                print("Datasets in file:")
-                for node in reader.iter_nodes(reader.root.data):
-                    print(f"- {node.name}: shape={getattr(node, 'shape', 'N/A')}")
-                    if hasattr(node, "__len__"):
-                        print(f"  Length of dataset: {len(node)}")
-                        try:
-                            if len(node) > 0:
-                                print(
-                                    f"  First {min(n_events, len(node))} values: "
-                                    f"{node[: min(n_events, len(node))]}"
-                                )
-                        except (TypeError, ValueError, IndexError):  # Not all Items support slicing
-                            pass
-        except Exception as exc:
-            raise ValueError("An error occurred while reading the HDF5 file") from exc
