@@ -33,7 +33,6 @@ dependencies = [
   "ctao-dpps-cosmic-ray-spectra",
   "ctapipe",
   "eventio",
-  "h5py",
   "jsonschema",
   "matplotlib",
   "numpy",

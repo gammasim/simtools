@@ -9,6 +9,8 @@ on:
     types: [opened, synchronize]
   schedule:
     - cron: "0 0 * * *"
+  release:
+    types: [published]
 
 jobs:
   unit_tests:
