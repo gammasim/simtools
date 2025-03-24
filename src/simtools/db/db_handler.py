@@ -273,8 +273,6 @@ class DatabaseHandler:
         """
         Get model parameters for all model versions.
 
-        Queries parameters for design and for the specified array element (if necessary).
-
         Parameters
         ----------
         site: str
@@ -290,10 +288,16 @@ class DatabaseHandler:
         """
         pars = defaultdict(dict)
         for _model_version in self.get_model_versions(collection):
-            parameter_data = self.get_model_parameters(
-                site, array_element_name, collection, _model_version
-            )
-            pars[_model_version].update(parameter_data)
+            try:
+                parameter_data = self.get_model_parameters(
+                    site, array_element_name, collection, _model_version
+                )
+                pars[_model_version].update(parameter_data)
+            except KeyError:
+                self._logger.debug(
+                    f"Skipping model version {_model_version} - {array_element_name} not found"
+                )
+                continue
         return pars
 
     def _get_parameter_for_model_version(
