@@ -1,11 +1,10 @@
 """Generate a reduced dataset from given simulation event list and save the output to file."""
 
 import logging
+from dataclasses import dataclass, field
 
 import numpy as np
 import tables
-from ctapipe.core import Container, Field
-from ctapipe.io import HDF5TableWriter
 from eventio import EventIOFile
 from eventio.simtel import (
     ArrayEvent,
@@ -19,34 +18,36 @@ from eventio.simtel import (
 DEFAULT_FILTERS = tables.Filters(complevel=5, complib="zlib", shuffle=True, bitshuffle=False)
 
 
-class ReducedDatasetContainer(Container):
-    """Container for reduced dataset information."""
+@dataclass
+class ShowerEventData:
+    """Shower event data."""
 
-    shower_id = Field(None, "Shower ID")
-    sim_energy = Field(None, "Simulated energy")
-    core_x = Field(None, "X-coordinate of the shower core")
-    core_y = Field(None, "Y-coordinate of the shower core")
-    area_weight = Field(None, "Area weighting factor")
-    shower_sim_azimuth = Field(None, "Simulated azimuth angle of the shower")
-    shower_sim_altitude = Field(None, "Simulated altitude angle of the shower")
+    event_x_core: np.ndarray = field(default_factory=lambda: np.array([]))
+    event_y_core: np.ndarray = field(default_factory=lambda: np.array([]))
+    simulated: np.ndarray = field(default_factory=lambda: np.array([]))
+    shower_sim_azimuth: np.ndarray = field(default_factory=lambda: np.array([]))
+    shower_sim_altitude: np.ndarray = field(default_factory=lambda: np.array([]))
+    shower_id: np.ndarray = field(default_factory=lambda: np.array([]))
+    area_weight: np.ndarray = field(default_factory=lambda: np.array([]))
 
-
-class TriggeredShowerContainer(Container):
-    """Container for triggered shower information."""
-
-    triggered_id = Field(None, "Event ID for triggered event")
-    triggered_energy = Field(None, "Shower energy for triggered event")
-    array_altitudes = Field(None, "Altitudes for the array")
-    array_azimuths = Field(None, "Azimuths for the array")
+    event_x_core_shower: np.ndarray = field(default_factory=lambda: np.array([]))
+    event_y_core_shower: np.ndarray = field(default_factory=lambda: np.array([]))
+    core_distance_shower: np.ndarray = field(default_factory=lambda: np.array([]))
 
 
-class FileNamesContainer(Container):
-    """Container for file names."""
+@dataclass
+class TriggeredEventData:
+    """Triggered event data."""
 
-    file_names = Field(None, "Input file names")
+    triggered_id: np.ndarray = field(default_factory=lambda: np.array([]))
+    triggered_energy: np.ndarray = field(default_factory=lambda: np.array([]))
+    array_altitude: np.ndarray = field(default_factory=lambda: np.array([]))
+    array_azimuth: np.ndarray = field(default_factory=lambda: np.array([]))
+    trigger_telescope_list_list: list = field(default_factory=list)
+    angular_distance: np.ndarray = field(default_factory=lambda: np.array([]))
 
 
-class MCEventExtractor:
+class SimtelIOEventDataWriter:
     """
     Generate a reduced dataset from given simulation event list and save the output to file.
 
@@ -61,18 +62,7 @@ class MCEventExtractor:
     """
 
     def __init__(self, input_files, output_file, max_files=100):
-        """
-        Initialize the MCEventExtractor with input files, output file, and max file limit.
-
-        Parameters
-        ----------
-        input_files : list
-            List of input file paths to process.
-        output_file : str
-            Path to the output HDF5 file.
-        max_files : int, optional
-            Maximum number of files to process.
-        """
+        """Initialize the MCEventExtractor with input files, output file, and max file limit."""
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
         self.output_file = output_file
@@ -80,6 +70,9 @@ class MCEventExtractor:
         self.shower = None
         self.n_use = None
         self.shower_id_offset = 0
+        self.event_data = ShowerEventData()
+        self.triggered_data = TriggeredEventData()
+        self.file_names = []
 
     def process_files(self):
         """Process the input files and store them in an HDF5 file."""
@@ -87,91 +80,31 @@ class MCEventExtractor:
             self._logger.warning("No input files provided.")
             return
 
-        data_lists = self._initialize_data_lists()
         self.shower_id_offset = 0
-        # Process the first file in write mode
-        self._logger.info(f"Processing file 1/{self.max_files}: {self.input_files[0]}")
-        self._process_file(self.input_files[0], data_lists, str(self.input_files[0]))
-        self._write_all_data(data_lists, mode="w")
-        self.shower_id_offset = len(data_lists["sim_energy"])
-        self._reset_data_lists(data_lists)
 
-        # Process remaining files in append mode
-        for i_file, file in enumerate(self.input_files[1 : self.max_files], start=2):
-            self._logger.info(f"Processing file {i_file}/{self.max_files}: {file}")
-            self._process_file(file, data_lists, str(file))
-            if len(data_lists["sim_energy"]) >= 1e7:
-                self._write_all_data(data_lists, mode="a")
-                self.shower_id_offset += len(data_lists["sim_energy"])
-                self._reset_data_lists(data_lists)
+        for i, file in enumerate(self.input_files[: self.max_files], start=1):
+            self._logger.info(f"Processing file {i}/{self.max_files}: {file}")
+            self._process_file(file)
+            if i == 1 or len(self.event_data.simulated) >= 1e7:
+                self._write_data(mode="w" if i == 1 else "a")
+                self.shower_id_offset += len(self.event_data.simulated)
+                self._reset_data()
 
-        # Final write for any remaining data
-        self._write_all_data(data_lists, mode="a")
+        self._write_data(mode="a")
 
-    def _write_all_data(self, data_lists, mode):
-        """Write all data sections at once helper method."""
-        self._write_data(data_lists, mode=mode)
-        self._write_variable_length_data(data_lists["trigger_telescope_list_list"], mode="a")
-        self._write_file_names(data_lists["file_names"], mode="a")
-
-    def _write_file_names(self, file_names, mode="a"):
-        """Write file names to HDF5 file."""
-        print("file_names", file_names)
-        with HDF5TableWriter(
-            self.output_file, group_name="data", mode=mode, filters=DEFAULT_FILTERS
-        ) as writer:
-            file_names_container = FileNamesContainer()
-            for file_name in file_names:
-                file_names_container.file_names = file_name
-                writer.write(table_name="file_names", containers=[file_names_container])
-
-    def _write_variable_length_data(self, trigger_telescope_list_list, mode="a"):
-        """Write variable-length array data to HDF5 file."""
-        with tables.open_file(self.output_file, mode=mode) as f:
-            if "trigger_telescope_list_list" in f.root.data:
-                vlarray = f.root.data.trigger_telescope_list_list
-            else:
-                vlarray = f.create_vlarray(
-                    f.root.data,
-                    "trigger_telescope_list_list",
-                    tables.Int16Atom(),
-                    "List of triggered telescope IDs",
-                )
-
-            for item in trigger_telescope_list_list:
-                vlarray.append(item)
-
-    def _initialize_data_lists(self):
-        """Initialize data lists."""
-        return {
-            "shower_id": [],
-            "sim_energy": [],
-            "triggered_id": [],
-            "triggered_energy": [],
-            "core_x": [],
-            "core_y": [],
-            "area_weight": [],
-            "shower_sim_azimuth": [],
-            "shower_sim_altitude": [],
-            "trigger_telescope_list_list": [],
-            "file_names": [],
-            "array_altitudes": [],
-            "array_azimuths": [],
-        }
-
-    def _process_file(self, file, data_lists, file_name):
+    def _process_file(self, file):
         """Process a single file and update data lists."""
         with EventIOFile(file) as f:
             for eventio_object in f:
                 if isinstance(eventio_object, MCRunHeader):
                     self._process_mc_run_header(eventio_object)
                 elif isinstance(eventio_object, MCShower):
-                    self._process_mc_shower(eventio_object, data_lists)
+                    self._process_mc_shower(eventio_object)
                 elif isinstance(eventio_object, MCEvent):
-                    self._process_mc_event(eventio_object, data_lists)
+                    self._process_mc_event(eventio_object)
                 elif isinstance(eventio_object, ArrayEvent):
-                    self._process_array_event(eventio_object, data_lists)
-            data_lists["file_names"].extend([file_name])
+                    self._process_array_event(eventio_object)
+            self.file_names.append(str(file))
 
     def _process_mc_run_header(self, eventio_object):
         """Process MC run header and update data lists."""
@@ -179,34 +112,44 @@ class MCEventExtractor:
         self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
         self._logger.info(f"Shower reuse factor: {self.n_use}")
 
-    def _process_mc_shower(self, eventio_object, data_lists):
+    def _process_mc_shower(self, eventio_object):
         """
-        Process MC shower and update data lists.
+        Process MC shower and update shower event list.
 
         Duplicated entries 'self.n_use' times to match the number simulated events with
         different core positions.
         """
         self.shower = eventio_object.parse()
-        data_lists["sim_energy"].extend(self.n_use * [self.shower["energy"]])
-        data_lists["shower_sim_azimuth"].extend(self.n_use * [self.shower["azimuth"]])
-        data_lists["shower_sim_altitude"].extend(self.n_use * [self.shower["altitude"]])
 
-    def _process_mc_event(self, eventio_object, data_lists):
-        """Process MC event and update data lists."""
+        energy_values = np.full(self.n_use, self.shower["energy"])
+        azimuth_values = np.full(self.n_use, self.shower["azimuth"])
+        altitude_values = np.full(self.n_use, self.shower["altitude"])
+
+        self.event_data.simulated = np.append(self.event_data.simulated, energy_values)
+        self.event_data.shower_sim_azimuth = np.append(
+            self.event_data.shower_sim_azimuth, azimuth_values
+        )
+        self.event_data.shower_sim_altitude = np.append(
+            self.event_data.shower_sim_altitude, altitude_values
+        )
+
+    def _process_mc_event(self, eventio_object):
+        """Process MC event and update shower event list."""
         event = eventio_object.parse()
-        data_lists["shower_id"].append(event["shower_num"])
-        data_lists["core_x"].append(event["xcore"])
-        data_lists["core_y"].append(event["ycore"])
-        data_lists["area_weight"].append(event["aweight"])
 
-    def _process_array_event(self, eventio_object, data_lists):
-        """Process array event and update data lists."""
+        self.event_data.shower_id = np.append(self.event_data.shower_id, event["shower_num"])
+        self.event_data.event_x_core = np.append(self.event_data.event_x_core, event["xcore"])
+        self.event_data.event_y_core = np.append(self.event_data.event_y_core, event["ycore"])
+        self.event_data.area_weight = np.append(self.event_data.area_weight, event["aweight"])
+
+    def _process_array_event(self, eventio_object):
+        """Process array event and update triggered event list."""
         tracking_positions = []
         previous_index = -1
 
         for i, obj in enumerate(eventio_object):
             if isinstance(obj, TriggerInformation):
-                self._process_trigger_information(obj, data_lists)
+                self._process_trigger_information(obj)
 
             if isinstance(obj, TrackingPosition):
                 tracking_position = obj.parse()
@@ -218,96 +161,202 @@ class MCEventExtractor:
                 )
 
             if i < previous_index:
-                self._process_tracking_positions(tracking_positions, data_lists)
+                self._process_tracking_positions(tracking_positions)
                 tracking_positions = []  # Reset for the next shower
 
             previous_index = i
 
         if tracking_positions:
-            self._process_tracking_positions(tracking_positions, data_lists)
+            self._process_tracking_positions(tracking_positions)
 
-    def _process_tracking_positions(self, tracking_positions, data_lists):
-        """
-        Process the collected tracking positions and update data lists.
-
-        For events with telescopes pointing in different directions, append
-        mean pointing directions.
-
-        Parameters
-        ----------
-        tracking_positions : list of dict
-            List of tracking positions with "altitude" and "azimuth" keys.
-        data_lists : dict
-            Data lists to update.
-        """
+    def _process_tracking_positions(self, tracking_positions):
+        """Process the collected tracking positions and update triggered event list."""
         altitudes = [pos["altitude"] for pos in tracking_positions]
         azimuths = [pos["azimuth"] for pos in tracking_positions]
         if isinstance(altitudes[0], list):
-            altitudes = altitudes[0]
-            azimuths = azimuths[0]
+            altitudes, azimuths = altitudes[0], azimuths[0]
+
         # Check if all tracking positions are the same
         if np.allclose(altitudes, altitudes[0], atol=1e-5) and np.allclose(
             azimuths, azimuths[0], atol=1e-5
         ):
-            data_lists["array_altitudes"].append(altitudes[0])
-            data_lists["array_azimuths"].append(azimuths[0])
-        else:  # append the mean telescope tracking positions for each triggered event
+            alt_value, az_value = altitudes[0], azimuths[0]
+        else:  # Use the mean telescope tracking positions
             self._logger.info("Telescopes have different tracking positions, applying mean.")
-            data_lists["array_altitudes"].append(np.mean(altitudes))
-            # TODO fix mean of azimuth values?
-            data_lists["array_azimuths"].append(np.mean(azimuths))
+            self._logger.warning("Incorrect calculation of az mean")
+            alt_value, az_value = np.mean(altitudes), np.mean(azimuths)
 
-    def _process_trigger_information(self, trigger_info, data_lists):
-        """Process trigger information and update data lists."""
+        self.triggered_data.array_altitude = np.append(
+            self.triggered_data.array_altitude, alt_value
+        )
+        self.triggered_data.array_azimuth = np.append(self.triggered_data.array_azimuth, az_value)
+
+    def _process_trigger_information(self, trigger_info):
+        """Process trigger information and update triggered event list."""
         trigger_info = trigger_info.parse()
         telescopes = trigger_info["telescopes_with_data"]
         if len(telescopes) > 0:
             # add offset to obtained unique shower IDs among all files
-            data_lists["triggered_id"].append(self.shower["shower"] + self.shower_id_offset)
-            data_lists["triggered_energy"].append(self.shower["energy"])
-            data_lists["trigger_telescope_list_list"].append(np.array(telescopes, dtype=np.int16))
+            self.triggered_data.triggered_id = np.append(
+                self.triggered_data.triggered_id, self.shower["shower"] + self.shower_id_offset
+            )
+            self.triggered_data.triggered_energy = np.append(
+                self.triggered_data.triggered_energy, self.shower["energy"]
+            )
+            self.triggered_data.trigger_telescope_list_list.append(
+                np.array(telescopes, dtype=np.int16)
+            )
 
-    def _write_data(self, data_lists, mode="a"):
-        """Write data to HDF5 file using HDF5TableWriter."""
-        with HDF5TableWriter(
-            self.output_file, group_name="data", mode=mode, filters=DEFAULT_FILTERS
-        ) as writer:
-            # Write reduced dataset container
-            reduced_container = ReducedDatasetContainer()
+    def _table_descriptions(self):
+        """HDF5 table descriptions for shower data, triggered data, and file names."""
+        shower_data_desc = {
+            "shower_id": tables.Int32Col(),
+            "simulated": tables.Float32Col(),
+            "event_x_core": tables.Float32Col(),
+            "event_y_core": tables.Float32Col(),
+            "area_weight": tables.Float32Col(),
+            "shower_sim_azimuth": tables.Float32Col(),
+            "shower_sim_altitude": tables.Float32Col(),
+        }
+        triggered_data_desc = {
+            "triggered_id": tables.Int32Col(),
+            "triggered_energy": tables.Float32Col(),
+            "array_altitude": tables.Float32Col(),
+            "array_azimuth": tables.Float32Col(),
+            "telescope_list_index": tables.Int32Col(),  # Index into VLArray
+        }
+        file_names_desc = {
+            "file_names": tables.StringCol(256),  # Adjust string length as needed
+        }
+        return shower_data_desc, triggered_data_desc, file_names_desc
 
-            for i in range(len(data_lists["sim_energy"])):
-                reduced_container.shower_id = data_lists["shower_id"][i]
-                reduced_container.sim_energy = data_lists["sim_energy"][i]
-                reduced_container.core_x = data_lists["core_x"][i]
-                reduced_container.core_y = data_lists["core_y"][i]
-                reduced_container.area_weight = data_lists["area_weight"][i]
-                reduced_container.shower_sim_azimuth = data_lists["shower_sim_azimuth"][i]
-                reduced_container.shower_sim_altitude = data_lists["shower_sim_altitude"][i]
+    def _tables(self, hdf5_file, data_group, mode="a"):
+        """Create or get HD5 tables."""
+        shower_data_desc, triggered_data_desc, file_names_desc = self._table_descriptions()
 
-                writer.write(table_name="reduced_data", containers=[reduced_container])
+        if mode == "w" or "/data/reduced_data" not in hdf5_file:
+            reduced_table = hdf5_file.create_table(
+                data_group,
+                "reduced_data",
+                shower_data_desc,
+                "Reduced Shower Data",
+                filters=DEFAULT_FILTERS,
+            )
+        else:
+            reduced_table = hdf5_file.get_node("/data/reduced_data")
 
-            # Write triggered shower container
-            triggered_container = TriggeredShowerContainer()
+        if mode == "w" or "/data/triggered_data" not in hdf5_file:
+            triggered_table = hdf5_file.create_table(
+                data_group,
+                "triggered_data",
+                triggered_data_desc,
+                "Triggered Data",
+                filters=DEFAULT_FILTERS,
+            )
+        else:
+            triggered_table = hdf5_file.get_node("/data/triggered_data")
 
-            for i in range(len(data_lists["triggered_id"])):
-                triggered_container.triggered_id = data_lists["triggered_id"][i]
-                triggered_container.triggered_energy = data_lists["triggered_energy"][i]
-                triggered_container.array_altitudes = np.array(data_lists["array_altitudes"][i])
-                triggered_container.array_azimuths = np.array(data_lists["array_azimuths"][i])
-                writer.write(table_name="triggered_data", containers=[triggered_container])
+        if mode == "w" or "/data/file_names" not in hdf5_file:
+            file_names_table = hdf5_file.create_table(
+                data_group, "file_names", file_names_desc, "File Names", filters=DEFAULT_FILTERS
+            )
+        else:
+            file_names_table = hdf5_file.get_node("/data/file_names")
+        return reduced_table, triggered_table, file_names_table
 
-    def _reset_data_lists(self, data_lists):
-        """Reset data lists during batch processing."""
-        data_lists.update({key: [] for key in data_lists})
+    def _write_event_data(self, reduced_table):
+        """Fill event data tables."""
+        if len(self.event_data.simulated) == 0:
+            return
+        row = reduced_table.row
+        for i, energy in enumerate(self.event_data.simulated):
+            row["shower_id"] = (
+                self.event_data.shower_id[i] if i < len(self.event_data.shower_id) else 0
+            )
+            row["simulated"] = energy
+            row["event_x_core"] = (
+                self.event_data.event_x_core[i] if i < len(self.event_data.event_x_core) else 0
+            )
+            row["event_y_core"] = (
+                self.event_data.event_y_core[i] if i < len(self.event_data.event_y_core) else 0
+            )
+            row["area_weight"] = (
+                self.event_data.area_weight[i] if i < len(self.event_data.area_weight) else 0
+            )
+            row["shower_sim_azimuth"] = self.event_data.shower_sim_azimuth[i]
+            row["shower_sim_altitude"] = self.event_data.shower_sim_altitude[i]
+            row.append()
+        reduced_table.flush()
 
-    def print_dataset_information(self, n_events=5):
+    def _writer_triggered_data(self, triggered_table, vlarray):
+        """Fill triggered event data tables."""
+        # Get or create VLArray for telescope lists
+        if len(self.triggered_data.triggered_id) == 0:
+            return
+        row = triggered_table.row
+        start_idx = vlarray.nrows
+        for i, triggered_id in enumerate(self.triggered_data.triggered_id):
+            row["triggered_id"] = triggered_id
+            row["triggered_energy"] = self.triggered_data.triggered_energy[i]
+            row["array_altitude"] = self.triggered_data.array_altitude[i]
+            row["array_azimuth"] = self.triggered_data.array_azimuth[i]
+            row["telescope_list_index"] = start_idx + i  # Index into the VLArray
+            row.append()
+            vlarray.append(self.triggered_data.trigger_telescope_list_list[i])
+        triggered_table.flush()
+
+    def _write_data(self, mode="a"):
+        """Write data to HDF5 file."""
+        with tables.open_file(self.output_file, mode=mode) as f:
+            if mode == "w" or "/data" not in f:
+                data_group = f.create_group("/", "data", "Data group")
+            else:
+                data_group = f.get_node("/data")
+
+            reduced_table, triggered_table, file_names_table = self._tables(f, data_group, mode)
+
+            self._write_event_data(reduced_table)
+            if mode == "w" or "/data/trigger_telescope_list_list" not in f:
+                vlarray = f.create_vlarray(
+                    data_group,
+                    "trigger_telescope_list_list",
+                    tables.Int16Atom(),
+                    "List of triggered telescope IDs",
+                )
+            else:
+                vlarray = f.get_node("/data/trigger_telescope_list_list")
+            self._writer_triggered_data(triggered_table, vlarray)
+
+            # Write file names
+            if self.file_names:
+                row = file_names_table.row
+                for name in self.file_names:
+                    row["file_names"] = name
+                    row.append()
+                file_names_table.flush()
+
+    def _reset_data(self):
+        """Reset data structures for batch processing."""
+        self.event_data = ShowerEventData()
+        self.triggered_data = TriggeredEventData()
+        self.file_names = []
+
+    def print_dataset_information(self, n_events=10):
         """Print information about the datasets in the generated HDF5 file."""
         try:
             with tables.open_file(self.output_file, mode="r") as reader:
                 print("Datasets in file:")
-                for name, dataset in reader.root.data._v_children.items():  # pylint: disable=protected-access
-                    print(f"- {name}: shape={dataset.shape}, dtype={dataset.dtype}")
-                    print(f"  Length of dataset: {len(dataset)}")
-                    print(f"  First {n_events} values: {dataset[:n_events]}")
+                for node in reader.iter_nodes(reader.root.data):
+                    print(f"- {node.name}: shape={getattr(node, 'shape', 'N/A')}")
+                    if hasattr(node, "__len__"):
+                        print(f"  Length of dataset: {len(node)}")
+                        try:
+                            if len(node) > 0:
+                                print(
+                                    f"  First {min(n_events, len(node))} values: "
+                                    f"{node[: min(n_events, len(node))]}"
+                                )
+                        except (TypeError, ValueError, IndexError):  # Not all Items support slicing
+                            pass
         except Exception as exc:
             raise ValueError("An error occurred while reading the HDF5 file") from exc
