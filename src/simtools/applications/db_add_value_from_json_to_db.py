@@ -26,6 +26,7 @@ r"""
 """
 
 import logging
+import uuid
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -45,7 +46,11 @@ def _parse():
     config.parser.add_argument(
         "--db_collection", help="DB collection to which to add new values.", required=True
     )
-    config.parser.add_argument("--db", help="Database name", type=str, required=True)
+    config.parser.add_argument(
+        "--test_db",
+        help="Use sandbox database. Drop all data after the operation.",
+        action="store_true",
+    )
     return config.initialize(db_config=True)
 
 
@@ -55,6 +60,9 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
+    if args_dict.get("test_db", False):
+        db_config["db_simulation_model"] = db_config["db_simulation_model"] + str(uuid.uuid4())
+        logger.info(f"Using test database: {db_config['db_simulation_model']}")
     db = db_handler.DatabaseHandler(mongo_db_config=db_config)
 
     files_to_insert = []
@@ -74,6 +82,8 @@ def main():  # noqa: D103
     print(*files_to_insert, sep="\n")
     print()
 
+    logger.info(f"DB {args_dict['db_simulation_model']} selected.")
+
     if gen.user_confirm():
         for file_to_insert_now in files_to_insert:
             par_dict = gen.collect_data_from_file(file_name=file_to_insert_now)
@@ -90,6 +100,13 @@ def main():  # noqa: D103
             )
     else:
         logger.info("Aborted, no change applied to the database")
+
+    # drop test database; be safe and required DB name is sandbox
+    if args_dict.get("test_db", False) and "sandbox" in args_dict["db_simulation_model"]:
+        logger.info(
+            f"Test database used. Dropping all data from {db_config['db_simulation_model']}"
+        )
+        db.db_client.drop_database(db_config["db_simulation_model"])
 
 
 if __name__ == "__main__":
