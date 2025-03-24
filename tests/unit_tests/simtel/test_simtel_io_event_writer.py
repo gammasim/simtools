@@ -66,8 +66,8 @@ def validate_datasets(reduced_data, triggered_data, file_names, trigger_telescop
     Helper function to validate that datasets are not empty.
     """
     assert len(reduced_data.col("simulated")) > 0
-    assert len(triggered_data.col("shower_id_triggered")) > 0
-    assert len(triggered_data.col("triggered_energies")) > 0
+    assert len(triggered_data.col("triggered_id")) > 0
+    assert len(triggered_data.col("triggered_energy")) > 0
     assert len(triggered_data.col("array_altitudes")) > 0
     assert len(triggered_data.col("array_azimuths")) > 0
     assert len(trigger_telescope_list_list) > 0
@@ -115,8 +115,8 @@ def test_print_dataset_information(mock_eventio_class, lookup_table_generator, c
     assert "shower_sim_altitude" in captured.out
     assert "array_altitudes" in captured.out
     assert "array_azimuths" in captured.out
-    assert "shower_id_triggered" in captured.out
-    assert "triggered_energies" in captured.out
+    assert "triggered_id" in captured.out
+    assert "triggered_energy" in captured.out
 
 
 @patch("simtools.production_configuration.extract_mc_event_data.EventIOFile", autospec=True)

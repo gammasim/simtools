@@ -37,7 +37,7 @@ def hdf5_file(tmp_path):
             group,
             "triggered_data",
             {
-                "shower_id_triggered": tables.Int32Col(pos=1),
+                "triggered_id": tables.Int32Col(pos=1),
                 "array_altitudes": tables.Float32Col(pos=2),
                 "array_azimuths": tables.Float32Col(pos=3),
             },
