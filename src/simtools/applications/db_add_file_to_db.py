@@ -38,6 +38,7 @@
 """
 
 import logging
+import uuid
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -68,6 +69,11 @@ def _parse():
         "--db",
         type=str,
         help=("The database to insert the files to."),
+    )
+    config.parser.add_argument(
+        "--test_db",
+        help="Use sandbox database. Drop all data after the operation.",
+        action="store_true",
     )
 
     return config.initialize(paths=False, db_config=True)
@@ -134,6 +140,10 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
     """
     plural = "" if len(files_to_insert) == 1 else "s"
 
+    if args_dict.get("test_db", False):
+        args_dict["db"] = args_dict["db"] + str(uuid.uuid4())
+        logger.info(f"Using test database: {args_dict['db']}")
+
     print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
     print(*files_to_insert, sep="\n")
     print()
@@ -144,6 +154,11 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
             logger.info(f"File {file_to_insert_now} inserted to {args_dict['db']} DB")
     else:
         logger.info(f"Aborted, did not insert file{plural} to the {args_dict['db']} DB")
+
+    # drop test database; be safe and required DB name is sandbox
+    if args_dict.get("test_db", False) and "sandbox" in args_dict["db"]:
+        logger.info(f"Test database used. Dropping all data from {args_dict['db']}")
+        db.db_client.drop_database(args_dict["db"])
 
 
 def main():  # noqa: D103

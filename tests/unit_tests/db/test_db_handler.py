@@ -397,6 +397,61 @@ def test_get_model_parameters_for_all_model_versions(
     assert result == expected
 
 
+def test_get_model_parameters_for_all_model_versions_mst(
+    db,
+    mocker,
+    standard_test_params,
+):
+    """Test get_model_parameters_for_all_model_versions method."""
+    site = standard_test_params["site"]
+    array_element_name = "MSTN-101"  # Using telescope that only exists in prod6
+    collection = standard_test_params["collection"]
+
+    mock_get_model_versions = mocker.patch.object(
+        db, "get_model_versions", return_value=["5.0.0", "6.0.0"]
+    )
+
+    # Mock get_model_parameters to raise KeyError for version 5.0.0
+    # but return valid data for version 6.0.0
+    def mock_get_parameters(site, array_element_name, collection, version):
+        if version == "5.0.0":
+            raise KeyError(f"{array_element_name} not found")
+        return {
+            "param1": "val5",
+            "param2": "val2",
+            "param3": "val6",
+        }
+
+    mock_get_parameter = mocker.patch.object(
+        db, "get_model_parameters", side_effect=mock_get_parameters
+    )
+
+    # Mock logger to verify debug message
+    mock_logger = mocker.patch.object(db._logger, "debug")
+
+    result = db.get_model_parameters_for_all_model_versions(site, array_element_name, collection)
+
+    # Verify that the mocks were called correctly
+    mock_get_model_versions.assert_called_once_with(collection)
+    assert mock_get_parameter.call_count == 2  # Should still try both versions
+
+    # Verify debug message for skipped version
+    mock_logger.assert_called_once_with(
+        f"Skipping model version 5.0.0 - {array_element_name} not found"
+    )
+
+    # Verify result only contains data for version 6.0.0
+    expected = {
+        "6.0.0": {
+            "param1": "val5",
+            "param2": "val2",
+            "param3": "val6",
+        }
+    }
+
+    assert result == expected
+
+
 def test_get_model_parameters_with_cache(db, mocker, standard_test_params):
     """Test get_model_parameters method with cache."""
     site = standard_test_params["site"]

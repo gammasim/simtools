@@ -69,9 +69,37 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--max_amplitude",
-        help="Maximum amplitude in amplitude spectrum",
+        help="Maximum amplitude for single p.e. for amplitude spectrum",
         type=float,
         default=42.0,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--scale_afterpulse_spectrum",
+        help="Scale afterpulse spectrum by the given factor",
+        type=float,
+        default=1.0,
+        required=False,
+    )
+    config.parser.add_argument(
+        "--afterpulse_amplitude_range",
+        help="Amplitude range in pe for afterpulse calculation",
+        type=float,
+        nargs=2,
+        default=[0.0, 42.0],
+        required=False,
+    )
+    config.parser.add_argument(
+        "--fit_afterpulse",
+        help="Fit afterpulse spectrum with an exponential decay function.",
+        action="store_true",
+        required=False,
+    )
+    config.parser.add_argument(
+        "--afterpulse_decay_factor_fixed_value",
+        help="Fix decay factor in afterpulse fit (free fit parameter if not set set).",
+        type=float,
+        default=15.0,
         required=False,
     )
     config.parser.add_argument(

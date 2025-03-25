@@ -54,7 +54,7 @@ def test_collect_dict_data(io_handler, caplog) -> None:
     _dict = gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 0)
     assert _dict["version"] != "0.1.0"
 
-    with pytest.raises(gen.InvalidConfigDataError, match=r"^YAML file"):
+    with pytest.raises(gen.InvalidConfigDataError, match=r"^Failed to read file"):
         gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 999)
 
     # document type not supported
@@ -64,6 +64,36 @@ def test_collect_dict_data(io_handler, caplog) -> None:
         )
         is None
     )
+
+
+def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
+    """Test error handling in collect_data_from_file."""
+    # Create an invalid YAML file
+    test_file = io_handler.get_output_file(file_name="invalid.yml")
+    with open(test_file, "w") as f:
+        f.write("invalid: {\n")  # Invalid YAML syntax
+
+    # Test with invalid YAML file
+    with pytest.raises(Exception, match=r"^Failed to read file"):
+        gen.collect_data_from_file(test_file)
+    assert "Failed to read file" in caplog.text
+
+    # Test with invalid JSON file
+    test_json = io_handler.get_output_file(file_name="invalid.json")
+    with open(test_json, "w") as f:
+        f.write("{invalid json")
+
+    with pytest.raises(Exception, match=r"^JSONDecodeError"):
+        gen.collect_data_from_file(test_json)
+    assert "Failed to read file" in caplog.text
+
+    # Test with unsupported file extension
+    test_unsupported = io_handler.get_output_file(file_name="test.xyz")
+    with open(test_unsupported, "w") as f:
+        f.write("some content")
+
+    result = gen.collect_data_from_file(test_unsupported)
+    assert result is None
 
 
 def test_collect_dict_from_url(io_handler) -> None:
