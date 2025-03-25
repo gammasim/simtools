@@ -27,19 +27,6 @@ def test_get_database_version_no_version():
         assert dependencies.get_database_version(db_config) is None
 
 
-def test_get_corsika_version(caplog):
-    # no build_opts.yml file
-    with caplog.at_level(logging.WARNING):
-        assert dependencies.get_corsika_version() is None
-    assert "CORSIKA version not implemented yet." in caplog.text
-
-    # mock get_build_options to return a dict
-    with mock.patch(
-        "simtools.dependencies.get_build_options", return_value={"corsika_version": "7.7"}
-    ):
-        assert dependencies.get_corsika_version() == "7.7"
-
-
 def test_get_sim_telarray_version_success(monkeypatch):
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
     expected_version = "2024.271.0"
@@ -92,3 +79,61 @@ def test_build_options(monkeypatch):
     ):
         build_opts = dependencies.get_build_options()
         assert build_opts == {"corsika_version": "7.7"}
+
+
+def test_get_corsika_version_success(monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+    mock_process = mock.Mock()
+    mock_process.stdout.readline.side_effect = [
+        "NUMBER OF VERSION :  7.7550\n",
+        "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n",
+        "",
+    ]
+
+    with mock.patch("subprocess.Popen", return_value=mock_process):
+        assert dependencies.get_corsika_version() == "7.7550"
+
+
+def test_get_corsika_version_no_env_var(caplog, monkeypatch):
+    monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
+
+    with caplog.at_level(logging.WARNING):
+        assert dependencies.get_corsika_version() is None
+
+    assert "Environment variable SIMTOOLS_SIMTEL_PATH is not set." in caplog.text
+
+
+def test_get_corsika_version_no_version(monkeypatch, caplog):
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+    mock_process = mock.Mock()
+    mock_process.stdout.readline.side_effect = [
+        "Some other output\n",
+        "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n",
+        "",
+    ]
+
+    with mock.patch("subprocess.Popen", return_value=mock_process):
+        with mock.patch(
+            "simtools.dependencies.get_build_options", return_value={"corsika_version": "7.7"}
+        ):
+            with caplog.at_level(logging.DEBUG):
+                assert dependencies.get_corsika_version() == "7.7"
+
+            assert "Getting the CORSIKA version from the build options." in caplog.text
+
+
+def test_get_corsika_version_no_build_opts(monkeypatch, caplog):
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+    mock_process = mock.Mock()
+    mock_process.stdout.readline.side_effect = [
+        "Some other output\n",
+        "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n",
+        "",
+    ]
+
+    with mock.patch("subprocess.Popen", return_value=mock_process):
+        with mock.patch("simtools.dependencies.get_build_options", side_effect=FileNotFoundError):
+            with caplog.at_level(logging.WARNING):
+                assert dependencies.get_corsika_version() is None
+
+            assert "Could not get CORSIKA version." in caplog.text
