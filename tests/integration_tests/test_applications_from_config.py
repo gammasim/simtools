@@ -67,7 +67,7 @@ def test_applications_from_config(tmp_test_directory, test_config, monkeypatch, 
         cmd, config_file_model_version = configuration.configure(
             tmp_config, tmp_test_directory, request
         )
-    except configuration.VersionError as exc:
+    except (configuration.ProductionDBError, configuration.VersionError) as exc:
         pytest.skip(str(exc))
 
     logger.info(f"Running application: {cmd}")
