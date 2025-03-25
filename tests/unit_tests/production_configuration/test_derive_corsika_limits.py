@@ -29,7 +29,7 @@ def test_init(mock_reader, hdf5_file_name):
     assert calculator.event_data_file == hdf5_file_name
     assert calculator.telescope_list == test_telescope_list
 
-    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=[7, 12])
+    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=[1, 2])
 
 
 def test_init_default_telescope_list(mock_reader, hdf5_file_name):
@@ -38,7 +38,7 @@ def test_init_default_telescope_list(mock_reader, hdf5_file_name):
     assert calculator.event_data_file == hdf5_file_name
     assert calculator.telescope_list is None
 
-    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=[7, 12])
+    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=None)
 
 
 def test_compute_limits_lower(mock_reader, hdf5_file_name):

@@ -29,7 +29,7 @@ class LimitCalculator:
         self.event_data_file = event_data_file
         self.telescope_list = telescope_list
 
-        self.reader = SimtelIOEventDataReader(event_data_file, telescope_list=[7, 12])
+        self.reader = SimtelIOEventDataReader(event_data_file, telescope_list=telescope_list)
         self.event_data = self.reader.triggered_shower_data
         self.triggered_data = self.reader.triggered_data
 

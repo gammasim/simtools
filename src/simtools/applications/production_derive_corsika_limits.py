@@ -53,6 +53,8 @@ def _parse():
         List of telescope IDs to filter the events (default is None).
         Definition of the telescope IDs can be found in the telescope
         definition file used for simulations.
+    plot_histograms: bool
+        Plot histograms of the event data.
 
     Returns
     -------
@@ -110,6 +112,9 @@ def main():
     _logger.info(f"Viewcone radius: {viewcone}")
 
     if args_dict.get("plot_histograms"):
+        _logger.info(
+            f"Plotting histograms written to {io_handler.IOHandler().get_output_directory()}"
+        )
         calculator.plot_data(
             lower_energy_limit,
             upper_radial_distance,
