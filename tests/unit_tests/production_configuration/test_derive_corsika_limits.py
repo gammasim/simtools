@@ -212,17 +212,70 @@ def test_plot_data(mock_reader, hdf5_file_name, mocker, tmp_path):
     assert mock_create_plot.call_count == 5
 
 
-def test_create_plot_histogram(mock_reader, hdf5_file_name, mocker):
+@pytest.fixture
+def mock_figure(mocker):
+    return mocker.patch("matplotlib.pyplot.figure")
+
+
+@pytest.fixture
+def mock_hist(mocker):
+    return mocker.patch("matplotlib.pyplot.hist")
+
+
+@pytest.fixture
+def mock_hist2d(mocker):
+    return mocker.patch("matplotlib.pyplot.hist2d")
+
+
+@pytest.fixture
+def mock_xlabel(mocker):
+    return mocker.patch("matplotlib.pyplot.xlabel")
+
+
+@pytest.fixture
+def mock_ylabel(mocker):
+    return mocker.patch("matplotlib.pyplot.ylabel")
+
+
+@pytest.fixture
+def mock_title(mocker):
+    return mocker.patch("matplotlib.pyplot.title")
+
+
+@pytest.fixture
+def mock_tight_layout(mocker):
+    return mocker.patch("matplotlib.pyplot.tight_layout")
+
+
+@pytest.fixture
+def mock_show(mocker):
+    return mocker.patch("matplotlib.pyplot.show")
+
+
+@pytest.fixture
+def mock_colorbar(mocker):
+    return mocker.patch("matplotlib.pyplot.colorbar")
+
+
+@pytest.fixture
+def mock_scatter(mocker):
+    return mocker.patch("matplotlib.pyplot.scatter")
+
+
+def test_create_plot_histogram(
+    mock_reader,
+    hdf5_file_name,
+    mock_figure,
+    mock_hist,
+    mock_xlabel,
+    mock_ylabel,
+    mock_title,
+    mock_tight_layout,
+    mock_show,
+):
     calculator = LimitCalculator(hdf5_file_name)
 
     # Mock matplotlib functions
-    mock_figure = mocker.patch("matplotlib.pyplot.figure")
-    mock_hist = mocker.patch("matplotlib.pyplot.hist")
-    mock_xlabel = mocker.patch("matplotlib.pyplot.xlabel")
-    mock_ylabel = mocker.patch("matplotlib.pyplot.ylabel")
-    mock_title = mocker.patch("matplotlib.pyplot.title")
-    mock_tight_layout = mocker.patch("matplotlib.pyplot.tight_layout")
-    mock_show = mocker.patch("matplotlib.pyplot.show")
 
     x_data = [1, 2, 3]
     bins = [0, 1, 2, 3]
@@ -234,9 +287,7 @@ def test_create_plot_histogram(mock_reader, hdf5_file_name, mocker):
         bins=bins,
         plot_type="histogram",
         plot_params=plot_params,
-        x_label="X Label",
-        y_label="Y Label",
-        title="Test Plot",
+        labels={"x": "X Label", "y": "Y Label", "title": "Test Plot"},
     )
 
     mock_figure.assert_called_once()
@@ -249,18 +300,8 @@ def test_create_plot_histogram(mock_reader, hdf5_file_name, mocker):
     assert fig == mock_figure.return_value
 
 
-def test_create_plot_histogram2d(mock_reader, hdf5_file_name, mocker):
+def test_create_plot_histogram2d(mock_reader, hdf5_file_name, mock_colorbar, mock_hist2d):
     calculator = LimitCalculator(hdf5_file_name)
-
-    # Mock matplotlib functions
-    mocker.patch("matplotlib.pyplot.figure")
-    mock_hist2d = mocker.patch("matplotlib.pyplot.hist2d")
-    mock_colorbar = mocker.patch("matplotlib.pyplot.colorbar")
-    mocker.patch("matplotlib.pyplot.xlabel")
-    mocker.patch("matplotlib.pyplot.ylabel")
-    mocker.patch("matplotlib.pyplot.title")
-    mocker.patch("matplotlib.pyplot.tight_layout")
-    mocker.patch("matplotlib.pyplot.show")
 
     x_data = [1, 2, 3]
     y_data = [4, 5, 6]
@@ -280,17 +321,8 @@ def test_create_plot_histogram2d(mock_reader, hdf5_file_name, mocker):
     mock_colorbar.assert_called_once_with(label="Counts")
 
 
-def test_create_plot_scatter(mock_reader, hdf5_file_name, mocker):
+def test_create_plot_scatter(mock_reader, hdf5_file_name, mock_scatter):
     calculator = LimitCalculator(hdf5_file_name)
-
-    # Mock matplotlib functions
-    mocker.patch("matplotlib.pyplot.figure")
-    mock_scatter = mocker.patch("matplotlib.pyplot.scatter")
-    mocker.patch("matplotlib.pyplot.xlabel")
-    mocker.patch("matplotlib.pyplot.ylabel")
-    mocker.patch("matplotlib.pyplot.title")
-    mocker.patch("matplotlib.pyplot.tight_layout")
-    mocker.patch("matplotlib.pyplot.show")
 
     x_data = [1, 2, 3]
     y_data = [4, 5, 6]
@@ -306,18 +338,10 @@ def test_create_plot_scatter(mock_reader, hdf5_file_name, mocker):
 def test_create_plot_with_lines(mock_reader, hdf5_file_name, mocker):
     calculator = LimitCalculator(hdf5_file_name)
 
-    # Mock matplotlib functions
-    mocker.patch("matplotlib.pyplot.figure")
-    mocker.patch("matplotlib.pyplot.hist")
     mock_axvline = mocker.patch("matplotlib.pyplot.axvline")
     mock_axhline = mocker.patch("matplotlib.pyplot.axhline")
-    mocker.patch("matplotlib.pyplot.xlabel")
-    mocker.patch("matplotlib.pyplot.ylabel")
-    mocker.patch("matplotlib.pyplot.title")
-    mocker.patch("matplotlib.pyplot.tight_layout")
-    mocker.patch("matplotlib.pyplot.show")
 
-    calculator._create_plot(x_data=[1, 2, 3], x_line=1.5, y_line=2.5)
+    calculator._create_plot(x_data=[1, 2, 3], lines={"x": 1.5, "y": 2.5})
 
     mock_axvline.assert_called_once_with(1.5, color="r", linestyle="--")
     mock_axhline.assert_called_once_with(2.5, color="r", linestyle="--")
@@ -326,18 +350,10 @@ def test_create_plot_with_lines(mock_reader, hdf5_file_name, mocker):
 def test_create_plot_with_scales(mock_reader, hdf5_file_name, mocker):
     calculator = LimitCalculator(hdf5_file_name)
 
-    # Mock matplotlib functions
-    mocker.patch("matplotlib.pyplot.figure")
-    mocker.patch("matplotlib.pyplot.hist")
     mock_xscale = mocker.patch("matplotlib.pyplot.xscale")
     mock_yscale = mocker.patch("matplotlib.pyplot.yscale")
-    mocker.patch("matplotlib.pyplot.xlabel")
-    mocker.patch("matplotlib.pyplot.ylabel")
-    mocker.patch("matplotlib.pyplot.title")
-    mocker.patch("matplotlib.pyplot.tight_layout")
-    mocker.patch("matplotlib.pyplot.show")
 
-    calculator._create_plot(x_data=[1, 2, 3], x_scale="log", y_scale="log")
+    calculator._create_plot(x_data=[1, 2, 3], scales={"x": "log", "y": "log"})
 
     mock_xscale.assert_called_once_with("log")
     mock_yscale.assert_called_once_with("log")
@@ -346,9 +362,6 @@ def test_create_plot_with_scales(mock_reader, hdf5_file_name, mocker):
 def test_create_plot_save_file(mock_reader, hdf5_file_name, mocker, tmp_path):
     calculator = LimitCalculator(hdf5_file_name)
 
-    # Mock matplotlib functions and logger
-    mocker.patch("matplotlib.pyplot.figure")
-    mocker.patch("matplotlib.pyplot.hist")
     mock_savefig = mocker.patch("matplotlib.pyplot.savefig")
     mock_close = mocker.patch("matplotlib.pyplot.close")
     mock_logger = mocker.patch.object(calculator, "_logger")

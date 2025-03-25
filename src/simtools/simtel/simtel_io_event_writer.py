@@ -149,7 +149,7 @@ class SimtelIOEventDataWriter:
         """Process array event and update triggered event list."""
         tracking_positions = []
 
-        for i, obj in enumerate(eventio_object):
+        for _, obj in enumerate(eventio_object):
             if isinstance(obj, TriggerInformation):
                 self._process_trigger_information(obj)
 
