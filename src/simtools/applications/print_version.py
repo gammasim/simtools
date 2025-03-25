@@ -18,6 +18,10 @@ def _parse(label, description, usage):
     """
     Parse command line configuration.
 
+    No command line arguments are required for this application,
+    but the configurator is called to set up the DB connection and
+    the structure with _parse is kept from other applications for consistency.
+
     Parameters
     ----------
     label : str
