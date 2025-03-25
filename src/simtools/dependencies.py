@@ -81,18 +81,52 @@ def get_sim_telarray_version():
 
 def get_corsika_version():
     """
-    Get the version of the corsika package.
+    Get the version of the CORSIKA package.
 
     Returns
     -------
     str
-        Version of the corsika package.
+        Version of the CORSIKA package.
     """
+    version = None
+    sim_telarray_path = os.getenv("SIMTOOLS_SIMTEL_PATH")
+    if sim_telarray_path is None:
+        _logger.warning("Environment variable SIMTOOLS_SIMTEL_PATH is not set.")
+        return None
+    corsika_command = Path(sim_telarray_path) / "corsika-run" / "corsika"
+
+    process = subprocess.Popen(  # pylint: disable=consider-using-with
+        corsika_command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        text=True,
+    )
+
+    # Capture output until it waits for input
+    while True:
+        line = process.stdout.readline()
+        if not line:
+            break
+        # Extract the version from the line "NUMBER OF VERSION :  7.7550"
+        if "NUMBER OF VERSION" in line:
+            version = line.split(":")[1].strip()
+            break
+        # Check for a specific prompt or indication that the program is waiting for input
+        if "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT" in line:
+            break
+
+    # Terminate the process
+    process.terminate()
+    # Check it's a valid version string
+    if version and re.match(r"\d+\.\d+", version):
+        return version
     try:
         build_opts = get_build_options()
     except (FileNotFoundError, TypeError):
-        _logger.warning("CORSIKA version not implemented yet.")
+        _logger.warning("Could not get CORSIKA version.")
         return None
+    _logger.debug("Getting the CORSIKA version from the build options.")
     return build_opts.get("corsika_version")
 
 
