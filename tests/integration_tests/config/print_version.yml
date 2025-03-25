@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-print-version
     TEST_NAME: print_versions_simtools_db_sim_telarray_corsika
-    # CONFIGURATION:
+    CONFIGURATION:
+      LABEL: print_versions
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
