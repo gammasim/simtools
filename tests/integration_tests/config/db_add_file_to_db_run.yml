@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-db-add-file-to-db
     TEST_NAME: run
+    SKIP_FOR_PRODUCTION_DB: true
     CONFIGURATION:
       FILE_NAME:
       - ./tests/resources/MLTdata-preproduction.meta.yml
