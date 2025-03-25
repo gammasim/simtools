@@ -377,6 +377,64 @@ class ReadParameters:
                 if comparison_data.get(parameter)[0]["file_flag"]:
                     file.write(f"![Parameter plot.](_images/{self.array_element}_{parameter}.png)")
 
+    def _write_array_layouts_section(self, file, layouts):
+        """Write the array layouts section of the report."""
+        file.write("\n## Array Layouts {#array-layouts-details}\n\n")
+        for layout in layouts:
+            layout_name = layout["name"]
+            elements = layout["elements"]
+            file.write(f"### {layout_name}\n\n")
+            file.write("| Element |\n|---------|\n")
+            for element in sorted(elements):
+                file.write(f"| [{element}]({element}.md) |\n")
+            file.write("\n")
+
+    def _write_array_triggers_section(self, file, trigger_configs):
+        """Write the array triggers section of the report."""
+        file.write("\n## Array Trigger Configurations {#array-triggers-details}\n\n")
+        file.write(
+            "| Trigger Name | Multiplicity | Width | Hard Stereo | Min Separation |\n"
+            "|--------------|--------------|--------|-------------|----------------|\n"
+        )
+        for config in trigger_configs:
+            name = config["name"]
+            mult = f"{config['multiplicity']['value']} {config['multiplicity']['unit'] or ''}"
+            width = f"{config['width']['value']} {config['width']['unit'] or ''}"
+            stereo = "Yes" if config["hard_stereo"]["value"] else "No"
+            min_sep = (
+                f"{config['min_separation']['value']} {config['min_separation']['unit'] or '-'}"
+            )
+            file.write(
+                f"| {name} | {mult.strip()} | {width.strip()} | {stereo} | {min_sep.strip()} |\n"
+            )
+        file.write("\n")
+
+    def _write_parameters_table(self, file, all_parameter_data):
+        """Write the main parameters table of the report."""
+        file.write("| Parameter | Value | Unit |\n|-----------|--------|------|\n")
+        for param_name, param_data in sorted(all_parameter_data.items()):
+            value = param_data.get("value")
+            unit = param_data.get("unit", "")
+            file_flag = param_data.get("file", False)
+
+            if value is None:
+                continue
+
+            if param_name == "array_layouts":
+                file.write(
+                    f"| array_layouts | [View Array Layouts](#array-layouts-details) | {unit} |\n"
+                )
+            elif param_name == "array_triggers":
+                file.write(
+                    "| array_triggers | "
+                    "[View Trigger Configurations](#array-triggers-details) | "
+                    f"{unit} |\n"
+                )
+            else:
+                formatted_value = self._format_parameter_value(value, unit, file_flag)
+                file.write(f"| {param_name} | {formatted_value} | {unit} |\n")
+        file.write("\n")
+
     def produce_observatory_report(self):
         """Produce a markdown report of all observatory parameters for a given site."""
         output_filename = Path(self.output_path / f"OBS-{self.site}.md")
@@ -398,77 +456,14 @@ class ReadParameters:
 
         with output_filename.open("w", encoding="utf-8") as file:
             file.write(f"# Observatory Parameters - {self.site} Site\n\n")
-            file.write("| Parameter | Value | Unit |\n")
-            file.write("|-----------|--------|------|\n")
-
-            for param_name, param_data in sorted(all_parameter_data.items()):
-                value = param_data.get("value")
-                unit = param_data.get("unit", "")
-                file_flag = param_data.get("file", False)
-
-                if value is not None:
-                    if param_name == "array_layouts":
-                        # Create an anchor for the layouts table
-                        anchor = "array-layouts-details"
-                        file.write(
-                            f"| array_layouts | [View Array Layouts](#{anchor}) | {unit} |\n"
-                        )
-                    elif param_name == "array_triggers":
-                        # Create an anchor for the triggers table
-                        anchor = "array-triggers-details"
-                        file.write(
-                            f"| array_triggers |"
-                            f" [View Trigger Configurations](#{anchor}) | {unit} |\n"
-                        )
-                    else:
-                        formatted_value = self._format_parameter_value(value, unit, file_flag)
-                        file.write(f"| {param_name} | {formatted_value} | {unit} |\n")
-
-            file.write("\n")
+            self._write_parameters_table(file, all_parameter_data)
 
             if "array_layouts" in all_parameter_data:
-                layouts = all_parameter_data["array_layouts"]["value"]
-                file.write("\n## Array Layouts {#array-layouts-details}\n\n")
-
-                # Create a table for each layout
-                for layout in layouts:
-                    layout_name = layout["name"]
-                    elements = layout["elements"]
-
-                    file.write(f"### {layout_name}\n\n")
-                    file.write("| Element |\n")
-                    file.write("|---------|\n")
-                    for element in sorted(elements):
-                        file.write(f"| [{element}]({element}.md) |\n")
-                    file.write("\n")
+                self._write_array_layouts_section(
+                    file, all_parameter_data["array_layouts"]["value"]
+                )
 
             if "array_triggers" in all_parameter_data:
-                trigger_configs = all_parameter_data["array_triggers"]["value"]
-                file.write("\n## Array Trigger Configurations {#array-triggers-details}\n\n")
-
-                # Create one table with all trigger configurations
-                file.write(
-                    "| Trigger Name | Multiplicity | Width | Hard Stereo | Min Separation |\n"
+                self._write_array_triggers_section(
+                    file, all_parameter_data["array_triggers"]["value"]
                 )
-                file.write(
-                    "|--------------|--------------|--------|-------------|----------------|\n"
-                )
-
-                for config in trigger_configs:
-                    name = config["name"]
-                    mult = (
-                        f"{config['multiplicity']['value']} {config['multiplicity']['unit'] or ''}"
-                    )
-                    width = f"{config['width']['value']} {config['width']['unit'] or ''}"
-                    stereo = "Yes" if config["hard_stereo"]["value"] else "No"
-                    min_sep = (
-                        f"{config['min_separation']['value']} "
-                        f"{config['min_separation']['unit'] or '-'}"
-                    )
-
-                    file.write(
-                        f"| {name} | {mult.strip()} |"
-                        f" {width.strip()} | {stereo} | {min_sep.strip()} |\n"
-                    )
-
-                file.write("\n")
