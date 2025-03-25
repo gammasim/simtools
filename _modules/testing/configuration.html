@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.configuration &#8212; simtools v0.1.dev1+g919f94a Manual</title>
+    <title>testing.configuration &#8212; simtools v0.1.dev1+g789b2e4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=7d50585e"></script>
+    <script src="../../_static/documentation_options.js?v=7308bb1e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g919f94a Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g789b2e4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -391,6 +391,7 @@ document.write(`
 <span></span><span class="sd">&quot;&quot;&quot;Integration test configuration.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
@@ -404,6 +405,13 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/testing.html#testing.configuration.VersionError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VersionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise if model version requested is not supported.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ProductionDBError">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.configuration.ProductionDBError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProductionDBError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise if production db is used.&quot;&quot;&quot;</span></div>
 
 
 
@@ -498,6 +506,7 @@ document.write(`
 
     <span class="k">if</span> <span class="s2">&quot;CONFIGURATION&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">_skip_test_for_model_version</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">model_version_requested</span><span class="p">)</span>
+        <span class="n">_skip_test_for_production_db</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
         <span class="n">config_file</span><span class="p">,</span> <span class="n">config_string</span><span class="p">,</span> <span class="n">config_file_model_version</span> <span class="o">=</span> <span class="n">_prepare_test_options</span><span class="p">(</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;CONFIGURATION&quot;</span><span class="p">],</span>
@@ -527,6 +536,17 @@ document.write(`
         <span class="k">raise</span> <span class="n">VersionError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Model version requested </span><span class="si">{</span><span class="n">model_version_requested</span><span class="si">}</span><span class="s2"> not supported for this test&quot;</span>
         <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_skip_test_for_production_db</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Skip test if production db is used.&quot;&quot;&quot;</span>
+    <span class="n">simtools_db_server</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SIMTOOLS_DB_SERVER&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">simtools_db_server</span>
+        <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SKIP_FOR_PRODUCTION_DB&quot;</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="s2">&quot;db.zeuthen.desy.de&quot;</span> <span class="ow">in</span> <span class="n">simtools_db_server</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ProductionDBError</span><span class="p">(</span><span class="s2">&quot;Production database used for this test&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_test_options</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">model_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
