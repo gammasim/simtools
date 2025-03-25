@@ -67,7 +67,10 @@ class SimtelIOEventDataWriter:
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
         self.output_file = output_file
-        self.max_files = max_files if max_files < len(input_files) else len(input_files)
+        try:
+            self.max_files = max_files if max_files < len(input_files) else len(input_files)
+        except TypeError as exc:
+            raise TypeError("No input files provided.") from exc
         self.shower = None
         self.n_use = None
         self.shower_id_offset = 0
@@ -77,10 +80,6 @@ class SimtelIOEventDataWriter:
 
     def process_files(self):
         """Process the input files and store them in an HDF5 file."""
-        if not self.input_files:
-            self._logger.warning("No input files provided.")
-            return
-
         self.shower_id_offset = 0
 
         for i, file in enumerate(self.input_files[: self.max_files], start=1):
@@ -165,6 +164,7 @@ class SimtelIOEventDataWriter:
                 )
 
             if i < previous_index:
+                print("AAAAAAA")
                 self._process_tracking_positions(tracking_positions)
                 tracking_positions = []  # Reset for the next shower
 
@@ -185,6 +185,7 @@ class SimtelIOEventDataWriter:
         # if isinstance(altitudes[0], list):
         #    altitudes, azimuths = altitudes[0], azimuths[0]
 
+        print("AAAA", altitudes, np.mean(altitudes))
         self.triggered_data.array_altitudes.append(np.mean(altitudes))
         self.triggered_data.array_azimuths.append(calculate_circular_mean(azimuths))
 
@@ -254,8 +255,14 @@ class SimtelIOEventDataWriter:
             row["area_weight"] = (
                 self.event_data.area_weight[i] if i < len(self.event_data.area_weight) else 0
             )
-            row["shower_azimuth"] = self.event_data.shower_azimuth[i]
-            row["shower_altitude"] = self.event_data.shower_altitude[i]
+            row["shower_azimuth"] = (
+                self.event_data.shower_azimuth[i] if i < len(self.event_data.shower_azimuth) else 0
+            )
+            row["shower_altitude"] = (
+                self.event_data.shower_altitude[i]
+                if i < len(self.event_data.shower_altitude)
+                else 0
+            )
             row.append()
         reduced_table.flush()
 
@@ -268,11 +275,23 @@ class SimtelIOEventDataWriter:
         start_idx = vlarray.nrows
         for i, triggered_id in enumerate(self.triggered_data.triggered_id):
             row["triggered_id"] = triggered_id
-            row["array_altitudes"] = self.triggered_data.array_altitudes[i]
-            row["array_azimuths"] = self.triggered_data.array_azimuths[i]
+            row["array_altitudes"] = (
+                self.triggered_data.array_altitudes[i]
+                if i < len(self.triggered_data.array_altitudes)
+                else 0
+            )
+            row["array_azimuths"] = (
+                self.triggered_data.array_azimuths[i]
+                if i < len(self.triggered_data.array_azimuths)
+                else 0
+            )
             row["telescope_list_index"] = start_idx + i  # Index into the VLArray
             row.append()
-            vlarray.append(self.triggered_data.trigger_telescope_list_list[i])
+            vlarray.append(
+                self.triggered_data.trigger_telescope_list_list[i]
+                if i < len(self.triggered_data.trigger_telescope_list_list)
+                else []
+            )
         triggered_table.flush()
 
     def _write_data(self, mode="a"):
