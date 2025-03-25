@@ -48,6 +48,9 @@ definitions:
             TEST_NAME:
               type: string
               description: "Test name. Should be unique for this application."
+            SKIP_FOR_PRODUCTION_DB:
+              type: boolean
+              description: "Skip test if production DB is used."
             MODEL_VERSION_USE_CURRENT:
               type: boolean
               description: |
