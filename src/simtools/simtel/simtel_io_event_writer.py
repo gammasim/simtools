@@ -57,13 +57,13 @@ class SimtelIOEventDataWriter:
     input_files : list
         List of input file paths to process.
     output_file : str
-        Path to the output HDF5 file.
+        Path to the output file.
     max_files : int, optional
         Maximum number of files to process.
     """
 
     def __init__(self, input_files, output_file, max_files=100):
-        """Initialize the MCEventExtractor with input files, output file, and max file limit."""
+        """Initialize class."""
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
         self.output_file = output_file
@@ -79,7 +79,7 @@ class SimtelIOEventDataWriter:
         self.file_names = []
 
     def process_files(self):
-        """Process the input files and store them in an HDF5 file."""
+        """Process the input files and store them in an file."""
         self.shower_id_offset = 0
 
         for i, file in enumerate(self.input_files[: self.max_files], start=1):
@@ -182,7 +182,7 @@ class SimtelIOEventDataWriter:
         trigger_info = trigger_info.parse()
         telescopes = trigger_info["triggered_telescopes"]
         if len(telescopes) > 0:
-            # add offset to obtained unique shower IDs among all files
+            # add offset to obtain unique shower IDs among all files
             self.triggered_data.triggered_id.append(self.shower["shower"] + self.shower_id_offset)
             self.triggered_data.trigger_telescope_list_list.append(
                 np.array(telescopes, dtype=np.int16)
@@ -206,11 +206,11 @@ class SimtelIOEventDataWriter:
             "telescope_list_index": tables.Int32Col(),  # Index into VLArray
         }
         file_names_desc = {
-            "file_names": tables.StringCol(256),  # Adjust string length as needed
+            "file_names": tables.StringCol(256),
         }
         return shower_data_desc, triggered_data_desc, file_names_desc
 
-    def _tables(self, hdf5_file, data_group, mode="a"):
+    def _tables(self, output_file, data_group, mode="a"):
         """Create or get HDF5 tables."""
         descriptions = self._table_descriptions()
         table_names = ["reduced_data", "triggered_data", "file_names"]
@@ -219,11 +219,11 @@ class SimtelIOEventDataWriter:
         for name, desc in zip(table_names, descriptions):
             path = f"/data/{name}"
             table_dict[name] = (
-                hdf5_file.create_table(
+                output_file.create_table(
                     data_group, name, desc, name.replace("_", " ").title(), filters=DEFAULT_FILTERS
                 )
-                if mode == "w" or path not in hdf5_file
-                else hdf5_file.get_node(path)
+                if mode == "w" or path not in output_file
+                else output_file.get_node(path)
             )
 
         return table_dict["reduced_data"], table_dict["triggered_data"], table_dict["file_names"]

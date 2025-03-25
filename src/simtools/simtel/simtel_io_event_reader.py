@@ -1,4 +1,16 @@
-"""Calculate the thresholds for energy, radial distance, and viewcone."""
+"""
+Read a reduced dataset from file.
+
+Allow to filter the events based on the triggered telescopes.
+Provide functionality to list events, e.g. through
+
+.. code-block:: console
+
+    from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
+    reader = SimtelIOEventDataReader("gamma_diffuse_60deg.hdf5", [1,2,3,4])
+    reader.print_event_table()
+
+"""
 
 import logging
 
@@ -140,11 +152,15 @@ class SimtelIOEventDataReader:
         ----------
         telescope_list : list
             List of telescope IDs to filter the events
+        triggered_id : np.ndarray
+            Array of event IDs that triggered.
+        trigger_telescope_list_list : list
+            List of triggered telescopes for each event.
 
         Returns
         -------
-        np.ndarray
-            Array of indices for triggered events.
+        tuple
+            Filtered triggered IDs and indices.
         """
         triggered_indices = np.arange(len(triggered_id))
         if telescope_list is not None:

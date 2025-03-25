@@ -2,7 +2,7 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-generate-simtel-event-data
-    TEST_NAME: extract_mc_event_data
+    TEST_NAME: run
     CONFIGURATION:
       PREFIX: tests/resources/
       WILDCARD: '*proton*.simtel.zst'
