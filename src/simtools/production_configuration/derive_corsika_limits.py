@@ -165,6 +165,7 @@ class LimitCalculator:
         output_path: Path or str, optional
             Directory to save plots. If None, plots will be displayed.
         """
+        event_counts = "Event Count"
         plots = {
             "core_vs_energy": {
                 "x_data": self.event_data.core_distance_shower,
@@ -172,11 +173,13 @@ class LimitCalculator:
                 "bins": [self.core_distance_bins, self.energy_bins],
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis"},
-                "x_label": "Core Distance [m]",
-                "y_label": "Energy [TeV]",
-                "title": "Triggered events: core distance vs energy",
-                "y_scale": "log",
-                "colorbar_label": "Event Count",
+                "labels": {
+                    "x": "Core Distance [m]",
+                    "y": "Energy [TeV]",
+                    "title": "Triggered events: core distance vs energy",
+                },
+                "scales": {"y": "log"},
+                "colorbar_label": event_counts,
                 "filename": "core_vs_energy_distribution.png",
             },
             "energy_distribution": {
@@ -184,12 +187,13 @@ class LimitCalculator:
                 "bins": np.logspace(-3, 0.0, 100),
                 "plot_type": "histogram",
                 "plot_params": {"histtype": "step", "color": "k", "lw": 2},
-                "x_label": "Energy [TeV]",
-                "y_label": "Event Count",
-                "title": "Triggered events: energy distribution",
-                "x_scale": "log",
-                "y_scale": "log",
-                "x_line": lower_energy_limit.value,
+                "labels": {
+                    "x": "Energy [TeV]",
+                    "y": event_counts,
+                    "title": "Triggered events: energy distribution",
+                },
+                "scales": {"x": "log", "y": "log"},
+                "lines": {"x": lower_energy_limit.value},
                 "filename": "energy_distribution.png",
             },
             "core_distance": {
@@ -197,10 +201,12 @@ class LimitCalculator:
                 "bins": self.core_distance_bins,
                 "plot_type": "histogram",
                 "plot_params": {"histtype": "step", "color": "k", "lw": 2},
-                "x_label": "Core Distance [m]",
-                "y_label": "Event Count",
-                "title": "Triggered events: core distance distribution",
-                "x_line": upper_radial_distance.value,
+                "labels": {
+                    "x": "Core Distance [m]",
+                    "y": event_counts,
+                    "title": "Triggered events: core distance distribution",
+                },
+                "lines": {"x": upper_radial_distance.value},
                 "filename": "core_distance_distribution.png",
             },
             "core_xy": {
@@ -209,12 +215,13 @@ class LimitCalculator:
                 "bins": 100,
                 "plot_type": "histogram2d",
                 "plot_params": {"norm": "log", "cmap": "viridis"},
-                "x_label": "Core X [m]",
-                "y_label": "Core Y [m]",
-                "title": "Triggered events: core x vs core y",
-                "colorbar_label": "Event Count",
-                "x_line": upper_radial_distance.value,
-                "y_line": upper_radial_distance.value,
+                "labels": {
+                    "x": "Core X [m]",
+                    "y": "Core Y [m]",
+                    "title": "Triggered events: core x vs core y",
+                },
+                "colorbar_label": event_counts,
+                "lines": {"x": upper_radial_distance.value, "y": upper_radial_distance.value},
                 "filename": "core_xy_distribution.png",
             },
             "view-cone": {
@@ -222,10 +229,12 @@ class LimitCalculator:
                 "bins": self.view_cone_bins,
                 "plot_type": "histogram",
                 "plot_params": {"histtype": "step", "color": "k", "lw": 2},
-                "x_label": "Distance to pointing direction [deg]",
-                "y_label": "Event Count",
-                "title": "Triggered events: viewcone distribution",
-                "x_line": viewcone.value,
+                "labels": {
+                    "x": "Distance to pointing direction [deg]",
+                    "y": event_counts,
+                    "title": "Triggered events: viewcone distribution",
+                },
+                "lines": {"x": viewcone.value},
                 "filename": "viewcone_distribution.png",
             },
         }
@@ -242,15 +251,11 @@ class LimitCalculator:
         bins=None,
         plot_type="histogram",
         plot_params=None,
-        x_label="",
-        y_label="",
-        title="",
-        x_scale=None,
-        y_scale=None,
+        labels=None,
+        scales=None,
         colorbar_label=None,
         output_file=None,
-        x_line=None,
-        y_line=None,
+        lines=None,
     ):
         """
         Create and save a plot with the given parameters.
@@ -267,24 +272,16 @@ class LimitCalculator:
             Type of plot: 'histogram', 'histogram2d', or 'scatter'.
         plot_params : dict, optional
             Additional parameters to pass to the plotting function.
-        x_label : str, optional
-            Label for the x-axis.
-        y_label : str, optional
-            Label for the y-axis.
-        title : str, optional
-            Title for the plot.
-        x_scale : str, optional
-            Scale for x-axis ('log' or 'linear').
-        y_scale : str, optional
-            Scale for y-axis ('log' or 'linear').
+        labels : dict, optional
+            Dictionary containing 'x', 'y', and 'title' labels.
+        scales : dict, optional
+            Dictionary containing 'x' and 'y' scale types ('log' or 'linear').
         colorbar_label : str, optional
             Label for the colorbar in 2D histograms.
         output_file : Path, optional
             File path to save the plot. If not provided, the plot will be displayed.
-        x_line : float, optional
-            Value for vertical line on the plot.
-        y_line : float, optional
-            Value for horizontal line on the plot.
+        lines : dict, optional
+            Dictionary containing 'x' and 'y' values for reference lines.
 
         Returns
         -------
@@ -293,6 +290,9 @@ class LimitCalculator:
         """
         fig = plt.figure(figsize=(8, 6))
         plot_params = plot_params or {}
+        labels = labels or {}
+        scales = scales or {}
+        lines = lines or {}
 
         if plot_type == "histogram":
             plt.hist(x_data, bins=bins, **plot_params)
@@ -303,19 +303,19 @@ class LimitCalculator:
         elif plot_type == "scatter":
             plt.scatter(x_data, y_data, **plot_params)
 
-        if x_line:
-            plt.axvline(x_line, color="r", linestyle="--")
-        if y_line:
-            plt.axhline(y_line, color="r", linestyle="--")
+        if "x" in lines:
+            plt.axvline(lines["x"], color="r", linestyle="--")
+        if "y" in lines:
+            plt.axhline(lines["y"], color="r", linestyle="--")
 
-        plt.xlabel(x_label)
-        plt.ylabel(y_label)
-        plt.title(title)
+        plt.xlabel(labels.get("x", ""))
+        plt.ylabel(labels.get("y", ""))
+        plt.title(labels.get("title", ""))
 
-        if x_scale:
-            plt.xscale(x_scale)
-        if y_scale:
-            plt.yscale(y_scale)
+        if "x" in scales:
+            plt.xscale(scales["x"])
+        if "y" in scales:
+            plt.yscale(scales["y"])
 
         if output_file:
             self._logger.info(f"Saving plot to {output_file}")
