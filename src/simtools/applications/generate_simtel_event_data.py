@@ -21,6 +21,7 @@ Generate a reduced dataset from input files and save the result.
 .. code-block:: console
 
     simtools-production-extract-mc-event-data \
+    simtools-generate-simtel-event-data \
         --prefix path/to/input_files/ \
         --wildcard 'gamma_*dark*.simtel.zst' \
         --output_file output_file.hdf5 \
@@ -34,7 +35,8 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.production_configuration.extract_mc_event_data import MCEventExtractor
+from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader
+from simtools.simtel.simtel_io_event_writer import SimtelIOEventDataWriter
 
 
 def _parse(label, description):
@@ -64,8 +66,9 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--print_dataset_information",
-        action="store_true",
-        help="Print information about the datasets in the generated reduced event dataset.",
+        type=int,
+        help="Print given number of rows of the dataset.",
+        default=0,
     )
 
     return config.initialize(db_config=False)
@@ -75,20 +78,7 @@ def main():
     """
     Process event data files and store data in reduced dataset.
 
-    The reduced dataset contains the following information:
-        - simulated: List of simulated events.
-        - shower_id_triggered: List of triggered shower IDs
-            (as in the telescope definition file used for simulations).
-        - triggered_energies: List of energies for triggered events.
-        - num_triggered_telescopes: Number of triggered telescopes for each event.
-        - core_x: X-coordinate of the shower core (ground coordinates).
-        - core_y: Y-coordinate of the shower core (ground coordinates).
-        - trigger_telescope_list_list: List of lists containing triggered telescope IDs.
-        - file_names: List of input file names.
-        - shower_sim_azimuth: Simulated azimuth angle of the shower.
-        - shower_sim_altitude: Simulated altitude angle of the shower.
-        - array_altitudes: List of altitudes for the array.
-        - array_azimuths: List of azimuths for the array.
+    The reduced dataset contains shower information, array information and triggered telescopes.
     """
     label = Path(__file__).stem
 
@@ -114,11 +104,13 @@ def main():
     output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
 
     output_filepath.parent.mkdir(parents=True, exist_ok=True)
-    generator = MCEventExtractor(files, output_filepath, args_dict["max_files"])
+    generator = SimtelIOEventDataWriter(files, output_filepath, args_dict["max_files"])
     generator.process_files()
     _logger.info(f"reduced dataset saved to: {output_filepath}")
-    if args_dict["print_dataset_information"]:
-        generator.print_dataset_information()
+
+    if args_dict["print_dataset_information"] > 0:
+        reader = SimtelIOEventDataReader(output_filepath)
+        reader.print_dataset_information(args_dict.get("print_dataset_information"))
 
 
 if __name__ == "__main__":
