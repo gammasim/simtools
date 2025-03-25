@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from simtools.io_operations.hdf5_handler import fill_hdf5_table, read_hdf5
+from simtools.io_operations.hdf5_handler import fill_hdf5_table
 
 
 def test_fill_hdf5_table_1d(corsika_histograms_instance_set_histograms):
@@ -45,13 +45,6 @@ def test_fill_hdf5_table_2d(corsika_histograms_instance_set_histograms):
     assert all(table["test_y_label_1"] == np.array([3, 4]))
     assert all(table.meta["x_bin_edges"] == x_bin_edges)
     assert all(table.meta["y_bin_edges"] == y_bin_edges)
-
-
-def test_read_hdf5():
-    tables = read_hdf5(
-        "tests/resources/run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5_reduced.hdata.hdf5"
-    )
-    assert len(tables) == 4
 
 
 def test_fill_hdf5_table_wrong_dimensions(corsika_histograms_instance_set_histograms):

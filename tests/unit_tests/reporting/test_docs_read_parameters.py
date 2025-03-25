@@ -5,6 +5,9 @@ import pytest
 
 from simtools.reporting.docs_read_parameters import ReadParameters
 
+# Test constants
+QE_FILE_NAME = "qe_lst1_20200318_high+low.dat"
+
 
 def test_get_all_parameter_descriptions(telescope_model_lst, io_handler, db_config):
     args = {
@@ -57,14 +60,12 @@ def test_produce_array_element_report(telescope_model_lst, io_handler, db_config
 
 def test_produce_model_parameter_reports(io_handler, db_config):
     args = {"site": "North", "telescope": "LSTN-01"}
-    output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"parameters/{args['telescope']}"
-    )
+    output_path = io_handler.get_output_directory(label="reports", sub_dir="parameters")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     read_parameters.produce_model_parameter_reports()
 
-    file_path = output_path / "quantum_efficiency.md"
+    file_path = output_path / args["telescope"] / "quantum_efficiency.md"
     assert file_path.exists()
 
 
@@ -190,7 +191,7 @@ def test__compare_parameter_across_versions(io_handler, db_config):
                 "instrument": "LSTN-01",
                 "site": "North",
                 "parameter_version": "1.0.0",
-                "value": "qe_lst1_20200318_high+low.dat",
+                "value": QE_FILE_NAME,
                 "unit": None,
                 "file": True,
             },
@@ -208,7 +209,7 @@ def test__compare_parameter_across_versions(io_handler, db_config):
                 "instrument": "LSTN-01",
                 "site": "North",
                 "parameter_version": "1.0.0",
-                "value": "qe_lst1_20200318_high+low.dat",
+                "value": QE_FILE_NAME,
                 "unit": None,
                 "file": True,
             },
@@ -256,3 +257,91 @@ def test__compare_parameter_across_versions(io_handler, db_config):
     assert position_comparison["parameter_version" == "2.0.0"]["model_version"] == "6.0.0"
 
     assert len(comparison_data.get("only_prod6_param")) == 1
+    assert "none_valued_param" not in comparison_data
+
+
+def test__compare_parameter_across_versions_empty_param_dict(io_handler, db_config):
+    """Test _compare_parameter_across_versions with empty parameter dictionaries."""
+    args = {"site": "North", "telescope": "LSTN-01"}
+    output_path = io_handler.get_output_directory(
+        label="reports", sub_dir=f"parameters/{args['telescope']}"
+    )
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    # Test data with empty parameter dictionary for version 5.0.0
+    mock_data = {
+        "5.0.0": {},  # Empty parameter dictionary
+        "6.0.0": {
+            "quantum_efficiency": {
+                "instrument": "LSTN-01",
+                "site": "North",
+                "parameter_version": "1.0.0",
+                "value": QE_FILE_NAME,
+                "unit": None,
+                "file": True,
+            }
+        },
+    }
+
+    comparison_data = read_parameters._compare_parameter_across_versions(
+        mock_data, ["quantum_efficiency"]
+    )
+
+    # Verify that data from version 6.0.0 is still processed
+    assert "quantum_efficiency" in comparison_data
+    qe_comparison = comparison_data["quantum_efficiency"]
+    assert len(qe_comparison) == 1
+    assert qe_comparison[0]["model_version"] == "6.0.0"
+    assert qe_comparison[0]["parameter_version"] == "1.0.0"
+
+
+def test_get_array_element_parameter_data_none_value(io_handler, db_config, mocker):
+    """Test that get_array_element_parameter_data correctly handles None values."""
+    args = {
+        "telescope": "tel",
+        "site": "North",
+        "model_version": "v1",
+    }
+    output_path = io_handler.get_output_directory(sub_dir=f"{args['model_version']}")
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    # Mock the model_parameters that will be filtered through
+    model_params = {"test_param": "description"}
+    mocker.patch("simtools.utils.names.model_parameters", return_value=model_params)
+
+    # Mock all_parameter_data with a None value
+    all_parameter_data = {
+        "test_param": {
+            "value": None,  # This will cause value_data to be None
+            "instrument": "tel",
+            "unit": "m",
+        }
+    }
+
+    # Mock the TelescopeModel
+    mock_telescope_model = mocker.MagicMock()
+    mock_telescope_model.name = "tel"
+    mock_telescope_model.site = args["site"]
+    mock_telescope_model.model_version = args["model_version"]
+
+    # Mock get_model_parameters to return our all_parameter_data
+    mocker.patch.object(read_parameters.db, "get_model_parameters", return_value=all_parameter_data)
+
+    # Mock get_all_parameter_descriptions
+    mocker.patch.object(
+        read_parameters,
+        "get_all_parameter_descriptions",
+        return_value=(
+            {"test_param": "Test parameter"},
+            {"test_param": "Test"},
+            {"test_param": "Structure"},
+        ),
+    )
+
+    result = read_parameters.get_array_element_parameter_data(mock_telescope_model)
+
+    # Assert result is empty (parameter was skipped due to None value)
+    assert len(result) == 0
+
+    # Verify the mocks were called
+    assert read_parameters.db.get_model_parameters.called

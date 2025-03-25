@@ -2,15 +2,14 @@
 name: CI-integrationtests
 # Integration tests for applications
 
-env:
-  SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray/"
-
 on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize]
   schedule:
     - cron: "0 0 * * *"
+  release:
+    types: [published]
 
 jobs:
 
@@ -62,13 +61,25 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
-
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set PATH
         run: |
           echo "PATH=\$PATH:/usr/bin:/usr/local/bin:$SIMTOOLS_SIMTEL_PATH" >> "$GITHUB_ENV"
+
+      - name: Create environment file (remote DB; schedule only)
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          {
+            echo "SIMTOOLS_DB_SERVER=${{ secrets.DB_SERVER }}"
+            echo "SIMTOOLS_DB_API_USER=${{ secrets.DB_API_USER }}"
+            echo "SIMTOOLS_DB_API_PW=${{ secrets.DB_API_PW }}"
+            echo "SIMTOOLS_DB_API_PORT=${{ secrets.DB_API_PORT }}"
+            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
+          } > .env
 
       - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
         run: |
@@ -76,7 +87,8 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
 
-      - name: Create environment file
+      - name: Create environment file (local DB)
+        if: github.event_name != 'schedule'
         run: |
           {
             echo "SIMTOOLS_DB_SERVER=mongodb"
@@ -84,20 +96,22 @@ jobs:
             echo "SIMTOOLS_DB_API_PW=password"
             echo "SIMTOOLS_DB_API_PORT=27017"
             echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
+            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
           } > .env
 
       - name: Upload data to MongoDB
+        if: github.event_name != 'schedule'
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
           cd database_scripts/
           ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
 
-      - name: Run integration tests
+      - name: Integration tests
         shell: bash -l {0}
         env:
           SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
-          SIMTOOLS_DB_SERVER: mongodb
+          SIMTOOLS_DB_SERVER: ${{ github.event_name == 'schedule' && secrets.DB_SERVER || 'mongodb' }}
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'

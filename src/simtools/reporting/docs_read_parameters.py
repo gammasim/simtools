@@ -11,7 +11,6 @@ from pathlib import Path
 import numpy as np
 
 from simtools.db import db_handler
-from simtools.io_operations import io_handler
 from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
@@ -69,84 +68,6 @@ class ReadParameters:
             raise FileNotFoundError(f"Data file not found: {input_file}.") from exc
 
         return f"_data_files/{output_file_name}"
-
-    def get_all_parameter_descriptions(self):
-        """
-        Get descriptions for all model parameters.
-
-        Returns
-        -------
-            tuple: A tuple containing two dictionaries:
-                - parameter_description: Maps parameter names to their descriptions.
-                - short_description: Maps parameter names to their short descriptions.
-                - inst_class: Maps parameter names to their respective class.
-        """
-        parameter_description, short_description, inst_class = {}, {}, {}
-
-        for instrument_class in names.db_collection_to_instrument_class_key("telescopes"):
-            for parameter, details in names.model_parameters(instrument_class).items():
-                parameter_description[parameter] = details.get("description")
-                short_description[parameter] = details.get("short_description")
-                inst_class[parameter] = instrument_class
-
-        return parameter_description, short_description, inst_class
-
-    def get_array_element_parameter_data(self, telescope_model, collection="telescopes"):
-        """
-        Get model parameter data and descriptions for a given array element.
-
-        Currently only configured for telescope.
-
-        Parameters
-        ----------
-        telescope_model : TelescopeModel
-            The telescope model instance.
-
-        Returns
-        -------
-        list: A list of lists containing parameter names, values with units,
-                descriptions, and short descriptions.
-        """
-        all_params = telescope_model.db.get_model_parameters(
-            site=telescope_model.site,
-            array_element_name=telescope_model.name,
-            collection=collection,
-            model_version=telescope_model.model_version,
-        )
-
-        telescope_model.export_model_files()
-        parameter_descriptions = self.get_all_parameter_descriptions()
-        data = []
-
-        for parameter in all_params:
-            if all_params[parameter]["instrument"] != telescope_model.name:
-                continue
-            parameter_version = telescope_model.get_parameter_version(parameter)
-            value = telescope_model.get_parameter_value_with_unit(parameter)
-            if telescope_model.get_parameter_file_flag(parameter) and value:
-                input_file_name = telescope_model.config_file_directory / Path(value)
-                output_file_name = self._convert_to_md(input_file_name)
-                value = f"[{Path(value).name}]({output_file_name})"
-            elif isinstance(value, list):
-                value = ", ".join(str(q) for q in value)
-            else:
-                value = str(value)
-
-            description = parameter_descriptions[0].get(parameter)
-            short_description = parameter_descriptions[1].get(parameter, description)
-            inst_class = parameter_descriptions[2].get(parameter)
-            data.append(
-                [
-                    inst_class,
-                    parameter,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ]
-            )
-
-        return data
 
     def _format_parameter_value(self, value_data, unit, file_flag):
         """Format parameter value based on type."""
@@ -216,13 +137,14 @@ class ReadParameters:
 
         # Iterate over each model version
         for version in all_versions:
-            Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
+            parameter_dict = all_param_data.get(version, {})
+            if not parameter_dict:
+                continue
 
+            Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
             self.db.export_model_files(
                 parameters=all_param_data.get(version), dest=f"{self.output_path}/model"
             )
-
-            parameter_dict = all_param_data.get(version, {})
 
             for parameter_name in filter(parameter_dict.__contains__, all_parameter_names):
                 parameter_data = parameter_dict.get(parameter_name)
@@ -234,7 +156,7 @@ class ReadParameters:
                 unit = parameter_data.get("unit") or " "
                 value_data = parameter_data.get("value")
 
-                if not value_data:
+                if value_data is None:
                     continue
 
                 file_flag = parameter_data.get("file", False)
@@ -253,6 +175,85 @@ class ReadParameters:
                 )
 
         return self._group_model_versions_by_parameter_version(grouped_data)
+
+    def get_all_parameter_descriptions(self):
+        """
+        Get descriptions for all model parameters.
+
+        Returns
+        -------
+            tuple: A tuple containing two dictionaries:
+                - parameter_description: Maps parameter names to their descriptions.
+                - short_description: Maps parameter names to their short descriptions.
+                - inst_class: Maps parameter names to their respective class.
+        """
+        parameter_description, short_description, inst_class = {}, {}, {}
+
+        for instrument_class in names.db_collection_to_instrument_class_key("telescopes"):
+            for parameter, details in names.model_parameters(instrument_class).items():
+                parameter_description[parameter] = details.get("description")
+                short_description[parameter] = details.get("short_description")
+                inst_class[parameter] = instrument_class
+
+        return parameter_description, short_description, inst_class
+
+    def get_array_element_parameter_data(self, telescope_model, collection="telescopes"):
+        """
+        Get model parameter data and descriptions for a given array element.
+
+        Currently only configured for telescope.
+
+        Parameters
+        ----------
+        telescope_model : TelescopeModel
+            The telescope model instance.
+
+        Returns
+        -------
+        list: A list of lists containing parameter names, values with units,
+                descriptions, and short descriptions.
+        """
+        all_parameter_data = self.db.get_model_parameters(
+            site=telescope_model.site,
+            array_element_name=telescope_model.name,
+            collection=collection,
+            model_version=telescope_model.model_version,
+        )
+
+        Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
+        self.db.export_model_files(parameters=all_parameter_data, dest=f"{self.output_path}/model")
+        parameter_descriptions = self.get_all_parameter_descriptions()
+        data = []
+
+        for parameter in filter(all_parameter_data.__contains__, names.model_parameters().keys()):
+            parameter_data = all_parameter_data.get(parameter)
+            if parameter_data["instrument"] != telescope_model.name:
+                continue
+            parameter_version = telescope_model.get_parameter_version(parameter)
+            unit = parameter_data.get("unit") or " "
+            value_data = parameter_data.get("value")
+
+            if value_data is None:
+                continue
+
+            file_flag = parameter_data.get("file", False)
+            value = self._format_parameter_value(value_data, unit, file_flag)
+
+            description = parameter_descriptions[0].get(parameter)
+            short_description = parameter_descriptions[1].get(parameter, description)
+            inst_class = parameter_descriptions[2].get(parameter)
+            data.append(
+                [
+                    inst_class,
+                    parameter,
+                    parameter_version,
+                    value,
+                    description,
+                    short_description,
+                ]
+            )
+
+        return data
 
     def produce_array_element_report(self):
         """
@@ -332,10 +333,8 @@ class ReadParameters:
             f"Comparing parameters across model versions for Telescope: {self.array_element}"
             f" and Site: {self.site}."
         )
-        io_handler_instance = io_handler.IOHandler()
-        output_path = io_handler_instance.get_output_directory(
-            label="reports", sub_dir=f"parameters/{self.array_element}"
-        )
+        output_path = self.output_path / f"{self.array_element}"
+        Path(output_path).mkdir(parents=True, exist_ok=True)
 
         all_parameter_names = names.model_parameters(None).keys()
         all_parameter_data = self.db.get_model_parameters_for_all_model_versions(

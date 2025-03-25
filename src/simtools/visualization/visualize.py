@@ -197,7 +197,7 @@ def set_style(palette="default", big_plot=False):
         raise KeyError(f"palette must be one of {', '.join(COLORS)}")
 
     fontsize = {"default": 17, "big_plot": 30}
-    markersize = {"default": 8, "big_plot": 18}
+    markersize = {"default": 6, "big_plot": 18}
     plot_size = "big_plot" if big_plot else "default"
 
     plt.rc("lines", linewidth=2, markersize=markersize[plot_size])

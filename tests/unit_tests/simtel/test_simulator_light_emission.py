@@ -74,7 +74,7 @@ def mock_simulator(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        default_le_config=default_config,
+        light_emission_config={},
         le_application=le_application,
         simtel_path=simtel_path,
         light_source_type=light_source_type,
@@ -108,7 +108,7 @@ def mock_simulator_variable(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        default_le_config=default_config,
+        light_emission_config=default_config,
         le_application=le_application,
         simtel_path=simtel_path,
         light_source_type=light_source_type,
@@ -142,7 +142,7 @@ def mock_simulator_laser(
         telescope_model=telescope_model,
         calibration_model=calibration_model,
         site_model=site_model_north,
-        default_le_config=default_config,
+        light_emission_config=default_config,
         le_application=le_application,
         simtel_path=simtel_path,
         light_source_type=light_source_type,
@@ -171,7 +171,14 @@ def test_initialization(mock_simulator, default_config):
     assert isinstance(mock_simulator, SimulatorLightEmission)
     assert mock_simulator.le_application[0] == "xyzls"
     assert mock_simulator.light_source_type == "led"
-    assert mock_simulator.default_le_config == default_config
+    assert mock_simulator.light_emission_config == {}
+
+
+def test_initialization_variable(mock_simulator_variable, default_config):
+    assert isinstance(mock_simulator_variable, SimulatorLightEmission)
+    assert mock_simulator_variable.le_application[0] == "xyzls"
+    assert mock_simulator_variable.light_source_type == "led"
+    assert mock_simulator_variable.light_emission_config == default_config
 
 
 def test_runs(mock_simulator):
@@ -246,10 +253,8 @@ def test_make_light_emission_script_laser(
     mock_output_path,
     io_handler,
 ):
-    # Call the method under test
     command = mock_simulator_laser._make_light_emission_script()
 
-    # Define the expected command
     expected_command = (
         f" rm {mock_output_path}/ls-beam_layout.simtel.gz\n"
         f"sim_telarray/LightEmission/ls-beam"
@@ -271,19 +276,15 @@ def test_make_light_emission_script_laser(
         f" -o {mock_output_path}/ls-beam.iact.gz\n"
     )
 
-    # Assert that the command matches the expected command
     assert command == expected_command
 
 
 def test_calibration_pointing_direction(mock_simulator):
-    # Calling calibration_pointing_direction method
     pointing_vector, angles = mock_simulator.calibration_pointing_direction()
 
-    # Expected pointing vector and angles
     expected_pointing_vector = [0.979, -0.104, -0.174]
     expected_angles = [79.952, 186.092, 79.952, 173.908]
 
-    # Asserting expected pointing vector and angles
     np.testing.assert_array_almost_equal(pointing_vector, expected_pointing_vector, decimal=3)
     np.testing.assert_array_almost_equal(angles, expected_angles, decimal=3)
 
@@ -298,6 +299,7 @@ def test_create_postscript(mock_simulator, simtel_path, mock_output_path):
         f" -p {mock_output_path}/postscripts/xyzls_layout_d_1000.ps"
         f" {mock_output_path}/xyzls_layout.simtel.gz\n"
     )
+    mock_simulator.distance = 1000 * u.m
 
     command = mock_simulator._create_postscript(integration_window=["7", "3"], level="5")
 
@@ -385,23 +387,19 @@ def test_prepare_script(
     mock_os_system,
     mock_simulator,
 ):
-    # Mocking data and behavior
     mock_file = Mock()
     mock_open.return_value.__enter__.return_value = mock_file
     mock_make_light_emission_script.return_value = "light_emission_script_command"
     mock_make_simtel_script.return_value = "simtel_script_command"
-
-    # Execute the method
+    mock_simulator.distance = 1000 * u.m
     script_path = mock_simulator.prepare_script(
         generate_postscript=True, integration_window=["7", "3"], level="5"
     )
 
-    # Assertions
     assert gen.program_is_executable(script_path)
     mock_make_light_emission_script.assert_called_once()  # Ensure this mock is called
     mock_make_simtel_script.assert_called_once()  # Ensure this mock is called
 
-    # Check file write calls
     expected_calls = [
         "#!/usr/bin/env bash\n\n",
         "light_emission_script_command\n\n",
@@ -415,7 +413,6 @@ def test_prepare_script(
 
 
 def test_remove_line_from_config(mock_simulator):
-    # Create a temporary config file with some lines
     config_content = """array_triggers: value1
     axes_offsets: value2
     some_other_config: value3
@@ -436,3 +433,232 @@ def test_remove_line_from_config(mock_simulator):
     assert updated_content.strip() == expected_content.strip()
 
     config_path.unlink()
+
+
+def test_update_light_emission_config(mock_simulator_variable):
+    """Test updating the light emission configuration."""
+    # Valid key
+    mock_simulator_variable.update_light_emission_config("z_pos", [200 * u.cm, 300 * u.cm])
+    assert mock_simulator_variable.light_emission_config["z_pos"]["default"] == [
+        200 * u.cm,
+        300 * u.cm,
+    ]
+
+    # Invalid key
+    with pytest.raises(
+        KeyError, match="Key 'invalid_key' not found in light emission configuration."
+    ):
+        mock_simulator_variable.update_light_emission_config("invalid_key", 100 * u.cm)
+
+
+def test_distance_list(mock_simulator_variable):
+    """Test converting a list of distances to astropy.Quantity."""
+    distances = mock_simulator_variable.distance_list(["100", "200", "300"])
+    assert distances == [100 * u.m, 200 * u.m, 300 * u.m]
+
+    # Invalid input
+    with pytest.raises(ValueError, match="Distances must be numeric values"):
+        mock_simulator_variable.distance_list(["100", "invalid", "300"])
+
+
+def test_calculate_distance_telescope_calibration_device_layout(mock_simulator):
+    """Test distance calculation for layout positions."""
+    distances = mock_simulator.calculate_distance_telescope_calibration_device()
+    assert len(distances) == 1
+    assert isinstance(distances[0], u.Quantity)
+
+
+def test_calculate_distance_telescope_calibration_device_variable(mock_simulator_variable):
+    """Test distance calculation for variable positions."""
+    mock_simulator_variable.light_emission_config["z_pos"]["default"] = [100 * u.m, 200 * u.m]
+    distances = mock_simulator_variable.calculate_distance_telescope_calibration_device()
+    assert len(distances) == 2
+    assert distances[0].unit == u.m
+    assert distances[1].unit == u.m
+    assert distances[0].value == pytest.approx(100)
+    assert distances[1].value == pytest.approx(200)
+
+
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.run_simulation")
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.save_figures_to_pdf")
+def test_simulate_variable_distances(
+    mock_save_figures, mock_run_simulation, mock_simulator_variable
+):
+    """Test simulating light emission for variable distances."""
+    mock_simulator_variable.light_emission_config["z_pos"]["default"] = [100 * u.m, 200 * u.m]
+    args_dict = {"distances_ls": None, "telescope": "LSTN-01"}
+
+    mock_simulator_variable.simulate_variable_distances(args_dict)
+
+    assert mock_run_simulation.call_count == 2
+
+    mock_save_figures.assert_called_once()
+
+
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.run_simulation")
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.save_figures_to_pdf")
+def test_simulate_layout_positions(mock_save_figures, mock_run_simulation, mock_simulator):
+    """Test simulating light emission for layout positions."""
+    args_dict = {"telescope": "LSTN-01"}
+
+    mock_simulator.simulate_layout_positions(args_dict)
+
+    mock_run_simulation.assert_called_once()
+
+    mock_save_figures.assert_called_once()
+
+
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission._plot_simulation_output")
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_distance_for_plotting")
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_simulation_output_filename"
+)
+def test_process_simulation_output(
+    mock_get_simulation_output_filename,
+    mock_get_distance_for_plotting,
+    mock_plot_simulation_output,
+    mock_simulator_variable,
+):
+    """Test the process_simulation_output method."""
+    args_dict = {
+        "boundary_thresh": 5,
+        "picture_thresh": 3,
+        "min_neighbors": 2,
+        "return_cleaned": True,
+    }
+    figures = []
+
+    # Mock return values
+    mock_get_simulation_output_filename.return_value = "mock_filename.simtel.gz"
+    mock_get_distance_for_plotting.return_value = 1000 * u.m
+    mock_figure = Mock()
+    mock_plot_simulation_output.return_value = mock_figure
+
+    # Call the method
+    mock_simulator_variable.process_simulation_output(args_dict, figures)
+
+    # Assertions
+    mock_get_simulation_output_filename.assert_called_once()
+    mock_get_distance_for_plotting.assert_called_once()
+    mock_plot_simulation_output.assert_called_once_with(
+        "mock_filename.simtel.gz",
+        5,
+        3,
+        2,
+        1000 * u.m,
+        True,
+    )
+    assert len(figures) == 1
+    assert figures[0] == mock_figure
+
+
+def test_get_simulation_output_filename(mock_simulator_variable):
+    """Test the _get_simulation_output_filename method."""
+    mock_simulator_variable.output_directory = "./tests/resources/"
+    mock_simulator_variable.le_application = ("xyzls", "variable")
+
+    filename = mock_simulator_variable._get_simulation_output_filename()
+
+    expected_filename = "./tests/resources//xyzls_variable.simtel.gz"
+    assert filename == expected_filename
+
+
+def test_get_distance_for_plotting_with_z_pos(mock_simulator_variable):
+    """Test _get_distance_for_plotting when z_pos is available."""
+    mock_simulator_variable.light_emission_config = {"z_pos": {"default": 1000 * u.m}}
+
+    distance = mock_simulator_variable._get_distance_for_plotting()
+
+    assert distance == 1000 * u.m
+
+
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission._get_simulation_output_filename"
+)
+def test_process_simulation_output_attribute_error(
+    mock_get_simulation_output_filename, mock_simulator_variable
+):
+    """Test process_simulation_output handles AttributeError and logs a warning."""
+    args_dict = {
+        "boundary_thresh": 5,
+        "picture_thresh": 3,
+        "min_neighbors": 2,
+        "return_cleaned": True,
+    }
+    figures = []
+
+    # Simulate AttributeError
+    mock_get_simulation_output_filename.side_effect = AttributeError
+
+    with patch.object(mock_simulator_variable._logger, "warning") as mock_warning:
+        mock_simulator_variable.process_simulation_output(args_dict, figures)
+
+        # Assert the warning was logged
+        mock_warning.assert_called_once_with(
+            "Telescope not triggered at distance of "
+            f"{mock_simulator_variable.light_emission_config['z_pos']['default']}"
+        )
+
+
+def test_get_distance_for_plotting(mock_simulator_variable):
+    """Test the _get_distance_for_plotting method."""
+    mock_simulator_variable.light_emission_config = {"z_pos": {"default": 1000 * u.m}}
+    distance = mock_simulator_variable._get_distance_for_plotting()
+    assert distance == 1000 * u.m
+
+    mock_simulator_variable.light_emission_config = {}
+    mock_simulator_variable.distance = 1500.0001 * u.m
+
+    with patch.object(mock_simulator_variable._logger, "warning"):
+        distance = mock_simulator_variable._get_distance_for_plotting()
+        assert distance == 1500 * u.m
+
+
+@patch("simtools.simtel.simulator_light_emission.save_figs_to_pdf")
+def test_save_figures_to_pdf(mock_save_figs_to_pdf, mock_simulator_variable):
+    """Test the save_figures_to_pdf method."""
+    figures = [Mock(), Mock()]  # Mock figures
+    telescope = "LSTN-01"
+
+    mock_simulator_variable.save_figures_to_pdf(figures, telescope)
+
+    # Assert save_figs_to_pdf was called with the correct arguments
+    mock_save_figs_to_pdf.assert_called_once_with(
+        figures,
+        f"{mock_simulator_variable.output_directory}/"
+        f"{telescope}_{mock_simulator_variable.le_application[0]}_{mock_simulator_variable.le_application[1]}.pdf",
+    )
+
+
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission.process_simulation_output")
+@patch("subprocess.run")
+@patch("builtins.open", new_callable=mock_open)
+def test_run_simulation(
+    mock_open, mock_subprocess_run, mock_process_simulation_output, mock_simulator_variable
+):
+    """Test the run_simulation method."""
+    args_dict = {
+        "boundary_thresh": 5,
+        "picture_thresh": 3,
+        "min_neighbors": 2,
+        "return_cleaned": True,
+    }
+    figures = []
+
+    mock_simulator_variable.prepare_script = Mock(return_value="dummy_script.sh")
+    mock_simulator_variable.run_simulation(args_dict, figures)
+
+    mock_open.assert_called_once_with(
+        Path(mock_simulator_variable.output_directory) / "logfile.log", "w", encoding="utf-8"
+    )
+    mock_subprocess_run.assert_called_once_with(
+        "dummy_script.sh",
+        shell=False,
+        check=False,
+        text=True,
+        stdout=mock_open.return_value.__enter__.return_value,
+        stderr=mock_open.return_value.__enter__.return_value,
+    )
+
+    # Assert process_simulation_output was called
+    mock_process_simulation_output.assert_called_once_with(args_dict, figures)
