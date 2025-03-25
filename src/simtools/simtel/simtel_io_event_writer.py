@@ -148,7 +148,6 @@ class SimtelIOEventDataWriter:
     def _process_array_event(self, eventio_object):
         """Process array event and update triggered event list."""
         tracking_positions = []
-        previous_index = -1
 
         for i, obj in enumerate(eventio_object):
             if isinstance(obj, TriggerInformation):
@@ -163,13 +162,6 @@ class SimtelIOEventDataWriter:
                     }
                 )
 
-            if i < previous_index:
-                print("AAAAAAA")
-                self._process_tracking_positions(tracking_positions)
-                tracking_positions = []  # Reset for the next shower
-
-            previous_index = i
-
         if tracking_positions:
             self._process_tracking_positions(tracking_positions)
 
@@ -181,9 +173,6 @@ class SimtelIOEventDataWriter:
         """
         altitudes = [pos["altitude"] for pos in tracking_positions]
         azimuths = [pos["azimuth"] for pos in tracking_positions]
-        # TODO understand when this is the case
-        # if isinstance(altitudes[0], list):
-        #    altitudes, azimuths = altitudes[0], azimuths[0]
 
         self.triggered_data.array_altitudes.append(np.mean(altitudes))
         self.triggered_data.array_azimuths.append(calculate_circular_mean(azimuths))
