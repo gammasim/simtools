@@ -68,6 +68,7 @@ def _parse(label, description):
         "--print_dataset_information",
         type=int,
         help="Print given number of rows of the dataset.",
+        default=0,
     )
 
     return config.initialize(db_config=False)
@@ -107,7 +108,7 @@ def main():
     generator.process_files()
     _logger.info(f"reduced dataset saved to: {output_filepath}")
 
-    if args_dict.get("print_dataset_information", 0) > 0:
+    if args_dict["print_dataset_information"] > 0:
         reader = SimtelIOEventDataReader(output_filepath)
         reader.print_dataset_information(args_dict.get("print_dataset_information"))
 
