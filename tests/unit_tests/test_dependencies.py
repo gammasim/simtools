@@ -178,3 +178,25 @@ def test_get_corsika_version_no_build_opts(monkeypatch, caplog):
                 assert dependencies.get_corsika_version() is None
 
             assert "Could not get CORSIKA version." in caplog.text
+
+
+def test_get_corsika_version_empty_line(monkeypatch):
+    # The empty line causes the function to break before reaching the version
+    # When actually running CORSIKA, we won't get an empty line in the stdout
+    # but rather "\n" at the end of the line. An empty line is a sign that the
+    # process has finished.
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+    mock_process = mock.Mock()
+    mock_process.stdout.readline.side_effect = [
+        "",  # Empty line first
+        "NUMBER OF VERSION :  7.7550\n",  # This should not be reached due to break
+    ]
+
+    with mock.patch("subprocess.Popen", return_value=mock_process):
+        with mock.patch(
+            "simtools.dependencies.get_build_options", return_value={"corsika_version": "7.7"}
+        ):
+            assert dependencies.get_corsika_version() == "7.7"
+
+    # Verify readline was called only once before breaking
+    assert mock_process.stdout.readline.call_count == 1
