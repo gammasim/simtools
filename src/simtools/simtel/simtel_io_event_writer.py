@@ -185,7 +185,6 @@ class SimtelIOEventDataWriter:
         # if isinstance(altitudes[0], list):
         #    altitudes, azimuths = altitudes[0], azimuths[0]
 
-        print("AAAA", altitudes, np.mean(altitudes))
         self.triggered_data.array_altitudes.append(np.mean(altitudes))
         self.triggered_data.array_azimuths.append(calculate_circular_mean(azimuths))
 
