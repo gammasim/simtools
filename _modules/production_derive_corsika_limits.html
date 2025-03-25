@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_derive_corsika_limits &#8212; simtools v0.1.dev1+g789b2e4 Manual</title>
+    <title>production_derive_corsika_limits &#8212; simtools v0.1.dev1+g66460e1 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=7308bb1e"></script>
+    <script src="../_static/documentation_options.js?v=105fef70"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g789b2e4 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g66460e1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -206,7 +206,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-extract-mc-event-data.html">simtools-production-extract-mc-event-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
@@ -423,6 +423,7 @@ document.write(`
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_corsika_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">LimitCalculator</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -442,6 +443,8 @@ document.write(`
 <span class="sd">        List of telescope IDs to filter the events (default is None).</span>
 <span class="sd">        Definition of the telescope IDs can be found in the telescope</span>
 <span class="sd">        definition file used for simulations.</span>
+<span class="sd">    plot_histograms: bool</span>
+<span class="sd">        Plot histograms of the event data.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -466,6 +469,12 @@ document.write(`
         <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
         <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List of telescope IDs to filter the events as used in sim_telarray.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--plot_histograms&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Plot histograms of the event data.&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">db_config</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
@@ -492,7 +501,18 @@ document.write(`
     <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Upper radius threshold: </span><span class="si">{</span><span class="n">upper_radial_distance</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">viewcone</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">compute_viewcone</span><span class="p">(</span><span class="n">loss_fraction</span><span class="p">)</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Viewcone radius: </span><span class="si">{</span><span class="n">viewcone</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Viewcone radius: </span><span class="si">{</span><span class="n">viewcone</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_histograms&quot;</span><span class="p">):</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Plotting histograms written to </span><span class="si">{</span><span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">calculator</span><span class="o">.</span><span class="n">plot_data</span><span class="p">(</span>
+            <span class="n">lower_energy_limit</span><span class="p">,</span>
+            <span class="n">upper_radial_distance</span><span class="p">,</span>
+            <span class="n">viewcone</span><span class="p">,</span>
+            <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span>
+        <span class="p">)</span></div>
 
 
 

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Production Configuration &#8212; simtools v0.1.dev1+g789b2e4 Manual</title>
+    <title>Production Configuration &#8212; simtools v0.1.dev1+g66460e1 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=7308bb1e"></script>
+    <script src="../_static/documentation_options.js?v=105fef70"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g789b2e4 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g66460e1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -207,7 +207,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-extract-mc-event-data.html">simtools-production-extract-mc-event-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
@@ -490,17 +490,6 @@ document.write(`
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.extract_mc_event_data">extract_mc_event_data</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.FileNamesContainer"><code class="docutils literal notranslate"><span class="pre">FileNamesContainer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.MCEventExtractor"><code class="docutils literal notranslate"><span class="pre">MCEventExtractor</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.MCEventExtractor.print_dataset_information"><code class="docutils literal notranslate"><span class="pre">MCEventExtractor.print_dataset_information()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.MCEventExtractor.process_files"><code class="docutils literal notranslate"><span class="pre">MCEventExtractor.process_files()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.ReducedDatasetContainer"><code class="docutils literal notranslate"><span class="pre">ReducedDatasetContainer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.TriggeredShowerContainer"><code class="docutils literal notranslate"><span class="pre">TriggeredShowerContainer</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_simulation_config">generate_simulation_config</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_simulation_config.SimulationConfig"><code class="docutils literal notranslate"><span class="pre">SimulationConfig</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.calculate_required_events()</span></code></a></li>
@@ -523,7 +512,10 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radial_distance"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radial_distance()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.core_distance_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -781,110 +773,8 @@ a u.Quantity.</p>
 </dd></dl>
 
 </section>
-<section id="module-production_configuration.extract_mc_event_data">
-<span id="id3"></span><span id="extract-mc-event-data"></span><h2>extract_mc_event_data<a class="headerlink" href="#module-production_configuration.extract_mc_event_data" title="Link to this heading">#</a></h2>
-<p>Generate a reduced dataset from given simulation event list and save the output to file.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.extract_mc_event_data.FileNamesContainer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.extract_mc_event_data.</span></span><span class="sig-name descname"><span class="pre">FileNamesContainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fields</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/extract_mc_event_data.html#FileNamesContainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.extract_mc_event_data.FileNamesContainer" title="Link to this definition">#</a></dt>
-<dd><p>Container for file names.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>file_names</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Input file names</p>
-</dd>
-<dt><strong>meta</strong><span class="classifier">dict</span></dt><dd><p>dict of attached metadata</p>
-</dd>
-<dt><strong>prefix</strong><span class="classifier">str</span></dt><dd><p>Prefix attached to column names when saved to a table or file</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.extract_mc_event_data.MCEventExtractor">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.extract_mc_event_data.</span></span><span class="sig-name descname"><span class="pre">MCEventExtractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/extract_mc_event_data.html#MCEventExtractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.extract_mc_event_data.MCEventExtractor" title="Link to this definition">#</a></dt>
-<dd><p>Generate a reduced dataset from given simulation event list and save the output to file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>input_files</strong><span class="classifier">list</span></dt><dd><p>List of input file paths to process.</p>
-</dd>
-<dt><strong>output_file</strong><span class="classifier">str</span></dt><dd><p>Path to the output HDF5 file.</p>
-</dd>
-<dt><strong>max_files</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum number of files to process.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.extract_mc_event_data.MCEventExtractor.print_dataset_information">
-<span class="sig-name descname"><span class="pre">print_dataset_information</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/extract_mc_event_data.html#MCEventExtractor.print_dataset_information"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.extract_mc_event_data.MCEventExtractor.print_dataset_information" title="Link to this definition">#</a></dt>
-<dd><p>Print information about the datasets in the generated HDF5 file.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.extract_mc_event_data.MCEventExtractor.process_files">
-<span class="sig-name descname"><span class="pre">process_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/extract_mc_event_data.html#MCEventExtractor.process_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.extract_mc_event_data.MCEventExtractor.process_files" title="Link to this definition">#</a></dt>
-<dd><p>Process the input files and store them in an HDF5 file.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.extract_mc_event_data.ReducedDatasetContainer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.extract_mc_event_data.</span></span><span class="sig-name descname"><span class="pre">ReducedDatasetContainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fields</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/extract_mc_event_data.html#ReducedDatasetContainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.extract_mc_event_data.ReducedDatasetContainer" title="Link to this definition">#</a></dt>
-<dd><p>Container for reduced dataset information.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>simulated</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Simulated energy</p>
-</dd>
-<dt><strong>core_x</strong><span class="classifier">Field(default=None)</span></dt><dd><p>X-coordinate of the shower core</p>
-</dd>
-<dt><strong>core_y</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Y-coordinate of the shower core</p>
-</dd>
-<dt><strong>shower_sim_azimuth</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Simulated azimuth angle of the shower</p>
-</dd>
-<dt><strong>shower_sim_altitude</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Simulated altitude angle of the shower</p>
-</dd>
-<dt><strong>meta</strong><span class="classifier">dict</span></dt><dd><p>dict of attached metadata</p>
-</dd>
-<dt><strong>prefix</strong><span class="classifier">str</span></dt><dd><p>Prefix attached to column names when saved to a table or file</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.extract_mc_event_data.TriggeredShowerContainer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.extract_mc_event_data.</span></span><span class="sig-name descname"><span class="pre">TriggeredShowerContainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fields</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/extract_mc_event_data.html#TriggeredShowerContainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.extract_mc_event_data.TriggeredShowerContainer" title="Link to this definition">#</a></dt>
-<dd><p>Container for triggered shower information.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>shower_id_triggered</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Triggered shower ID</p>
-</dd>
-<dt><strong>triggered_energies</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Triggered energies</p>
-</dd>
-<dt><strong>array_altitudes</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Altitudes for the array</p>
-</dd>
-<dt><strong>array_azimuths</strong><span class="classifier">Field(default=None)</span></dt><dd><p>Azimuths for the array</p>
-</dd>
-<dt><strong>meta</strong><span class="classifier">dict</span></dt><dd><p>dict of attached metadata</p>
-</dd>
-<dt><strong>prefix</strong><span class="classifier">str</span></dt><dd><p>Prefix attached to column names when saved to a table or file</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 <section id="module-production_configuration.generate_simulation_config">
-<span id="id4"></span><span id="generate-simulation-config"></span><h2>generate_simulation_config<a class="headerlink" href="#module-production_configuration.generate_simulation_config" title="Link to this heading">#</a></h2>
+<span id="id3"></span><span id="generate-simulation-config"></span><h2>generate_simulation_config<a class="headerlink" href="#module-production_configuration.generate_simulation_config" title="Link to this heading">#</a></h2>
 <p>Derives simulation configuration parameters for a grid point based on several metrics.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig">
@@ -940,7 +830,7 @@ a u.Quantity.</p>
 
 </section>
 <section id="module-production_configuration.interpolation_handler">
-<span id="id5"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
+<span id="id4"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
 <p>Interpolates between instances of StatisticalErrorEvaluator using EventScaler.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler">
@@ -1005,12 +895,12 @@ and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
 
 </section>
 <section id="module-production_configuration.derive_corsika_limits">
-<span id="id6"></span><span id="derive-corsika-limits"></span><h2>derive_corsika_limits<a class="headerlink" href="#module-production_configuration.derive_corsika_limits" title="Link to this heading">#</a></h2>
-<p>Calculate the thresholds for energy, radial distance, and viewcone.</p>
+<span id="id5"></span><span id="derive-corsika-limits"></span><h2>derive_corsika_limits<a class="headerlink" href="#module-production_configuration.derive_corsika_limits" title="Link to this heading">#</a></h2>
+<p>Calculate CORSIKA thresholds for energy, radial distance, and viewcone.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">LimitCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator" title="Link to this definition">#</a></dt>
-<dd><p>Compute thresholds/limits for energy, radial distance, and viewcone.</p>
+<dd><p>Compute thresholds for CORSIKA configuration for energy, radial distance, and viewcone.</p>
 <p>Event data is read from the reduced MC event data file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1085,10 +975,42 @@ between the triggered events and the simulated events using the shower IDs.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">core_distance_bins</span></span><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins" title="Link to this definition">#</a></dt>
+<dd><p>Return bins for the core distance histogram.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.energy_bins">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy_bins</span></span><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins" title="Link to this definition">#</a></dt>
+<dd><p>Return bins for the energy histogram.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.plot_data">
-<span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_energy_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_radial_distance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viewcone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_corsika_limits.html#LimitCalculator.plot_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data" title="Link to this definition">#</a></dt>
 <dd><p>Plot the core distances and energies of triggered events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>lower_energy_limit: astropy.units.Quantity</strong></dt><dd><p>Lower energy limit to display on plots.</p>
+</dd>
+<dt><strong>upper_radial_distance: astropy.units.Quantity</strong></dt><dd><p>Upper radial distance limit to display on plots.</p>
+</dd>
+<dt><strong>viewcone: astropy.units.Quantity</strong></dt><dd><p>Viewcone radius to display on plots.</p>
+</dd>
+<dt><strong>output_path: Path or str, optional</strong></dt><dd><p>Directory to save plots. If None, plots will be displayed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">view_cone_bins</span></span><a class="headerlink" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins" title="Link to this definition">#</a></dt>
+<dd><p>Return bins for the viewcone histogram.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1165,17 +1087,6 @@ between the triggered events and the simulated events using the shower IDs.</p>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.extract_mc_event_data">extract_mc_event_data</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.FileNamesContainer"><code class="docutils literal notranslate"><span class="pre">FileNamesContainer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.MCEventExtractor"><code class="docutils literal notranslate"><span class="pre">MCEventExtractor</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.MCEventExtractor.print_dataset_information"><code class="docutils literal notranslate"><span class="pre">MCEventExtractor.print_dataset_information()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.MCEventExtractor.process_files"><code class="docutils literal notranslate"><span class="pre">MCEventExtractor.process_files()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.ReducedDatasetContainer"><code class="docutils literal notranslate"><span class="pre">ReducedDatasetContainer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.extract_mc_event_data.TriggeredShowerContainer"><code class="docutils literal notranslate"><span class="pre">TriggeredShowerContainer</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_simulation_config">generate_simulation_config</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_simulation_config.SimulationConfig"><code class="docutils literal notranslate"><span class="pre">SimulationConfig</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.calculate_required_events()</span></code></a></li>
@@ -1198,7 +1109,10 @@ between the triggered events and the simulated events using the shower IDs.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radial_distance"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radial_distance()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.core_distance_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
 </ul>
 </li>
 </ul>

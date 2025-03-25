@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g789b2e4 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g66460e1 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=7308bb1e"></script>
+    <script src="_static/documentation_options.js?v=105fef70"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g789b2e4 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g66460e1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -206,7 +206,7 @@
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-extract-mc-event-data.html">simtools-production-extract-mc-event-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
@@ -576,12 +576,12 @@ document.write(`
 </li>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_ecsv_files">compare_ecsv_files() (in module testing.validate_output)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_files">compare_files() (in module testing.validate_output)</a>
 </li>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_json_or_yaml_files">compare_json_or_yaml_files() (in module testing.validate_output)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">compare_simtel_config_with_schema() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_efficiency_and_errors">compute_efficiency_and_errors() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
@@ -590,15 +590,11 @@ document.write(`
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_reconstructed_event_histogram">compute_reconstructed_event_histogram() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate">compute_system_trigger_rate() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
-</li>
       <li><a href="api-reference/mc_model.html#model.model_utils.compute_telescope_transmission">compute_telescope_transmission() (in module model.model_utils)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radial_distance">compute_upper_radial_distance() (production_configuration.derive_corsika_limits.LimitCalculator method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone">compute_viewcone() (production_configuration.derive_corsika_limits.LimitCalculator method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.config">config (simtel.simtel_io_histogram.SimtelIOHistogram property)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.config_file_directory">config_file_directory (model.model_parameter.ModelParameter property)</a>
 </li>
@@ -664,6 +660,8 @@ document.write(`
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.convert_telescope_altitude_to_corsika_system">convert_telescope_altitude_to_corsika_system() (layout.telescope_position.TelescopePosition static method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins">core_distance_bins (production_configuration.derive_corsika_limits.LimitCalculator property)</a>
+</li>
       <li>
     corsika.corsika_config
 
@@ -703,10 +701,6 @@ document.write(`
       <li><a href="api-reference/runners.html#runners.corsika_runner.CorsikaRunner">CorsikaRunner (class in runners.corsika_runner)</a>
 </li>
       <li><a href="api-reference/runners.html#runners.corsika_simtel_runner.CorsikaSimtelRunner">CorsikaSimtelRunner (class in runners.corsika_simtel_runner)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.count_simulated_events">count_simulated_events() (simtel.simtel_io_events.SimtelIOEvents method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.count_triggered_events">count_triggered_events() (simtel.simtel_io_events.SimtelIOEvents method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.create_bin_edges">create_bin_edges() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
@@ -916,9 +910,7 @@ document.write(`
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.efficiency_interval">efficiency_interval() (configuration.commandline_parser.CommandLineParser static method)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_observation_time">estimate_observation_time() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_trigger_rate_uncertainty">estimate_trigger_rate_uncertainty() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins">energy_bins (production_configuration.derive_corsika_limits.LimitCalculator property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_1d_histogram">event_1d_histogram() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
@@ -946,14 +938,14 @@ document.write(`
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.export_event_header_2d_histogram">export_event_header_2d_histogram() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.export_histograms">export_histograms() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 
       <ul>
         <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.export_histograms">(simtel.simtel_io_histograms.SimtelIOHistograms method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/db_handler.html#db.db_handler.DatabaseHandler.export_model_file">export_model_file() (db.db_handler.DatabaseHandler method)</a>
 </li>
       <li><a href="api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.export_model_files">export_model_files() (camera.camera_efficiency.CameraEfficiency method)</a>
@@ -996,16 +988,12 @@ document.write(`
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference/production_configuration.html#production_configuration.extract_mc_event_data.FileNamesContainer">FileNamesContainer (class in production_configuration.extract_mc_event_data)</a>
-</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration">fill_corsika_configuration() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.fill_event_histogram_dicts">fill_event_histogram_dicts() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
+      <li><a href="api-reference/io_operations.html#io_operations.hdf5_handler.fill_hdf5_table">fill_hdf5_table() (in module io_operations.hdf5_handler)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-reference/io_operations.html#io_operations.hdf5_handler.fill_hdf5_table">fill_hdf5_table() (in module io_operations.hdf5_handler)</a>
-</li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.find_best_parameters">find_best_parameters() (in module derive_psf_parameters)</a>
 </li>
       <li><a href="api-reference/camera.html#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.fit_afterpulse_spectrum">fit_afterpulse_spectrum() (camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum method)</a>
@@ -1055,6 +1043,13 @@ document.write(`
 
       <ul>
         <li><a href="user-guide/applications/simtools-generate-simtel-array-histograms.html#module-generate_simtel_array_histograms">module</a>
+</li>
+      </ul></li>
+      <li>
+    generate_simtel_event_data
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-generate-simtel-event-data.html#module-generate_simtel_event_data">module</a>
 </li>
       </ul></li>
       <li><a href="api-reference/job_execution.html#job_execution.htcondor_script_generator.generate_submission_script">generate_submission_script() (in module job_execution.htcondor_script_generator)</a>
@@ -1137,6 +1132,8 @@ document.write(`
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.get_effective_area">get_effective_area() (ray_tracing.psf_analysis.PSFImage method)</a>
 </li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_event_data">get_event_data() (simtel.simtel_io_event_writer.SimtelIOEventDataWriter method)</a>
+</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_event_parameter_info">get_event_parameter_info() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.get_file_list">get_file_list() (simulator.Simulator method)</a>
@@ -1153,16 +1150,14 @@ document.write(`
       </ul></li>
       <li><a href="api-reference/data_model.html#data_model.schema.get_get_model_parameter_schema_files">get_get_model_parameter_schema_files() (in module data_model.schema)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.get_histogram_type_title">get_histogram_type_title() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
-</li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage.get_image_data">get_image_data() (ray_tracing.psf_analysis.PSFImage method)</a>
 </li>
       <li><a href="api-reference/io_operations.html#io_operations.io_handler.IOHandler.get_input_data_file">get_input_data_file() (io_operations.io_handler.IOHandler method)</a>
 </li>
-      <li><a href="api-reference/mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">get_lightguide_efficiency_angle_file_name() (model.camera.Camera method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">get_lightguide_efficiency_angle_file_name() (model.camera.Camera method)</a>
+</li>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">get_lightguide_efficiency_wavelength_file_name() (model.camera.Camera method)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.visualize.get_lines">get_lines() (in module visualization.visualize)</a>
@@ -1218,8 +1213,6 @@ document.write(`
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.get_parameter_value_with_unit">get_parameter_value_with_unit() (model.model_parameter.ModelParameter method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.get_parameter_version">get_parameter_version() (model.model_parameter.ModelParameter method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function">get_particle_distribution_function() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_photon_altitude_distr">get_photon_altitude_distr() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
@@ -1323,8 +1316,6 @@ document.write(`
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.hist_config_to_yaml">hist_config_to_yaml() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.HistogramIdNotFoundError">HistogramIdNotFoundError</a>
-</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.HistogramNotCreatedError">HistogramNotCreatedError</a>
 </li>
   </ul></td>
@@ -1334,10 +1325,6 @@ document.write(`
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.ray_tracing.RayTracing.images">images() (ray_tracing.ray_tracing.RayTracing method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.InconsistentHistogramFormatError">InconsistentHistogramFormatError</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.InconsistentInputFileError">InconsistentInputFileError</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.individual_telescopes">individual_telescopes (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
@@ -1373,10 +1360,10 @@ document.write(`
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.interpolation_handler.InterpolationHandler">InterpolationHandler (class in production_configuration.interpolation_handler)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/utils.html#utils.general.InvalidConfigDataError">InvalidConfigDataError</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/configuration_module.html#configuration.configurator.InvalidConfigurationParameterError">InvalidConfigurationParameterError</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.InvalidCoordSystemErrorError">InvalidCoordSystemErrorError</a>
@@ -1483,10 +1470,10 @@ document.write(`
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator">LimitCalculator (class in production_configuration.derive_corsika_limits)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.list_of_histograms">list_of_histograms (simtel.simtel_io_histograms.SimtelIOHistograms property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.list_of_histograms">list_of_histograms (simtel.simtel_io_histograms.SimtelIOHistograms property)</a>
+</li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.load_and_process_data">load_and_process_data() (in module derive_psf_parameters)</a>
 </li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.load_data">load_data() (in module derive_psf_parameters)</a>
@@ -1498,10 +1485,6 @@ document.write(`
       <li><a href="api-reference/runners.html#runners.runner_services.RunnerServices.load_data_directories">load_data_directories() (runners.runner_services.RunnerServices method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.load_data_from_file">load_data_from_file() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.load_header_and_summary">load_header_and_summary() (simtel.simtel_io_events.SimtelIOEvents method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.load_input_files">load_input_files() (simtel.simtel_io_events.SimtelIOEvents method)</a>
 </li>
       <li><a href="api-reference/data_model.html#data_model.schema.load_schema">load_schema() (in module data_model.schema)</a>
 </li>
@@ -1528,13 +1511,13 @@ document.write(`
 </li>
         <li><a href="user-guide/applications/simtools-generate-regular-arrays.html#generate_regular_arrays.main">(in module generate_regular_arrays)</a>
 </li>
+        <li><a href="user-guide/applications/simtools-generate-simtel-event-data.html#generate_simtel_event_data.main">(in module generate_simtel_event_data)</a>
+</li>
         <li><a href="user-guide/applications/simtools-plot-array-layout.html#plot_array_layout.main">(in module plot_array_layout)</a>
 </li>
         <li><a href="user-guide/applications/simtools-plot-tabular-data.html#plot_tabular_data.main">(in module plot_tabular_data)</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#production_derive_corsika_limits.main">(in module production_derive_corsika_limits)</a>
-</li>
-        <li><a href="user-guide/applications/simtools-production-extract-mc-event-data.html#production_extract_mc_event_data.main">(in module production_extract_mc_event_data)</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#production_generate_simulation_config.main">(in module production_generate_simulation_config)</a>
 </li>
@@ -1543,8 +1526,6 @@ document.write(`
         <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.main">(in module simulate_light_emission)</a>
 </li>
       </ul></li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.extract_mc_event_data.MCEventExtractor">MCEventExtractor (class in production_configuration.extract_mc_event_data)</a>
-</li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.MeanRadiusOuterEdgeHandler">MeanRadiusOuterEdgeHandler (class in visualization.legend_handlers)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.MeanRadiusOuterEdgeObject">MeanRadiusOuterEdgeObject (class in visualization.legend_handlers)</a>
@@ -1703,6 +1684,8 @@ document.write(`
 </li>
         <li><a href="user-guide/applications/simtools-generate-simtel-array-histograms.html#module-generate_simtel_array_histograms">generate_simtel_array_histograms</a>
 </li>
+        <li><a href="user-guide/applications/simtools-generate-simtel-event-data.html#module-generate_simtel_event_data">generate_simtel_event_data</a>
+</li>
         <li><a href="api-reference/io_operations.html#module-io_operations.hdf5_handler">io_operations.hdf5_handler</a>
 </li>
         <li><a href="api-reference/io_operations.html#module-io_operations.io_handler">io_operations.io_handler</a>
@@ -1745,15 +1728,11 @@ document.write(`
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.event_scaler">production_configuration.event_scaler</a>
 </li>
-        <li><a href="api-reference/production_configuration.html#module-production_configuration.extract_mc_event_data">production_configuration.extract_mc_event_data</a>
-</li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.generate_simulation_config">production_configuration.generate_simulation_config</a>
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">production_configuration.interpolation_handler</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits">production_derive_corsika_limits</a>
-</li>
-        <li><a href="user-guide/applications/simtools-production-extract-mc-event-data.html#module-production_extract_mc_event_data">production_extract_mc_event_data</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#module-production_generate_simulation_config">production_generate_simulation_config</a>
 </li>
@@ -1783,9 +1762,9 @@ document.write(`
 </li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_config_writer">simtel.simtel_config_writer</a>
 </li>
-        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_events">simtel.simtel_io_events</a>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_event_reader">simtel.simtel_io_event_reader</a>
 </li>
-        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_histogram">simtel.simtel_io_histogram</a>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_event_writer">simtel.simtel_io_event_writer</a>
 </li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_histograms">simtel.simtel_io_histograms</a>
 </li>
@@ -1866,19 +1845,13 @@ document.write(`
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event">num_photons_per_event (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
-      <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event_per_telescope">num_photons_per_event_per_telescope (corsika.corsika_histograms.CorsikaHistograms property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_event_per_telescope">num_photons_per_event_per_telescope (corsika.corsika_histograms.CorsikaHistograms property)</a>
+</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.num_photons_per_telescope">num_photons_per_telescope (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.number_of_files">number_of_files (simtel.simtel_io_events.SimtelIOEvents property)</a>
-
-      <ul>
-        <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.number_of_files">(simtel.simtel_io_histograms.SimtelIOHistograms property)</a>
-</li>
-      </ul></li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.number_of_histogram_types">number_of_histogram_types (simtel.simtel_io_histogram.SimtelIOHistogram property)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.number_of_files">number_of_files (simtel.simtel_io_histograms.SimtelIOHistograms property)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.array_model.ArrayModel.number_of_telescopes">number_of_telescopes (model.array_model.ArrayModel property)</a>
 </li>
@@ -1988,6 +1961,8 @@ document.write(`
 </li>
       <li><a href="api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.prepare_data_dict_for_writing">prepare_data_dict_for_writing() (data_model.model_data_writer.ModelDataWriter static method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/runners.html#runners.corsika_runner.CorsikaRunner.prepare_run_script">prepare_run_script() (runners.corsika_runner.CorsikaRunner method)</a>
 
       <ul>
@@ -1996,8 +1971,6 @@ document.write(`
         <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelRunner.prepare_run_script">(runners.simtel_runner.SimtelRunner method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script">prepare_script() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.primary">primary (corsika.corsika_config.CorsikaConfig property)</a>
@@ -2010,9 +1983,9 @@ document.write(`
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.print_config_parameter">print_config_parameter() (corsika.corsika_config.CorsikaConfig method)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.extract_mc_event_data.MCEventExtractor.print_dataset_information">print_dataset_information() (production_configuration.extract_mc_event_data.MCEventExtractor method)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_dataset_information">print_dataset_information() (simtel.simtel_io_event_reader.SimtelIOEventDataReader method)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.print_info">print_info() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_event_table">print_event_table() (simtel.simtel_io_event_reader.SimtelIOEventDataReader method)</a>
 </li>
       <li><a href="user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html#convert_all_model_parameters_from_simtel.print_list_of_files">print_list_of_files() (in module convert_all_model_parameters_from_simtel)</a>
 
@@ -2032,7 +2005,7 @@ document.write(`
         <li><a href="api-reference/mc_model.html#model.array_model.ArrayModel.print_telescope_list">(model.array_model.ArrayModel method)</a>
 </li>
       </ul></li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.extract_mc_event_data.MCEventExtractor.process_files">process_files() (production_configuration.extract_mc_event_data.MCEventExtractor method)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files">process_files() (simtel.simtel_io_event_writer.SimtelIOEventDataWriter method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.process_line">process_line() (model.camera.Camera static method)</a>
 </li>
@@ -2043,8 +2016,6 @@ document.write(`
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.produce_array_element_report">produce_array_element_report() (reporting.docs_read_parameters.ReadParameters method)</a>
 </li>
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.produce_model_parameter_reports">produce_model_parameter_reports() (reporting.docs_read_parameters.ReadParameters method)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data">produce_trigger_meta_data() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
 </li>
       <li>
     production_configuration.calculate_statistical_errors_grid_point
@@ -2068,13 +2039,6 @@ document.write(`
 </li>
       </ul></li>
       <li>
-    production_configuration.extract_mc_event_data
-
-      <ul>
-        <li><a href="api-reference/production_configuration.html#module-production_configuration.extract_mc_event_data">module</a>
-</li>
-      </ul></li>
-      <li>
     production_configuration.generate_simulation_config
 
       <ul>
@@ -2093,13 +2057,6 @@ document.write(`
 
       <ul>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits">module</a>
-</li>
-      </ul></li>
-      <li>
-    production_extract_mc_event_data
-
-      <ul>
-        <li><a href="user-guide/applications/simtools-production-extract-mc-event-data.html#module-production_extract_mc_event_data">module</a>
 </li>
       </ul></li>
       <li>
@@ -2153,6 +2110,8 @@ document.write(`
 </li>
       <li><a href="user-guide/applications/simtools-run-application.html#run_application.read_application_configuration">read_application_configuration() (in module run_application)</a>
 </li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_event_data">read_event_data() (simtel.simtel_io_event_reader.SimtelIOEventDataReader method)</a>
+</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.read_event_information">read_event_information() (corsika.corsika_histograms.CorsikaHistograms method)</a>
 </li>
       <li><a href="api-reference/io_operations.html#io_operations.hdf5_handler.read_hdf5">read_hdf5() (in module io_operations.hdf5_handler)</a>
@@ -2184,8 +2143,6 @@ document.write(`
       <li><a href="api-reference/data_model.html#data_model.data_reader.read_value_from_file">read_value_from_file() (in module data_model.data_reader)</a>
 </li>
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters">ReadParameters (class in reporting.docs_read_parameters)</a>
-</li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.extract_mc_event_data.ReducedDatasetContainer">ReducedDatasetContainer (class in production_configuration.extract_mc_event_data)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -2288,8 +2245,6 @@ document.write(`
 </li>
       <li><a href="api-reference/array_layout.html#layout.array_layout.ArrayLayout.select_assets">select_assets() (layout.array_layout.ArrayLayout method)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents.select_events">select_events() (simtel.simtel_io_events.SimtelIOEvents method)</a>
-</li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.set_altitude">set_altitude() (layout.telescope_position.TelescopePosition method)</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.set_auxiliary_parameter">set_auxiliary_parameter() (layout.telescope_position.TelescopePosition method)</a>
@@ -2312,6 +2267,8 @@ document.write(`
 </li>
       <li><a href="api-reference/visualization.html#visualization.visualize.set_style">set_style() (in module visualization.visualize)</a>
 </li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.ShowerEventData">ShowerEventData (class in simtel.simtel_io_event_writer)</a>
+</li>
       <li>
     simtel.simtel_config_reader
 
@@ -2327,17 +2284,17 @@ document.write(`
 </li>
       </ul></li>
       <li>
-    simtel.simtel_io_events
+    simtel.simtel_io_event_reader
 
       <ul>
-        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_events">module</a>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_event_reader">module</a>
 </li>
       </ul></li>
       <li>
-    simtel.simtel_io_histogram
+    simtel.simtel_io_event_writer
 
       <ul>
-        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_histogram">module</a>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_event_writer">module</a>
 </li>
       </ul></li>
       <li>
@@ -2394,9 +2351,9 @@ document.write(`
 </li>
       <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelExecutionError">SimtelExecutionError</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_events.SimtelIOEvents">SimtelIOEvents (class in simtel.simtel_io_events)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_reader.SimtelIOEventDataReader">SimtelIOEventDataReader (class in simtel.simtel_io_event_reader)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram">SimtelIOHistogram (class in simtel.simtel_io_histogram)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.SimtelIOEventDataWriter">SimtelIOEventDataWriter (class in simtel.simtel_io_event_writer)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms">SimtelIOHistograms (class in simtel.simtel_io_histograms)</a>
 </li>
@@ -2466,8 +2423,6 @@ document.write(`
 </li>
       <li><a href="api-reference/testing.html#testing.helpers.skip_camera_efficiency">skip_camera_efficiency() (in module testing.helpers)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.solid_angle">solid_angle (simtel.simtel_io_histogram.SimtelIOHistogram property)</a>
-</li>
       <li><a href="api-reference/utils.html#utils.general.sort_arrays">sort_arrays() (in module utils.general)</a>
 </li>
       <li><a href="api-reference/utils.html#utils.value_conversion.split_value_and_unit">split_value_and_unit() (in module utils.value_conversion)</a>
@@ -2527,6 +2482,8 @@ document.write(`
         <li><a href="api-reference/testing.html#module-testing.assertions">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     testing.configuration
 
@@ -2534,8 +2491,6 @@ document.write(`
         <li><a href="api-reference/testing.html#module-testing.configuration">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     testing.helpers
 
@@ -2550,15 +2505,9 @@ document.write(`
         <li><a href="api-reference/testing.html#module-testing.validate_output">module</a>
 </li>
       </ul></li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.total_area">total_area (simtel.simtel_io_histogram.SimtelIOHistogram property)</a>
-</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.total_num_photons">total_num_photons (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events">total_number_of_events (simtel.simtel_io_histogram.SimtelIOHistogram property)</a>
-</li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table">trigger_info_in_table() (simtel.simtel_io_histogram.SimtelIOHistogram method)</a>
-</li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.extract_mc_event_data.TriggeredShowerContainer">TriggeredShowerContainer (class in production_configuration.extract_mc_event_data)</a>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_event_writer.TriggeredEventData">TriggeredEventData (class in simtel.simtel_io_event_writer)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -2658,10 +2607,10 @@ document.write(`
         <li><a href="user-guide/applications/simtools-validate-file-using-schema.html#module-validate_file_using_schema">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.validate_metadata">validate_metadata() (in module validate_file_using_schema)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/data_model.html#data_model.validate_data.DataValidator.validate_model_parameter">validate_model_parameter() (data_model.validate_data.DataValidator static method)</a>
 </li>
       <li>
@@ -2687,6 +2636,8 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="api-reference/testing.html#testing.configuration.VersionError">VersionError</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins">view_cone_bins (production_configuration.derive_corsika_limits.LimitCalculator property)</a>
 </li>
       <li>
     visualization.legend_handlers

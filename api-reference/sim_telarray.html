@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g789b2e4 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g66460e1 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=7308bb1e"></script>
+    <script src="../_static/documentation_options.js?v=105fef70"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g789b2e4 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g66460e1 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -207,7 +207,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-extract-mc-event-data.html">simtools-production-extract-mc-event-data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
@@ -487,39 +487,23 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_table_reader.read_simtel_table"><code class="docutils literal notranslate"><span class="pre">read_simtel_table()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-events">simtel_io_events</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.InconsistentInputFileError"><code class="docutils literal notranslate"><span class="pre">InconsistentInputFileError</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.count_simulated_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.count_simulated_events()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.count_triggered_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.count_triggered_events()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.load_header_and_summary"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.load_header_and_summary()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.load_input_files"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.load_input_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.number_of_files"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.number_of_files</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.select_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.select_events()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-event-reader">simtel_io_event_reader</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_dataset_information"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.print_dataset_information()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_event_table"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.print_event_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_event_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.read_event_data()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-histogram">simtel_io_histogram</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.HistogramIdNotFoundError"><code class="docutils literal notranslate"><span class="pre">HistogramIdNotFoundError</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.InconsistentHistogramFormatError"><code class="docutils literal notranslate"><span class="pre">InconsistentHistogramFormatError</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.compute_system_trigger_rate()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.config"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.config</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_observation_time"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.estimate_observation_time()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_trigger_rate_uncertainty"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.estimate_trigger_rate_uncertainty()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.fill_event_histogram_dicts"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.fill_event_histogram_dicts()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.get_histogram_type_title"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.get_histogram_type_title()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.get_particle_distribution_function()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.number_of_histogram_types"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.number_of_histogram_types</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.print_info"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.print_info()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.produce_trigger_meta_data()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.solid_angle"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.solid_angle</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_area"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_area</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_number_of_events</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.trigger_info_in_table()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-event-writer">simtel_io_event_writer</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.ShowerEventData"><code class="docutils literal notranslate"><span class="pre">ShowerEventData</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_event_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter.get_event_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter.process_files()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.TriggeredEventData"><code class="docutils literal notranslate"><span class="pre">TriggeredEventData</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-histograms">simtel_io_histograms</a><ul class="nav section-nav flex-column">
@@ -756,125 +740,65 @@ Check for differences in ‘default’ and ‘limits’ entries.</p>
 </dd></dl>
 
 </section>
-<section id="simtel-io-events">
-<h2>simtel_io_events<a class="headerlink" href="#simtel-io-events" title="Link to this heading">#</a></h2>
-<p id="module-simtel.simtel_io_events"><span id="simtel-io-events-1"></span>Read sim_telarray events from file.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="simtel.simtel_io_events.InconsistentInputFileError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_events.</span></span><span class="sig-name descname"><span class="pre">InconsistentInputFileError</span></span><a class="reference internal" href="../_modules/simtel/simtel_io_events.html#InconsistentInputFileError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_events.InconsistentInputFileError" title="Link to this definition">#</a></dt>
-<dd><p>Exception for inconsistent input file.</p>
-</dd></dl>
-
+<section id="simtel-io-event-reader">
+<h2>simtel_io_event_reader<a class="headerlink" href="#simtel-io-event-reader" title="Link to this heading">#</a></h2>
+<p id="module-simtel.simtel_io_event_reader"><span id="simtel-io-event-reader-1"></span>Read a reduced dataset from file.</p>
+<p>Allow to filter the events based on the triggered telescopes.
+Provide functionality to list events, e.g. through</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">from simtools.simtel.simtel_io_event_reader import SimtelIOEventDataReader</span>
+<span class="go">reader = SimtelIOEventDataReader(&quot;gamma_diffuse_60deg.hdf5&quot;, [1,2,3,4])</span>
+<span class="go">reader.print_event_table()</span>
+</pre></div>
+</div>
 <dl class="py class">
-<dt class="sig sig-object py" id="simtel.simtel_io_events.SimtelIOEvents">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_events.</span></span><span class="sig-name descname"><span class="pre">SimtelIOEvents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_events.html#SimtelIOEvents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_events.SimtelIOEvents" title="Link to this definition">#</a></dt>
-<dd><p>Read sim_telarray events from file.</p>
-<p>sim_telarray files are read with eventio package.</p>
+<dt class="sig sig-object py" id="simtel.simtel_io_event_reader.SimtelIOEventDataReader">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_event_reader.</span></span><span class="sig-name descname"><span class="pre">SimtelIOEventDataReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_reader.html#SimtelIOEventDataReader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader" title="Link to this definition">#</a></dt>
+<dd><p>Read reduced MC data set from file.</p>
+<p>Calculate some standard derivation like core position in shower coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>input_files: list</strong></dt><dd><p>List of sim_telarray output files (str of Path).</p>
+<dt><strong>event_data_file</strong><span class="classifier">str</span></dt><dd><p>Path to the HDF5 file containing the event data.</p>
+</dd>
+<dt><strong>telescope_list</strong><span class="classifier">list, optional</span></dt><dd><p>List of telescope IDs to filter the events (default is None).</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_events.SimtelIOEvents.count_simulated_events">
-<span class="sig-name descname"><span class="pre">count_simulated_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_events.html#SimtelIOEvents.count_simulated_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_events.SimtelIOEvents.count_simulated_events" title="Link to this definition">#</a></dt>
-<dd><p>Determine number of simulated events within a certain energy range and  core radius.</p>
-<p>Use the simulated power law.
-This calculation assumes the simulated spectrum is given by a single power law.</p>
+<dt class="sig sig-object py" id="simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_dataset_information">
+<span class="sig-name descname"><span class="pre">print_dataset_information</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_reader.html#SimtelIOEventDataReader.print_dataset_information"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_dataset_information" title="Link to this definition">#</a></dt>
+<dd><p>Print information about the datasets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_event_table">
+<span class="sig-name descname"><span class="pre">print_event_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines_per_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_reader.html#SimtelIOEventDataReader.print_event_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_event_table" title="Link to this definition">#</a></dt>
+<dd><p>Print event table with pagination.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>energy_range: Tuple len 2</strong></dt><dd><p>Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).</p>
+<dt><strong>lines_per_page</strong><span class="classifier">int</span></dt><dd><p>Number of lines to display before pausing (default: 20)</p>
 </dd>
-<dt><strong>core_max: astropy.Quantity distance</strong></dt><dd><p>Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.</p>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_event_data">
+<span class="sig-name descname"><span class="pre">read_event_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_data_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_reader.html#SimtelIOEventDataReader.read_event_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_event_data" title="Link to this definition">#</a></dt>
+<dd><p>Read event data from the reduced MC event data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>event_data_file</strong><span class="classifier">str, Path</span></dt><dd><p>Path to the HDF5 file containing the event data.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>int</dt><dd><p>Number of simulated events.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_events.SimtelIOEvents.count_triggered_events">
-<span class="sig-name descname"><span class="pre">count_triggered_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_events.html#SimtelIOEvents.count_triggered_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_events.SimtelIOEvents.count_triggered_events" title="Link to this definition">#</a></dt>
-<dd><p>Count number of triggered events within a certain energy range and core radius.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>energy_range: Tuple with len 2</strong></dt><dd><p>Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).</p>
-</dd>
-<dt><strong>core_max: astropy.Quantity distance</strong></dt><dd><p>Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>int</dt><dd><p>Number of triggered events.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_events.SimtelIOEvents.load_header_and_summary">
-<span class="sig-name descname"><span class="pre">load_header_and_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_events.html#SimtelIOEvents.load_header_and_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_events.SimtelIOEvents.load_header_and_summary" title="Link to this definition">#</a></dt>
-<dd><p>Read MC header from sim_telarray files and store it into _mc_header.</p>
-<p>Also fills summary_events with energy and core radius of triggered events.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_events.SimtelIOEvents.load_input_files">
-<span class="sig-name descname"><span class="pre">load_input_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_events.html#SimtelIOEvents.load_input_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_events.SimtelIOEvents.load_input_files" title="Link to this definition">#</a></dt>
-<dd><p>Store list of input files into input_files attribute.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>files: list</strong></dt><dd><p>List of sim_telarray files (str or Path).</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simtel.simtel_io_events.SimtelIOEvents.number_of_files">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_files</span></span><a class="headerlink" href="#simtel.simtel_io_events.SimtelIOEvents.number_of_files" title="Link to this definition">#</a></dt>
-<dd><p>Return number of files loaded.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>int</dt><dd><p>Number of files loaded.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_events.SimtelIOEvents.select_events">
-<span class="sig-name descname"><span class="pre">select_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_events.html#SimtelIOEvents.select_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_events.SimtelIOEvents.select_events" title="Link to this definition">#</a></dt>
-<dd><p>Select sim_telarray events within a certain energy range and core radius.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>energy_range: Tuple len 2</strong></dt><dd><p>Max and min energy of energy range, e.g. energy_range=(100 * u.GeV, 10 * u.TeV).</p>
-</dd>
-<dt><strong>core_max: astropy.Quantity distance</strong></dt><dd><p>Maximum core radius for selecting showers, e.g. core_max=1000 * u.m.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of events.</p>
+<dt>ShowerEventData, TriggeredEventData</dt><dd><p>Event data and triggered event data.</p>
 </dd>
 </dl>
 </dd>
@@ -884,89 +808,39 @@ This calculation assumes the simulated spectrum is given by a single power law.<
 </dd></dl>
 
 </section>
-<section id="simtel-io-histogram">
-<h2>simtel_io_histogram<a class="headerlink" href="#simtel-io-histogram" title="Link to this heading">#</a></h2>
-<p id="module-simtel.simtel_io_histogram"><span id="simtel-io-histogram-1"></span>Reads the content of either a single histogram or simtel_array output file.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.HistogramIdNotFoundError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histogram.</span></span><span class="sig-name descname"><span class="pre">HistogramIdNotFoundError</span></span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#HistogramIdNotFoundError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.HistogramIdNotFoundError" title="Link to this definition">#</a></dt>
-<dd><p>Exception for histogram ID not found.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.InconsistentHistogramFormatError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histogram.</span></span><span class="sig-name descname"><span class="pre">InconsistentHistogramFormatError</span></span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#InconsistentHistogramFormatError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.InconsistentHistogramFormatError" title="Link to this definition">#</a></dt>
-<dd><p>Exception for bad histogram format.</p>
+<section id="simtel-io-event-writer">
+<h2>simtel_io_event_writer<a class="headerlink" href="#simtel-io-event-writer" title="Link to this heading">#</a></h2>
+<p id="module-simtel.simtel_io_event_writer"><span id="simtel-io-event-writer-1"></span>Generate a reduced dataset from given simulation event list and save the output to file.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_writer.ShowerEventData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_event_writer.</span></span><span class="sig-name descname"><span class="pre">ShowerEventData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulated_energy:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_core:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_core:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shower_azimuth:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shower_altitude:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shower_id:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_weight:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_core_shower:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_core_shower:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_distance_shower:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_writer.html#ShowerEventData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_writer.ShowerEventData" title="Link to this definition">#</a></dt>
+<dd><p>Shower event data.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histogram.</span></span><span class="sig-name descname"><span class="pre">SimtelIOHistogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histogram_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_from_distribution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view_cone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram" title="Link to this definition">#</a></dt>
-<dd><p>Reads and generates histograms from sim_telarray output.</p>
-<p>Read the content of either a single histogram (.hdata, or .hdata.zst) or a single simtel_array
-output file (.simtel or .simtel.zst).</p>
+<dt class="sig sig-object py" id="simtel.simtel_io_event_writer.SimtelIOEventDataWriter">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_event_writer.</span></span><span class="sig-name descname"><span class="pre">SimtelIOEventDataWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_writer.html#SimtelIOEventDataWriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter" title="Link to this definition">#</a></dt>
+<dd><p>Generate a reduced dataset from given simulation event list and save the output to file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>histogram_file: str</strong></dt><dd><p>The histogram (.hdata.zst) or simtel_array (.simtel.zst) file.</p>
+<dt><strong>input_files</strong><span class="classifier">list</span></dt><dd><p>List of input file paths to process.</p>
 </dd>
-<dt><strong>area_from_distribution: bool</strong></dt><dd><p>If true, the area thrown (the area in which the simulated events are distributed)
-in the trigger rate calculation is estimated based on the event distribution.
-The expected shape of the distribution of events as function of the core distance is
-triangular up to the maximum distance. The weighted mean radius of the triangular
-distribution is 2/3 times the upper edge. Therefore, when using the
-<code class="docutils literal notranslate"><span class="pre">area_from_distribution</span></code> flag, the mean distance times 3/2, returns just the position of
-the upper edge in the triangle distribution with little impact of the binning and little
-dependence on the scatter area defined in the simulation. This is special useful when
-calculating trigger rate for individual telescopes.
-If false, the area thrown is estimated based on the maximum distance as given in
-the simulation configuration.</p>
+<dt><strong>output_file</strong><span class="classifier">str</span></dt><dd><p>Path to the output file.</p>
 </dd>
-<dt><strong>energy_range: list</strong></dt><dd><p>The energy range used in the simulation. It must be passed as a list of floats and the
-energy must be in TeV.
-This argument is only needed and used if histogram_file is a .hdata file, in which case the
-energy range cannot be retrieved directly from the file.</p>
-</dd>
-<dt><strong>view_cone: list</strong></dt><dd><p>The view cone used in the simulation. It must be passed as a list of floats and the
-view cone must be in deg.
-This argument is only needed and used if histogram_file is a .hdata file, in which case the
-view cone cannot be retrieved directly from the file.</p>
+<dt><strong>max_files</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum number of files to process.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate">
-<span class="sig-name descname"><span class="pre">compute_system_trigger_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">events_histogram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triggered_events_histogram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.compute_system_trigger_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate" title="Link to this definition">#</a></dt>
-<dd><p>Compute the system trigger rate and its uncertainty, which are saved as class attributes.</p>
-<p>If events_histogram and triggered_events_histogram are passed, they are used to calculate
-the trigger rate and trigger rate uncertainty, instead of the histograms from the file.
-This is specially useful when calculating the trigger rate for stacked files, in which case
-one can pass the histograms resulted from stacking the files to this function.
-Default is filling from the file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>events_histogram:</strong></dt><dd><p>A dictionary with “data” corresponding to a 2D histogram (core distance x energy)
-for the simulated events.</p>
-</dd>
-<dt><strong>triggered_events_histogram:</strong></dt><dd><p>A dictionary with “data” corresponding to a 2D histogram (core distance x energy)
-for the triggered events.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.config">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.config" title="Link to this definition">#</a></dt>
-<dd><p>Return information about the input parameters for the simulation.</p>
-<p>If the file is a .hdata or .hdata.zst, config will be None.</p>
+<dt class="sig sig-object py" id="simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_event_data">
+<span class="sig-name descname"><span class="pre">get_event_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_writer.html#SimtelIOEventDataWriter.get_event_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_event_data" title="Link to this definition">#</a></dt>
+<dd><p>Return shower and triggered event data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>dict:</dt><dd><p>dictionary with information about the simulation (pyeventio MCRunHeader object).</p>
+<dt>ShowerEventData, TriggeredEventData</dt><dd><p>Shower and triggered event data.</p>
 </dd>
 </dl>
 </dd>
@@ -974,218 +848,17 @@ for the triggered events.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.estimate_observation_time">
-<span class="sig-name descname"><span class="pre">estimate_observation_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stacked_num_simulated_events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.estimate_observation_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_observation_time" title="Link to this definition">#</a></dt>
-<dd><p>Estimates the observation time corresponding to the simulated number of events.</p>
-<p>It uses the CTAO reference cosmic-ray spectra, the total number of particles simulated,
-and other information from the simulation configuration self.config.
-If stacked_num_simulated_events is given, the observation time is estimated from it instead
-of from the simulation configuration (useful for the stacked trigger rate estimate).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>stacked_num_simulated_events: int</strong></dt><dd><p>total number of simulated events for the stacked dataset.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>astropy.Quantity[time]</dt><dd><p>Estimated observation time based on the total number of particles simulated.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files">
+<span class="sig-name descname"><span class="pre">process_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_writer.html#SimtelIOEventDataWriter.process_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files" title="Link to this definition">#</a></dt>
+<dd><p>Process the input files and store them in an file.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.estimate_trigger_rate_uncertainty">
-<span class="sig-name descname"><span class="pre">estimate_trigger_rate_uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trigger_rate_estimate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_simulated_events</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_triggered_events</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.estimate_trigger_rate_uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_trigger_rate_uncertainty" title="Link to this definition">#</a></dt>
-<dd><p>Estimate the trigger rate uncertainty.</p>
-<p>The calculation is based on the number of simulated and triggered events.
-Poisson statistics are assumed. The uncertainty is calculated based on propagation
-of the individual uncertainties.
-If stacked_num_simulated_events is passed, the uncertainty is estimated based on it instead
-of based on the total number of trigger events from the simulation configuration
-(useful for the stacked trigger rate estimate).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>trigger_rate_estimate: astropy.Quantity[1/time]</strong></dt><dd><p>The already estimated the trigger rate.</p>
-</dd>
-<dt><strong>num_simulated_events: int</strong></dt><dd><p>Total number of simulated events.</p>
-</dd>
-<dt><strong>num_triggered_events: int</strong></dt><dd><p>Total number of triggered events.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>astropy.Quantity[1/time]</dt><dd><p>Uncertainty in the trigger rate estimate.</p>
-</dd>
-</dl>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.fill_event_histogram_dicts">
-<span class="sig-name descname"><span class="pre">fill_event_histogram_dicts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.fill_event_histogram_dicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.fill_event_histogram_dicts" title="Link to this definition">#</a></dt>
-<dd><p>Get data from the total simulated event and the triggered event histograms.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>tuple(dict, dict):</dt><dd><p>Information about the histograms with simulated and triggered events.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>HistogramIdNotFoundError:</dt><dd><p>if histogram ids not found. Problem with the file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.get_histogram_type_title">
-<span class="sig-name descname"><span class="pre">get_histogram_type_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histogram_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.get_histogram_type_title"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.get_histogram_type_title" title="Link to this definition">#</a></dt>
-<dd><p>Return the title of the histogram with index histogram_index.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>histogram_index: int</strong></dt><dd><p>Histogram index.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>str</dt><dd><p>Histogram title.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function">
-<span class="sig-name descname"><span class="pre">get_particle_distribution_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reference'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.get_particle_distribution_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function" title="Link to this definition">#</a></dt>
-<dd><p>Get the particle distribution function.</p>
-<p>This depends on whether one wants the reference CR distribution or the distribution
-used in the simulation. This is controlled by label.
-By using label=”reference”, one gets the distribution function according to a pre-defined CR
-distribution, while by using label=”simulation”, the spectral index of the distribution
-function from the simulation is used. The label=”simulation” works only when the
-input file is a .simtel file and not a .hdata file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>label: str</strong></dt><dd><p>label defining which distribution function. Possible values are: “reference”, or
-“simulation”.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ctao_cr_spectra.spectral.PowerLaw</dt><dd><p>The function describing the spectral distribution.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.number_of_histogram_types">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_histogram_types</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.number_of_histogram_types" title="Link to this definition">#</a></dt>
-<dd><p>Return number of histograms.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.print_info">
-<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.print_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.print_info" title="Link to this definition">#</a></dt>
-<dd><p>Print information on the geometry and input parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>dict:</dt><dd><p>Dictionary with the information, e.g., view angle, energy range, etc.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data">
-<span class="sig-name descname"><span class="pre">produce_trigger_meta_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.produce_trigger_meta_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data" title="Link to this definition">#</a></dt>
-<dd><p>Produce the meta data to include in the tabulated form of the trigger rate per energy bin.</p>
-<p>It shows some information from the input file (simtel_array file) and the final estimate
-system trigger rate.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>dict:</dt><dd><p>dictionary with the metadata.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.solid_angle">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">solid_angle</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.solid_angle" title="Link to this definition">#</a></dt>
-<dd><p>Solid angle corresponding to the view cone.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>astropy.Quantity[u.sr]:</dt><dd><p>Solid angle corresponding to the view cone.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.total_area">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_area</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_area" title="Link to this definition">#</a></dt>
-<dd><p>Total area covered by the simulated events (original CORSIKA CSCAT), i.e., area thrown.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>astropy.Quantity[area]:</dt><dd><p>Total area covered on the ground covered by the simulation.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_number_of_events</span></span><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events" title="Link to this definition">#</a></dt>
-<dd><p>Return the total number of simulated and triggered events in the histograms.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>int, int:</dt><dd><p>total number of simulated and triggered events.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table">
-<span class="sig-name descname"><span class="pre">trigger_info_in_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histogram.html#SimtelIOHistogram.trigger_info_in_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table" title="Link to this definition">#</a></dt>
-<dd><p>Provide the trigger rate per energy bin in tabulated form.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>astropy.QTable:</dt><dd><p>The QTable instance with the trigger rate per energy bin.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
+<dl class="py class">
+<dt class="sig sig-object py" id="simtel.simtel_io_event_writer.TriggeredEventData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_event_writer.</span></span><span class="sig-name descname"><span class="pre">TriggeredEventData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">triggered_id:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_altitudes:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_azimuths:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_telescope_list_list:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular_distance:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_event_writer.html#TriggeredEventData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_event_writer.TriggeredEventData" title="Link to this definition">#</a></dt>
+<dd><p>Triggered event data.</p>
 </dd></dl>
 
 </section>
@@ -1660,39 +1333,23 @@ mirror_numbers.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_table_reader.read_simtel_table"><code class="docutils literal notranslate"><span class="pre">read_simtel_table()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-events">simtel_io_events</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.InconsistentInputFileError"><code class="docutils literal notranslate"><span class="pre">InconsistentInputFileError</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.count_simulated_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.count_simulated_events()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.count_triggered_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.count_triggered_events()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.load_header_and_summary"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.load_header_and_summary()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.load_input_files"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.load_input_files()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.number_of_files"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.number_of_files</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_events.SimtelIOEvents.select_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOEvents.select_events()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-event-reader">simtel_io_event_reader</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_dataset_information"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.print_dataset_information()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.print_event_table"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.print_event_table()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_reader.SimtelIOEventDataReader.read_event_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataReader.read_event_data()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-histogram">simtel_io_histogram</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.HistogramIdNotFoundError"><code class="docutils literal notranslate"><span class="pre">HistogramIdNotFoundError</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.InconsistentHistogramFormatError"><code class="docutils literal notranslate"><span class="pre">InconsistentHistogramFormatError</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.compute_system_trigger_rate"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.compute_system_trigger_rate()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.config"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.config</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_observation_time"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.estimate_observation_time()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.estimate_trigger_rate_uncertainty"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.estimate_trigger_rate_uncertainty()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.fill_event_histogram_dicts"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.fill_event_histogram_dicts()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.get_histogram_type_title"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.get_histogram_type_title()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.get_particle_distribution_function"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.get_particle_distribution_function()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.number_of_histogram_types"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.number_of_histogram_types</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.print_info"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.print_info()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.produce_trigger_meta_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.produce_trigger_meta_data()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.solid_angle"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.solid_angle</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_area"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_area</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.total_number_of_events"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.total_number_of_events</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histogram.SimtelIOHistogram.trigger_info_in_table"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistogram.trigger_info_in_table()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-event-writer">simtel_io_event_writer</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.ShowerEventData"><code class="docutils literal notranslate"><span class="pre">ShowerEventData</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.get_event_data"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter.get_event_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.SimtelIOEventDataWriter.process_files"><code class="docutils literal notranslate"><span class="pre">SimtelIOEventDataWriter.process_files()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_event_writer.TriggeredEventData"><code class="docutils literal notranslate"><span class="pre">TriggeredEventData</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-histograms">simtel_io_histograms</a><ul class="nav section-nav flex-column">
