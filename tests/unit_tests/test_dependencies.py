@@ -9,6 +9,52 @@ from simtools import dependencies
 from simtools.db.db_handler import DatabaseHandler
 
 
+def test_get_version_string_success(monkeypatch):
+    db_config = {"host": "localhost", "port": 27017}
+    mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
+    mock_db_handler.mongo_db_config = {"db_simulation_model": "v1.0.0"}
+
+    with mock.patch("simtools.dependencies.DatabaseHandler", return_value=mock_db_handler):
+        monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+
+        mock_sim_telarray_result = mock.Mock()
+        mock_sim_telarray_result.stdout = "Release: 2024.271.0 from 2024-09-27"
+        mock_sim_telarray_result.stderr = ""
+
+        mock_corsika_process = mock.Mock()
+        mock_corsika_process.stdout.readline.side_effect = [
+            "NUMBER OF VERSION :  7.7550\n",
+            "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n",
+            "",
+        ]
+
+        with mock.patch("subprocess.run", return_value=mock_sim_telarray_result):
+            with mock.patch("subprocess.Popen", return_value=mock_corsika_process):
+                expected_output = (
+                    "Database version: v1.0.0\n"
+                    "sim_telarray version: 2024.271.0\n"
+                    "CORSIKA version: 7.7550\n"
+                )
+                assert dependencies.get_version_string(db_config) == expected_output
+
+
+def test_get_version_string_no_env_var(monkeypatch, caplog):
+    db_config = {"host": "localhost", "port": 27017}
+    mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
+    mock_db_handler.mongo_db_config = {"db_simulation_model": "v1.0.0"}
+
+    with mock.patch("simtools.dependencies.DatabaseHandler", return_value=mock_db_handler):
+        monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
+
+        with caplog.at_level(logging.WARNING):
+            expected_output = (
+                "Database version: v1.0.0\nsim_telarray version: None\nCORSIKA version: None\n"
+            )
+            assert dependencies.get_version_string(db_config) == expected_output
+
+        assert "Environment variable SIMTOOLS_SIMTEL_PATH is not set." in caplog.text
+
+
 def test_get_database_version_success():
     db_config = {"host": "localhost", "port": 27017}
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
@@ -37,11 +83,6 @@ def test_get_sim_telarray_version_success(monkeypatch):
     subprocess_mock = "subprocess.run"
     with mock.patch(subprocess_mock, return_value=mock_result):
         assert dependencies.get_sim_telarray_version() == expected_version
-
-    with mock.patch(subprocess_mock, return_value=mock_result):
-        version_string = dependencies.get_version_string()
-        assert "Database version: None" in version_string
-        assert "sim_telarray version:" in version_string
 
 
 def test_get_sim_telarray_version_no_env_var(caplog, monkeypatch):
