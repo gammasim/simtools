@@ -161,3 +161,22 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
     y_trans = x * np.sin(rotation_around_z_axis) + y * np.cos(rotation_around_z_axis)
 
     return x_trans, y_trans
+
+
+def calculate_circular_mean(angles):
+    """
+    Calculate circular mean of angles in radians.
+
+    Parameters
+    ----------
+    angles: numpy.array
+        Array of angles in radians.
+
+    Returns
+    -------
+    float
+        Circular mean of the angles.
+    """
+    sin_sum = np.sum(np.sin(angles))
+    cos_sum = np.sum(np.cos(angles))
+    return np.arctan2(sin_sum, cos_sum)
