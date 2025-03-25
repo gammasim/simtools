@@ -95,6 +95,8 @@ def get_corsika_version():
         return None
     corsika_command = Path(sim_telarray_path) / "corsika-run" / "corsika"
 
+    # Below I do not use the standard context manager because
+    # it makes mocking in the tests significanlty more difficult
     process = subprocess.Popen(  # pylint: disable=consider-using-with
         corsika_command,
         stdout=subprocess.PIPE,
