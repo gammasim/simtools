@@ -89,3 +89,22 @@ def test_convert_2d_to_radial_distr(caplog) -> None:
         )
     msg = "The histogram with number of bins"
     assert msg in caplog.text
+
+
+def test_calculate_circular_mean():
+    # Test opposite angles cancel out
+    angles = np.array([0, np.pi])
+    assert transf.calculate_circular_mean(angles) == np.pi / 2
+
+    # Test mean of same angles
+    angles = np.array([np.pi / 4, np.pi / 4, np.pi / 4])
+    assert transf.calculate_circular_mean(angles) == pytest.approx(np.pi / 4)
+
+    # Test simple cases
+    angles = np.array([0, np.pi / 2, np.pi, 3 * np.pi / 2])
+    assert pytest.approx(transf.calculate_circular_mean(angles)) == 2.26196
+
+    # Test mean of random angles
+    angles = np.array([0.1, 0.2, 0.3])
+    expected = 0.2
+    assert pytest.approx(transf.calculate_circular_mean(angles), abs=1e-6) == expected
