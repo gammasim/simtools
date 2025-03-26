@@ -24,15 +24,6 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(extract-mc-event-data)=
-
-## extract_mc_event_data
-
-```{eval-rst}
-.. automodule:: production_configuration.extract_mc_event_data
-   :members:
-```
-
 (generate-simulation-config)=
 
 ## generate_simulation_config

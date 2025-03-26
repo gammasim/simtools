@@ -33,6 +33,7 @@ import logging
 
 import simtools.utils.general as gen
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.production_configuration.derive_corsika_limits import LimitCalculator
 
 _logger = logging.getLogger(__name__)
@@ -52,6 +53,8 @@ def _parse():
         List of telescope IDs to filter the events (default is None).
         Definition of the telescope IDs can be found in the telescope
         definition file used for simulations.
+    plot_histograms: bool
+        Plot histograms of the event data.
 
     Returns
     -------
@@ -77,6 +80,12 @@ def _parse():
         nargs="*",
         help="List of telescope IDs to filter the events as used in sim_telarray.",
     )
+    config.parser.add_argument(
+        "--plot_histograms",
+        help="Plot histograms of the event data.",
+        action="store_true",
+        default=False,
+    )
     return config.initialize(db_config=False)
 
 
@@ -101,6 +110,17 @@ def main():
 
     viewcone = calculator.compute_viewcone(loss_fraction)
     _logger.info(f"Viewcone radius: {viewcone}")
+
+    if args_dict.get("plot_histograms"):
+        _logger.info(
+            f"Plotting histograms written to {io_handler.IOHandler().get_output_directory()}"
+        )
+        calculator.plot_data(
+            lower_energy_limit,
+            upper_radial_distance,
+            viewcone,
+            io_handler.IOHandler().get_output_directory(),
+        )
 
 
 if __name__ == "__main__":
