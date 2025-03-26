@@ -426,7 +426,7 @@ class ModelDataWriter:
         """
         Prepare data dictionary for writing to json file.
 
-        Ensure sim_telarray style lists as strings.
+        Ensure sim_telarray style lists as strings 'type' and 'unit' entries.
         Replace "None" with "null" for unit field.
 
         Parameters
@@ -441,7 +441,6 @@ class ModelDataWriter:
 
         """
         try:
-            data_dict["value"] = gen.convert_list_to_string(data_dict["value"])
             data_dict["unit"] = gen.convert_list_to_string(data_dict["unit"], comma_separated=True)
             data_dict["type"] = gen.convert_list_to_string(
                 data_dict["type"], comma_separated=True, collapse_list=True
