@@ -256,25 +256,35 @@ def test__generate_parameter_report_combinations(io_handler, db_config):
 
 
 def test_auto_generate_array_element_reports(io_handler, db_config):
-    args = {"all_telescopes": True, "all_sites": True, "all_model_versions": True}
+    """Test array element report generation with all observatory options enabled."""
+    # Test observatory path with all options enabled
+    args = {"observatory": True, "all_sites": True, "all_model_versions": True}
     output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    # Mock the observatory reports method
+    with patch.object(
+        report_generator, "auto_generate_observatory_reports"
+    ) as mock_observatory_reports:
+        report_generator.auto_generate_array_element_reports()
+
+        # Verify observatory reports were generated
+        mock_observatory_reports.assert_called_once()
+
+        # Verify the arguments passed to ReportGenerator were preserved
+        assert report_generator.args["all_sites"] is True
+        assert report_generator.args["all_model_versions"] is True
+        assert report_generator.args["observatory"] is True
+
+    # Test regular array element report generation
+    args = {"all_telescopes": True, "all_sites": True, "all_model_versions": True}
     report_generator = ReportGenerator(db_config, args, output_path)
 
     # Mock parameters that would be returned for different sites and telescopes
     mock_params = [
         ("6.0.0", "LSTN-01", "North"),
         ("6.0.0", "LSTN-02", "North"),
-        ("6.0.0", "MSTN-01", "North"),
-        ("6.0.0", "MSTS-01", "South"),
-        ("6.0.0", "MSTS-02", "South"),
-        ("5.0.0", "LSTN-01", "North"),
-        ("5.0.0", "LSTN-02", "North"),
-        ("5.0.0", "MSTN-01", "North"),
-        ("5.0.0", "MSTS-01", "South"),
-        ("5.0.0", "MSTS-02", "South"),
     ]
-
-    mock_report_gen = MagicMock()
 
     with (
         patch.object(
@@ -283,27 +293,18 @@ def test_auto_generate_array_element_reports(io_handler, db_config):
             return_value=mock_params,
         ),
         patch.object(
-            report_generator, "_generate_single_array_element_report", side_effect=mock_report_gen
-        ),
+            report_generator, "_generate_single_array_element_report"
+        ) as mock_single_report,
     ):
         report_generator.auto_generate_array_element_reports()
 
         # Verify that _generate_single_array_element_report was called for each combination
-        assert mock_report_gen.call_count == 10
-        mock_report_gen.assert_has_calls(
+        assert mock_single_report.call_count == 2
+        mock_single_report.assert_has_calls(
             [
                 call("6.0.0", "LSTN-01", "North"),
                 call("6.0.0", "LSTN-02", "North"),
-                call("6.0.0", "MSTN-01", "North"),
-                call("6.0.0", "MSTS-01", "South"),
-                call("6.0.0", "MSTS-02", "South"),
-                call("5.0.0", "LSTN-01", "North"),
-                call("5.0.0", "LSTN-02", "North"),
-                call("5.0.0", "MSTN-01", "North"),
-                call("5.0.0", "MSTS-01", "South"),
-                call("5.0.0", "MSTS-02", "South"),
-            ],
-            any_order=True,
+            ]
         )
 
 
@@ -416,3 +417,112 @@ def test__get_valid_sites_for_telescope(io_handler, db_config):
 
             # Verify result is always a list
             assert isinstance(result, list)
+
+
+def test__generate_observatory_report_combinations(io_handler, db_config):
+    """Test generation of observatory report combinations."""
+    test_cases = [
+        # Case 1: All sites and all model versions
+        {
+            "args": {
+                "all_sites": True,
+                "all_model_versions": True,
+            },
+            "mock_model_versions": ["5.0.0", "6.0.0"],
+            "expected_combinations": [
+                ("North", "5.0.0"),
+                ("North", "6.0.0"),
+                ("South", "5.0.0"),
+                ("South", "6.0.0"),
+            ],
+        },
+        # Case 2: Specific site and all model version
+        {
+            "args": {
+                "all_model_versions": True,
+                "site": "North",
+            },
+            "mock_model_versions": ["5.0.0", "6.0.0"],
+            "expected_combinations": [("North", "5.0.0"), ("North", "6.0.0")],
+        },
+    ]
+
+    for case in test_cases:
+        report_generator = ReportGenerator(
+            db_config, case["args"], io_handler.get_output_directory()
+        )
+
+        with patch.object(
+            report_generator.db,
+            "get_model_versions",
+            return_value=case["mock_model_versions"],
+        ):
+            result = list(report_generator._generate_observatory_report_combinations())
+            assert set(result) == set(case["expected_combinations"])
+
+
+def test__generate_single_observatory_report(io_handler, db_config):
+    """Test generation of a single observatory report."""
+    args = {"site": "North", "model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    mock_read_params = MagicMock()
+
+    with patch(
+        "simtools.reporting.docs_auto_report_generator.ReadParameters",
+        return_value=mock_read_params,
+    ) as mock_read_params_class:
+        report_generator._generate_single_observatory_report(args["site"], args["model_version"])
+
+        # Verify ReadParameters was instantiated with correct arguments
+        expected_args = {
+            "site": args["site"],
+            "model_version": args["model_version"],
+            "observatory": True,
+        }
+        expected_output_path = Path(output_path) / str(args["model_version"])
+
+        mock_read_params_class.assert_called_once_with(
+            db_config, expected_args, expected_output_path
+        )
+
+        # Verify produce_observatory_report was called
+        mock_read_params.produce_observatory_report.assert_called_once()
+
+
+def test_auto_generate_observatory_reports(io_handler, db_config):
+    """Test generation of all observatory reports."""
+    args = {"all_sites": True, "all_model_versions": True}
+    output_path = io_handler.get_output_directory()
+    report_generator = ReportGenerator(db_config, args, output_path)
+
+    # Mock combinations that would be returned
+    mock_combinations = [
+        ("North", "6.0.0"),
+        ("North", "5.0.0"),
+        ("South", "6.0.0"),
+        ("South", "5.0.0"),
+    ]
+
+    mock_generate_report = MagicMock()
+
+    with (
+        patch.object(
+            report_generator,
+            "_generate_observatory_report_combinations",
+            return_value=mock_combinations,
+        ),
+        patch.object(
+            report_generator,
+            "_generate_single_observatory_report",
+            side_effect=mock_generate_report,
+        ),
+    ):
+        report_generator.auto_generate_observatory_reports()
+
+        # Verify that _generate_single_observatory_report was called for each combination
+        assert mock_generate_report.call_count == len(mock_combinations)
+        mock_generate_report.assert_has_calls(
+            [call(site, version) for site, version in mock_combinations]
+        )

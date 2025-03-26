@@ -498,7 +498,7 @@ def test_produce_observatory_report(io_handler, db_config, mocker):
         assert "none_valued_param" not in content
 
 
-def test_write_array_layouts_section(io_handler, db_config):
+def test__write_array_layouts_section(io_handler, db_config):
     """Test writing array layouts section."""
     args = {}
     output_path = io_handler.get_output_directory()
@@ -529,7 +529,7 @@ def test_write_array_layouts_section(io_handler, db_config):
     assert "MST2" in output
 
 
-def test_write_array_triggers_section(io_handler, db_config):
+def test__write_array_triggers_section(io_handler, db_config):
     """Test writing array triggers section."""
     args = {}
     output_path = io_handler.get_output_directory()
@@ -565,7 +565,7 @@ def test_write_array_triggers_section(io_handler, db_config):
     assert "| Trigger2 | 3 telescopes | 150 ns | No | 75 m |" in output
 
 
-def test_write_parameters_table(io_handler, db_config):
+def test__write_parameters_table(io_handler, db_config):
     """Test writing parameters table."""
     args = {}
     output_path = io_handler.get_output_directory()
