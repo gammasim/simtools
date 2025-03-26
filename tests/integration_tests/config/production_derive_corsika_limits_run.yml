@@ -1,0 +1,10 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-production-derive-corsika-limits
+    TEST_NAME: simtools-production-derive-corsika-limits
+    CONFIGURATION:
+      EVENT_DATA_FILE: tests/resources/run202_202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.hdf5
+      LOSS_FRACTION: 1.e-3
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
