@@ -1,4 +1,6 @@
+from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 import astropy.units as u
 import pytest
@@ -43,19 +45,70 @@ def test_get_array_element_parameter_data(telescope_model_lst, io_handler, db_co
         assert result[4] == "Nominal overall focal length of the entire telescope."
 
 
-def test_produce_array_element_report(telescope_model_lst, io_handler, db_config):
+def test_produce_array_element_report(telescope_model_lst, io_handler, db_config, mocker):
+    """Test array element report generation with both observatory and telescope scenarios."""
+    # Test observatory report path
     args = {
-        "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
         "model_version": telescope_model_lst.model_version,
+        "observatory": True,
     }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
-    read_parameters.produce_array_element_report()
+    # Mock observatory parameters
+    mock_obs_params = {
+        "site_elevation": {
+            "value": 2200,
+            "unit": "m",
+        }
+    }
 
-    file_path = output_path / f"{telescope_model_lst.name}.md"
-    assert file_path.exists()
+    with patch.object(read_parameters.db, "get_model_parameters", return_value=mock_obs_params):
+        read_parameters.produce_array_element_report()
+
+        # Verify observatory report was generated
+        obs_file = output_path / f"OBS-{args['site']}.md"
+        assert obs_file.exists()
+
+        # Verify DB was called with correct parameters
+        read_parameters.db.get_model_parameters.assert_called_once_with(
+            site=args["site"],
+            array_element_name=f"OBS-{args['site']}",
+            collection="sites",
+            model_version=args["model_version"],
+        )
+
+    # Test telescope report
+    args["observatory"] = False
+    args["telescope"] = telescope_model_lst.name
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    mock_telescope_params = {
+        "focal_length": {
+            "value": 2800.0,
+            "unit": "cm",
+            "parameter_version": "1.0.0",
+            "instrument": telescope_model_lst.name,
+        }
+    }
+
+    with patch.object(
+        read_parameters.db, "get_model_parameters", return_value=mock_telescope_params
+    ):
+        read_parameters.produce_array_element_report()
+
+        # Verify telescope report was generated
+        tel_file = output_path / f"{telescope_model_lst.name}.md"
+        assert tel_file.exists()
+
+        # Verify DB was called with correct parameters
+        read_parameters.db.get_model_parameters.assert_called_once_with(
+            site=args["site"],
+            array_element_name=args["telescope"],
+            collection="telescopes",
+            model_version=args["model_version"],
+        )
 
 
 def test_produce_model_parameter_reports(io_handler, db_config):
@@ -84,6 +137,11 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
 
     # testing with valid file
     new_file = read_parameters._convert_to_md("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
+    assert isinstance(new_file, str)
+    assert Path(output_path / new_file).exists()
+
+    # testing with non-utf-8 file
+    new_file = read_parameters._convert_to_md("tests/resources/example_non_utf-8_file.lis")
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
@@ -345,3 +403,190 @@ def test_get_array_element_parameter_data_none_value(io_handler, db_config, mock
 
     # Verify the mocks were called
     assert read_parameters.db.get_model_parameters.called
+
+
+def test_produce_observatory_report(io_handler, db_config, mocker):
+    """Test generation of observatory parameter report with all parameter types and empty data."""
+    args = {"site": "North", "model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config, args, output_path)
+
+    # Test with empty parameter data
+    mock_logger = mocker.patch("logging.Logger.warning")
+
+    with patch.object(read_parameters.db, "get_model_parameters", return_value={}):
+        read_parameters.produce_observatory_report()
+
+        # Verify warning was logged
+        mock_logger.assert_called_once_with(
+            f"No observatory parameters found for site {args['site']}"
+        )
+
+        # Verify DB call was made with correct parameters
+        read_parameters.db.get_model_parameters.assert_called_once_with(
+            site=read_parameters.site,
+            array_element_name=f"OBS-{read_parameters.site}",
+            collection="sites",
+            model_version=read_parameters.model_version,
+        )
+
+        # Verify no file was created
+        output_file = Path(output_path) / f"OBS-{args['site']}.md"
+        assert not output_file.exists()
+
+    # Test with valid parameter data
+    mock_parameters = {
+        "site_elevation": {
+            "value": 2200,
+            "unit": "m",
+            "parameter_version": "1.0",
+        },
+        "array_layouts": {
+            "value": [
+                {"name": "Layout1", "elements": ["LST1", "LST2"]},
+                {"name": "Layout2", "elements": ["MST1", "MST2"]},
+            ],
+            "unit": None,
+            "parameter_version": "1.0",
+        },
+        "array_triggers": {
+            "value": [
+                {
+                    "name": "LSTN_array",
+                    "multiplicity": {"value": 2, "unit": None},
+                    "width": {"value": 120, "unit": "ns"},
+                    "hard_stereo": {"value": True, "unit": None},
+                    "min_separation": {"value": None, "unit": "m"},
+                },
+                {
+                    "name": "MSTN_array",
+                    "multiplicity": {"value": 2, "unit": None},
+                    "width": {"value": 200, "unit": "ns"},
+                    "hard_stereo": {"value": False, "unit": None},
+                    "min_separation": {"value": 40, "unit": "m"},
+                },
+            ],
+            "unit": None,
+            "parameter_version": "1.0",
+        },
+        "none_valued_param": {
+            "value": None,
+            "unit": None,
+            "parameter_version": "1.0",
+        },
+    }
+
+    with patch.object(read_parameters.db, "get_model_parameters", return_value=mock_parameters):
+        read_parameters.produce_observatory_report()
+
+        # Verify DB call was made with correct parameters
+        read_parameters.db.get_model_parameters.assert_called_once_with(
+            site=read_parameters.site,
+            array_element_name=f"OBS-{read_parameters.site}",
+            collection="sites",
+            model_version=read_parameters.model_version,
+        )
+
+        # Check output file exists and contains expected content
+        output_file = Path(output_path) / f"OBS-{args['site']}.md"
+        assert output_file.exists()
+
+        content = output_file.read_text()
+        assert "# Observatory Parameters" in content
+        assert "| Parameter | Value |" in content
+        assert "| site_elevation | 2200 m |" in content
+        assert "none_valued_param" not in content
+
+
+def test_write_array_layouts_section(io_handler, db_config):
+    """Test writing array layouts section."""
+    args = {}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config, args, output_path)
+
+    mock_layouts = [
+        {
+            "name": "Layout1",
+            "elements": ["LST1", "LST2", "MST1"],
+        },
+        {
+            "name": "Layout2",
+            "elements": ["LST1", "MST1", "MST2"],
+        },
+    ]
+
+    with StringIO() as file:
+        read_parameters._write_array_layouts_section(file, mock_layouts)
+        output = file.getvalue()
+
+    # Verify section header
+    assert "## Array Layouts {#array-layouts-details}" in output
+
+    # Verify layout names
+    assert "### Layout1" in output
+    assert "MST1" in output
+    assert "### Layout2" in output
+    assert "MST2" in output
+
+
+def test_write_array_triggers_section(io_handler, db_config):
+    """Test writing array triggers section."""
+    args = {}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config, args, output_path)
+
+    mock_triggers = [
+        {
+            "name": "Trigger1",
+            "multiplicity": {"value": 2, "unit": None},
+            "width": {"value": 100, "unit": "ns"},
+            "hard_stereo": {"value": True, "unit": None},
+            "min_separation": {"value": 50, "unit": "m"},
+        },
+        {
+            "name": "Trigger2",
+            "multiplicity": {"value": 3, "unit": "telescopes"},
+            "width": {"value": 150, "unit": "ns"},
+            "hard_stereo": {"value": False, "unit": None},
+            "min_separation": {"value": 75, "unit": "m"},
+        },
+    ]
+
+    with StringIO() as file:
+        read_parameters._write_array_triggers_section(file, mock_triggers)
+        output = file.getvalue()
+
+    # Verify section header and table headers
+    assert "## Array Trigger Configurations {#array-triggers-details}" in output
+    assert "| Trigger Name | Multiplicity | Width | Hard Stereo | Min Separation |" in output
+
+    # Verify trigger data
+    assert "| Trigger1 | 2 | 100 ns | Yes | 50 m |" in output
+    assert "| Trigger2 | 3 telescopes | 150 ns | No | 75 m |" in output
+
+
+def test_write_parameters_table(io_handler, db_config):
+    """Test writing parameters table."""
+    args = {}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config, args, output_path)
+
+    mock_params = {
+        "site_elevation": {"value": 2200, "unit": "m"},
+        "array_layouts": {"value": [], "unit": None},
+        "array_triggers": {"value": [], "unit": None},
+    }
+
+    with StringIO() as file:
+        read_parameters._write_parameters_table(file, mock_params)
+        output = file.getvalue()
+
+    # Verify table headers
+    assert "| Parameter | Value " in output
+
+    # Verify normal parameter
+    assert "| site_elevation | 2200 m |" in output
+
+    # Verify special sections
+    assert "| array_layouts | [View Array Layouts](#array-layouts-details) |" in output
+    assert "| array_triggers | [View Trigger Configurations](#array-triggers-details) |" in output

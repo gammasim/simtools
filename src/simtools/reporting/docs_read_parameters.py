@@ -411,28 +411,24 @@ class ReadParameters:
 
     def _write_parameters_table(self, file, all_parameter_data):
         """Write the main parameters table of the report."""
-        file.write("| Parameter | Value | Unit |\n|-----------|--------|------|\n")
+        file.write("| Parameter | Value |\n|-----------|--------|\n")
         for param_name, param_data in sorted(all_parameter_data.items()):
             value = param_data.get("value")
-            unit = param_data.get("unit", "")
+            unit = param_data.get("unit") or " "
             file_flag = param_data.get("file", False)
 
             if value is None:
                 continue
 
             if param_name == "array_layouts":
-                file.write(
-                    f"| array_layouts | [View Array Layouts](#array-layouts-details) | {unit} |\n"
-                )
+                file.write("| array_layouts | [View Array Layouts](#array-layouts-details) |\n")
             elif param_name == "array_triggers":
                 file.write(
-                    "| array_triggers | "
-                    "[View Trigger Configurations](#array-triggers-details) | "
-                    f"{unit} |\n"
+                    "| array_triggers | [View Trigger Configurations](#array-triggers-details) |\n"
                 )
             else:
                 formatted_value = self._format_parameter_value(value, unit, file_flag)
-                file.write(f"| {param_name} | {formatted_value} | {unit} |\n")
+                file.write(f"| {param_name} | {formatted_value} |\n")
         file.write("\n")
 
     def produce_observatory_report(self):
