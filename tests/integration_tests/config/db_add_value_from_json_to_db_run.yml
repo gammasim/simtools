@@ -3,6 +3,7 @@ CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-db-add-value-from-json-to-db
     TEST_NAME: run
+    SKIP_FOR_PRODUCTION_DB: true
     CONFIGURATION:
       FILE_NAME: ./tests/resources/model_parameters/num_gains-0.0.0.json
       DB_COLLECTION: telescopes

@@ -31,21 +31,21 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simtel_io_events
+## simtel_io_event_reader
 
-(simtel-io-events-1)=
+(simtel_io_event_reader-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_io_events
+.. automodule:: simtel.simtel_io_event_reader
    :members:
 ```
 
-## simtel_io_histogram
+## simtel_io_event_writer
 
-(simtel-io-histogram-1)=
+(simtel_io_event_writer-1)=
 
 ```{eval-rst}
-.. automodule:: simtel.simtel_io_histogram
+.. automodule:: simtel.simtel_io_event_writer
    :members:
 ```
 
