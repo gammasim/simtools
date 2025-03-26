@@ -9,13 +9,72 @@ from simtools import dependencies
 from simtools.db.db_handler import DatabaseHandler
 
 
-def test_get_version_string_success(monkeypatch):
-    db_config = {"host": "localhost", "port": 27017}
-    mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = {"db_simulation_model": "v1.0.0"}
+@pytest.fixture
+def mongo_db_config():
+    return {"db_simulation_model": "v1.0.0"}
 
-    with mock.patch("simtools.dependencies.DatabaseHandler", return_value=mock_db_handler):
-        monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+
+@pytest.fixture
+def db_config():
+    return {"host": "localhost", "port": 27017}
+
+
+@pytest.fixture
+def db_handler_function():
+    return "simtools.dependencies.DatabaseHandler"
+
+
+@pytest.fixture
+def fake_path():
+    return "/fake/path"
+
+
+@pytest.fixture
+def corsika_version_string():
+    return "NUMBER OF VERSION :  7.7550\n"
+
+
+@pytest.fixture
+def corsika_request_for_input():
+    return "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n"
+
+
+@pytest.fixture
+def subprocess_run():
+    return "subprocess.run"
+
+
+@pytest.fixture
+def subprocess_popen():
+    return "subprocess.Popen"
+
+
+@pytest.fixture
+def env_not_set_error():
+    return "Environment variable SIMTOOLS_SIMTEL_PATH is not set."
+
+
+@pytest.fixture
+def get_build_options_literal():
+    return "simtools.dependencies.get_build_options"
+
+
+def test_get_version_string_success(
+    monkeypatch,
+    mongo_db_config,
+    db_config,
+    db_handler_function,
+    fake_path,
+    corsika_version_string,
+    corsika_request_for_input,
+    subprocess_run,
+    subprocess_popen,
+):
+    mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
+    mock_db_handler.mongo_db_config = mongo_db_config
+
+    with mock.patch(db_handler_function, return_value=mock_db_handler):
+        monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
 
         mock_sim_telarray_result = mock.Mock()
         mock_sim_telarray_result.stdout = "Release: 2024.271.0 from 2024-09-27"
@@ -23,13 +82,13 @@ def test_get_version_string_success(monkeypatch):
 
         mock_corsika_process = mock.Mock()
         mock_corsika_process.stdout.readline.side_effect = [
-            "NUMBER OF VERSION :  7.7550\n",
-            "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n",
+            corsika_version_string,
+            corsika_request_for_input,
             "",
         ]
 
-        with mock.patch("subprocess.run", return_value=mock_sim_telarray_result):
-            with mock.patch("subprocess.Popen", return_value=mock_corsika_process):
+        with mock.patch(subprocess_run, return_value=mock_sim_telarray_result):
+            with mock.patch(subprocess_popen, return_value=mock_corsika_process):
                 expected_output = (
                     "Database version: v1.0.0\n"
                     "sim_telarray version: 2024.271.0\n"
@@ -38,12 +97,13 @@ def test_get_version_string_success(monkeypatch):
                 assert dependencies.get_version_string(db_config) == expected_output
 
 
-def test_get_version_string_no_env_var(monkeypatch, caplog):
-    db_config = {"host": "localhost", "port": 27017}
+def test_get_version_string_no_env_var(
+    monkeypatch, mongo_db_config, db_config, db_handler_function, env_not_set_error, caplog
+):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = {"db_simulation_model": "v1.0.0"}
+    mock_db_handler.mongo_db_config = mongo_db_config
 
-    with mock.patch("simtools.dependencies.DatabaseHandler", return_value=mock_db_handler):
+    with mock.patch(db_handler_function, return_value=mock_db_handler):
         monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
 
         with caplog.at_level(logging.WARNING):
@@ -52,65 +112,62 @@ def test_get_version_string_no_env_var(monkeypatch, caplog):
             )
             assert dependencies.get_version_string(db_config) == expected_output
 
-        assert "Environment variable SIMTOOLS_SIMTEL_PATH is not set." in caplog.text
+        assert env_not_set_error in caplog.text
 
 
-def test_get_database_version_success():
-    db_config = {"host": "localhost", "port": 27017}
+def test_get_database_version_success(mongo_db_config, db_config, db_handler_function):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
-    mock_db_handler.mongo_db_config = {"db_simulation_model": "v1.0.0"}
+    mock_db_handler.mongo_db_config = mongo_db_config
 
-    with mock.patch("simtools.dependencies.DatabaseHandler", return_value=mock_db_handler):
+    with mock.patch(db_handler_function, return_value=mock_db_handler):
         assert dependencies.get_database_version(db_config) == "v1.0.0"
 
 
-def test_get_database_version_no_version():
-    db_config = {"host": "localhost", "port": 27017}
+def test_get_database_version_no_version(db_config, db_handler_function):
     mock_db_handler = mock.MagicMock(spec=DatabaseHandler)
     mock_db_handler.mongo_db_config = {}
 
-    with mock.patch("simtools.dependencies.DatabaseHandler", return_value=mock_db_handler):
+    with mock.patch(db_handler_function, return_value=mock_db_handler):
         assert dependencies.get_database_version(db_config) is None
 
 
-def test_get_sim_telarray_version_success(monkeypatch):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+def test_get_sim_telarray_version_success(monkeypatch, fake_path, subprocess_run):
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     expected_version = "2024.271.0"
     mock_result = mock.Mock()
     mock_result.stdout = "Release: 2024.271.0 from 2024-09-27"
     mock_result.stderr = ""
 
-    subprocess_mock = "subprocess.run"
-    with mock.patch(subprocess_mock, return_value=mock_result):
+    with mock.patch(subprocess_run, return_value=mock_result):
         assert dependencies.get_sim_telarray_version() == expected_version
 
 
-def test_get_sim_telarray_version_no_env_var(caplog, monkeypatch):
+def test_get_sim_telarray_version_no_env_var(caplog, monkeypatch, env_not_set_error):
     monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
 
     with caplog.at_level(logging.WARNING):
         assert dependencies.get_sim_telarray_version() is None
 
-    assert "Environment variable SIMTOOLS_SIMTEL_PATH is not set." in caplog.text
+    assert env_not_set_error in caplog.text
 
 
-def test_get_sim_telarray_version_no_release(monkeypatch):
+def test_get_sim_telarray_version_no_release(monkeypatch, subprocess_run):
     monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path_simtel")
     mock_result = mock.Mock()
     mock_result.stdout = "Some other output"
     mock_result.stderr = ""
 
-    with mock.patch("subprocess.run", return_value=mock_result):
+    with mock.patch(subprocess_run, return_value=mock_result):
         with pytest.raises(ValueError, match="sim_telarray release not found in Some other output"):
             dependencies.get_sim_telarray_version()
 
 
-def test_build_options(monkeypatch):
+def test_build_options(monkeypatch, fake_path):
     # no SIMTEL_PATH defined
     with pytest.raises(TypeError, match="SIMTEL_PATH not defined"):
         dependencies.get_build_options()
     # SIMTEL_PATH defined, but no build_opts.yml file
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     with pytest.raises(FileNotFoundError, match="No build_opts.yml file found."):
         dependencies.get_build_options()
 
@@ -122,80 +179,94 @@ def test_build_options(monkeypatch):
         assert build_opts == {"corsika_version": "7.7"}
 
 
-def test_get_corsika_version_success(monkeypatch):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+def test_get_corsika_version_success(
+    monkeypatch, fake_path, corsika_version_string, corsika_request_for_input, subprocess_popen
+):
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_process = mock.Mock()
     mock_process.stdout.readline.side_effect = [
-        "NUMBER OF VERSION :  7.7550\n",
-        "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n",
+        corsika_version_string,
+        corsika_request_for_input,
         "",
     ]
 
-    with mock.patch("subprocess.Popen", return_value=mock_process):
+    with mock.patch(subprocess_popen, return_value=mock_process):
         assert dependencies.get_corsika_version() == "7.7550"
 
 
-def test_get_corsika_version_no_env_var(caplog, monkeypatch):
+def test_get_corsika_version_no_env_var(caplog, monkeypatch, env_not_set_error):
     monkeypatch.delenv("SIMTOOLS_SIMTEL_PATH", raising=False)
 
     with caplog.at_level(logging.WARNING):
         assert dependencies.get_corsika_version() is None
 
-    assert "Environment variable SIMTOOLS_SIMTEL_PATH is not set." in caplog.text
+    assert env_not_set_error in caplog.text
 
 
-def test_get_corsika_version_no_version(monkeypatch, caplog):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+def test_get_corsika_version_no_version(
+    monkeypatch,
+    fake_path,
+    corsika_request_for_input,
+    subprocess_popen,
+    get_build_options_literal,
+    caplog,
+):
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_process = mock.Mock()
     mock_process.stdout.readline.side_effect = [
         "Some other output\n",
-        "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n",
+        corsika_request_for_input,
         "",
     ]
 
-    with mock.patch("subprocess.Popen", return_value=mock_process):
-        with mock.patch(
-            "simtools.dependencies.get_build_options", return_value={"corsika_version": "7.7"}
-        ):
+    with mock.patch(subprocess_popen, return_value=mock_process):
+        with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
             with caplog.at_level(logging.DEBUG):
                 assert dependencies.get_corsika_version() == "7.7"
 
             assert "Getting the CORSIKA version from the build options." in caplog.text
 
 
-def test_get_corsika_version_no_build_opts(monkeypatch, caplog):
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+def test_get_corsika_version_no_build_opts(
+    monkeypatch,
+    fake_path,
+    corsika_request_for_input,
+    subprocess_popen,
+    get_build_options_literal,
+    caplog,
+):
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_process = mock.Mock()
     mock_process.stdout.readline.side_effect = [
         "Some other output\n",
-        "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT\n",
+        corsika_request_for_input,
         "",
     ]
 
-    with mock.patch("subprocess.Popen", return_value=mock_process):
-        with mock.patch("simtools.dependencies.get_build_options", side_effect=FileNotFoundError):
+    with mock.patch(subprocess_popen, return_value=mock_process):
+        with mock.patch(get_build_options_literal, side_effect=FileNotFoundError):
             with caplog.at_level(logging.WARNING):
                 assert dependencies.get_corsika_version() is None
 
             assert "Could not get CORSIKA version." in caplog.text
 
 
-def test_get_corsika_version_empty_line(monkeypatch):
+def test_get_corsika_version_empty_line(
+    monkeypatch, fake_path, corsika_version_string, subprocess_popen, get_build_options_literal
+):
     # The empty line causes the function to break before reaching the version
     # When actually running CORSIKA, we won't get an empty line in the stdout
     # but rather "\n" at the end of the line. An empty line is a sign that the
     # process has finished.
-    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", "/fake/path")
+    monkeypatch.setenv("SIMTOOLS_SIMTEL_PATH", fake_path)
     mock_process = mock.Mock()
     mock_process.stdout.readline.side_effect = [
         "",  # Empty line first
-        "NUMBER OF VERSION :  7.7550\n",  # This should not be reached due to break
+        corsika_version_string,  # This should not be reached due to break
     ]
 
-    with mock.patch("subprocess.Popen", return_value=mock_process):
-        with mock.patch(
-            "simtools.dependencies.get_build_options", return_value={"corsika_version": "7.7"}
-        ):
+    with mock.patch(subprocess_popen, return_value=mock_process):
+        with mock.patch(get_build_options_literal, return_value={"corsika_version": "7.7"}):
             assert dependencies.get_corsika_version() == "7.7"
 
     # Verify readline was called only once before breaking
