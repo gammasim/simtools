@@ -32,7 +32,7 @@ class ReadParameters:
         self.observatory = args.get("observatory")
 
     def _convert_to_md(self, input_file):
-        """Convert a '.dat' or '.ecsv' file to a Markdown file, preserving formatting."""
+        """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
         output_data_path = Path(self.output_path / "_data_files")
         output_data_path.mkdir(parents=True, exist_ok=True)
