@@ -6,11 +6,13 @@ The versions of simtools, the DB, sim_telarray, and CORSIKA are printed.
 
 """
 
+import json
 import logging
 from pathlib import Path
 
 from simtools import dependencies, version
 from simtools.configuration import configurator
+from simtools.io_operations import io_handler
 from simtools.utils import general as gen
 
 
@@ -38,24 +40,41 @@ def _parse(label, description, usage):
     """
     config = configurator.Configurator(label=label, description=description, usage=usage)
 
-    return config.initialize(db_config=True, require_command_line=False)
+    return config.initialize(db_config=True, output=True)
 
 
 def main():
     """Print the versions of the simtools software."""
+    label = Path(__file__).stem
     args_dict, db_config = _parse(
-        Path(__file__).stem,
+        label=label,
         description="Print the versions of simtools, the DB, sim_telarray and CORSIKA.",
         usage="simtools-print-version",
     )
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
+    io_handler_instance = io_handler.IOHandler()
 
     version_string = dependencies.get_version_string(db_config)
+    version_dict = {"simtools version": version.__version__}
 
     print()
-    print(f"simtools version: {version.__version__}")
+    # The loop below is not necessary, there is only one entry, but it is cleaner
+    for key, value in version_dict.items():  #
+        print(f"{key}: {value}")
     print(version_string)
+
+    version_list = version_string.strip().split("\n")
+    for version_entry in version_list:
+        key, value = version_entry.split(": ")
+        version_dict[key] = value
+
+    with open(
+        io_handler_instance.get_output_file(args_dict["output_file"], label=label),
+        "w",
+        encoding="utf-8",
+    ) as f:
+        json.dump(version_dict, f, indent=4)
 
 
 if __name__ == "__main__":
