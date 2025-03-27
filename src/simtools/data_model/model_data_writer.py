@@ -441,13 +441,13 @@ class ModelDataWriter:
 
         """
         try:
-            data_dict["value"] = gen.convert_list_to_string(data_dict["value"])
-            data_dict["unit"] = gen.convert_list_to_string(data_dict["unit"], comma_separated=True)
-            data_dict["type"] = gen.convert_list_to_string(
-                data_dict["type"], comma_separated=True, collapse_list=True
-            )
             if isinstance(data_dict["unit"], str):
                 data_dict["unit"] = data_dict["unit"].replace("None", "null")
+            elif isinstance(data_dict["unit"], list):
+                data_dict["unit"] = [
+                    unit.replace("None", "null") if isinstance(unit, str) else unit
+                    for unit in data_dict["unit"]
+                ]
         except KeyError:
             pass
         return data_dict
