@@ -108,6 +108,9 @@ class ReportGenerator:
 
     def auto_generate_array_element_reports(self):
         """Generate all reports based on which --all_* flag is passed."""
+        if self.args.get("observatory"):
+            self.auto_generate_observatory_reports()
+            return
         for params in self._generate_array_element_report_combinations():
             self._generate_single_array_element_report(*params)
 
@@ -171,3 +174,44 @@ class ReportGenerator:
             logger.info(
                 f"Markdown report generated for {site} Telescope {telescope}: {self.output_path}"
             )
+
+    def _generate_observatory_report_combinations(self) -> Generator[tuple[str, str], None, None]:
+        """Generate combinations of sites and model versions for observatory reports.
+
+        Yields
+        ------
+            tuple[str, str]: A tuple containing (site, model_version) for each valid combination
+                based on the input arguments.
+        """
+        all_sites = names.site_names()
+        selected_sites = all_sites if self.args.get("all_sites") else {self.args["site"]}
+
+        model_versions = (
+            self.db.get_model_versions()
+            if self.args.get("all_model_versions")
+            else [self.args["model_version"]]
+        )
+
+        for site in selected_sites:
+            for version in model_versions:
+                yield site, version
+
+    def _generate_single_observatory_report(self, site: str, model_version: str):
+        """Generate a single observatory report with given parameters."""
+        self.args.update(
+            {
+                "site": site,
+                "model_version": model_version,
+                "observatory": True,
+            }
+        )
+
+        output_path = Path(self.output_path) / str(model_version)
+        ReadParameters(self.db_config, self.args, output_path).produce_observatory_report()
+
+        logger.info(f"Observatory report generated for {site} (v{model_version}): {output_path}")
+
+    def auto_generate_observatory_reports(self):
+        """Generate all observatory reports based on which --all_* flags are passed."""
+        for params in self._generate_observatory_report_combinations():
+            self._generate_single_observatory_report(*params)
