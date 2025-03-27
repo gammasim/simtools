@@ -426,7 +426,7 @@ class ModelDataWriter:
         """
         Prepare data dictionary for writing to json file.
 
-        Ensure sim_telarray style lists as strings.
+        Ensure sim_telarray style lists as strings 'type' and 'unit' entries.
         Replace "None" with "null" for unit field.
 
         Parameters
