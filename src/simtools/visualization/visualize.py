@@ -740,7 +740,7 @@ def plot_array(
 
 
 def initialize_tel_counters():
-    return {one_telescope: 0 for one_telescope in names.get_list_of_array_element_types()}
+    return dict.fromkeys(names.get_list_of_array_element_types(), 0)
 
 
 def get_rotated_positions(telescopes, rotate_angle):
