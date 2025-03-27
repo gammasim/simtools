@@ -85,7 +85,7 @@ RUN echo "build_opt: $BUILD_OPT" > /workdir/sim_telarray/build_opts.yml && \
 FROM almalinux:9.5-minimal
 WORKDIR /workdir
 ARG BUILD_BRANCH=main
-ARG SIMTOOLS_REQUIREMENT="git+https://github.com/gammasim/simtools.git"
+ARG SIMTOOLS_REQUIREMENT="https://github.com/gammasim/simtools.git"
 ARG PYTHON_VERSION=3.12
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
@@ -95,11 +95,11 @@ RUN microdnf update -y && microdnf install -y \
     microdnf clean all
 
 RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') \
-  && git clone -b $BUILD_BRANCH https://github.com/gammasim/simtools.git --depth 1 \
+  && git clone -b $BUILD_BRANCH ${SIMTOOLS_REQUIREMENT} --depth 1 \
   && python${PYTHON_VERSION} -m venv env \
   && source env/bin/activate \
   && pip install -U pip \
-  && pip install --no-cache-dir ${SIMTOOLS_REQUIREMENT}
+  && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}"
 
 ENV SIMTEL_PATH="/workdir/sim_telarray/"
 ENV PATH="/workdir/env/bin/:$PATH"
