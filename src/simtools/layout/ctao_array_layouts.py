@@ -100,9 +100,9 @@ def merge_array_layouts(layouts_1, layouts_2):
 
     Parameters
     ----------
-    layout_1 : dict
+    layouts_1 : dict
         Array layout dictionary 1.
-    layout_2 : dict
+    layouts_2 : dict
         Array layout dictionary 2.
 
     Returns
