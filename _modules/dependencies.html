@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dependencies &#8212; simtools v0.1.dev1+g4db08f5 Manual</title>
+    <title>dependencies &#8212; simtools v0.1.dev1+g036b545 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=9c0e7dc2"></script>
+    <script src="../_static/documentation_options.js?v=be1efd9f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g4db08f5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g036b545 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -216,6 +216,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
@@ -482,18 +483,53 @@ document.write(`
 <a class="viewcode-back" href="../api-reference/dependencies.html#dependencies.get_corsika_version">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_corsika_version</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the version of the corsika package.</span>
+<span class="sd">    Get the version of the CORSIKA package.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str</span>
-<span class="sd">        Version of the corsika package.</span>
+<span class="sd">        Version of the CORSIKA package.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sim_telarray_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SIMTOOLS_SIMTEL_PATH&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sim_telarray_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Environment variable SIMTOOLS_SIMTEL_PATH is not set.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">corsika_command</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">sim_telarray_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;corsika-run&quot;</span> <span class="o">/</span> <span class="s2">&quot;corsika&quot;</span>
+
+    <span class="c1"># Below I do not use the standard context manager because</span>
+    <span class="c1"># it makes mocking in the tests significantly more difficult</span>
+    <span class="n">process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>  <span class="c1"># pylint: disable=consider-using-with</span>
+        <span class="n">corsika_command</span><span class="p">,</span>
+        <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+        <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Capture output until it waits for input</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="c1"># Extract the version from the line &quot;NUMBER OF VERSION :  7.7550&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;NUMBER OF VERSION&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">break</span>
+        <span class="c1"># Check for a specific prompt or indication that the program is waiting for input</span>
+        <span class="k">if</span> <span class="s2">&quot;DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+    <span class="c1"># Check it&#39;s a valid version string</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">and</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\d+\.\d+&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">version</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">build_opts</span> <span class="o">=</span> <span class="n">get_build_options</span><span class="p">()</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;CORSIKA version not implemented yet.&quot;</span><span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not get CORSIKA version.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Getting the CORSIKA version from the build options.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">build_opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;corsika_version&quot;</span><span class="p">)</span></div>
 
 
