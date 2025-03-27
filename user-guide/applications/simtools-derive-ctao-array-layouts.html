@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-run-application &#8212; simtools v0.1.dev1+g2f1a98d Manual</title>
+    <title>simtools-derive-ctao-array-layouts &#8212; simtools v0.1.dev1+g2f1a98d Manual</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-run-application';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-derive-ctao-array-layouts';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-print-version" href="simtools-print-version.html" />
-    <link rel="prev" title="simtools-production-scale-events" href="simtools-production-scale-events.html" />
+    <link rel="next" title="simtools-derive-mirror-rnda" href="simtools-derive-mirror-rnda.html" />
+    <link rel="prev" title="simtools-db-inspect-databases" href="simtools-db-inspect-databases.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -200,7 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
@@ -217,7 +217,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-scale-events.html">simtools-production-scale-events</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-print-version.html">simtools-print-version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
@@ -327,7 +327,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-run-application.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-derive-ctao-array-layouts.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -344,7 +344,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-run-application.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-derive-ctao-array-layouts.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -374,7 +374,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/simtools-run-application.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simtools-derive-ctao-array-layouts.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -458,7 +458,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>simtools-run-application</h1>
+    <h1>simtools-derive-ctao-array-layouts</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -468,10 +468,8 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.get_subdirectory_name"><code class="docutils literal notranslate"><span class="pre">get_subdirectory_name()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.read_application_configuration"><code class="docutils literal notranslate"><span class="pre">read_application_configuration()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.run_application"><code class="docutils literal notranslate"><span class="pre">run_application()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -483,71 +481,45 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-run_application">
-<span id="simtools-run-application"></span><h1>simtools-run-application<a class="headerlink" href="#module-run_application" title="Link to this heading">#</a></h1>
-<p>Run several simtools applications using a configuration file.</p>
-<p>Allows to run several simtools applications with a single configuration file, which includes
-both the name of the simtools application and the configuration for the application.</p>
-<p>This application is used for model parameter setting workflows.
-Strong assumptions are applied on the directory structure for input and output files of
-applications.</p>
+  <section id="module-derive_ctao_array_layouts">
+<span id="simtools-derive-ctao-array-layouts"></span><h1>simtools-derive-ctao-array-layouts<a class="headerlink" href="#module-derive_ctao_array_layouts" title="Link to this heading">#</a></h1>
+<p>Derive CTAO array layouts definitions using CTAO common identifiers repository.</p>
+<p>Retrieves the CTAO array layouts definitions from the CTAO common identifiers repository
+and synchronizes them with the model parameter definition in ‘array_layouts’ for all
+CTAO sites.</p>
+<p>Requires access to the CTAO common identifiers repository. Future versions of the
+common identifiers might be stored in a CTAO technical database.</p>
+<section id="command-line-arguments">
+<h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>site (str)</dt><dd><p>CTAO site (North or South).</p>
+</dd>
+<dt>parameter_version (str)</dt><dd><p>Model parameter version.</p>
+</dd>
+<dt>repository_url (str)</dt><dd><p>URL or path of the CTAO common identifiers repository.</p>
+</dd>
+<dt>repository_branch (str )</dt><dd><p>Repository branch to use for CTAO common identifiers.</p>
+</dd>
+<dt>updated_parameter_version (str)</dt><dd><p>Updated parameter version.</p>
+</dd>
+</dl>
+</section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Run the application with the configuration file ‘config_file_name’:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-run-application --configuration_file config_file_name</span>
-</pre></div>
-</div>
-<p>Run the application with the configuration file ‘config_file_name’, but skipping all steps except
-step 2 and 3 (useful for debugging):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-run-application --configuration_file config_file_name --steps 2 3</span>
+<p>Derive the CTAO array layouts definitions for the North site using the CTAO common identifiers
+repository. Merge the retrieved array layouts with the model parameter definition in
+‘array_layouts’ (in this example for site North and parameter version 2.0.0). Write the
+updated array layouts and metadata using the parameter version indicated by the
+‘updated_parameter_version’ argument.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-derive-ctao-array-layouts --site North \</span>
+<span class="go">    --repository_url &quot;https://gitlab.cta-observatory.org/&quot; \</span>
+<span class="go">    &quot;cta-computing/common/identifiers/-/raw/&quot; \</span>
+<span class="go">    --repository_branch main \</span>
+<span class="go">    --site North --parameter_version 2.0.0 \</span>
+<span class="go">    --updated_parameter_version 3.0.0</span>
 </pre></div>
 </div>
 </section>
-<dl class="py function">
-<dt class="sig sig-object py" id="run_application.get_subdirectory_name">
-<span class="sig-prename descclassname"><span class="pre">run_application.</span></span><span class="sig-name descname"><span class="pre">get_subdirectory_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/run_application.html#get_subdirectory_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#run_application.get_subdirectory_name" title="Link to this definition">#</a></dt>
-<dd><p>Get the first subdirectory name under ‘input’.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="run_application.read_application_configuration">
-<span class="sig-prename descclassname"><span class="pre">run_application.</span></span><span class="sig-name descname"><span class="pre">read_application_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/run_application.html#read_application_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#run_application.read_application_configuration" title="Link to this definition">#</a></dt>
-<dd><p>Read application configuration from file and modify for setting workflows.</p>
-<p>Strong assumptions on the structure of input and output files:</p>
-<ul class="simple">
-<li><p>configuration file is expected to be in ‘./input/&lt;workflow directory&gt;/&lt;yaml file&gt;’</p></li>
-<li><p>output files will be written out to ‘./output/&lt;workflow directory&gt;/’</p></li>
-</ul>
-<p>Replaces the placeholders in the configuration file with the actual values.
-Sets ‘USE_PLAIN_OUTPUT_PATH’ to True for all applications.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>configuration_file</strong><span class="classifier">str</span></dt><dd><p>Configuration file name.</p>
-</dd>
-<dt><strong>steps</strong><span class="classifier">list</span></dt><dd><p>List of steps to be executed (None: all steps).</p>
-</dd>
-<dt><strong>logger</strong><span class="classifier">Logger</span></dt><dd><p>Logger object.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Application configuration.</p>
-</dd>
-<dt>Path</dt><dd><p>Path to the log file.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="run_application.run_application">
-<span class="sig-prename descclassname"><span class="pre">run_application.</span></span><span class="sig-name descname"><span class="pre">run_application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/run_application.html#run_application"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#run_application.run_application" title="Link to this definition">#</a></dt>
-<dd><p>Run a simtools application and return stdout and stderr.</p>
-</dd></dl>
-
 </section>
 
 
@@ -562,20 +534,20 @@ Sets ‘USE_PLAIN_OUTPUT_PATH’ to True for all applications.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-production-scale-events.html"
+       href="simtools-db-inspect-databases.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-production-scale-events</p>
+        <p class="prev-next-title">simtools-db-inspect-databases</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-print-version.html"
+       href="simtools-derive-mirror-rnda.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-print-version</p>
+        <p class="prev-next-title">simtools-derive-mirror-rnda</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -595,10 +567,8 @@ Sets ‘USE_PLAIN_OUTPUT_PATH’ to True for all applications.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.get_subdirectory_name"><code class="docutils literal notranslate"><span class="pre">get_subdirectory_name()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.read_application_configuration"><code class="docutils literal notranslate"><span class="pre">read_application_configuration()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run_application.run_application"><code class="docutils literal notranslate"><span class="pre">run_application()</span></code></a></li>
 </ul>
   </nav></div>
 

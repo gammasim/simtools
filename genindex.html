@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+ge7270fa Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g2f1a98d Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=c2017f27"></script>
+    <script src="_static/documentation_options.js?v=9b57af93"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ge7270fa Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g2f1a98d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -199,6 +199,7 @@
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
@@ -853,6 +854,13 @@ document.write(`
 </li>
       </ul></li>
       <li>
+    derive_ctao_array_layouts
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-derive-ctao-array-layouts.html#module-derive_ctao_array_layouts">module</a>
+</li>
+      </ul></li>
+      <li>
     derive_mirror_rnda
 
       <ul>
@@ -1456,6 +1464,13 @@ document.write(`
 </li>
       </ul></li>
       <li>
+    layout.ctao_array_layouts
+
+      <ul>
+        <li><a href="api-reference/array_layout.html#module-layout.ctao_array_layouts">module</a>
+</li>
+      </ul></li>
+      <li>
     layout.geo_coordinates
 
       <ul>
@@ -1473,10 +1488,10 @@ document.write(`
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.light_emission_default_configuration">light_emission_default_configuration() (simtel.simulator_light_emission.SimulatorLightEmission static method)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator">LimitCalculator (class in production_configuration.derive_corsika_limits)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_corsika_limits.LimitCalculator">LimitCalculator (class in production_configuration.derive_corsika_limits)</a>
+</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_histograms.SimtelIOHistograms.list_of_histograms">list_of_histograms (simtel.simtel_io_histograms.SimtelIOHistograms property)</a>
 </li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.load_and_process_data">load_and_process_data() (in module derive_psf_parameters)</a>
@@ -1536,6 +1551,8 @@ document.write(`
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.MeanRadiusOuterEdgeHandler">MeanRadiusOuterEdgeHandler (class in visualization.legend_handlers)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.MeanRadiusOuterEdgeObject">MeanRadiusOuterEdgeObject (class in visualization.legend_handlers)</a>
+</li>
+      <li><a href="api-reference/array_layout.html#layout.ctao_array_layouts.merge_array_layouts">merge_array_layouts() (in module layout.ctao_array_layouts)</a>
 </li>
       <li><a href="api-reference/data_model.html#data_model.metadata_collector.MetadataCollector">MetadataCollector (class in data_model.metadata_collector)</a>
 </li>
@@ -1671,6 +1688,8 @@ document.write(`
 </li>
         <li><a href="api-reference/dependencies.html#module-dependencies">dependencies</a>
 </li>
+        <li><a href="user-guide/applications/simtools-derive-ctao-array-layouts.html#module-derive_ctao_array_layouts">derive_ctao_array_layouts</a>
+</li>
         <li><a href="user-guide/applications/simtools-derive-mirror-rnda.html#module-derive_mirror_rnda">derive_mirror_rnda</a>
 </li>
         <li><a href="user-guide/applications/simtools-derive-photon-electron-spectrum.html#module-derive_photon_electron_spectrum">derive_photon_electron_spectrum</a>
@@ -1704,6 +1723,8 @@ document.write(`
         <li><a href="api-reference/job_execution.html#module-job_execution.job_manager">job_execution.job_manager</a>
 </li>
         <li><a href="api-reference/array_layout.html#module-layout.array_layout">layout.array_layout</a>
+</li>
+        <li><a href="api-reference/array_layout.html#module-layout.ctao_array_layouts">layout.ctao_array_layouts</a>
 </li>
         <li><a href="api-reference/array_layout.html#module-layout.geo_coordinates">layout.geo_coordinates</a>
 </li>
@@ -2164,10 +2185,10 @@ document.write(`
 </li>
       <li><a href="api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters">ReadParameters (class in reporting.docs_read_parameters)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/utils.html#utils.general.remove_substring_recursively_from_dict">remove_substring_recursively_from_dict() (in module utils.general)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/reporting.html#reporting.docs_auto_report_generator.ReportGenerator">ReportGenerator (class in reporting.docs_auto_report_generator)</a>
 </li>
       <li>
@@ -2187,6 +2208,8 @@ document.write(`
       <li><a href="api-reference/simulators.html#simulator.Simulator.resources">resources() (simulator.Simulator method)</a>
 </li>
       <li><a href="api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.results_summary">results_summary() (camera.camera_efficiency.CameraEfficiency method)</a>
+</li>
+      <li><a href="api-reference/array_layout.html#layout.ctao_array_layouts.retrieve_array_layouts">retrieve_array_layouts() (in module layout.ctao_array_layouts)</a>
 </li>
       <li><a href="api-reference/utils.html#utils.geometry.rotate">rotate() (in module utils.geometry)</a>
 </li>
@@ -2701,10 +2724,12 @@ document.write(`
       </ul></li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file">write_array_config_file() (simtel.simtel_config_writer.SimtelConfigWriter method)</a>
 </li>
-      <li><a href="api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json">write_dict_to_model_parameter_json() (data_model.model_data_writer.ModelDataWriter method)</a>
+      <li><a href="api-reference/array_layout.html#layout.ctao_array_layouts.write_array_layouts">write_array_layouts() (in module layout.ctao_array_layouts)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/data_model.html#data_model.model_data_writer.ModelDataWriter.write_dict_to_model_parameter_json">write_dict_to_model_parameter_json() (data_model.model_data_writer.ModelDataWriter method)</a>
+</li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">write_optimization_data() (ray_tracing.mirror_panel_psf.MirrorPanelPSF method)</a>
 </li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_single_mirror_list_file">write_single_mirror_list_file() (simtel.simtel_config_writer.SimtelConfigWriter method)</a>

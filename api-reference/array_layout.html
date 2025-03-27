@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Layout &#8212; simtools v0.1.dev1+ge7270fa Manual</title>
+    <title>Layout &#8212; simtools v0.1.dev1+g2f1a98d Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=c2017f27"></script>
+    <script src="../_static/documentation_options.js?v=9b57af93"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ge7270fa Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g2f1a98d Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -200,6 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-db-inspect-databases.html">simtools-db-inspect-databases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
@@ -509,6 +510,12 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates.crs_wgs84"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates.crs_wgs84()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.ctao_array_layouts">ctao_array_layouts</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.merge_array_layouts"><code class="docutils literal notranslate"><span class="pre">merge_array_layouts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.retrieve_array_layouts"><code class="docutils literal notranslate"><span class="pre">retrieve_array_layouts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.write_array_layouts"><code class="docutils literal notranslate"><span class="pre">write_array_layouts()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1076,6 +1083,74 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 </dd></dl>
 
 </section>
+<section id="module-layout.ctao_array_layouts">
+<span id="ctao-array-layouts"></span><span id="ctaoarraylayoutsmodule"></span><h2>ctao_array_layouts<a class="headerlink" href="#module-layout.ctao_array_layouts" title="Link to this heading">#</a></h2>
+<p>Retrieve, merge, and write layouts from CTAO common identifiers repository.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="layout.ctao_array_layouts.merge_array_layouts">
+<span class="sig-prename descclassname"><span class="pre">layout.ctao_array_layouts.</span></span><span class="sig-name descname"><span class="pre">merge_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layouts_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layouts_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/ctao_array_layouts.html#merge_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.ctao_array_layouts.merge_array_layouts" title="Link to this definition">#</a></dt>
+<dd><p>Compare array layout dictionaries and merge them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>layouts_1</strong><span class="classifier">dict</span></dt><dd><p>Array layout dictionary 1.</p>
+</dd>
+<dt><strong>layouts_2</strong><span class="classifier">dict</span></dt><dd><p>Array layout dictionary 2.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Merged array layout dictionary based on layout_1.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="layout.ctao_array_layouts.retrieve_array_layouts">
+<span class="sig-prename descclassname"><span class="pre">layout.ctao_array_layouts.</span></span><span class="sig-name descname"><span class="pre">retrieve_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repository_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/ctao_array_layouts.html#retrieve_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.ctao_array_layouts.retrieve_array_layouts" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve array layouts from CTAO common identifiers repository.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>site</strong><span class="classifier">str</span></dt><dd><p>Site identifier.</p>
+</dd>
+<dt><strong>repository_url</strong><span class="classifier">str</span></dt><dd><p>URL or path to CTAO common identifiers</p>
+</dd>
+<dt><strong>branch_name</strong><span class="classifier">str</span></dt><dd><p>Repository branch to use for CTAO common identifiers.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Array layouts for all CTAO sites.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="layout.ctao_array_layouts.write_array_layouts">
+<span class="sig-prename descclassname"><span class="pre">layout.ctao_array_layouts.</span></span><span class="sig-name descname"><span class="pre">write_array_layouts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_layouts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/layout/ctao_array_layouts.html#write_array_layouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#layout.ctao_array_layouts.write_array_layouts" title="Link to this definition">#</a></dt>
+<dd><p>Write array layouts as model parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>args_dict</strong><span class="classifier">dict</span></dt><dd><p>Command line arguments.</p>
+</dd>
+<dt><strong>array_layouts</strong><span class="classifier">dict</span></dt><dd><p>Array layouts to be written.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict</span></dt><dd><p>Database configuration.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -1165,6 +1240,12 @@ X-axis points towards geographic North, y-axis towards geographic West.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.geo_coordinates.GeoCoordinates.crs_wgs84"><code class="docutils literal notranslate"><span class="pre">GeoCoordinates.crs_wgs84()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-layout.ctao_array_layouts">ctao_array_layouts</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.merge_array_layouts"><code class="docutils literal notranslate"><span class="pre">merge_array_layouts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.retrieve_array_layouts"><code class="docutils literal notranslate"><span class="pre">retrieve_array_layouts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout.ctao_array_layouts.write_array_layouts"><code class="docutils literal notranslate"><span class="pre">write_array_layouts()</span></code></a></li>
 </ul>
 </li>
 </ul>
