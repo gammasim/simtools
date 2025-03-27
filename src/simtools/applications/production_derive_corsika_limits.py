@@ -8,9 +8,9 @@ The limits are derived based on the event loss fraction specified by the user.
 Command line arguments
 ----------------------
 event_data_files (str, required)
-    Path to a YAML file containing event data file paths.
+    Path to a file containing event data file paths.
 telescope_ids (str, required)
-    Path to a YAML file containing telescope configurations.
+    Path to a file containing telescope configurations.
 loss_fraction (float, required)
     Fraction of events to be lost.
 plot_histograms (bool, optional)
@@ -62,13 +62,13 @@ def _parse():
         "--event_data_files",
         type=str,
         required=True,
-        help="Path to a YAML file containing event data file paths.",
+        help="Path to a file containing event data file paths.",
     )
     config.parser.add_argument(
         "--telescope_ids",
         type=str,
         required=True,
-        help="Path to a YAML file containing telescope configurations.",
+        help="Path to a file containing telescope configurations.",
     )
     config.parser.add_argument(
         "--loss_fraction", type=float, required=True, help="Fraction of events to be lost."
