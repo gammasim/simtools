@@ -50,6 +50,21 @@ def _parse():
     """
     Parse command line configuration.
 
+    Parameters
+    ----------
+    event_data_files: str
+        Path to a file listing event data file paths. These files contain the
+        simulation data used for deriving the limits.
+    loss_fraction: float
+        Fraction of events to be excluded during limit computation. Determines
+        thresholds for energy, radial distance, and viewcone.
+    telescope_ids: str
+        Path to a file defining telescope configurations. Specifies telescope
+        arrays or IDs used to filter events during processing.
+    plot_histograms: bool
+        If True, generates and saves histograms of the event data to visualize
+        the computed limits and distributions.
+
     Returns
     -------
     CommandLineParser
