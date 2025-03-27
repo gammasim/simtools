@@ -18,6 +18,10 @@ def retrieve_array_layouts(site, repository_url, branch_name="main"):
 
     Parameters
     ----------
+    site : str
+        Site identifier.
+    repository_url : str
+        URL or path to CTAO common identifiers
     branch_name : str
         Repository branch to use for CTAO common identifiers.
 
@@ -46,7 +50,7 @@ def retrieve_array_layouts(site, repository_url, branch_name="main"):
 
 def _get_layouts_per_site(site, sub_arrays, array_element_ids):
     """
-    Get array layouts for all CTAO sites.
+    Get array layouts for CTAO sites.
 
     Parameters
     ----------
@@ -60,7 +64,7 @@ def _get_layouts_per_site(site, sub_arrays, array_element_ids):
     Returns
     -------
     dict
-        Array layouts for all CTAO sites.
+        Array layouts for CTAO sites.
     """
     layouts_per_site = []
 
@@ -138,6 +142,8 @@ def write_array_layouts(array_layouts, args_dict, db_config):
         Command line arguments.
     array_layouts : dict
         Array layouts to be written.
+    db_config : dict
+        Database configuration.
     """
     _logger.info(f"Writing updated array layouts to the database for site {args_dict['site']}.")
 
