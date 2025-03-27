@@ -52,6 +52,7 @@ simtools-production-derive-corsika-limits <applications/simtools-production-deri
 simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
 simtools-production-scale-events <applications/simtools-production-scale-events>
 simtools-run-application <applications/simtools-run-application>
+simtools-print-version <applications/simtools-print-version>
 simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
