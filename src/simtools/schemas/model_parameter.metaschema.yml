@@ -62,6 +62,11 @@ definitions:
         anyOf:
           - type: string
           - type: "null"
+          - type: array
+            items:
+              type:
+                - string
+                - "null"
         description: "Unit of the parameter."
       value:
         anyOf:
