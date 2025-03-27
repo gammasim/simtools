@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+gc1e7125 Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+ge7270fa Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=26504635"></script>
+    <script src="../_static/documentation_options.js?v=c2017f27"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc1e7125 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge7270fa Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -728,7 +728,7 @@ document.write(`
             <span class="n">input_file_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enforce_list_type</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">)</span>
             <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess_run_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">):</span> <span class="n">file</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">input_file_list</span><span class="p">}</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">]:</span>
-            <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{</span><span class="n">run</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_to_simulate</span><span class="p">()}</span>
+            <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_to_simulate</span><span class="p">())</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_runs_and_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No runs to submit.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_runs_and_files</span>
@@ -791,7 +791,7 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;sub_out&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">]</span>
-        <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">defaults</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
         <span class="n">results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-derive-corsika-limits &#8212; simtools v0.1.dev1+gc1e7125 Manual</title>
+    <title>simtools-production-derive-corsika-limits &#8212; simtools v0.1.dev1+ge7270fa Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=26504635"></script>
+    <script src="../../_static/documentation_options.js?v=c2017f27"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc1e7125 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ge7270fa Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -469,7 +469,9 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.create_results_table"><code class="docutils literal notranslate"><span class="pre">create_results_table()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.process_file"><code class="docutils literal notranslate"><span class="pre">process_file()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -488,30 +490,85 @@ document.write(`
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>event_data_file (str, required)</dt><dd><p>Path to the file containing the event data.</p>
+<dt>event_data_files (str, required)</dt><dd><p>Path to a file containing event data file paths.</p>
+</dd>
+<dt>telescope_ids (str, required)</dt><dd><p>Path to a file containing telescope configurations.</p>
 </dd>
 <dt>loss_fraction (float, required)</dt><dd><p>Fraction of events to be lost.</p>
 </dd>
-<dt>telescope_ids (list of int, optional)</dt><dd><p>List of telescope IDs to filter the events (default is None).
-Definition of the telescope IDs can be found
-in the telescope definition file used for simulations.</p>
+<dt>plot_histograms (bool, optional)</dt><dd><p>Plot histograms of the event data.</p>
+</dd>
+<dt>output_file (str, optional)</dt><dd><p>Path to the output file for the derived limits.</p>
 </dd>
 </dl>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>Derive limits for a given file with a specified loss fraction.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-corsika-limits\\</span>
-<span class="go">    --event_data_file path/to/event_data_file.hdf5 \\</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-corsika-limits \\</span>
+<span class="go">    --event_data_files path/to/event_data_files.yaml \\</span>
+<span class="go">    --telescope_ids path/to/telescope_configs.yaml \\</span>
 <span class="go">    --loss_fraction 1e-6 \\</span>
-<span class="go">    --telescope_ids 1 2 3</span>
+<span class="go">    --plot_histograms \\</span>
+<span class="go">    --output_file corsika_simulation_limits_lookup.ecsv</span>
 </pre></div>
 </div>
 </section>
 <dl class="py function">
+<dt class="sig sig-object py" id="production_derive_corsika_limits.create_results_table">
+<span class="sig-prename descclassname"><span class="pre">production_derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">create_results_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_corsika_limits.html#create_results_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_corsika_limits.create_results_table" title="Link to this definition">#</a></dt>
+<dd><p>Create an Astropy Table from the results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>results</strong><span class="classifier">list[dict]</span></dt><dd><dl class="simple">
+<dt>List of dictionaries containing the computed limits for each file</dt><dd><p>and telescope configuration.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>loss_fraction</strong><span class="classifier">float</span></dt><dd><p>Fraction of events to be lost, added as metadata to the table.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>astropy.table.Table</dt><dd><p>An Astropy Table containing the results with appropriate units and metadata.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="production_derive_corsika_limits.main">
 <span class="sig-prename descclassname"><span class="pre">production_derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_corsika_limits.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_corsika_limits.main" title="Link to this definition">#</a></dt>
 <dd><p>Derive limits for energy, radial distance, and viewcone.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="production_derive_corsika_limits.process_file">
+<span class="sig-prename descclassname"><span class="pre">production_derive_corsika_limits.</span></span><span class="sig-name descname"><span class="pre">process_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_histograms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_corsika_limits.html#process_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_corsika_limits.process_file" title="Link to this definition">#</a></dt>
+<dd><p>Process a single file and compute limits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the event data file.</p>
+</dd>
+<dt><strong>telescope_ids</strong><span class="classifier">list[int]</span></dt><dd><p>List of telescope IDs to filter the events.</p>
+</dd>
+<dt><strong>loss_fraction</strong><span class="classifier">float</span></dt><dd><p>Fraction of events to be lost.</p>
+</dd>
+<dt><strong>plot_histograms</strong><span class="classifier">bool</span></dt><dd><p>Whether to plot histograms.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing the computed limits.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -563,7 +620,9 @@ in the telescope definition file used for simulations.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.create_results_table"><code class="docutils literal notranslate"><span class="pre">create_results_table()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_corsika_limits.process_file"><code class="docutils literal notranslate"><span class="pre">process_file()</span></code></a></li>
 </ul>
   </nav></div>
 
