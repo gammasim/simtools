@@ -96,7 +96,7 @@ def get_corsika_version():
     corsika_command = Path(sim_telarray_path) / "corsika-run" / "corsika"
 
     # Below I do not use the standard context manager because
-    # it makes mocking in the tests significanlty more difficult
+    # it makes mocking in the tests significantly more difficult
     process = subprocess.Popen(  # pylint: disable=consider-using-with
         corsika_command,
         stdout=subprocess.PIPE,
@@ -118,7 +118,6 @@ def get_corsika_version():
         if "DATA CARDS FOR RUN STEERING ARE EXPECTED FROM STANDARD INPUT" in line:
             break
 
-    # Terminate the process
     process.terminate()
     # Check it's a valid version string
     if version and re.match(r"\d+\.\d+", version):
