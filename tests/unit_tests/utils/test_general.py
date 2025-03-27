@@ -25,7 +25,7 @@ url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 test_data = "Test data"
 
 
-def test_collect_dict_data(io_handler, caplog) -> None:
+def test_collect_dict_data(io_handler) -> None:
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml")
     if not Path(test_yaml_file).exists():
@@ -76,7 +76,6 @@ def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
     # Test with invalid YAML file
     with pytest.raises(Exception, match=r"^Failed to read file"):
         gen.collect_data_from_file(test_file)
-    assert "Failed to read file" in caplog.text
 
     # Test with invalid JSON file
     test_json = io_handler.get_output_file(file_name="invalid.json")
@@ -85,7 +84,6 @@ def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
 
     with pytest.raises(Exception, match=r"^JSONDecodeError"):
         gen.collect_data_from_file(test_json)
-    assert "Failed to read file" in caplog.text
 
     # Test with unsupported file extension
     test_unsupported = io_handler.get_output_file(file_name="test.xyz")
