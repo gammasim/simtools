@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Reporting &#8212; simtools v0.1.dev1+g036b545 Manual</title>
+    <title>Reporting &#8212; simtools v0.1.dev1+g4632263 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=be1efd9f"></script>
+    <script src="../_static/documentation_options.js?v=0f2a94b9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g036b545 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4632263 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -473,6 +473,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.get_array_element_parameter_data"><code class="docutils literal notranslate"><span class="pre">ReadParameters.get_array_element_parameter_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.produce_array_element_report"><code class="docutils literal notranslate"><span class="pre">ReadParameters.produce_array_element_report()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.produce_model_parameter_reports"><code class="docutils literal notranslate"><span class="pre">ReadParameters.produce_model_parameter_reports()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.produce_observatory_report"><code class="docutils literal notranslate"><span class="pre">ReadParameters.produce_observatory_report()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -480,6 +481,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-reporting.docs_auto_report_generator">docs_auto_report_generator</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator"><code class="docutils literal notranslate"><span class="pre">ReportGenerator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_array_element_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_array_element_reports()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_observatory_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_observatory_reports()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_parameter_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_parameter_reports()</span></code></a></li>
 </ul>
 </li>
@@ -561,6 +563,12 @@ versions, and descriptions.</p>
 values across model versions.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="reporting.docs_read_parameters.ReadParameters.produce_observatory_report">
+<span class="sig-name descname"><span class="pre">produce_observatory_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_read_parameters.html#ReadParameters.produce_observatory_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_read_parameters.ReadParameters.produce_observatory_report" title="Link to this definition">#</a></dt>
+<dd><p>Produce a markdown report of all observatory parameters for a given site.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -575,6 +583,12 @@ values across model versions.</p>
 <dt class="sig sig-object py" id="reporting.docs_auto_report_generator.ReportGenerator.auto_generate_array_element_reports">
 <span class="sig-name descname"><span class="pre">auto_generate_array_element_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_auto_report_generator.html#ReportGenerator.auto_generate_array_element_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_array_element_reports" title="Link to this definition">#</a></dt>
 <dd><p>Generate all reports based on which –all_* flag is passed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reporting.docs_auto_report_generator.ReportGenerator.auto_generate_observatory_reports">
+<span class="sig-name descname"><span class="pre">auto_generate_observatory_reports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reporting/docs_auto_report_generator.html#ReportGenerator.auto_generate_observatory_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_observatory_reports" title="Link to this definition">#</a></dt>
+<dd><p>Generate all observatory reports based on which –all_* flags are passed.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -639,6 +653,7 @@ values across model versions.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.get_array_element_parameter_data"><code class="docutils literal notranslate"><span class="pre">ReadParameters.get_array_element_parameter_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.produce_array_element_report"><code class="docutils literal notranslate"><span class="pre">ReadParameters.produce_array_element_report()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.produce_model_parameter_reports"><code class="docutils literal notranslate"><span class="pre">ReadParameters.produce_model_parameter_reports()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_read_parameters.ReadParameters.produce_observatory_report"><code class="docutils literal notranslate"><span class="pre">ReadParameters.produce_observatory_report()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -646,6 +661,7 @@ values across model versions.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-reporting.docs_auto_report_generator">docs_auto_report_generator</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator"><code class="docutils literal notranslate"><span class="pre">ReportGenerator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_array_element_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_array_element_reports()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_observatory_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_observatory_reports()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_parameter_reports"><code class="docutils literal notranslate"><span class="pre">ReportGenerator.auto_generate_parameter_reports()</span></code></a></li>
 </ul>
 </li>
