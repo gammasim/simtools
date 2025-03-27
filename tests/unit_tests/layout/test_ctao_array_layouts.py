@@ -9,10 +9,15 @@ from simtools.layout.ctao_array_layouts import merge_array_layouts, write_array_
 
 
 @pytest.fixture
-def mock_io_handler():
+def test_output():
+    return "test_output.json"
+
+
+@pytest.fixture
+def mock_io_handler(test_output):
     with patch("simtools.layout.ctao_array_layouts.io_handler.IOHandler") as mock:
         instance = Mock()
-        instance.get_output_file.return_value = "test_output.json"
+        instance.get_output_file.return_value = test_output
         mock.return_value = instance
         yield mock
 
@@ -29,11 +34,18 @@ def mock_metadata_collector():
         yield mock
 
 
-def test_write_array_layouts(mock_io_handler, mock_model_data_writer, mock_metadata_collector):
+@pytest.fixture
+def test_path():
+    return "/test/path"
+
+
+def test_write_array_layouts(
+    mock_io_handler, mock_model_data_writer, mock_metadata_collector, test_path, test_output
+):
     array_layouts = {"value": [{"name": "test_array", "elements": ["tel1", "tel2"]}]}
     args_dict = {
         "site": "north",
-        "output_path": "/test/path",
+        "output_path": test_path,
         "use_plain_output_path": True,
         "updated_parameter_version": "v1",
     }
@@ -42,7 +54,7 @@ def test_write_array_layouts(mock_io_handler, mock_model_data_writer, mock_metad
     write_array_layouts(array_layouts, args_dict, db_config)
 
     mock_io_handler.return_value.set_paths.assert_called_once_with(
-        output_path="/test/path", use_plain_output_path=True
+        output_path=test_path, use_plain_output_path=True
     )
     mock_io_handler.return_value.get_output_file.assert_called_once_with("array-layouts-v1.json")
 
@@ -51,13 +63,13 @@ def test_write_array_layouts(mock_io_handler, mock_model_data_writer, mock_metad
         value=array_layouts["value"],
         instrument="north",
         parameter_version="v1",
-        output_file="test_output.json",
+        output_file=test_output,
         use_plain_output_path=True,
         db_config={"test": "config"},
     )
 
     mock_metadata_collector.dump.assert_called_once_with(
-        args_dict, "test_output.json", add_activity_name=True
+        args_dict, test_output, add_activity_name=True
     )
 
 
@@ -180,23 +192,23 @@ def test_retrieve_array_layouts_from_url():
         mock_gen.is_url.return_value = True
 
         cta_array_layouts.retrieve_array_layouts(
-            site="north", repository_url="http://test.com", branch_name="test-branch"
+            site="north", repository_url="https://test.com", branch_name="test-branch"
         )
 
-        mock_gen.is_url.assert_called_once_with("http://test.com")
+        mock_gen.is_url.assert_called_once_with("https://test.com")
         mock_gen.collect_data_from_http.assert_called_with(
-            url="http://test.com/test-branch/subarray-ids.json"
+            url="https://test.com/test-branch/subarray-ids.json"
         )
 
 
-def test_retrieve_array_layouts_from_file():
+def test_retrieve_array_layouts_from_file(test_path):
     """Test retrieving array layouts from local file."""
     with patch("simtools.layout.ctao_array_layouts.gen") as mock_gen:
         mock_gen.is_url.return_value = False
 
         cta_array_layouts.retrieve_array_layouts(
-            site="north", repository_url="/test/path", branch_name="test-branch"
+            site="north", repository_url=test_path, branch_name="test-branch"
         )
 
-        mock_gen.is_url.assert_called_once_with("/test/path")
+        mock_gen.is_url.assert_called_once_with(test_path)
         mock_gen.collect_data_from_file.assert_called()
