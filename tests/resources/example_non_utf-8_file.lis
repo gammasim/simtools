@@ -1,0 +1,35 @@
+# This is an example of a non-utf-8 file
+#
+# Zodiacal light as a function of ecliptic coordinates
+# based on Leinert, in units of 10-8 W m^-2 sr^-1 micrometer^-1 m-^1 (????) at a wavelength of 500 nm
+# "The scale factor to convert these units into photons cm^-2 s^-1 sr-^1 Å^-1 is 252 at 5000 Å; ie,
+# the numbers in the table have to be multiplied by 252."
+# (source: http://tauvex.iiap.res.in/tauwiki/index.php/Zodiacal_Light)
+# For photons / (nm m^2 s sr) the conversion factor is then 2.52e7. Thus even at the poles
+# of the ecliptic about a quarter of a V=22 mag/(arc sec)^2 sky is still zodiacal light.
+#
+# beta |   0       5       10      15      20      25      30      45      60      75      90
+# ---- |   --      --      --      --      --      --      --      --      --      --      --
+# 0    |                           3140    1610    985     640     275     150     100     77
+# 5    |                           2940    1540    945     625     271     150     100     77
+# 10   |                   4740    2470    1370    865     590     264     148     100     77
+# 15   |   11500   6780    3440    1860    1110    755     525     251     146     100     77
+# 20   |   6400    4480    2410    1410    910     635     454     237     141     99      77
+# 25   |   3840    2830    1730    1100    749     545     410     223     136     97      77
+# 30   |   2480    1870    1220    845     615     467     365     207     131     95      77
+# 35   |   1650    1270    910     680     510     397     320     193     125     93      77
+# 40   |   1180    940     700     530     416     338     282     179     120     92      77
+# 45   |   910     730     555     442     356     292     250     166     116     90      77
+# 60   |   505     442     352     292     243     209     183     134     104     86      77
+# 75   |   338     317     269     227     196     172     151     116     93      82      77
+# 90   |   259     251     225     193     166     147     132     104     86      79      77
+# 105  |   212     210     197     170     150     133     119     96      82      77      77
+# 120  |   188     186     177     154     138     125     113     90      77      74      77
+# 135  |   179     178     166     147     134     122     110     90      77      73      77
+# 150  |   179     178     165     148     137     127     116     96      79      72      77
+# 165  |   196     192     179     165     151     141     131     104     82      72      77
+# 180  |   230     212     195     178     163     148     134     105     83      72      77
+# with a spectrum derived from the solar spectrum but - because of small scattering
+# particles - expected to have somewhat higher relative intensity in the blue (?)
+#
+# And then there are all the stars brighter than V=20 in addition ...

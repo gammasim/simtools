@@ -41,6 +41,12 @@ def _parse(label):
         "--all_sites", action="store_true", help="Produce reports for all sites."
     )
 
+    config.parser.add_argument(
+        "--observatory",
+        action="store_true",
+        help="Produce reports for an observatory at a given site.",
+    )
+
     return config.initialize(
         db_config=True, simulation_model=["site", "telescope", "model_version"]
     )
