@@ -30,6 +30,9 @@ definitions:
           - string
           - "null"
         description: "Associated instrument."
+      meta_parameter:
+        type: boolean
+        description: "Meta parameter flag for sim_telarray."
       parameter:
         type: string
         description: "Parameter name."
