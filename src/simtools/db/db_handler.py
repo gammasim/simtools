@@ -799,10 +799,9 @@ class DatabaseHandler:
                     f"corresponding to the {par_dict['parameter']} parameter, must be provided."
                 )
             file_path = Path(file_prefix).joinpath(par_dict["value"])
-            if general.is_utf8_file(file_path):
-                files_to_add_to_db.add(f"{file_path}")
-            else:
+            if not general.is_utf8_file(file_path):
                 raise ValueError(f"File is not UTF-8 encoded: {file_path}")
+            files_to_add_to_db.add(f"{file_path}")
 
         self._logger.info(
             f"Adding a new entry to DB {db_name} and collection {collection_name}:\n{par_dict}"
