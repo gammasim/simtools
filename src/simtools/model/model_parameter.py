@@ -86,6 +86,18 @@ class ModelParameter:
         self._is_config_file_up_to_date = False
         self._is_exported_model_files_up_to_date = False
 
+    @property
+    def parameters(self):
+        """
+        Model parameters dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing all model parameters
+        """
+        return self._parameters
+
     def _get_parameter_dict(self, par_name):
         """
         Get model parameter dictionary as stored in the DB.
@@ -110,11 +122,11 @@ class ModelParameter:
             If par_name does not match any parameter in this model.
         """
         try:
-            return self._parameters[par_name]
+            return self.parameters[par_name]
         except (KeyError, ValueError) as e:
-            msg = f"Parameter {par_name} was not found in the model {self.name}, {self.site}."
-            self._logger.error(msg)
-            raise InvalidModelParameterError(msg) from e
+            raise InvalidModelParameterError(
+                f"Parameter {par_name} was not found in the model {self.name}, {self.site}."
+            ) from e
 
     def get_parameter_value(self, par_name, parameter_dict=None):
         """
@@ -258,7 +270,7 @@ class ModelParameter:
 
     def print_parameters(self):
         """Print parameters and their values for debugging purposes."""
-        for par in self._parameters:
+        for par in self.parameters:
             print(f"{par} = {self.get_parameter_value(par)}")
 
     def _set_config_file_directory_and_name(self):
@@ -298,21 +310,6 @@ class ModelParameter:
         """
         return self._simulation_config_parameters.get(simulation_software)
 
-    def has_parameter(self, par_name):
-        """Check if a parameter exists in the model.
-
-        Parameters
-        ----------
-        par_name : str
-            Name of the parameter.
-
-        Returns
-        -------
-        bool
-            True if parameter exists in the model.
-        """
-        return par_name in self._parameters
-
     def _load_simulation_software_parameter(self):
         """Read simulation software parameters from DB."""
         for simulation_software in self._simulation_config_parameters:
@@ -337,12 +334,12 @@ class ModelParameter:
         if self.db is None:
             return
 
-        if self.name is not None:
+        if self.name:
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.collection, self.model_version
             )
 
-        if self.site is not None:
+        if self.site:
             self._parameters.update(
                 self.db.get_model_parameters(
                     self.site,
@@ -353,55 +350,10 @@ class ModelParameter:
             )
         self._load_simulation_software_parameter()
 
-    def set_extra_label(self, extra_label):
-        """
-        Set an extra label for the name of the config file.
-
-        Notes
-        -----
-        The config file directory name is not affected by the extra label. Only the file name is \
-        changed. This is important for the ArrayModel class to export multiple config files in the\
-        same directory.
-
-        Parameters
-        ----------
-        extra_label: str
-            Extra label to be appended to the original label.
-        """
-        self._extra_label = extra_label
-        self._set_config_file_directory_and_name()
-
     @property
     def extra_label(self):
         """Return the extra label if defined, if not return ''."""
         return self._extra_label if self._extra_label is not None else ""
-
-    def get_simtel_parameters(self, parameters=None):
-        """
-        Get simtel parameters as name and value pairs.
-
-        Parameters
-        ----------
-        parameters: dict
-            Parameters (simtools) to be renamed (if necessary)
-
-        Returns
-        -------
-        dict
-            simtel parameters as dict (sorted by parameter names)
-
-        """
-        if parameters is None:
-            parameters = self._parameters
-
-        _simtel_parameter_value = {}
-        for key in parameters:
-            _par_name = names.get_simulation_software_name_from_parameter_name(
-                key, simulation_software="sim_telarray"
-            )
-            if _par_name is not None:
-                _simtel_parameter_value[_par_name] = parameters[key].get("value")
-        return dict(sorted(_simtel_parameter_value.items()))
 
     def change_parameter(self, par_name, value):
         """
@@ -421,29 +373,24 @@ class ModelParameter:
         InvalidModelParameterError
             If the parameter to be changed does not exist in this model.
         """
-        if par_name not in self._parameters:
-            msg = f"Parameter {par_name} not in the model"
-            self._logger.error(msg)
-            raise InvalidModelParameterError(msg)
+        if par_name not in self.parameters:
+            raise InvalidModelParameterError(f"Parameter {par_name} not in the model")
 
-        if isinstance(value, str):
-            value = gen.convert_string_to_list(value)
+        value = gen.convert_string_to_list(value) if isinstance(value, str) else value
 
+        param_type = self.get_parameter_type(par_name)
         if not gen.validate_data_type(
-            reference_dtype=self.get_parameter_type(par_name),
+            reference_dtype=param_type,
             value=value,
             dtype=None,
             allow_subtypes=True,
         ):
-            raise ValueError(
-                f"Could not cast {value} of type {type(value)} "
-                f"to {self.get_parameter_type(par_name)}."
-            )
+            raise ValueError(f"Could not cast {value} of type {type(value)} to {param_type}.")
 
         self._logger.debug(
             f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
         )
-        self._parameters[par_name]["value"] = value
+        self.parameters[par_name]["value"] = value
 
         # In case parameter is a file, the model files will be outdated
         if self.get_parameter_file_flag(par_name):
@@ -483,7 +430,7 @@ class ModelParameter:
 
         """
         for par, value in kwargs.items():
-            if par in self._parameters:
+            if par in self.parameters:
                 self.change_parameter(par, value)
 
         self._is_config_file_up_to_date = False
@@ -507,7 +454,7 @@ class ModelParameter:
     def export_model_files(self):
         """Export the model files into the config file directory."""
         # Removing parameter files added manually (which are not in DB)
-        pars_from_db = copy(self._parameters)
+        pars_from_db = copy(self.parameters)
         if self._added_parameter_files is not None:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
@@ -517,18 +464,14 @@ class ModelParameter:
 
     def export_config_file(self):
         """Export the config file used by sim_telarray."""
-        # Exporting model file
         if not self._is_exported_model_files_up_to_date:
             self.export_model_files()
 
-        # Using SimtelConfigWriter to write the config file.
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self.config_file_path,
-            parameters=self.get_simtel_parameters(parameters=self._parameters),
-            config_parameters=self.get_simtel_parameters(
-                parameters=self._simulation_config_parameters["simtel"]
-            ),
+            parameters=self.parameters,
+            config_parameters=self._simulation_config_parameters["simtel"],
         )
 
     @property
