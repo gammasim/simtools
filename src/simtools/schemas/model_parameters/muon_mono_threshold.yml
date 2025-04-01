@@ -1,0 +1,45 @@
+%YAML 1.2
+---
+title: Schema for muon_mono_threshold model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: muon_mono_threshold
+description: |-
+  If the array trigger requires triggers from more than one telescope, the events best
+  suitable for muon-ring calibration purposes, initiated by isolated muons, would be
+  severely suppressed. Events with triggers in an extended area of the camera are a
+  good indicator of muon rings and can be made to pass by stereo event selection.
+  The first parameter is a threshold on the number of trigger groups fired, the second
+  a threshold on the number of - yet to be determined - larger regions in which any
+  trigger groups fired.
+short_description: Thresholds for mono muon events.
+data:
+  - type: uint64
+    description: minimum number of trigger groups fired.
+    default: 0
+    unit: dimensionless
+  - type: uint64
+    description: minimum number of larger regions with trigger groups fired.
+    default: 0
+    unit: dimensionless
+instrument:
+  class: Camera
+  type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Observation execution
+simulation_software:
+  - name: sim_telarray
+    internal_parameter_name: muon_mono_thresh
