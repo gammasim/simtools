@@ -80,8 +80,6 @@ class SimtelConfigWriter:
                 _simtel_name = names.get_simulation_software_name_from_parameter_name(
                     par, simulation_software="sim_telarray"
                 )
-                # TODO - this should be handled differently
-                # TODO - check why this is in the list of parameters
                 # array trigger is a site parameter, not a telescope parameter
                 # fake_mirror_list is not a sim_telarray parameter (used for testeff only)
                 if (
@@ -89,7 +87,6 @@ class SimtelConfigWriter:
                     or _simtel_name.startswith("array_trigger")
                     or _simtel_name == "fake_mirror_list"
                 ):
-                    print("AAAAAA", par, _simtel_name)
                     continue
                 if _simtel_name:
                     file.write(
