@@ -117,7 +117,7 @@ class SimtelConfigWriter:
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
-    def _get_simtel_metadata(self, config_type, model_parameters=None):
+    def _get_simtel_metadata(self, config_type, model_parameters):
         """
         Return simtel metadata.
 
