@@ -17,7 +17,7 @@ def simtel_config_writer(model_version):
         site="North",
         model_version=model_version,
         label="test-simtel-config-writer",
-        telescope_model_name="test_telecope",
+        telescope_model_name="test_telescope",
     )
 
 
@@ -48,12 +48,28 @@ def test_write_array_config_file(
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt")
     simtel_config_writer.write_telescope_config_file(
-        config_file_path=file, parameters={"num_gains": 1}
+        config_file_path=file,
+        parameters={
+            "num_gains": {
+                "parameter": "num_gains",
+                "value": 1,
+                "unit": None,
+                "meta_parameter": False,
+            }
+        },
     )
     assert file_has_text(file, "num_gains = 1")
 
     simtel_config_writer.write_telescope_config_file(
-        config_file_path=file, parameters={"array_triggers": "array_triggers.dat"}
+        config_file_path=file,
+        parameters={
+            "array_triggers": {
+                "parameter": "array_triggers",
+                "value": "array_triggers.dat",
+                "unit": None,
+                "meta_parameter": False,
+            }
+        },
     )
     assert not file_has_text(file, "array_triggers = array_triggers.dat")
 
@@ -61,13 +77,13 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
 def test_get_simtel_metadata(simtel_config_writer):
     _tel = simtel_config_writer._get_simtel_metadata("telescope")
     assert len(_tel) == 8
-    assert _tel["camera_config_name"] == simtel_config_writer._telescope_model_name
-    assert _tel["optics_config_name"] == simtel_config_writer._telescope_model_name
+    assert f"camera_config_name = {simtel_config_writer._telescope_model_name}" in _tel
+    assert f"optics_config_name = {simtel_config_writer._telescope_model_name}" in _tel
 
     _site = simtel_config_writer._get_simtel_metadata("site")
     assert len(_site) == 8
-    assert _site["site_config_name"] == simtel_config_writer._site
-    assert _site["array_config_name"] == simtel_config_writer._layout_name
+    assert f"site_config_name = {simtel_config_writer._site}" in _site
+    assert f"array_config_name = {simtel_config_writer._layout_name}" in _site
 
     with pytest.raises(ValueError, match=r"^Unknown metadata type"):
         simtel_config_writer._get_simtel_metadata("unknown")
