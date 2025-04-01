@@ -119,6 +119,7 @@ def test_get_telescope_position_parameter(array_model, io_handler):
         "unit": "m",
         "type": "float64",
         "file": False,
+        "meta_parameter": False,
     }
 
 
