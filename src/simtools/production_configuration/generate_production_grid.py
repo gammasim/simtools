@@ -25,9 +25,9 @@ class GridGeneration:
     """
     Defines and generates a grid of simulation points based on flexible axes definitions.
 
-    This class generates a grid of points for a simulation based on parameters like energy, azimuth,
-    zenith angle, night-sky background, and camera offset, taking into account axis definitions,
-      scaling, and units.
+    This class generates a grid of points for a simulation based on parameters like energy,
+    azimuth, zenith angle, night-sky background, and camera offset,
+    taking into account axis definitions, scaling, and units.
     """
 
     def __init__(
@@ -98,89 +98,137 @@ class GridGeneration:
         upper_radius_thresholds = np.array([row["upper_radius_threshold"] for row in matching_rows])
         viewcone_radii = np.array([row["viewcone_radius"] for row in matching_rows])
 
-        if "energy" in self.axes:
-            interpolated_lower = self._interpolate_limits(
-                zeniths, azimuths, lower_energy_thresholds, self.axes["energy"]["range"]
+        target_zeniths = np.linspace(
+            self.axes["zenith_angle"]["range"][0],
+            self.axes["zenith_angle"]["range"][1],
+            self.axes["zenith_angle"]["binning"],
+        )
+        target_azimuths = np.linspace(
+            self.axes["azimuth"]["range"][0],
+            self.axes["azimuth"]["range"][1],
+            self.axes["azimuth"]["binning"],
+        )
+
+        is_flat_zenith = len(np.unique(zeniths)) == 1
+        is_flat_azimuth = len(np.unique(azimuths)) == 1
+
+        if is_flat_zenith and is_flat_azimuth:
+            interpolated_energy = np.full(
+                target_zeniths.size * target_azimuths.size, lower_energy_thresholds[0]
             )
-            self.axes["energy"]["range"] = (interpolated_lower, self.axes["energy"]["range"][1])
-
-        if "radius" in self.axes:
-            interpolated_upper = self._interpolate_limits(
-                zeniths, azimuths, upper_radius_thresholds, self.axes["radius"]["range"]
+            interpolated_radius = np.full(
+                target_zeniths.size * target_azimuths.size, upper_radius_thresholds[0]
             )
-            self.axes["radius"]["range"] = (0, interpolated_upper)
-
-        if "viewcone" in self.axes:
-            interpolated_viewcone = self._interpolate_limits(
-                zeniths, azimuths, viewcone_radii, self.axes["viewcone"]["range"]
+            interpolated_viewcone = np.full(
+                target_zeniths.size * target_azimuths.size, viewcone_radii[0]
             )
-            self.axes["viewcone"]["range"] = (0, interpolated_viewcone)
+        elif is_flat_zenith:
+            self._logger.info("Zenith is flat, interpolating only along azimuth")
+            interpolated_energy = np.interp(
+                target_azimuths, azimuths, lower_energy_thresholds, left=np.nan, right=np.nan
+            )
+            interpolated_radius = np.interp(
+                target_azimuths, azimuths, upper_radius_thresholds, left=np.nan, right=np.nan
+            )
+            interpolated_viewcone = np.interp(
+                target_azimuths, azimuths, viewcone_radii, left=np.nan, right=np.nan
+            )
+            interpolated_energy = np.tile(interpolated_energy, (len(target_zeniths), 1))
+            interpolated_radius = np.tile(interpolated_radius, (len(target_zeniths), 1))
+            interpolated_viewcone = np.tile(interpolated_viewcone, (len(target_zeniths), 1))
+        elif is_flat_azimuth:
+            self._logger.info("Azimuth is flat, interpolating only along zenith")
+            interpolated_energy = np.interp(
+                target_zeniths, zeniths, lower_energy_thresholds, left=np.nan, right=np.nan
+            )
+            interpolated_radius = np.interp(
+                target_zeniths, zeniths, upper_radius_thresholds, left=np.nan, right=np.nan
+            )
+            interpolated_viewcone = np.interp(
+                target_zeniths, zeniths, viewcone_radii, left=np.nan, right=np.nan
+            )
+            interpolated_energy = np.tile(
+                interpolated_energy[:, np.newaxis], (1, len(target_azimuths))
+            )
+            interpolated_radius = np.tile(
+                interpolated_radius[:, np.newaxis], (1, len(target_azimuths))
+            )
+            interpolated_viewcone = np.tile(
+                interpolated_viewcone[:, np.newaxis], (1, len(target_azimuths))
+            )
+        else:
+            self._logger.info("Neither zenith nor azimuth is flat, performing 2D interpolation")
+            target_grid = (
+                np.array(np.meshgrid(target_zeniths, target_azimuths, indexing="ij"))
+                .reshape(2, -1)
+                .T
+            )
+            interpolated_energy = griddata(
+                points=np.column_stack((zeniths, azimuths)),
+                values=lower_energy_thresholds,
+                xi=target_grid,
+                method="linear",
+                fill_value=np.nan,
+            )
+            interpolated_radius = griddata(
+                points=np.column_stack((zeniths, azimuths)),
+                values=upper_radius_thresholds,
+                xi=target_grid,
+                method="linear",
+                fill_value=np.nan,
+            )
+            interpolated_viewcone = griddata(
+                points=np.column_stack((zeniths, azimuths)),
+                values=viewcone_radii,
+                xi=target_grid,
+                method="linear",
+                fill_value=np.nan,
+            )
+            interpolated_energy = interpolated_energy.reshape(
+                len(target_zeniths), len(target_azimuths)
+            )
+            interpolated_radius = interpolated_radius.reshape(
+                len(target_zeniths), len(target_azimuths)
+            )
+            interpolated_viewcone = interpolated_viewcone.reshape(
+                len(target_zeniths), len(target_azimuths)
+            )
 
-    def _interpolate_limits(self, zeniths, azimuths, values, axis_range):
-        """
-        Interpolate limits for a given axis based on zenith and azimuth.
-
-        Parameters
-        ----------
-        zeniths : np.ndarray
-            Array of zenith values from the lookup table.
-        azimuths : np.ndarray
-            Array of azimuth values from the lookup table.
-        values : np.ndarray
-            Array of limit values corresponding to the zenith and azimuth.
-        axis_range : tuple
-            The current range of the axis.
-
-        Returns
-        -------
-        float
-            The interpolated limit value.
-        """
-        # Create a grid of zenith and azimuth values
-        points = np.column_stack((zeniths, azimuths))
-        grid_point = np.array([[axis_range[0], axis_range[1]]])
-
-        # Interpolate the value at the grid point
-        interpolated_value = griddata(points, values, grid_point, method="linear")
-
-        # If interpolation fails, fallback to the closest value
-        if np.isnan(interpolated_value):
-            distances = np.sqrt((zeniths - axis_range[0]) ** 2 + (azimuths - axis_range[1]) ** 2)
-            closest_index = np.argmin(distances)
-            interpolated_value = values[closest_index]
-
-        return interpolated_value
+        self.interpolated_limits = {
+            "energy": interpolated_energy,
+            "radius": interpolated_radius,
+            "viewcone": interpolated_viewcone,
+            "target_zeniths": target_zeniths,
+            "target_azimuths": target_azimuths,
+        }
 
     def generate_grid(self) -> list[dict]:
         """
-        Generate the grid based on the defined axes.
+        Generate the grid based on the defined axes and include interpolated limits.
+
+        Takes energy threshold, viewcone, and radius from the interpolated lookup table.
 
         Returns
         -------
         list of dict
             A list of grid points, each represented as a dictionary with axis names
-              as keys and axis values as values. Axis values may include units where defined.
+            as keys and axis values as values. Axis values may include units where defined.
         """
         axis_values = {}
 
         for axis_name, axis in self.axes.items():
-            print("axis_name", axis_name)
-            print("axis", axis)
+            if axis_name in ["energy", "viewcone", "radius"]:
+                continue  # Skip fixed coordinates
             axis_range = axis["range"]
             binning = axis["binning"]
             scaling = axis.get("scaling", "linear")
-            distribution = axis.get("distribution", "uniform")
+            # distribution = axis.get("distribution", "uniform")
             units = axis.get("units", None)
 
-            # Create axis values based on scaling
             if scaling == "log":
                 values = np.logspace(np.log10(axis_range[0]), np.log10(axis_range[1]), binning)
             else:
                 values = np.linspace(axis_range[0], axis_range[1], binning)
-
-            # Apply distribution type
-            if distribution == "power-law":
-                values = self.generate_power_law_values(axis_range=axis_range, binning=binning)
 
             if units:
                 values = values * u.Unit(units)
@@ -189,13 +237,39 @@ class GridGeneration:
 
         value_arrays = [value.value for value in axis_values.values()]
         units = [value.unit for value in axis_values.values()]
-
         grid = np.meshgrid(*value_arrays, indexing="ij")
         combinations = np.vstack(list(map(np.ravel, grid))).T
-        return [
-            {key: Quantity(combination[i], units[i]) for i, key in enumerate(axis_values.keys())}
-            for combination in combinations
-        ]
+
+        grid_points = []
+        for combination in combinations:
+            grid_point = {
+                key: Quantity(combination[i], units[i]) for i, key in enumerate(axis_values.keys())
+            }
+
+            if "energy" in self.interpolated_limits:
+                zenith_idx = np.searchsorted(
+                    self.interpolated_limits["target_zeniths"], grid_point["zenith_angle"].value
+                )
+                azimuth_idx = np.searchsorted(
+                    self.interpolated_limits["target_azimuths"], grid_point["azimuth"].value
+                )
+                energy_lower = self.interpolated_limits["energy"][zenith_idx, azimuth_idx]
+                grid_point["energy_range"] = {
+                    "lower": energy_lower * u.TeV,
+                    "upper": self.axes["energy"]["range"][1] * u.TeV,
+                }
+
+            if "radius" in self.interpolated_limits:
+                radius_value = self.interpolated_limits["radius"][zenith_idx, azimuth_idx]
+                grid_point["radius"] = radius_value * u.m
+
+            if "viewcone" in self.interpolated_limits:
+                viewcone_value = self.interpolated_limits["viewcone"][zenith_idx, azimuth_idx]
+                grid_point["viewcone"] = viewcone_value * u.deg
+
+            grid_points.append(grid_point)
+
+        return grid_points
 
     def generate_power_law_values(self, axis_range, binning, power_law_index=3):
         """

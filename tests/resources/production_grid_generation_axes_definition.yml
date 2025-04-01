@@ -1,20 +1,20 @@
 ---
 axes:
   energy:
-    range: [1.0e+3, 1.0e+2]
+    range: [1.0e+3, 2.0e+2]
     binning: 2
     scaling: log
     distribution: uniform
-    units: eV
+    units: TeV
   azimuth:
-    range: [70, 80]
+    range: [0, 20]
     binning: 2
     scaling: linear
     distribution: uniform
     units: deg
   zenith_angle:
-    range: [20, 30]
-    binning: 2
+    range: [55, 60]
+    binning: 3
     scaling: linear
     distribution: uniform
     units: deg
@@ -30,3 +30,15 @@ axes:
     scaling: linear
     distribution: uniform
     units: deg
+  viewcone:
+    range: [0, 10]
+    binning: 2
+    scaling: linear
+    distribution: uniform
+    units: deg
+  radius:
+    range: [0, 2000]
+    binning: 2
+    scaling: linear
+    distribution: uniform
+    units: m
