@@ -273,6 +273,7 @@ def test_get_validated_parameter_dict():
         "unit": u.Unit(""),
         "type": "int64",
         "file": False,
+        "meta_parameter": False,
     }
 
     assert w1.get_validated_parameter_dict(
@@ -291,6 +292,7 @@ def test_get_validated_parameter_dict():
         "unit": u.Unit("ns"),
         "type": "float64",
         "file": False,
+        "meta_parameter": False,
     }
 
     assert w1.get_validated_parameter_dict(
@@ -309,6 +311,7 @@ def test_get_validated_parameter_dict():
         "unit": u.Unit("m"),
         "type": "float64",
         "file": False,
+        "meta_parameter": False,
     }
 
 

@@ -330,6 +330,7 @@ class ArrayModel:
             "unit": "m",
             "type": "float64",
             "file": False,
+            "meta_parameter": False,
         }
 
     def _get_array_elements_from_list(self, array_elements_list: list[str]) -> dict:
