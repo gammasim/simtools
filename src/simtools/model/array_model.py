@@ -12,7 +12,7 @@ from simtools.io_operations import io_handler
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
-from simtools.utils import general, names
+from simtools.utils import names
 
 __all__ = ["ArrayModel"]
 
@@ -326,9 +326,7 @@ class ArrayModel:
             "site": site,
             "parameter_version": parameter_version,
             "unique_id": None,
-            "value": general.convert_list_to_string(
-                [x.to("m").value, y.to("m").value, z.to("m").value]
-            ),
+            "value": [x.to("m").value, y.to("m").value, z.to("m").value],
             "unit": "m",
             "type": "float64",
             "file": False,

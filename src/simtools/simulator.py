@@ -329,7 +329,7 @@ class Simulator:
             input_file_list = self._enforce_list_type(input_file_list)
             _runs_and_files = {self._guess_run_from_file(file): file for file in input_file_list}
         elif self.simulation_software in ["corsika", "corsika_simtel"]:
-            _runs_and_files = {run: None for run in self._get_runs_to_simulate()}
+            _runs_and_files = dict.fromkeys(self._get_runs_to_simulate())
         if len(_runs_and_files) == 0:
             raise ValueError("No runs to submit.")
         return _runs_and_files
@@ -392,7 +392,7 @@ class Simulator:
 
         """
         keys = ["output", "sub_out", "log", "input", "hist", "corsika_log"]
-        defaults = {key: None for key in keys}
+        defaults = dict.fromkeys(keys)
         results = {key: defaults[key] for key in keys}
         results["output"] = str(
             self._simulation_runner.get_file_name(file_type="output", run_number=run_number)

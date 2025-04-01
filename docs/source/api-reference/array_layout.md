@@ -32,3 +32,12 @@ It is used within CORSIKA Config and Array Model in order to encapsulate the inf
 .. automodule:: layout.geo_coordinates
    :members:
 ```
+
+(ctaoarraylayoutsmodule)=
+
+## ctao_array_layouts
+
+```{eval-rst}
+.. automodule:: layout.ctao_array_layouts
+   :members:
+```

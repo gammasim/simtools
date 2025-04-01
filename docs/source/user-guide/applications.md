@@ -34,6 +34,7 @@ simtools-db-get-array-layouts-from-db <applications/simtools-db-get-array-layout
 simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
 simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-db>
 simtools-db-inspect-databases  <applications/simtools-db-inspect-databases>
+simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
 simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-electron-spectrum>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
@@ -51,6 +52,7 @@ simtools-production-derive-corsika-limits <applications/simtools-production-deri
 simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
 simtools-production-scale-events <applications/simtools-production-scale-events>
 simtools-run-application <applications/simtools-run-application>
+simtools-print-version <applications/simtools-print-version>
 simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>

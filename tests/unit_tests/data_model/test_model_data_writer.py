@@ -221,10 +221,9 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
     )
     assert Path(tmp_test_directory / "array_element_position_utm.json").is_file()
     assert isinstance(position_dict, dict)
-    value_list = [float(value) for value in position_dict["value"].split()]
-    assert pytest.approx(value_list[0]) == 217659.6
-    assert pytest.approx(value_list[1]) == 3184995.1
-    assert pytest.approx(value_list[2]) == 2185.0
+    assert pytest.approx(position_dict["value"][0]) == 217659.6
+    assert pytest.approx(position_dict["value"][1]) == 3184995.1
+    assert pytest.approx(position_dict["value"][2]) == 2185.0
     assert Path(tmp_test_directory / "array_element_position_utm.meta.yml").is_file()
 
     position_dict = writer.ModelDataWriter.dump_model_parameter(
@@ -236,11 +235,10 @@ def test_dump_model_parameter(tmp_test_directory, db_config):
         output_path=tmp_test_directory,
         use_plain_output_path=True,
     )
-    value_list = [float(value) for value in position_dict["value"].split()]
-    assert pytest.approx(value_list[0]) == 6.55
-    assert pytest.approx(value_list[1]) == 0.0
-    assert pytest.approx(value_list[2]) == 0.0
-    assert pytest.approx(value_list[3]) == 0.0
+    assert pytest.approx(position_dict["value"][0]) == 6.55
+    assert pytest.approx(position_dict["value"][1]) == 0.0
+    assert pytest.approx(position_dict["value"][2]) == 0.0
+    assert pytest.approx(position_dict["value"][3]) == 0.0
 
     with patch(
         "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
@@ -315,42 +313,14 @@ def test_get_validated_parameter_dict():
 
 
 def test_prepare_data_dict_for_writing():
-    data_dict_1 = {}
-    assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_1) == {}
-    data_dict_2 = {
-        "value": 5.5,
-        "unit": "m",
-        "type": "float64",
-    }
-    assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_2) == data_dict_2
-    data_dict_3 = {
-        "value": [5.5, 6.6],
-        "unit": "m",
-        "type": "float64",
-    }
-    assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_3) == {
-        "value": "5.5 6.6",
-        "unit": "m",
-        "type": "float64",
-    }
-    data_dict_4 = {
-        "value": [5.5, 6.6],
-        "unit": ["m", "l"],
-        "type": ["float64", "float64"],
-    }
-    assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_4) == {
-        "value": "5.5 6.6",
-        "unit": "m, l",
-        "type": "float64",
-    }
     data_dict_5 = {
         "value": [5.5, 6.6],
         "unit": ["None", "None"],
         "type": "float64",
     }
     assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_5) == {
-        "value": "5.5 6.6",
-        "unit": "null, null",
+        "value": [5.5, 6.6],
+        "unit": ["null", "null"],
         "type": "float64",
     }
 

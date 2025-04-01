@@ -29,20 +29,10 @@ class ReadParameters:
         self.site = args.get("site")
         self.model_version = args.get("model_version", None)
         self.output_path = output_path
+        self.observatory = args.get("observatory")
 
     def _convert_to_md(self, input_file):
-        """
-        Convert a '.dat' or '.ecsv' file to a Markdown file, preserving formatting.
-
-        Parameters
-        ----------
-        input_file: Path, str
-           Simulation data file (in '.dat' or '.ecsv' format).
-
-        Returns
-        -------
-        - Path to the created Markdown file.
-        """
+        """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
         output_data_path = Path(self.output_path / "_data_files")
         output_data_path.mkdir(parents=True, exist_ok=True)
@@ -50,18 +40,20 @@ class ReadParameters:
         output_file = output_data_path / output_file_name
 
         try:
-            with (
-                input_file.open("r", encoding="utf-8") as infile,
-                output_file.open("w", encoding="utf-8") as outfile,
-            ):
-                outfile.write(f"# {input_file.stem}")
-                outfile.write("\n")
-                outfile.write("```")
-                outfile.write("\n")
-                file_contents = infile.read()
+            # First try with utf-8
+            try:
+                with input_file.open("r", encoding="utf-8") as infile:
+                    file_contents = infile.read()
+            except UnicodeDecodeError:
+                # If utf-8 fails, try with latin-1 (which can read any byte sequence)
+                with input_file.open("r", encoding="latin-1") as infile:
+                    file_contents = infile.read()
+
+            with output_file.open("w", encoding="utf-8") as outfile:
+                outfile.write(f"# {input_file.stem}\n")
+                outfile.write("```\n")
                 outfile.write(file_contents)
-                outfile.write("\n")
-                outfile.write("```")
+                outfile.write("\n```")
 
         except FileNotFoundError as exc:
             logger.exception(f"Data file not found: {input_file}.")
@@ -262,6 +254,10 @@ class ReadParameters:
         Outputs one markdown report of a given array element listing parameter values,
         versions, and descriptions.
         """
+        if self.observatory:
+            self.produce_observatory_report()
+            return
+
         telescope_model = TelescopeModel(
             site=self.site,
             telescope_name=self.array_element,
@@ -380,3 +376,90 @@ class ReadParameters:
                 file.write("\n")
                 if comparison_data.get(parameter)[0]["file_flag"]:
                     file.write(f"![Parameter plot.](_images/{self.array_element}_{parameter}.png)")
+
+    def _write_array_layouts_section(self, file, layouts):
+        """Write the array layouts section of the report."""
+        file.write("\n## Array Layouts {#array-layouts-details}\n\n")
+        for layout in layouts:
+            layout_name = layout["name"]
+            elements = layout["elements"]
+            file.write(f"### {layout_name}\n\n")
+            file.write("| Element |\n|---------|\n")
+            for element in sorted(elements):
+                file.write(f"| [{element}]({element}.md) |\n")
+            file.write("\n")
+
+    def _write_array_triggers_section(self, file, trigger_configs):
+        """Write the array triggers section of the report."""
+        file.write("\n## Array Trigger Configurations {#array-triggers-details}\n\n")
+        file.write(
+            "| Trigger Name | Multiplicity | Width | Hard Stereo | Min Separation |\n"
+            "|--------------|--------------|--------|-------------|----------------|\n"
+        )
+        for config in trigger_configs:
+            name = config["name"]
+            mult = f"{config['multiplicity']['value']} {config['multiplicity']['unit'] or ''}"
+            width = f"{config['width']['value']} {config['width']['unit'] or ''}"
+            stereo = "Yes" if config["hard_stereo"]["value"] else "No"
+            min_sep = (
+                f"{config['min_separation']['value']} {config['min_separation']['unit'] or '-'}"
+            )
+            file.write(
+                f"| {name} | {mult.strip()} | {width.strip()} | {stereo} | {min_sep.strip()} |\n"
+            )
+        file.write("\n")
+
+    def _write_parameters_table(self, file, all_parameter_data):
+        """Write the main parameters table of the report."""
+        file.write("| Parameter | Value |\n|-----------|--------|\n")
+        for param_name, param_data in sorted(all_parameter_data.items()):
+            value = param_data.get("value")
+            unit = param_data.get("unit") or " "
+            file_flag = param_data.get("file", False)
+
+            if value is None:
+                continue
+
+            if param_name == "array_layouts":
+                file.write("| array_layouts | [View Array Layouts](#array-layouts-details) |\n")
+            elif param_name == "array_triggers":
+                file.write(
+                    "| array_triggers | [View Trigger Configurations](#array-triggers-details) |\n"
+                )
+            else:
+                formatted_value = self._format_parameter_value(value, unit, file_flag)
+                file.write(f"| {param_name} | {formatted_value} |\n")
+        file.write("\n")
+
+    def produce_observatory_report(self):
+        """Produce a markdown report of all observatory parameters for a given site."""
+        output_filename = Path(self.output_path / f"OBS-{self.site}.md")
+        output_filename.parent.mkdir(parents=True, exist_ok=True)
+
+        all_parameter_data = self.db.get_model_parameters(
+            site=self.site,
+            array_element_name="OBS-" + self.site,
+            collection="sites",
+            model_version=self.model_version,
+        )
+
+        if not all_parameter_data:
+            logger.warning(f"No observatory parameters found for site {self.site}")
+            return
+
+        Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
+        self.db.export_model_files(parameters=all_parameter_data, dest=f"{self.output_path}/model")
+
+        with output_filename.open("w", encoding="utf-8") as file:
+            file.write(f"# Observatory Parameters - {self.site} Site\n\n")
+            self._write_parameters_table(file, all_parameter_data)
+
+            if "array_layouts" in all_parameter_data:
+                self._write_array_layouts_section(
+                    file, all_parameter_data["array_layouts"]["value"]
+                )
+
+            if "array_triggers" in all_parameter_data:
+                self._write_array_triggers_section(
+                    file, all_parameter_data["array_triggers"]["value"]
+                )
