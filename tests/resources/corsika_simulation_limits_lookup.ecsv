@@ -1,0 +1,19 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: file_path, datatype: string}
+# - {name: zenith, datatype: float64}
+# - {name: azimuth, datatype: float64}
+# - {name: telescope_ids, datatype: string, subtype: json}
+# - {name: lower_energy_threshold, unit: TeV, datatype: float64}
+# - {name: upper_radius_threshold, unit: m, datatype: float64}
+# - {name: viewcone_radius, unit: deg, datatype: float64}
+# meta: !!omap
+# - {created: '2025-03-27T15:04:26.319622'}
+# - {description: Lookup table for CORSIKA limits computed from gamma-ray shower simulations.}
+# - {loss_fraction: 1.0e-06}
+# schema: astropy-2.0
+file_path zenith azimuth telescope_ids lower_energy_threshold upper_radius_threshold viewcone_radius
+tests/resources/run202_202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.hdf5 20 0 [] 0.03344165 1827.3672112969614 7.8522673
+tests/resources/run202_202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.hdf5 20 0 [1] 0.086080745 1827.3672112969614 7.8527613
+tests/resources/run202_202_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.hdf5 20 0 [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] 0.086080745 1828.613794434402 5.994665

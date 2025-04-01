@@ -1,0 +1,32 @@
+---
+axes:
+  energy:
+    range: [1.0e+3, 1.0e+2]
+    binning: 2
+    scaling: log
+    distribution: uniform
+    units: eV
+  azimuth:
+    range: [70, 80]
+    binning: 2
+    scaling: linear
+    distribution: uniform
+    units: deg
+  zenith_angle:
+    range: [20, 30]
+    binning: 2
+    scaling: linear
+    distribution: uniform
+    units: deg
+  night_sky_background:
+    range: [5, 6]
+    binning: 2
+    scaling: linear
+    distribution: uniform
+    units: MHz
+  offset:
+    range: [0, 10]
+    binning: 2
+    scaling: linear
+    distribution: uniform
+    units: deg

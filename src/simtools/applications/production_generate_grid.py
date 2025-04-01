@@ -4,7 +4,7 @@ r"""
 Generate a grid of simulation points using flexible axes definitions.
 
 This application generates a grid of simulation points based on input parameters
-such as energy, azimuth, zenith angle, night-sky background, and camera offset.
+ energy, azimuth, zenith angle, night-sky background, and camera offset.
 It can also convert the generated points to RA/Dec coordinates if the selected
 coordinate system is 'ra_dec'.
 
@@ -29,12 +29,11 @@ To generate a grid of simulation points, execute the script as follows:
 
 .. code-block:: console
 
-    simtools-production-generate-grid --site North --model_version "6.0.0"\
-      --axes  tests/resources/production_grid_generation_axes_definition.yaml\
-      --coordinate_system "ra_dec" --observing_time "2017-09-16 00:00:00"
-
-The output will display the generated grid points and their RA/Dec coordinates
-(if applicable).
+    simtools-production-generate-grid --site North --model_version 6.0.0 \
+      --axes  tests/resources/production_grid_generation_axes_definition.yml \
+      --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
+      --lookup_table tests/resources/corsika_simulation_limits_lookup.ecsv \
+        --telescope_ids 1
 """
 
 import logging
@@ -56,10 +55,20 @@ def _parse(label, description):
 
     Parameters
     ----------
-    label : str
-        Label describing the application.
-    description : str
-        Description of the application.
+    axes : str
+        Path to the axes configuration file.
+    coordinate_system : str
+        Coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
+    observing_time : str
+        Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').
+    output_file : str
+        Output file for the generated grid points.
+    telescope_ids : list of int
+        List of telescope IDs as used in simtel_array to
+          filter the events.
+    lookup_table : str
+        Path to the lookup table for simulation limits.
+
 
     Returns
     -------
@@ -72,7 +81,7 @@ def _parse(label, description):
         "--axes",
         type=str,
         required=True,
-        help="Path to a YAML or JSON file defining the grid axes.",
+        help="Path to a file defining the grid axes.",
     )
     config.parser.add_argument(
         "--coordinate_system",
@@ -92,8 +101,22 @@ def _parse(label, description):
         default="grid_output.json",
         help="Output file for the generated grid points (default: 'grid_output.json').",
     )
+    config.parser.add_argument(
+        "--telescope_ids",
+        type=int,
+        nargs="*",
+        default=None,
+        help="List of telescope IDs as used in sim_telarray to get the specific limits from the "
+        "lookup table.",
+    )
+    config.parser.add_argument(
+        "--lookup_table",
+        type=str,
+        required=True,
+        help="Path to the lookup table for simulation limits.",
+    )
 
-    return config.initialize(db_config=True, simulation_model=["version", "site"])
+    return config.initialize(db_config=True, simulation_model=["version", "site", "model_version"])
 
 
 def load_axes(file_path: str):
@@ -152,11 +175,12 @@ def main():
         coordinate_system=args_dict["coordinate_system"],
         observing_location=observing_location,
         observing_time=observing_time,
+        lookup_table=args_dict["lookup_table"],
+        telescope_ids=args_dict["telescope_ids"],
     )
 
     grid_points = grid_gen.generate_grid()
 
-    # Optionally convert to RA/Dec
     if args_dict["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
 
