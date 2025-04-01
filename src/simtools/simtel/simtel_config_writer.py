@@ -76,16 +76,28 @@ class SimtelConfigWriter:
             )
             file.write("#endif\n\n")
 
-            for _simtel_name, value in parameters.items():
+            for par, value in parameters.items():
+                _simtel_name = names.get_simulation_software_name_from_parameter_name(
+                    par, simulation_software="sim_telarray"
+                )
+                # TODO - this should be handled differently
+                # TODO - check why this is in the list of parameters
                 # array trigger is a site parameter, not a telescope parameter
                 # fake_mirror_list is not a sim_telarray parameter (used for testeff only)
-                if _simtel_name.startswith("array_trigger") or _simtel_name == "fake_mirror_list":
+                if (
+                    not _simtel_name
+                    or _simtel_name.startswith("array_trigger")
+                    or _simtel_name == "fake_mirror_list"
+                ):
+                    print("AAAAAA", par, _simtel_name)
                     continue
                 if _simtel_name:
-                    file.write(f"{_simtel_name} = {self._get_value_string_for_simtel(value)}\n")
-            _config_meta = self._get_simtel_metadata("telescope")
-            for _simtel_name, value in _config_meta.items():
-                file.write(f"{_simtel_name} = {value}\n")
+                    file.write(
+                        f"{_simtel_name} = {self._get_value_string_for_simtel(value['value'])}\n"
+                    )
+            _config_meta = self._get_simtel_metadata("telescope", parameters)
+            for value in _config_meta:
+                file.write(f"{value}\n")
 
     def _get_value_string_for_simtel(self, value):
         """
@@ -108,7 +120,7 @@ class SimtelConfigWriter:
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
-    def _get_simtel_metadata(self, config_type):
+    def _get_simtel_metadata(self, config_type, model_parameters=None):
         """
         Return simtel metadata.
 
@@ -116,35 +128,54 @@ class SimtelConfigWriter:
         ----------
         type: str
             Type of the configuration file (telescope, site)
+        model_parameters: dict
+            Model parameters dictionary.
 
         Returns
         -------
-        dict
-            Dictionary with simtel metadata.
+        list
+            List with simtel metadata.
 
         """
-        parameters = {}
-        parameters["config_release"] = (
-            f"{self._model_version} written by simtools v{simtools.version.__version__}"
-        )
-        parameters["config_version"] = self._model_version
+        meta_parameters = [
+            f"config_release = {self._model_version} with simtools v{simtools.version.__version__}",
+            f"config_version = {self._model_version}",
+        ]
         if config_type == "telescope":
-            parameters["camera_config_name"] = self._telescope_model_name
-            parameters["camera_config_variant"] = ""
-            parameters["camera_config_version"] = self._model_version
-            parameters["optics_config_name"] = self._telescope_model_name
-            parameters["optics_config_variant"] = ""
-            parameters["optics_config_version"] = self._model_version
+            meta_parameters.extend(
+                [
+                    f"camera_config_name = {self._telescope_model_name}",
+                    "camera_config_variant = ",
+                    f"camera_config_version = {self._model_version}",
+                    f"optics_config_name = {self._telescope_model_name}",
+                    "optics_config_variant = ",
+                    f"optics_config_version = {self._model_version}",
+                ]
+            )
+            prefix = "metaparam telescope add"
         elif config_type == "site":
-            parameters["site_config_name"] = self._site
-            parameters["site_config_variant"] = ""
-            parameters["site_config_version"] = self._model_version
-            parameters["array_config_name"] = self._layout_name
-            parameters["array_config_variant"] = ""
-            parameters["array_config_version"] = self._model_version
+            meta_parameters.extend(
+                [
+                    f"site_config_name = {self._site}",
+                    "site_config_variant = ",
+                    f"site_config_version = {self._model_version}",
+                    f"array_config_name = {self._layout_name}",
+                    "array_config_variant = ",
+                    f"array_config_version = {self._model_version}",
+                ]
+            )
+            prefix = "metaparam global add"
         else:
             raise ValueError(f"Unknown metadata type {config_type}")
-        return parameters
+
+        if model_parameters:
+            meta_parameters.extend(
+                f"{prefix} {key}"
+                for key, value in model_parameters.items()
+                if value.get("meta_parameter")
+            )
+
+        return meta_parameters
 
     def write_array_config_file(self, config_file_path, telescope_model, site_model):
         """
@@ -177,7 +208,7 @@ class SimtelConfigWriter:
 
             # Writing site parameters
             self._write_site_parameters(
-                file, site_model, Path(config_file_path).parent, telescope_model
+                file, site_model.parameters, Path(config_file_path).parent, telescope_model
             )
 
             # Maximum telescopes
@@ -276,7 +307,7 @@ class SimtelConfigWriter:
         header += f"{comment_char}\n"
         file.write(header)
 
-    def _write_site_parameters(self, file, site_model, model_path, telescope_model):
+    def _write_site_parameters(self, file, site_parameters, model_path, telescope_model):
         """
         Write site parameters.
 
@@ -284,27 +315,26 @@ class SimtelConfigWriter:
         ----------
         file: file
             File to write on.
-        site_model: SiteModel
-            Site model.
+        site_parameters: site parameters
+            Site parameters.
         model_path: Path
             Path to the model for writing of additional files.
         telescope_model: dict of TelescopeModel
             Telescope models.
         """
         file.write(self.TAB + "% Site parameters\n")
-        _site_parameters = site_model.get_simtel_parameters()
-        for par, value in _site_parameters.items():
+        for par, value in site_parameters.items():
             _simtel_name = names.get_simulation_software_name_from_parameter_name(
                 par, simulation_software="sim_telarray"
             )
             _simtel_name, value = self._convert_model_parameters_to_simtel_format(
-                _simtel_name, value, model_path, telescope_model
+                _simtel_name, value["value"], model_path, telescope_model
             )
             if _simtel_name is not None:
                 file.write(f"{self.TAB}{_simtel_name} = {value}\n")
-        _simtel_meta = self._get_simtel_metadata("site")
-        for _simtel_name, value in _simtel_meta.items():
-            file.write(f"{self.TAB}{_simtel_name} = {value}\n")
+        _simtel_meta = self._get_simtel_metadata("site", site_parameters)
+        for value in _simtel_meta:
+            file.write(f"{self.TAB}{value}\n")
         file.write("\n")
 
     def _convert_model_parameters_to_simtel_format(
