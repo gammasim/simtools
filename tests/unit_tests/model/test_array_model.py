@@ -115,7 +115,7 @@ def test_get_telescope_position_parameter(array_model, io_handler):
         "site": "North",
         "parameter_version": "2.0.0",
         "unique_id": None,
-        "value": "10.0 2.0 30.0",
+        "value": [10.0, 2.0, 30.0],
         "unit": "m",
         "type": "float64",
         "file": False,

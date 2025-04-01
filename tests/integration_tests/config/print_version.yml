@@ -1,0 +1,12 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-print-version
+    TEST_NAME: print_versions_simtools_db_sim_telarray_corsika
+    CONFIGURATION:
+      LABEL: print_versions
+      OUTPUT_PATH: simtools-output
+      LOG_LEVEL: DEBUG
+      OUTPUT_FILE: simtools_db_sim_telarray_corsika_versions.json
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0

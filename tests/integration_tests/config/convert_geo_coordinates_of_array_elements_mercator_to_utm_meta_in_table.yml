@@ -16,9 +16,7 @@ CTA_SIMPIPE:
       SKIP_OUTPUT_VALIDATION: true
       LOG_LEVEL: DEBUG
     INTEGRATION_TESTS:
-    - REFERENCE_OUTPUT_FILE: './tests/resources/telescope_positions-North-utm.ecsv
-
-        '
+    - REFERENCE_OUTPUT_FILE: './tests/resources/telescope_positions-North-utm.ecsv'
       TOLERANCE: 0.01
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
