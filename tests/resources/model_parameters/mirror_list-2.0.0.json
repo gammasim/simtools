@@ -8,5 +8,6 @@
     "value": "mirror_CTA-N-LST1_v2019-03-31_rotated.dat",
     "unit": null,
     "type": "string",
-    "file": true
+    "file": true,
+    "meta_parameter": true
 }

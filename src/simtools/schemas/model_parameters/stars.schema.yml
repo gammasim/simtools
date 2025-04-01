@@ -1,0 +1,36 @@
+%YAML 1.2
+---
+title: Schema for stars model parameter
+version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+developer_note: To be replaced by a data table
+name: stars
+description: |-
+  A file with a list of stars shining, containing one row per star with azimuth,
+  altitude (both in degrees) and weighting factor for the number of photons. An
+  optional fourth value is the distance of the light source (in kilometers) or 0
+  (standing for infinity). In addition to ray-tracing evaluation, the stars also contribute
+  to the nighsky background rate in the affected pixels.
+short_description: File with shining stars in Az/Alt.
+data:
+  - type: file
+    unit: dimensionless
+    default: null
+instrument:
+  class: Site
+  type:
+    - Atmosphere
+  site:
+    - North
+    - South
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Calibration
+simulation_software:
+  - name: sim_telarray

@@ -641,6 +641,7 @@ class ArrayLayout:
             "unit": "m",
             "type": "float64",
             "file": False,
+            "meta_parameter": False,
         }
 
     def get_number_of_telescopes(self):
