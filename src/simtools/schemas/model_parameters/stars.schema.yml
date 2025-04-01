@@ -8,12 +8,12 @@ meta_schema_version: 0.1.0
 developer_note: To be replaced by a data table
 name: stars
 description: |-
-  An file with a list of stars shining, containing one row per star with az-
-  imuth, altitude (both in degrees) and weighting factor for the number of photons. An
-  optional fourth value is the distance of the light source (note: in kilometers) or 0.
-  (standing for infinity). In addition to ray-tracing evaluation the stars also contribute
+  A file with a list of stars shining, containing one row per star with azimuth, 
+  altitude (both in degrees) and weighting factor for the number of photons. An
+  optional fourth value is the distance of the light source (in kilometers) or 0
+  (standing for infinity). In addition to ray-tracing evaluation, the stars also contribute
   to the nighsky background rate in the affected pixels.
-short_description: Sky map (Az/Alt) of NSB enhancement factors.
+short_description: File with shining stars in Az/Alt.
 data:
   - type: file
     unit: dimensionless
