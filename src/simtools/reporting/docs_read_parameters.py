@@ -388,10 +388,16 @@ class ReadParameters:
             for element in sorted(elements):
                 file.write(f"| [{element}]({element}.md) |\n")
             file.write("\n")
+            image_path = (
+                f"_images/OBS-{self.site}_{layout_name}_{self.model_version.split('.')[0]}.png"
+            )
+            if Path(image_path).exists():
+                file.write(f"![{layout_name} Layout]({image_path})\n\n")
+                file.write("\n")
 
     def _write_array_triggers_section(self, file, trigger_configs):
         """Write the array triggers section of the report."""
-        file.write("\n## Array Trigger Configurations {#array-triggers-details}\n\n")
+        file.write("\n## Array Trigger Configurations\n\n")
         file.write(
             "| Trigger Name | Multiplicity | Width | Hard Stereo | Min Separation |\n"
             "|--------------|--------------|--------|-------------|----------------|\n"
@@ -421,10 +427,11 @@ class ReadParameters:
                 continue
 
             if param_name == "array_layouts":
-                file.write("| array_layouts | [View Array Layouts](#array-layouts-details) |\n")
+                file.write("| array_layouts | [View Array Layouts](#array-layouts) |\n")
             elif param_name == "array_triggers":
                 file.write(
-                    "| array_triggers | [View Trigger Configurations](#array-triggers-details) |\n"
+                    "| array_triggers | [View Trigger Configurations]"
+                    "(#array-trigger-configurations) |\n"
                 )
             else:
                 formatted_value = self._format_parameter_value(value, unit, file_flag)
