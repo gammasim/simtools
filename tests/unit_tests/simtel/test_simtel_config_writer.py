@@ -75,18 +75,18 @@ def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
 
 
 def test_get_simtel_metadata(simtel_config_writer):
-    _tel = simtel_config_writer._get_simtel_metadata("telescope")
+    _tel = simtel_config_writer._get_simtel_metadata("telescope", None)
     assert len(_tel) == 8
     assert f"camera_config_name = {simtel_config_writer._telescope_model_name}" in _tel
     assert f"optics_config_name = {simtel_config_writer._telescope_model_name}" in _tel
 
-    _site = simtel_config_writer._get_simtel_metadata("site")
+    _site = simtel_config_writer._get_simtel_metadata("site", None)
     assert len(_site) == 8
     assert f"site_config_name = {simtel_config_writer._site}" in _site
     assert f"array_config_name = {simtel_config_writer._layout_name}" in _site
 
     with pytest.raises(ValueError, match=r"^Unknown metadata type"):
-        simtel_config_writer._get_simtel_metadata("unknown")
+        simtel_config_writer._get_simtel_metadata("unknown", None)
 
 
 def test_get_value_string_for_simtel(simtel_config_writer):
