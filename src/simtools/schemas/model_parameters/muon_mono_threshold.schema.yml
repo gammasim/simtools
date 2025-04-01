@@ -39,7 +39,7 @@ activity:
   validation:
     - ValidateParameterByExpert
 source:
-  - Observation execution
+  - Initial instrument setup
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: muon_mono_thresh
