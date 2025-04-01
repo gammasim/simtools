@@ -9,16 +9,16 @@ developer_note: |-
   To be replaced by a data table. Accepted range is 0 to 1
 name: primary_mirror_degraded_map
 description: |-
-  Position-dependent map of degradation factors for the primary mirror.
+  Position-dependent map of degradation factors for the (primary) mirror.
   This degradation gets applied on top of mirror_degraded_reflection.
-  Note that the impact of it on the nightsky background is not automatically
+  Note that the impact of it on the night-sky background is not automatically
   accounted for and must be evaluated separately and included in the
   configured NSB pixel p.e. rates. It is recommended to use a map with an
   average efficiency of 1.0 and use mirror_degraded_reflection
   for the overall degradation.  Tables with equidistant spacing in both x and
   y are highly recommended because the interpolation is faster.
 short_description: |-
-  Position-dependent map of degradation factors for the primary mirror.
+  Position-dependent map of degradation factors for the (primary) mirror.
 data:
   - type: file
     unit: dimensionless
@@ -26,6 +26,10 @@ data:
 instrument:
   class: Structure
   type:
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
     - SSTS
     - SCTS
 activity:
