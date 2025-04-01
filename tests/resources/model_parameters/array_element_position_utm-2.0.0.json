@@ -12,5 +12,6 @@
     ],
     "unit": "m",
     "type": "float64",
-    "file": false
+    "file": false,
+    "meta_parameter": false
 }
