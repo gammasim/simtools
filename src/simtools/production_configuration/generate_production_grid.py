@@ -1,72 +1,12 @@
 """
 Module defines the `GridGeneration` class.
 
-Used to generate a grid of simulation points based on flexible axes definitions.
-The grid can be adapted based on different science cases and data levels. The
-axes include parameters such as energy, azimuth, zenith angle, night-sky background,
-and camera offset. The class handles various axis scaling, binning,
+Used to generate a grid of simulation points based on flexible axes definitions such as energy,
+ azimuth, zenith angle, night-sky background,
+and camera offset. The module handles axis scaling, binning,
 and distribution types, allowing for adaptable simulation configurations. Additionally,
 it provides functionality for converting between Altitude/Azimuth and Right Ascension
-/Declination coordinates.
-
-Key Components:
----------------
-- `GridGeneration`: Class to handle the generation and adaptation of grid points for simulations.
-  - Attributes:
-    - `axes` (list of dict): List of dictionaries defining each axis with properties
-      such as name, range, binning, scaling, etc.
-    - `coordinate_system` (str): The coordinate system being used
-    (e.g., 'zenith_azimuth' or 'ra_dec').
-    - `observing_location` (EarthLocation): The location of the observation
-      (latitude, longitude, height).
-    - `observing_time` (Time): The time of the observation.
-
-Example Usage:
---------------
-```python
-from astropy.coordinates import EarthLocation
-from astropy.time import Time
-# Define axes for the grid
-axes = [
-    {"name": "energy", "range": (1e9, 1e14), "binning": 10,
-      "scaling": "log", "distribution": "uniform"},
-    {"name": "azimuth", "range": (70, 80), "binning": 3,
-      "scaling": "linear", "distribution": "uniform"},
-    {"name": "zenith_angle", "range": (20, 30), "binning": 3,
-      "scaling": "linear", "distribution": "uniform"},
-    {"name": "night_sky_background", "range": (5, 6), "binning": 2,
-      "scaling": "linear", "distribution": "uniform"},
-    {"name": "offset", "range": (0, 10), "binning": 5,
-      "scaling": "linear", "distribution": "uniform"},
-]
-
-
-# Define coordinate system
-coordinate_system = "ra_dec"
-
-# Define the observing location and time
-latitude = 28.7622  # degrees
-longitude = -17.8920  # degrees
-
-# Create EarthLocation object
-observing_location = EarthLocation(lon=longitude*u.deg, lat=latitude*u.deg, height=2000*u.m)
-
-observing_time = Time('2017-09-16 0:0:0')
-
-# Create grid generation instance
-grid_gen = GridGeneration(axes, coordinate_system, observing_location, observing_time)
-
-# Generate grid points
-grid_points = grid_gen.generate_grid()
-
-# If coordinate system is 'ra_dec', convert the generated grid points to RA/Dec
-grid_points_converted = grid_gen.convert_coordinates(grid_points)
-
-# Example of converting AltAz coordinates to RA/Dec
-alt = 45.0  # Altitude in degrees
-az = 30.0   # Azimuth in degrees
-radec = grid_gen.convert_altaz_to_radec(alt, az)
-print(f"RA: {radec.ra.deg} degrees, Dec: {radec.dec.deg} degrees")
+Declination coordinates.
 """
 
 import json
@@ -75,8 +15,10 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
+from astropy.table import Table
 from astropy.time import Time
 from astropy.units import Quantity
+from scipy.interpolate import griddata
 
 
 class GridGeneration:
@@ -84,50 +26,41 @@ class GridGeneration:
     Defines and generates a grid of simulation points based on flexible axes definitions.
 
     This class generates a grid of points for a simulation based on parameters like energy, azimuth,
-    zenith angle, night-sky background, and camera offset. The grid adapts to different science
-    cases and data levels, taking into account flexible axis definitions, scaling, and units.
-
-    Attributes
-    ----------
-    axes : list of dict
-        List of dictionaries defining each axis with properties such as name,
-          range, binning, scaling, distribution, and unit.
-    coordinate_system : str
-        The coordinate system being used (e.g., 'zenith_azimuth' or 'declination_azimuth').
-    observing_location : EarthLocation
-        The location of the observation (latitude, longitude, and height).
-    observing_time : Time
-        The time of the observation.
+    zenith angle, night-sky background, and camera offset, taking into account axis definitions,
+      scaling, and units.
     """
 
     def __init__(
         self,
-        axes: list[dict],
+        axes: dict,
         coordinate_system: str = "zenith_azimuth",
         observing_location=None,
         observing_time=None,
-        db_config=None,
+        lookup_table: str | None = None,
+        telescope_ids: list | None = None,
     ):
         """
         Initialize the grid with the given axes and coordinate system.
 
         Parameters
         ----------
-        axes : list of dict
-            List of dictionaries where each dictionary defines an axis with properties
-              such as name, range, binning, scaling, distribution type, and unit.
+        axes : dict
+            Dictionary where each key is the axis name and the value is a dictionary
+            defining the axis properties (range, binning, scaling, etc.).
         coordinate_system : str, optional
             The coordinate system for the grid generation (default is 'zenith_azimuth').
         observing_location : EarthLocation, optional
             The location of the observation (latitude, longitude, height).
         observing_time : Time, optional
             The time of the observation.
-        db_config : dict, optional
-            Database configuration for fetching default limits.
+        lookup_table : str, optional
+            Path to the lookup table file (ECSV format).
+        telescope_ids : list of int, optional
+            List of telescope IDs to get the limits for.
         """
         self._logger = logging.getLogger(__name__)
 
-        self.axes = axes
+        self.axes = axes["axes"] if "axes" in axes else axes
         self.coordinate_system = coordinate_system
         self.observing_location = (
             observing_location
@@ -135,42 +68,88 @@ class GridGeneration:
             else EarthLocation(lat=0.0 * u.deg, lon=0.0 * u.deg, height=0 * u.m)
         )
         self.observing_time = observing_time if observing_time is not None else Time.now()
-        self.db_config = db_config
+        self.lookup_table = lookup_table
+        self.telescope_ids = telescope_ids
 
-        # Fetch default limits from the database if db_config is provided
-        if self.db_config:
-            self._apply_default_limits_from_db()
+        if self.lookup_table:
+            self._apply_lookup_table_limits()
 
-    def _apply_default_limits_from_db(self):
-        """Fetch default limits from the database and apply them to the axes."""
-        # Simulate fetching limits from the database
-        db_limits = self._fetch_limits_from_db()
+    def _apply_lookup_table_limits(self):
+        """Apply interpolated limits from the provided lookup table to the axes."""
+        lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
 
-        # Update axes with db limits
-        for axis in self.axes:
-            if axis["name"] == "energy":
-                axis["range"] = (db_limits["lower_energy_threshold"], axis["range"][1])
-            elif axis["name"] == "viewcone":
-                axis["range"] = (0, db_limits["viewcone"])
-            elif axis["name"] == "radius":
-                axis["range"] = (0, db_limits["upper_radius_threshold"])
+        if isinstance(lookup_table["telescope_ids"][0], str):
+            lookup_table["telescope_ids"] = [
+                json.loads(telescope_ids) for telescope_ids in lookup_table["telescope_ids"]
+            ]
 
-    def _fetch_limits_from_db(self):
+        matching_rows = [
+            row for row in lookup_table if set(self.telescope_ids) == set(row["telescope_ids"])
+        ]
+
+        if not matching_rows:
+            raise ValueError(
+                f"No matching rows in the lookup table for telescope_ids: {self.telescope_ids}"
+            )
+
+        zeniths = np.array([row["zenith"] for row in matching_rows])
+        azimuths = np.array([row["azimuth"] for row in matching_rows])
+        lower_energy_thresholds = np.array([row["lower_energy_threshold"] for row in matching_rows])
+        upper_radius_thresholds = np.array([row["upper_radius_threshold"] for row in matching_rows])
+        viewcone_radii = np.array([row["viewcone_radius"] for row in matching_rows])
+
+        if "energy" in self.axes:
+            interpolated_lower = self._interpolate_limits(
+                zeniths, azimuths, lower_energy_thresholds, self.axes["energy"]["range"]
+            )
+            self.axes["energy"]["range"] = (interpolated_lower, self.axes["energy"]["range"][1])
+
+        if "radius" in self.axes:
+            interpolated_upper = self._interpolate_limits(
+                zeniths, azimuths, upper_radius_thresholds, self.axes["radius"]["range"]
+            )
+            self.axes["radius"]["range"] = (0, interpolated_upper)
+
+        if "viewcone" in self.axes:
+            interpolated_viewcone = self._interpolate_limits(
+                zeniths, azimuths, viewcone_radii, self.axes["viewcone"]["range"]
+            )
+            self.axes["viewcone"]["range"] = (0, interpolated_viewcone)
+
+    def _interpolate_limits(self, zeniths, azimuths, values, axis_range):
         """
-        Simulate fetching limits from the database.
+        Interpolate limits for a given axis based on zenith and azimuth.
+
+        Parameters
+        ----------
+        zeniths : np.ndarray
+            Array of zenith values from the lookup table.
+        azimuths : np.ndarray
+            Array of azimuth values from the lookup table.
+        values : np.ndarray
+            Array of limit values corresponding to the zenith and azimuth.
+        axis_range : tuple
+            The current range of the axis.
 
         Returns
         -------
-        dict
-            A dictionary containing default limits.
+        float
+            The interpolated limit value.
         """
-        # Replace this with actual database queries
-        return {
-            "lower_energy_threshold": 1e9,  # Example: 1 GeV
-            "upper_energy_threshold": 1e14,  # Example: 100 TeV
-            "viewcone": 10,  # Example: 10 degrees
-            "upper_radius_threshold": 5000,  # Example: 5000 meters
-        }
+        # Create a grid of zenith and azimuth values
+        points = np.column_stack((zeniths, azimuths))
+        grid_point = np.array([[axis_range[0], axis_range[1]]])
+
+        # Interpolate the value at the grid point
+        interpolated_value = griddata(points, values, grid_point, method="linear")
+
+        # If interpolation fails, fallback to the closest value
+        if np.isnan(interpolated_value):
+            distances = np.sqrt((zeniths - axis_range[0]) ** 2 + (azimuths - axis_range[1]) ** 2)
+            closest_index = np.argmin(distances)
+            interpolated_value = values[closest_index]
+
+        return interpolated_value
 
     def generate_grid(self) -> list[dict]:
         """
@@ -184,13 +163,15 @@ class GridGeneration:
         """
         axis_values = {}
 
-        for axis in self.axes:
-            name = axis["name"]
+        for axis_name, axis in self.axes.items():
+            print("axis_name", axis_name)
+            print("axis", axis)
             axis_range = axis["range"]
             binning = axis["binning"]
             scaling = axis.get("scaling", "linear")
             distribution = axis.get("distribution", "uniform")
-            unit = axis.get("unit", None)
+            units = axis.get("units", None)
+
             # Create axis values based on scaling
             if scaling == "log":
                 values = np.logspace(np.log10(axis_range[0]), np.log10(axis_range[1]), binning)
@@ -201,10 +182,10 @@ class GridGeneration:
             if distribution == "power-law":
                 values = self.generate_power_law_values(axis_range=axis_range, binning=binning)
 
-            if unit:
-                values = values * u.Unit(unit)
+            if units:
+                values = values * u.Unit(units)
 
-            axis_values[name] = values
+            axis_values[axis_name] = values
 
         value_arrays = [value.value for value in axis_values.values()]
         units = [value.unit for value in axis_values.values()]
