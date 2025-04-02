@@ -846,6 +846,28 @@ def _load_yaml_using_astropy(file):
     return astropy_yaml.load(file)
 
 
+def is_utf8_file(file_name):
+    """
+    Check if a file is encoded in UTF-8.
+
+    Parameters
+    ----------
+    file_name: str, Path
+        Name of the file to be checked.
+
+    Returns
+    -------
+    bool
+        True if the file is encoded in UTF-8, False otherwise.
+    """
+    try:
+        with open(file_name, encoding="utf-8") as file:
+            file.read()
+        return True
+    except UnicodeDecodeError:
+        return False
+
+
 def read_file_encoded_in_utf_or_latin(file_name):
     """
     Read a file encoded in UTF-8 or Latin-1.
