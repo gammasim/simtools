@@ -381,7 +381,7 @@ class ReadParameters:
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
-        file.write("\n## Array Layouts {#array-layouts-details}\n\n")
+        file.write("\n## Array Layouts {#array-layouts}\n\n")
         for layout in layouts:
             layout_name = layout["name"]
             elements = layout["elements"]
@@ -394,9 +394,8 @@ class ReadParameters:
                 f"../../_images/OBS-{self.site}_{layout_name}_"
                 f"{self.model_version.split('.')[0]}.png"
             )
-            if Path(image_path).exists():
-                file.write(f"![{layout_name} Layout]({image_path})\n\n")
-                file.write("\n")
+            file.write(f"![{layout_name} Layout]({image_path})\n\n")
+            file.write("\n")
 
     def _write_array_triggers_section(self, file, trigger_configs):
         """Write the array triggers section of the report."""

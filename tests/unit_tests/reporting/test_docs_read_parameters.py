@@ -515,11 +515,6 @@ def test__write_array_layouts_section(io_handler, db_config, mocker):
         },
     ]
 
-    # Mock image path exists
-    mock_exists = mocker.Mock()
-    mock_exists.return_value = True
-    mocker.patch("pathlib.Path.exists", mock_exists)
-
     with StringIO() as file:
         read_parameters._write_array_layouts_section(file, mock_layouts)
         output = file.getvalue()
