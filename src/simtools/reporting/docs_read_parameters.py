@@ -381,7 +381,7 @@ class ReadParameters:
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
-        file.write("\n## Array Layouts {#array-layouts}\n\n")
+        file.write("\n## Array Layouts\n\n")
         for layout in layouts:
             layout_name = layout["name"]
             elements = layout["elements"]
@@ -419,25 +419,32 @@ class ReadParameters:
 
     def _write_parameters_table(self, file, all_parameter_data):
         """Write the main parameters table of the report."""
-        file.write("| Parameter | Value |\n|-----------|--------|\n")
+        file.write(
+            "| Parameter | Value | Parameter Version |\n"
+            "|-----------|--------|-------------------|\n"
+        )
         for param_name, param_data in sorted(all_parameter_data.items()):
             value = param_data.get("value")
             unit = param_data.get("unit") or " "
             file_flag = param_data.get("file", False)
+            parameter_version = param_data.get("parameter_version")
 
             if value is None:
                 continue
 
             if param_name == "array_layouts":
-                file.write("| array_layouts | [View Array Layouts](#array-layouts) |\n")
+                file.write(
+                    "| array_layouts | [View Array Layouts](#array-layouts)"
+                    f" | {parameter_version} |\n"
+                )
             elif param_name == "array_triggers":
                 file.write(
                     "| array_triggers | [View Trigger Configurations]"
-                    "(#array-trigger-configurations) |\n"
+                    f"(#array-trigger-configurations) | {parameter_version} |\n"
                 )
             else:
                 formatted_value = self._format_parameter_value(value, unit, file_flag)
-                file.write(f"| {param_name} | {formatted_value} |\n")
+                file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
         file.write("\n")
 
     def produce_observatory_report(self):
