@@ -88,10 +88,9 @@ class SimtelConfigWriter:
                     or _simtel_name == "fake_mirror_list"
                 ):
                     continue
-                if _simtel_name:
-                    file.write(
-                        f"{_simtel_name} = {self._get_value_string_for_simtel(value['value'])}\n"
-                    )
+                file.write(
+                    f"{_simtel_name} = {self._get_value_string_for_simtel(value['value'])}\n"
+                )
             _config_meta = self._get_simtel_metadata("telescope", parameters)
             for value in _config_meta:
                 file.write(f"{value}\n")
@@ -149,7 +148,7 @@ class SimtelConfigWriter:
                     f"optics_config_version = {self._model_version}",
                 ]
             )
-            prefix = "metaparam telescope add"
+            prefix = "metaparam telescope"
         elif config_type == "site":
             meta_parameters.extend(
                 [
@@ -161,16 +160,22 @@ class SimtelConfigWriter:
                     f"array_config_version = {self._model_version}",
                 ]
             )
-            prefix = "metaparam global add"
+            prefix = "metaparam global"
         else:
             raise ValueError(f"Unknown metadata type {config_type}")
 
         if model_parameters:
-            meta_parameters.extend(
-                f"{prefix} {key}"
-                for key, value in model_parameters.items()
-                if value.get("meta_parameter")
-            )
+            for key, value in model_parameters.items():
+                simtel_name = names.get_simulation_software_name_from_parameter_name(
+                    key, simulation_software="sim_telarray", set_meta_parameter=False
+                )
+                if simtel_name and value.get("meta_parameter"):
+                    meta_parameters.append(f"{prefix} add {simtel_name}")
+                simtel_name = names.get_simulation_software_name_from_parameter_name(
+                    key, simulation_software="sim_telarray", set_meta_parameter=True
+                )
+                if simtel_name and value.get("meta_parameter"):
+                    meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
 
         return meta_parameters
 
