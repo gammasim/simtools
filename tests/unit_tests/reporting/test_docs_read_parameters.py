@@ -575,9 +575,9 @@ def test__write_parameters_table(io_handler, db_config):
     read_parameters = ReadParameters(db_config, args, output_path)
 
     mock_params = {
-        "site_elevation": {"value": 2200, "unit": "m"},
-        "array_layouts": {"value": [], "unit": None},
-        "array_triggers": {"value": [], "unit": None},
+        "site_elevation": {"value": 2200, "unit": "m", "parameter_version": "1.0.0"},
+        "array_layouts": {"value": [], "unit": None, "parameter_version": "2.0.0"},
+        "array_triggers": {"value": [], "unit": None, "parameter_version": "3.0.0"},
     }
 
     with StringIO() as file:
@@ -585,14 +585,14 @@ def test__write_parameters_table(io_handler, db_config):
         output = file.getvalue()
 
     # Verify table headers
-    assert "| Parameter | Value " in output
+    assert "| Parameter | Value | Parameter Version |" in output
 
     # Verify normal parameter
-    assert "| site_elevation | 2200 m |" in output
+    assert "| site_elevation | 2200 m | 1.0.0 |" in output
 
     # Verify special sections
-    assert "| array_layouts | [View Array Layouts](#array-layouts) |" in output
+    assert "| array_layouts | [View Array Layouts](#array-layouts) | 2.0.0 |" in output
     assert (
-        "| array_triggers | [View Trigger Configurations](#array-trigger-configurations) |"
+        "| array_triggers | [View Trigger Configurations](#array-trigger-configurations) | 3.0.0 |"
         in output
     )
