@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_io_event_reader &#8212; simtools v0.1.dev1+g80473a5 Manual</title>
+    <title>simtel.simtel_io_event_reader &#8212; simtools v0.1.dev1+ga722935 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f6f184fd"></script>
+    <script src="../../_static/documentation_options.js?v=8616d4b6"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g80473a5 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+ga722935 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -560,10 +560,10 @@ document.write(`
 <span class="sd">            Filtered triggered IDs and indices.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">triggered_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">triggered_id</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">telescope_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">telescope_list</span><span class="p">:</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
                 <span class="p">[</span>
-                    <span class="nb">all</span><span class="p">(</span><span class="n">tel</span> <span class="ow">in</span> <span class="n">event</span> <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="n">telescope_list</span><span class="p">)</span>
+                    <span class="nb">any</span><span class="p">(</span><span class="n">tel</span> <span class="ow">in</span> <span class="n">event</span> <span class="k">for</span> <span class="n">tel</span> <span class="ow">in</span> <span class="n">telescope_list</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">trigger_telescope_list_list</span>
                 <span class="p">]</span>
             <span class="p">)</span>
