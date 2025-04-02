@@ -7,5 +7,6 @@
     "unit": null,
     "type": "int",
     "applicable": true,
-    "file": false
+    "file": false,
+    "meta_parameter": false
 }
