@@ -375,7 +375,9 @@ class ReadParameters:
 
                 file.write("\n")
                 if comparison_data.get(parameter)[0]["file_flag"]:
-                    file.write(f"![Parameter plot.](_images/{self.array_element}_{parameter}.png)")
+                    file.write(
+                        f"![Parameter plot.](../../_images/{self.array_element}_{parameter}.png)"
+                    )
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
@@ -389,7 +391,8 @@ class ReadParameters:
                 file.write(f"| [{element}]({element}.md) |\n")
             file.write("\n")
             image_path = (
-                f"_images/OBS-{self.site}_{layout_name}_{self.model_version.split('.')[0]}.png"
+                f"../../_images/OBS-{self.site}_{layout_name}_"
+                f"{self.model_version.split('.')[0]}.png"
             )
             if Path(image_path).exists():
                 file.write(f"![{layout_name} Layout]({image_path})\n\n")
