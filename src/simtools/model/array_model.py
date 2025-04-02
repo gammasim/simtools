@@ -206,6 +206,7 @@ class ArrayModel:
             label=self.label,
         )
         self._config_file_path = self.get_config_directory().joinpath(config_file_name)
+        self.site_model.export_model_files()
 
         # Writing parameters to the file
         self._logger.info(f"Writing array configuration file into {self._config_file_path}")
