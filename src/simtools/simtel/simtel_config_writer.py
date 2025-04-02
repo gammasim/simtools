@@ -80,17 +80,12 @@ class SimtelConfigWriter:
                 _simtel_name = names.get_simulation_software_name_from_parameter_name(
                     par, simulation_software="sim_telarray"
                 )
-                # array trigger is a site parameter, not a telescope parameter
-                # fake_mirror_list is not a sim_telarray parameter (used for testeff only)
-                if (
-                    not _simtel_name
-                    or _simtel_name.startswith("array_trigger")
-                    or _simtel_name == "fake_mirror_list"
-                ):
-                    continue
-                file.write(
-                    f"{_simtel_name} = {self._get_value_string_for_simtel(value['value'])}\n"
-                )
+                if _simtel_name:
+                    file.write(
+                        f"{_simtel_name} = {self._get_value_string_for_simtel(value['value'])}\n"
+                    )
+            if "stars" not in parameters:  # sim_telarray requires 'stars' to be set
+                file.write("stars = none\n")
             _config_meta = self._get_simtel_metadata("telescope", parameters)
             for value in _config_meta:
                 file.write(f"{value}\n")

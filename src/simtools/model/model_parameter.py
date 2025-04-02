@@ -334,20 +334,11 @@ class ModelParameter:
         if self.db is None:
             return
 
-        if self.name:
+        if self.name or self.site:
             self._parameters = self.db.get_model_parameters(
                 self.site, self.name, self.collection, self.model_version
             )
 
-        if self.site:
-            self._parameters.update(
-                self.db.get_model_parameters(
-                    self.site,
-                    None,
-                    "sites",
-                    self.model_version,
-                )
-            )
         self._load_simulation_software_parameter()
 
     @property
