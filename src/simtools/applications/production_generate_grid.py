@@ -3,8 +3,12 @@
 r"""
 Generate a grid of simulation points using flexible axes definitions.
 
-This application generates a grid of simulation points based on input parameters
- energy, azimuth, zenith angle, night-sky background, and camera offset.
+This application generates a grid of simulation points based on the provided axes
+definitions. The axes definitions (range, binning) are specified in a file.
+The viewcone, radius and energy thresholds are provided as a lookup table and
+are interpolated based on the generated grid points. The generated grid points are
+filtered based on the specified telescope IDs and the limits from the lookup table.
+The generated grid points are saved to a file.
 It can also convert the generated points to RA/Dec coordinates if the selected
 coordinate system is 'ra_dec'.
 
@@ -14,14 +18,16 @@ axes (str, required)
     Path to a YAML or JSON file defining the axes of the grid.
 coordinate_system (str, optional, default='zenith_azimuth')
     The coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
-latitude (float, required)
-    Latitude of the observing location in degrees.
-longitude (float, required)
-    Longitude of the observing location in degrees.
-height (float, required)
-    Height of the observing location in meters.
 observing_time (str, optional, default=now)
     Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').
+lookup_table (str, required)
+    Path to the lookup table for simulation limits. The table should contain
+    varying azimuth and/or zenith angles.
+telescope_ids (list of int, optional)
+    List of telescope IDs as used in sim_telarray to filter the events.
+output_file (str, optional, default='grid_output.json')
+    Output file for the generated grid points (default: 'grid_output.json').
+
 
 Example
 -------
@@ -55,19 +61,19 @@ def _parse(label, description):
 
     Parameters
     ----------
-    axes : str
-        Path to the axes configuration file.
-    coordinate_system : str
-        Coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
-    observing_time : str
+    axes (str, required)
+        Path to a YAML or JSON file defining the axes of the grid.
+    coordinate_system (str, optional, default='zenith_azimuth')
+        The coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
+    observing_time (str, optional, default=now)
         Time of the observation (format: 'YYYY-MM-DD HH:MM:SS').
-    output_file : str
-        Output file for the generated grid points.
-    telescope_ids : list of int
-        List of telescope IDs as used in simtel_array to
-          filter the events.
-    lookup_table : str
-        Path to the lookup table for simulation limits.
+    lookup_table (str, required)
+        Path to the lookup table for simulation limits. The table should contain
+        varying azimuth and/or zenith angles.
+    telescope_ids (list of int, optional)
+        List of telescope IDs as used in sim_telarray to filter the events.
+    output_file (str, optional, default='grid_output.json')
+        Output file for the generated grid points (default: 'grid_output.json').
 
 
     Returns
@@ -113,7 +119,8 @@ def _parse(label, description):
         "--lookup_table",
         type=str,
         required=True,
-        help="Path to the lookup table for simulation limits.",
+        help="Path to the lookup table for simulation limits. "
+        "Table required with varying azimuth and or zenith angle. ",
     )
 
     return config.initialize(db_config=True, simulation_model=["version", "site", "model_version"])
@@ -183,7 +190,6 @@ def main():
 
     if args_dict["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
-    print(grid_points)
 
     grid_gen.clean_grid_output(grid_points, output_file=output_filepath)
 
