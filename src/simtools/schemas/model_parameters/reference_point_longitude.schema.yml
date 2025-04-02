@@ -34,3 +34,6 @@ source:
   - Initial instrument setup
 simulation_software:
   - name: corsika
+  - name: sim_telarray
+    internal_parameter_name: latitude
+    set_meta_parameter: true
