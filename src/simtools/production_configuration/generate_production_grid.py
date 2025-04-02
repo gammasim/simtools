@@ -93,7 +93,7 @@ class GridGeneration:
             )
 
         zeniths = np.array([row["zenith"] for row in matching_rows])
-        azimuths = np.array([row["azimuth"] for row in matching_rows])
+        azimuths = np.array([row["azimuth"] for row in matching_rows]) % 360  # Normalize azimuths
         lower_energy_thresholds = np.array([row["lower_energy_threshold"] for row in matching_rows])
         upper_radius_thresholds = np.array([row["upper_radius_threshold"] for row in matching_rows])
         viewcone_radii = np.array([row["viewcone_radius"] for row in matching_rows])
@@ -103,16 +103,15 @@ class GridGeneration:
             self.axes["zenith_angle"]["range"][1],
             self.axes["zenith_angle"]["binning"],
         )
-        target_azimuths = np.linspace(
-            self.axes["azimuth"]["range"][0],
-            self.axes["azimuth"]["range"][1],
-            self.axes["azimuth"]["binning"],
+        target_azimuths = self.create_circular_binning(
+            self.axes["azimuth"]["range"], self.axes["azimuth"]["binning"]
         )
 
         is_flat_zenith = len(np.unique(zeniths)) == 1
         is_flat_azimuth = len(np.unique(azimuths)) == 1
 
         if is_flat_zenith and is_flat_azimuth:
+            self._logger.info("Both zenith and azimuth are flat, assigning constant values.")
             interpolated_energy = np.full(
                 target_zeniths.size * target_azimuths.size, lower_energy_thresholds[0]
             )
@@ -123,7 +122,7 @@ class GridGeneration:
                 target_zeniths.size * target_azimuths.size, viewcone_radii[0]
             )
         elif is_flat_zenith:
-            self._logger.info("Zenith is flat, interpolating only along azimuth")
+            self._logger.info("Zenith is flat, interpolating only along azimuth.")
             interpolated_energy = np.interp(
                 target_azimuths, azimuths, lower_energy_thresholds, left=np.nan, right=np.nan
             )
@@ -137,7 +136,7 @@ class GridGeneration:
             interpolated_radius = np.tile(interpolated_radius, (len(target_zeniths), 1))
             interpolated_viewcone = np.tile(interpolated_viewcone, (len(target_zeniths), 1))
         elif is_flat_azimuth:
-            self._logger.info("Azimuth is flat, interpolating only along zenith")
+            self._logger.info("Azimuth is flat, interpolating only along zenith.")
             interpolated_energy = np.interp(
                 target_zeniths, zeniths, lower_energy_thresholds, left=np.nan, right=np.nan
             )
@@ -157,7 +156,7 @@ class GridGeneration:
                 interpolated_viewcone[:, np.newaxis], (1, len(target_azimuths))
             )
         else:
-            self._logger.info("Neither zenith nor azimuth is flat, performing 2D interpolation")
+            self._logger.info("Neither zenith nor azimuth is flat, performing 2D interpolation.")
             target_grid = (
                 np.array(np.meshgrid(target_zeniths, target_azimuths, indexing="ij"))
                 .reshape(2, -1)
@@ -202,6 +201,38 @@ class GridGeneration:
             "target_azimuths": target_azimuths,
         }
 
+    def create_circular_binning(self, azimuth_range, num_bins):
+        """
+        Create bin centers for azimuth angles, handling circular wraparound (0° to 360°).
+
+        Parameters
+        ----------
+        azimuth_range : tuple
+            (min_azimuth, max_azimuth), can wrap around 0°.
+        num_bins : int
+            Number of bins.
+
+        Returns
+        -------
+        np.ndarray
+            Array of bin centers.
+        """
+        azimuth_min, azimuth_max = azimuth_range
+        azimuth_min %= 360  # Normalize to [0, 360)
+        azimuth_max %= 360
+
+        if azimuth_min > azimuth_max:  # Handles wraparound case (e.g., 310° to 20°)
+            # Total range is split into two parts: [azimuth_min, 360) and [0, azimuth_max]
+            total_range = (360 - azimuth_min) + azimuth_max
+
+            bin_edges = np.linspace(azimuth_min, azimuth_min + total_range, num_bins, endpoint=True)
+            bin_centers = bin_edges % 360  # Wrap around to [0, 360)
+        else:
+            # range does not cross 360°
+            bin_centers = np.linspace(azimuth_min, azimuth_max, num_bins, endpoint=True)
+
+        return bin_centers
+
     def generate_grid(self) -> list[dict]:
         """
         Generate the grid based on the defined axes and include interpolated limits.
@@ -222,7 +253,6 @@ class GridGeneration:
             axis_range = axis["range"]
             binning = axis["binning"]
             scaling = axis.get("scaling", "linear")
-            # distribution = axis.get("distribution", "uniform")
             units = axis.get("units", None)
 
             if scaling == "log":
@@ -253,6 +283,14 @@ class GridGeneration:
                 azimuth_idx = np.searchsorted(
                     self.interpolated_limits["target_azimuths"], grid_point["azimuth"].value
                 )
+
+                zenith_idx = np.clip(
+                    zenith_idx, 0, len(self.interpolated_limits["target_zeniths"]) - 1
+                )
+                azimuth_idx = np.clip(
+                    azimuth_idx, 0, len(self.interpolated_limits["target_azimuths"]) - 1
+                )
+
                 energy_lower = self.interpolated_limits["energy"][zenith_idx, azimuth_idx]
                 grid_point["energy_range"] = {
                     "lower": energy_lower * u.TeV,
