@@ -498,9 +498,9 @@ def test_produce_observatory_report(io_handler, db_config, mocker):
         assert "none_valued_param" not in content
 
 
-def test__write_array_layouts_section(io_handler, db_config):
+def test__write_array_layouts_section(io_handler, db_config, mocker):
     """Test writing array layouts section."""
-    args = {}
+    args = {"site": "North", "model_version": "6.0.0"}
     output_path = io_handler.get_output_directory()
     read_parameters = ReadParameters(db_config, args, output_path)
 
@@ -515,18 +515,26 @@ def test__write_array_layouts_section(io_handler, db_config):
         },
     ]
 
+    # Mock image path exists
+    mock_exists = mocker.Mock()
+    mock_exists.return_value = True
+    mocker.patch("pathlib.Path.exists", mock_exists)
+
     with StringIO() as file:
         read_parameters._write_array_layouts_section(file, mock_layouts)
         output = file.getvalue()
 
     # Verify section header
-    assert "## Array Layouts {#array-layouts-details}" in output
+    assert "## Array Layouts" in output
 
     # Verify layout names
     assert "### Layout1" in output
-    assert "MST1" in output
+    assert "[MST1](MST1.md)" in output
     assert "### Layout2" in output
-    assert "MST2" in output
+    assert "[MST2](MST2.md)" in output
+
+    # Verify image links
+    assert "![Layout1 Layout](../../_images/OBS-North_Layout1_6.png)" in output
 
 
 def test__write_array_triggers_section(io_handler, db_config):
@@ -557,7 +565,7 @@ def test__write_array_triggers_section(io_handler, db_config):
         output = file.getvalue()
 
     # Verify section header and table headers
-    assert "## Array Trigger Configurations {#array-triggers-details}" in output
+    assert "## Array Trigger Configurations" in output
     assert "| Trigger Name | Multiplicity | Width | Hard Stereo | Min Separation |" in output
 
     # Verify trigger data
@@ -588,5 +596,8 @@ def test__write_parameters_table(io_handler, db_config):
     assert "| site_elevation | 2200 m |" in output
 
     # Verify special sections
-    assert "| array_layouts | [View Array Layouts](#array-layouts-details) |" in output
-    assert "| array_triggers | [View Trigger Configurations](#array-triggers-details) |" in output
+    assert "| array_layouts | [View Array Layouts](#array-layouts) |" in output
+    assert (
+        "| array_triggers | [View Trigger Configurations](#array-trigger-configurations) |"
+        in output
+    )
