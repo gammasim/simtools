@@ -35,5 +35,5 @@ source:
 simulation_software:
   - name: corsika
   - name: sim_telarray
-    internal_parameter_name: latitude
+    internal_parameter_name: longitude
     set_meta_parameter: true
