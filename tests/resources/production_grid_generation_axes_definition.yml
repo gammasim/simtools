@@ -7,14 +7,14 @@ axes:
     distribution: uniform
     units: TeV
   azimuth:
-    range: [0, 20]
-    binning: 2
+    range: [310, 20]
+    binning: 3
     scaling: linear
     distribution: uniform
     units: deg
   zenith_angle:
-    range: [55, 60]
-    binning: 3
+    range: [20, 30]
+    binning: 2
     scaling: linear
     distribution: uniform
     units: deg

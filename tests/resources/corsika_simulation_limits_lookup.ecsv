@@ -26,3 +26,15 @@ tests/resources/run202_202_proton_za52deg_azm0deg_North_test_layout_test-prod.si
 tests/resources/run202_202_proton_za60deg_azm0deg_North_test_layout_test-prod.simtel.hdf5 60 0 [] 0.06344165 1827.3672112969614 7.8522673
 tests/resources/run202_202_proton_za60deg_azm0deg_North_test_layout_test-prod.simtel.hdf5 60 0 [1] 0.086080745 1827.3672112969614 7.8527613
 tests/resources/run202_202_proton_za60deg_azm0deg_North_test_layout_test-prod.simtel.hdf5 60 0 [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] 0.086080745 1828.613794434402 5.994665
+tests/resources/run202_202_proton_za20deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 20 180 [] 1.03344165 1827.3672112969614 7.8522673
+tests/resources/run202_202_proton_za20deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 20 180 [1] 0.086080745 1827.3672112969614 7.8527613
+tests/resources/run202_202_proton_za20deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 20 180 [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] 0.086080745 1828.613794434402 5.994665
+tests/resources/run202_202_proton_za40deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 40 180 [] 1.04344165 1827.3672112969614 7.8522673
+tests/resources/run202_202_proton_za40deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 40 180 [1] 0.086080745 1827.3672112969614 7.8527613
+tests/resources/run202_202_proton_za40deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 40 180 [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] 0.086080745 1828.613794434402 5.994665
+tests/resources/run202_202_proton_za52deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 52 180 [] 1.05344165 1827.3672112969614 7.8522673
+tests/resources/run202_202_proton_za52deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 52 180 [1] 0.086080745 1827.3672112969614 7.8527613
+tests/resources/run202_202_proton_za52deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 52 180 [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] 0.086080745 1828.613794434402 5.994665
+tests/resources/run202_202_proton_za60deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 60 180 [] 1.06344165 1827.3672112969614 7.8522673
+tests/resources/run202_202_proton_za60deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 60 180 [1] 0.086080745 1827.3672112969614 7.8527613
+tests/resources/run202_202_proton_za60deg_azm180deg_North_test_layout_test-prod.simtel.hdf5 60 180 [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] 0.086080745 1828.613794434402 5.994665
