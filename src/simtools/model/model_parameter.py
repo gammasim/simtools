@@ -491,18 +491,6 @@ class ModelParameter:
             self._set_config_file_directory_and_name()
         return self._config_file_path
 
-    def get_config_file(self):
-        """
-        Get the file path for the sim_telarray configuration file.
-
-        Returns
-        -------
-        Path
-            Path of the exported config file for sim_telarray.
-        """
-        # TODO remove function
-        return self.config_file_path
-
     def _load_simtel_config_writer(self):
         """Load the SimtelConfigWriter object."""
         if self.simtel_config_writer is None:
