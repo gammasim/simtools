@@ -142,8 +142,8 @@ def test_get_simtel_metadata_with_model_parameters(simtel_config_writer):
     def mock_get_name(key, simulation_software, set_meta_parameter):
         if simulation_software == "sim_telarray":
             if set_meta_parameter:
-                return "test_param_meta"
-            return "test_param"
+                return "test_set_param_meta"
+            return "test_add_param"
         return None
 
     with mock.patch(
@@ -151,12 +151,12 @@ def test_get_simtel_metadata_with_model_parameters(simtel_config_writer):
         side_effect=mock_get_name,
     ):
         tel_meta = simtel_config_writer._get_simtel_metadata("telescope", model_parameters)
-        assert "metaparam telescope add test_param" in tel_meta
-        assert "metaparam telescope set test_param_meta=42" in tel_meta
+        assert "metaparam telescope add test_add_param" in tel_meta
+        assert "metaparam telescope set test_set_param_meta=42" in tel_meta
 
         site_meta = simtel_config_writer._get_simtel_metadata("site", model_parameters)
-        assert "metaparam global add test_param" in site_meta
-        assert "metaparam global set test_param_meta=42" in site_meta
+        assert "metaparam global add test_add_param" in site_meta
+        assert "metaparam global set test_set_param_meta=42" in site_meta
 
 
 def test_get_simtel_metadata_without_model_parameters(simtel_config_writer):
