@@ -187,7 +187,7 @@ class ArrayModel:
             )
             if name not in exported_models:
                 self._logger.debug(f"Exporting configuration file for telescope {name}")
-                tel_model.export_config_file()
+                tel_model.write_sim_telarray_config_file()
                 exported_models.append(name)
             else:
                 self._logger.debug(
