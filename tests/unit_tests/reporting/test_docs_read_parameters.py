@@ -130,18 +130,23 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    parameter_name = "test"
 
     # testing with invalid file
     with pytest.raises(FileNotFoundError, match="Data file not found: "):
-        read_parameters._convert_to_md("invalid-file.dat")
+        read_parameters._convert_to_md(parameter_name, "invalid-file.dat")
 
     # testing with valid file
-    new_file = read_parameters._convert_to_md("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
+    new_file = read_parameters._convert_to_md(
+        parameter_name, "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
+    )
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
     # testing with non-utf-8 file
-    new_file = read_parameters._convert_to_md("tests/resources/example_non_utf-8_file.lis")
+    new_file = read_parameters._convert_to_md(
+        parameter_name, "tests/resources/example_non_utf-8_file.lis"
+    )
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
@@ -149,13 +154,14 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
 def test__format_parameter_value(io_handler, db_config):
     output_path = io_handler.get_output_directory()
     read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
+    parameter_name = "test"
 
     mock_data_1 = [[24.74, 9.0, 350.0, 1066.0], ["ns", "ns", "V", "V"], False]
-    result_1 = read_parameters._format_parameter_value(*mock_data_1)
+    result_1 = read_parameters._format_parameter_value(parameter_name, *mock_data_1)
     assert result_1 == "24.74 ns, 9.0 ns, 350.0 V, 1066.0 V"
 
     mock_data_2 = [4.0, " ", None]
-    result_2 = read_parameters._format_parameter_value(*mock_data_2)
+    result_2 = read_parameters._format_parameter_value(parameter_name, *mock_data_2)
     assert result_2 == "4.0"
 
     mock_data_3 = [
@@ -163,11 +169,11 @@ def test__format_parameter_value(io_handler, db_config):
         "GHz",
         False,
     ]
-    result_3 = read_parameters._format_parameter_value(*mock_data_3)
+    result_3 = read_parameters._format_parameter_value(parameter_name, *mock_data_3)
     assert result_3 == "all: 0.2 GHz"
 
     mock_data_4 = [[1, 2, 3, 4], "m", None]
-    result_4 = read_parameters._format_parameter_value(*mock_data_4)
+    result_4 = read_parameters._format_parameter_value(parameter_name, *mock_data_4)
     assert result_4 == "1 m, 2 m, 3 m, 4 m"
 
 
