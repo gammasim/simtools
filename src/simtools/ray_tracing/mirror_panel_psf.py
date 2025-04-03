@@ -9,7 +9,7 @@ from astropy.table import QTable, Table
 import simtools.data_model.model_data_writer as writer
 import simtools.utils.general as gen
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 
 
@@ -38,7 +38,7 @@ class MirrorPanelPSF:
         self._logger.debug("Initializing MirrorPanelPSF")
 
         self.args_dict = args_dict
-        self.telescope_model = self._define_telescope_model(label, db_config)
+        self.telescope_model, self.site_model = self._define_telescope_model(label, db_config)
 
         if self.args_dict["test"]:
             self.args_dict["number_of_mirrors_to_test"] = 2
@@ -76,24 +76,27 @@ class MirrorPanelPSF:
             telescope model
 
         """
-        tel = TelescopeModel(
+        tel_model, site_model = initialize_simulation_models(
+            label=label,
+            db_config=db_config,
             site=self.args_dict["site"],
             telescope_name=self.args_dict["telescope"],
             model_version=self.args_dict["model_version"],
-            mongo_db_config=db_config,
-            label=label,
         )
         if self.args_dict["mirror_list"] is not None:
             mirror_list_file = gen.find_file(
                 name=self.args_dict["mirror_list"], loc=self.args_dict["model_path"]
             )
-            tel.change_parameter("mirror_list", self.args_dict["mirror_list"])
-            tel.export_parameter_file("mirror_list", mirror_list_file)
+            tel_model.change_parameter("mirror_list", self.args_dict["mirror_list"])
+            # TODO check if export_model and export_parameter file is needed
+            tel_model.export_parameter_file("mirror_list", mirror_list_file)
+            tel_model.export_model_files()
         if self.args_dict["random_focal_length"] is not None:
-            tel.change_parameter("random_focal_length", str(self.args_dict["random_focal_length"]))
-        tel.export_model_files()
+            tel_model.change_parameter(
+                "random_focal_length", str(self.args_dict["random_focal_length"])
+            )
 
-        return tel
+        return tel_model, site_model
 
     def _get_psf_containment(self):
         """Read measured single-mirror point-spread function from file and return mean and sigma."""
@@ -229,6 +232,7 @@ class MirrorPanelPSF:
         self.telescope_model.change_parameter("mirror_reflection_random_angle", rnda)
         ray = RayTracing(
             telescope_model=self.telescope_model,
+            site_model=self.site_model,
             simtel_path=self.args_dict.get("simtel_path", None),
             single_mirror_mode=True,
             mirror_numbers=(
