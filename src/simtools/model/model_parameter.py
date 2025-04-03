@@ -369,14 +369,14 @@ class ModelParameter:
 
         value = gen.convert_string_to_list(value) if isinstance(value, str) else value
 
-        param_type = self.get_parameter_type(par_name)
+        par_type = self.get_parameter_type(par_name)
         if not gen.validate_data_type(
-            reference_dtype=param_type,
+            reference_dtype=par_type,
             value=value,
             dtype=None,
             allow_subtypes=True,
         ):
-            raise ValueError(f"Could not cast {value} of type {type(value)} to {param_type}.")
+            raise ValueError(f"Could not cast {value} of type {type(value)} to {par_type}.")
 
         self._logger.debug(
             f"Changing parameter {par_name} from {self.get_parameter_value(par_name)} to {value}"
