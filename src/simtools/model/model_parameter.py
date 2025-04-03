@@ -442,7 +442,7 @@ class ModelParameter:
         self._added_parameter_files.append(par_name)
         shutil.copy(file_path, self.config_file_directory)
 
-    def export_model_files(self):
+    def export_model_files(self, destination_path=None):
         """Export the model files into the config file directory."""
         # Removing parameter files added manually (which are not in DB)
         pars_from_db = copy(self.parameters)
@@ -450,7 +450,10 @@ class ModelParameter:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
-        self.db.export_model_files(parameters=pars_from_db, dest=self.config_file_directory)
+        self.db.export_model_files(
+            parameters=pars_from_db,
+            dest=destination_path if destination_path else self.config_file_directory,
+        )
         self._is_exported_model_files_up_to_date = True
 
     def write_sim_telarray_config_file(self, model=None):
@@ -462,14 +465,15 @@ class ModelParameter:
         model: TelescopeModel or SiteModel
             Model object for additional parameter to be written to the config file.
         """
-        # TODO check
+        # TODO check / improve
         if not self._is_exported_model_files_up_to_date:
             self.export_model_files()
+            if model:
+                model.export_model_files(self.config_file_directory)
 
         parameters = self.parameters
-        parameters.update(self._simulation_config_parameters["simtel"].get("parameters", {}))
+        parameters.update(self._simulation_config_parameters.get("simtel", {}))
         if model:
-            print("AAAAAAAA")
             parameters.update(model.parameters)
 
         self._load_simtel_config_writer()
