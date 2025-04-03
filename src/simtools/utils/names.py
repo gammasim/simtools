@@ -513,6 +513,7 @@ def get_collection_name_from_parameter_name(parameter_name):
 def get_simulation_software_name_from_parameter_name(
     parameter_name,
     simulation_software="sim_telarray",
+    set_meta_parameter=False,
 ):
     """
     Get the name used in the given simulation software from the model parameter name.
@@ -526,6 +527,8 @@ def get_simulation_software_name_from_parameter_name(
         Model parameter name.
     simulation_software: str
         Simulation software name.
+    set_meta_parameter: bool
+        If True, return values with 'set_meta_parameter' field set to True.
 
     Returns
     -------
@@ -537,7 +540,10 @@ def get_simulation_software_name_from_parameter_name(
         raise KeyError(f"Parameter {parameter_name} without schema definition")
 
     for software in _parameter.get("simulation_software", []):
-        if software.get("name") == simulation_software:
+        if (
+            software.get("name") == simulation_software
+            and software.get("set_meta_parameter", False) is set_meta_parameter
+        ):
             return software.get("internal_parameter_name", parameter_name)
 
     return None
