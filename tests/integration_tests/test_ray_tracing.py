@@ -103,13 +103,13 @@ def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_
         plt.close()
 
 
-def test_single_mirror(simtel_path_no_mock, io_handler, telescope_model_mst, site_model_north):
+def test_single_mirror(simtel_path_no_mock, io_handler, telescope_model_mst, site_model_south):
     """Test MST, single mirror PSF simulation"""
 
-    telescope_model_mst.write_sim_telarray_config_file()
+    telescope_model_mst.write_sim_telarray_config_file(site_model_south)
     ray = RayTracing(
         telescope_model=telescope_model_mst,
-        site_model=site_model_north,
+        site_model=site_model_south,
         simtel_path=simtel_path_no_mock,
         mirror_numbers=list(range(1, 5)),
         single_mirror_mode=True,
