@@ -52,7 +52,7 @@ class CameraEfficiency:
         self.test = test
 
         self.io_handler = io_handler.IOHandler()
-        self.telescope_model, self._site_model = self._initialize_simulation_models(
+        self.telescope_model, self.site_model = self._initialize_simulation_models(
             config_data, db_config
         )
         self.output_dir = self.io_handler.get_output_directory(self.label, sub_dir="plots")
@@ -92,6 +92,7 @@ class CameraEfficiency:
             site=config_data["site"],
             model_version=config_data["model_version"],
             mongo_db_config=db_config,
+            label=self.label,
         )
         return tel_model, site_model
 
@@ -164,6 +165,7 @@ class CameraEfficiency:
         simtel = SimulatorCameraEfficiency(
             simtel_path=self._simtel_path,
             telescope_model=self.telescope_model,
+            site_model=self.site_model,
             zenith_angle=self.config["zenith_angle"],
             file_simtel=self._file["simtel"],
             file_log=self._file["log"],
@@ -178,7 +180,8 @@ class CameraEfficiency:
     def export_model_files(self):
         """Export model and config files to the output directory."""
         self.telescope_model.export_config_file()
-        self.telescope_model.export_model_files()
+        for model in (self.telescope_model, self.site_model):
+            model.export_model_files()
         if not self.config.get("skip_correction_to_nsb_spectrum", False):
             self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
                 model_directory=self.telescope_model.config_file_directory
@@ -442,7 +445,7 @@ class CameraEfficiency:
         nsb_integral = 0.0001 * (n1_sum - 0.5 * n1_integral_edges_sum)
         nsb_rate_ref_conditions = (
             nsb_rate_provided_spectrum
-            * self._site_model.get_parameter_value("nsb_reference_value")
+            * self.site_model.get_parameter_value("nsb_reference_value")
             / nsb_integral
         )
         return nsb_rate_provided_spectrum, nsb_rate_ref_conditions
