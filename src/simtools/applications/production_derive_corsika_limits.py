@@ -175,7 +175,7 @@ def create_results_table(results, loss_fraction):
     ----------
     results : list[dict]
         List of dictionaries containing the computed limits for each file
-          and telescope configuration.
+        and telescope configuration.
     loss_fraction : float
         Fraction of events to be lost, added as metadata to the table.
 
@@ -191,6 +191,7 @@ def create_results_table(results, loss_fraction):
                 res["telescope_ids"],
                 res["zenith"],
                 res["azimuth"],
+                res["nsb"],
                 res["lower_energy_threshold"],
                 res["upper_radius_threshold"],
                 res["viewcone_radius"],
@@ -202,6 +203,7 @@ def create_results_table(results, loss_fraction):
             "telescope_ids",
             "zenith",
             "azimuth",
+            "nsb",
             "lower_energy_threshold",
             "upper_radius_threshold",
             "viewcone_radius",
