@@ -1,14 +1,56 @@
 #!/usr/bin/python3
-"""Helper functions calculations related to model parameters."""
+"""Helper functions related to model parameters."""
 
 import math
 
+from simtools.model.site_model import SiteModel
+from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
 __all__ = [
     "compute_telescope_transmission",
     "is_two_mirror_telescope",
 ]
+
+
+def initialize_simulation_models(label, db_config, site, telescope_name, model_version):
+    """
+    Initialize simulation models for a single telescope and site model.
+
+    Parameters
+    ----------
+    label: str
+        Label for the simulation.
+    db_config: dict
+        Database configuration.
+    site: str
+        Name of the site.
+    telescope_name: str
+        Name of the telescope.
+    model_version: str
+        Version of the simulation model
+
+    Returns
+    -------
+    Tuple
+        Tuple containing the telescope model and site model.
+    """
+    tel_model = TelescopeModel(
+        site=site,
+        telescope_name=telescope_name,
+        mongo_db_config=db_config,
+        model_version=model_version,
+        label=label,
+    )
+    site_model = SiteModel(
+        site=site,
+        model_version=model_version,
+        mongo_db_config=db_config,
+        label=label,
+    )
+    for model in tel_model, site_model:
+        model.export_model_files()
+    return tel_model, site_model
 
 
 def compute_telescope_transmission(pars: list[float], off_axis: float) -> float:

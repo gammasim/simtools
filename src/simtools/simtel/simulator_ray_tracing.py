@@ -25,6 +25,8 @@ class SimulatorRayTracing(SimtelRunner):
     ----------
     telescope_model: TelescopeModel
         telescope model
+    site_model: SiteModel
+        site model
     label: str
         label used for output file naming.
     simtel_path: str or Path
@@ -41,6 +43,7 @@ class SimulatorRayTracing(SimtelRunner):
     def __init__(
         self,
         telescope_model,
+        site_model,
         label=None,
         simtel_path=None,
         config_data=None,
@@ -54,6 +57,7 @@ class SimulatorRayTracing(SimtelRunner):
         super().__init__(label=label, simtel_path=simtel_path)
 
         self.telescope_model = telescope_model
+        self.site_model = site_model
         self.label = label if label is not None else self.telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
@@ -152,7 +156,7 @@ class SimulatorRayTracing(SimtelRunner):
         command += super().get_config_option("IMAGING_LIST", str(self._photons_file))
         command += super().get_config_option("stars", str(self._stars_file))
         command += super().get_config_option(
-            "altitude", self.telescope_model.get_parameter_value("corsika_observation_level")
+            "altitude", self.site_model.get_parameter_value("corsika_observation_level")
         )
         command += super().get_config_option(
             "telescope_theta",

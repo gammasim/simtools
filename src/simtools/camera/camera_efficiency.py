@@ -9,8 +9,7 @@ import numpy as np
 from astropy.table import Table
 
 from simtools.io_operations import io_handler
-from simtools.model.site_model import SiteModel
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 from simtools.utils import names
 from simtools.visualization import visualize
@@ -52,8 +51,12 @@ class CameraEfficiency:
         self.test = test
 
         self.io_handler = io_handler.IOHandler()
-        self.telescope_model, self.site_model = self._initialize_simulation_models(
-            config_data, db_config
+        self.telescope_model, self.site_model = initialize_simulation_models(
+            self.label,
+            db_config,
+            config_data["site"],
+            config_data["telescope"],
+            config_data["model_version"],
         )
         self.output_dir = self.io_handler.get_output_directory(self.label, sub_dir="plots")
 
@@ -66,35 +69,6 @@ class CameraEfficiency:
     def __repr__(self):
         """Return string representation of the CameraEfficiency instance."""
         return f"CameraEfficiency(label={self.label})\n"
-
-    def _initialize_simulation_models(self, config_data, db_config):
-        """
-        Initialize site and telescope models.
-
-        Parameters
-        ----------
-        config_data: dict
-            Dict containing the configurable parameters.
-
-        Returns
-        -------
-        tuple
-            Tuple containing the site and telescope models.
-        """
-        tel_model = TelescopeModel(
-            site=config_data["site"],
-            telescope_name=config_data["telescope"],
-            mongo_db_config=db_config,
-            model_version=config_data["model_version"],
-            label=self.label,
-        )
-        site_model = SiteModel(
-            site=config_data["site"],
-            model_version=config_data["model_version"],
-            mongo_db_config=db_config,
-            label=self.label,
-        )
-        return tel_model, site_model
 
     def _configuration_from_args_dict(self, config_data):
         """
@@ -180,8 +154,6 @@ class CameraEfficiency:
     def export_model_files(self):
         """Export model and config files to the output directory."""
         self.telescope_model.export_config_file()
-        for model in (self.telescope_model, self.site_model):
-            model.export_model_files()
         if not self.config.get("skip_correction_to_nsb_spectrum", False):
             self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
                 model_directory=self.telescope_model.config_file_directory
