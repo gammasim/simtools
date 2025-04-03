@@ -157,7 +157,7 @@ class CorsikaSimtelRunner:
         except TypeError:  # allow for self.label to be None
             weak_pointing = False
 
-        self.corsika_config.array_model.write_sim_telarray_config()
+        self.corsika_config.array_model.export_all_simtel_config_files()
 
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.corsika_config.array_model.config_file_path}"
