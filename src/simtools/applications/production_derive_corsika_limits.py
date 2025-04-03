@@ -125,12 +125,18 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     dict
         Dictionary containing the computed limits and metadata.
     """
-    # Extract zenith and azimuth from the file path
     match = re.search(r"za(\d+)deg.*azm(\d+)deg", file_path)
     if not match:
         raise ValueError(f"Could not extract zenith and azimuth from file path: {file_path}")
     zenith = int(match.group(1))
     azimuth = int(match.group(2))
+
+    if "dark" in file_path:
+        nsb = "dark"
+    elif "moon" in file_path:
+        nsb = "moon"
+    else:
+        raise ValueError(f"Could not determine NSB (dark or moon) from file path: {file_path}")
 
     calculator = LimitCalculator(file_path, telescope_list=telescope_ids)
 
@@ -154,6 +160,7 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
         "telescope_ids": telescope_ids,
         "zenith": zenith,
         "azimuth": azimuth,
+        "nsb": nsb,
         "lower_energy_threshold": lower_energy_limit,
         "upper_radius_threshold": upper_radial_distance,
         "viewcone_radius": viewcone,
@@ -207,7 +214,8 @@ def create_results_table(results, loss_fraction):
 
     table.meta["created"] = datetime.datetime.now().isoformat()
     table.meta["description"] = (
-        "Lookup table for CORSIKA limits computed from gamma-ray shower simulations."
+        "Lookup table for CORSIKA limits computed from gamma-ray shower simulations "
+        "using simtool production_derive_corsika_limits"
     )
     table.meta["loss_fraction"] = loss_fraction
 
