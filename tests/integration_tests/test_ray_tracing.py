@@ -14,7 +14,14 @@ logger = logging.getLogger()
 
 
 @pytest.mark.parametrize("telescope_model_name", ["SSTS-design"])
-def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler, model_version):
+def test_ssts(
+    telescope_model_name,
+    db_config,
+    simtel_path_no_mock,
+    io_handler,
+    model_version,
+    site_model_south,
+):
     # Test with 3 SSTs
     tel = TelescopeModel(
         site="south",
@@ -26,6 +33,7 @@ def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler, 
 
     ray = RayTracing(
         telescope_model=tel,
+        site_model=site_model_south,
         simtel_path=simtel_path_no_mock,
         zenith_angle=20.0 * u.deg,
         source_distance=10.0 * u.km,
@@ -35,9 +43,10 @@ def test_ssts(telescope_model_name, db_config, simtel_path_no_mock, io_handler, 
     ray.analyze(force=True)
 
 
-def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
+def test_rx(simtel_path_no_mock, io_handler, telescope_model_lst, site_model_north):
     ray = RayTracing(
         telescope_model=telescope_model_lst,
+        site_model=site_model_north,
         simtel_path=simtel_path_no_mock,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
@@ -77,9 +86,10 @@ def test_rx(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
     plt.close()
 
 
-def test_plot_image(db_config, simtel_path_no_mock, io_handler, telescope_model_sst):
+def test_plot_image(simtel_path_no_mock, io_handler, telescope_model_sst, site_model_south):
     ray = RayTracing(
         telescope_model=telescope_model_sst,
+        site_model=site_model_south,
         simtel_path=simtel_path_no_mock,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
@@ -128,9 +138,10 @@ def test_single_mirror(simtel_path_no_mock, io_handler, telescope_model_mst, sit
     plt.close()
 
 
-def test_integral_curve(db_config, simtel_path_no_mock, io_handler, telescope_model_lst):
+def test_integral_curve(simtel_path_no_mock, io_handler, telescope_model_lst, site_model_north):
     ray = RayTracing(
         telescope_model=telescope_model_lst,
+        site_model=site_model_north,
         simtel_path=simtel_path_no_mock,
         zenith_angle=20 * u.deg,
         source_distance=10 * u.km,
