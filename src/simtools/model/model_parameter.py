@@ -468,7 +468,8 @@ class ModelParameter:
 
         parameters = self.parameters
         parameters.update(self._simulation_config_parameters["simtel"].get("parameters", {}))
-        if model is not None:
+        if model:
+            print("AAAAAAAA")
             parameters.update(model.parameters)
 
         self._load_simtel_config_writer()
