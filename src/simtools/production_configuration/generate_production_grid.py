@@ -387,3 +387,4 @@ class GridGeneration:
             self._logger.info(f"Output saved to {output_file}")
         else:
             self._logger.info(output_data)
+        return output_data
