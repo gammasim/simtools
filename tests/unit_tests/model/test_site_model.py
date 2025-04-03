@@ -21,9 +21,8 @@ def test_site_model(db_config, model_version):
     for key in ["center_altitude", "center_northing", "center_easting", "epsg_code"]:
         assert key in _south.get_reference_point()
 
-    _pars = _south.get_simtel_parameters(_south._parameters)
-    assert "altitude" in _pars
-    assert isinstance(_pars["altitude"], float)
+    assert "reference_point_altitude" in _south.parameters.keys()
+    assert isinstance(_south.parameters["reference_point_altitude"]["value"], float)
 
 
 def test_get_corsika_site_parameters(db_config, model_version):

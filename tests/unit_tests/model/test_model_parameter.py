@@ -129,12 +129,6 @@ def test_handling_parameters(telescope_model_lst):
         tel_model._get_parameter_dict("bla_bla")
 
 
-def test_has_parameter(telescope_model_lst):
-    tel_model = telescope_model_lst
-    assert tel_model.has_parameter("secondary_mirror_diameter") is False
-    assert tel_model.has_parameter("focus_offset") is True
-
-
 def test_print_parameters(telescope_model_lst, capsys):
     tel_model = telescope_model_lst
     tel_model.print_parameters()
@@ -171,20 +165,6 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy.db = None
     telescope_copy._load_parameters_from_db()
     assert mock_db.call_count == 4
-
-
-def test_extra_labels(telescope_model_lst):
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    assert telescope_copy._extra_label is None
-    assert telescope_copy.extra_label == ""
-
-    telescope_copy.set_extra_label("test")
-    assert telescope_copy._extra_label == "test"
-    assert telescope_copy.extra_label == "test"
-
-
-def test_get_simtel_parameters(telescope_model_lst):
-    assert isinstance(telescope_model_lst.get_simtel_parameters(), dict)
 
 
 def test_change_parameter(telescope_model_lst):

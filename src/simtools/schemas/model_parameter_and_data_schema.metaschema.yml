@@ -290,6 +290,10 @@ definitions:
         type: string
         description: |-
           "Naming of parameter as used this simulation software"
+      set_meta_parameter:
+        type: boolean
+        description: |-
+          "Add this parameter as sim_telarray meta parameter using option 'set'"
     required:
       - name
     title: SimulationSoftware
