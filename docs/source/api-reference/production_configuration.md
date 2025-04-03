@@ -51,7 +51,7 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(generate-production-grid)
+(generate-production-grid)=
 
 ## generate_production_grid
 
