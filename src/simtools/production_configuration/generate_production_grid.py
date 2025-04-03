@@ -98,6 +98,13 @@ class GridGeneration:
         upper_radius_thresholds = np.array([row["upper_radius_threshold"] for row in matching_rows])
         viewcone_radii = np.array([row["viewcone_radius"] for row in matching_rows])
 
+        # wrap azimuth values on both sides to handle circularity
+        azimuths_wrapped = np.concatenate([azimuths, azimuths + 360, azimuths - 360])
+        zeniths_wrapped = np.tile(zeniths, 3)
+        lower_energy_thresholds_wrapped = np.tile(lower_energy_thresholds, 3)
+        upper_radius_thresholds_wrapped = np.tile(upper_radius_thresholds, 3)
+        viewcone_radii_wrapped = np.tile(viewcone_radii, 3)
+
         target_zeniths = np.linspace(
             self.axes["zenith_angle"]["range"][0],
             self.axes["zenith_angle"]["range"][1],
@@ -106,92 +113,40 @@ class GridGeneration:
         target_azimuths = self.create_circular_binning(
             self.axes["azimuth"]["range"], self.axes["azimuth"]["binning"]
         )
+        print("Target azimuths:", target_azimuths)
+        print("Target zeniths:", target_zeniths)
 
-        is_flat_zenith = len(np.unique(zeniths)) == 1
-        is_flat_azimuth = len(np.unique(azimuths)) == 1
+        target_grid = (
+            np.array(np.meshgrid(target_zeniths, target_azimuths, indexing="ij")).reshape(2, -1).T
+        )
 
-        if is_flat_zenith and is_flat_azimuth:
-            self._logger.info("Both zenith and azimuth are flat, assigning constant values.")
-            interpolated_energy = np.full(
-                target_zeniths.size * target_azimuths.size, lower_energy_thresholds[0]
-            )
-            interpolated_radius = np.full(
-                target_zeniths.size * target_azimuths.size, upper_radius_thresholds[0]
-            )
-            interpolated_viewcone = np.full(
-                target_zeniths.size * target_azimuths.size, viewcone_radii[0]
-            )
-        elif is_flat_zenith:
-            self._logger.info("Zenith is flat, interpolating only along azimuth.")
-            interpolated_energy = np.interp(
-                target_azimuths, azimuths, lower_energy_thresholds, left=np.nan, right=np.nan
-            )
-            interpolated_radius = np.interp(
-                target_azimuths, azimuths, upper_radius_thresholds, left=np.nan, right=np.nan
-            )
-            interpolated_viewcone = np.interp(
-                target_azimuths, azimuths, viewcone_radii, left=np.nan, right=np.nan
-            )
-            interpolated_energy = np.tile(interpolated_energy, (len(target_zeniths), 1))
-            interpolated_radius = np.tile(interpolated_radius, (len(target_zeniths), 1))
-            interpolated_viewcone = np.tile(interpolated_viewcone, (len(target_zeniths), 1))
-        elif is_flat_azimuth:
-            self._logger.info("Azimuth is flat, interpolating only along zenith.")
-            interpolated_energy = np.interp(
-                target_zeniths, zeniths, lower_energy_thresholds, left=np.nan, right=np.nan
-            )
-            interpolated_radius = np.interp(
-                target_zeniths, zeniths, upper_radius_thresholds, left=np.nan, right=np.nan
-            )
-            interpolated_viewcone = np.interp(
-                target_zeniths, zeniths, viewcone_radii, left=np.nan, right=np.nan
-            )
-            interpolated_energy = np.tile(
-                interpolated_energy[:, np.newaxis], (1, len(target_azimuths))
-            )
-            interpolated_radius = np.tile(
-                interpolated_radius[:, np.newaxis], (1, len(target_azimuths))
-            )
-            interpolated_viewcone = np.tile(
-                interpolated_viewcone[:, np.newaxis], (1, len(target_azimuths))
-            )
-        else:
-            self._logger.info("Neither zenith nor azimuth is flat, performing 2D interpolation.")
-            target_grid = (
-                np.array(np.meshgrid(target_zeniths, target_azimuths, indexing="ij"))
-                .reshape(2, -1)
-                .T
-            )
-            interpolated_energy = griddata(
-                points=np.column_stack((zeniths, azimuths)),
-                values=lower_energy_thresholds,
-                xi=target_grid,
-                method="linear",
-                fill_value=np.nan,
-            )
-            interpolated_radius = griddata(
-                points=np.column_stack((zeniths, azimuths)),
-                values=upper_radius_thresholds,
-                xi=target_grid,
-                method="linear",
-                fill_value=np.nan,
-            )
-            interpolated_viewcone = griddata(
-                points=np.column_stack((zeniths, azimuths)),
-                values=viewcone_radii,
-                xi=target_grid,
-                method="linear",
-                fill_value=np.nan,
-            )
-            interpolated_energy = interpolated_energy.reshape(
-                len(target_zeniths), len(target_azimuths)
-            )
-            interpolated_radius = interpolated_radius.reshape(
-                len(target_zeniths), len(target_azimuths)
-            )
-            interpolated_viewcone = interpolated_viewcone.reshape(
-                len(target_zeniths), len(target_azimuths)
-            )
+        interpolated_energy = griddata(
+            points=np.column_stack((zeniths_wrapped, azimuths_wrapped)),
+            values=lower_energy_thresholds_wrapped,
+            xi=target_grid,
+            method="linear",
+            fill_value=np.nan,
+        )
+        interpolated_radius = griddata(
+            points=np.column_stack((zeniths_wrapped, azimuths_wrapped)),
+            values=upper_radius_thresholds_wrapped,
+            xi=target_grid,
+            method="linear",
+            fill_value=np.nan,
+        )
+        interpolated_viewcone = griddata(
+            points=np.column_stack((zeniths_wrapped, azimuths_wrapped)),
+            values=viewcone_radii_wrapped,
+            xi=target_grid,
+            method="linear",
+            fill_value=np.nan,
+        )
+
+        interpolated_energy = interpolated_energy.reshape(len(target_zeniths), len(target_azimuths))
+        interpolated_radius = interpolated_radius.reshape(len(target_zeniths), len(target_azimuths))
+        interpolated_viewcone = interpolated_viewcone.reshape(
+            len(target_zeniths), len(target_azimuths)
+        )
 
         self.interpolated_limits = {
             "energy": interpolated_energy,
@@ -292,9 +247,8 @@ class GridGeneration:
                 )
 
                 energy_lower = self.interpolated_limits["energy"][zenith_idx, azimuth_idx]
-                grid_point["energy_range"] = {
+                grid_point["energy_threshold"] = {
                     "lower": energy_lower * u.TeV,
-                    "upper": self.axes["energy"]["range"][1] * u.TeV,
                 }
 
             if "radius" in self.interpolated_limits:
