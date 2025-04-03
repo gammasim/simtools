@@ -15,6 +15,7 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
 logger = logging.getLogger()
+IMAGE_PATH = "../../_images"
 
 
 class ReadParameters:
@@ -31,7 +32,7 @@ class ReadParameters:
         self.output_path = output_path
         self.observatory = args.get("observatory")
 
-    def _convert_to_md(self, input_file):
+    def _convert_to_md(self, parameter, input_file):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
         output_data_path = Path(self.output_path / "_data_files")
@@ -51,6 +52,9 @@ class ReadParameters:
 
             with output_file.open("w", encoding="utf-8") as outfile:
                 outfile.write(f"# {input_file.stem}\n")
+                outfile.write(
+                    f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_{parameter}.png)\n"
+                )
                 outfile.write("```\n")
                 outfile.write(file_contents)
                 outfile.write("\n```")
@@ -61,11 +65,11 @@ class ReadParameters:
 
         return f"_data_files/{output_file_name}"
 
-    def _format_parameter_value(self, value_data, unit, file_flag):
+    def _format_parameter_value(self, parameter, value_data, unit, file_flag):
         """Format parameter value based on type."""
         if file_flag:
             input_file_name = f"{self.output_path}/model/{value_data}"
-            output_file_name = self._convert_to_md(input_file_name)
+            output_file_name = self._convert_to_md(parameter, input_file_name)
             return f"[{Path(value_data).name}]({output_file_name})".strip()
         if isinstance(value_data, (str | int | float)):
             return f"{value_data} {unit}".strip()
@@ -152,7 +156,7 @@ class ReadParameters:
                     continue
 
                 file_flag = parameter_data.get("file", False)
-                value = self._format_parameter_value(value_data, unit, file_flag)
+                value = self._format_parameter_value(parameter_name, value_data, unit, file_flag)
                 parameter_version = parameter_data.get("parameter_version")
                 model_version = version
 
@@ -229,7 +233,7 @@ class ReadParameters:
                 continue
 
             file_flag = parameter_data.get("file", False)
-            value = self._format_parameter_value(value_data, unit, file_flag)
+            value = self._format_parameter_value(parameter, value_data, unit, file_flag)
 
             description = parameter_descriptions[0].get(parameter)
             short_description = parameter_descriptions[1].get(parameter, description)
@@ -376,7 +380,7 @@ class ReadParameters:
                 file.write("\n")
                 if comparison_data.get(parameter)[0]["file_flag"]:
                     file.write(
-                        f"![Parameter plot.](../../_images/{self.array_element}_{parameter}.png)"
+                        f"![Parameter plot.]({IMAGE_PATH}/{self.array_element}_{parameter}.png)"
                     )
 
     def _write_array_layouts_section(self, file, layouts):
@@ -391,8 +395,7 @@ class ReadParameters:
                 file.write(f"| [{element}]({element}.md) |\n")
             file.write("\n")
             image_path = (
-                f"../../_images/OBS-{self.site}_{layout_name}_"
-                f"{self.model_version.split('.')[0]}.png"
+                f"{IMAGE_PATH}/OBS-{self.site}_{layout_name}_{self.model_version.split('.')[0]}.png"
             )
             file.write(f"![{layout_name} Layout]({image_path})\n\n")
             file.write("\n")
@@ -443,7 +446,7 @@ class ReadParameters:
                     f"(#array-trigger-configurations) | {parameter_version} |\n"
                 )
             else:
-                formatted_value = self._format_parameter_value(value, unit, file_flag)
+                formatted_value = self._format_parameter_value(param_name, value, unit, file_flag)
                 file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
         file.write("\n")
 
