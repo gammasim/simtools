@@ -75,7 +75,6 @@ class GridGeneration:
             self._apply_lookup_table_limits()
 
     def _apply_lookup_table_limits(self):
-        """Apply interpolated limits from the provided lookup table to the axes."""
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
 
         if isinstance(lookup_table["telescope_ids"][0], str):
@@ -93,14 +92,15 @@ class GridGeneration:
             )
 
         zeniths = np.array([row["zenith"] for row in matching_rows])
-        azimuths = np.array([row["azimuth"] for row in matching_rows]) % 360  # Normalize azimuths
+        azimuths = np.array([row["azimuth"] for row in matching_rows]) % 360
+        nsb_values = np.array([1 if row["nsb"] == "dark" else 5 for row in matching_rows])
         lower_energy_thresholds = np.array([row["lower_energy_threshold"] for row in matching_rows])
         upper_radius_thresholds = np.array([row["upper_radius_threshold"] for row in matching_rows])
         viewcone_radii = np.array([row["viewcone_radius"] for row in matching_rows])
 
-        # wrap azimuth values on both sides to handle circularity
         azimuths_wrapped = np.concatenate([azimuths, azimuths + 360, azimuths - 360])
         zeniths_wrapped = np.tile(zeniths, 3)
+        nsb_wrapped = np.tile(nsb_values, 3)
         lower_energy_thresholds_wrapped = np.tile(lower_energy_thresholds, 3)
         upper_radius_thresholds_wrapped = np.tile(upper_radius_thresholds, 3)
         viewcone_radii_wrapped = np.tile(viewcone_radii, 3)
@@ -113,39 +113,46 @@ class GridGeneration:
         target_azimuths = self.create_circular_binning(
             self.axes["azimuth"]["range"], self.axes["azimuth"]["binning"]
         )
-        print("Target azimuths:", target_azimuths)
-        print("Target zeniths:", target_zeniths)
-
-        target_grid = (
-            np.array(np.meshgrid(target_zeniths, target_azimuths, indexing="ij")).reshape(2, -1).T
+        target_nsb = np.linspace(
+            self.axes["nsb"]["range"][0],
+            self.axes["nsb"]["range"][1],
+            self.axes["nsb"]["binning"],
         )
-
+        target_grid = (
+            np.array(np.meshgrid(target_zeniths, target_azimuths, target_nsb, indexing="ij"))
+            .reshape(3, -1)
+            .T
+        )
         interpolated_energy = griddata(
-            points=np.column_stack((zeniths_wrapped, azimuths_wrapped)),
+            points=np.column_stack((zeniths_wrapped, azimuths_wrapped, nsb_wrapped)),
             values=lower_energy_thresholds_wrapped,
             xi=target_grid,
             method="linear",
             fill_value=np.nan,
         )
         interpolated_radius = griddata(
-            points=np.column_stack((zeniths_wrapped, azimuths_wrapped)),
+            points=np.column_stack((zeniths_wrapped, azimuths_wrapped, nsb_wrapped)),
             values=upper_radius_thresholds_wrapped,
             xi=target_grid,
             method="linear",
             fill_value=np.nan,
         )
         interpolated_viewcone = griddata(
-            points=np.column_stack((zeniths_wrapped, azimuths_wrapped)),
+            points=np.column_stack((zeniths_wrapped, azimuths_wrapped, nsb_wrapped)),
             values=viewcone_radii_wrapped,
             xi=target_grid,
             method="linear",
             fill_value=np.nan,
         )
 
-        interpolated_energy = interpolated_energy.reshape(len(target_zeniths), len(target_azimuths))
-        interpolated_radius = interpolated_radius.reshape(len(target_zeniths), len(target_azimuths))
+        interpolated_energy = interpolated_energy.reshape(
+            len(target_zeniths), len(target_azimuths), len(target_nsb)
+        )
+        interpolated_radius = interpolated_radius.reshape(
+            len(target_zeniths), len(target_azimuths), len(target_nsb)
+        )
         interpolated_viewcone = interpolated_viewcone.reshape(
-            len(target_zeniths), len(target_azimuths)
+            len(target_zeniths), len(target_azimuths), len(target_nsb)
         )
 
         self.interpolated_limits = {
@@ -154,6 +161,7 @@ class GridGeneration:
             "viewcone": interpolated_viewcone,
             "target_zeniths": target_zeniths,
             "target_azimuths": target_azimuths,
+            "target_nsb": target_nsb,
         }
 
     def create_circular_binning(self, azimuth_range, num_bins):
@@ -238,6 +246,9 @@ class GridGeneration:
                 azimuth_idx = np.searchsorted(
                     self.interpolated_limits["target_azimuths"], grid_point["azimuth"].value
                 )
+                nsb_idx = np.searchsorted(
+                    self.interpolated_limits["target_nsb"], grid_point["nsb"].value
+                )
 
                 zenith_idx = np.clip(
                     zenith_idx, 0, len(self.interpolated_limits["target_zeniths"]) - 1
@@ -245,18 +256,21 @@ class GridGeneration:
                 azimuth_idx = np.clip(
                     azimuth_idx, 0, len(self.interpolated_limits["target_azimuths"]) - 1
                 )
+                nsb_idx = np.clip(nsb_idx, 0, len(self.interpolated_limits["target_nsb"]) - 1)
 
-                energy_lower = self.interpolated_limits["energy"][zenith_idx, azimuth_idx]
+                energy_lower = self.interpolated_limits["energy"][zenith_idx, azimuth_idx, nsb_idx]
                 grid_point["energy_threshold"] = {
                     "lower": energy_lower * u.TeV,
                 }
 
             if "radius" in self.interpolated_limits:
-                radius_value = self.interpolated_limits["radius"][zenith_idx, azimuth_idx]
+                radius_value = self.interpolated_limits["radius"][zenith_idx, azimuth_idx, nsb_idx]
                 grid_point["radius"] = radius_value * u.m
 
             if "viewcone" in self.interpolated_limits:
-                viewcone_value = self.interpolated_limits["viewcone"][zenith_idx, azimuth_idx]
+                viewcone_value = self.interpolated_limits["viewcone"][
+                    zenith_idx, azimuth_idx, nsb_idx
+                ]
                 grid_point["viewcone"] = viewcone_value * u.deg
 
             grid_points.append(grid_point)
@@ -342,16 +356,23 @@ class GridGeneration:
         cleaned_points = []
 
         def serialize_quantity(value):
-            """Serialize Quantity objects."""
-            if hasattr(value, "unit"):
-                return {"value": value.value, "unit": str(value.unit)}
+            """Serialize Quantity and numpy.ndarray objects."""
+            if isinstance(value, np.ndarray):
+                if isinstance(value, u.Quantity):
+                    return {
+                        "value": value.value.tolist(),
+                        "unit": str(value.unit),
+                    }  # Handle Quantity arrays
+                return value.tolist()  # Convert numpy array to list
+            if isinstance(value, u.Quantity):
+                return {"value": value.value, "unit": str(value.unit)}  # Handle single Quantity
             return value
 
         for point in grid_points:
             cleaned_point = {}
             for key, value in point.items():
                 if isinstance(value, dict):
-                    # nested dictionaries
+                    # Nested dictionaries
                     cleaned_point[key] = {k: serialize_quantity(v) for k, v in value.items()}
                 else:
                     cleaned_point[key] = serialize_quantity(value)
