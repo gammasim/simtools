@@ -244,15 +244,15 @@ def test_updating_export_model_files(db_config, io_handler, model_version):
     )
 
     logger.debug(
-        "tel._is_exported_model_files should be False because export_config_file"
+        "tel._is_exported_model_files should be False because write_sim_telarray_config_file"
         " was not called yet."
     )
     assert False is tel._is_exported_model_files_up_to_date
 
     # Exporting config file
-    tel.export_config_file()
+    tel.write_sim_telarray_config_file()
     logger.debug(
-        "tel._is_exported_model_files should be True because export_config_file was called."
+        "tel._is_exported_model_files should be True because write_sim_telarray_config_file was called."
     )
     assert tel._is_exported_model_files_up_to_date
 
@@ -267,7 +267,7 @@ def test_updating_export_model_files(db_config, io_handler, model_version):
 
     # Testing the DB connection
     logger.info("DB should NOT be read next.")
-    tel.export_config_file()
+    tel.write_sim_telarray_config_file()
 
     # Changing a parameter that is a file
     logger.debug("Changing a parameter that IS a file - camera_config_file")
@@ -317,7 +317,7 @@ def test_get_config_file(telescope_model_lst, mocker):
 
     telescope_copy = copy.deepcopy(telescope_model_lst)
     telescope_copy._is_config_file_up_to_date = False
-    mock_export = mocker.patch.object(TelescopeModel, "export_config_file")
+    mock_export = mocker.patch.object(TelescopeModel, "write_sim_telarray_config_file")
     telescope_copy.get_config_file()
     mock_export.assert_called_once()
 

@@ -453,16 +453,28 @@ class ModelParameter:
         self.db.export_model_files(parameters=pars_from_db, dest=self.config_file_directory)
         self._is_exported_model_files_up_to_date = True
 
-    def export_config_file(self):
-        """Export the config file used by sim_telarray."""
+    def write_sim_telarray_config_file(self, model=None):
+        """
+        Write the sim_telarray configuration file.
+
+        Parameters
+        ----------
+        model: TelescopeModel or SiteModel
+            Model object for additional parameter to be written to the config file.
+        """
+        # TODO check
         if not self._is_exported_model_files_up_to_date:
             self.export_model_files()
+
+        parameters = self.parameters
+        parameters.update(self._simulation_config_parameters["simtel"].get("parameters", {}))
+        if model is not None:
+            parameters.update(model.parameters)
 
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self.config_file_path,
             parameters=self.parameters,
-            config_parameters=self._simulation_config_parameters["simtel"],
         )
 
     @property
@@ -479,24 +491,16 @@ class ModelParameter:
             self._set_config_file_directory_and_name()
         return self._config_file_path
 
-    def get_config_file(self, no_export=False):
+    def get_config_file(self):
         """
-        Get the path of the config file for sim_telarray.
-
-        The config file is produced if the file is not up to date.
-
-        Parameters
-        ----------
-        no_export: bool
-            Turn it on if you do not want the file to be exported.
+        Get the file path for the sim_telarray configuration file.
 
         Returns
         -------
         Path
             Path of the exported config file for sim_telarray.
         """
-        if not self._is_config_file_up_to_date and not no_export:
-            self.export_config_file()
+        # TODO remove function
         return self.config_file_path
 
     def _load_simtel_config_writer(self):

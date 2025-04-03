@@ -153,7 +153,7 @@ class CameraEfficiency:
 
     def export_model_files(self):
         """Export model and config files to the output directory."""
-        self.telescope_model.export_config_file()
+        self.telescope_model.write_sim_telarray_config_file()
         if not self.config.get("skip_correction_to_nsb_spectrum", False):
             self.telescope_model.export_nsb_spectrum_to_telescope_altitude_correction_file(
                 model_directory=self.telescope_model.config_file_directory
