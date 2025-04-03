@@ -555,6 +555,21 @@ def test_get_simulation_software_name_from_parameter_name():
         )
         is None
     )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "reference_point_longitude",
+            simulation_software="sim_telarray",
+        )
+        is None
+    )
+    assert (
+        names.get_simulation_software_name_from_parameter_name(
+            "reference_point_longitude",
+            simulation_software="sim_telarray",
+            set_meta_parameter=True,
+        )
+        == "longitude"
+    )
 
 
 def test_file_name_with_version():

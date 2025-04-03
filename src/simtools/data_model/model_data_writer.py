@@ -269,6 +269,7 @@ class ModelDataWriter:
             "unit": unit,
             "type": self._get_parameter_type(),
             "file": self._parameter_is_a_file(),
+            "meta_parameter": False,
         }
         return self.validate_and_transform(
             product_data_dict=data_dict,

@@ -914,12 +914,14 @@ def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory
     mocks = add_parameter_mocks
     mocks["validate"].return_value = {"parameter": "param1", "value": "value1", "file": True}
     mock_insert_file_to_db = mocker.patch.object(db, "insert_file_to_db")
+    mock_is_utf8 = mocker.patch("simtools.utils.general.is_utf8_file", return_value=True)
 
     par_dict = {"parameter": "param1", "value": "value1", "file": True}
     collection_name = "telescopes"
 
     db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
 
+    mock_is_utf8.assert_called_once_with(Path(f"{tmp_test_directory!s}/value1"))
     mocks["validate"].assert_called_once_with(par_dict)
     mocks["db_name"].assert_called_once_with(test_db)
     mocks["get_collection"].assert_called_once_with(test_db, collection_name)
@@ -929,6 +931,13 @@ def test_add_new_parameter_with_file(db, add_parameter_mocks, tmp_test_directory
     )
     mock_insert_file_to_db.assert_called_once_with(f"{tmp_test_directory!s}/value1", test_db)
     mocks["reset_cache"].assert_called_once()
+
+    # non-utf8 file
+    mock_insert_file_to_db.reset_mock()
+    mock_is_utf8.return_value = False
+    with pytest.raises(ValueError, match=r"File is not UTF-8 encoded"):
+        db.add_new_parameter(test_db, par_dict, collection_name, tmp_test_directory)
+    mock_insert_file_to_db.assert_not_called()
 
 
 def test_add_new_parameter_with_file_no_prefix(db, add_parameter_mocks, test_db):
