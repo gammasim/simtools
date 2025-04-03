@@ -16,31 +16,21 @@ load_dotenv(".env")
 
 config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
 test_configs, test_ids = configuration.get_list_of_test_configurations(config_files)
-
-
-test_configs = [pytest.param(config, id=test_id) for config, test_id in zip(test_configs, test_ids)]
-
-
-@pytest.fixture(scope="session", params=test_configs)
-def test_config(request):
-    """
-    Fixture to parametrize the test with the configurations from the config files.
-
-    Allows to add markers to very requirements and use cases for CTAO using the
-    'pytest-requirements' package.
-    """
-    config = request.param
-
+test_parameters = []
+for config, test_id in zip(test_configs, test_ids):
+    marks = []
     if config.get("TEST_REQUIREMENT"):
-        request.applymarker(pytest.mark.verifies_requirement(config["TEST_REQUIREMENT"]))
+        marks.append(pytest.mark.verifies_requirement(config["TEST_REQUIREMENT"]))
 
     if config.get("TEST_USE_CASE"):
-        request.applymarker(pytest.mark.verifies_usecase(config["TEST_USE_CASE"]))
+        marks.append(pytest.mark.verifies_usecase(config["TEST_USE_CASE"]))
 
-    return config
+    param = pytest.param(config, id=test_id, marks=marks)
+    test_parameters.append(param)
 
 
-def test_applications_from_config(tmp_test_directory, test_config, monkeypatch, request):
+@pytest.mark.parametrize("config", test_parameters)
+def test_applications_from_config(tmp_test_directory, config, request):
     """
     Test all applications from config files found in the config directory.
 
@@ -52,7 +42,6 @@ def test_applications_from_config(tmp_test_directory, test_config, monkeypatch, 
         Dictionary with the configuration parameters for the test.
 
     """
-    config = test_config
     tmp_config = copy.deepcopy(config)
     skip_message = helpers.skip_camera_efficiency(tmp_config)
     if skip_message:
