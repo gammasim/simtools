@@ -117,13 +117,28 @@ class Simulator:
         ArrayModel
             ArrayModel object.
         """
-        return ArrayModel(
-            label=self.label,
-            site=self.args_dict.get("site"),
-            layout_name=self.args_dict.get("array_layout_name"),
-            mongo_db_config=mongo_db_config,
-            model_version=self.args_dict.get("model_version", None),
-        )
+        model_version = self.args_dict.get("model_version", None)
+        array_models = []
+
+        if not isinstance(model_version, list):
+            model_version = [model_version]
+
+        for version in model_version:
+            array_models.append(
+                ArrayModel(
+                    label=self.label,
+                    site=self.args_dict.get("site"),
+                    layout_name=self.args_dict.get("array_layout_name"),
+                    mongo_db_config=mongo_db_config,
+                    model_version=version,
+                )
+            )
+            # The following ensures we write out the sim_telarray config files for all array models,
+            # not just the last one (which is done later)
+            if len(model_version) > 1:
+                array_models[-1].export_all_simtel_config_files()
+
+        return array_models
 
     def _initialize_run_list(self):
         """
@@ -214,12 +229,16 @@ class Simulator:
         CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
             Simulation runner object.
         """
-        corsika_config = CorsikaConfig(
-            array_model=self.array_model,
-            label=self.label,
-            args_dict=self.args_dict,
-            db_config=db_config,
-        )
+        corsika_configuations = []
+        for array_model in self.array_model:
+            corsika_configuations.append(
+                CorsikaConfig(
+                    array_model=array_model,
+                    label=self.label,
+                    args_dict=self.args_dict,
+                    db_config=db_config,
+                )
+            )
 
         runner_class = {
             "corsika": CorsikaRunner,
@@ -229,7 +248,7 @@ class Simulator:
 
         runner_args = {
             "label": self.label,
-            "corsika_config": corsika_config,
+            "corsika_config": corsika_configuations[-1],
             "simtel_path": self.args_dict.get("simtel_path"),
             "use_multipipe": runner_class is CorsikaSimtelRunner,
         }
@@ -238,6 +257,8 @@ class Simulator:
             runner_args["keep_seeds"] = self.args_dict.get("corsika_test_seeds", False)
         if runner_class is not CorsikaRunner:
             runner_args["sim_telarray_seeds"] = self.args_dict.get("sim_telarray_seeds")
+        if runner_class is CorsikaSimtelRunner:
+            runner_args["corsika_config"] = corsika_configuations
 
         return runner_class(**runner_args)
 

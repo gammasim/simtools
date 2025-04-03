@@ -271,6 +271,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 help="production model version",
                 type=str,
                 default=None,
+                nargs="+",
             )
         if "parameter_version" in model_options:
             _job_group.add_argument(

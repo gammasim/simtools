@@ -47,21 +47,27 @@ class CorsikaSimtelRunner:
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
 
-        self.corsika_config.set_output_file_and_directory(use_multipipe)
+        self.corsika_config[0].set_output_file_and_directory(use_multipipe)
         self.corsika_runner = CorsikaRunner(
-            corsika_config=corsika_config,
+            corsika_config=corsika_config[-1],
             simtel_path=simtel_path,
             label=label,
             keep_seeds=keep_seeds,
             use_multipipe=use_multipipe,
         )
-        self.simulator_array = SimulatorArray(
-            corsika_config=corsika_config,
-            simtel_path=simtel_path,
-            label=label,
-            use_multipipe=use_multipipe,
-            sim_telarray_seeds=sim_telarray_seeds,
-        )
+        # The simulator array should be defined for every CORSIKA configuration
+        # because it allows to define multiple sim_telarray instances
+        self.simulator_array = []
+        for _corsika_config in corsika_config:
+            self.simulator_array.append(
+                SimulatorArray(
+                    corsika_config=_corsika_config,
+                    simtel_path=simtel_path,
+                    label=label,
+                    use_multipipe=use_multipipe,
+                    sim_telarray_seeds=sim_telarray_seeds,
+                )
+            )
 
     def prepare_run_script(
         self, run_number=None, input_file=None, extra_commands=None, use_pfp=False
@@ -103,15 +109,20 @@ class CorsikaSimtelRunner:
         Path:
             Full path of the run script file.
         """
-        run_command = self._make_run_command(
-            run_number=run_number,
-            input_file="-",  # instruct sim_telarray to take input from standard output
-        )
-        multipipe_file = Path(self.corsika_config.config_file_path.parent).joinpath(
-            self.corsika_config.get_corsika_config_file_name("multipipe")
+        multipipe_file = Path(self.corsika_config[0].config_file_path.parent).joinpath(
+            self.corsika_config[0].get_corsika_config_file_name("multipipe")
         )
         with open(multipipe_file, "w", encoding="utf-8") as file:
-            file.write(f"{run_command}")
+            for corsika_config, simulator_array in zip(self.corsika_config, self.simulator_array):
+                run_command = self._make_run_command(
+                    run_number=run_number,
+                    input_file="-",  # instruct sim_telarray to take input from standard output
+                    corsika_config=corsika_config,
+                    simulator_array=simulator_array,
+                )
+                file.write(f"{run_command}")
+                file.write("\n")
+
         self._logger.info(f"Multipipe script: {multipipe_file}")
         self._write_multipipe_script(multipipe_file)
 
@@ -124,7 +135,7 @@ class CorsikaSimtelRunner:
         multipipe_file: str or Path
             The name of the multipipe file which contains all of the multipipe commands.
         """
-        multipipe_script = Path(self.corsika_config.config_file_path.parent).joinpath(
+        multipipe_script = Path(self.corsika_config[0].config_file_path.parent).joinpath(
             "run_cta_multipipe"
         )
         with open(multipipe_script, "w", encoding="utf-8") as file:
@@ -135,7 +146,9 @@ class CorsikaSimtelRunner:
 
         multipipe_script.chmod(multipipe_script.stat().st_mode | stat.S_IEXEC)
 
-    def _make_run_command(self, run_number=None, input_file=None):
+    def _make_run_command(
+        self, run_number=None, input_file=None, corsika_config=None, simulator_array=None
+    ):
         """
         Build and return the command to run simtel_array.
 
@@ -158,43 +171,43 @@ class CorsikaSimtelRunner:
             weak_pointing = False
 
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
-        command += f" -c {self.corsika_config.array_model.get_config_file()}"
-        command += f" -I{self.corsika_config.array_model.get_config_directory()}"
-        command += self.simulator_array.get_config_option(
-            "telescope_theta", self.corsika_config.zenith_angle, weak_option=weak_pointing
+        command += f" -c {corsika_config.array_model.get_config_file()}"
+        command += f" -I{corsika_config.array_model.get_config_directory()}"
+        command += simulator_array.get_config_option(
+            "telescope_theta", corsika_config.zenith_angle, weak_option=weak_pointing
         )
-        command += self.simulator_array.get_config_option(
-            "telescope_phi", self.corsika_config.azimuth_angle, weak_option=weak_pointing
+        command += simulator_array.get_config_option(
+            "telescope_phi", corsika_config.azimuth_angle, weak_option=weak_pointing
         )
-        command += self.simulator_array.get_config_option(
+        command += simulator_array.get_config_option(
             "power_law",
             SimulatorArray.get_power_law_for_sim_telarray_histograms(
-                self.corsika_config.primary_particle
+                corsika_config.primary_particle
             ),
         )
-        command += self.simulator_array.get_config_option(
+        command += simulator_array.get_config_option(
             "histogram_file",
-            self.get_file_name(
+            simulator_array.get_file_name(
                 simulation_software="simtel", file_type="histogram", run_number=run_number
             ),
         )
-        command += self.simulator_array.get_config_option("random_state", "none")
+        command += simulator_array.get_config_option("random_state", "none")
         if self.sim_telarray_seeds:
-            command += self.simulator_array.get_config_option(
-                "random_seed", self.sim_telarray_seeds
-            )
-        command += self.simulator_array.get_config_option("show", "all")
-        command += self.simulator_array.get_config_option(
+            command += simulator_array.get_config_option("random_seed", self.sim_telarray_seeds)
+        command += simulator_array.get_config_option("show", "all")
+        command += simulator_array.get_config_option(
             "output_file",
-            self.simulator_array.get_file_name(
+            simulator_array.get_file_name(
                 simulation_software="simtel", file_type="output", run_number=run_number
             ),
         )
         command += f" {input_file}"
-        _log_file = self.simulator_array.get_file_name(
+        _log_file = simulator_array.get_file_name(
             simulation_software="simtel", file_type="log", run_number=run_number
         )
         command += f" | gzip > {_log_file} 2>&1 || exit"
+
+        logging.debug(f"sim_telarray command to be included in the multipipe cfg: {command}")
 
         # Remove the default sim_telarray configuration directories
         return clear_default_sim_telarray_cfg_directories(command)
@@ -221,5 +234,7 @@ class CorsikaSimtelRunner:
             # preference to simtel output (multipipe)
             simulation_software = "simtel" if self.simulator_array else "corsika"
 
-        runner = self.corsika_runner if simulation_software == "corsika" else self.simulator_array
+        runner = (
+            self.corsika_runner if simulation_software == "corsika" else self.simulator_array[0]
+        )
         return runner.get_file_name(file_type=file_type, run_number=run_number, mode=mode)
