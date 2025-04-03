@@ -450,6 +450,8 @@ class ModelParameter:
             for par in self._added_parameter_files:
                 pars_from_db.pop(par)
 
+        print("MMMMMODEL DIRECTORY", self.config_file_directory)
+
         self.db.export_model_files(parameters=pars_from_db, dest=self.config_file_directory)
         self._is_exported_model_files_up_to_date = True
 
