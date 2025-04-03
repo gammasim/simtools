@@ -7,6 +7,43 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [0.14.0](https://github.com/gammasim/simtools/tree/0.14.0) - 2025-04-03
+
+### Bugfixes
+
+- Fix integration tests uploading values / files to sandbox DB. ([#1453](https://github.com/gammasim/simtools/pull/1453))
+- Fix building of production images from branches other than `main`. ([#1467](https://github.com/gammasim/simtools/pull/1467))
+- Add missing `parameter` definition in model parameter schema. ([#1470](https://github.com/gammasim/simtools/pull/1470))
+- Primary degraded map is a parameter applied for all telescope types. ([#1475](https://github.com/gammasim/simtools/pull/1475))
+- Fixes a bug in the selection of the triggered events by telescope IDs for the limits calculation. ([#1483](https://github.com/gammasim/simtools/pull/1483))
+- Fix how integration tests are marked for use cases (used in SimPipe AIV). ([#1484](https://github.com/gammasim/simtools/pull/1484))
+
+### New Features
+
+- Added functionality to automate report generation for array elements and parameters. ([#1436](https://github.com/gammasim/simtools/pull/1436))
+- Add full set of array pointings to reduced mc event data file if available in the mc header. ([#1439](https://github.com/gammasim/simtools/pull/1439))
+- Add fitting of afterpulse spectrum to derive single pe application. ([#1446](https://github.com/gammasim/simtools/pull/1446))
+- Run scheduled nightly integration and unit tests on production DB. ([#1454](https://github.com/gammasim/simtools/pull/1454))
+- Generalize extraction of MC event tree from sim_telarrary files; generic writer and reader. ([#1458](https://github.com/gammasim/simtools/pull/1458))
+- Add functionality to generate reports for site-specific parameters. ([#1459](https://github.com/gammasim/simtools/pull/1459))
+- Allow to skip integration tests for production DB. ([#1460](https://github.com/gammasim/simtools/pull/1460))
+- Add an application to print the versions of simtools, the DB, sim_telarray, and CORSIKA (`simtools-print-version`). ([#1461](https://github.com/gammasim/simtools/pull/1461))
+- Use files to pass filepaths for simtel event data files and telescope IDs in corsika limits derivation tool. ([#1464](https://github.com/gammasim/simtools/pull/1464))
+- Retrieve CTAO layout definitions. Merge with model parameter value and write to disk. ([#1465](https://github.com/gammasim/simtools/pull/1465))
+- Add tests to ensure that model table files uploaded to DB follow Unicode. ([#1473](https://github.com/gammasim/simtools/pull/1473))
+- Add writing of metadata into sim_telarray configuration files. ([#1474](https://github.com/gammasim/simtools/pull/1474))
+- Update model parameter definitions to reflect those from most recent sim_telarray release. ([#1476](https://github.com/gammasim/simtools/pull/1476))
+
+### Maintenance
+
+- Remove docker prod image generation; documentation update and improved workflow naming. ([#1447](https://github.com/gammasim/simtools/pull/1447))
+- Change requirement of arguments in event scaling application and improve documentation. ([#1449](https://github.com/gammasim/simtools/pull/1449))
+- Refactor light emission application and move logic to helper functions. ([#1450](https://github.com/gammasim/simtools/pull/1450))
+- Use consistently numpy dtypes for model parameters. ([#1451](https://github.com/gammasim/simtools/pull/1451))
+- Remove h5py dependency. ([#1456](https://github.com/gammasim/simtools/pull/1456))
+- Store arrays in model parameters as arrays and not as strings. ([#1466](https://github.com/gammasim/simtools/pull/1466))
+
+
 ## [0.13.0](https://github.com/gammasim/simtools/tree/0.13.0) - 2025-03-19
 
 ### Bugfixes
