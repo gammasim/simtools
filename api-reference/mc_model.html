@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g9059837 Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+gc266d1e Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=c3dd78a2"></script>
+    <script src="../_static/documentation_options.js?v=e90ba4ec"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9059837 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc266d1e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -535,11 +535,9 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_value"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_value()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_value_with_unit"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_value_with_unit()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_version"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_version()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_simtel_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_simtel_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_simulation_software_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_simulation_software_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.has_parameter"><code class="docutils literal notranslate"><span class="pre">ModelParameter.has_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.parameters</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.print_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.print_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.set_extra_label"><code class="docutils literal notranslate"><span class="pre">ModelParameter.set_extra_label()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1352,26 +1350,6 @@ of the database structure is needed when accessing the model parameters.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_simtel_parameters">
-<span class="sig-name descname"><span class="pre">get_simtel_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.get_simtel_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_simtel_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Get simtel parameters as name and value pairs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>parameters: dict</strong></dt><dd><p>Parameters (simtools) to be renamed (if necessary)</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>simtel parameters as dict (sorted by parameter names)</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_simulation_software_parameters">
 <span class="sig-name descname"><span class="pre">get_simulation_software_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.get_simulation_software_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_simulation_software_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Get simulation software parameters.</p>
@@ -1391,20 +1369,14 @@ of the database structure is needed when accessing the model parameters.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.has_parameter">
-<span class="sig-name descname"><span class="pre">has_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.has_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.has_parameter" title="Link to this definition">#</a></dt>
-<dd><p>Check if a parameter exists in the model.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.parameters">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#model.model_parameter.ModelParameter.parameters" title="Link to this definition">#</a></dt>
+<dd><p>Model parameters dictionary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>par_name</strong><span class="classifier">str</span></dt><dd><p>Name of the parameter.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>bool</dt><dd><p>True if parameter exists in the model.</p>
+<dt>dict</dt><dd><p>Dictionary containing all model parameters</p>
 </dd>
 </dl>
 </dd>
@@ -1415,22 +1387,6 @@ of the database structure is needed when accessing the model parameters.</p>
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.print_parameters">
 <span class="sig-name descname"><span class="pre">print_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.print_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.print_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Print parameters and their values for debugging purposes.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.set_extra_label">
-<span class="sig-name descname"><span class="pre">set_extra_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extra_label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.set_extra_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.set_extra_label" title="Link to this definition">#</a></dt>
-<dd><p>Set an extra label for the name of the config file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>extra_label: str</strong></dt><dd><p>Extra label to be appended to the original label.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The config file directory name is not affected by the extra label. Only the file name is         changed. This is important for the ArrayModel class to export multiple config files in the        same directory.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1949,11 +1905,9 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_value"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_value()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_value_with_unit"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_value_with_unit()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_version"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_version()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_simtel_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_simtel_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_simulation_software_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_simulation_software_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.has_parameter"><code class="docutils literal notranslate"><span class="pre">ModelParameter.has_parameter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.parameters</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.print_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.print_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.set_extra_label"><code class="docutils literal notranslate"><span class="pre">ModelParameter.set_extra_label()</span></code></a></li>
 </ul>
 </li>
 </ul>

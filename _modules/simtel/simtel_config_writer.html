@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_writer &#8212; simtools v0.1.dev1+g9059837 Manual</title>
+    <title>simtel.simtel_config_writer &#8212; simtools v0.1.dev1+gc266d1e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c3dd78a2"></script>
+    <script src="../../_static/documentation_options.js?v=e90ba4ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9059837 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc266d1e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -472,16 +472,24 @@ document.write(`
             <span class="p">)</span>
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#endif</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">_simtel_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                    <span class="n">par</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span>
+                <span class="p">)</span>
                 <span class="c1"># array trigger is a site parameter, not a telescope parameter</span>
                 <span class="c1"># fake_mirror_list is not a sim_telarray parameter (used for testeff only)</span>
-                <span class="k">if</span> <span class="n">_simtel_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;array_trigger&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_simtel_name</span> <span class="o">==</span> <span class="s2">&quot;fake_mirror_list&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="ow">not</span> <span class="n">_simtel_name</span>
+                    <span class="ow">or</span> <span class="n">_simtel_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;array_trigger&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">_simtel_name</span> <span class="o">==</span> <span class="s2">&quot;fake_mirror_list&quot;</span>
+                <span class="p">):</span>
                     <span class="k">continue</span>
-                <span class="k">if</span> <span class="n">_simtel_name</span><span class="p">:</span>
-                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value_string_for_simtel</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">_config_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_metadata</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_config_meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value_string_for_simtel</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">_config_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_metadata</span><span class="p">(</span><span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_config_meta</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_value_string_for_simtel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
@@ -505,7 +513,7 @@ document.write(`
             <span class="n">value</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_list_to_string</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">shorten_list</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_simtel_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_simtel_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_type</span><span class="p">,</span> <span class="n">model_parameters</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return simtel metadata.</span>
 
@@ -513,35 +521,60 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        type: str</span>
 <span class="sd">            Type of the configuration file (telescope, site)</span>
+<span class="sd">        model_parameters: dict</span>
+<span class="sd">            Model parameters dictionary.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Dictionary with simtel metadata.</span>
+<span class="sd">        list</span>
+<span class="sd">            List with simtel metadata.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;config_release&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2"> written by simtools v</span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;config_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span>
+        <span class="n">meta_parameters</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;config_release = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2"> with simtools v</span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
         <span class="k">if</span> <span class="n">config_type</span> <span class="o">==</span> <span class="s2">&quot;telescope&quot;</span><span class="p">:</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;camera_config_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;camera_config_variant&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;camera_config_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;optics_config_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;optics_config_variant&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;optics_config_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span>
+            <span class="n">meta_parameters</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;camera_config_name = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;camera_config_variant = &quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;camera_config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;optics_config_name = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;optics_config_variant = &quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;optics_config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;metaparam telescope&quot;</span>
         <span class="k">elif</span> <span class="n">config_type</span> <span class="o">==</span> <span class="s2">&quot;site&quot;</span><span class="p">:</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;site_config_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;site_config_variant&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;site_config_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;array_config_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layout_name</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;array_config_variant&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;array_config_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span>
+            <span class="n">meta_parameters</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;site_config_name = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;site_config_variant = &quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;site_config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;array_config_name = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_layout_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;array_config_variant = &quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;array_config_version = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;metaparam global&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown metadata type </span><span class="si">{</span><span class="n">config_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">parameters</span>
+
+        <span class="k">if</span> <span class="n">model_parameters</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">model_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">simtel_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="n">set_meta_parameter</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">simtel_name</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_parameter&quot;</span><span class="p">):</span>
+                    <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> add </span><span class="si">{</span><span class="n">simtel_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">simtel_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="n">set_meta_parameter</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">simtel_name</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_parameter&quot;</span><span class="p">):</span>
+                    <span class="n">meta_parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2"> set </span><span class="si">{</span><span class="n">simtel_name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">meta_parameters</span>
 
 <div class="viewcode-block" id="SimtelConfigWriter.write_array_config_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file">[docs]</a>
@@ -576,7 +609,7 @@ document.write(`
 
             <span class="c1"># Writing site parameters</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_write_site_parameters</span><span class="p">(</span>
-                <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">telescope_model</span>
+                <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">telescope_model</span>
             <span class="p">)</span>
 
             <span class="c1"># Maximum telescopes</span>
@@ -679,7 +712,7 @@ document.write(`
         <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">comment_char</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_write_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_site_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write site parameters.</span>
 
@@ -687,27 +720,26 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        file: file</span>
 <span class="sd">            File to write on.</span>
-<span class="sd">        site_model: SiteModel</span>
-<span class="sd">            Site model.</span>
+<span class="sd">        site_parameters: site parameters</span>
+<span class="sd">            Site parameters.</span>
 <span class="sd">        model_path: Path</span>
 <span class="sd">            Path to the model for writing of additional files.</span>
 <span class="sd">        telescope_model: dict of TelescopeModel</span>
 <span class="sd">            Telescope models.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;% Site parameters</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">_site_parameters</span> <span class="o">=</span> <span class="n">site_model</span><span class="o">.</span><span class="n">get_simtel_parameters</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_site_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">site_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">_simtel_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
                 <span class="n">par</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span>
             <span class="p">)</span>
             <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>
-                <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span>
+                <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">telescope_model</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">_simtel_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">_simtel_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_metadata</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">_simtel_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_simtel_meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">_simtel_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">_simtel_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_simtel_metadata</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="n">site_parameters</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_simtel_meta</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span><span class="si">}{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_model_parameters_to_simtel_format</span><span class="p">(</span>

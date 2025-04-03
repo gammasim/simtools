@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+g9059837 Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+gc266d1e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c3dd78a2"></script>
+    <script src="../../_static/documentation_options.js?v=e90ba4ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9059837 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc266d1e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -483,6 +483,18 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">False</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model parameters dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary containing all model parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_parameter_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get model parameter dictionary as stored in the DB.</span>
@@ -507,11 +519,11 @@ document.write(`
 <span class="sd">            If par_name does not match any parameter in this model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">]</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not found in the model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidModelParameterError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+            <span class="k">raise</span> <span class="n">InvalidModelParameterError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> was not found in the model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
 <div class="viewcode-block" id="ModelParameter.get_parameter_value">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_parameter_value">[docs]</a>
@@ -672,7 +684,7 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.print_parameters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">print_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print parameters and their values for debugging purposes.&quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">par</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">par</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
@@ -716,24 +728,6 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">simulation_software</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ModelParameter.has_parameter">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.has_parameter">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">has_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if a parameter exists in the model.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        par_name : str</span>
-<span class="sd">            Name of the parameter.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        bool</span>
-<span class="sd">            True if parameter exists in the model.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">par_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span></div>
-
-
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_simulation_software_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read simulation software parameters from DB.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">simulation_software</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="p">:</span>
@@ -758,12 +752,12 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
@@ -774,61 +768,10 @@ document.write(`
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_simulation_software_parameter</span><span class="p">()</span>
 
-<div class="viewcode-block" id="ModelParameter.set_extra_label">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.set_extra_label">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_label</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set an extra label for the name of the config file.</span>
-
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        The config file directory name is not affected by the extra label. Only the file name is \</span>
-<span class="sd">        changed. This is important for the ArrayModel class to export multiple config files in the\</span>
-<span class="sd">        same directory.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        extra_label: str</span>
-<span class="sd">            Extra label to be appended to the original label.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="o">=</span> <span class="n">extra_label</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span></div>
-
-
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">extra_label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the extra label if defined, if not return &#39;&#39;.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-
-<div class="viewcode-block" id="ModelParameter.get_simtel_parameters">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_simtel_parameters">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_simtel_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get simtel parameters as name and value pairs.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        parameters: dict</span>
-<span class="sd">            Parameters (simtools) to be renamed (if necessary)</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            simtel parameters as dict (sorted by parameter names)</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
-
-        <span class="n">_simtel_parameter_value</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
-            <span class="n">_par_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
-                <span class="n">key</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">_par_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">_simtel_parameter_value</span><span class="p">[</span><span class="n">_par_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_simtel_parameter_value</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span></div>
-
 
 <div class="viewcode-block" id="ModelParameter.change_parameter">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.change_parameter">[docs]</a>
@@ -850,29 +793,24 @@ document.write(`
 <span class="sd">        InvalidModelParameterError</span>
 <span class="sd">            If the parameter to be changed does not exist in this model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">par_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> not in the model&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidModelParameterError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">par_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidModelParameterError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> not in the model&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">convert_string_to_list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
 
+        <span class="n">par_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_type</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">gen</span><span class="o">.</span><span class="n">validate_data_type</span><span class="p">(</span>
-            <span class="n">reference_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_type</span><span class="p">(</span><span class="n">par_name</span><span class="p">),</span>
+            <span class="n">reference_dtype</span><span class="o">=</span><span class="n">par_type</span><span class="p">,</span>
             <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">allow_subtypes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Could not cast </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_type</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not cast </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">par_type</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Changing parameter </span><span class="si">{</span><span class="n">par_name</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">par_name</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
         <span class="c1"># In case parameter is a file, the model files will be outdated</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter_file_flag</span><span class="p">(</span><span class="n">par_name</span><span class="p">):</span>
@@ -918,7 +856,7 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span><span class="n">par</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="o">=</span> <span class="kc">False</span></div>
@@ -948,7 +886,7 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the model files into the config file directory.&quot;&quot;&quot;</span>
         <span class="c1"># Removing parameter files added manually (which are not in DB)</span>
-        <span class="n">pars_from_db</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">)</span>
+        <span class="n">pars_from_db</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span><span class="p">:</span>
                 <span class="n">pars_from_db</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">par</span><span class="p">)</span>
@@ -961,18 +899,14 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.export_config_file">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">export_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the config file used by sim_telarray.&quot;&quot;&quot;</span>
-        <span class="c1"># Exporting model file</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">()</span>
 
-        <span class="c1"># Using SimtelConfigWriter to write the config file.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_simtel_config_writer</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span><span class="o">.</span><span class="n">write_telescope_config_file</span><span class="p">(</span>
             <span class="n">config_file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">,</span>
-            <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_simtel_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">),</span>
-            <span class="n">config_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_simtel_parameters</span><span class="p">(</span>
-                <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">]</span>
-            <span class="p">),</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+            <span class="n">config_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">],</span>
         <span class="p">)</span></div>
 
 

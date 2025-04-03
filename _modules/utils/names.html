@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.names &#8212; simtools v0.1.dev1+g9059837 Manual</title>
+    <title>utils.names &#8212; simtools v0.1.dev1+gc266d1e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=c3dd78a2"></script>
+    <script src="../../_static/documentation_options.js?v=e90ba4ec"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9059837 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc266d1e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -920,6 +920,7 @@ document.write(`
 <span class="k">def</span><span class="w"> </span><span class="nf">get_simulation_software_name_from_parameter_name</span><span class="p">(</span>
     <span class="n">parameter_name</span><span class="p">,</span>
     <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
+    <span class="n">set_meta_parameter</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the name used in the given simulation software from the model parameter name.</span>
@@ -933,6 +934,8 @@ document.write(`
 <span class="sd">        Model parameter name.</span>
 <span class="sd">    simulation_software: str</span>
 <span class="sd">        Simulation software name.</span>
+<span class="sd">    set_meta_parameter: bool</span>
+<span class="sd">        If True, return values with &#39;set_meta_parameter&#39; field set to True.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -944,7 +947,10 @@ document.write(`
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2"> without schema definition&quot;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">software</span> <span class="ow">in</span> <span class="n">_parameter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-        <span class="k">if</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">simulation_software</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">simulation_software</span>
+            <span class="ow">and</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;set_meta_parameter&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="n">set_meta_parameter</span>
+        <span class="p">):</span>
             <span class="k">return</span> <span class="n">software</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;internal_parameter_name&quot;</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="kc">None</span>
