@@ -163,10 +163,10 @@ class SimtelIOEventDataReader:
             Filtered triggered IDs and indices.
         """
         triggered_indices = np.arange(len(triggered_id))
-        if telescope_list is not None:
+        if telescope_list:
             mask = np.array(
                 [
-                    all(tel in event for tel in telescope_list)
+                    any(tel in event for tel in telescope_list)
                     for event in trigger_telescope_list_list
                 ]
             )
