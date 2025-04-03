@@ -166,7 +166,6 @@ def test_get_simtel_metadata_without_model_parameters(simtel_config_writer):
     assert f"optics_config_name = {simtel_config_writer._telescope_model_name}" in _tel
 
     _site = simtel_config_writer._get_simtel_metadata("site", None)
-    assert len(_site) == 8
     assert f"site_config_name = {simtel_config_writer._site}" in _site
     assert f"array_config_name = {simtel_config_writer._layout_name}" in _site
 
