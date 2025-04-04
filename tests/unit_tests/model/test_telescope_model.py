@@ -23,7 +23,7 @@ def test_get_on_axis_eff_optical_area(telescope_model_lst):
 # depends on prod5; prod6 is incomplete in the DB
 def test_read_two_dim_wavelength_angle(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
-    tel_model.export_config_file()
+    tel_model.write_sim_telarray_config_file()
 
     two_dim_file = tel_model.get_parameter_value("camera_filter")
     assert tel_model.config_file_directory.joinpath(two_dim_file).exists()
@@ -54,7 +54,7 @@ def test_read_incidence_angle_distribution(telescope_model_sst):
 @pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_calc_average_curve(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
-    tel_model.export_config_file()
+    tel_model.write_sim_telarray_config_file()
 
     two_dim_file = tel_model.get_parameter_value("camera_filter")
     two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)
@@ -70,7 +70,7 @@ def test_calc_average_curve(telescope_model_sst_prod5):
 @pytest.mark.xfail(reason="Test requires Derived-Values Database")
 def test_export_table_to_model_directory(telescope_model_sst_prod5):
     tel_model = telescope_model_sst_prod5
-    tel_model.export_config_file()
+    tel_model.write_sim_telarray_config_file()
 
     two_dim_file = tel_model.get_parameter_value("camera_filter")
     two_dim_dist = tel_model.read_two_dim_wavelength_angle(two_dim_file)

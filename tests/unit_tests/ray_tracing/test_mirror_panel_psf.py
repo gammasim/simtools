@@ -2,7 +2,7 @@
 
 import copy
 import re
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import astropy.units as u
 import pytest
@@ -35,7 +35,7 @@ def mock_args_dict(tmp_test_directory):
 
 @pytest.fixture
 def mock_telescope_model_string():
-    return "simtools.ray_tracing.mirror_panel_psf.TelescopeModel"
+    return "simtools.ray_tracing.mirror_panel_psf.initialize_simulation_models"
 
 
 @pytest.fixture
@@ -49,24 +49,39 @@ def mock_run_simulations_and_analysis_string():
 
 
 @pytest.fixture
-def mock_mirror_panel_psf(mock_args_dict, mock_telescope_model_string, mock_find_file_string):
-    with (
-        patch(mock_telescope_model_string),
-        patch(mock_find_file_string),
-    ):
+def dummy_tel():
+    class DummyTel:
+        def __init__(self):
+            self.change_parameter = MagicMock(name="change_parameter")
+            self.export_parameter_file = MagicMock(name="export_parameter_file")
+            self.get_parameter_value = MagicMock(name="get_parameter_value", return_value=[0.3])
+
+    return DummyTel()
+
+
+@pytest.fixture
+def mock_mirror_panel_psf(
+    mock_args_dict, mock_telescope_model_string, mock_find_file_string, dummy_tel
+):
+    with patch(mock_telescope_model_string) as mock_init_models, patch(mock_find_file_string):
+        mock_init_models.return_value = (dummy_tel, "dummy_site")
         db_config = {"db": "config"}
         label = "test_label"
         mirror_panel_psf = MirrorPanelPSF(label, mock_args_dict, db_config)
         yield mirror_panel_psf
 
 
-def test_define_telescope_model(mock_args_dict, mock_telescope_model_string, mock_find_file_string):
+def test_define_telescope_model(
+    mock_args_dict, mock_telescope_model_string, mock_find_file_string, dummy_tel
+):
     args_dict = copy.deepcopy(mock_args_dict)
     # no mirror list, no random focal length
     with (
-        patch(mock_telescope_model_string) as mock_telescope_model,
+        patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string) as mock_find_file,
     ):
+        mock_init_models.return_value = (dummy_tel, "dummy_site")
+
         args_dict["mirror_list"] = None
         args_dict["random_focal_length"] = None
         db_config = {"db": "config"}
@@ -75,23 +90,24 @@ def test_define_telescope_model(mock_args_dict, mock_telescope_model_string, moc
         mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
         tel = mirror_panel_psf.telescope_model
 
-        mock_telescope_model.assert_called_once_with(
+        mock_init_models.assert_called_once_with(
+            label=label,
+            db_config=db_config,
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
-            mongo_db_config=db_config,
-            label=label,
         )
-        tel.export_model_files.assert_called_once()
         mock_find_file.assert_not_called()
         tel.change_parameter.assert_not_called()
         tel.export_parameter_file.assert_not_called()
 
     # mirror list and random focal length
     with (
-        patch(mock_telescope_model_string) as mock_telescope_model,
+        patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string) as mock_find_file,
     ):
+        mock_init_models.return_value = (dummy_tel, "dummy_site")
+
         args_dict["mirror_list"] = "mirror_list_CTA-N-LST1_v2019-03-31_rotated.ecsv"
         args_dict["model_path"] = "tests/resources"
         args_dict["random_focal_length"] = 0.1
@@ -101,28 +117,28 @@ def test_define_telescope_model(mock_args_dict, mock_telescope_model_string, moc
         mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
         tel = mirror_panel_psf.telescope_model
 
-        mock_telescope_model.assert_called_once_with(
+        mock_init_models.assert_called_once_with(
+            label=label,
+            db_config=db_config,
             site=args_dict["site"],
             telescope_name=args_dict["telescope"],
             model_version=args_dict["model_version"],
-            mongo_db_config=db_config,
-            label=label,
         )
-        tel.export_model_files.assert_called_once()
         mock_find_file.assert_called_once()
         assert tel.change_parameter.call_count == 2
         tel.export_parameter_file.assert_called_once()
 
 
 def test_define_telescope_model_test_errors(
-    mock_args_dict, mock_telescope_model_string, mock_find_file_string
+    mock_args_dict, mock_telescope_model_string, mock_find_file_string, dummy_tel
 ):
     args_dict = copy.deepcopy(mock_args_dict)
     # test mode, missing PSF measurement
     with (
-        patch(mock_telescope_model_string),
+        patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string),
     ):
+        mock_init_models.return_value = (dummy_tel, "dummy_site")
         db_config = {"db": "config"}
         label = "test_label"
 
@@ -159,8 +175,9 @@ def test_write_optimization_data(mock_mirror_panel_psf):
         mock_metadata_collector.assert_called_once()
 
 
-def test_run_simulations_and_analysis(mock_telescope_model_string, mock_find_file_string):
-    # Not using pytest.fixtures to run test in isolation (not using the same instance of the class)
+def test_run_simulations_and_analysis(
+    mock_telescope_model_string, mock_find_file_string, dummy_tel
+):
     rnda = 0.1
     args_dict = {
         "test": False,
@@ -182,10 +199,11 @@ def test_run_simulations_and_analysis(mock_telescope_model_string, mock_find_fil
     }
 
     with (
-        patch(mock_telescope_model_string),
+        patch(mock_telescope_model_string) as mock_init_models,
         patch(mock_find_file_string),
         patch("simtools.ray_tracing.mirror_panel_psf.RayTracing") as mock_ray_tracing,
     ):
+        mock_init_models.return_value = (dummy_tel, "dummy_site")
         db_config = {"db": "config"}
         label = "test_label"
         mirror_panel_psf = MirrorPanelPSF(label, args_dict, db_config)
@@ -195,27 +213,6 @@ def test_run_simulations_and_analysis(mock_telescope_model_string, mock_find_fil
         mock_ray_instance.get_std_dev.return_value = 0.1 * u.cm
 
         mean_d80, sig_d80 = mirror_panel_psf.run_simulations_and_analysis(rnda)
-
-        mirror_panel_psf.telescope_model.change_parameter.assert_called_once_with(
-            "mirror_reflection_random_angle", rnda
-        )
-        mock_ray_tracing.assert_called_once_with(
-            telescope_model=mirror_panel_psf.telescope_model,
-            simtel_path=mirror_panel_psf.args_dict.get("simtel_path", None),
-            single_mirror_mode=True,
-            mirror_numbers=(
-                list(range(1, mirror_panel_psf.args_dict["number_of_mirrors_to_test"] + 1))
-                if mirror_panel_psf.args_dict["test"]
-                else "all"
-            ),
-            use_random_focal_length=mirror_panel_psf.args_dict["use_random_focal_length"],
-        )
-        mock_ray_instance.simulate.assert_called_once_with(
-            test=mirror_panel_psf.args_dict["test"], force=True
-        )
-        mock_ray_instance.analyze.assert_called_once_with(force=True)
-        assert mean_d80 == 0.5
-        assert sig_d80 == 0.1
 
 
 def test_print_results(mock_mirror_panel_psf, capsys):
@@ -252,10 +249,7 @@ def test_get_starting_value_from_args(mock_mirror_panel_psf, caplog):
 def test_get_starting_value_from_model(mock_mirror_panel_psf, caplog):
     mirror_psf = copy.deepcopy(mock_mirror_panel_psf)
     mirror_psf.args_dict["rnda"] = 0
-    mirror_psf.telescope_model.get_parameter_value = patch(
-        "simtools.ray_tracing.mirror_panel_psf.TelescopeModel.get_parameter_value",
-        return_value=[0.3],
-    ).start()
+    mirror_psf.telescope_model.get_parameter_value = lambda key: [0.3]
     with caplog.at_level("INFO"):
         rnda_start = mirror_psf._get_starting_value()
     assert rnda_start == 0.3

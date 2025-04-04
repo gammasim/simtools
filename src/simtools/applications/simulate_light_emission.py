@@ -116,8 +116,7 @@ import astropy.units as u
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.model.calibration_model import CalibrationModel
-from simtools.model.site_model import SiteModel
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
 
@@ -298,24 +297,17 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
 
-    telescope_model = TelescopeModel(
+    telescope_model, site_model = initialize_simulation_models(
+        label=label,
+        db_config=db_config,
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
-        mongo_db_config=db_config,
         model_version=args_dict["model_version"],
-        label=label,
     )
 
     calibration_model = CalibrationModel(
         site=args_dict["site"],
         calibration_device_model_name=args_dict["illuminator"],
-        mongo_db_config=db_config,
-        model_version=args_dict["model_version"],
-        label=label,
-    )
-
-    site_model = SiteModel(
-        site=args_dict["site"],
         mongo_db_config=db_config,
         model_version=args_dict["model_version"],
         label=label,

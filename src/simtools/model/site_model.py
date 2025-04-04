@@ -41,6 +41,7 @@ class SiteModel(ModelParameter):
             model_version=model_version,
             db=None,
             label=label,
+            collection="sites",
         )
 
     def get_reference_point(self) -> dict:

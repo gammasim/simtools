@@ -16,8 +16,10 @@ class SimulatorCameraEfficiency(SimtelRunner):
 
     Parameters
     ----------
-    telescope_model: str
+    telescope_model: TelescopeModel
         Instance of TelescopeModel class.
+    site_model: SiteModel
+        Instance of SiteModel class.
     label: str
         Instance label. Important for output file naming.
     simtel_path: str or Path
@@ -33,6 +35,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
     def __init__(
         self,
         telescope_model,
+        site_model,
         label=None,
         simtel_path=None,
         file_simtel=None,
@@ -48,6 +51,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         super().__init__(label=label, simtel_path=simtel_path)
 
         self._telescope_model = telescope_model
+        self._site_model = site_model
         self.label = label if label is not None else self._telescope_model.label
 
         self._file_simtel = file_simtel
@@ -68,8 +72,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
             self._nsb_spectrum = self._validate_or_fix_nsb_spectrum_file_format(nsb_spectrum)
         else:
             self._nsb_spectrum = (
-                self._telescope_model.config_file_directory
-                / Path(self._telescope_model.get_parameter_value("nsb_reference_spectrum")).name
+                self._site_model.config_file_directory
+                / Path(self._site_model.get_parameter_value("nsb_reference_spectrum")).name
             )
 
     def _make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
@@ -127,8 +131,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
         if self.nsb_spectrum is not None:
             command += f" -fnsb {self.nsb_spectrum}"
         command += " -nm -nsb-extra"
-        command += f" -alt {self._telescope_model.get_parameter_value('corsika_observation_level')}"
-        command += f" -fatm {self._telescope_model.get_parameter_value('atmospheric_transmission')}"
+        command += f" -alt {self._site_model.get_parameter_value('corsika_observation_level')}"
+        command += f" -fatm {self._site_model.get_parameter_value('atmospheric_transmission')}"
         command += f" -flen {focal_length}"
         command += f" {pixel_shape_cmd} {pixel_diameter}"
         if mirror_class == 0:
@@ -152,7 +156,7 @@ class SimulatorCameraEfficiency(SimtelRunner):
         command += f" -fqe {self._telescope_model.get_parameter_value('quantum_efficiency')}"
         command += " 200 1000"  # lmin and lmax
         command += " 300"  # Xmax
-        command += f" {self._telescope_model.get_parameter_value('atmospheric_profile')}"
+        command += f" {self._site_model.get_parameter_value('atmospheric_profile')}"
         command += f" {self.zenith_angle}"
 
         # Remove the default sim_telarray configuration directories

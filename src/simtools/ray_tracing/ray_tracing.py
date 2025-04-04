@@ -33,6 +33,8 @@ class RayTracing:
     ----------
     telescope_model: TelescopeModel
         telescope model
+    site_model: SiteModel
+        site model
     simtel_path: str (or Path)
         Location of sim_telarray installation.
     label: str
@@ -61,6 +63,7 @@ class RayTracing:
     def __init__(
         self,
         telescope_model,
+        site_model,
         simtel_path,
         label=None,
         zenith_angle=20.0 * u.deg,
@@ -77,7 +80,7 @@ class RayTracing:
         self.simtel_path = Path(simtel_path)
         self._io_handler = io_handler.IOHandler()
 
-        self.telescope_model = telescope_model
+        self.telescope_model, self.site_model = telescope_model, site_model
         self.label = label if label is not None else self.telescope_model.label
 
         self.zenith_angle = zenith_angle.to("deg").value
@@ -211,6 +214,7 @@ class RayTracing:
                 simtel = SimulatorRayTracing(
                     simtel_path=self.simtel_path,
                     telescope_model=self.telescope_model,
+                    site_model=self.site_model,
                     test=test,
                     config_data={
                         "zenith_angle": self.zenith_angle,

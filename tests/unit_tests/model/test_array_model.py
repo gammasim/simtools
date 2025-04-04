@@ -125,7 +125,7 @@ def test_get_telescope_position_parameter(array_model, io_handler):
 
 def test_get_config_file(model_version, array_model, io_handler):
     am = array_model
-    assert am.get_config_file().name == "CTA-test_layout-North-" + model_version + "_test.cfg"
+    assert am.config_file_path.name == "CTA-test_layout-North-" + model_version + "_test.cfg"
 
 
 def test_get_config_directory(array_model, io_handler):

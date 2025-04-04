@@ -8,8 +8,6 @@ import pytest
 from astropy.table import Table
 
 from simtools.camera.camera_efficiency import CameraEfficiency
-from simtools.model.site_model import SiteModel
-from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
@@ -53,14 +51,6 @@ def prepare_results_file(io_handler):
 
 def test_report(camera_efficiency_lst):
     assert str(camera_efficiency_lst) == "CameraEfficiency(label=validate_camera_efficiency)\n"
-
-
-def test_initialize_simulation_models(db_config, config_data_lst, camera_efficiency_lst):
-    tel_model, site_model = camera_efficiency_lst._initialize_simulation_models(
-        config_data_lst, db_config
-    )
-    assert isinstance(tel_model, TelescopeModel)
-    assert isinstance(site_model, SiteModel)
 
 
 def test_configuration_from_args_dict(camera_efficiency_lst):

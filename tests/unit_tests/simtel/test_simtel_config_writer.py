@@ -136,7 +136,7 @@ def test_convert_model_parameters_to_simtel_format(
         assert "Trigger 2 of 1" in content
 
 
-def test_get_simtel_metadata_with_model_parameters(simtel_config_writer):
+def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
     model_parameters = {"test_param": {"value": 42, "meta_parameter": True}}
 
     def mock_get_name(key, simulation_software, set_meta_parameter):
@@ -150,24 +150,24 @@ def test_get_simtel_metadata_with_model_parameters(simtel_config_writer):
         "simtools.utils.names.get_simulation_software_name_from_parameter_name",
         side_effect=mock_get_name,
     ):
-        tel_meta = simtel_config_writer._get_simtel_metadata("telescope", model_parameters)
+        tel_meta = simtel_config_writer._get_sim_telarray_metadata("telescope", model_parameters)
         assert "metaparam telescope add test_add_param" in tel_meta
         assert "metaparam telescope set test_set_param_meta=42" in tel_meta
 
-        site_meta = simtel_config_writer._get_simtel_metadata("site", model_parameters)
+        site_meta = simtel_config_writer._get_sim_telarray_metadata("site", model_parameters)
         assert "metaparam global add test_add_param" in site_meta
         assert "metaparam global set test_set_param_meta=42" in site_meta
 
 
-def test_get_simtel_metadata_without_model_parameters(simtel_config_writer):
-    _tel = simtel_config_writer._get_simtel_metadata("telescope", None)
+def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer):
+    _tel = simtel_config_writer._get_sim_telarray_metadata("telescope", None)
     assert len(_tel) == 8
     assert f"camera_config_name = {simtel_config_writer._telescope_model_name}" in _tel
     assert f"optics_config_name = {simtel_config_writer._telescope_model_name}" in _tel
 
-    _site = simtel_config_writer._get_simtel_metadata("site", None)
+    _site = simtel_config_writer._get_sim_telarray_metadata("site", None)
     assert f"site_config_name = {simtel_config_writer._site}" in _site
     assert f"array_config_name = {simtel_config_writer._layout_name}" in _site
 
     with pytest.raises(ValueError, match=r"^Unknown metadata type"):
-        simtel_config_writer._get_simtel_metadata("unknown", None)
+        simtel_config_writer._get_sim_telarray_metadata("unknown", None)
