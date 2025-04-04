@@ -20,7 +20,7 @@ class CorsikaSimtelRunner:
 
     Parameters
     ----------
-    corsika_config : list
+    corsika_config : CorsikaConfig or list of CorsikaConfig
         A list of "CorsikaConfig" instances which
         contain the CORSIKA configuration parameters.
     simtel_path : str or Path
@@ -43,8 +43,10 @@ class CorsikaSimtelRunner:
         sim_telarray_seeds=None,
     ):
         self._logger = logging.getLogger(__name__)
+        if not isinstance(corsika_config, list):
+            corsika_config = [corsika_config]
         self.corsika_config = corsika_config
-        # the main corsika config is the one used to define the CORSIKA specific configuration.
+        # the main corsika config is the one used to define the CORSIKA specific parameters.
         # The others are used for the array configurations. The name "main" is a bit misleading.
         self.main_corsika_config = corsika_config[0]
         self._simtel_path = simtel_path
@@ -162,9 +164,9 @@ class CorsikaSimtelRunner:
         input_file: str
             Full path of the input CORSIKA file.
             Use '-' to tell sim_telarray to read from standard output
-        corsika_config: CorsikaConfig
+        corsika_config: CorsikaConfig, optional
             CORSIKA configuration.
-        simulator_array: SimulatorArray
+        simulator_array: SimulatorArray, optional
             SimulatorArray instance.
 
         Returns
