@@ -2,9 +2,9 @@
 Module defines the `GridGeneration` class.
 
 Used to generate a grid of simulation points based on flexible axes definitions such as energy,
- azimuth, zenith angle, night-sky background,
-and camera offset. The module handles axis scaling, binning,
-and distribution types, allowing for adaptable simulation configurations. Additionally,
+azimuth, zenith angle, night-sky background, and camera offset.
+The module handles axis scaling, binning, and distribution types,
+allowing for adaptable simulation configurations. Additionally,
 it provides functionality for converting between Altitude/Azimuth and Right Ascension
 Declination coordinates.
 """
