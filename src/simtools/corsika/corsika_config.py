@@ -124,9 +124,12 @@ class CorsikaConfig:
         if db_config is None:  # all following parameter require DB
             return config
 
-        db_model_parameters = ModelParameter(
-            mongo_db_config=db_config, model_version=args_dict["model_version"]
-        )
+        model_version = args_dict.get("model_version", None)
+        # If the user provided multiple model versions, we take the first one
+        # because for CORSIKA config we need only one and it doesn't matter which
+        if isinstance(model_version, list):
+            model_version = model_version[0]
+        db_model_parameters = ModelParameter(mongo_db_config=db_config, model_version=model_version)
         parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
 
         config["INTERACTION_FLAGS"] = self._corsika_configuration_interaction_flags(
