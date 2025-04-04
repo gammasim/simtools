@@ -17,10 +17,14 @@ data:
     allowed_range:
       min: 0
 instrument:
-  class: Calibration
+  class: Camera
   type:
-    - ILLN
-    - ILLS
+    - LSTN
+    - LSTS
+    - MSTN
+    - MSTS
+    - SSTS
+    - SCTS
 activity:
   setting:
     - SetParameterFromExternal
