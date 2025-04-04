@@ -25,7 +25,8 @@ class ModelParameter:
     """
     Base class for simulation model parameters.
 
-    Provides methods to read and manipulate parameters from DB.
+    Provides methods to read and manipulate parameters from DB and to write
+    sim_telarray configuration files.
 
     Parameters
     ----------
@@ -438,13 +439,27 @@ class ModelParameter:
         file_path: str
             Path of the file to be added to the config file directory.
         """
-        if self._added_parameter_files is None:
-            self._added_parameter_files = []
+        self._added_parameter_files = self._added_parameter_files or []
         self._added_parameter_files.append(par_name)
         shutil.copy(file_path, self.config_file_directory)
 
-    def export_model_files(self, destination_path=None):
-        """Export the model files into the config file directory."""
+    def export_model_files(self, destination_path=None, update_if_necessary=True):
+        """
+        Export the model files into the config file directory.
+
+        Parameters
+        ----------
+        destination_path: str
+            Path to the directory where the model files should be exported.
+            If None, the config file directory is used.
+        update_if_necessary: bool
+            If True, the model files are only exported if they are not up to date.
+        """
+        if self._is_exported_model_files_up_to_date and update_if_necessary:
+            self._logger.debug(
+                f"Model files for {self.name} are already exported to {self.config_file_directory}"
+            )
+            return
         # Removing parameter files added manually (which are not in DB)
         pars_from_db = copy(self.parameters)
         if self._added_parameter_files is not None:
@@ -453,29 +468,25 @@ class ModelParameter:
 
         self.db.export_model_files(
             parameters=pars_from_db,
-            dest=destination_path if destination_path else self.config_file_directory,
+            dest=destination_path or self.config_file_directory,
         )
         self._is_exported_model_files_up_to_date = True
 
-    def write_sim_telarray_config_file(self, model=None):
+    def write_sim_telarray_config_file(self, add_model=None):
         """
         Write the sim_telarray configuration file.
 
         Parameters
         ----------
-        model: TelescopeModel or SiteModel
+        add_model: TelescopeModel or SiteModel
             Model object for additional parameter to be written to the config file.
         """
-        # TODO check / improve
-        if not self._is_exported_model_files_up_to_date:
-            self.export_model_files()
-            if model:
-                model.export_model_files(self.config_file_directory)
+        self.export_model_files(update_if_necessary=True)
 
-        parameters = self.parameters
-        parameters.update(self._simulation_config_parameters.get("simtel", {}))
-        if model:
-            parameters.update(model.parameters)
+        self.parameters.update(self._simulation_config_parameters.get("simtel", {}))
+        if add_model:
+            self.parameters.update(add_model.parameters)
+            add_model.export_model_files(self.config_file_directory, update_if_necessary=True)
 
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
@@ -488,7 +499,7 @@ class ModelParameter:
         """Directory for configure files. Configure, if necessary."""
         if self._config_file_directory is None:
             self._set_config_file_directory_and_name()
-        return self._config_file_directory
+        return self._config_file_directory or self._set_config_file_directory_and_name()
 
     @property
     def config_file_path(self):
