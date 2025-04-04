@@ -136,7 +136,8 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     elif "moon" in file_path:
         nsb = "moon"
     else:
-        raise ValueError(f"Could not determine NSB (dark or moon) from file path: {file_path}")
+        _logger.warning(f"Could not determine NSB (dark or moon) from file path: {file_path}")
+        nsb = "unknown"
 
     calculator = LimitCalculator(file_path, telescope_list=telescope_ids)
 
