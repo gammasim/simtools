@@ -355,27 +355,14 @@ class GridGeneration:
         """Clean the grid output and save to a file or print to the console."""
         cleaned_points = []
 
-        def serialize_quantity(value):
-            """Serialize Quantity and numpy.ndarray objects."""
-            if isinstance(value, np.ndarray):
-                if isinstance(value, u.Quantity):
-                    return {
-                        "value": value.value.tolist(),
-                        "unit": str(value.unit),
-                    }  # Handle Quantity arrays
-                return value.tolist()  # Convert numpy array to list
-            if isinstance(value, u.Quantity):
-                return {"value": value.value, "unit": str(value.unit)}  # Handle single Quantity
-            return value
-
         for point in grid_points:
             cleaned_point = {}
             for key, value in point.items():
                 if isinstance(value, dict):
                     # Nested dictionaries
-                    cleaned_point[key] = {k: serialize_quantity(v) for k, v in value.items()}
+                    cleaned_point[key] = {k: self.serialize_quantity(v) for k, v in value.items()}
                 else:
-                    cleaned_point[key] = serialize_quantity(value)
+                    cleaned_point[key] = self.serialize_quantity(value)
 
             cleaned_points.append(cleaned_point)
 
@@ -388,3 +375,16 @@ class GridGeneration:
         else:
             self._logger.info(output_data)
         return output_data
+
+    def serialize_quantity(self, value):
+        """Serialize Quantity and numpy.ndarray objects."""
+        if isinstance(value, np.ndarray):
+            if isinstance(value, u.Quantity):
+                return {
+                    "value": value.value.tolist(),
+                    "unit": str(value.unit),
+                }  # Handle Quantity arrays
+            return value.tolist()  # Convert numpy array to list
+        if isinstance(value, u.Quantity):
+            return {"value": value.value, "unit": str(value.unit)}  # Handle single Quantity
+        return value
