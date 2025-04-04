@@ -61,6 +61,38 @@ def test_generate_grid(grid_gen):
     assert all("azimuth" in point for point in grid_points)
     assert all("nsb" in point for point in grid_points)
 
+    def test_generate_grid_log_scaling(
+        axes_definition, lookup_table, observing_location, observing_time
+    ):
+        """Test grid generation with logarithmic scaling for azimuth axis."""
+        axes_definition["axes"]["azimuth"] = {
+            "range": [50, 360],
+            "binning": 4,
+            "scaling": "log",
+            "units": "deg",
+        }
+
+        grid_gen = GridGeneration(
+            axes=axes_definition,
+            coordinate_system="zenith_azimuth",
+            observing_location=observing_location,
+            observing_time=observing_time,
+            lookup_table=lookup_table,
+            telescope_ids=[1],
+        )
+
+        grid_points = grid_gen.generate_grid()
+        azimuth_values = [point["azimuth"].value for point in grid_points]
+
+        expected_values = np.logspace(
+            np.log10(axes_definition["axes"]["azimuth"]["range"][0]),
+            np.log10(axes_definition["axes"]["azimuth"]["range"][1]),
+            axes_definition["axes"]["azimuth"]["binning"],
+        )
+
+        assert len(azimuth_values) == 24
+        assert np.allclose(azimuth_values, expected_values, rtol=1e-5)
+
 
 def test_interpolated_limits(grid_gen):
     # Mock interpolated limits
@@ -224,5 +256,5 @@ def test_no_matching_rows_in_lookup_table(axes_definition, observing_location, o
             observing_location=observing_location,
             observing_time=observing_time,
             lookup_table="tests/resources/corsika_simulation_limits_lookup.ecsv",
-            telescope_ids=[999],  # Non-existent telescope ID
+            telescope_ids=[999],
         )
