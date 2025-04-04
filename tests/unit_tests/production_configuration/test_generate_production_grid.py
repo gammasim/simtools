@@ -211,3 +211,18 @@ def test_apply_lookup_table_limits(grid_gen):
     assert np.shape(grid_gen.interpolated_limits["energy"]) == (2, 3, 2)
     assert np.shape(grid_gen.interpolated_limits["radius"]) == (2, 3, 2)
     assert np.shape(grid_gen.interpolated_limits["viewcone"]) == (2, 3, 2)
+
+
+def test_no_matching_rows_in_lookup_table(axes_definition, observing_location, observing_time):
+    """Test behavior when no matching rows are found in the lookup table."""
+    with pytest.raises(
+        ValueError, match="No matching rows in the lookup table for telescope_ids: \\[999\\]"
+    ):
+        GridGeneration(
+            axes=axes_definition,
+            coordinate_system="zenith_azimuth",
+            observing_location=observing_location,
+            observing_time=observing_time,
+            lookup_table="tests/resources/corsika_simulation_limits_lookup.ecsv",
+            telescope_ids=[999],  # Non-existent telescope ID
+        )
