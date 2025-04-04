@@ -58,4 +58,4 @@ the calculation of the number of events to be simulated given a pre-determined m
 ```{eval-rst}
 .. automodule:: production_configuration.generate_production_grid
    :members:
-``
+```
