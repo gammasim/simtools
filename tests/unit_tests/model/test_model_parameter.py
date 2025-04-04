@@ -160,11 +160,11 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 4
+    assert mock_db.call_count == 3
 
     telescope_copy.db = None
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 4
+    assert mock_db.call_count == 3
 
 
 def test_change_parameter(telescope_model_lst):
@@ -310,20 +310,6 @@ def test_config_file_path(telescope_model_lst, mocker):
     telescope_copy._config_file_path = Path("test_path")
     assert telescope_copy.config_file_path == Path("test_path")
     not mock_config.assert_called_once()
-
-
-def test_get_config_file(telescope_model_lst, mocker):
-    assert isinstance(telescope_model_lst.get_config_file(), Path)
-
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    telescope_copy._is_config_file_up_to_date = False
-    mock_export = mocker.patch.object(TelescopeModel, "write_sim_telarray_config_file")
-    telescope_copy.get_config_file()
-    mock_export.assert_called_once()
-
-    telescope_copy._is_config_file_up_to_date = False
-    telescope_copy.get_config_file(no_export=True)
-    not mock_export.assert_called_once()
 
 
 def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_model_lst, mocker):

@@ -443,7 +443,7 @@ class ModelParameter:
         self._added_parameter_files.append(par_name)
         shutil.copy(file_path, self.config_file_directory)
 
-    def export_model_files(self, destination_path=None, update_if_necessary=True):
+    def export_model_files(self, destination_path=None, update_if_necessary=False):
         """
         Export the model files into the config file directory.
 
