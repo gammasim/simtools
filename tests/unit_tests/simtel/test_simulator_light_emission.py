@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, mock_open, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, mock_open, patch
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -191,10 +191,8 @@ def test_photons_per_run_default(mock_simulator):
 
 def test_make_light_emission_script(
     mock_simulator,
-    telescope_model_lst,
-    simtel_path,
+    site_model_north,
     mock_output_path,
-    io_handler,
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
@@ -209,7 +207,7 @@ def test_make_light_emission_script(
         " -p Gauss:0.0"
         " -a isotropic"
         f" -A {mock_output_path}/model/"
-        f"{telescope_model_lst.get_parameter_value('atmospheric_profile')}"
+        f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
 
@@ -220,10 +218,8 @@ def test_make_light_emission_script(
 
 def test_make_light_emission_script_variable(
     mock_simulator_variable,
-    telescope_model_lst,
-    simtel_path,
+    site_model_north,
     mock_output_path,
-    io_handler,
 ):
     """layout coordinate vector between LST and ILLN"""
     expected_command = (
@@ -235,7 +231,7 @@ def test_make_light_emission_script_variable(
         " -d 0,0,-1"
         " -n 10000000.0"
         f" -A {mock_output_path}/model/"
-        f"{telescope_model_lst.get_parameter_value('atmospheric_profile')}"
+        f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/xyzls.iact.gz\n"
     )
     assert mock_simulator_variable.le_application[0] == "xyzls"
@@ -248,10 +244,8 @@ def test_make_light_emission_script_variable(
 
 def test_make_light_emission_script_laser(
     mock_simulator_laser,
-    telescope_model_lst,
-    simtel_path,
+    site_model_north,
     mock_output_path,
-    io_handler,
 ):
     command = mock_simulator_laser._make_light_emission_script()
 
@@ -272,7 +266,7 @@ def test_make_light_emission_script_laser(
         " --laser-theta 10.048226999999997"
         " --laser-phi 173.908048"
         f" --atmosphere {mock_output_path}/model/"
-        f"{mock_simulator_laser._calibration_model.get_parameter_value('atmospheric_profile')}"
+        f"{site_model_north.get_parameter_value('atmospheric_profile')}"
         f" -o {mock_output_path}/ls-beam.iact.gz\n"
     )
 
@@ -336,7 +330,8 @@ def test_make_simtel_script(mock_simulator):
         path_to_config_directory = "/path/to/config/"
         mock_simulator._telescope_model.config_file_directory = path_to_config_directory
         path_to_config_file = "/path/to/config/config.cfg"
-        mock_simulator._telescope_model.get_config_file.return_value = path_to_config_file
+        config_file_path_mock = PropertyMock(return_value=path_to_config_file)
+        type(mock_simulator._telescope_model).config_file_path = config_file_path_mock
 
         def get_telescope_model_param(param):
             if param == "atmospheric_transmission":

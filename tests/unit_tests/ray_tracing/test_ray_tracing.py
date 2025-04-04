@@ -416,7 +416,7 @@ def test_get_mirror_panel_focal_length_with_random_uniform(ray_tracing_lst, mock
     mock_rng_instance.uniform.assert_called_once_with(low=-1.0, high=1.0)
 
 
-def test_ray_tracing_simulate(ray_tracing_lst, caplog, mocker):
+def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker):
     mock_simulator = mocker.patch("simtools.ray_tracing.ray_tracing.SimulatorRayTracing")
     mock_simulator_instance = mock_simulator.return_value
     mock_simulator_instance.run = mocker.Mock()
@@ -432,6 +432,7 @@ def test_ray_tracing_simulate(ray_tracing_lst, caplog, mocker):
     mock_simulator.assert_called_once_with(
         simtel_path=ray_tracing_lst.simtel_path,
         telescope_model=ray_tracing_lst.telescope_model,
+        site_model=site_model_north,
         test=True,
         config_data={
             "zenith_angle": ray_tracing_lst.zenith_angle,
