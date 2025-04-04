@@ -63,18 +63,12 @@ class MirrorPanelPSF:
         This includes updating the configuration with mirror list and/or random focal length given
         as input.
 
-        Attributes
-        ----------
-        label: str
-            Application label.
-        db_config:
-            Dictionary with database configuration.
-
         Returns
         -------
-        tel TelescopeModel
-            telescope model
-
+        tel : TelescopeModel
+            The telescope model.
+        site_model : any
+            The site model.
         """
         tel_model, site_model = initialize_simulation_models(
             label=label,
