@@ -130,18 +130,23 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    parameter_name = "test"
 
     # testing with invalid file
     with pytest.raises(FileNotFoundError, match="Data file not found: "):
-        read_parameters._convert_to_md("invalid-file.dat")
+        read_parameters._convert_to_md(parameter_name, "invalid-file.dat")
 
     # testing with valid file
-    new_file = read_parameters._convert_to_md("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
+    new_file = read_parameters._convert_to_md(
+        parameter_name, "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
+    )
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
     # testing with non-utf-8 file
-    new_file = read_parameters._convert_to_md("tests/resources/example_non_utf-8_file.lis")
+    new_file = read_parameters._convert_to_md(
+        parameter_name, "tests/resources/example_non_utf-8_file.lis"
+    )
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
@@ -149,13 +154,14 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
 def test__format_parameter_value(io_handler, db_config):
     output_path = io_handler.get_output_directory()
     read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
+    parameter_name = "test"
 
     mock_data_1 = [[24.74, 9.0, 350.0, 1066.0], ["ns", "ns", "V", "V"], False]
-    result_1 = read_parameters._format_parameter_value(*mock_data_1)
+    result_1 = read_parameters._format_parameter_value(parameter_name, *mock_data_1)
     assert result_1 == "24.74 ns, 9.0 ns, 350.0 V, 1066.0 V"
 
     mock_data_2 = [4.0, " ", None]
-    result_2 = read_parameters._format_parameter_value(*mock_data_2)
+    result_2 = read_parameters._format_parameter_value(parameter_name, *mock_data_2)
     assert result_2 == "4.0"
 
     mock_data_3 = [
@@ -163,11 +169,11 @@ def test__format_parameter_value(io_handler, db_config):
         "GHz",
         False,
     ]
-    result_3 = read_parameters._format_parameter_value(*mock_data_3)
+    result_3 = read_parameters._format_parameter_value(parameter_name, *mock_data_3)
     assert result_3 == "all: 0.2 GHz"
 
     mock_data_4 = [[1, 2, 3, 4], "m", None]
-    result_4 = read_parameters._format_parameter_value(*mock_data_4)
+    result_4 = read_parameters._format_parameter_value(parameter_name, *mock_data_4)
     assert result_4 == "1 m, 2 m, 3 m, 4 m"
 
 
@@ -498,9 +504,9 @@ def test_produce_observatory_report(io_handler, db_config, mocker):
         assert "none_valued_param" not in content
 
 
-def test__write_array_layouts_section(io_handler, db_config):
+def test__write_array_layouts_section(io_handler, db_config, mocker):
     """Test writing array layouts section."""
-    args = {}
+    args = {"site": "North", "model_version": "6.0.0"}
     output_path = io_handler.get_output_directory()
     read_parameters = ReadParameters(db_config, args, output_path)
 
@@ -520,13 +526,16 @@ def test__write_array_layouts_section(io_handler, db_config):
         output = file.getvalue()
 
     # Verify section header
-    assert "## Array Layouts {#array-layouts-details}" in output
+    assert "## Array Layouts" in output
 
     # Verify layout names
     assert "### Layout1" in output
-    assert "MST1" in output
+    assert "[MST1](MST1.md)" in output
     assert "### Layout2" in output
-    assert "MST2" in output
+    assert "[MST2](MST2.md)" in output
+
+    # Verify image links
+    assert "![Layout1 Layout](../../_images/OBS-North_Layout1_6.png)" in output
 
 
 def test__write_array_triggers_section(io_handler, db_config):
@@ -557,7 +566,7 @@ def test__write_array_triggers_section(io_handler, db_config):
         output = file.getvalue()
 
     # Verify section header and table headers
-    assert "## Array Trigger Configurations {#array-triggers-details}" in output
+    assert "## Array Trigger Configurations" in output
     assert "| Trigger Name | Multiplicity | Width | Hard Stereo | Min Separation |" in output
 
     # Verify trigger data
@@ -572,9 +581,9 @@ def test__write_parameters_table(io_handler, db_config):
     read_parameters = ReadParameters(db_config, args, output_path)
 
     mock_params = {
-        "site_elevation": {"value": 2200, "unit": "m"},
-        "array_layouts": {"value": [], "unit": None},
-        "array_triggers": {"value": [], "unit": None},
+        "site_elevation": {"value": 2200, "unit": "m", "parameter_version": "1.0.0"},
+        "array_layouts": {"value": [], "unit": None, "parameter_version": "2.0.0"},
+        "array_triggers": {"value": [], "unit": None, "parameter_version": "3.0.0"},
     }
 
     with StringIO() as file:
@@ -582,11 +591,14 @@ def test__write_parameters_table(io_handler, db_config):
         output = file.getvalue()
 
     # Verify table headers
-    assert "| Parameter | Value " in output
+    assert "| Parameter | Value | Parameter Version |" in output
 
     # Verify normal parameter
-    assert "| site_elevation | 2200 m |" in output
+    assert "| site_elevation | 2200 m | 1.0.0 |" in output
 
     # Verify special sections
-    assert "| array_layouts | [View Array Layouts](#array-layouts-details) |" in output
-    assert "| array_triggers | [View Trigger Configurations](#array-triggers-details) |" in output
+    assert "| array_layouts | [View Array Layouts](#array-layouts) | 2.0.0 |" in output
+    assert (
+        "| array_triggers | [View Trigger Configurations](#array-trigger-configurations) | 3.0.0 |"
+        in output
+    )
