@@ -7,6 +7,13 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.15.0](https://github.com/gammasim/simtools/tree/v0.15.0) - 2025-04-04
+
+### Maintenance
+
+- Skip testing of DB upload for simpipe integration tests. ([#1488](https://github.com/gammasim/simtools/pull/1488))
+
+
 ## [0.14.0](https://github.com/gammasim/simtools/tree/0.14.0) - 2025-04-03
 
 ### Bugfixes
