@@ -28,9 +28,12 @@ def show_all():
 
 
 @pytest.fixture
-def simulation_file():
+def simulation_file(model_version):
     """Base name for simulation test file."""
-    return "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-simtel-runner"
+    return (
+        f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}_"
+        "test-corsika-simtel-runner"
+    )
 
 
 @pytest.fixture
@@ -114,7 +117,7 @@ def test_write_multipipe_script(corsika_simtel_runner):
         assert "'Fan-out failed'" in script_content
 
 
-def test_make_run_command(corsika_simtel_runner, simtel_command, show_all):
+def test_make_run_command(corsika_simtel_runner, simtel_command, show_all, model_version):
     command = corsika_simtel_runner._make_run_command(
         input_file="-",
         run_number=1,
@@ -125,7 +128,7 @@ def test_make_run_command(corsika_simtel_runner, simtel_command, show_all):
     assert "-C telescope_theta=20" in command
     assert "-C telescope_phi=0" in command
     assert show_all in command
-    assert "run000001_proton_za20deg_azm000deg_South_test_layout_test" in command
+    assert f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}" in command
 
     _test_corsika_simtel_runner = copy.deepcopy(corsika_simtel_runner)
     _test_corsika_simtel_runner.label = None
@@ -138,7 +141,7 @@ def test_make_run_command(corsika_simtel_runner, simtel_command, show_all):
     assert "-W" not in command
 
 
-def test_make_run_command_divergent(corsika_simtel_runner, simtel_command, show_all):
+def test_make_run_command_divergent(corsika_simtel_runner, simtel_command, show_all, model_version):
     corsika_simtel_runner.label = "test-corsika-simtel-runner-divergent-pointing"
     command = corsika_simtel_runner._make_run_command(
         input_file="-",
@@ -150,7 +153,7 @@ def test_make_run_command_divergent(corsika_simtel_runner, simtel_command, show_
     assert "-W telescope_theta=20" in command  # -W is for pointing
     assert "-W telescope_phi=0" in command
     assert show_all in command
-    assert "run000001_proton_za20deg_azm000deg_South_test_layout_test" in command
+    assert f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}" in command
 
 
 def test_get_file_name(corsika_simtel_runner, simulation_file):
