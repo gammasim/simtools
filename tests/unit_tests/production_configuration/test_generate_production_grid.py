@@ -115,6 +115,31 @@ def test_clean_grid_output(grid_gen):
     assert '"energy_threshold"' in cleaned_points
 
 
+def test_serialize_quantity(grid_gen):
+    # Case 1: Value is a numpy array
+    np_array = np.array([1, 2, 3])
+    serialized = grid_gen.serialize_quantity(np_array)
+    assert serialized == [1, 2, 3]
+
+    # Case 2: Value is a Quantity (single value)
+    quantity = 5 * u.m
+    serialized = grid_gen.serialize_quantity(quantity)
+    assert serialized == {"value": 5, "unit": "m"}
+
+    # Case 3: Value is a Quantity (array)
+    quantity_array = np.array([1, 2, 3]) * u.s
+    serialized = grid_gen.serialize_quantity(quantity_array)
+    assert serialized == {
+        "value": [1, 2, 3],
+        "unit": "s",
+    }
+
+    # Case 4: Value is neither numpy array nor Quantity
+    normal_value = "test_string"
+    serialized = grid_gen.serialize_quantity(normal_value)
+    assert serialized == "test_string"
+
+
 def test_convert_altaz_to_radec_and_coordinates(grid_gen):
     # Case 1: Valid AltAz to RA/Dec conversion
     alt, az = 45.0 * u.deg, 30.0 * u.deg
