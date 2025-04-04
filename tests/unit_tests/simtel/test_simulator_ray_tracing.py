@@ -157,7 +157,7 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
 
     assert "bin/sim_telarray" in command
     assert (
-        "model/CTA-South-SSTS-design-"
+        f"model/{model_version}/CTA-South-SSTS-design-"
         + model_version.replace("_", "-")
         + "_test-telescope-model-sst.cfg"
         in command
