@@ -166,12 +166,12 @@ class GridGeneration:
 
     def create_circular_binning(self, azimuth_range, num_bins):
         """
-        Create bin centers for azimuth angles, handling circular wraparound (0° to 360°).
+        Create bin centers for azimuth angles, handling circular wraparound (0 deg to 360 deg).
 
         Parameters
         ----------
         azimuth_range : tuple
-            (min_azimuth, max_azimuth), can wrap around 0°.
+            (min_azimuth, max_azimuth), can wrap around 0 deg.
         num_bins : int
             Number of bins.
 
@@ -184,14 +184,14 @@ class GridGeneration:
         azimuth_min %= 360  # Normalize to [0, 360)
         azimuth_max %= 360
 
-        if azimuth_min > azimuth_max:  # Handles wraparound case (e.g., 310° to 20°)
+        if azimuth_min > azimuth_max:  # Handles wraparound case (e.g., 310 deg to 20 deg)
             # Total range is split into two parts: [azimuth_min, 360) and [0, azimuth_max]
             total_range = (360 - azimuth_min) + azimuth_max
 
             bin_edges = np.linspace(azimuth_min, azimuth_min + total_range, num_bins, endpoint=True)
             bin_centers = bin_edges % 360  # Wrap around to [0, 360)
         else:
-            # range does not cross 360°
+            # range does not cross 360 deg
             bin_centers = np.linspace(azimuth_min, azimuth_max, num_bins, endpoint=True)
 
         return bin_centers
