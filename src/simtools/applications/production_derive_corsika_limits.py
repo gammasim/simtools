@@ -34,6 +34,7 @@ Derive limits for a given file with a specified loss fraction.
 
 import datetime
 import logging
+import re
 
 from astropy.table import Table
 
@@ -122,8 +123,22 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     Returns
     -------
     dict
-        Dictionary containing the computed limits.
+        Dictionary containing the computed limits and metadata.
     """
+    match = re.search(r"za(\d+)deg.*azm(\d+)deg", file_path)
+    if not match:
+        raise ValueError(f"Could not extract zenith and azimuth from file path: {file_path}")
+    zenith = int(match.group(1))
+    azimuth = int(match.group(2))
+
+    if "dark" in file_path:
+        nsb = "dark"
+    elif "moon" in file_path:
+        nsb = "moon"
+    else:
+        _logger.warning(f"Could not determine NSB (dark or moon) from file path: {file_path}")
+        nsb = "unknown"
+
     calculator = LimitCalculator(file_path, telescope_list=telescope_ids)
 
     lower_energy_limit = calculator.compute_lower_energy_limit(loss_fraction)
@@ -144,6 +159,9 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     return {
         "file_path": file_path,
         "telescope_ids": telescope_ids,
+        "zenith": zenith,
+        "azimuth": azimuth,
+        "nsb": nsb,
         "lower_energy_threshold": lower_energy_limit,
         "upper_radius_threshold": upper_radial_distance,
         "viewcone_radius": viewcone,
@@ -158,7 +176,7 @@ def create_results_table(results, loss_fraction):
     ----------
     results : list[dict]
         List of dictionaries containing the computed limits for each file
-          and telescope configuration.
+        and telescope configuration.
     loss_fraction : float
         Fraction of events to be lost, added as metadata to the table.
 
@@ -172,6 +190,9 @@ def create_results_table(results, loss_fraction):
             (
                 res["file_path"],
                 res["telescope_ids"],
+                res["zenith"],
+                res["azimuth"],
+                res["nsb"],
                 res["lower_energy_threshold"],
                 res["upper_radius_threshold"],
                 res["viewcone_radius"],
@@ -181,6 +202,9 @@ def create_results_table(results, loss_fraction):
         names=[
             "file_path",
             "telescope_ids",
+            "zenith",
+            "azimuth",
+            "nsb",
             "lower_energy_threshold",
             "upper_radius_threshold",
             "viewcone_radius",
@@ -193,7 +217,8 @@ def create_results_table(results, loss_fraction):
 
     table.meta["created"] = datetime.datetime.now().isoformat()
     table.meta["description"] = (
-        "Lookup table for CORSIKA limits computed from gamma-ray shower simulations."
+        "Lookup table for CORSIKA limits computed from gamma-ray shower simulations "
+        "using simtool production_derive_corsika_limits"
     )
     table.meta["loss_fraction"] = loss_fraction
 
