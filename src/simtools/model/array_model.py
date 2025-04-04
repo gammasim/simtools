@@ -257,7 +257,9 @@ class ArrayModel:
             Path of the config directory path for sim_telarray.
         """
         if self._config_file_directory is None:
-            self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
+            self._config_file_directory = self.io_handler.get_output_directory(
+                self.label, f"model/{self.model_version}"
+            )
         return self._config_file_directory
 
     def _load_array_element_positions_from_file(
