@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.configuration &#8212; simtools v0.1.dev1+g3981d5b Manual</title>
+    <title>testing.configuration &#8212; simtools v0.1.dev1+gd467000 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=d9b7b190"></script>
+    <script src="../../_static/documentation_options.js?v=3180c753"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3981d5b Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gd467000 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -542,12 +542,13 @@ document.write(`
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_skip_test_for_production_db</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Skip test if production db is used.&quot;&quot;&quot;</span>
-    <span class="n">simtools_db_server</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SIMTOOLS_DB_SERVER&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="n">simtools_db_server</span>
-        <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SKIP_FOR_PRODUCTION_DB&quot;</span><span class="p">)</span>
-        <span class="ow">and</span> <span class="s2">&quot;db.zeuthen.desy.de&quot;</span> <span class="ow">in</span> <span class="n">simtools_db_server</span>
-    <span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SKIP_FOR_PRODUCTION_DB&quot;</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="s2">&quot;db.zeuthen.desy.de&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SIMTOOLS_DB_SERVER&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ProductionDBError</span><span class="p">(</span><span class="s2">&quot;Production database used for this test&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;simpipe&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SIMTOOLS_DB_API_USER&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">ProductionDBError</span><span class="p">(</span><span class="s2">&quot;Production database used for this test&quot;</span><span class="p">)</span>
 
 
