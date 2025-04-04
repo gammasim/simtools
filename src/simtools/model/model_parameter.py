@@ -87,6 +87,32 @@ class ModelParameter:
         self._is_exported_model_files_up_to_date = False
 
     @property
+    def model_version(self):
+        """Model version."""
+        return self._model_version
+
+    @model_version.setter
+    def model_version(self, _model_version):
+        """
+        Set model version.
+
+        Parameters
+        ----------
+        _model_version: str or list
+            Model version (ex. 6.0.0).
+            If a list is passed, only the first element will be used.
+
+        Raises
+        ------
+        ValueError
+            If more than one model version is passed.
+        """
+        if isinstance(_model_version, list):
+            if len(_model_version) != 1:
+                raise ValueError("Only one model version can be passed to the ModelParameter.")
+            self._model_version = _model_version[0]
+
+    @property
     def parameters(self):
         """
         Model parameters dictionary.
