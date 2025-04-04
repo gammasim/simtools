@@ -138,12 +138,13 @@ def _skip_test_for_model_version(config, model_version_requested):
 
 def _skip_test_for_production_db(config):
     """Skip test if production db is used."""
-    simtools_db_server = os.environ.get("SIMTOOLS_DB_SERVER")
-    if (
-        simtools_db_server
-        and config.get("SKIP_FOR_PRODUCTION_DB")
-        and "db.zeuthen.desy.de" in simtools_db_server
-    ):
+    if not config.get("SKIP_FOR_PRODUCTION_DB"):
+        return
+
+    if "db.zeuthen.desy.de" in os.getenv("SIMTOOLS_DB_SERVER", ""):
+        raise ProductionDBError("Production database used for this test")
+
+    if "simpipe" in os.getenv("SIMTOOLS_DB_API_USER", ""):
         raise ProductionDBError("Production database used for this test")
 
 
