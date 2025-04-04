@@ -200,8 +200,14 @@ def test_generate_power_law_values(grid_gen):
 
 
 def test_apply_lookup_table_limits(grid_gen):
-    # Ensure the lookup table is applied correctly
     grid_gen._apply_lookup_table_limits()
     assert "energy" in grid_gen.interpolated_limits
     assert "radius" in grid_gen.interpolated_limits
     assert "viewcone" in grid_gen.interpolated_limits
+    assert np.isclose(grid_gen.interpolated_limits["energy"][0][0][0], 0.00459, rtol=1e-2)
+    assert np.isclose(grid_gen.interpolated_limits["radius"][0][0][0], 2047.8, rtol=1e-2)
+    assert np.isclose(grid_gen.interpolated_limits["viewcone"][0][0][0], 9.98, rtol=1e-2)
+
+    assert np.shape(grid_gen.interpolated_limits["energy"]) == (2, 3, 2)
+    assert np.shape(grid_gen.interpolated_limits["radius"]) == (2, 3, 2)
+    assert np.shape(grid_gen.interpolated_limits["viewcone"]) == (2, 3, 2)
