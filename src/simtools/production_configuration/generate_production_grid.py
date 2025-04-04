@@ -77,11 +77,6 @@ class GridGeneration:
     def _apply_lookup_table_limits(self):
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
 
-        if isinstance(lookup_table["telescope_ids"][0], str):
-            lookup_table["telescope_ids"] = [
-                json.loads(telescope_ids) for telescope_ids in lookup_table["telescope_ids"]
-            ]
-
         matching_rows = [
             row for row in lookup_table if set(self.telescope_ids) == set(row["telescope_ids"])
         ]
