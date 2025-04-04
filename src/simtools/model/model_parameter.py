@@ -4,7 +4,6 @@
 import logging
 import shutil
 from copy import copy
-from pathlib import Path
 
 import astropy.units as u
 
@@ -280,8 +279,8 @@ class ModelParameter:
         if self.name is None and self.site is None:
             return
 
-        self._config_file_directory = Path(
-            self.io_handler.get_output_directory(label=self.label, sub_dir="model")
+        self._config_file_directory = self.io_handler.get_output_directory(
+            label=self.label, sub_dir="model"
         )
 
         # Setting file name and the location
@@ -292,7 +291,7 @@ class ModelParameter:
             label=self.label,
             extra_label=self._extra_label,
         )
-        self._config_file_path = Path(self.config_file_directory).joinpath(config_file_name)
+        self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
         self._logger.debug(f"Config file path: {self._config_file_path}")
 
