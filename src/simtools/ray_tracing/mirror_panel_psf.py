@@ -88,9 +88,7 @@ class MirrorPanelPSF:
                 name=self.args_dict["mirror_list"], loc=self.args_dict["model_path"]
             )
             tel_model.change_parameter("mirror_list", self.args_dict["mirror_list"])
-            # TODO check if export_model and export_parameter file is needed
             tel_model.export_parameter_file("mirror_list", mirror_list_file)
-            tel_model.export_model_files()
         if self.args_dict["random_focal_length"] is not None:
             tel_model.change_parameter(
                 "random_focal_length", str(self.args_dict["random_focal_length"])
