@@ -126,6 +126,14 @@ class ArrayModel:
         Path
             Path of the exported config file for sim_telarray.
         """
+        if self._config_file_path is None:
+            config_file_name = names.simtel_config_file_name(
+                array_name=self.layout_name,
+                site=self.site_model.site,
+                model_version=self.model_version,
+                label=self.label,
+            )
+            self._config_file_path = self.get_config_directory().joinpath(config_file_name)
         return self._config_file_path
 
     @property
@@ -210,17 +218,8 @@ class ArrayModel:
 
     def export_simtel_array_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
-        # Setting file name and the location
-        config_file_name = names.simtel_config_file_name(
-            array_name=self.layout_name,
-            site=self.site_model.site,
-            model_version=self.model_version,
-            label=self.label,
-        )
-        self._config_file_path = self.get_config_directory().joinpath(config_file_name)
         self.site_model.export_model_files()
 
-        # Writing parameters to the file
         self._logger.info(f"Writing array configuration file into {self.config_file_path}")
         simtel_writer = SimtelConfigWriter(
             site=self.site_model.site,
