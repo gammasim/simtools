@@ -50,7 +50,7 @@ class CommandLineParser(argparse.ArgumentParser):
             Add output file configuration to list of args.
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
-            (use: 'version', 'telescope', 'site')
+            (use: 'model_version', 'telescope', 'site')
         simulation_configuration: dict
             Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
@@ -271,6 +271,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 help="production model version",
                 type=str,
                 default=None,
+                nargs="+",
             )
         if "parameter_version" in model_options:
             _job_group.add_argument(
