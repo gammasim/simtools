@@ -140,6 +140,35 @@ class ArrayModel:
         """
         return self.site_model.site
 
+    @property
+    def model_version(self):
+        """Model version."""
+        return self._model_version
+
+    @model_version.setter
+    def model_version(self, model_version):
+        """
+        Set model version.
+
+        Parameters
+        ----------
+        _model_version: str or list
+            Model version (e.g., "6.0.0").
+            If a list is passed, it must contain exactly one element,
+            and only that element will be used.
+
+        Raises
+        ------
+        ValueError
+            If more than one model version is passed.
+        """
+        if isinstance(model_version, list):
+            if len(model_version) != 1:
+                raise ValueError("Only one model version can be passed to the ArrayModel.")
+            self._model_version = model_version[0]
+        else:
+            self._model_version = model_version
+
     def _build_telescope_models(self, site_model: SiteModel, array_elements: dict) -> dict:
         """
         Build the the telescope models for all telescopes of this array.

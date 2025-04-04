@@ -19,8 +19,8 @@ class SiteModel(ModelParameter):
         Site name (e.g., South or North).
     mongo_db_config: dict
         MongoDB configuration.
-    model_version: str
-        Model version.
+    model_version: str or list
+        Model version or list of model versions (in which case only the first one is used).
     label: str, optional
         Instance label. Important for output file naming.
     """

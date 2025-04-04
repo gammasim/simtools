@@ -92,25 +92,28 @@ class ModelParameter:
         return self._model_version
 
     @model_version.setter
-    def model_version(self, _model_version):
+    def model_version(self, model_version):
         """
         Set model version.
 
         Parameters
         ----------
         _model_version: str or list
-            Model version (ex. 6.0.0).
-            If a list is passed, only the first element will be used.
+            Model version (e.g., "6.0.0").
+            If a list is passed, it must contain exactly one element,
+            and only that element will be used.
 
         Raises
         ------
         ValueError
             If more than one model version is passed.
         """
-        if isinstance(_model_version, list):
-            if len(_model_version) != 1:
+        if isinstance(model_version, list):
+            if len(model_version) != 1:
                 raise ValueError("Only one model version can be passed to the ModelParameter.")
-            self._model_version = _model_version[0]
+            self._model_version = model_version[0]
+        else:
+            self._model_version = model_version
 
     @property
     def parameters(self):
