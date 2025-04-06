@@ -226,15 +226,6 @@ def test_flen_type(telescope_model_lst):
 
 
 def test_updating_export_model_files(db_config, io_handler, model_version):
-    """
-    It was found in derive_mirror_rnda_angle that the DB was being
-    accessed each time the model was changed, because the model
-    files were being re-exported. A flag called _is_exported_model_files_up_to_date
-    was added to prevent this behavior. This test is meant to assure
-    it is working properly.
-    """
-
-    # We need a brand new telescope_model to avoid interference
     tel = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
@@ -333,3 +324,38 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
         },
         dest=model_directory,
     )
+
+
+def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
+    """Test writing sim_telarray config file with and without additional model."""
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+
+    mock_writer = mocker.Mock()
+    mock_writer.write_telescope_config_file = mocker.Mock()
+
+    mock_export = mocker.patch.object(TelescopeModel, "export_model_files")
+    mock_load_writer = mocker.patch.object(
+        TelescopeModel,
+        "_load_simtel_config_writer",
+        side_effect=lambda: setattr(telescope_copy, "simtel_config_writer", mock_writer),
+    )
+
+    telescope_copy.write_sim_telarray_config_file()
+    mock_export.assert_called_once_with(update_if_necessary=True)
+    mock_load_writer.assert_called_once()
+    mock_writer.write_telescope_config_file.assert_called_once()
+
+    mock_export.reset_mock()
+    mock_load_writer.reset_mock()
+    mock_writer.write_telescope_config_file.reset_mock()
+
+    add_model = copy.deepcopy(telescope_model_lst)
+    add_model._parameters = {"test_param": "test_value"}
+
+    telescope_copy.write_sim_telarray_config_file(add_model=add_model)
+    assert mock_export.call_count == 2  # Called for both models
+    mock_load_writer.assert_called_once()
+    assert telescope_copy.parameters.get("test_param") == "test_value"
+    mock_writer.write_telescope_config_file.assert_called_once()
+
+    mock_export.assert_any_call(telescope_copy.config_file_directory, update_if_necessary=True)
