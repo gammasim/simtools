@@ -12,7 +12,7 @@ __all__ = ["InvalidOutputFileError", "SimtelExecutionError", "SimtelRunner"]
 
 
 class SimtelExecutionError(Exception):
-    """Exception for simtel_array execution error."""
+    """Exception for sim_telarray execution error."""
 
 
 class InvalidOutputFileError(Exception):

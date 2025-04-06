@@ -68,7 +68,7 @@ def _parse(label=None, description=None):
     )
     config.parser.add_argument(
         "--simtel_cfg_file",
-        help="File name for simtel_array configuration",
+        help="File name for sim_telarray configuration",
         type=str,
         required=True,
     )
