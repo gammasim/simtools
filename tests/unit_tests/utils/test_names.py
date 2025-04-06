@@ -385,7 +385,7 @@ def test_simtel_telescope_config_file_name(model_version):
     )
 
 
-def test_simtel_array_config_file_name(model_version):
+def test_sim_telarray_config_file_name(model_version):
     assert (
         names.simtel_config_file_name(
             array_name="4LSTs", site="South", model_version=model_version, label=None

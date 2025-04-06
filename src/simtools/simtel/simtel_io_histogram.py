@@ -1,4 +1,4 @@
-"""Reads the content of either a single histogram or simtel_array output file."""
+"""Reads the content of either a single histogram or sim_telarray output file."""
 
 import copy
 import logging
@@ -32,13 +32,13 @@ class SimtelIOHistogram:
     """
     Reads and generates histograms from sim_telarray output.
 
-    Read the content of either a single histogram (.hdata, or .hdata.zst) or a single simtel_array
+    Read the content of either a single histogram (.hdata, or .hdata.zst) or a single sim_telarray
     output file (.simtel or .simtel.zst).
 
     Parameters
     ----------
     histogram_file: str
-        The histogram (.hdata.zst) or simtel_array (.simtel.zst) file.
+        The histogram (.hdata.zst) or sim_telarray (.simtel.zst) file.
     area_from_distribution: bool
         If true, the area thrown (the area in which the simulated events are distributed)
         in the trigger rate calculation is estimated based on the event distribution.
@@ -348,7 +348,7 @@ class SimtelIOHistogram:
             for the triggered events.
         """
         if self.trigger_rate is None:
-            # Get the simulated and triggered 2D histograms from the simtel_array output file
+            # Get the simulated and triggered 2D histograms from the sim_telarray output file
             if events_histogram is None and triggered_events_histogram is None:
                 events_histogram, triggered_events_histogram = self.fill_event_histogram_dicts()
             # Calculate triggered/simulated event 1D histogram (energy dependent)
@@ -408,7 +408,7 @@ class SimtelIOHistogram:
         """
         Produce the meta data to include in the tabulated form of the trigger rate per energy bin.
 
-        It shows some information from the input file (simtel_array file) and the final estimate
+        It shows some information from the input file (sim_telarray file) and the final estimate
         system trigger rate.
 
         Returns
@@ -417,7 +417,7 @@ class SimtelIOHistogram:
             dictionary with the metadata.
         """
         return {
-            "simtel_array_file": self.histogram_file,
+            "sim_telarray_file": self.histogram_file,
             "simulation_input": self.print_info(mode="silent"),
             "system_trigger_rate (Hz)": self.trigger_rate.value,
         }

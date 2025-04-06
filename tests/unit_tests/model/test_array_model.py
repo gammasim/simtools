@@ -66,7 +66,7 @@ def test_exporting_config_files(db_config, io_handler, model_version):
     )
 
     am.export_simtel_telescope_config_files()
-    am.export_simtel_array_config_file()
+    am.export_sim_telarray_config_file()
 
     test_cfg = "_test.cfg"
     list_of_export_files = [
