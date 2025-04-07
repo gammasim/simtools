@@ -1,12 +1,12 @@
 """
 Module defines the `GridGeneration` class.
 
-Used to generate a grid of simulation points based on flexible axes definitions such as energy,
+Used to generate a grid of simulation points based on flexible axes definitions such
 azimuth, zenith angle, night-sky background, and camera offset.
-The module handles axis scaling, binning, and distribution types,
-allowing for adaptable simulation configurations. Additionally,
-it provides functionality for converting between Altitude/Azimuth and Right Ascension
-Declination coordinates.
+The module handles axis binning, scaling and interpolation of energy thresholds, viewcone,
+and radius limits from a lookup table.
+Additionally, it allows for converting between Altitude/Azimuth and Right Ascension
+Declination coordinates. The resulting grid points are saved to a file.
 """
 
 import json
@@ -25,9 +25,10 @@ class GridGeneration:
     """
     Defines and generates a grid of simulation points based on flexible axes definitions.
 
-    This class generates a grid of points for a simulation based on parameters like energy,
+    This class generates a grid of points for a simulation based on parameters such as
     azimuth, zenith angle, night-sky background, and camera offset,
-    taking into account axis definitions, scaling, and units.
+    taking into account axis definitions, scaling, and units and interpolating values
+    for simulations from a lookup table.
     """
 
     def __init__(
@@ -79,7 +80,7 @@ class GridGeneration:
 
     def _generate_target_values(self):
         """
-        Generate target values for all axes and store them as Quantities.
+        Generate target axis values and store them as Quantities.
 
         Returns
         -------
@@ -230,7 +231,7 @@ class GridGeneration:
 
     def generate_grid(self) -> list[dict]:
         """
-        Generate the grid based on the defined axes and include interpolated limits.
+        Generate the grid based on the required axes and include interpolated limits.
 
         Takes energy threshold, viewcone, and radius from the interpolated lookup table.
 
