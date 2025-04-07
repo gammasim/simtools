@@ -190,7 +190,7 @@ def main():
 
     if args_dict["coordinate_system"] == "ra_dec":
         grid_points = grid_gen.convert_coordinates(grid_points)
-    grid_gen.clean_grid_output(grid_points, output_file=output_filepath)
+    grid_gen.serialize_grid_points(grid_points, output_file=output_filepath)
 
 
 if __name__ == "__main__":

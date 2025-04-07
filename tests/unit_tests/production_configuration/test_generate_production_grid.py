@@ -159,7 +159,7 @@ def test_interpolated_limits(grid_gen):
         assert isinstance(point["viewcone"], Quantity)
 
 
-def test_clean_grid_output(grid_gen):
+def test_serialize_grid_points(grid_gen):
     # Case 1: Valid grid points
     grid_points = [
         {
@@ -179,7 +179,7 @@ def test_clean_grid_output(grid_gen):
             "viewcone": 2 * u.deg,
         },
     ]
-    cleaned_points = grid_gen.clean_grid_output(grid_points)
+    cleaned_points = grid_gen.serialize_grid_points(grid_points)
     assert isinstance(cleaned_points, str)  # JSON string
     assert '"zenith_angle"' in cleaned_points
     assert '"energy_threshold"' in cleaned_points

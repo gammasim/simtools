@@ -364,8 +364,8 @@ class GridGeneration:
                     point["dec"] = radec.dec.deg * u.deg
         return grid_points
 
-    def clean_grid_output(self, grid_points, output_file=None):
-        """Clean the grid output and save to a file or print to the console."""
+    def serialize_grid_points(self, grid_points, output_file=None):
+        """Serialize the grid output and save to a file or print to the console."""
         cleaned_points = []
 
         for point in grid_points:
