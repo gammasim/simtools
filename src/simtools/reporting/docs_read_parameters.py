@@ -50,15 +50,16 @@ class ReadParameters:
                 with input_file.open("r", encoding="latin-1") as infile:
                     file_contents = infile.read()
 
-            with output_file.open("w", encoding="utf-8") as outfile:
-                outfile.write(f"# {input_file.stem}\n")
-                outfile.write(
-                    f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_"
-                    f"{parameter}_{self.model_version.split('.')[0]}.png)\n"
-                )
-                outfile.write("```\n")
-                outfile.write(file_contents)
-                outfile.write("\n```")
+            if self.model_version is not None:
+                with output_file.open("w", encoding="utf-8") as outfile:
+                    outfile.write(f"# {input_file.stem}\n")
+                    outfile.write(
+                        f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_"
+                        f"{parameter}_{self.model_version.split('.')[0]}.png)\n"
+                    )
+                    outfile.write("```\n")
+                    outfile.write(file_contents)
+                    outfile.write("\n```")
 
         except FileNotFoundError as exc:
             logger.exception(f"Data file not found: {input_file}.")
