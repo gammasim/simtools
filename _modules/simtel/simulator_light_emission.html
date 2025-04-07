@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_light_emission &#8212; simtools v0.1.dev1+g478c810 Manual</title>
+    <title>simtel.simulator_light_emission &#8212; simtools v0.1.dev1+g464ce64 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=32b4c930"></script>
+    <script src="../../_static/documentation_options.js?v=862d513e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g478c810 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g464ce64 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -658,13 +658,12 @@ document.write(`
         <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -I&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -c </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_config_file</span><span class="p">(</span><span class="n">no_export</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_line_from_config</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_config_file</span><span class="p">(</span><span class="n">no_export</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="s2">&quot;array_triggers&quot;</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_line_from_config</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_config_file</span><span class="p">(</span><span class="n">no_export</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="s2">&quot;axes_offsets&quot;</span>
-            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_line_from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_config_file</span><span class="p">(</span><span class="n">no_export</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="s2">&quot;array_triggers&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_line_from_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model</span><span class="o">.</span><span class="n">get_config_file</span><span class="p">(</span><span class="n">no_export</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="s2">&quot;axes_offsets&quot;</span>
+        <span class="p">)</span>
 
         <span class="n">command</span> <span class="o">+=</span> <span class="s2">&quot; -DNUM_TELESCOPES=1&quot;</span>
 
