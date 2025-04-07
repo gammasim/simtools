@@ -187,7 +187,6 @@ def create_results_table(results, loss_fraction):
     table = Table(
         rows=[
             (
-                res["file_path"],
                 res["telescope_ids"],
                 res["zenith"],
                 res["azimuth"],
@@ -199,7 +198,6 @@ def create_results_table(results, loss_fraction):
             for res in results
         ],
         names=[
-            "file_path",
             "telescope_ids",
             "zenith",
             "azimuth",
