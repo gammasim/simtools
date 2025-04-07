@@ -304,3 +304,11 @@ def test_no_matching_rows_in_lookup_table(axes_definition, observing_location, o
             lookup_table="tests/resources/corsika_simulation_limits_lookup.ecsv",
             telescope_ids=[999],
         )
+
+
+def test_missing_observing_time(grid_gen):
+    """Test behavior when observing_time is not set."""
+    grid_gen.observing_time = None
+
+    with pytest.raises(ValueError, match="Observing time is not set"):
+        grid_gen.convert_altaz_to_radec(45 * u.deg, 30 * u.deg)
