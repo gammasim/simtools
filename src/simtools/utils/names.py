@@ -19,7 +19,11 @@ from pathlib import Path
 
 import yaml
 
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
+from simtools.constants import (
+    MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
+    MODEL_PARAMETER_SCHEMA_PATH,
+    SCHEMA_PATH,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -57,6 +61,21 @@ def array_elements():
     """
     with open(Path(SCHEMA_PATH) / "array_elements.yml", encoding="utf-8") as file:
         return yaml.safe_load(file)["data"]
+
+
+@cache
+def simulation_software():
+    """
+    Get simulation software names from the meta schema definition.
+
+    Returns
+    -------
+    list
+        List of simulation software names.
+    """
+    with open(Path(MODEL_PARAMETER_DESCRIPTION_METASCHEMA), encoding="utf-8") as file:
+        schema = yaml.safe_load(file)
+        return schema["definitions"]["SimulationSoftwareName"]["enum"]
 
 
 @cache
@@ -512,7 +531,7 @@ def get_collection_name_from_parameter_name(parameter_name):
 
 def get_simulation_software_name_from_parameter_name(
     parameter_name,
-    simulation_software="sim_telarray",
+    software_name="sim_telarray",
     set_meta_parameter=False,
 ):
     """
@@ -541,7 +560,7 @@ def get_simulation_software_name_from_parameter_name(
 
     for software in _parameter.get("simulation_software", []):
         if (
-            software.get("name") == simulation_software
+            software.get("name") == software_name
             and software.get("set_meta_parameter", False) is set_meta_parameter
         ):
             return software.get("internal_parameter_name", parameter_name)

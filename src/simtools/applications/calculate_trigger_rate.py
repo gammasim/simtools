@@ -3,14 +3,14 @@
 r"""
 Calculates array or single-telescope trigger rates.
 
-The applications reads from a simtel_array output file, a list of
-simtel_array output files ou from a file containing a list of simtel_array files.
+The applications reads from a sim_telarray output file, a list of
+sim_telarray output files ou from a file containing a list of sim_telarray files.
 
 
 Command line arguments
 ----------------------
 simtel_file_names (str or list):
-    Path to the simtel_array file or a list of simtel_array output files.
+    Path to the sim_telarray file or a list of sim_telarray output files.
     Files can be generated in `simulate_prod` using the ``--save_file_lists`` option.
 save_tables (bool):
     If true, save the tables with the energy-dependent trigger rate to a ecsv file.
@@ -28,7 +28,7 @@ area_from_distribution (bool):
 
 Example
 -------
-Calculate trigger rate from simtel_array file
+Calculate trigger rate from sim_telarray file
 
 .. code-block:: console
 
@@ -73,8 +73,8 @@ def _parse(label, description):
 
     config.parser.add_argument(
         "--simtel_file_names",
-        help="Name of the simtel_array output files to be calculate the trigger rate from or the "
-        "text file containing the list of simtel_array output files.",
+        help="Name of the sim_telarray output files to be calculate the trigger rate from or the "
+        "text file containing the list of sim_telarray output files.",
         nargs="+",
         required=True,
         type=str,
@@ -136,20 +136,20 @@ def _get_simulation_parameters(config_parser):
 def main():  # noqa: D103
     label = Path(__file__).stem
     description = (
-        "Calculates the simulated and triggered event rate based on simtel_array output files."
+        "Calculates the simulated and triggered event rate based on sim_telarray output files."
     )
     config_parser = _parse(label, description)
 
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(config_parser["log_level"]))
 
-    simtel_array_files = gen.get_list_of_files_from_command_line(
+    sim_telarray_files = gen.get_list_of_files_from_command_line(
         config_parser["simtel_file_names"], [".zst", ".simtel", ".hdata"]
     )
     energy_range, view_cone = _get_simulation_parameters(config_parser)
 
     histograms = SimtelIOHistograms(
-        simtel_array_files,
+        sim_telarray_files,
         area_from_distribution=config_parser["area_from_distribution"],
         energy_range=energy_range,
         view_cone=view_cone,
@@ -177,7 +177,7 @@ def main():  # noqa: D103
         output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")
         for i_table, table in enumerate(trigger_rate_in_tables):
             output_file = (
-                str(output_path.joinpath(Path(simtel_array_files[i_table]).stem)) + ".ecsv"
+                str(output_path.joinpath(Path(sim_telarray_files[i_table]).stem)) + ".ecsv"
             )
             logger.info(f"Writing table {i_table + 1} to {output_file}")
             table.write(output_file, overwrite=True)

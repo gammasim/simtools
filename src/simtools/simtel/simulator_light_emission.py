@@ -244,12 +244,12 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _make_simtel_script(self):
         """
-        Return the command to run simtel_array using the output from the previous step.
+        Return the command to run sim_telarray using the output from the previous step.
 
         Returns
         -------
         str
-            The command to run simtel_array
+            The command to run sim_telarray
         """
         # LightEmission
         _, angles = self.calibration_pointing_direction()
@@ -258,13 +258,12 @@ class SimulatorLightEmission(SimtelRunner):
         command += " -I"
         command += f" -I{self._telescope_model.config_file_directory}"
         command += f" -c {self._telescope_model.get_config_file(no_export=True)}"
-        if not self.test:
-            self._remove_line_from_config(
-                self._telescope_model.get_config_file(no_export=True), "array_triggers"
-            )
-            self._remove_line_from_config(
-                self._telescope_model.get_config_file(no_export=True), "axes_offsets"
-            )
+        self._remove_line_from_config(
+            self._telescope_model.get_config_file(no_export=True), "array_triggers"
+        )
+        self._remove_line_from_config(
+            self._telescope_model.get_config_file(no_export=True), "axes_offsets"
+        )
 
         command += " -DNUM_TELESCOPES=1"
 
