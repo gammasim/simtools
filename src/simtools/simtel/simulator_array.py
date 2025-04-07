@@ -114,7 +114,7 @@ class SimulatorArray(SimtelRunner):
             msg = f"sim_telarray output file {output_file} does not exist."
             self._logger.error(msg)
             raise InvalidOutputFileError(msg)
-        self._logger.debug(f"simtel_array output file {output_file} exists.")
+        self._logger.debug(f"sim_telarray output file {output_file} exists.")
         return True
 
     @staticmethod

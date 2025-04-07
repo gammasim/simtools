@@ -137,7 +137,7 @@ class CorsikaSimtelRunner:
 
     def _make_run_command(self, run_number=None, input_file=None):
         """
-        Build and return the command to run simtel_array.
+        Build and return the command to run sim_telarray.
 
         Parameters
         ----------
