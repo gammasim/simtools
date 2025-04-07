@@ -678,7 +678,7 @@ class DatabaseHandler:
                 model_version=model_version,
                 collection="configuration_corsika",
             )
-        if simulation_software == "simtel":
+        if simulation_software == "sim_telarray":
             return (
                 self.get_model_parameters(
                     site,
