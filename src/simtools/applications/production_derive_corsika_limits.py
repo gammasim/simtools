@@ -36,6 +36,7 @@ import datetime
 import logging
 import re
 
+import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
@@ -125,6 +126,7 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     dict
         Dictionary containing the computed limits and metadata.
     """
+    # Extract zenith and azimuth from the file path
     match = re.search(r"za(\d+)deg.*azm(\d+)deg", file_path)
     if not match:
         raise ValueError(f"Could not extract zenith and azimuth from file path: {file_path}")
@@ -132,12 +134,26 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     azimuth = int(match.group(2))
 
     if "dark" in file_path:
-        nsb = "dark"
+        nsb = 1
+    elif "halfmoon" in file_path:
+        nsb = 5
     elif "moon" in file_path:
-        nsb = "moon"
+        nsb = 19
     else:
-        _logger.warning(f"Could not determine NSB (dark or moon) from file path: {file_path}")
+        _logger.warning(f"Could not determine NSB from file path: {file_path}")
         nsb = "unknown"
+
+    if "gamma-diffuse" in file_path:
+        particle_type = "gamma-diffuse"
+    elif "gamma" in file_path:
+        particle_type = "gamma"
+    elif "proton" in file_path:
+        particle_type = "proton"
+    elif "electron" in file_path:
+        particle_type = "electron"
+    else:
+        _logger.warning(f"Could not determine particle type from file path: {file_path}")
+        particle_type = "unknown"
 
     calculator = LimitCalculator(file_path, telescope_list=telescope_ids)
 
@@ -157,6 +173,7 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
         )
 
     return {
+        "particle_type": particle_type,
         "telescope_ids": telescope_ids,
         "zenith": zenith,
         "azimuth": azimuth,
@@ -187,6 +204,7 @@ def create_results_table(results, loss_fraction):
     table = Table(
         rows=[
             (
+                res["particle_type"],
                 res["telescope_ids"],
                 res["zenith"],
                 res["azimuth"],
@@ -198,6 +216,7 @@ def create_results_table(results, loss_fraction):
             for res in results
         ],
         names=[
+            "particle_type",
             "telescope_ids",
             "zenith",
             "azimuth",
@@ -206,8 +225,19 @@ def create_results_table(results, loss_fraction):
             "upper_radius_threshold",
             "viewcone_radius",
         ],
+        dtype=[
+            "S64",
+            "S64",
+            np.int64,
+            np.int64,
+            np.int64,
+            np.float64,
+            np.float64,
+            np.float64,
+        ],
     )
-
+    table["zenith"].unit = "deg"
+    table["azimuth"].unit = "deg"
     table["lower_energy_threshold"].unit = "TeV"
     table["upper_radius_threshold"].unit = "m"
     table["viewcone_radius"].unit = "deg"
