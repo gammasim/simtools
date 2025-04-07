@@ -532,6 +532,7 @@ class ModelParameter:
         model_directory: Path
             Model directory to export the file to.
         """
+        print("AAAAA", self._simulation_config_parameters)
         self.db.export_model_files(
             parameters={
                 "nsb_spectrum_at_2200m": {
