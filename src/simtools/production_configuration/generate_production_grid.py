@@ -105,6 +105,9 @@ class GridGeneration:
                 cos_max = np.cos(np.radians(axis_range[1]))
                 inv_cos_values = np.linspace(1 / cos_min, 1 / cos_max, binning)
                 values = np.degrees(np.arccos(1 / inv_cos_values))
+            elif scaling == "power-law":
+                # Power-law scaling
+                values = self.generate_power_law_values(axis_range, binning)
             else:
                 # Linear scaling
                 values = np.linspace(axis_range[0], axis_range[1], binning)
@@ -276,7 +279,7 @@ class GridGeneration:
 
         return grid_points
 
-    def generate_power_law_values(self, axis_range, binning, power_law_index=3):
+    def generate_power_law_values(self, axis_range, binning, power_law_index=2):
         """
         Generate axis values following a power-law distribution.
 
