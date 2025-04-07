@@ -24,7 +24,7 @@ __all__ = [
 
 class SimtelIOHistograms:
     """
-    Read the content of either multiple histogram (.hdata, or .hdata.zst) or simtel_array files.
+    Read the content of either multiple histogram (.hdata, or .hdata.zst) or sim_telarray files.
 
     Allow both the .hdata.zst histogram and the .simtel.zst output file type.
     It uses the SimtelIOHistogram class to deal with individual files.
@@ -159,7 +159,7 @@ class SimtelIOHistograms:
         if sim_hist is None or trig_hist is None:
             msg = (
                 "Simulated and triggered histograms were not found in the stacked histograms."
-                " Please check your simtel_array files!"
+                " Please check your sim_telarray files!"
             )
             self._logger.error(msg)
             raise HistogramIdNotFoundError

@@ -231,7 +231,7 @@ def test_produce_trigger_meta_data(simtel_hist_io_instance, simtel_io_file):
     result = simtel_hist_io_instance.produce_trigger_meta_data()
 
     expected_result = {
-        "simtel_array_file": simtel_io_file,
+        "sim_telarray_file": simtel_io_file,
         "simulation_input": simtel_hist_io_instance.print_info(mode="silent"),
         "system_trigger_rate (Hz)": trigger_rate,
     }

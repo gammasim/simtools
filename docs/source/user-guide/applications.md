@@ -45,7 +45,7 @@ simtools-generate-corsika-histograms <applications/simtools-generate-corsika-his
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
-simtools-generate-simtel-array-histograms <applications/simtools-generate-simtel-array-histograms>
+simtools-generate-sim-telarray-histograms <applications/simtools-generate-sim-telarray-histograms>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>

@@ -139,8 +139,8 @@ def test_convert_model_parameters_to_simtel_format(
 def test_get_simtel_metadata_with_model_parameters(simtel_config_writer):
     model_parameters = {"test_param": {"value": 42, "meta_parameter": True}}
 
-    def mock_get_name(key, simulation_software, set_meta_parameter):
-        if simulation_software == "sim_telarray":
+    def mock_get_name(key, software_name, set_meta_parameter):
+        if software_name == "sim_telarray":
             if set_meta_parameter:
                 return "test_set_param_meta"
             return "test_add_param"

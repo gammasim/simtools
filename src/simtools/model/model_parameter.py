@@ -64,7 +64,7 @@ class ModelParameter:
         )
 
         self._parameters = {}
-        self._simulation_config_parameters = {"corsika": {}, "simtel": {}}
+        self._simulation_config_parameters = {sw: {} for sw in names.simulation_software()}
         self.collection = collection
         self.label = label
         self.model_version = model_version
@@ -471,7 +471,7 @@ class ModelParameter:
         self.simtel_config_writer.write_telescope_config_file(
             config_file_path=self.config_file_path,
             parameters=self.parameters,
-            config_parameters=self._simulation_config_parameters["simtel"],
+            config_parameters=self._simulation_config_parameters["sim_telarray"],
         )
 
     @property
@@ -532,10 +532,11 @@ class ModelParameter:
         model_directory: Path
             Model directory to export the file to.
         """
+        print("AAAAA", self._simulation_config_parameters)
         self.db.export_model_files(
             parameters={
                 "nsb_spectrum_at_2200m": {
-                    "value": self._simulation_config_parameters["simtel"][
+                    "value": self._simulation_config_parameters["sim_telarray"][
                         "correct_nsb_spectrum_to_telescope_altitude"
                     ]["value"],
                     "file": True,

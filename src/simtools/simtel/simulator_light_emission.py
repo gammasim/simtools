@@ -244,12 +244,12 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _make_simtel_script(self):
         """
-        Return the command to run simtel_array using the output from the previous step.
+        Return the command to run sim_telarray using the output from the previous step.
 
         Returns
         -------
         str
-            The command to run simtel_array
+            The command to run sim_telarray
         """
         # LightEmission
         _, angles = self.calibration_pointing_direction()
