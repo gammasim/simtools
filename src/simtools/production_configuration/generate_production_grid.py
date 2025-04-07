@@ -71,10 +71,53 @@ class GridGeneration:
         self.lookup_table = lookup_table
         self.telescope_ids = telescope_ids
 
+        # Store target values for each axis
+        self.target_values = self._generate_target_values()
+
         if self.lookup_table:
             self._apply_lookup_table_limits()
 
+    def _generate_target_values(self):
+        """
+        Generate target values for all axes and store them as Quantities.
+
+        Returns
+        -------
+        dict
+            Dictionary of target values for each axis, stored as Quantity objects.
+        """
+        target_values = {}
+        for axis_name, axis in self.axes.items():
+            axis_range = axis["range"]
+            binning = axis["binning"]
+            scaling = axis.get("scaling", "linear")
+            units = axis.get("units", None)
+
+            if axis_name == "azimuth":
+                # Use circular binning for azimuth
+                values = self.create_circular_binning(axis_range, binning)
+            elif scaling == "log":
+                # Log scaling
+                values = np.logspace(np.log10(axis_range[0]), np.log10(axis_range[1]), binning)
+            elif scaling == "1/cos":
+                # 1/cos scaling
+                cos_min = np.cos(np.radians(axis_range[0]))
+                cos_max = np.cos(np.radians(axis_range[1]))
+                inv_cos_values = np.linspace(1 / cos_min, 1 / cos_max, binning)
+                values = np.degrees(np.arccos(1 / inv_cos_values))
+            else:
+                # Linear scaling
+                values = np.linspace(axis_range[0], axis_range[1], binning)
+
+            if units:
+                values = values * u.Unit(units)
+
+            target_values[axis_name] = values
+
+        return target_values
+
     def _apply_lookup_table_limits(self):
+        """Apply limits from the lookup table and interpolate values."""
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
 
         matching_rows = [
@@ -100,19 +143,10 @@ class GridGeneration:
         upper_radius_thresholds_wrapped = np.tile(upper_radius_thresholds, 3)
         viewcone_radii_wrapped = np.tile(viewcone_radii, 3)
 
-        target_zeniths = np.linspace(
-            self.axes["zenith_angle"]["range"][0],
-            self.axes["zenith_angle"]["range"][1],
-            self.axes["zenith_angle"]["binning"],
-        )
-        target_azimuths = self.create_circular_binning(
-            self.axes["azimuth"]["range"], self.axes["azimuth"]["binning"]
-        )
-        target_nsb = np.linspace(
-            self.axes["nsb"]["range"][0],
-            self.axes["nsb"]["range"][1],
-            self.axes["nsb"]["binning"],
-        )
+        target_zeniths = self.target_values["zenith_angle"].value
+        target_azimuths = self.target_values["azimuth"].value
+        target_nsb = self.target_values["nsb"].value
+
         target_grid = (
             np.array(np.meshgrid(target_zeniths, target_azimuths, target_nsb, indexing="ij"))
             .reshape(3, -1)
@@ -154,9 +188,6 @@ class GridGeneration:
             "energy": interpolated_energy,
             "radius": interpolated_radius,
             "viewcone": interpolated_viewcone,
-            "target_zeniths": target_zeniths,
-            "target_azimuths": target_azimuths,
-            "target_nsb": target_nsb,
         }
 
     def create_circular_binning(self, azimuth_range, num_bins):
@@ -179,15 +210,21 @@ class GridGeneration:
         azimuth_min %= 360  # Normalize to [0, 360)
         azimuth_max %= 360
 
-        if azimuth_min > azimuth_max:  # Handles wraparound case (e.g., 310 deg to 20 deg)
-            # Total range is split into two parts: [azimuth_min, 360) and [0, azimuth_max]
-            total_range = (360 - azimuth_min) + azimuth_max
+        clockwise_distance = (azimuth_max - azimuth_min) % 360
+        counterclockwise_distance = (azimuth_min - azimuth_max) % 360
 
-            bin_edges = np.linspace(azimuth_min, azimuth_min + total_range, num_bins, endpoint=True)
-            bin_centers = bin_edges % 360  # Wrap around to [0, 360)
+        if clockwise_distance <= counterclockwise_distance:
+            bin_centers = (
+                np.linspace(azimuth_min, azimuth_min + clockwise_distance, num_bins, endpoint=True)
+                % 360
+            )
         else:
-            # range does not cross 360 deg
-            bin_centers = np.linspace(azimuth_min, azimuth_max, num_bins, endpoint=True)
+            bin_centers = (
+                np.linspace(
+                    azimuth_min, azimuth_min - counterclockwise_distance, num_bins, endpoint=True
+                )
+                % 360
+            )
 
         return bin_centers
 
@@ -203,60 +240,27 @@ class GridGeneration:
             A list of grid points, each represented as a dictionary with axis names
             as keys and axis values as values. Axis values may include units where defined.
         """
-        axis_values = {}
-
-        for axis_name, axis in self.axes.items():
-            if axis_name in ["energy", "viewcone", "radius"]:
-                continue  # Skip fixed coordinates
-            axis_range = axis["range"]
-            binning = axis["binning"]
-            scaling = axis.get("scaling", "linear")
-            units = axis.get("units", None)
-
-            if scaling == "log":
-                values = np.logspace(np.log10(axis_range[0]), np.log10(axis_range[1]), binning)
-            else:
-                values = np.linspace(axis_range[0], axis_range[1], binning)
-
-            if units:
-                values = values * u.Unit(units)
-
-            axis_values[axis_name] = values
-
-        value_arrays = [value.value for value in axis_values.values()]
-        units = [value.unit for value in axis_values.values()]
+        value_arrays = [value.value for value in self.target_values.values()]
+        units = [value.unit for value in self.target_values.values()]
         grid = np.meshgrid(*value_arrays, indexing="ij")
         combinations = np.vstack(list(map(np.ravel, grid))).T
-
         grid_points = []
         for combination in combinations:
             grid_point = {
-                key: Quantity(combination[i], units[i]) for i, key in enumerate(axis_values.keys())
+                key: Quantity(combination[i], units[i])
+                for i, key in enumerate(self.target_values.keys())
             }
 
             if "energy" in self.interpolated_limits:
                 zenith_idx = np.searchsorted(
-                    self.interpolated_limits["target_zeniths"], grid_point["zenith_angle"].value
+                    self.target_values["zenith_angle"].value, grid_point["zenith_angle"].value
                 )
                 azimuth_idx = np.searchsorted(
-                    self.interpolated_limits["target_azimuths"], grid_point["azimuth"].value
+                    self.target_values["azimuth"].value, grid_point["azimuth"].value
                 )
-                nsb_idx = np.searchsorted(
-                    self.interpolated_limits["target_nsb"], grid_point["nsb"].value
-                )
-
-                zenith_idx = np.clip(
-                    zenith_idx, 0, len(self.interpolated_limits["target_zeniths"]) - 1
-                )
-                azimuth_idx = np.clip(
-                    azimuth_idx, 0, len(self.interpolated_limits["target_azimuths"]) - 1
-                )
-                nsb_idx = np.clip(nsb_idx, 0, len(self.interpolated_limits["target_nsb"]) - 1)
-
+                nsb_idx = np.searchsorted(self.target_values["nsb"].value, grid_point["nsb"].value)
                 energy_lower = self.interpolated_limits["energy"][zenith_idx, azimuth_idx, nsb_idx]
-                grid_point["energy_threshold"] = {
-                    "lower": energy_lower * u.TeV,
-                }
+                grid_point["energy_threshold"] = {"lower": energy_lower * u.TeV}
 
             if "radius" in self.interpolated_limits:
                 radius_value = self.interpolated_limits["radius"][zenith_idx, azimuth_idx, nsb_idx]
