@@ -69,9 +69,9 @@ class SimtelConfigReader:
 
     def __init__(
         self,
-        schema_file,
-        simtel_config_file,
-        simtel_telescope_name,
+        schema_file=None,
+        simtel_config_file=None,
+        simtel_telescope_name=None,
         parameter_name=None,
         camera_pixels=None,
     ):
@@ -91,11 +91,13 @@ class SimtelConfigReader:
                 self.parameter_name
             ).upper()
         except (KeyError, AttributeError):
-            self.simtel_parameter_name = self.parameter_name.upper()
+            self.simtel_parameter_name = self.parameter_name.upper() if parameter_name else None
         self.simtel_telescope_name = simtel_telescope_name
         self.camera_pixels = camera_pixels
-        self.parameter_dict = self.read_simtel_config_file(
-            simtel_config_file, simtel_telescope_name
+        self.parameter_dict = (
+            self.read_simtel_config_file(simtel_config_file, simtel_telescope_name)
+            if simtel_config_file
+            else {}
         )
 
     def _should_skip_limits_check(self, data_type):
