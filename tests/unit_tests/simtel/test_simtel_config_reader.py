@@ -60,6 +60,9 @@ def test_simtel_config_reader_init(simtel_config_file):
         )
     assert none_parameter.simtel_parameter_name == "NUM_GAINS"
 
+    # test init without any parameter
+    assert isinstance(SimtelConfigReader(), SimtelConfigReader)
+
 
 def test_simtel_config_reader_num_gains(config_reader_num_gains):
     _config = config_reader_num_gains
