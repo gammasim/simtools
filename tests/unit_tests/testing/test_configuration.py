@@ -320,12 +320,14 @@ def test_skip_test_for_production_db_skip(monkeypatch):
 def test_skip_test_for_production_db_no_db_api_user(monkeypatch):
     config = {"SKIP_FOR_PRODUCTION_DB": True}
     monkeypatch.delenv("SIMTOOLS_DB_API_USER", raising=False)
+    monkeypatch.delenv("SIMTOOLS_DB_SERVER", raising=False)
     configuration._skip_test_for_production_db(config)
 
 
 def test_skip_test_for_production_db_not_simpipe(monkeypatch):
     config = {"SKIP_FOR_PRODUCTION_DB": True}
     monkeypatch.setenv("SIMTOOLS_DB_API_USER", "simtools")
+    monkeypatch.delenv("SIMTOOLS_DB_SERVER", raising=False)
     configuration._skip_test_for_production_db(config)
 
 
