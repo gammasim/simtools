@@ -1,5 +1,5 @@
 
-imtools-generate-simtel-array-histograms
+imtools-generate-sim-telarray-histograms
 ========================================
 
 .. automodule:: generate_sim_telarray_histograms
