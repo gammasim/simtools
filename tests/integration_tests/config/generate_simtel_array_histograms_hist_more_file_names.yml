@@ -1,7 +1,7 @@
 ---
 CTA_SIMPIPE:
   APPLICATIONS:
-  - APPLICATION: simtools-generate-simtel-array-histograms
+  - APPLICATION: simtools-generate-sim-telarray-histograms
     TEST_NAME: hist_more_file_names
     CONFIGURATION:
       HIST_FILE_NAMES:
