@@ -155,7 +155,7 @@ class CorsikaSimtelRunner:
         self, run_number=None, input_file=None, corsika_config=None, simulator_array=None
     ):
         """
-        Build and return the command to run simtel_array.
+        Build and return the command to run sim_telarray.
 
         Parameters
         ----------

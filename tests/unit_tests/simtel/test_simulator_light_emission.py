@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, mock_open, patch
+from unittest.mock import MagicMock, Mock, call, mock_open, patch
 
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -338,40 +338,53 @@ def test_make_simtel_script(mock_simulator):
         path_to_config_file = "/path/to/config/config.cfg"
         mock_simulator._telescope_model.get_config_file.return_value = path_to_config_file
 
-        def get_telescope_model_param(param):
-            if param == "atmospheric_transmission":
-                return "atm_test"
-            if param == "array_element_position_ground":
-                return (1, 1, 1)
-            return MagicMock()
+        # Patch Path.open to mock file handling for the config file
+        with patch("pathlib.Path.open", mock_open(read_data=mock_file_content)) as mock_path_open:
 
-        mock_simulator._telescope_model.get_parameter_value.side_effect = get_telescope_model_param
+            def get_telescope_model_param(param):
+                if param == "atmospheric_transmission":
+                    return "atm_test"
+                if param == "array_element_position_ground":
+                    return (1, 1, 1)
+                return MagicMock()
 
-        mock_simulator._site_model.get_parameter_value.side_effect = lambda param: (
-            "999" if param == "corsika_observation_level" else MagicMock()
-        )
+            mock_simulator._telescope_model.get_parameter_value.side_effect = (
+                get_telescope_model_param
+            )
 
-        mock_simulator.output_directory = "/directory"
+            mock_simulator._site_model.get_parameter_value.side_effect = lambda param: (
+                "999" if param == "corsika_observation_level" else MagicMock()
+            )
 
-        expected_command = (
-            "SIM_TELARRAY_CONFIG_PATH='' "
-            "/path/to/sim_telarray/bin/sim_telarray/ "
-            "-I -I/path/to/config/ "
-            "-c /path/to/config/config.cfg "
-            "-DNUM_TELESCOPES=1 "
-            "-C altitude=999 -C atmospheric_transmission=atm_test "
-            "-C TRIGGER_TELESCOPES=1 "
-            "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
-            "-C MAXIMUM_TELESCOPES=1 "
-            "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
-            "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
-            "-C output_file=/directory/xyzls_layout.simtel.gz "
-            "-C histogram_file=/directory/xyzls_layout.ctsim.hdata\n"
-        )
+            mock_simulator.output_directory = "/directory"
 
-        command = mock_simulator._make_simtel_script()
+            expected_command = (
+                "SIM_TELARRAY_CONFIG_PATH='' "
+                "/path/to/sim_telarray/bin/sim_telarray/ "
+                "-I -I/path/to/config/ "
+                "-c /path/to/config/config.cfg "
+                "-DNUM_TELESCOPES=1 "
+                "-C altitude=999 -C atmospheric_transmission=atm_test "
+                "-C TRIGGER_TELESCOPES=1 "
+                "-C TELTRIG_MIN_SIGSUM=2 -C PULSE_ANALYSIS=-30 "
+                "-C MAXIMUM_TELESCOPES=1 "
+                "-C telescope_theta=76.980826 -C telescope_phi=180.17047 "
+                "-C power_law=2.68 -C input_file=/directory/xyzls.iact.gz "
+                "-C output_file=/directory/xyzls_layout.simtel.gz "
+                "-C histogram_file=/directory/xyzls_layout.ctsim.hdata\n"
+            )
 
-        assert command == expected_command
+            command = mock_simulator._make_simtel_script()
+
+            assert command == expected_command
+
+            mock_path_open.assert_has_calls(
+                [
+                    call("r", encoding="utf-8"),
+                    call("w", encoding="utf-8"),
+                ],
+                any_order=True,
+            )
 
 
 @patch("os.system")

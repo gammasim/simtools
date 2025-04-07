@@ -225,7 +225,7 @@ class ArrayModel:
 
         self._telescope_model_files_exported = True
 
-    def export_simtel_array_config_file(self):
+    def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
         # Setting file name and the location
         config_file_name = names.simtel_config_file_name(
@@ -260,7 +260,7 @@ class ArrayModel:
         if not self._telescope_model_files_exported:
             self.export_simtel_telescope_config_files()
         if not self._array_model_file_exported:
-            self.export_simtel_array_config_file()
+            self.export_sim_telarray_config_file()
 
     def get_config_file(self) -> Path:
         """
