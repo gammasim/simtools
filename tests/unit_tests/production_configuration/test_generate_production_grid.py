@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -96,6 +97,41 @@ def test_generate_grid_log_scaling(
     assert np.allclose(unique_nsb_values, expected_values, rtol=1e-4)
 
 
+def test_generate_grid_1_over_cos_scaling(
+    axes_definition, lookup_table, observing_location, observing_time
+):
+    """Test grid generation with 1/cos scaling for zenith_angle axis."""
+    axes_definition["axes"]["zenith_angle"] = {
+        "range": [30, 60],
+        "binning": 5,
+        "scaling": "1/cos",
+        "units": "deg",
+    }
+
+    grid_gen = GridGeneration(
+        axes=axes_definition,
+        coordinate_system="zenith_azimuth",
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=lookup_table,
+        telescope_ids=[1],
+    )
+
+    grid_points = grid_gen.generate_grid()
+    zenith_values = [point["zenith_angle"].value for point in grid_points]
+    unique_zenith_values = np.unique(zenith_values)
+
+    cos_min = np.cos(np.radians(axes_definition["axes"]["zenith_angle"]["range"][0]))
+    cos_max = np.cos(np.radians(axes_definition["axes"]["zenith_angle"]["range"][1]))
+    cos_values = np.linspace(
+        1 / cos_min, 1 / cos_max, axes_definition["axes"]["zenith_angle"]["binning"]
+    )
+    expected_values = np.degrees(np.arccos(1 / cos_values))
+
+    assert len(unique_zenith_values) == len(expected_values)
+    assert np.allclose(unique_zenith_values, expected_values, rtol=1e-4)
+
+
 def test_interpolated_limits(grid_gen):
     # Mock interpolated limits
     grid_gen.interpolated_limits = {
@@ -149,29 +185,20 @@ def test_clean_grid_output(grid_gen):
     assert '"energy_threshold"' in cleaned_points
 
 
-def test_serialize_quantity(grid_gen):
-    # Case 1: Value is a numpy array
-    np_array = np.array([1, 2, 3])
-    serialized = grid_gen.serialize_quantity(np_array)
-    assert serialized == [1, 2, 3]
-
-    # Case 2: Value is a Quantity (single value)
+def test_serialize_quantity(grid_gen, caplog):
+    # Case 1: Value is a Quantity (single value)
     quantity = 5 * u.m
     serialized = grid_gen.serialize_quantity(quantity)
     assert serialized == {"value": 5, "unit": "m"}
 
-    # Case 3: Value is a Quantity (array)
-    quantity_array = np.array([1, 2, 3]) * u.s
-    serialized = grid_gen.serialize_quantity(quantity_array)
-    assert serialized == {
-        "value": [1, 2, 3],
-        "unit": "s",
-    }
+    # Case 2: Value is not a Quantity (single value)
+    value = 5
 
-    # Case 4: Value is neither numpy array nor Quantity
-    normal_value = "test_string"
-    serialized = grid_gen.serialize_quantity(normal_value)
-    assert serialized == "test_string"
+    with caplog.at_level(logging.WARNING):
+        grid_gen.serialize_quantity(value)
+
+    assert "Unsupported type" in caplog.text
+    assert str(type(value)) in caplog.text
 
 
 def test_convert_altaz_to_radec_and_coordinates(grid_gen):
