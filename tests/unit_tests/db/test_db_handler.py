@@ -817,16 +817,17 @@ def test_get_simulation_configuration_parameters(db, mocker):
     )
     assert mock_get_model_parameters.call_count == 1
 
+    software = "sim_telarray"
     assert (
-        db.get_simulation_configuration_parameters("simtel", "North", "LSTN-design", "6.0.0")
+        db.get_simulation_configuration_parameters(software, "North", "LSTN-design", "6.0.0")
         == return_value
     )
     assert mock_get_model_parameters.call_count == 2
-    assert db.get_simulation_configuration_parameters("simtel", "North", None, "6.0.0") == {}
+    assert db.get_simulation_configuration_parameters(software, "North", None, "6.0.0") == {}
     assert mock_get_model_parameters.call_count == 2
-    assert db.get_simulation_configuration_parameters("simtel", None, "LSTN-design", "6.0.0") == {}
+    assert db.get_simulation_configuration_parameters(software, None, "LSTN-design", "6.0.0") == {}
     assert mock_get_model_parameters.call_count == 2
-    assert db.get_simulation_configuration_parameters("simtel", None, None, "6.0.0") == {}
+    assert db.get_simulation_configuration_parameters(software, None, None, "6.0.0") == {}
     assert mock_get_model_parameters.call_count == 2
 
     with pytest.raises(ValueError, match=r"Unknown simulation software: wrong"):

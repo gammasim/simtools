@@ -45,7 +45,7 @@ model_version (str, optional)
     Version of the simulation model.
 light_source_type (str, optional)
     Select calibration light source type: led (default) or laser.
-    This changes the pre-compiled (simtel_array) application that is used to run the
+    This changes the pre-compiled (sim_telarray) application that is used to run the
     light emission package with. Currently we use xyzls (laser), and ls-beam can be
     accessed by using the laser option.
 off_axis_angle (float, optional)
