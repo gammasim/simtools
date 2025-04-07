@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>imtools-generate-simtel-array-histograms &#8212; simtools v0.1.dev1+g0c7d28e Manual</title>
+    <title>simtools-generate-sim-telarray-histograms &#8212; simtools v0.1.dev1+g478c810 Manual</title>
   
   
   
@@ -36,11 +36,11 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b4a97bd1"></script>
+    <script src="../../_static/documentation_options.js?v=32b4c930"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-generate-simtel-array-histograms';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-generate-sim-telarray-histograms';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="simtools-plot-array-layout" href="simtools-plot-array-layout.html" />
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0c7d28e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g478c810 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -211,7 +211,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-generate-simtel-array-histograms</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-generate-sim-telarray-histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
@@ -327,7 +327,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-generate-simtel-array-histograms.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-generate-sim-telarray-histograms.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -344,7 +344,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-generate-simtel-array-histograms.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-generate-sim-telarray-histograms.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -374,7 +374,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/simtools-generate-simtel-array-histograms.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simtools-generate-sim-telarray-histograms.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -458,7 +458,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>imtools-generate-simtel-array-histograms</h1>
+    <h1>simtools-generate-sim-telarray-histograms</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -471,8 +471,8 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.check_and_log_overwrite"><code class="docutils literal notranslate"><span class="pre">check_and_log_overwrite()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.create_pdf"><code class="docutils literal notranslate"><span class="pre">create_pdf()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_sim_telarray_histograms.check_and_log_overwrite"><code class="docutils literal notranslate"><span class="pre">check_and_log_overwrite()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_sim_telarray_histograms.create_pdf"><code class="docutils literal notranslate"><span class="pre">create_pdf()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -484,8 +484,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-generate_simtel_array_histograms">
-<span id="imtools-generate-simtel-array-histograms"></span><h1>imtools-generate-simtel-array-histograms<a class="headerlink" href="#module-generate_simtel_array_histograms" title="Link to this heading">#</a></h1>
+  <section id="module-generate_sim_telarray_histograms">
+<span id="simtools-generate-sim-telarray-histograms"></span><h1>simtools-generate-sim-telarray-histograms<a class="headerlink" href="#module-generate_sim_telarray_histograms" title="Link to this heading">#</a></h1>
 <p>Write sim_telarray histograms into pdf and hdf5 files.</p>
 <p>It accepts multiple lists of histograms files, a single list or a histogram file.
 Each histogram is plotted in a page of the pdf file if the –pdf option is activated.</p>
@@ -523,15 +523,15 @@ untouched.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-simtel-array-histograms --hist_file_names tests/resources/ \\</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-generate-sim-telarray-histograms --hist_file_names tests/resources/ \\</span>
 <span class="go">    run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst \\</span>
 <span class="go">    --output_file_name test_hist_hdata --hdf5 --pdf</span>
 </pre></div>
 </div>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="generate_simtel_array_histograms.check_and_log_overwrite">
-<span class="sig-prename descclassname"><span class="pre">generate_simtel_array_histograms.</span></span><span class="sig-name descname"><span class="pre">check_and_log_overwrite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/generate_simtel_array_histograms.html#check_and_log_overwrite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_simtel_array_histograms.check_and_log_overwrite" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="generate_sim_telarray_histograms.check_and_log_overwrite">
+<span class="sig-prename descclassname"><span class="pre">generate_sim_telarray_histograms.</span></span><span class="sig-name descname"><span class="pre">check_and_log_overwrite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/generate_sim_telarray_histograms.html#check_and_log_overwrite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_sim_telarray_histograms.check_and_log_overwrite" title="Link to this definition">#</a></dt>
 <dd><p>Check if the output hdf5 file already exists and log a warning if it does.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -552,8 +552,8 @@ untouched.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="generate_simtel_array_histograms.create_pdf">
-<span class="sig-prename descclassname"><span class="pre">generate_simtel_array_histograms.</span></span><span class="sig-name descname"><span class="pre">create_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_histograms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/generate_simtel_array_histograms.html#create_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_simtel_array_histograms.create_pdf" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="generate_sim_telarray_histograms.create_pdf">
+<span class="sig-prename descclassname"><span class="pre">generate_sim_telarray_histograms.</span></span><span class="sig-name descname"><span class="pre">create_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_histograms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/generate_sim_telarray_histograms.html#create_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#generate_sim_telarray_histograms.create_pdf" title="Link to this definition">#</a></dt>
 <dd><p>Create a PDF file containing histograms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -621,8 +621,8 @@ untouched.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raises">Raises</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.check_and_log_overwrite"><code class="docutils literal notranslate"><span class="pre">check_and_log_overwrite()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_simtel_array_histograms.create_pdf"><code class="docutils literal notranslate"><span class="pre">create_pdf()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_sim_telarray_histograms.check_and_log_overwrite"><code class="docutils literal notranslate"><span class="pre">check_and_log_overwrite()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate_sim_telarray_histograms.create_pdf"><code class="docutils literal notranslate"><span class="pre">create_pdf()</span></code></a></li>
 </ul>
   </nav></div>
 

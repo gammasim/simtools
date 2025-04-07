@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-calculate-trigger-rate &#8212; simtools v0.1.dev1+g0c7d28e Manual</title>
+    <title>simtools-calculate-trigger-rate &#8212; simtools v0.1.dev1+g478c810 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=b4a97bd1"></script>
+    <script src="../../_static/documentation_options.js?v=32b4c930"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0c7d28e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g478c810 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -211,7 +211,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
@@ -484,12 +484,12 @@ document.write(`
   <section id="module-calculate_trigger_rate">
 <span id="simtools-calculate-trigger-rate"></span><h1>simtools-calculate-trigger-rate<a class="headerlink" href="#module-calculate_trigger_rate" title="Link to this heading">#</a></h1>
 <p>Calculates array or single-telescope trigger rates.</p>
-<p>The applications reads from a simtel_array output file, a list of
-simtel_array output files ou from a file containing a list of simtel_array files.</p>
+<p>The applications reads from a sim_telarray output file, a list of
+sim_telarray output files ou from a file containing a list of sim_telarray files.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt>simtel_file_names (str or list):</dt><dd><p>Path to the simtel_array file or a list of simtel_array output files.
+<dt>simtel_file_names (str or list):</dt><dd><p>Path to the sim_telarray file or a list of sim_telarray output files.
 Files can be generated in <a class="reference internal" href="simtools-simulate-prod.html#module-simulate_prod" title="simulate_prod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simulate_prod</span></code></a> using the <code class="docutils literal notranslate"><span class="pre">--save_file_lists</span></code> option.</p>
 </dd>
 <dt>save_tables (bool):</dt><dd><p>If true, save the tables with the energy-dependent trigger rate to a ecsv file.</p>
@@ -509,7 +509,7 @@ the simulation configuration.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
-<p>Calculate trigger rate from simtel_array file</p>
+<p>Calculate trigger rate from sim_telarray file</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-calculate-trigger-rate --simtel_file_names tests/resources/ \\</span>
 <span class="go">run201_proton_za20deg_azm0deg_North_test_layout_test-prod.simtel.zst</span>
 </pre></div>

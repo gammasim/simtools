@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g0c7d28e Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g478c810 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=b4a97bd1"></script>
+    <script src="../_static/documentation_options.js?v=32b4c930"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0c7d28e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g478c810 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -211,7 +211,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-simtel-array-histograms.html">simtools-generate-simtel-array-histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-generate-sim-telarray-histograms.html">simtools-generate-sim-telarray-histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
@@ -603,7 +603,7 @@ The sim_telarray configuration can be generated using e.g., the following sim_te
 <dl class="py method">
 <dt class="sig sig-object py" id="simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">
 <span class="sig-name descname"><span class="pre">compare_simtel_config_with_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_reader.html#SimtelConfigReader.compare_simtel_config_with_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema" title="Link to this definition">#</a></dt>
-<dd><p>Compare limits and defaults reported by simtel_array with schema.</p>
+<dd><p>Compare limits and defaults reported by sim_telarray with schema.</p>
 <p>This is mostly for debugging purposes and includes simple printing.
 Check for differences in ‘default’ and ‘limits’ entries.</p>
 </dd></dl>
@@ -870,7 +870,7 @@ Provide functionality to list events, e.g. through</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_io_histograms.SimtelIOHistograms">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_histograms.</span></span><span class="sig-name descname"><span class="pre">SimtelIOHistograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">histogram_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_from_distribution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view_cone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_histograms.html#SimtelIOHistograms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_histograms.SimtelIOHistograms" title="Link to this definition">#</a></dt>
-<dd><p>Read the content of either multiple histogram (.hdata, or .hdata.zst) or simtel_array files.</p>
+<dd><p>Read the content of either multiple histogram (.hdata, or .hdata.zst) or sim_telarray files.</p>
 <p>Allow both the .hdata.zst histogram and the .simtel.zst output file type.
 It uses the SimtelIOHistogram class to deal with individual files.
 Histogram files are ultimately handled by using eventio library.</p>
