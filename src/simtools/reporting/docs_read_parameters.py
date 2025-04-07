@@ -54,7 +54,7 @@ class ReadParameters:
                 outfile.write(f"# {input_file.stem}\n")
                 outfile.write(
                     f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_"
-                    f"{parameter}_{self.model_version}.png)\n"
+                    f"{parameter}_{self.model_version.split('.')[0]}.png)\n"
                 )
                 outfile.write("```\n")
                 outfile.write(file_contents)
