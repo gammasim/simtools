@@ -137,7 +137,7 @@ class SimulatorRayTracing(SimtelRunner):
             self._write_out_single_pixel_camera_file()
 
     def _make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
-        """Generate simtel_array run command."""
+        """Generate sim_telarray run command."""
         if self.config.single_mirror_mode:
             # Note: no mirror length defined for dual-mirror telescopes
             _mirror_focal_length = float(

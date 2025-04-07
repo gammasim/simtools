@@ -44,7 +44,7 @@ r"""
             2>|/dev/null | grep '(@cfg)' | sed 's/^(@cfg) //' >| all_telescope_config_paranal.cfg
 
 
-    Extract then model parameters from the simtel_array configuration file for LSTN-01
+    Extract then model parameters from the sim_telarray configuration file for LSTN-01
     (telescopes are named CT1, CT2, ..., in the sim_telarray configuration file and must be
     provided in the "simtel_telescope_name" command line argument)
     and write json files in the same format as the model parameter database:
@@ -94,7 +94,7 @@ def _parse(label=None, description=None):
 
     config.parser.add_argument(
         "--simtel_cfg_file",
-        help="File name for simtel_array configuration",
+        help="File name for sim_telarray configuration",
         type=str,
         required=True,
     )
