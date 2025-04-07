@@ -122,9 +122,11 @@ class DatabaseHandler:
             port=self.mongo_db_config["db_api_port"],
             username=self.mongo_db_config["db_api_user"],
             password=self.mongo_db_config["db_api_pw"],
-            authSource=self.mongo_db_config.get("db_api_authentication_database")
-            if self.mongo_db_config.get("db_api_authentication_database")
-            else "admin",
+            authSource=(
+                self.mongo_db_config.get("db_api_authentication_database")
+                if self.mongo_db_config.get("db_api_authentication_database")
+                else "admin"
+            ),
             directConnection=direct_connection,
             ssl=not direct_connection,
             tlsallowinvalidhostnames=True,
@@ -211,8 +213,13 @@ class DatabaseHandler:
         """
         collection_name = names.get_collection_name_from_parameter_name(parameter)
         if model_version:
+            model_version_to_read = model_version
+            if isinstance(model_version, list):
+                if len(model_version) != 1:
+                    raise ValueError("Only one model version can be passed to get_model_parameter.")
+                model_version_to_read = model_version[0]
             production_table = self._read_production_table_from_mongo_db(
-                collection_name, model_version
+                collection_name, model_version_to_read
             )
             array_element_list = self._get_array_element_list(
                 array_element_name, site, production_table, collection_name
