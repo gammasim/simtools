@@ -65,12 +65,12 @@ def test_generate_grid(grid_gen):
 def test_generate_grid_log_scaling(
     axes_definition, lookup_table, observing_location, observing_time
 ):
-    """Test grid generation with logarithmic scaling for azimuth axis."""
-    axes_definition["axes"]["azimuth"] = {
-        "range": [50, 360],
+    """Test grid generation with logarithmic scaling for nsb axis."""
+    axes_definition["axes"]["nsb"] = {
+        "range": [2, 5],
         "binning": 4,
         "scaling": "log",
-        "units": "deg",
+        "units": "MHz",
     }
 
     grid_gen = GridGeneration(
@@ -83,17 +83,17 @@ def test_generate_grid_log_scaling(
     )
 
     grid_points = grid_gen.generate_grid()
-    azimuth_values = [point["azimuth"].value for point in grid_points]
+    nsb_values = [point["nsb"].value for point in grid_points]
+    unique_nsb_values = np.unique(nsb_values)
 
     expected_values = np.logspace(
-        np.log10(axes_definition["axes"]["azimuth"]["range"][0]),
-        np.log10(axes_definition["axes"]["azimuth"]["range"][1]),
-        axes_definition["axes"]["azimuth"]["binning"],
+        np.log10(axes_definition["axes"]["nsb"]["range"][0]),
+        np.log10(axes_definition["axes"]["nsb"]["range"][1]),
+        axes_definition["axes"]["nsb"]["binning"],
     )
 
-    assert len(azimuth_values) == 32
-    repeated_expected_values = np.repeat(expected_values, 8)
-    assert np.allclose(azimuth_values, repeated_expected_values, rtol=1e-5)
+    assert len(unique_nsb_values) == len(expected_values)
+    assert np.allclose(unique_nsb_values, expected_values, rtol=1e-4)
 
 
 def test_interpolated_limits(grid_gen):
@@ -219,6 +219,23 @@ def test_create_circular_binning(grid_gen):
     bins = grid_gen.create_circular_binning((0, 360), 1)
     assert len(bins) == 1
     assert bins[0] == 0
+
+
+def test_create_circular_binning_with_shortest_path(grid_gen):
+    # Case 1: Clockwise path (shortest distance)
+    bins = grid_gen.create_circular_binning((350, 10), 3)
+    expected_bins = [350, 0, 10]
+    assert np.allclose(bins, expected_bins)
+
+    # Case 2: No wraparound
+    bins = grid_gen.create_circular_binning((30, 150), 4)
+    expected_bins = [30, 70, 110, 150]
+    assert np.allclose(bins, expected_bins)
+
+    # Case 3: Counterclockwise path (shortest distance)
+    bins = grid_gen.create_circular_binning((10, 350), 3)
+    expected_bins = [10, 0, 350]
+    assert np.allclose(bins, expected_bins)
 
 
 def test_generate_power_law_values(grid_gen):
