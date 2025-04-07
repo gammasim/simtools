@@ -39,7 +39,7 @@ r"""
     -------
     .. code-block:: console
 
-        simtools-generate-simtel-array-histograms --hist_file_names tests/resources/ \\
+        simtools-generate-sim-telarray-histograms --hist_file_names tests/resources/ \\
             run2_gamma_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst \\
             --output_file_name test_hist_hdata --hdf5 --pdf
 
@@ -167,7 +167,7 @@ def create_pdf(simtel_histograms, output_file_name, config_parser, logger):
 
 def main():  # noqa: D103
     label = Path(__file__).stem
-    description = "Display simtel_array histograms and/or write them into hdf5 format."
+    description = "Display sim_telarray histograms and/or write them into hdf5 format."
     io_handler_instance = io_handler.IOHandler()
     config_parser = _parse(label, description)
     output_path = io_handler_instance.get_output_directory(label, sub_dir="application-plots")

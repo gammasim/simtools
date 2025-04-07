@@ -385,7 +385,7 @@ def test_simtel_telescope_config_file_name(model_version):
     )
 
 
-def test_simtel_array_config_file_name(model_version):
+def test_sim_telarray_config_file_name(model_version):
     assert (
         names.simtel_config_file_name(
             array_name="4LSTs", site="South", model_version=model_version, label=None
@@ -508,64 +508,65 @@ def test_generate_file_name_ray_tracing():
 
 
 def test_get_simulation_software_name_from_parameter_name():
+    sim_telarray = "sim_telarray"
     assert (
         names.get_simulation_software_name_from_parameter_name(
-            "focal_length", simulation_software="sim_telarray"
+            "focal_length", software_name=sim_telarray
         )
         == "focal_length"
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
-            "telescope_axis_height", simulation_software="sim_telarray"
+            "telescope_axis_height", software_name=sim_telarray
         )
         is None
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
-            "corsika_observation_level", simulation_software="sim_telarray"
+            "corsika_observation_level", software_name=sim_telarray
         )
         == "altitude"
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
-            "corsika_observation_level", simulation_software="corsika"
+            "corsika_observation_level", software_name="corsika"
         )
         == "OBSLEV"
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
-            "reference_point_longitude", simulation_software="sim_telarray"
+            "reference_point_longitude", software_name=sim_telarray
         )
         is None  # this is not a sim_telarray parameter
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
-            "reference_point_longitude", simulation_software="corsika"
+            "reference_point_longitude", software_name="corsika"
         )
         == "reference_point_longitude"
     )
     with pytest.raises(KeyError, match=r"Parameter Not_a_parameter without schema definition"):
         names.get_simulation_software_name_from_parameter_name(
-            "Not_a_parameter", simulation_software="sim_telarray"
+            "Not_a_parameter", software_name=sim_telarray
         )
     assert (
         names.get_simulation_software_name_from_parameter_name(
             "corsika_observation_level",
-            simulation_software=None,
+            software_name=None,
         )
         is None
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
             "reference_point_longitude",
-            simulation_software="sim_telarray",
+            software_name=sim_telarray,
         )
         is None
     )
     assert (
         names.get_simulation_software_name_from_parameter_name(
             "reference_point_longitude",
-            simulation_software="sim_telarray",
+            software_name=sim_telarray,
             set_meta_parameter=True,
         )
         == "longitude"
