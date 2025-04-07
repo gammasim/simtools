@@ -74,7 +74,7 @@ class SimtelConfigWriter:
             for par, value in parameters.items():
                 simtel_name, value = self._convert_model_parameters_to_simtel_format(
                     names.get_simulation_software_name_from_parameter_name(
-                        par, simulation_software="sim_telarray"
+                        par, software_name="sim_telarray"
                     ),
                     value["value"],
                     config_file_path,
@@ -158,12 +158,12 @@ class SimtelConfigWriter:
         if model_parameters:
             for key, value in model_parameters.items():
                 simtel_name = names.get_simulation_software_name_from_parameter_name(
-                    key, simulation_software="sim_telarray", set_meta_parameter=False
+                    key, software_name="sim_telarray", set_meta_parameter=False
                 )
                 if simtel_name and value.get("meta_parameter"):
                     meta_parameters.append(f"{prefix} add {simtel_name}")
                 simtel_name = names.get_simulation_software_name_from_parameter_name(
-                    key, simulation_software="sim_telarray", set_meta_parameter=True
+                    key, software_name="sim_telarray", set_meta_parameter=True
                 )
                 if simtel_name and value.get("meta_parameter"):
                     meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
@@ -315,7 +315,7 @@ class SimtelConfigWriter:
         for par, value in site_parameters.items():
             simtel_name, value = self._convert_model_parameters_to_simtel_format(
                 names.get_simulation_software_name_from_parameter_name(
-                    par, simulation_software="sim_telarray"
+                    par, software_name="sim_telarray"
                 ),
                 value["value"],
                 model_path,

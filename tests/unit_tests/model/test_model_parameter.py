@@ -309,7 +309,7 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
 
     mock_db_export = mocker.patch.object(DatabaseHandler, "export_model_files")
     mock_simulation_config_parameters = {
-        "simtel": {"correct_nsb_spectrum_to_telescope_altitude": {"value": "test_value"}}
+        "sim_telarray": {"correct_nsb_spectrum_to_telescope_altitude": {"value": "test_value"}}
     }
     telescope_copy._simulation_config_parameters = mock_simulation_config_parameters
 

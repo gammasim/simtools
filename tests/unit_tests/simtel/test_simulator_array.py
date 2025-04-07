@@ -56,3 +56,10 @@ def test_get_power_law_for_sim_telarray_histograms():
     assert SimulatorArray.get_power_law_for_sim_telarray_histograms(electron) == pytest.approx(3.3)
     assert SimulatorArray.get_power_law_for_sim_telarray_histograms(proton) == pytest.approx(2.68)
     assert SimulatorArray.get_power_law_for_sim_telarray_histograms(helium) == pytest.approx(2.68)
+
+
+def test_check_run_result_file_exists(simtel_runner, tmp_path):
+    output_file = tmp_path / "test_output.zst"
+    output_file.touch()
+    simtel_runner.get_file_name = lambda file_type, run_number: output_file
+    assert simtel_runner._check_run_result(run_number=1) is True
