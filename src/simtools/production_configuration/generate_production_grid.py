@@ -376,14 +376,8 @@ class GridGeneration:
         return output_data
 
     def serialize_quantity(self, value):
-        """Serialize Quantity and numpy.ndarray objects."""
-        if isinstance(value, np.ndarray):
-            if isinstance(value, u.Quantity):
-                return {
-                    "value": value.value.tolist(),
-                    "unit": str(value.unit),
-                }  # Handle Quantity arrays
-            return value.tolist()  # Convert numpy array to list
+        """Serialize Quantity."""
         if isinstance(value, u.Quantity):
-            return {"value": value.value, "unit": str(value.unit)}  # Handle single Quantity
+            return {"value": value.value, "unit": str(value.unit)}
+        self._logger.warning(f"Unsupported type {type(value)} for serialization. Returning as is.")
         return value
