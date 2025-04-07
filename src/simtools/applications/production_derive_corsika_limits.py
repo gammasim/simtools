@@ -157,7 +157,6 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
         )
 
     return {
-        "file_path": file_path,
         "telescope_ids": telescope_ids,
         "zenith": zenith,
         "azimuth": azimuth,
