@@ -16,7 +16,6 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.table import Table
-from astropy.time import Time
 from astropy.units import Quantity
 from scipy.interpolate import griddata
 
@@ -53,7 +52,7 @@ class GridGeneration:
         observing_location : EarthLocation, optional
             The location of the observation (latitude, longitude, height).
         observing_time : Time, optional
-            The time of the observation.
+            The time of the observation. If None, coordinate conversion to RA/Dec not working.
         lookup_table : str, optional
             Path to the lookup table file (ECSV format).
         telescope_ids : list of int, optional
@@ -68,7 +67,7 @@ class GridGeneration:
             if observing_location is not None
             else EarthLocation(lat=0.0 * u.deg, lon=0.0 * u.deg, height=0 * u.m)
         )
-        self.observing_time = observing_time if observing_time is not None else Time.now()
+        self.observing_time = observing_time
         self.lookup_table = lookup_table
         self.telescope_ids = telescope_ids
 
@@ -314,7 +313,18 @@ class GridGeneration:
         -------
         SkyCoord
             SkyCoord object containing the RA/Dec coordinates.
+
+        Raises
+        ------
+        ValueError
+            If observing_time is not set.
         """
+        if self.observing_time is None:
+            raise ValueError(
+                "Observing time is not set. "
+                "Please provide an observing_time to convert coordinates."
+            )
+
         alt_rad = alt.to(u.rad)
         az_rad = az.to(u.rad)
         aa = AltAz(
