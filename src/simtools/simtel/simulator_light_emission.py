@@ -258,13 +258,12 @@ class SimulatorLightEmission(SimtelRunner):
         command += " -I"
         command += f" -I{self._telescope_model.config_file_directory}"
         command += f" -c {self._telescope_model.get_config_file(no_export=True)}"
-        if not self.test:
-            self._remove_line_from_config(
-                self._telescope_model.get_config_file(no_export=True), "array_triggers"
-            )
-            self._remove_line_from_config(
-                self._telescope_model.get_config_file(no_export=True), "axes_offsets"
-            )
+        self._remove_line_from_config(
+            self._telescope_model.get_config_file(no_export=True), "array_triggers"
+        )
+        self._remove_line_from_config(
+            self._telescope_model.get_config_file(no_export=True), "axes_offsets"
+        )
 
         command += " -DNUM_TELESCOPES=1"
 
