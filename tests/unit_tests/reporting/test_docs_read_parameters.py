@@ -590,3 +590,47 @@ def test__write_parameters_table(io_handler, db_config):
     # Verify special sections
     assert "| array_layouts | [View Array Layouts](#array-layouts-details) |" in output
     assert "| array_triggers | [View Trigger Configurations](#array-triggers-details) |" in output
+
+
+def test_model_version_setter_with_valid_string(db_config, io_handler):
+    """Test setting model_version with a valid string."""
+    args = {"model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    read_parameters.model_version = "7.0.0"
+    assert read_parameters.model_version == "7.0.0"
+
+
+def test_model_version_setter_with_valid_list(db_config, io_handler):
+    """Test setting model_version with a valid list containing one element."""
+    args = {"model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    read_parameters.model_version = ["7.0.0"]
+    assert read_parameters.model_version == "7.0.0"
+
+
+def test_model_version_setter_with_invalid_list(db_config, io_handler):
+    """Test setting model_version with an invalid list containing more than one element."""
+    args = {"model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    with pytest.raises(
+        ValueError, match="Only one model version can be passed to the ReadParameters."
+    ):
+        read_parameters.model_version = ["7.0.0", "8.0.0"]
+
+
+def test_model_version_setter_with_empty_list(db_config, io_handler):
+    """Test setting model_version with an empty list."""
+    args = {"model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    with pytest.raises(
+        ValueError, match="Only one model version can be passed to the ReadParameters."
+    ):
+        read_parameters.model_version = []
