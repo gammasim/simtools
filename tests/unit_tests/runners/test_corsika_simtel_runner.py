@@ -129,6 +129,7 @@ def test_make_run_command(corsika_simtel_runner, simtel_command, show_all, model
     assert "-C telescope_phi=0" in command
     assert show_all in command
     assert f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}" in command
+    assert "random_seed" not in command
 
     _test_corsika_simtel_runner = copy.deepcopy(corsika_simtel_runner)
     _test_corsika_simtel_runner.label = None
@@ -139,6 +140,16 @@ def test_make_run_command(corsika_simtel_runner, simtel_command, show_all, model
         simulator_array=corsika_simtel_runner.simulator_array[0],
     )
     assert "-W" not in command
+
+    corsika_simtel_runner.sim_telarray_seeds = "12345"
+    command = corsika_simtel_runner._make_run_command(
+        input_file="-",
+        run_number=1,
+        corsika_config=corsika_simtel_runner.main_corsika_config,
+        simulator_array=corsika_simtel_runner.simulator_array[0],
+    )
+    assert "random_seed" in command
+    assert "12345" in command
 
 
 def test_make_run_command_divergent(corsika_simtel_runner, simtel_command, show_all, model_version):
