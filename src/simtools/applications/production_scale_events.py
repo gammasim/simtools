@@ -45,22 +45,10 @@ The output will display the scaled events for the specified query point and save
  the results to the specified output file.
 """
 
-import itertools
-import json
-import logging
 from pathlib import Path
 
-import astropy.units as u
-import numpy as np
-
-import simtools.utils.general as gen
 from simtools.configuration import configurator
-from simtools.configuration.commandline_parser import CommandLineParser
-from simtools.io_operations import io_handler
-from simtools.production_configuration.calculate_statistical_errors_grid_point import (
-    StatisticalErrorEvaluator,
-)
-from simtools.production_configuration.interpolation_handler import InterpolationHandler
+from simtools.production_configuration.scale_events_manager import ScaleEventsManager
 
 
 def _parse(label, description):
@@ -84,13 +72,12 @@ def _parse(label, description):
         "--zeniths",
         required=True,
         nargs="+",
-        type=CommandLineParser.zenith_angle,
+        type=float,
         help="List of zenith angles.",
     )
     config.parser.add_argument(
         "--offsets", required=True, nargs="+", type=float, help="List of offsets in degrees."
     )
-
     config.parser.add_argument(
         "--query_point",
         required=True,
@@ -126,59 +113,15 @@ def _parse(label, description):
 
 
 def main():
-    """Run the evaluator and interpolate."""
+    """Run the ScaleEventsManager."""
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label,
         "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
     )
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    logger.info(f"args dict: {args_dict}")
 
-    output_path = io_handler.IOHandler().get_output_directory(label)
-    output_filepath = Path(output_path).joinpath(f"{args_dict['output_file']}")
-
-    evaluator_instances = []
-
-    metrics = gen.collect_data_from_file(args_dict["metrics_file"])
-
-    if args_dict["base_path"] and args_dict["zeniths"] and args_dict["offsets"]:
-        for zenith, offset in itertools.product(args_dict["zeniths"], args_dict["offsets"]):
-            file_name = args_dict["file_name_template"].format(zenith=int(zenith.value))
-            file_path = Path(args_dict["base_path"]).joinpath(file_name)
-
-            if not file_path.exists():
-                logger.warning(f"File not found: {file_path}. Skipping.")
-                continue
-
-            evaluator = StatisticalErrorEvaluator(
-                file_path,
-                file_type="Gamma-cone",
-                metrics=metrics,
-                grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
-            )
-            evaluator.calculate_metrics()
-            evaluator_instances.append(evaluator)
-
-    else:
-        logger.warning("No files read")
-        logger.warning(f"Base Path: {args_dict['base_path']}")
-        logger.warning(f"Zeniths: {args_dict['zeniths']}")
-        logger.warning(f"Offsets: {args_dict['offsets']}")
-
-    interpolation_handler = InterpolationHandler(evaluator_instances, metrics=metrics)
-    query_points = np.array([args_dict["query_point"]])
-    scaled_events = interpolation_handler.interpolate(query_points)
-
-    output_data = {
-        "query_point": args_dict["query_point"],
-        "scaled_events": scaled_events.tolist(),
-    }
-    with open(output_filepath, "w", encoding="utf-8") as f:
-        json.dump(output_data, f, indent=4)
-    logger.info(f"Output saved to {output_filepath}")
-    logger.info(f"Scaled events for grid point {args_dict['query_point']}: {scaled_events}")
+    manager = ScaleEventsManager(args_dict)
+    manager.run()
 
 
 if __name__ == "__main__":
