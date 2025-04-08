@@ -75,7 +75,9 @@ def test_fill_corsika_configuration(io_handler, corsika_config_mock_array_model)
         assert key in corsika_config_mock_array_model.config
 
 
-def test_fill_corsika_configuration_model_version(io_handler, corsika_config_mock_array_model):
+def test_fill_corsika_configuration_model_version(
+    io_handler, corsika_config_mock_array_model, gcm2
+):
     """Test handling a list of model versions as input, taking the first one only."""
 
     with patch("simtools.corsika.corsika_config.ModelParameter") as mock_model_parameter:
@@ -84,8 +86,8 @@ def test_fill_corsika_configuration_model_version(io_handler, corsika_config_moc
             "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
             "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
             "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
-            "corsika_starting_grammage": {"value": 0.0, "unit": "g/cm2"},
-            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": "g/cm2"},
+            "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
+            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
             "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
             "corsika_iact_split_auto": {"value": 15000000, "unit": None},
             "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
