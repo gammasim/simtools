@@ -258,9 +258,11 @@ def test_open_mongo_db_direct_connection(mocker, db, db_config):
         port=db_config["db_api_port"],
         username=db_config["db_api_user"],
         password=db_config["db_api_pw"],
-        authSource=db_config.get("db_api_authentication_database")
-        if db_config.get("db_api_authentication_database")
-        else "admin",
+        authSource=(
+            db_config.get("db_api_authentication_database")
+            if db_config.get("db_api_authentication_database")
+            else "admin"
+        ),
         directConnection=True,
         ssl=False,
         tlsallowinvalidhostnames=True,
@@ -516,6 +518,61 @@ def test_get_model_parameters_no_parameters(db, mocker, standard_test_params):
         collection,
     )
     assert result == {}
+
+
+def test_get_model_parameter_with_model_version_list(
+    db, mock_get_collection_name, common_mock_read_mongo_db, mocker, standard_test_params
+):
+    """Test get_model_parameter method with model_version as list."""
+    site = standard_test_params["site"]
+    array_element_name = standard_test_params["array_element_name"]
+    collection = standard_test_params["collection"]
+
+    # Mock the production table reading
+    mock_read_production_table = mocker.patch.object(
+        db,
+        "_read_production_table_from_mongo_db",
+        return_value={
+            "parameters": {
+                "LSTN-design": {"test_param": "2.0.0"},
+                "LSTN-01": {"test_param": "1.0.0"},
+            }
+        },
+    )
+
+    # Mock array element list
+    mock_get_array_element_list = mocker.patch.object(
+        db, "_get_array_element_list", return_value=["LSTN-design", "LSTN-01"]
+    )
+
+    # Update common_mock_read_mongo_db to return the expected format
+    common_mock_read_mongo_db.return_value = {"test_param": {"value": "test_value"}}
+
+    # Test with multiple versions - should raise ValueError
+    with pytest.raises(
+        ValueError, match="Only one model version can be passed to get_model_parameter."
+    ):
+        db.get_model_parameter(
+            parameter="test_param",
+            site=site,
+            array_element_name=array_element_name,
+            model_version=["5.0.0", "6.0.0"],
+        )
+
+    # Test with single version in list - should work
+    result = db.get_model_parameter(
+        parameter="test_param",
+        site=site,
+        array_element_name=array_element_name,
+        model_version=["5.0.0"],
+    )
+
+    # Verify the mocks were called correctly
+    mock_read_production_table.assert_called_once_with(collection, "5.0.0")
+    mock_get_array_element_list.assert_called_once()
+    mock_get_collection_name.assert_called_with("test_param")
+    common_mock_read_mongo_db.assert_called_once()
+    assert result == {"test_param": {"value": "test_value"}}
 
 
 def test_get_collection(db, mock_db_name, test_db, mocker):
