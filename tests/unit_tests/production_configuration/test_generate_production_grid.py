@@ -185,6 +185,39 @@ def test_serialize_grid_points(grid_gen):
     assert '"energy_threshold"' in cleaned_points
 
 
+def test_serialize_grid_points_with_output_file(grid_gen, tmp_path, caplog):
+    """Test serialize_grid_points when an output file is provided."""
+    grid_points = [
+        {
+            "zenith_angle": 30 * u.deg,
+            "azimuth": 310 * u.deg,
+            "nsb": 4,
+            "energy_threshold": {"lower": 0.1 * u.TeV},
+            "radius": 100 * u.m,
+            "viewcone": 1 * u.deg,
+        },
+        {
+            "zenith_angle": 40 * u.deg,
+            "azimuth": 345 * u.deg,
+            "nsb": 5,
+            "energy_threshold": {"lower": 0.2 * u.TeV},
+            "radius": 200 * u.m,
+            "viewcone": 2 * u.deg,
+        },
+    ]
+    output_file = tmp_path / "grid_output.json"
+    with caplog.at_level(logging.INFO):
+        grid_gen.serialize_grid_points(grid_points, output_file=output_file)
+    assert output_file.exists()
+
+    with open(output_file, encoding="utf-8") as f:
+        file_content = f.read()
+        assert '"zenith_angle"' in file_content
+        assert '"energy_threshold"' in file_content
+
+    assert f"Output saved to {output_file}" in caplog.text
+
+
 def test_serialize_quantity(grid_gen, caplog):
     # Case 1: Value is a Quantity (single value)
     quantity = 5 * u.m
