@@ -151,9 +151,7 @@ class CorsikaSimtelRunner:
 
         multipipe_script.chmod(multipipe_script.stat().st_mode | stat.S_IEXEC)
 
-    def _make_run_command(
-        self, run_number=None, input_file=None, corsika_config=None, simulator_array=None
-    ):
+    def _make_run_command(self, run_number, input_file, corsika_config, simulator_array):
         """
         Build and return the command to run sim_telarray.
 
@@ -164,9 +162,9 @@ class CorsikaSimtelRunner:
         input_file: str
             Full path of the input CORSIKA file.
             Use '-' to tell sim_telarray to read from standard output
-        corsika_config: CorsikaConfig, optional
+        corsika_config: CorsikaConfig
             CORSIKA configuration.
-        simulator_array: SimulatorArray, optional
+        simulator_array: SimulatorArray
             SimulatorArray instance.
 
         Returns
