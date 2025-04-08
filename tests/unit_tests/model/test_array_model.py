@@ -177,3 +177,21 @@ def test_update_array_element_position(array_model_from_list):
     assert "LSTN-01" in am.array_elements
     assert "LSTN-01" in am.telescope_model
     assert am.array_elements["LSTN-01"] is None
+
+
+def test_model_version_setter_with_valid_string(array_model):
+    am = array_model
+    am.model_version = "6.0.0"
+    assert am.model_version == "6.0.0"
+
+
+def test_model_version_setter_with_valid_list(array_model):
+    am = array_model
+    am.model_version = ["6.0.0"]
+    assert am.model_version == "6.0.0"
+
+
+def test_model_version_setter_with_invalid_list(array_model):
+    am = array_model
+    with pytest.raises(ValueError, match="Only one model version can be passed to the ArrayModel."):
+        am.model_version = ["6.0.0", "7.0.0"]
