@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_derive_corsika_limits &#8212; simtools v0.1.dev1+g464ce64 Manual</title>
+    <title>production_derive_corsika_limits &#8212; simtools v0.1.dev1+g619490f Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=862d513e"></script>
+    <script src="../_static/documentation_options.js?v=29bf303e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g464ce64 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g619490f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -214,6 +214,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
@@ -426,7 +427,9 @@ document.write(`
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
@@ -516,8 +519,37 @@ document.write(`
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    dict</span>
-<span class="sd">        Dictionary containing the computed limits.</span>
+<span class="sd">        Dictionary containing the computed limits and metadata.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Extract zenith and azimuth from the file path</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;za(\d+)deg.*azm(\d+)deg&quot;</span><span class="p">,</span> <span class="n">file_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not extract zenith and azimuth from file path: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">zenith</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">azimuth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="s2">&quot;dark&quot;</span> <span class="ow">in</span> <span class="n">file_path</span><span class="p">:</span>
+        <span class="n">nsb</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="s2">&quot;halfmoon&quot;</span> <span class="ow">in</span> <span class="n">file_path</span><span class="p">:</span>
+        <span class="n">nsb</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">elif</span> <span class="s2">&quot;moon&quot;</span> <span class="ow">in</span> <span class="n">file_path</span><span class="p">:</span>
+        <span class="n">nsb</span> <span class="o">=</span> <span class="mi">19</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not determine NSB from file path: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">nsb</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="s2">&quot;gamma-diffuse&quot;</span> <span class="ow">in</span> <span class="n">file_path</span><span class="p">:</span>
+        <span class="n">particle_type</span> <span class="o">=</span> <span class="s2">&quot;gamma-diffuse&quot;</span>
+    <span class="k">elif</span> <span class="s2">&quot;gamma&quot;</span> <span class="ow">in</span> <span class="n">file_path</span><span class="p">:</span>
+        <span class="n">particle_type</span> <span class="o">=</span> <span class="s2">&quot;gamma&quot;</span>
+    <span class="k">elif</span> <span class="s2">&quot;proton&quot;</span> <span class="ow">in</span> <span class="n">file_path</span><span class="p">:</span>
+        <span class="n">particle_type</span> <span class="o">=</span> <span class="s2">&quot;proton&quot;</span>
+    <span class="k">elif</span> <span class="s2">&quot;electron&quot;</span> <span class="ow">in</span> <span class="n">file_path</span><span class="p">:</span>
+        <span class="n">particle_type</span> <span class="o">=</span> <span class="s2">&quot;electron&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not determine particle type from file path: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">particle_type</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+
     <span class="n">calculator</span> <span class="o">=</span> <span class="n">LimitCalculator</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">telescope_list</span><span class="o">=</span><span class="n">telescope_ids</span><span class="p">)</span>
 
     <span class="n">lower_energy_limit</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">compute_lower_energy_limit</span><span class="p">(</span><span class="n">loss_fraction</span><span class="p">)</span>
@@ -536,8 +568,11 @@ document.write(`
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;file_path&quot;</span><span class="p">:</span> <span class="n">file_path</span><span class="p">,</span>
+        <span class="s2">&quot;particle_type&quot;</span><span class="p">:</span> <span class="n">particle_type</span><span class="p">,</span>
         <span class="s2">&quot;telescope_ids&quot;</span><span class="p">:</span> <span class="n">telescope_ids</span><span class="p">,</span>
+        <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="n">zenith</span><span class="p">,</span>
+        <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">azimuth</span><span class="p">,</span>
+        <span class="s2">&quot;nsb&quot;</span><span class="p">:</span> <span class="n">nsb</span><span class="p">,</span>
         <span class="s2">&quot;lower_energy_threshold&quot;</span><span class="p">:</span> <span class="n">lower_energy_limit</span><span class="p">,</span>
         <span class="s2">&quot;upper_radius_threshold&quot;</span><span class="p">:</span> <span class="n">upper_radial_distance</span><span class="p">,</span>
         <span class="s2">&quot;viewcone_radius&quot;</span><span class="p">:</span> <span class="n">viewcone</span><span class="p">,</span>
@@ -555,7 +590,7 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    results : list[dict]</span>
 <span class="sd">        List of dictionaries containing the computed limits for each file</span>
-<span class="sd">          and telescope configuration.</span>
+<span class="sd">        and telescope configuration.</span>
 <span class="sd">    loss_fraction : float</span>
 <span class="sd">        Fraction of events to be lost, added as metadata to the table.</span>
 
@@ -564,33 +599,52 @@ document.write(`
 <span class="sd">    astropy.table.Table</span>
 <span class="sd">        An Astropy Table containing the results with appropriate units and metadata.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
     <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
         <span class="n">rows</span><span class="o">=</span><span class="p">[</span>
             <span class="p">(</span>
-                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;file_path&quot;</span><span class="p">],</span>
+                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;particle_type&quot;</span><span class="p">],</span>
                 <span class="n">res</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">],</span>
-                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;lower_energy_threshold&quot;</span><span class="p">],</span>
-                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;upper_radius_threshold&quot;</span><span class="p">],</span>
-                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">],</span>
+                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">],</span>
+                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">],</span>
+                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;nsb&quot;</span><span class="p">],</span>
+                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;lower_energy_threshold&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;upper_radius_threshold&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">res</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span>
         <span class="p">],</span>
         <span class="n">names</span><span class="o">=</span><span class="p">[</span>
-            <span class="s2">&quot;file_path&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;particle_type&quot;</span><span class="p">,</span>
             <span class="s2">&quot;telescope_ids&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;zenith&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;azimuth&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nsb&quot;</span><span class="p">,</span>
             <span class="s2">&quot;lower_energy_threshold&quot;</span><span class="p">,</span>
             <span class="s2">&quot;upper_radius_threshold&quot;</span><span class="p">,</span>
             <span class="s2">&quot;viewcone_radius&quot;</span><span class="p">,</span>
         <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;S64&quot;</span><span class="p">,</span>
+            <span class="nb">object</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+            <span class="nb">object</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+        <span class="p">],</span>
     <span class="p">)</span>
-
+    <span class="n">table</span><span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;deg&quot;</span>
+    <span class="n">table</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;deg&quot;</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">&quot;lower_energy_threshold&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;TeV&quot;</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">&quot;upper_radius_threshold&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;m&quot;</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;deg&quot;</span>
 
     <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;created&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
     <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">&quot;Lookup table for CORSIKA limits computed from gamma-ray shower simulations.&quot;</span>
+        <span class="s2">&quot;Lookup table for CORSIKA limits computed from gamma-ray shower simulations &quot;</span>
+        <span class="s2">&quot;using simtool production_derive_corsika_limits&quot;</span>
     <span class="p">)</span>
     <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;loss_fraction&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss_fraction</span>
 

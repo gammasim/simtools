@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-derive-corsika-limits &#8212; simtools v0.1.dev1+g464ce64 Manual</title>
+    <title>simtools-production-derive-corsika-limits &#8212; simtools v0.1.dev1+g619490f Manual</title>
   
   
   
@@ -36,14 +36,14 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=862d513e"></script>
+    <script src="../../_static/documentation_options.js?v=29bf303e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-derive-corsika-limits';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-production-generate-simulation-config" href="simtools-production-generate-simulation-config.html" />
+    <link rel="next" title="simtools-production-generate-grid" href="simtools-production-generate-grid.html" />
     <link rel="prev" title="simtools-plot-tabular-data" href="simtools-plot-tabular-data.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g464ce64 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g619490f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -215,6 +215,7 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
@@ -522,10 +523,8 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>results</strong><span class="classifier">list[dict]</span></dt><dd><dl class="simple">
-<dt>List of dictionaries containing the computed limits for each file</dt><dd><p>and telescope configuration.</p>
-</dd>
-</dl>
+<dt><strong>results</strong><span class="classifier">list[dict]</span></dt><dd><p>List of dictionaries containing the computed limits for each file
+and telescope configuration.</p>
 </dd>
 <dt><strong>loss_fraction</strong><span class="classifier">float</span></dt><dd><p>Fraction of events to be lost, added as metadata to the table.</p>
 </dd>
@@ -565,7 +564,7 @@ document.write(`
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Dictionary containing the computed limits.</p>
+<dt>dict</dt><dd><p>Dictionary containing the computed limits and metadata.</p>
 </dd>
 </dl>
 </dd>
@@ -595,11 +594,11 @@ document.write(`
       </div>
     </a>
     <a class="right-next"
-       href="simtools-production-generate-simulation-config.html"
+       href="simtools-production-generate-grid.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-production-generate-simulation-config</p>
+        <p class="prev-next-title">simtools-production-generate-grid</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

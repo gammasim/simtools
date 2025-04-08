@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g464ce64 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g619490f Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=862d513e"></script>
+    <script src="_static/documentation_options.js?v=29bf303e"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g464ce64 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g619490f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -214,6 +214,7 @@
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
@@ -582,10 +583,10 @@ document.write(`
 </li>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_files">compare_files() (in module testing.validate_output)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/testing.html#testing.validate_output.compare_json_or_yaml_files">compare_json_or_yaml_files() (in module testing.validate_output)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema">compare_simtel_config_with_schema() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.compute_efficiency_and_errors">compute_efficiency_and_errors() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
@@ -644,8 +645,14 @@ document.write(`
         <li><a href="user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html#module-convert_all_model_parameters_from_simtel">module</a>
 </li>
       </ul></li>
-      <li><a href="api-reference/array_layout.html#layout.array_layout.ArrayLayout.convert_coordinates">convert_coordinates() (layout.array_layout.ArrayLayout method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec">convert_altaz_to_radec() (production_configuration.generate_production_grid.GridGeneration method)</a>
 </li>
+      <li><a href="api-reference/array_layout.html#layout.array_layout.ArrayLayout.convert_coordinates">convert_coordinates() (layout.array_layout.ArrayLayout method)</a>
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.convert_coordinates">(production_configuration.generate_production_grid.GridGeneration method)</a>
+</li>
+      </ul></li>
       <li>
     convert_geo_coordinates_of_array_elements
 
@@ -707,6 +714,8 @@ document.write(`
       <li><a href="api-reference/runners.html#runners.corsika_simtel_runner.CorsikaSimtelRunner">CorsikaSimtelRunner (class in runners.corsika_simtel_runner)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.create_bin_edges">create_bin_edges() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.create_circular_binning">create_circular_binning() (production_configuration.generate_production_grid.GridGeneration method)</a>
 </li>
       <li><a href="user-guide/applications/simtools-generate-sim-telarray-histograms.html#generate_sim_telarray_histograms.create_pdf">create_pdf() (in module generate_sim_telarray_histograms)</a>
 </li>
@@ -1042,6 +1051,8 @@ document.write(`
       </ul></li>
       <li><a href="api-reference/utils.html#utils.names.generate_file_name">generate_file_name() (in module utils.names)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.generate_grid">generate_grid() (production_configuration.generate_production_grid.GridGeneration method)</a>
+</li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.generate_random_parameters">generate_random_parameters() (in module derive_psf_parameters)</a>
 </li>
       <li>
@@ -1297,6 +1308,8 @@ document.write(`
 </li>
       <li><a href="api-reference/dependencies.html#dependencies.get_version_string">get_version_string() (in module dependencies)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration">GridGeneration (class in production_configuration.generate_production_grid)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1492,6 +1505,8 @@ document.write(`
 </li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.load_and_process_data">load_and_process_data() (in module derive_psf_parameters)</a>
 </li>
+      <li><a href="user-guide/applications/simtools-production-generate-grid.html#production_generate_grid.load_axes">load_axes() (in module production_generate_grid)</a>
+</li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.load_data">load_data() (in module derive_psf_parameters)</a>
 
       <ul>
@@ -1536,6 +1551,8 @@ document.write(`
         <li><a href="user-guide/applications/simtools-print-version.html#print_version.main">(in module print_version)</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#production_derive_corsika_limits.main">(in module production_derive_corsika_limits)</a>
+</li>
+        <li><a href="user-guide/applications/simtools-production-generate-grid.html#production_generate_grid.main">(in module production_generate_grid)</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#production_generate_simulation_config.main">(in module production_generate_simulation_config)</a>
 </li>
@@ -1754,11 +1771,15 @@ document.write(`
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.event_scaler">production_configuration.event_scaler</a>
 </li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.generate_production_grid">production_configuration.generate_production_grid</a>
+</li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.generate_simulation_config">production_configuration.generate_simulation_config</a>
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">production_configuration.interpolation_handler</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits">production_derive_corsika_limits</a>
+</li>
+        <li><a href="user-guide/applications/simtools-production-generate-grid.html#module-production_generate_grid">production_generate_grid</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#module-production_generate_simulation_config">production_generate_simulation_config</a>
 </li>
@@ -2078,6 +2099,13 @@ document.write(`
 </li>
       </ul></li>
       <li>
+    production_configuration.generate_production_grid
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.generate_production_grid">module</a>
+</li>
+      </ul></li>
+      <li>
     production_configuration.generate_simulation_config
 
       <ul>
@@ -2096,6 +2124,13 @@ document.write(`
 
       <ul>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_generate_grid
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-production-generate-grid.html#module-production_generate_grid">module</a>
 </li>
       </ul></li>
       <li>
@@ -2286,6 +2321,10 @@ document.write(`
 </li>
       <li><a href="api-reference/array_layout.html#layout.array_layout.ArrayLayout.select_assets">select_assets() (layout.array_layout.ArrayLayout method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points">serialize_grid_points() (production_configuration.generate_production_grid.GridGeneration method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.generate_production_grid.GridGeneration.serialize_quantity">serialize_quantity() (production_configuration.generate_production_grid.GridGeneration method)</a>
+</li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.set_altitude">set_altitude() (layout.telescope_position.TelescopePosition method)</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.set_auxiliary_parameter">set_auxiliary_parameter() (layout.telescope_position.TelescopePosition method)</a>
@@ -2382,10 +2421,10 @@ document.write(`
 </li>
       <li><a href="api-reference/utils.html#utils.names.simtel_single_mirror_list_file_name">simtel_single_mirror_list_file_name() (in module utils.names)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">SimtelConfigReader (class in simtel.simtel_config_reader)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">SimtelConfigReader (class in simtel.simtel_config_reader)</a>
+</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter">SimtelConfigWriter (class in simtel.simtel_config_writer)</a>
 </li>
       <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelExecutionError">SimtelExecutionError</a>

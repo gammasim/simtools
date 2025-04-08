@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Production Configuration &#8212; simtools v0.1.dev1+g464ce64 Manual</title>
+    <title>Production Configuration &#8212; simtools v0.1.dev1+g619490f Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=862d513e"></script>
+    <script src="../_static/documentation_options.js?v=29bf303e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g464ce64 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g619490f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -215,6 +215,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
@@ -518,6 +519,18 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_production_grid">generate_production_grid</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration"><code class="docutils literal notranslate"><span class="pre">GridGeneration</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_altaz_to_radec()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.create_circular_binning"><code class="docutils literal notranslate"><span class="pre">GridGeneration.create_circular_binning()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.generate_grid"><code class="docutils literal notranslate"><span class="pre">GridGeneration.generate_grid()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_grid_points()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_quantity"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_quantity()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1018,6 +1031,127 @@ between the triggered events and the simulated events using the shower IDs.</p>
 </dd></dl>
 
 </section>
+<section id="module-production_configuration.generate_production_grid">
+<span id="id6"></span><span id="generate-production-grid"></span><h2>generate_production_grid<a class="headerlink" href="#module-production_configuration.generate_production_grid" title="Link to this heading">#</a></h2>
+<p>Module defines the <a class="reference internal" href="#production_configuration.generate_production_grid.GridGeneration" title="production_configuration.generate_production_grid.GridGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GridGeneration</span></code></a> class.</p>
+<p>Used to generate a grid of simulation points based on flexible axes definitions such
+azimuth, zenith angle, night-sky background, and camera offset.
+The module handles axis binning, scaling and interpolation of energy thresholds, viewcone,
+and radius limits from a lookup table.
+Additionally, it allows for converting between Altitude/Azimuth and Right Ascension
+Declination coordinates. The resulting grid points are saved to a file.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="production_configuration.generate_production_grid.GridGeneration">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.generate_production_grid.</span></span><span class="sig-name descname"><span class="pre">GridGeneration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate_system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'zenith_azimuth'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observing_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observing_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lookup_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_production_grid.html#GridGeneration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_production_grid.GridGeneration" title="Link to this definition">#</a></dt>
+<dd><p>Defines and generates a grid of simulation points based on flexible axes definitions.</p>
+<p>This class generates a grid of points for a simulation based on parameters such as
+azimuth, zenith angle, night-sky background, and camera offset,
+taking into account axis definitions, scaling, and units and interpolating values
+for simulations from a lookup table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec">
+<span class="sig-name descname"><span class="pre">convert_altaz_to_radec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">az</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_production_grid.html#GridGeneration.convert_altaz_to_radec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec" title="Link to this definition">#</a></dt>
+<dd><p>Convert Altitude/Azimuth (AltAz) coordinates to Right Ascension/Declination (RA/Dec).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>alt</strong><span class="classifier">float</span></dt><dd><p>Altitude angle in degrees.</p>
+</dd>
+<dt><strong>az</strong><span class="classifier">float</span></dt><dd><p>Azimuth angle in degrees.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>SkyCoord</dt><dd><p>SkyCoord object containing the RA/Dec coordinates.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If observing_time is not set.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.generate_production_grid.GridGeneration.convert_coordinates">
+<span class="sig-name descname"><span class="pre">convert_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/production_configuration/generate_production_grid.html#GridGeneration.convert_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_production_grid.GridGeneration.convert_coordinates" title="Link to this definition">#</a></dt>
+<dd><p>Convert the grid points to RA/Dec coordinates if necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid_points</strong><span class="classifier">list of dict</span></dt><dd><dl class="simple">
+<dt>List of grid points, each represented as a dictionary with axis</dt><dd><p>names as keys and values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list of dict</dt><dd><p>The grid points with converted RA/Dec coordinates.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.generate_production_grid.GridGeneration.create_circular_binning">
+<span class="sig-name descname"><span class="pre">create_circular_binning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_bins</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_production_grid.html#GridGeneration.create_circular_binning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_production_grid.GridGeneration.create_circular_binning" title="Link to this definition">#</a></dt>
+<dd><p>Create bin centers for azimuth angles, handling circular wraparound (0 deg to 360 deg).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>azimuth_range</strong><span class="classifier">tuple</span></dt><dd><p>(min_azimuth, max_azimuth), can wrap around 0 deg.</p>
+</dd>
+<dt><strong>num_bins</strong><span class="classifier">int</span></dt><dd><p>Number of bins.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>Array of bin centers.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.generate_production_grid.GridGeneration.generate_grid">
+<span class="sig-name descname"><span class="pre">generate_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/production_configuration/generate_production_grid.html#GridGeneration.generate_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_production_grid.GridGeneration.generate_grid" title="Link to this definition">#</a></dt>
+<dd><p>Generate the grid based on the required axes and include interpolated limits.</p>
+<p>Takes energy threshold, viewcone, and radius from the interpolated lookup table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list of dict</dt><dd><p>A list of grid points, each represented as a dictionary with axis names
+as keys and axis values as values. Axis values may include units where defined.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.generate_production_grid.GridGeneration.serialize_grid_points">
+<span class="sig-name descname"><span class="pre">serialize_grid_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_production_grid.html#GridGeneration.serialize_grid_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points" title="Link to this definition">#</a></dt>
+<dd><p>Serialize the grid output and save to a file or print to the console.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.generate_production_grid.GridGeneration.serialize_quantity">
+<span class="sig-name descname"><span class="pre">serialize_quantity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_production_grid.html#GridGeneration.serialize_quantity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_production_grid.GridGeneration.serialize_quantity" title="Link to this definition">#</a></dt>
+<dd><p>Serialize Quantity.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -1115,6 +1249,18 @@ between the triggered events and the simulated events using the shower IDs.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_production_grid">generate_production_grid</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration"><code class="docutils literal notranslate"><span class="pre">GridGeneration</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_altaz_to_radec()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.create_circular_binning"><code class="docutils literal notranslate"><span class="pre">GridGeneration.create_circular_binning()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.generate_grid"><code class="docutils literal notranslate"><span class="pre">GridGeneration.generate_grid()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_grid_points()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_quantity"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_quantity()</span></code></a></li>
 </ul>
 </li>
 </ul>
