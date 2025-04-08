@@ -1,0 +1,19 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-production-generate-grid
+    TEST_NAME: production_generate_grid
+    CONFIGURATION:
+      SITE: "North"
+      MODEL_VERSION: "6.0.0"
+      AXES: tests/resources/production_grid_generation_axes_definition.yml
+      COORDINATE_SYSTEM: "zenith_azimuth"
+      OBSERVING_TIME: "2017-09-16 00:00:00"
+      LOOKUP_TABLE: tests/resources/corsika_simulation_limits_lookup.ecsv
+      TELESCOPE_IDS: []
+      OUTPUT_PATH: simtools-output
+      OUTPUT_FILE: grid_output.json
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: "grid_output.json"
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
