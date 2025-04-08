@@ -5,6 +5,7 @@ import pathlib
 from unittest.mock import Mock, patch
 
 import pytest
+from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig
 
@@ -72,6 +73,49 @@ def test_fill_corsika_configuration(io_handler, corsika_config_mock_array_model)
         "IACT_PARAMETERS",
     ]:
         assert key in corsika_config_mock_array_model.config
+
+
+def test_fill_corsika_configuration_model_version(io_handler, corsika_config_mock_array_model):
+    """Test handling a list of model versions as input, taking the first one only."""
+
+    with patch("simtools.corsika.corsika_config.ModelParameter") as mock_model_parameter:
+        mock_params = Mock()
+        mock_params.get_simulation_software_parameters.return_value = {
+            "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
+            "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
+            "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
+            "corsika_starting_grammage": {"value": 0.0, "unit": "g/cm2"},
+            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": "g/cm2"},
+            "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
+            "corsika_iact_split_auto": {"value": 15000000, "unit": None},
+            "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
+            "corsika_particle_kinetic_energy_cutoff": {
+                "value": [0.3, 0.1, 0.020, 0.020],
+                "unit": "GeV",
+            },
+        }
+        mock_model_parameter.return_value = mock_params
+
+        args_dict = {
+            "model_version": ["5.0.0", "6.0.0"],
+            "azimuth_angle": 0 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "event_number_first_shower": 1,
+            "nshow": 100,
+            "eslope": 2.0,
+            "energy_range": [10 * u.GeV, 10000 * u.GeV],
+            "view_cone": [0 * u.deg, 0 * u.deg],
+            "core_scatter": [10, 140000 * u.cm],
+            "correct_for_b_field_alignment": True,
+        }
+        config = corsika_config_mock_array_model.fill_corsika_configuration(args_dict, db_config={})
+
+        # Verify ModelParameter was instantiated with the correct model (the first one)
+        mock_model_parameter.assert_called_once_with(mongo_db_config={}, model_version="5.0.0")
+        mock_params.get_simulation_software_parameters.assert_called_once_with("corsika")
+
+        assert isinstance(config, dict)
+        assert "USER_INPUT" in config
 
 
 def test_corsika_configuration_from_user_input(
