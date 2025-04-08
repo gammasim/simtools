@@ -132,8 +132,40 @@ def test_generate_grid_1_over_cos_scaling(
     assert np.allclose(unique_zenith_values, expected_values, rtol=1e-4)
 
 
+def test_generate_grid_power_law_scaling(
+    axes_definition, lookup_table, observing_location, observing_time
+):
+    """Test grid generation with power-law scaling for an axis."""
+    axes_definition["axes"]["offset"] = {
+        "range": [1, 100],
+        "binning": 5,
+        "scaling": "power-law",
+        "units": "deg",
+    }
+
+    grid_gen = GridGeneration(
+        axes=axes_definition,
+        coordinate_system="zenith_azimuth",
+        observing_location=observing_location,
+        observing_time=observing_time,
+        lookup_table=lookup_table,
+        telescope_ids=[1],
+    )
+    grid_points = grid_gen.generate_grid()
+
+    offset_values = [point["offset"].value for point in grid_points]
+    unique_offset_values = np.unique(offset_values)
+
+    expected_values = grid_gen.generate_power_law_values(
+        axis_range=axes_definition["axes"]["offset"]["range"],
+        binning=axes_definition["axes"]["offset"]["binning"],
+    )
+
+    assert len(unique_offset_values) == len(expected_values)
+    assert np.allclose(unique_offset_values, expected_values, rtol=1e-4)
+
+
 def test_interpolated_limits(grid_gen):
-    # Mock interpolated limits
     grid_gen.interpolated_limits = {
         "energy": np.array(
             [[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], [[0.7, 0.8], [0.9, 1.0], [1.1, 1.2]]]
