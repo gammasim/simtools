@@ -70,15 +70,18 @@ def main():  # noqa: D103
         ).auto_generate_array_element_reports()
 
     else:
+        model_version = args["model_version"]
+        if isinstance(model_version, list):
+            model_version = model_version[0]
         ReadParameters(
             db_config,
             args,
-            Path(output_path / f"{args['model_version']}"),
+            Path(output_path / f"{model_version}"),
         ).produce_array_element_report()
 
         logger.info(
             f"Markdown report generated for {args['site']}"
-            f" Telescope {args['telescope']} (v{args['model_version']}):"
+            f" Telescope {args['telescope']} (v{model_version}):"
             f" {output_path}"
         )
 
