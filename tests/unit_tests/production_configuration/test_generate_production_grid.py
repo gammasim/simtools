@@ -132,44 +132,6 @@ def test_generate_grid_1_over_cos_scaling(
     assert np.allclose(unique_zenith_values, expected_values, rtol=1e-4)
 
 
-def test_generate_grid_power_law_scaling(
-    axes_definition, lookup_table, observing_location, observing_time
-):
-    """Test grid generation with power-law scaling for an axis."""
-    axes_definition["axes"]["offset"] = {
-        "range": [1, 100],
-        "binning": 5,
-        "scaling": "power-law",
-        "units": "deg",
-    }
-
-    grid_gen = GridGeneration(
-        axes=axes_definition,
-        coordinate_system="zenith_azimuth",
-        observing_location=observing_location,
-        observing_time=observing_time,
-        lookup_table=lookup_table,
-        telescope_ids=[1],
-    )
-
-    grid_points = grid_gen.generate_grid()
-
-    offset_values = [point["offset"].value for point in grid_points]
-    unique_offset_values = np.unique(offset_values)
-
-    axis_range = axes_definition["axes"]["offset"]["range"]
-    binning = axes_definition["axes"]["offset"]["binning"]
-    power_law_index = 2  # Default power-law index used in the implementation
-    lin_space = np.linspace(0, 1, binning)
-    lin_space = np.clip(lin_space, 1e-10, 1 - 1e-10)
-    expected_values = (
-        axis_range[0] + (axis_range[1] - axis_range[0]) * (lin_space) ** power_law_index
-    )
-
-    assert len(unique_offset_values) == len(expected_values)
-    assert np.allclose(unique_offset_values, expected_values, rtol=1e-4)
-
-
 def test_interpolated_limits(grid_gen):
     grid_gen.interpolated_limits = {
         "energy": np.array(
@@ -313,18 +275,6 @@ def test_create_circular_binning_with_shortest_path(grid_gen):
     bins = grid_gen.create_circular_binning((10, 350), 3)
     expected_bins = [10, 0, 350]
     assert np.allclose(bins, expected_bins)
-
-
-def test_generate_power_law_values(grid_gen):
-    # Case 1: Valid input
-    values = grid_gen.generate_power_law_values((1e9, 1e12), 10, 3)
-    assert len(values) == 10
-    assert values[0] >= 1e9
-    assert values[-1] <= 1e12
-
-    # Case 3: Zero bins
-    values = grid_gen.generate_power_law_values((1e9, 1e12), 0, 3)
-    assert len(values) == 0
 
 
 def test_apply_lookup_table_limits(grid_gen):
