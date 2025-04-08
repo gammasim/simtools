@@ -31,6 +31,35 @@ class ReadParameters:
         self.output_path = output_path
         self.observatory = args.get("observatory")
 
+    @property
+    def model_version(self):
+        """Model version."""
+        return self._model_version
+
+    @model_version.setter
+    def model_version(self, model_version):
+        """
+        Set model version.
+
+        Parameters
+        ----------
+        _model_version: str or list
+            Model version (e.g., "6.0.0").
+            If a list is passed, it must contain exactly one element,
+            and only that element will be used.
+
+        Raises
+        ------
+        ValueError
+            If more than one model version is passed.
+        """
+        if isinstance(model_version, list):
+            if len(model_version) != 1:
+                raise ValueError("Only one model version can be passed to the ReadParameters.")
+            self._model_version = model_version[0]
+        else:
+            self._model_version = model_version
+
     def _convert_to_md(self, input_file):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
