@@ -141,7 +141,7 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
         nsb = 19
     else:
         _logger.warning(f"Could not determine NSB from file path: {file_path}")
-        nsb = "unknown"
+        nsb = None
 
     if "gamma-diffuse" in file_path:
         particle_type = "gamma-diffuse"
@@ -201,6 +201,7 @@ def create_results_table(results, loss_fraction):
     astropy.table.Table
         An Astropy Table containing the results with appropriate units and metadata.
     """
+    print("results", results)
     table = Table(
         rows=[
             (
@@ -209,9 +210,9 @@ def create_results_table(results, loss_fraction):
                 res["zenith"],
                 res["azimuth"],
                 res["nsb"],
-                res["lower_energy_threshold"],
-                res["upper_radius_threshold"],
-                res["viewcone_radius"],
+                res["lower_energy_threshold"].value,
+                res["upper_radius_threshold"].value,
+                res["viewcone_radius"].value,
             )
             for res in results
         ],
@@ -227,15 +228,16 @@ def create_results_table(results, loss_fraction):
         ],
         dtype=[
             "S64",
-            "S64",
-            np.int64,
-            np.int64,
-            np.int64,
+            object,
+            np.float64,
+            np.float64,
+            object,
             np.float64,
             np.float64,
             np.float64,
         ],
     )
+    print("AAAA table", table)
     table["zenith"].unit = "deg"
     table["azimuth"].unit = "deg"
     table["lower_energy_threshold"].unit = "TeV"
