@@ -237,7 +237,6 @@ def create_results_table(results, loss_fraction):
             np.float64,
         ],
     )
-    print("AAAA table", table)
     table["zenith"].unit = "deg"
     table["azimuth"].unit = "deg"
     table["lower_energy_threshold"].unit = "TeV"
