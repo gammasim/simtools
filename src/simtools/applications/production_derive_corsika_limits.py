@@ -34,7 +34,9 @@ Derive limits for a given file with a specified loss fraction.
 
 import datetime
 import logging
+import re
 
+import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
@@ -122,8 +124,37 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
     Returns
     -------
     dict
-        Dictionary containing the computed limits.
+        Dictionary containing the computed limits and metadata.
     """
+    # Extract zenith and azimuth from the file path
+    match = re.search(r"za(\d+)deg.*azm(\d+)deg", file_path)
+    if not match:
+        raise ValueError(f"Could not extract zenith and azimuth from file path: {file_path}")
+    zenith = int(match.group(1))
+    azimuth = int(match.group(2))
+
+    if "dark" in file_path:
+        nsb = 1
+    elif "halfmoon" in file_path:
+        nsb = 5
+    elif "moon" in file_path:
+        nsb = 19
+    else:
+        _logger.warning(f"Could not determine NSB from file path: {file_path}")
+        nsb = None
+
+    if "gamma-diffuse" in file_path:
+        particle_type = "gamma-diffuse"
+    elif "gamma" in file_path:
+        particle_type = "gamma"
+    elif "proton" in file_path:
+        particle_type = "proton"
+    elif "electron" in file_path:
+        particle_type = "electron"
+    else:
+        _logger.warning(f"Could not determine particle type from file path: {file_path}")
+        particle_type = "unknown"
+
     calculator = LimitCalculator(file_path, telescope_list=telescope_ids)
 
     lower_energy_limit = calculator.compute_lower_energy_limit(loss_fraction)
@@ -142,8 +173,11 @@ def process_file(file_path, telescope_ids, loss_fraction, plot_histograms):
         )
 
     return {
-        "file_path": file_path,
+        "particle_type": particle_type,
         "telescope_ids": telescope_ids,
+        "zenith": zenith,
+        "azimuth": azimuth,
+        "nsb": nsb,
         "lower_energy_threshold": lower_energy_limit,
         "upper_radius_threshold": upper_radial_distance,
         "viewcone_radius": viewcone,
@@ -158,7 +192,7 @@ def create_results_table(results, loss_fraction):
     ----------
     results : list[dict]
         List of dictionaries containing the computed limits for each file
-          and telescope configuration.
+        and telescope configuration.
     loss_fraction : float
         Fraction of events to be lost, added as metadata to the table.
 
@@ -167,33 +201,52 @@ def create_results_table(results, loss_fraction):
     astropy.table.Table
         An Astropy Table containing the results with appropriate units and metadata.
     """
+    print("results", results)
     table = Table(
         rows=[
             (
-                res["file_path"],
+                res["particle_type"],
                 res["telescope_ids"],
-                res["lower_energy_threshold"],
-                res["upper_radius_threshold"],
-                res["viewcone_radius"],
+                res["zenith"],
+                res["azimuth"],
+                res["nsb"],
+                res["lower_energy_threshold"].value,
+                res["upper_radius_threshold"].value,
+                res["viewcone_radius"].value,
             )
             for res in results
         ],
         names=[
-            "file_path",
+            "particle_type",
             "telescope_ids",
+            "zenith",
+            "azimuth",
+            "nsb",
             "lower_energy_threshold",
             "upper_radius_threshold",
             "viewcone_radius",
         ],
+        dtype=[
+            "S64",
+            object,
+            np.float64,
+            np.float64,
+            object,
+            np.float64,
+            np.float64,
+            np.float64,
+        ],
     )
-
+    table["zenith"].unit = "deg"
+    table["azimuth"].unit = "deg"
     table["lower_energy_threshold"].unit = "TeV"
     table["upper_radius_threshold"].unit = "m"
     table["viewcone_radius"].unit = "deg"
 
     table.meta["created"] = datetime.datetime.now().isoformat()
     table.meta["description"] = (
-        "Lookup table for CORSIKA limits computed from gamma-ray shower simulations."
+        "Lookup table for CORSIKA limits computed from gamma-ray shower simulations "
+        "using simtool production_derive_corsika_limits"
     )
     table.meta["loss_fraction"] = loss_fraction
 

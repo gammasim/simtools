@@ -1,0 +1,22 @@
+---
+axes:
+  azimuth:
+    range: [310, 20]
+    binning: 3
+    scaling: linear
+    units: deg
+  zenith_angle:
+    range: [30, 40]
+    binning: 2
+    scaling: linear
+    units: deg
+  nsb:
+    range: [4, 5]
+    binning: 2
+    scaling: linear
+    units: MHz
+  offset:
+    range: [0, 10]
+    binning: 2
+    scaling: linear
+    units: deg
