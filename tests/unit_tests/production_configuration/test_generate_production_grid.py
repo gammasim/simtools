@@ -151,14 +151,19 @@ def test_generate_grid_power_law_scaling(
         lookup_table=lookup_table,
         telescope_ids=[1],
     )
+
     grid_points = grid_gen.generate_grid()
 
     offset_values = [point["offset"].value for point in grid_points]
     unique_offset_values = np.unique(offset_values)
 
-    expected_values = grid_gen.generate_power_law_values(
-        axis_range=axes_definition["axes"]["offset"]["range"],
-        binning=axes_definition["axes"]["offset"]["binning"],
+    axis_range = axes_definition["axes"]["offset"]["range"]
+    binning = axes_definition["axes"]["offset"]["binning"]
+    power_law_index = 2  # Default power-law index used in the implementation
+    lin_space = np.linspace(0, 1, binning)
+    lin_space = np.clip(lin_space, 1e-10, 1 - 1e-10)
+    expected_values = (
+        axis_range[0] + (axis_range[1] - axis_range[0]) * (lin_space) ** power_law_index
     )
 
     assert len(unique_offset_values) == len(expected_values)
