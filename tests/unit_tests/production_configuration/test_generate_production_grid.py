@@ -165,7 +165,7 @@ def test_serialize_grid_points(grid_gen):
         {
             "zenith_angle": 30 * u.deg,
             "azimuth": 310 * u.deg,
-            "nsb": 4 * u.MHz,
+            "nsb": 4,
             "energy_threshold": {"lower": 0.1 * u.TeV},
             "radius": 100 * u.m,
             "viewcone": 1 * u.deg,
@@ -173,7 +173,7 @@ def test_serialize_grid_points(grid_gen):
         {
             "zenith_angle": 40 * u.deg,
             "azimuth": 345 * u.deg,
-            "nsb": 5 * u.MHz,
+            "nsb": 5,
             "energy_threshold": {"lower": 0.2 * u.TeV},
             "radius": 200 * u.m,
             "viewcone": 2 * u.deg,
