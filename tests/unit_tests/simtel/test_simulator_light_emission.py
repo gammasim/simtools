@@ -330,7 +330,6 @@ def test_make_simtel_script(mock_simulator):
         path_to_config_directory = "/path/to/config/"
         mock_simulator._telescope_model.config_file_directory = path_to_config_directory
         path_to_config_file = "/path/to/config/config.cfg"
-        mock_simulator._telescope_model.get_config_file.return_value = path_to_config_file
         config_file_path_mock = PropertyMock(return_value=path_to_config_file)
         type(mock_simulator._telescope_model).config_file_path = config_file_path_mock
 
