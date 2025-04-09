@@ -189,7 +189,7 @@ def test__wrap_at_underscores(io_handler, db_config):
     result_2 = read_parameters._wrap_at_underscores("this_is_a_really_long_test", 10)
     assert result_2 == "this_is_a really long_test"
 
-    # No underscores → nothing to wrap
+    # No underscores -> nothing to wrap
     result_3 = read_parameters._wrap_at_underscores("simpletext", 10)
     assert result_3 == "simpletext"
 
