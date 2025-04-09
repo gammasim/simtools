@@ -367,9 +367,9 @@ def test_pack_for_register(array_simulator, mocker, caplog):
     )
 
 
-def test_initialize_array_model_with_single_version(shower_simulator, db_config, model_version):
+def test_initialize_array_models_with_single_version(shower_simulator, db_config, model_version):
     # Test with a single model version
-    array_models = shower_simulator._initialize_array_model(mongo_db_config=db_config)
+    array_models = shower_simulator._initialize_array_models(mongo_db_config=db_config)
     assert len(array_models) == 1
     assert isinstance(array_models[0], ArrayModel)
     assert array_models[0].model_version == model_version
@@ -377,11 +377,11 @@ def test_initialize_array_model_with_single_version(shower_simulator, db_config,
     assert array_models[0].layout_name == shower_simulator.args_dict.get("array_layout_name")
 
 
-def test_initialize_array_model_with_multiple_versions(shower_simulator, db_config):
+def test_initialize_array_models_with_multiple_versions(shower_simulator, db_config):
     # Test with multiple model versions
     model_versions = ["5.0.0", "6.0.0"]
     shower_simulator.args_dict["model_version"] = model_versions
-    array_models = shower_simulator._initialize_array_model(mongo_db_config=db_config)
+    array_models = shower_simulator._initialize_array_models(mongo_db_config=db_config)
     assert len(array_models) == 2
     for i, model_version in enumerate(model_versions):
         assert isinstance(array_models[i], ArrayModel)

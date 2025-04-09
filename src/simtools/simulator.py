@@ -74,7 +74,7 @@ class Simulator:
         self._submit_options = self.args_dict.get("submit_options", None)
         self._extra_commands = extra_commands
 
-        self.array_models = self._initialize_array_model(mongo_db_config)
+        self.array_models = self._initialize_array_models(mongo_db_config)
         self._simulation_runner = self._initialize_simulation_runner(mongo_db_config)
 
     @property
@@ -103,7 +103,7 @@ class Simulator:
             raise gen.InvalidConfigDataError
         self._simulation_software = simulation_software.lower()
 
-    def _initialize_array_model(self, mongo_db_config):
+    def _initialize_array_models(self, mongo_db_config):
         """
         Initialize array simulation model.
 
