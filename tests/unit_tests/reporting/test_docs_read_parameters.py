@@ -182,7 +182,7 @@ def test__wrap_at_underscores(io_handler, db_config):
     read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
 
     # "this_is_a_test" -> parts: ['this', 'is', 'a', 'test']
-    # builds: "this" (4), "this_is" (7), "this_is_a" (9), "this_is_a_test" (14) > 10 → wrap before "test"
+    # builds: "this" (4), "this_is" (7), "this_is_a" (9), "this_is_a_test" (14) > 10 -> wrap before "test"
     result_1 = read_parameters._wrap_at_underscores("this_is_a_test", 10)
     assert result_1 == "this_is_a test"
 
