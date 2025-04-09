@@ -124,11 +124,14 @@ class CorsikaConfig:
         if db_config is None:  # all following parameter require DB
             return config
 
-        model_version = args_dict.get("model_version", None)
         # If the user provided multiple model versions, we take the first one
         # because for CORSIKA config we need only one and it doesn't matter which
-        if isinstance(model_version, list):
-            model_version = model_version[0]
+        model_versions = args_dict.get("model_version", None)
+        if not isinstance(model_versions, list):
+            model_versions = [model_versions]
+        self.assert_corsika_configurations_match(model_versions, db_config=db_config)
+        model_version = model_versions[0]
+        self._logger.debug(f"Using model version {model_version} for CORSIKA parameters")
         db_model_parameters = ModelParameter(mongo_db_config=db_config, model_version=model_version)
         parameters_from_db = db_model_parameters.get_simulation_software_parameters("corsika")
 
@@ -142,6 +145,60 @@ class CorsikaConfig:
         config["IACT_PARAMETERS"] = self._corsika_configuration_iact_parameters(parameters_from_db)
 
         return config
+
+    def assert_corsika_configurations_match(self, model_versions, db_config=None):
+        """
+        Assert that CORSIKA configurations match across all model versions.
+
+        Parameters
+        ----------
+        model_versions : list
+            List of model versions to check.
+        db_config : dict, optional
+            Database configuration.
+
+        Raises
+        ------
+        InvalidCorsikaInputError
+            If CORSIKA parameters are not identical across all model versions.
+        """
+        if len(model_versions) < 2:
+            return
+
+        parameters_from_db_list = []
+
+        # Get parameters for all model versions
+        for model_version in model_versions:
+            db_model_parameters = ModelParameter(
+                mongo_db_config=db_config, model_version=model_version
+            )
+            parameters_from_db_list.append(
+                db_model_parameters.get_simulation_software_parameters("corsika")
+            )
+
+        # Parameters that can differ between model versions (e.g., i/o buffer size)
+        skip_parameters = ["corsika_iact_io_buffer", "corsika_iact_split_auto"]
+
+        # Check if all parameters match
+        for i in range(len(parameters_from_db_list) - 1):
+            for key in parameters_from_db_list[i]:
+                if key in skip_parameters:
+                    continue
+
+                current_value = parameters_from_db_list[i][key]["value"]
+                next_value = parameters_from_db_list[i + 1][key]["value"]
+
+                if current_value != next_value:
+                    self._logger.warning(
+                        f"Parameter '{key}' mismatch between model versions:\n"
+                        f"  {model_versions[i]}: {current_value}\n"
+                        f"  {model_versions[i + 1]}: {next_value}"
+                    )
+                    raise InvalidCorsikaInputError(
+                        f"CORSIKA parameter '{key}' differs between model versions "
+                        f"{model_versions[i]} and {model_versions[i + 1]}. "
+                        f"Values are {current_value} and {next_value} respectively."
+                    )
 
     def _corsika_configuration_from_user_input(self, args_dict):
         """
