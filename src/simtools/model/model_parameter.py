@@ -98,7 +98,7 @@ class ModelParameter:
 
         Parameters
         ----------
-        _model_version: str or list
+        model_version: str or list
             Model version (e.g., "6.0.0").
             If a list is passed, it must contain exactly one element,
             and only that element will be used.
