@@ -163,11 +163,10 @@ class ArrayModel:
             If more than one model version is passed.
         """
         if isinstance(model_version, list):
-            if len(model_version) != 1:
-                raise ValueError("Only one model version can be passed to the ArrayModel.")
-            self._model_version = model_version[0]
-        else:
-            self._model_version = model_version
+            raise ValueError(
+                f"Only one model version can be passed to {self.__class__.__name__}, not a list."
+            )
+        self._model_version = model_version
 
     def _build_telescope_models(self, site_model: SiteModel, array_elements: dict) -> dict:
         """

@@ -548,10 +548,39 @@ def test_get_model_parameter_with_model_version_list(
     # Update common_mock_read_mongo_db to return the expected format
     common_mock_read_mongo_db.return_value = {"test_param": {"value": "test_value"}}
 
+    # Test with single version as string - should work
+    db.get_model_parameter(
+        parameter="test_param",
+        site=site,
+        array_element_name=array_element_name,
+        model_version="5.0.0",
+    )
+    mock_get_collection_name.assert_called_once_with("test_param")
+    mock_read_production_table.assert_called_once_with(collection, "5.0.0")
+    mock_get_array_element_list.assert_called_once_with(
+        array_element_name,
+        site,
+        {
+            "parameters": {
+                "LSTN-design": {"test_param": "2.0.0"},
+                "LSTN-01": {"test_param": "1.0.0"},
+            },
+        },
+        collection,
+    )
+    common_mock_read_mongo_db.assert_called_once_with(
+        query={
+            "parameter_version": "1.0.0",
+            "parameter": "test_param",
+            "instrument": "LSTN-01",
+            "site": site,
+        },
+        collection_name=collection,
+    )
+
+    error_message = "Only one model version can be passed to get_model_parameter, not a list."
     # Test with multiple versions - should raise ValueError
-    with pytest.raises(
-        ValueError, match="Only one model version can be passed to get_model_parameter."
-    ):
+    with pytest.raises(ValueError, match=error_message):
         db.get_model_parameter(
             parameter="test_param",
             site=site,
@@ -559,20 +588,17 @@ def test_get_model_parameter_with_model_version_list(
             model_version=["5.0.0", "6.0.0"],
         )
 
-    # Test with single version in list - should work
-    result = db.get_model_parameter(
-        parameter="test_param",
-        site=site,
-        array_element_name=array_element_name,
-        model_version=["5.0.0"],
-    )
-
-    # Verify the mocks were called correctly
-    mock_read_production_table.assert_called_once_with(collection, "5.0.0")
-    mock_get_array_element_list.assert_called_once()
-    mock_get_collection_name.assert_called_with("test_param")
-    common_mock_read_mongo_db.assert_called_once()
-    assert result == {"test_param": {"value": "test_value"}}
+    # Test with single version in list - should raise ValueError
+    with pytest.raises(
+        ValueError,
+        match=error_message,
+    ):
+        db.get_model_parameter(
+            parameter="test_param",
+            site=site,
+            array_element_name=array_element_name,
+            model_version=["5.0.0"],
+        )
 
 
 def test_get_collection(db, mock_db_name, test_db, mocker):

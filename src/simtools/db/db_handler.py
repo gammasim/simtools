@@ -213,13 +213,12 @@ class DatabaseHandler:
         """
         collection_name = names.get_collection_name_from_parameter_name(parameter)
         if model_version:
-            model_version_to_read = model_version
             if isinstance(model_version, list):
-                if len(model_version) != 1:
-                    raise ValueError("Only one model version can be passed to get_model_parameter.")
-                model_version_to_read = model_version[0]
+                raise ValueError(
+                    "Only one model version can be passed to get_model_parameter, not a list."
+                )
             production_table = self._read_production_table_from_mongo_db(
-                collection_name, model_version_to_read
+                collection_name, model_version
             )
             array_element_list = self._get_array_element_list(
                 array_element_name, site, production_table, collection_name
