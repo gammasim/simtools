@@ -177,19 +177,6 @@ def test__format_parameter_value(io_handler, db_config):
     assert result_4 == "1 m, 2 m, 3 m, 4 m"
 
 
-def test__wrap_markdown_link(io_handler, db_config):
-    output_path = io_handler.get_output_directory()
-    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
-
-    # The link "[link](http://example.com)" is longer than 5 chars, so it's wrapped
-    result_1 = read_parameters._wrap_markdown_link("Check this [link](http://example.com)", 5)
-    assert result_1 == "Check this [link](http://example.com)"
-
-    # Short link should remain inline (len("[short](x)") < 20)
-    result_2 = read_parameters._wrap_markdown_link("Click [short](x) here", 20)
-    assert result_2 == "Click [short](x) here"
-
-
 def test__wrap_at_underscores(io_handler, db_config):
     output_path = io_handler.get_output_directory()
     read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
