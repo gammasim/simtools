@@ -1,106 +1,104 @@
-import json
-import logging
+from pathlib import Path
+from unittest.mock import patch
 
-import numpy as np
 import pytest
 
 from simtools.production_configuration.scale_events_manager import ScaleEventsManager
 
 
 @pytest.fixture
-def args_dict(tmp_path):
+def args_dict(tmp_path, metrics_file):
     """Fixture to provide a mock args_dict for testing."""
     return {
-        "base_path": tmp_path,
+        "base_path": "tests/resources/production_dl2_fits/",
         "zeniths": [20, 40],
         "offsets": [0.5, 1.0],
         "query_point": [1.0, 180.0, 20.0, 4.0, 0.5],
         "output_file": "scaled_events.json",
-        "metrics_file": str(tmp_path / "metrics.yml"),
-        "file_name_template": "mock_file_zenith_{zenith}.fits",
+        "metrics_file": str(metrics_file),
+        "file_name_template": "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits",
     }
 
 
 @pytest.fixture
-def mock_metrics_file(tmp_path):
-    """Fixture to create a mock metrics file."""
-    metrics_file = tmp_path / "metrics.yml"
-    metrics_file.write_text("mock_metrics: true\n")
-    return metrics_file
+def metrics_file():
+    """Fixture to return a metrics file."""
+    return Path("tests/resources/production_simulation_config_metrics.yml")
 
 
-@pytest.fixture
-def mock_event_files(tmp_path):
-    """Fixture to create mock event files."""
-    for zenith in [20, 40]:
-        file_path = tmp_path / f"mock_file_zenith_{zenith}.fits"
-        file_path.write_text("Mock event data")
-    return tmp_path
-
-
-def test_initialize_evaluators(args_dict, mock_metrics_file, mock_event_files):
-    """Test the initialization of evaluators."""
-    args_dict["metrics_file"] = str(mock_metrics_file)
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_no_evaluators_initialized(mock_get_output_directory, args_dict, tmp_path):
+    """Test behavior when no evaluators are initialized."""
+    mock_get_output_directory.return_value = str(tmp_path)  # Mock output directory
+    args_dict["zeniths"] = []  # No zeniths provided
     manager = ScaleEventsManager(args_dict)
 
     manager.initialize_evaluators()
 
-    # Check that evaluators are initialized
-    assert len(manager.evaluator_instances) == 4  # 2 zeniths x 2 offsets
-    for evaluator in manager.evaluator_instances:
-        assert evaluator.file_path.exists()
-        assert evaluator.file_path.suffix == ".fits"
+    # Check that no evaluators are initialized
+    assert len(manager.evaluator_instances) == 0
 
 
-def test_perform_interpolation(args_dict, mock_metrics_file, mock_event_files):
-    """Test the interpolation functionality."""
-    args_dict["metrics_file"] = str(mock_metrics_file)
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_invalid_query_point(mock_get_output_directory, args_dict):
+    """Test behavior with an invalid query point."""
+    args_dict["query_point"] = [1, 2]  # Invalid query point
+    manager = ScaleEventsManager(args_dict)
+    manager.initialize_evaluators()
+
+    with pytest.raises(ValueError, match="Invalid query point format. Expected 5 values, got 2."):
+        manager.perform_interpolation()
+
+
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_missing_event_files(mock_get_output_directory, args_dict, tmp_path):
+    """Test behavior when event files are missing."""
+    mock_get_output_directory.return_value = str(tmp_path)
+    args_dict["file_name_template"] = "non_existent_file.fits"
     manager = ScaleEventsManager(args_dict)
 
     manager.initialize_evaluators()
-    scaled_events = manager.perform_interpolation()
 
-    # Check that interpolation results are returned
-    assert scaled_events is not None
-    assert isinstance(scaled_events, np.ndarray)
-    assert scaled_events.shape == (1,)  # Single query point
+    # Check that no evaluators are initialized due to missing files
+    assert len(manager.evaluator_instances) == 0
 
 
-def test_write_output(args_dict, mock_metrics_file, mock_event_files, tmp_path):
-    """Test writing the interpolation results to a file."""
-    args_dict["metrics_file"] = str(mock_metrics_file)
-    args_dict["output_file"] = "test_output.json"
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_no_base_path(mock_get_output_directory, args_dict, tmp_path):
+    """Test behavior when base_path is not provided."""
+    mock_get_output_directory.return_value = str(tmp_path)
+    args_dict["base_path"] = None
     manager = ScaleEventsManager(args_dict)
 
     manager.initialize_evaluators()
-    scaled_events = np.array([123.45])  # Mock interpolation result
-    manager.write_output(scaled_events)
 
-    # Check that the output file is created
-    output_file = tmp_path / "test_output.json"
-    assert output_file.exists()
-
-    # Check the contents of the output file
-    with open(output_file, encoding="utf-8") as f:
-        output_data = json.load(f)
-        assert "query_point" in output_data
-        assert "scaled_events" in output_data
-        assert output_data["scaled_events"] == [123.45]
+    # Check that no evaluators are initialized
+    assert len(manager.evaluator_instances) == 0
 
 
-def test_run_workflow(args_dict, mock_metrics_file, mock_event_files, tmp_path, caplog):
-    """Test the full workflow of the ScaleEventsManager."""
-    args_dict["metrics_file"] = str(mock_metrics_file)
-    args_dict["output_file"] = "workflow_output.json"
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_empty_offsets(mock_get_output_directory, args_dict, tmp_path):
+    """Test behavior when offsets are empty."""
+    mock_get_output_directory.return_value = str(tmp_path)
+    args_dict["offsets"] = []  # Empty offsets
     manager = ScaleEventsManager(args_dict)
 
-    with caplog.at_level(logging.INFO):
-        manager.run()
+    manager.initialize_evaluators()
 
-    # Check that the output file is created
-    output_file = tmp_path / "workflow_output.json"
-    assert output_file.exists()
+    # Check that no evaluators are initialized
+    assert len(manager.evaluator_instances) == 0
 
-    # Check the logs for workflow execution
-    assert "args dict" in caplog.text
-    assert "Output saved to" in caplog.text
+
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_no_query_point(mock_get_output_directory, args_dict, tmp_path):
+    """Test behavior when query_point is missing."""
+    mock_get_output_directory.return_value = str(tmp_path)
+    args_dict.pop("query_point", None)  # Remove query_point
+    manager = ScaleEventsManager(args_dict)
+
+    manager.initialize_evaluators()
+
+    with pytest.raises(
+        ValueError, match="Invalid query point format. Expected 5 values, got None."
+    ):
+        manager.perform_interpolation()

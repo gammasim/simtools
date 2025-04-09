@@ -87,6 +87,12 @@ class ScaleEventsManager:
             return None
 
         interpolation_handler = InterpolationHandler(self.evaluator_instances, metrics=self.metrics)
+        query_point = self.args.get("query_point")
+        if not query_point or len(query_point) != 5:
+            raise ValueError(
+                "Invalid query point format. "
+                f"Expected 5 values, got {len(query_point) if query_point else 'None'}."
+            )
         query_points = np.array([self.args["query_point"]])
         return interpolation_handler.interpolate(query_points)
 
