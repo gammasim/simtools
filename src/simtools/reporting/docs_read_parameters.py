@@ -15,6 +15,7 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 
 logger = logging.getLogger()
+IMAGE_PATH = "../../_images"
 
 
 class ReadParameters:
@@ -31,7 +32,7 @@ class ReadParameters:
         self.output_path = output_path
         self.observatory = args.get("observatory")
 
-    def _convert_to_md(self, input_file):
+    def _convert_to_md(self, parameter, input_file):
         """Convert a file to a Markdown file, preserving formatting."""
         input_file = Path(input_file)
         output_data_path = Path(self.output_path / "_data_files")
@@ -49,11 +50,16 @@ class ReadParameters:
                 with input_file.open("r", encoding="latin-1") as infile:
                     file_contents = infile.read()
 
-            with output_file.open("w", encoding="utf-8") as outfile:
-                outfile.write(f"# {input_file.stem}\n")
-                outfile.write("```\n")
-                outfile.write(file_contents)
-                outfile.write("\n```")
+            if self.model_version is not None:
+                with output_file.open("w", encoding="utf-8") as outfile:
+                    outfile.write(f"# {input_file.stem}\n")
+                    outfile.write(
+                        f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_"
+                        f"{parameter}_{self.model_version.split('.')[0]}.png)\n"
+                    )
+                    outfile.write("```\n")
+                    outfile.write(file_contents)
+                    outfile.write("\n```")
 
         except FileNotFoundError as exc:
             logger.exception(f"Data file not found: {input_file}.")
@@ -61,11 +67,11 @@ class ReadParameters:
 
         return f"_data_files/{output_file_name}"
 
-    def _format_parameter_value(self, value_data, unit, file_flag):
+    def _format_parameter_value(self, parameter, value_data, unit, file_flag):
         """Format parameter value based on type."""
         if file_flag:
             input_file_name = f"{self.output_path}/model/{value_data}"
-            output_file_name = self._convert_to_md(input_file_name)
+            output_file_name = self._convert_to_md(parameter, input_file_name)
             return f"[{Path(value_data).name}]({output_file_name})".strip()
         if isinstance(value_data, (str | int | float)):
             return f"{value_data} {unit}".strip()
@@ -152,7 +158,7 @@ class ReadParameters:
                     continue
 
                 file_flag = parameter_data.get("file", False)
-                value = self._format_parameter_value(value_data, unit, file_flag)
+                value = self._format_parameter_value(parameter_name, value_data, unit, file_flag)
                 parameter_version = parameter_data.get("parameter_version")
                 model_version = version
 
@@ -229,7 +235,7 @@ class ReadParameters:
                 continue
 
             file_flag = parameter_data.get("file", False)
-            value = self._format_parameter_value(value_data, unit, file_flag)
+            value = self._format_parameter_value(parameter, value_data, unit, file_flag)
 
             description = parameter_descriptions[0].get(parameter)
             short_description = parameter_descriptions[1].get(parameter, description)
@@ -375,11 +381,13 @@ class ReadParameters:
 
                 file.write("\n")
                 if comparison_data.get(parameter)[0]["file_flag"]:
-                    file.write(f"![Parameter plot.](_images/{self.array_element}_{parameter}.png)")
+                    file.write(
+                        f"![Parameter plot.]({IMAGE_PATH}/{self.array_element}_{parameter}.png)"
+                    )
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""
-        file.write("\n## Array Layouts {#array-layouts-details}\n\n")
+        file.write("\n## Array Layouts\n\n")
         for layout in layouts:
             layout_name = layout["name"]
             elements = layout["elements"]
@@ -388,10 +396,15 @@ class ReadParameters:
             for element in sorted(elements):
                 file.write(f"| [{element}]({element}.md) |\n")
             file.write("\n")
+            image_path = (
+                f"{IMAGE_PATH}/OBS-{self.site}_{layout_name}_{self.model_version.split('.')[0]}.png"
+            )
+            file.write(f"![{layout_name} Layout]({image_path})\n\n")
+            file.write("\n")
 
     def _write_array_triggers_section(self, file, trigger_configs):
         """Write the array triggers section of the report."""
-        file.write("\n## Array Trigger Configurations {#array-triggers-details}\n\n")
+        file.write("\n## Array Trigger Configurations\n\n")
         file.write(
             "| Trigger Name | Multiplicity | Width | Hard Stereo | Min Separation |\n"
             "|--------------|--------------|--------|-------------|----------------|\n"
@@ -411,24 +424,32 @@ class ReadParameters:
 
     def _write_parameters_table(self, file, all_parameter_data):
         """Write the main parameters table of the report."""
-        file.write("| Parameter | Value |\n|-----------|--------|\n")
+        file.write(
+            "| Parameter | Value | Parameter Version |\n"
+            "|-----------|--------|-------------------|\n"
+        )
         for param_name, param_data in sorted(all_parameter_data.items()):
             value = param_data.get("value")
             unit = param_data.get("unit") or " "
             file_flag = param_data.get("file", False)
+            parameter_version = param_data.get("parameter_version")
 
             if value is None:
                 continue
 
             if param_name == "array_layouts":
-                file.write("| array_layouts | [View Array Layouts](#array-layouts-details) |\n")
+                file.write(
+                    "| array_layouts | [View Array Layouts](#array-layouts)"
+                    f" | {parameter_version} |\n"
+                )
             elif param_name == "array_triggers":
                 file.write(
-                    "| array_triggers | [View Trigger Configurations](#array-triggers-details) |\n"
+                    "| array_triggers | [View Trigger Configurations]"
+                    f"(#array-trigger-configurations) | {parameter_version} |\n"
                 )
             else:
-                formatted_value = self._format_parameter_value(value, unit, file_flag)
-                file.write(f"| {param_name} | {formatted_value} |\n")
+                formatted_value = self._format_parameter_value(param_name, value, unit, file_flag)
+                file.write(f"| {param_name} | {formatted_value} | {parameter_version} |\n")
         file.write("\n")
 
     def produce_observatory_report(self):
