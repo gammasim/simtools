@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -102,3 +102,36 @@ def test_no_query_point(mock_get_output_directory, args_dict, tmp_path):
         ValueError, match="Invalid query point format. Expected 5 values, got None."
     ):
         manager.perform_interpolation()
+
+
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_write_output(mock_get_output_directory, args_dict, tmp_path):
+    """Test the write_output method."""
+    mock_get_output_directory.return_value = str(tmp_path)
+    manager = ScaleEventsManager(args_dict)
+
+    mock_output_data = {"key": "value"}
+    manager.output_data = mock_output_data
+
+    manager.write_output = MagicMock()
+
+    manager.write_output()
+
+    manager.write_output.assert_called_once()
+
+
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_run(mock_get_output_directory, args_dict, tmp_path):
+    """Test the run method."""
+    mock_get_output_directory.return_value = str(tmp_path)
+    manager = ScaleEventsManager(args_dict)
+
+    manager.initialize_evaluators = MagicMock()
+    manager.perform_interpolation = MagicMock()
+    manager.write_output = MagicMock()
+
+    manager.run()
+
+    manager.initialize_evaluators.assert_called_once()
+    manager.perform_interpolation.assert_called_once()
+    manager.write_output.assert_called_once()
