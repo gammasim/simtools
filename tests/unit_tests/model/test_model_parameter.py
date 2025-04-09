@@ -366,12 +366,16 @@ def test_model_version_setter(mocker):
 
     assert model_param.model_version == "5.0.0"
 
-    # Test setting a valid single-element list model version
-    model_param.model_version = ["6.0.0"]
-    assert model_param.model_version == "6.0.0"
+    # Test setting a invalid single-element list model version
+    # It is invalid because a list with one element will always be converted to a string
+    # in the configurator
+    with pytest.raises(
+        ValueError, match="Only one model version can be passed to ModelParameter, not a list."
+    ):
+        model_param.model_version = ["6.0.0"]
 
     # Test setting an invalid multi-element list model version
     with pytest.raises(
-        ValueError, match="Only one model version can be passed to the ModelParameter."
+        ValueError, match="Only one model version can be passed to ModelParameter, not a list."
     ):
         model_param.model_version = ["7.0.0", "8.0.0"]
