@@ -50,7 +50,7 @@ class ProductionStatisticsDerivator:
         -------
         u.Quantity
             If 'return_sum' is True, returns the total
-              derived production statistics as a u.Quantity.
+            derived production statistics as a u.Quantity.
             If 'return_sum' is False, returns an array of production statistics along the energy
             axis as a u.Quantity.
         """
