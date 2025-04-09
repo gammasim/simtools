@@ -53,6 +53,7 @@ simtools-production-generate-grid <applications/simtools-production-generate-gri
 simtools-production-generate-simulation-config <applications/simtools-production-generate-simulation-config>
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
 simtools-print-version <applications/simtools-print-version>
+simtools-run-application <applications/simtools-run-application>
 simtools-simulate-light-emission <applications/simtools-simulate-light-emission>
 simtools-simulate-prod <applications/simtools-simulate-prod>
 simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
