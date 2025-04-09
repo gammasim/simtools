@@ -63,7 +63,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.light_emission_config = light_emission_config
         self.distance = None
         self.light_source_type = light_source_type
-        self._telescope_model.write_sim_telarray_config_file(add_model=site_model)
+        self._telescope_model.write_sim_telarray_config_file(additional_model=site_model)
         self.test = test
 
     @staticmethod

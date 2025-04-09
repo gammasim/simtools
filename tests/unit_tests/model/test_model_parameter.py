@@ -243,7 +243,8 @@ def test_updating_export_model_files(db_config, io_handler, model_version):
     # Exporting config file
     tel.write_sim_telarray_config_file()
     logger.debug(
-        "tel._is_exported_model_files should be True because write_sim_telarray_config_file was called."
+        "tel._is_exported_model_files should be True because "
+        "write_sim_telarray_config_file was called."
     )
     assert tel._is_exported_model_files_up_to_date
 
@@ -352,7 +353,7 @@ def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
     add_model = copy.deepcopy(telescope_model_lst)
     add_model._parameters = {"test_param": "test_value"}
 
-    telescope_copy.write_sim_telarray_config_file(add_model=add_model)
+    telescope_copy.write_sim_telarray_config_file(additional_model=add_model)
     assert mock_export.call_count == 2  # Called for both models
     mock_load_writer.assert_called_once()
     assert telescope_copy.parameters.get("test_param") == "test_value"
