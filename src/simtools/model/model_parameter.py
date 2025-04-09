@@ -471,21 +471,23 @@ class ModelParameter:
         )
         self._is_exported_model_files_up_to_date = True
 
-    def write_sim_telarray_config_file(self, add_model=None):
+    def write_sim_telarray_config_file(self, additional_model=None):
         """
         Write the sim_telarray configuration file.
 
         Parameters
         ----------
-        add_model: TelescopeModel or SiteModel
+        additional_model: TelescopeModel or SiteModel
             Model object for additional parameter to be written to the config file.
         """
+        self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
         self.export_model_files(update_if_necessary=True)
 
-        self.parameters.update(self._simulation_config_parameters.get("simtel", {}))
-        if add_model:
-            self.parameters.update(add_model.parameters)
-            add_model.export_model_files(self.config_file_directory, update_if_necessary=True)
+        if additional_model:
+            self.parameters.update(additional_model.parameters)
+            additional_model.export_model_files(
+                self.config_file_directory, update_if_necessary=True
+            )
 
         self._load_simtel_config_writer()
         self.simtel_config_writer.write_telescope_config_file(
@@ -495,10 +497,10 @@ class ModelParameter:
 
     @property
     def config_file_directory(self):
-        """Directory for configure files. Configure, if necessary."""
+        """Directory for configuration files. Configure if not yet set."""
         if self._config_file_directory is None:
             self._set_config_file_directory_and_name()
-        return self._config_file_directory or self._set_config_file_directory_and_name()
+        return self._config_file_directory
 
     @property
     def config_file_path(self):

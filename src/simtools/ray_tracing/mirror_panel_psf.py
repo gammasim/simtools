@@ -67,7 +67,7 @@ class MirrorPanelPSF:
         -------
         tel : TelescopeModel
             The telescope model.
-        site_model : any
+        site_model : SiteModel
             The site model.
         """
         tel_model, site_model = initialize_simulation_models(
