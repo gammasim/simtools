@@ -163,6 +163,12 @@ class Configurator:
             self.config["activity_id"] = str(uuid.uuid4())
         if self.config["label"] is None:
             self.config["label"] = self.label
+        if self.config.get("model_version", None):
+            if (
+                isinstance(self.config["model_version"], list)
+                and len(self.config["model_version"]) == 1
+            ):
+                self.config["model_version"] = self.config["model_version"][0]
 
         self._initialize_io_handler()
         if output:
