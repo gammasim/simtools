@@ -144,3 +144,44 @@ def test_run(mock_get_output_directory, args_dict, tmp_path):
     manager.initialize_evaluators.assert_called_once()
     manager.perform_interpolation.assert_called_once()
     manager.write_output.assert_called_once()
+
+
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+def test_perform_interpolation_not_initialized(mock_get_output_directory, args_dict, tmp_path):
+    """Test perform_interpolation when no evaluators are initialized."""
+    mock_get_output_directory.return_value = str(tmp_path)
+    manager = ScaleEventsManager(args_dict)
+
+    manager.logger = MagicMock()
+
+    manager.evaluator_instances = []
+
+    result = manager.perform_interpolation()
+
+    manager.logger.error.assert_called_once_with(
+        "No evaluators initialized. Cannot perform interpolation."
+    )
+    assert result is None
+
+
+@patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
+@patch("simtools.production_configuration.interpolation_handler.InterpolationHandler.interpolate")
+def test_perform_interpolation_with_valid_query_point(
+    mock_interpolate, mock_get_output_directory, args_dict, tmp_path
+):
+    mock_get_output_directory.return_value = str(tmp_path)
+    manager = ScaleEventsManager(args_dict)
+
+    manager.evaluator_instances = [MagicMock()]
+
+    mock_interpolate.return_value = np.array([12345])
+
+    result = manager.perform_interpolation()
+
+    expected_query_points = np.array([args_dict["query_point"]])
+
+    actual_query_points = mock_interpolate.call_args[0][0]
+
+    np.testing.assert_array_equal(actual_query_points, expected_query_points)
+
+    assert np.array_equal(result, np.array([12345]))
