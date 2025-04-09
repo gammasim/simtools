@@ -71,8 +71,6 @@ def main():  # noqa: D103
 
     else:
         model_version = args["model_version"]
-        if isinstance(model_version, list):
-            model_version = model_version[0]
         ReadParameters(
             db_config,
             args,
