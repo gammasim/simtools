@@ -84,30 +84,6 @@ class ReadParameters:
             else ", ".join(f"{v} {unit}" for v in value_data)
         ).strip()
 
-    def _wrap_markdown_link(self, text, max_width):
-        # Pattern to find Markdown links: [text](url) or [text][ref]
-        pattern = re.compile(r"\[[^\]]+\](\([^)]+\)|\[[^\]]+\])")
-
-        def replacer(match):
-            link = match.group(0)
-            if len(link) > max_width:
-                # Put long links on their own line
-                return f"\n{link}\n"
-            return link
-
-        # Protect links by putting long ones on their own lines
-        protected_text = pattern.sub(replacer, text)
-
-        # Wrap non-link text, leave links untouched
-        wrapped_lines = []
-        for line in protected_text.splitlines():
-            if pattern.match(line.strip()):
-                wrapped_lines.append(line.strip())
-            else:
-                wrapped_lines.extend(textwrap.wrap(line, max_width))
-
-        return " ".join(wrapped_lines)
-
     def _wrap_at_underscores(self, text, max_width):
         parts = text.split("_")
         lines = []
@@ -280,7 +256,9 @@ class ReadParameters:
             value = self._format_parameter_value(parameter, value_data, unit, file_flag)
 
             description = parameter_descriptions[0].get(parameter)
-            short_description = parameter_descriptions[1].get(parameter, description)
+            short_description = parameter_descriptions[1].get(parameter)
+            if short_description is None:
+                short_description = description
             inst_class = parameter_descriptions[2].get(parameter)
 
             matching_instrument = parameter_data["instrument"] == telescope_model.name
@@ -291,6 +269,7 @@ class ReadParameters:
                     value = f"***{value}***"
                 description = f"***{description}***"
                 short_description = f"***{short_description}***"
+
             data.append(
                 [
                     inst_class,
@@ -359,7 +338,7 @@ class ReadParameters:
                 )
 
                 # Write table rows
-                column_widths = [20, 20, 20, 70]
+                column_widths = [10, 10, 20, 60]
                 for (
                     _,
                     parameter_name,
@@ -372,13 +351,12 @@ class ReadParameters:
                     wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
                     wrapped_text = " ".join(wrapped_text)
                     parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
-                    if isinstance(value, str):
-                        value = value = self._wrap_markdown_link(value, column_widths[2])
+
                     file.write(
                         f"| {parameter_name:{column_widths[0]}} |"
                         f" {parameter_version:{column_widths[1]}} |"
                         f" {value:{column_widths[2]}} |"
-                        f" {wrapped_text} |\n"
+                        f" {wrapped_text:{column_widths[3]}} |\n"
                     )
                 file.write("\n\n")
 
