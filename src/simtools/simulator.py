@@ -105,7 +105,7 @@ class Simulator:
 
     def _initialize_array_models(self, mongo_db_config):
         """
-        Initialize array simulation model.
+        Initialize array simulation models.
 
         Parameters
         ----------
@@ -117,24 +117,19 @@ class Simulator:
         list
             List of ArrayModel objects.
         """
-        model_versions = self.args_dict.get("model_version", None)
-        array_models = []
+        model_version = self.args_dict.get("model_version", [])
+        versions = [model_version] if not isinstance(model_version, list) else model_version
 
-        if not isinstance(model_versions, list):
-            model_versions = [model_versions]
-
-        for model_version in model_versions:
-            array_models.append(
-                ArrayModel(
-                    label=self.label,
-                    site=self.args_dict.get("site"),
-                    layout_name=self.args_dict.get("array_layout_name"),
-                    mongo_db_config=mongo_db_config,
-                    model_version=model_version,
-                )
+        return [
+            ArrayModel(
+                label=self.label,
+                site=self.args_dict.get("site"),
+                layout_name=self.args_dict.get("array_layout_name"),
+                mongo_db_config=mongo_db_config,
+                model_version=version,
             )
-
-        return array_models
+            for version in versions
+        ]
 
     def _initialize_run_list(self):
         """
