@@ -85,6 +85,7 @@ class ReadParameters:
         ).strip()
 
     def _wrap_at_underscores(self, text, max_width):
+        """Wrap text at underscores to fit within a specified width."""
         parts = text.split("_")
         lines = []
         current = []
