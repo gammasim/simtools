@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera.camera_efficiency &#8212; simtools v0.1.dev1+g0d6ac2d Manual</title>
+    <title>camera.camera_efficiency &#8212; simtools v0.1.dev1+g3a381fc Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f19fb25a"></script>
+    <script src="../../_static/documentation_options.js?v=262a52b6"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0d6ac2d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3a381fc Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -402,8 +402,7 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.site_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SiteModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.telescope_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelescopeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_camera_efficiency</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorCameraEfficiency</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
@@ -447,8 +446,12 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="n">test</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_simulation_models</span><span class="p">(</span>
-            <span class="n">config_data</span><span class="p">,</span> <span class="n">db_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">db_config</span><span class="p">,</span>
+            <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
+            <span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;plots&quot;</span><span class="p">)</span>
 
@@ -461,34 +464,6 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation of the CameraEfficiency instance.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;CameraEfficiency(label=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_simulation_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_data</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize site and telescope models.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        config_data: dict</span>
-<span class="sd">            Dict containing the configurable parameters.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        tuple</span>
-<span class="sd">            Tuple containing the site and telescope models.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">tel_model</span> <span class="o">=</span> <span class="n">TelescopeModel</span><span class="p">(</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-            <span class="n">telescope_name</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-            <span class="n">model_version</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-            <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-            <span class="n">model_version</span><span class="o">=</span><span class="n">config_data</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_configuration_from_args_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -561,6 +536,7 @@ document.write(`
         <span class="n">simtel</span> <span class="o">=</span> <span class="n">SimulatorCameraEfficiency</span><span class="p">(</span>
             <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="p">,</span>
             <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
+            <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
             <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">],</span>
             <span class="n">file_simtel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">],</span>
             <span class="n">file_log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">],</span>
@@ -577,8 +553,7 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/camera.html#camera.camera_efficiency.CameraEfficiency.export_model_files">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Export model and config files to the output directory.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">export_config_file</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">write_sim_telarray_config_file</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skip_correction_to_nsb_spectrum&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">export_nsb_spectrum_to_telescope_altitude_correction_file</span><span class="p">(</span>
                 <span class="n">model_directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">config_file_directory</span>
@@ -866,7 +841,7 @@ document.write(`
         <span class="n">nsb_integral</span> <span class="o">=</span> <span class="mf">0.0001</span> <span class="o">*</span> <span class="p">(</span><span class="n">n1_sum</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">n1_integral_edges_sum</span><span class="p">)</span>
         <span class="n">nsb_rate_ref_conditions</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">nsb_rate_provided_spectrum</span>
-            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">)</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value</span><span class="p">(</span><span class="s2">&quot;nsb_reference_value&quot;</span><span class="p">)</span>
             <span class="o">/</span> <span class="n">nsb_integral</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">nsb_rate_provided_spectrum</span><span class="p">,</span> <span class="n">nsb_rate_ref_conditions</span></div>

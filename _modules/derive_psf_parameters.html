@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+g0d6ac2d Manual</title>
+    <title>derive_psf_parameters &#8212; simtools v0.1.dev1+g3a381fc Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=f19fb25a"></script>
+    <script src="../_static/documentation_options.js?v=262a52b6"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0d6ac2d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3a381fc Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -486,7 +486,7 @@ document.write(`
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.telescope_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelescopeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize</span>
 
@@ -717,7 +717,7 @@ document.write(`
 
 <div class="viewcode-block" id="run_pars">
 <a class="viewcode-back" href="../user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.run_pars">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.</span>
 
@@ -732,6 +732,7 @@ document.write(`
 
     <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
         <span class="n">telescope_model</span><span class="o">=</span><span class="n">tel_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="o">=</span><span class="n">site_model</span><span class="p">,</span>
         <span class="n">simtel_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">],</span>
         <span class="n">zenith_angle</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
         <span class="n">source_distance</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;src_distance&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
@@ -786,7 +787,9 @@ document.write(`
 
 <div class="viewcode-block" id="find_best_parameters">
 <a class="viewcode-back" href="../user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.find_best_parameters">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">find_best_parameters</span><span class="p">(</span><span class="n">all_parameters</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_best_parameters</span><span class="p">(</span>
+    <span class="n">all_parameters</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Find the best parameters from all parameter sets.</span>
 
@@ -798,7 +801,7 @@ document.write(`
     <span class="n">best_pars</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">for</span> <span class="n">pars</span> <span class="ow">in</span> <span class="n">all_parameters</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">rmsd</span> <span class="o">=</span> <span class="n">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">rmsd</span> <span class="o">=</span> <span class="n">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">rmsd</span> <span class="o">&lt;</span> <span class="n">min_rmsd</span><span class="p">:</span>
             <span class="n">min_rmsd</span> <span class="o">=</span> <span class="n">rmsd</span>
             <span class="n">best_pars</span> <span class="o">=</span> <span class="n">pars</span>
@@ -817,12 +820,12 @@ document.write(`
     <span class="c1"># Output directory to save files related directly to this app</span>
     <span class="n">_io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
     <span class="n">output_dir</span> <span class="o">=</span> <span class="n">_io_handler</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">sub_dir</span><span class="o">=</span><span class="s2">&quot;application-plots&quot;</span><span class="p">)</span>
-    <span class="n">tel_model</span> <span class="o">=</span> <span class="n">TelescopeModel</span><span class="p">(</span>
+    <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+        <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
         <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
         <span class="n">telescope_name</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
-        <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
         <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">all_parameters</span> <span class="o">=</span> <span class="p">[]</span>
@@ -841,11 +844,11 @@ document.write(`
     <span class="n">pdf_pages</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">plot_file</span><span class="p">)</span>
 
     <span class="n">best_pars</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">find_best_parameters</span><span class="p">(</span>
-        <span class="n">all_parameters</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span>
+        <span class="n">all_parameters</span><span class="p">,</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span>
     <span class="p">)</span>
 
     <span class="c1"># Rerunning and plotting the best pars</span>
-    <span class="n">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">)</span>
+    <span class="n">run_pars</span><span class="p">(</span><span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">best_pars</span><span class="p">,</span> <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">pdf_pages</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="n">pdf_pages</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 

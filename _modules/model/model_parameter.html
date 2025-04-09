@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.model_parameter &#8212; simtools v0.1.dev1+g0d6ac2d Manual</title>
+    <title>model.model_parameter &#8212; simtools v0.1.dev1+g3a381fc Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f19fb25a"></script>
+    <script src="../../_static/documentation_options.js?v=262a52b6"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0d6ac2d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3a381fc Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -422,7 +422,8 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for simulation model parameters.</span>
 
-<span class="sd">    Provides methods to read and manipulate parameters from DB.</span>
+<span class="sd">    Provides methods to read and manipulate parameters from DB and to write</span>
+<span class="sd">    sim_telarray configuration files.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -753,20 +754,11 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
-                    <span class="kc">None</span><span class="p">,</span>
-                    <span class="s2">&quot;sites&quot;</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_simulation_software_parameter</span><span class="p">()</span>
 
     <span class="nd">@property</span>
@@ -876,44 +868,73 @@ document.write(`
 <span class="sd">        file_path: str</span>
 <span class="sd">            Path of the file to be added to the config file directory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="ow">or</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">par_name</span><span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ModelParameter.export_model_files">
 <a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.export_model_files">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the model files into the config file directory.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_model_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">destination_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update_if_necessary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export the model files into the config file directory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        destination_path: str</span>
+<span class="sd">            Path to the directory where the model files should be exported.</span>
+<span class="sd">            If None, the config file directory is used.</span>
+<span class="sd">        update_if_necessary: bool</span>
+<span class="sd">            If True, the model files are only exported if they are not up to date.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="ow">and</span> <span class="n">update_if_necessary</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Model files for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> are already exported to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
         <span class="c1"># Removing parameter files added manually (which are not in DB)</span>
         <span class="n">pars_from_db</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_added_parameter_files</span><span class="p">:</span>
                 <span class="n">pars_from_db</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">par</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="n">pars_from_db</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="n">pars_from_db</span><span class="p">,</span>
+            <span class="n">dest</span><span class="o">=</span><span class="n">destination_path</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="ModelParameter.export_config_file">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.export_config_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">export_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the config file used by sim_telarray.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_exported_model_files_up_to_date</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">()</span>
+<div class="viewcode-block" id="ModelParameter.write_sim_telarray_config_file">
+<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.write_sim_telarray_config_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_sim_telarray_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">additional_model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the sim_telarray configuration file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        additional_model: TelescopeModel or SiteModel</span>
+<span class="sd">            Model object for additional parameter to be written to the config file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span><span class="n">update_if_necessary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">additional_model</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">additional_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="n">additional_model</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config_file_directory</span><span class="p">,</span> <span class="n">update_if_necessary</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_simtel_config_writer</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_config_writer</span><span class="o">.</span><span class="n">write_telescope_config_file</span><span class="p">(</span>
             <span class="n">config_file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">,</span>
             <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
-            <span class="n">config_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="p">[</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">],</span>
         <span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">config_file_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Directory for configure files. Configure, if necessary.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Directory for configuration files. Configure if not yet set.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_directory</span>
@@ -924,29 +945,6 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_config_file_directory_and_name</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_path</span>
-
-<div class="viewcode-block" id="ModelParameter.get_config_file">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.model_parameter.ModelParameter.get_config_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">no_export</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the path of the config file for sim_telarray.</span>
-
-<span class="sd">        The config file is produced if the file is not up to date.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        no_export: bool</span>
-<span class="sd">            Turn it on if you do not want the file to be exported.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Path</span>
-<span class="sd">            Path of the exported config file for sim_telarray.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_config_file_up_to_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">no_export</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">export_config_file</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span></div>
-
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_simtel_config_writer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the SimtelConfigWriter object.&quot;&quot;&quot;</span>
@@ -974,7 +972,6 @@ document.write(`
 <span class="sd">        model_directory: Path</span>
 <span class="sd">            Model directory to export the file to.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;AAAAA&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_config_parameters</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">(</span>
             <span class="n">parameters</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">&quot;nsb_spectrum_at_2200m&quot;</span><span class="p">:</span> <span class="p">{</span>

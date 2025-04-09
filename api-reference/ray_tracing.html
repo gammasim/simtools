@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Ray Tracing &#8212; simtools v0.1.dev1+g0d6ac2d Manual</title>
+    <title>Ray Tracing &#8212; simtools v0.1.dev1+g3a381fc Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=f19fb25a"></script>
+    <script src="../_static/documentation_options.js?v=262a52b6"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0d6ac2d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3a381fc Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -528,12 +528,14 @@ document.write(`
 <p>Ray tracing simulations and analysis.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ray_tracing.ray_tracing.RayTracing">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.ray_tracing.</span></span><span class="sig-name descname"><span class="pre">RayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle=&lt;Quantity</span> <span class="pre">20.</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis_angle=&lt;Quantity</span> <span class="pre">[0.]</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_distance=&lt;Quantity</span> <span class="pre">10.</span> <span class="pre">km&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_random_focal_length=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_numbers='all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ray_tracing.ray_tracing.</span></span><span class="sig-name descname"><span class="pre">RayTracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle=&lt;Quantity</span> <span class="pre">20.</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis_angle=&lt;Quantity</span> <span class="pre">[0.]</span> <span class="pre">deg&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_distance=&lt;Quantity</span> <span class="pre">10.</span> <span class="pre">km&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mirror_mode=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_random_focal_length=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror_numbers='all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ray_tracing/ray_tracing.html#RayTracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ray_tracing.ray_tracing.RayTracing" title="Link to this definition">#</a></dt>
 <dd><p>Ray tracing simulations and analysis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>telescope_model: TelescopeModel</strong></dt><dd><p>telescope model</p>
+</dd>
+<dt><strong>site_model: SiteModel</strong></dt><dd><p>site model</p>
 </dd>
 <dt><strong>simtel_path: str (or Path)</strong></dt><dd><p>Location of sim_telarray installation.</p>
 </dd>

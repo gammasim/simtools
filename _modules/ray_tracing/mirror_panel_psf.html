@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ray_tracing.mirror_panel_psf &#8212; simtools v0.1.dev1+g0d6ac2d Manual</title>
+    <title>ray_tracing.mirror_panel_psf &#8212; simtools v0.1.dev1+g3a381fc Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f19fb25a"></script>
+    <script src="../../_static/documentation_options.js?v=262a52b6"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0d6ac2d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3a381fc Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -402,7 +402,7 @@ document.write(`
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">writer</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.telescope_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelescopeModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_simulation_models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.ray_tracing.ray_tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">RayTracing</span>
 
 
@@ -433,7 +433,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initializing MirrorPanelPSF&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_telescope_model</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">db_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_define_telescope_model</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">db_config</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;number_of_mirrors_to_test&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
@@ -458,37 +458,32 @@ document.write(`
 <span class="sd">        This includes updating the configuration with mirror list and/or random focal length given</span>
 <span class="sd">        as input.</span>
 
-<span class="sd">        Attributes</span>
-<span class="sd">        ----------</span>
-<span class="sd">        label: str</span>
-<span class="sd">            Application label.</span>
-<span class="sd">        db_config:</span>
-<span class="sd">            Dictionary with database configuration.</span>
-
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        tel TelescopeModel</span>
-<span class="sd">            telescope model</span>
-
+<span class="sd">        tel : TelescopeModel</span>
+<span class="sd">            The telescope model.</span>
+<span class="sd">        site_model : SiteModel</span>
+<span class="sd">            The site model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">tel</span> <span class="o">=</span> <span class="n">TelescopeModel</span><span class="p">(</span>
+        <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span> <span class="o">=</span> <span class="n">initialize_simulation_models</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+            <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
             <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
             <span class="n">telescope_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope&quot;</span><span class="p">],</span>
             <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mirror_list_file</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">find_file</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_path&quot;</span><span class="p">]</span>
             <span class="p">)</span>
-            <span class="n">tel</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">])</span>
-            <span class="n">tel</span><span class="o">.</span><span class="n">export_parameter_file</span><span class="p">(</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">,</span> <span class="n">mirror_list_file</span><span class="p">)</span>
+            <span class="n">tel_model</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">])</span>
+            <span class="n">tel_model</span><span class="o">.</span><span class="n">export_parameter_file</span><span class="p">(</span><span class="s2">&quot;mirror_list&quot;</span><span class="p">,</span> <span class="n">mirror_list_file</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;random_focal_length&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">tel</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span><span class="s2">&quot;random_focal_length&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;random_focal_length&quot;</span><span class="p">]))</span>
-        <span class="n">tel</span><span class="o">.</span><span class="n">export_model_files</span><span class="p">()</span>
+            <span class="n">tel_model</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span>
+                <span class="s2">&quot;random_focal_length&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;random_focal_length&quot;</span><span class="p">])</span>
+            <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">tel</span>
+        <span class="k">return</span> <span class="n">tel_model</span><span class="p">,</span> <span class="n">site_model</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_psf_containment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read measured single-mirror point-spread function from file and return mean and sigma.&quot;&quot;&quot;</span>
@@ -629,6 +624,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">change_parameter</span><span class="p">(</span><span class="s2">&quot;mirror_reflection_random_angle&quot;</span><span class="p">,</span> <span class="n">rnda</span><span class="p">)</span>
         <span class="n">ray</span> <span class="o">=</span> <span class="n">RayTracing</span><span class="p">(</span>
             <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
+            <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
             <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simtel_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
             <span class="n">single_mirror_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">mirror_numbers</span><span class="o">=</span><span class="p">(</span>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ray_tracing.ray_tracing &#8212; simtools v0.1.dev1+g0d6ac2d Manual</title>
+    <title>ray_tracing.ray_tracing &#8212; simtools v0.1.dev1+g3a381fc Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f19fb25a"></script>
+    <script src="../../_static/documentation_options.js?v=262a52b6"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0d6ac2d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3a381fc Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -428,6 +428,8 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    telescope_model: TelescopeModel</span>
 <span class="sd">        telescope model</span>
+<span class="sd">    site_model: SiteModel</span>
+<span class="sd">        site model</span>
 <span class="sd">    simtel_path: str (or Path)</span>
 <span class="sd">        Location of sim_telarray installation.</span>
 <span class="sd">    label: str</span>
@@ -456,6 +458,7 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">telescope_model</span><span class="p">,</span>
+        <span class="n">site_model</span><span class="p">,</span>
         <span class="n">simtel_path</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">zenith_angle</span><span class="o">=</span><span class="mf">20.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
@@ -472,7 +475,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">simtel_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span> <span class="o">=</span> <span class="n">telescope_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_model</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">label</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">label</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">zenith_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
@@ -608,6 +611,7 @@ document.write(`
                 <span class="n">simtel</span> <span class="o">=</span> <span class="n">SimulatorRayTracing</span><span class="p">(</span>
                     <span class="n">simtel_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">simtel_path</span><span class="p">,</span>
                     <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
+                    <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
                     <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
                     <span class="n">config_data</span><span class="o">=</span><span class="p">{</span>
                         <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>

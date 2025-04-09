@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+g0d6ac2d Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g3a381fc Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=f19fb25a"></script>
+    <script src="../_static/documentation_options.js?v=262a52b6"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0d6ac2d Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g3a381fc Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -471,12 +471,12 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#array-model">array_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel"><code class="docutils literal notranslate"><span class="pre">ArrayModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.config_file_path"><code class="docutils literal notranslate"><span class="pre">ArrayModel.config_file_path</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_all_simtel_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_all_simtel_config_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_array_elements_as_table"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_array_elements_as_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_sim_telarray_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_simtel_telescope_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_simtel_telescope_config_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_directory"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_directory()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayModel.number_of_telescopes</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayModel.print_telescope_list()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.site"><code class="docutils literal notranslate"><span class="pre">ArrayModel.site</span></code></a></li>
@@ -525,12 +525,10 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.change_parameter"><code class="docutils literal notranslate"><span class="pre">ModelParameter.change_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.config_file_directory"><code class="docutils literal notranslate"><span class="pre">ModelParameter.config_file_directory</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.config_file_path"><code class="docutils literal notranslate"><span class="pre">ModelParameter.config_file_path</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_model_files"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_model_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_parameter_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_parameter_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.extra_label"><code class="docutils literal notranslate"><span class="pre">ModelParameter.extra_label</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_file_flag"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_file_flag()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_type"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_type()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_value"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_value()</span></code></a></li>
@@ -539,6 +537,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_simulation_software_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_simulation_software_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.parameters</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.print_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.print_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.write_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.write_sim_telarray_config_file()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -622,6 +621,20 @@ the array element positions).</p>
 </dl>
 </dd>
 </dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.config_file_path">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">config_file_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/pathlib.html#pathlib.Path" title="(in Python v3.11)"><span class="pre">Path</span></a></em><a class="headerlink" href="#model.array_model.ArrayModel.config_file_path" title="Link to this definition">#</a></dt>
+<dd><p>Return the path of the array config file for sim_telarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Path</dt><dd><p>Path of the exported config file for sim_telarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="model.array_model.ArrayModel.export_all_simtel_config_files">
 <span class="sig-name descname"><span class="pre">export_all_simtel_config_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/array_model.html#ArrayModel.export_all_simtel_config_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.export_all_simtel_config_files" title="Link to this definition">#</a></dt>
@@ -669,21 +682,6 @@ the array element positions).</p>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt>Path</dt><dd><p>Path of the config directory path for sim_telarray.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model.array_model.ArrayModel.get_config_file">
-<span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/pathlib.html#pathlib.Path" title="(in Python v3.11)"><span class="pre">Path</span></a></span></span><a class="reference internal" href="../_modules/model/array_model.html#ArrayModel.get_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.array_model.ArrayModel.get_config_file" title="Link to this definition">#</a></dt>
-<dd><p>Return the path of the array config file for sim_telarray.</p>
-<p>A new config file is produced if the file is not updated.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>Path</dt><dd><p>Path of the exported config file for sim_telarray.</p>
 </dd>
 </dl>
 </dd>
@@ -1079,7 +1077,8 @@ X, Y positions, mirror_diameter, focal length and shape_type.</p>
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model.model_parameter.</span></span><span class="sig-name descname"><span class="pre">ModelParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mongo_db_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_element_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'telescopes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter" title="Link to this definition">#</a></dt>
 <dd><p>Base class for simulation model parameters.</p>
-<p>Provides methods to read and manipulate parameters from DB.</p>
+<p>Provides methods to read and manipulate parameters from DB and to write
+sim_telarray configuration files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1158,7 +1157,7 @@ This feature is intended for developers and lacks validation.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.config_file_directory">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">config_file_directory</span></span><a class="headerlink" href="#model.model_parameter.ModelParameter.config_file_directory" title="Link to this definition">#</a></dt>
-<dd><p>Directory for configure files. Configure, if necessary.</p>
+<dd><p>Directory for configuration files. Configure if not yet set.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1168,15 +1167,20 @@ This feature is intended for developers and lacks validation.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.export_config_file">
-<span class="sig-name descname"><span class="pre">export_config_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.export_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.export_config_file" title="Link to this definition">#</a></dt>
-<dd><p>Export the config file used by sim_telarray.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.export_model_files">
-<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.export_model_files" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">export_model_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_if_necessary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.export_model_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.export_model_files" title="Link to this definition">#</a></dt>
 <dd><p>Export the model files into the config file directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>destination_path: str</strong></dt><dd><p>Path to the directory where the model files should be exported.
+If None, the config file directory is used.</p>
+</dd>
+<dt><strong>update_if_necessary: bool</strong></dt><dd><p>If True, the model files are only exported if they are not up to date.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1217,27 +1221,6 @@ directory. This method allows to export it explicitly.</p>
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.extra_label">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extra_label</span></span><a class="headerlink" href="#model.model_parameter.ModelParameter.extra_label" title="Link to this definition">#</a></dt>
 <dd><p>Return the extra label if defined, if not return ‘’.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.get_config_file">
-<span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">no_export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.get_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.get_config_file" title="Link to this definition">#</a></dt>
-<dd><p>Get the path of the config file for sim_telarray.</p>
-<p>The config file is produced if the file is not up to date.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>no_export: bool</strong></dt><dd><p>Turn it on if you do not want the file to be exported.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>Path</dt><dd><p>Path of the exported config file for sim_telarray.</p>
-</dd>
-</dl>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1390,12 +1373,26 @@ of the database structure is needed when accessing the model parameters.</p>
 <dd><p>Print parameters and their values for debugging purposes.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.write_sim_telarray_config_file">
+<span class="sig-name descname"><span class="pre">write_sim_telarray_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">additional_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/model/model_parameter.html#ModelParameter.write_sim_telarray_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_parameter.ModelParameter.write_sim_telarray_config_file" title="Link to this definition">#</a></dt>
+<dd><p>Write the sim_telarray configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>additional_model: TelescopeModel or SiteModel</strong></dt><dd><p>Model object for additional parameter to be written to the config file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
 <section id="model-utilities">
 <h2>model utilities<a class="headerlink" href="#model-utilities" title="Link to this heading">#</a></h2>
-<p id="module-model.model_utils"><span id="model-utils"></span>Helper functions calculations related to model parameters.</p>
+<p id="module-model.model_utils"><span id="model-utils"></span>Helper functions related to model parameters.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="model.model_utils.compute_telescope_transmission">
 <span class="sig-prename descclassname"><span class="pre">model.model_utils.</span></span><span class="sig-name descname"><span class="pre">compute_telescope_transmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">off_axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/model/model_utils.html#compute_telescope_transmission"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#model.model_utils.compute_telescope_transmission" title="Link to this definition">#</a></dt>
@@ -1841,12 +1838,12 @@ reflectivity, etc.)</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#array-model">array_model</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel"><code class="docutils literal notranslate"><span class="pre">ArrayModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.config_file_path"><code class="docutils literal notranslate"><span class="pre">ArrayModel.config_file_path</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_all_simtel_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_all_simtel_config_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_array_elements_as_table"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_array_elements_as_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_sim_telarray_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_simtel_telescope_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_simtel_telescope_config_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_directory"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_directory()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayModel.number_of_telescopes</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayModel.print_telescope_list()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.site"><code class="docutils literal notranslate"><span class="pre">ArrayModel.site</span></code></a></li>
@@ -1895,12 +1892,10 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.change_parameter"><code class="docutils literal notranslate"><span class="pre">ModelParameter.change_parameter()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.config_file_directory"><code class="docutils literal notranslate"><span class="pre">ModelParameter.config_file_directory</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.config_file_path"><code class="docutils literal notranslate"><span class="pre">ModelParameter.config_file_path</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_model_files"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_model_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_nsb_spectrum_to_telescope_altitude_correction_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.export_parameter_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.export_parameter_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.extra_label"><code class="docutils literal notranslate"><span class="pre">ModelParameter.extra_label</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_file_flag"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_file_flag()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_type"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_type()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_value"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_value()</span></code></a></li>
@@ -1909,6 +1904,7 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_simulation_software_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_simulation_software_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.parameters</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.print_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.print_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.write_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.write_sim_telarray_config_file()</span></code></a></li>
 </ul>
 </li>
 </ul>
