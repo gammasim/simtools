@@ -3,6 +3,7 @@
 r"""Class to read and manage relevant model parameters for a given telescope model."""
 
 import logging
+import re
 import textwrap
 from collections import defaultdict
 from itertools import groupby
@@ -219,8 +220,6 @@ class ReadParameters:
 
         for parameter in filter(all_parameter_data.__contains__, names.model_parameters().keys()):
             parameter_data = all_parameter_data.get(parameter)
-            if parameter_data["instrument"] != telescope_model.name:
-                continue
             parameter_version = telescope_model.get_parameter_version(parameter)
             unit = parameter_data.get("unit") or " "
             value_data = parameter_data.get("value")
@@ -234,6 +233,15 @@ class ReadParameters:
             description = parameter_descriptions[0].get(parameter)
             short_description = parameter_descriptions[1].get(parameter, description)
             inst_class = parameter_descriptions[2].get(parameter)
+
+            matching_instrument = parameter_data["instrument"] == telescope_model.name
+            if not names.is_design_type(telescope_model.name) and matching_instrument:
+                parameter = f"***{parameter}***"
+                parameter_version = f"***{parameter_version}***"
+                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                    value = f"***{value}***"
+                description = f"***{description}***"
+                short_description = f"***{short_description}***"
             data.append(
                 [
                     inst_class,
@@ -258,6 +266,49 @@ class ReadParameters:
             self.produce_observatory_report()
             return
 
+        def wrap_markdown_link(text, max_width):
+            # Pattern to find Markdown links: [text](url) or [text][ref]
+            pattern = re.compile(r"\[[^\]]+\](\([^)]+\)|\[[^\]]+\])")
+
+            def replacer(match):
+                link = match.group(0)
+                if len(link) > max_width:
+                    # Put long links on their own line
+                    return f"\n{link}\n"
+                return link
+
+            # Protect links by putting long ones on their own lines
+            protected_text = pattern.sub(replacer, text)
+
+            # Wrap non-link text, leave links untouched
+            wrapped_lines = []
+            for line in protected_text.splitlines():
+                if pattern.match(line.strip()):
+                    wrapped_lines.append(line.strip())
+                else:
+                    wrapped_lines.extend(textwrap.wrap(line, max_width))
+
+            return " ".join(wrapped_lines)
+
+        def wrap_at_underscores(text, max_width):
+            parts = text.split("_")
+            lines = []
+            current = []
+
+            for part in parts:
+                # Predict the new length if we add this part
+                next_line = "_".join([*current, part])
+                if len(next_line) <= max_width:
+                    current.append(part)
+                else:
+                    lines.append("_".join(current))
+                    current = [part]
+
+            if current:
+                lines.append("_".join(current))
+
+            return " ".join(lines)
+
         telescope_model = TelescopeModel(
             site=self.site,
             telescope_name=self.array_element,
@@ -281,7 +332,11 @@ class ReadParameters:
                 file.write(
                     "The design model can be found here: "
                     f"[{telescope_model.design_model}]"
-                    f"({telescope_model.design_model}.md).\n"
+                    f"({telescope_model.design_model}.md).\n\n"
+                )
+                file.write(
+                    "Parameters shown in ***bold and italics*** are specific to each telescope.\n"
+                    "Parameters without emphasis are inherited from the design model.\n"
                 )
                 file.write("\n\n")
 
@@ -310,6 +365,9 @@ class ReadParameters:
                     text = short_description if short_description else description
                     wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
                     wrapped_text = " ".join(wrapped_text)
+                    parameter_name = wrap_at_underscores(parameter_name, column_widths[0])
+                    if isinstance(value, str):
+                        value = value = wrap_markdown_link(value, column_widths[2])
                     file.write(
                         f"| {parameter_name:{column_widths[0]}} |"
                         f" {parameter_version:{column_widths[1]}} |"
