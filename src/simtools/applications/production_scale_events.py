@@ -106,7 +106,7 @@ def _parse(label, description):
         default=("prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"),
         help=(
             "Template for the file name. (default: "
-            "'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits')"
+            "'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'"
         ),
     )
     return config.initialize(db_config=False)
