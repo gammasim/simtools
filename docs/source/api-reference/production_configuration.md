@@ -50,3 +50,12 @@ the calculation of the number of events to be simulated given a pre-determined m
 .. automodule:: production_configuration.derive_corsika_limits
    :members:
 ```
+
+(generate-production-grid)=
+
+## generate_production_grid
+
+```{eval-rst}
+.. automodule:: production_configuration.generate_production_grid
+   :members:
+```
