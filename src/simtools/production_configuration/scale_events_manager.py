@@ -98,10 +98,6 @@ class ScaleEventsManager:
 
     def write_output(self, scaled_events):
         """Write the interpolation results to a file."""
-        if scaled_events is None:
-            self.logger.error("No scaled events to write. Exiting.")
-            return
-
         output_data = {
             "query_point": self.args["query_point"],
             "scaled_events": scaled_events.tolist(),

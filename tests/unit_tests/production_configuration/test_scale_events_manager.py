@@ -1,6 +1,8 @@
+import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
+import numpy as np
 import pytest
 
 from simtools.production_configuration.scale_events_manager import ScaleEventsManager
@@ -105,19 +107,26 @@ def test_no_query_point(mock_get_output_directory, args_dict, tmp_path):
 
 
 @patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
-def test_write_output(mock_get_output_directory, args_dict, tmp_path):
+@patch("builtins.open", new_callable=mock_open)
+def test_write_output(mock_open, mock_get_output_directory, args_dict, tmp_path):
     """Test the write_output method."""
     mock_get_output_directory.return_value = str(tmp_path)
     manager = ScaleEventsManager(args_dict)
 
-    mock_output_data = {"key": "value"}
-    manager.output_data = mock_output_data
+    scaled_events = np.array([10000])
 
-    manager.write_output = MagicMock()
+    manager.write_output(scaled_events=scaled_events)
 
-    manager.write_output()
+    mock_open.assert_any_call(Path(tmp_path) / args_dict["output_file"], "w", encoding="utf-8")
 
-    manager.write_output.assert_called_once()
+    handle = mock_open()
+    written_data = "".join(call.args[0] for call in handle.write.call_args_list)
+
+    expected_data = {
+        "query_point": [1.0, 180.0, 20.0, 4.0, 0.5],
+        "scaled_events": [10000],
+    }
+    assert json.loads(written_data) == expected_data
 
 
 @patch("simtools.io_operations.io_handler.IOHandler.get_output_directory")
