@@ -23,7 +23,7 @@ query_point (list of float, required)
         - NSB (MHz)
         - Offset (degrees)
 output_file (str, optional)
-    Output file to store the results. Default: 'interpolated_scaled_events.json'.
+    Output file to store the results. Default: 'interpolated_production_statistics.json'.
 metrics_file (str, optional)
     Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
 file_name_template (str, optional)
@@ -41,14 +41,16 @@ To evaluate statistical uncertainties and perform interpolation, run the command
         --metrics_file "path/to/metrics.yaml" \\
         --output_file "output.json"
 
-The output will display the scaled events for the specified query point and save
+The output will display the production statistics for the specified query point and save
  the results to the specified output file.
 """
 
 from pathlib import Path
 
 from simtools.configuration import configurator
-from simtools.production_configuration.scale_events_manager import ScaleEventsManager
+from simtools.production_configuration.derive_production_statistics_handler import (
+    ProductionStatisticsHandler,
+)
 
 
 def _parse(label, description):
@@ -89,8 +91,11 @@ def _parse(label, description):
         "--output_file",
         required=False,
         type=str,
-        default="interpolated_scaled_events.json",
-        help="Output file to store the results. (default: 'interpolated_scaled_events.json').",
+        default="interpolated_production_statistics.json",
+        help=(
+            "Output file to store the results. "
+            "(default: 'interpolated_production_statistics.json')."
+        ),
     )
     config.parser.add_argument(
         "--metrics_file",
@@ -113,14 +118,14 @@ def _parse(label, description):
 
 
 def main():
-    """Run the ScaleEventsManager."""
+    """Run the ProductionStatisticsHandler."""
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label,
         "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
     )
 
-    manager = ScaleEventsManager(args_dict)
+    manager = ProductionStatisticsHandler(args_dict)
     manager.run()
 
 
