@@ -54,11 +54,20 @@ class ReadParameters:
                 with output_file.open("w", encoding="utf-8") as outfile:
                     outfile.write(f"# {input_file.stem}\n")
                     outfile.write(
+                        "The full file can be found in the Simulation Model repository [here]"
+                        "(https://gitlab.cta-observatory.org/cta-science/simulations/"
+                        "simulation-model/simulation-models/-/blob/main/simulation-models/"
+                        f"model_parameters/Files/{input_file.stem}.dat).\n\n"
+                    )
+                    outfile.write(
                         f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_"
                         f"{parameter}_{self.model_version.split('.')[0]}.png)\n"
                     )
+                    outfile.write("\n\n")
+                    outfile.write("The first 30 lines of the file are:\n")
                     outfile.write("```\n")
-                    outfile.write(file_contents)
+                    first_30_lines = "\n".join(file_contents.splitlines()[:30])
+                    outfile.write(first_30_lines)
                     outfile.write("\n```")
 
         except FileNotFoundError as exc:
