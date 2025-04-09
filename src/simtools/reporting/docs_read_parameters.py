@@ -84,6 +84,49 @@ class ReadParameters:
             else ", ".join(f"{v} {unit}" for v in value_data)
         ).strip()
 
+    def _wrap_markdown_link(self, text, max_width):
+        # Pattern to find Markdown links: [text](url) or [text][ref]
+        pattern = re.compile(r"\[[^\]]+\](\([^)]+\)|\[[^\]]+\])")
+
+        def replacer(match):
+            link = match.group(0)
+            if len(link) > max_width:
+                # Put long links on their own line
+                return f"\n{link}\n"
+            return link
+
+        # Protect links by putting long ones on their own lines
+        protected_text = pattern.sub(replacer, text)
+
+        # Wrap non-link text, leave links untouched
+        wrapped_lines = []
+        for line in protected_text.splitlines():
+            if pattern.match(line.strip()):
+                wrapped_lines.append(line.strip())
+            else:
+                wrapped_lines.extend(textwrap.wrap(line, max_width))
+
+        return " ".join(wrapped_lines)
+
+    def _wrap_at_underscores(self, text, max_width):
+        parts = text.split("_")
+        lines = []
+        current = []
+
+        for part in parts:
+            # Predict the new length if we add this part
+            next_line = "_".join([*current, part])
+            if len(next_line) <= max_width:
+                current.append(part)
+            else:
+                lines.append("_".join(current))
+                current = [part]
+
+        if current:
+            lines.append("_".join(current))
+
+        return " ".join(lines)
+
     def _group_model_versions_by_parameter_version(self, grouped_data):
         """Group model versions by parameter version and track the parameter values."""
         result = {}
@@ -272,49 +315,6 @@ class ReadParameters:
             self.produce_observatory_report()
             return
 
-        def wrap_markdown_link(text, max_width):
-            # Pattern to find Markdown links: [text](url) or [text][ref]
-            pattern = re.compile(r"\[[^\]]+\](\([^)]+\)|\[[^\]]+\])")
-
-            def replacer(match):
-                link = match.group(0)
-                if len(link) > max_width:
-                    # Put long links on their own line
-                    return f"\n{link}\n"
-                return link
-
-            # Protect links by putting long ones on their own lines
-            protected_text = pattern.sub(replacer, text)
-
-            # Wrap non-link text, leave links untouched
-            wrapped_lines = []
-            for line in protected_text.splitlines():
-                if pattern.match(line.strip()):
-                    wrapped_lines.append(line.strip())
-                else:
-                    wrapped_lines.extend(textwrap.wrap(line, max_width))
-
-            return " ".join(wrapped_lines)
-
-        def wrap_at_underscores(text, max_width):
-            parts = text.split("_")
-            lines = []
-            current = []
-
-            for part in parts:
-                # Predict the new length if we add this part
-                next_line = "_".join([*current, part])
-                if len(next_line) <= max_width:
-                    current.append(part)
-                else:
-                    lines.append("_".join(current))
-                    current = [part]
-
-            if current:
-                lines.append("_".join(current))
-
-            return " ".join(lines)
-
         telescope_model = TelescopeModel(
             site=self.site,
             telescope_name=self.array_element,
@@ -371,9 +371,9 @@ class ReadParameters:
                     text = short_description if short_description else description
                     wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
                     wrapped_text = " ".join(wrapped_text)
-                    parameter_name = wrap_at_underscores(parameter_name, column_widths[0])
+                    parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
                     if isinstance(value, str):
-                        value = value = wrap_markdown_link(value, column_widths[2])
+                        value = value = self._wrap_markdown_link(value, column_widths[2])
                     file.write(
                         f"| {parameter_name:{column_widths[0]}} |"
                         f" {parameter_version:{column_widths[1]}} |"
