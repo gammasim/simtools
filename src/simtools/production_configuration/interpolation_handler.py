@@ -181,7 +181,7 @@ class InterpolationHandler:
 
         self.interpolate(self.grid_points)
 
-        plt.plot(midpoints, evaluator.production_statistics, label="Scaled")
+        plt.plot(midpoints, evaluator.production_statistics, label="Derived")
 
         reconstructed_event_histogram, _ = np.histogram(
             evaluator.data["event_energies_reco"], bins=evaluator.data["bin_edges_low"]
