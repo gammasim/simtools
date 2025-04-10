@@ -32,21 +32,26 @@ def assert_sim_telarray_metadata(file, array_model):
             f"number of telescopes in array model ({len(array_model.telescope_model)})"
         )
 
-    telescope_parameter_mismatch = []
-    for i, (_, model) in enumerate(array_model.telescope_model.items(), start=1):
-        telescope_parameter_mismatch.append(_assert_model_parameters(telescope_meta[i], model))
+    telescope_parameter_mismatch = [
+        _assert_model_parameters(telescope_meta[i], model)
+        for i, (_, model) in enumerate(array_model.telescope_model.items(), start=1)
+    ]
 
-    if len(site_parameter_mismatch) > 0 or any(len(m) > 0 for m in telescope_parameter_mismatch):
-        if len(site_parameter_mismatch) > 0:
-            raise ValueError(
-                f"Site model parameters do not match sim_telarray metadata: "
-                f"{site_parameter_mismatch}"
-            )
-        if any(len(m) > 0 for m in telescope_parameter_mismatch):
-            raise ValueError(
-                f"Telescope model parameters do not match sim_telarray metadata: "
-                f"{telescope_parameter_mismatch}"
-            )
+    # ensure printout of all mismatches, not only those found first
+    if len(site_parameter_mismatch) > 0:
+        raise ValueError(
+            f"Site model parameters do not match sim_telarray metadata: "
+            f"{site_parameter_mismatch} "
+            f"telescope_parameter_mismatch: {telescope_parameter_mismatch}"
+        )
+    if any(len(m) > 0 for m in telescope_parameter_mismatch):
+        raise ValueError(
+            f"Telescope model parameters do not match sim_telarray metadata: "
+            f"{telescope_parameter_mismatch}"
+        )
+
+    print("FFFF", telescope_meta.keys())
+    print(telescope_meta)
 
 
 def _assert_model_parameters(global_meta, model):
@@ -78,11 +83,13 @@ def _assert_model_parameters(global_meta, model):
         if sim_telarray_name in global_meta.keys():
             parameter_type = model.parameters[param]["type"]
             if parameter_type not in ("string", "dict", "boolean"):
-                value = config_reader.extract_value_from_sim_telarray_column(
+                value, _ = config_reader.extract_value_from_sim_telarray_column(
                     [global_meta[sim_telarray_name]], parameter_type
                 )
             else:
                 value = global_meta[sim_telarray_name]
+                value = (int)(value) if value.isnumeric() else value
+
             _logger.info(
                 f"Parameter {param} in sim_telarray file: {value}, "
                 f"in model: {model.parameters[param]['value']}"
@@ -129,11 +136,8 @@ def is_equal(value1, value2, value_type):
     bool
         True if the values are equal, False otherwise.
     """
-    print("AAAA", value_type)
-    if isinstance(value1, tuple):
-        value1 = value1[0]
-    if isinstance(value2, tuple):
-        value2 = value2[0]
+    value1 = value1[0] if isinstance(value1, tuple) else value1
+    value2 = value2[0] if isinstance(value2, tuple) else value2
     if value1 is None or value2 is None:
         if value1 in ("none", None) and value2 in ("none", None):
             return True
@@ -142,7 +146,6 @@ def is_equal(value1, value2, value_type):
     if value_type == "dict":
         return value1 == value2
     if value_type == "boolean":
-        print("FFFFF", value1, value2, type(value1), type(value2))
         return bool(value1) == bool(value2)
     if isinstance(value1, np.ndarray | list) and isinstance(value2, np.ndarray | list):
         return np.allclose(np.array(value1), np.array(value2), rtol=1e-10)
