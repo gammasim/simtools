@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Runners for simulation software. &#8212; simtools v0.1.dev1+gc6ec78e Manual</title>
+    <title>Runners for simulation software. &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=84435803"></script>
+    <script src="../_static/documentation_options.js?v=819338f9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc6ec78e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -756,7 +756,8 @@ for the sim_telarray configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>corsika_config</strong><span class="classifier">CorsikaConfig</span></dt><dd><p>Configuration parameters for CORSIKA.</p>
+<dt><strong>corsika_config</strong><span class="classifier">CorsikaConfig or list of CorsikaConfig</span></dt><dd><p>A list of “CorsikaConfig” instances which
+contain the CORSIKA configuration parameters.</p>
 </dd>
 <dt><strong>simtel_path</strong><span class="classifier">str or Path</span></dt><dd><p>Location of the sim_telarray package.</p>
 </dd>
@@ -771,7 +772,7 @@ for the sim_telarray configuration.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="runners.corsika_simtel_runner.CorsikaSimtelRunner.get_file_name">
-<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_simtel_runner.html#CorsikaSimtelRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner.get_file_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_simtel_runner.html#CorsikaSimtelRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_simtel_runner.CorsikaSimtelRunner.get_file_name" title="Link to this definition">#</a></dt>
 <dd><p>Get the full path of a file for a given run number.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -781,6 +782,12 @@ for the sim_telarray configuration.</p>
 <dt><strong>file_type: str</strong></dt><dd><p>File type.</p>
 </dd>
 <dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
+</dd>
+<dt><strong>mode: str</strong></dt><dd><p>Mode to use for the file name.</p>
+</dd>
+<dt><strong>model_version_index: int</strong></dt><dd><p>Index of the model version.
+This is used to select the correct simulator_array instance
+in case multiple array models are simulated.</p>
 </dd>
 </dl>
 </dd>

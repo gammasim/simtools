@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>db.db_handler &#8212; simtools v0.1.dev1+gc6ec78e Manual</title>
+    <title>db.db_handler &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=84435803"></script>
+    <script src="../../_static/documentation_options.js?v=819338f9"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc6ec78e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -517,9 +517,11 @@ document.write(`
             <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_port&quot;</span><span class="p">],</span>
             <span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_user&quot;</span><span class="p">],</span>
             <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="p">[</span><span class="s2">&quot;db_api_pw&quot;</span><span class="p">],</span>
-            <span class="n">authSource</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">)</span>
-            <span class="k">else</span> <span class="s2">&quot;admin&quot;</span><span class="p">,</span>
+            <span class="n">authSource</span><span class="o">=</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mongo_db_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">)</span>
+                <span class="k">else</span> <span class="s2">&quot;admin&quot;</span>
+            <span class="p">),</span>
             <span class="n">directConnection</span><span class="o">=</span><span class="n">direct_connection</span><span class="p">,</span>
             <span class="n">ssl</span><span class="o">=</span><span class="ow">not</span> <span class="n">direct_connection</span><span class="p">,</span>
             <span class="n">tlsallowinvalidhostnames</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -608,6 +610,10 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">collection_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_collection_name_from_parameter_name</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">model_version</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Only one model version can be passed to get_model_parameter, not a list.&quot;</span>
+                <span class="p">)</span>
             <span class="n">production_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_production_table_from_mongo_db</span><span class="p">(</span>
                 <span class="n">collection_name</span><span class="p">,</span> <span class="n">model_version</span>
             <span class="p">)</span>

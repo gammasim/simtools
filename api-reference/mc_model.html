@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MC Model &#8212; simtools v0.1.dev1+gc6ec78e Manual</title>
+    <title>MC Model &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=84435803"></script>
+    <script src="../_static/documentation_options.js?v=819338f9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc6ec78e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -477,6 +477,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_sim_telarray_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_simtel_telescope_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_simtel_telescope_config_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_directory"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_directory()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.model_version"><code class="docutils literal notranslate"><span class="pre">ArrayModel.model_version</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayModel.number_of_telescopes</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayModel.print_telescope_list()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.site"><code class="docutils literal notranslate"><span class="pre">ArrayModel.site</span></code></a></li>
@@ -535,6 +536,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_value_with_unit"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_value_with_unit()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_version"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_version()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_simulation_software_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_simulation_software_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.model_version"><code class="docutils literal notranslate"><span class="pre">ModelParameter.model_version</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.parameters</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.print_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.print_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.write_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.write_sim_telarray_config_file()</span></code></a></li>
@@ -686,6 +688,12 @@ the array element positions).</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model.array_model.ArrayModel.model_version">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_version</span></span><a class="headerlink" href="#model.array_model.ArrayModel.model_version" title="Link to this definition">#</a></dt>
+<dd><p>Model version.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1354,6 +1362,12 @@ of the database structure is needed when accessing the model parameters.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="model.model_parameter.ModelParameter.model_version">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_version</span></span><a class="headerlink" href="#model.model_parameter.ModelParameter.model_version" title="Link to this definition">#</a></dt>
+<dd><p>Model version.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="model.model_parameter.ModelParameter.parameters">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#model.model_parameter.ModelParameter.parameters" title="Link to this definition">#</a></dt>
 <dd><p>Model parameters dictionary.</p>
@@ -1451,7 +1465,7 @@ of the database structure is needed when accessing the model parameters.</p>
 </dd>
 <dt><strong>mongo_db_config: dict</strong></dt><dd><p>MongoDB configuration.</p>
 </dd>
-<dt><strong>model_version: str</strong></dt><dd><p>Model version.</p>
+<dt><strong>model_version: str or list</strong></dt><dd><p>Model version or list of model versions (in which case only the first one is used).</p>
 </dd>
 <dt><strong>label: str, optional</strong></dt><dd><p>Instance label. Important for output file naming.</p>
 </dd>
@@ -1844,6 +1858,7 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_sim_telarray_config_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.export_simtel_telescope_config_files"><code class="docutils literal notranslate"><span class="pre">ArrayModel.export_simtel_telescope_config_files()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.get_config_directory"><code class="docutils literal notranslate"><span class="pre">ArrayModel.get_config_directory()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.model_version"><code class="docutils literal notranslate"><span class="pre">ArrayModel.model_version</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.number_of_telescopes"><code class="docutils literal notranslate"><span class="pre">ArrayModel.number_of_telescopes</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.print_telescope_list"><code class="docutils literal notranslate"><span class="pre">ArrayModel.print_telescope_list()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.array_model.ArrayModel.site"><code class="docutils literal notranslate"><span class="pre">ArrayModel.site</span></code></a></li>
@@ -1902,6 +1917,7 @@ reflectivity, etc.)</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_value_with_unit"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_value_with_unit()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_parameter_version"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_parameter_version()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.get_simulation_software_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.get_simulation_software_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.model_version"><code class="docutils literal notranslate"><span class="pre">ModelParameter.model_version</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.parameters</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.print_parameters"><code class="docutils literal notranslate"><span class="pre">ModelParameter.print_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model.model_parameter.ModelParameter.write_sim_telarray_config_file"><code class="docutils literal notranslate"><span class="pre">ModelParameter.write_sim_telarray_config_file()</span></code></a></li>

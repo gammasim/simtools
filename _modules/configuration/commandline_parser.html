@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+gc6ec78e Manual</title>
+    <title>configuration.commandline_parser &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=84435803"></script>
+    <script src="../../_static/documentation_options.js?v=819338f9"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc6ec78e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -447,7 +447,7 @@ document.write(`
 <span class="sd">            Add output file configuration to list of args.</span>
 <span class="sd">        simulation_model: list</span>
 <span class="sd">            List of simulation model configuration parameters to add to list of args</span>
-<span class="sd">            (use: &#39;version&#39;, &#39;telescope&#39;, &#39;site&#39;)</span>
+<span class="sd">            (use: &#39;model_version&#39;, &#39;telescope&#39;, &#39;site&#39;)</span>
 <span class="sd">        simulation_configuration: dict</span>
 <span class="sd">            Dict of simulation software configuration parameters to add to list of args.</span>
 <span class="sd">        db_config: bool</span>
@@ -692,6 +692,7 @@ document.write(`
                 <span class="n">help</span><span class="o">=</span><span class="s2">&quot;production model version&quot;</span><span class="p">,</span>
                 <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
                 <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;parameter_version&quot;</span> <span class="ow">in</span> <span class="n">model_options</span><span class="p">:</span>
             <span class="n">_job_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>

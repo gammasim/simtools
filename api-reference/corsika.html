@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CORSIKA &#8212; simtools v0.1.dev1+gc6ec78e Manual</title>
+    <title>CORSIKA &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=84435803"></script>
+    <script src="../_static/documentation_options.js?v=819338f9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gc6ec78e Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -471,6 +471,7 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-config">corsika_config</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.assert_corsika_configurations_match"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.assert_corsika_configurations_match()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.fill_corsika_configuration()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.generate_corsika_input_file"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.generate_corsika_input_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.get_config_parameter"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.get_config_parameter()</span></code></a></li>
@@ -601,6 +602,28 @@ document.write(`
 </dl>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.assert_corsika_configurations_match">
+<span class="sig-name descname"><span class="pre">assert_corsika_configurations_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_versions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.assert_corsika_configurations_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.assert_corsika_configurations_match" title="Link to this definition">#</a></dt>
+<dd><p>Assert that CORSIKA configurations match across all model versions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_versions</strong><span class="classifier">list</span></dt><dd><p>List of model versions to check.</p>
+</dd>
+<dt><strong>db_config</strong><span class="classifier">dict, optional</span></dt><dd><p>Database configuration.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>InvalidCorsikaInputError</dt><dd><p>If CORSIKA parameters are not identical across all model versions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="corsika.corsika_config.CorsikaConfig.fill_corsika_configuration">
 <span class="sig-name descname"><span class="pre">fill_corsika_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/corsika/corsika_config.html#CorsikaConfig.fill_corsika_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration" title="Link to this definition">#</a></dt>
@@ -2012,6 +2035,7 @@ spherical representation of the telescopes.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-config">corsika_config</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.assert_corsika_configurations_match"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.assert_corsika_configurations_match()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.fill_corsika_configuration"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.fill_corsika_configuration()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.generate_corsika_input_file"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.generate_corsika_input_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika.corsika_config.CorsikaConfig.get_config_parameter"><code class="docutils literal notranslate"><span class="pre">CorsikaConfig.get_config_parameter()</span></code></a></li>
