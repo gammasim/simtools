@@ -10,7 +10,7 @@ CTA_SIMPIPE:
       - 40
       - 52
       - 60
-      OFFSETS:
+      CAMERA_OFFSETS:
       - 0
       QUERY_POINT:
       - 1
