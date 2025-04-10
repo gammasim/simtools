@@ -56,9 +56,11 @@ def runner_service_config_only_diffuse_gamma(corsika_config_mock_array_model):
 
 
 @pytest.fixture
-def file_base_name():
+def file_base_name(model_version):
     """Base name for simulation test file."""
-    return "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-runner"
+    return (
+        f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}_test-corsika-runner"
+    )
 
 
 def test_init_runner_services(runner_service_config_only):
@@ -67,18 +69,21 @@ def test_init_runner_services(runner_service_config_only):
     assert runner_service_config_only.directory == {}
 
 
-def test_get_info_for_file_name(runner_service_config_only):
+def test_get_info_for_file_name(runner_service_config_only, model_version):
     info_for_file_name = runner_service_config_only._get_info_for_file_name(run_number=1)
     assert info_for_file_name["run_number"] == 1
     assert info_for_file_name["primary"] == "proton"
     assert info_for_file_name["array_name"] == "test_layout"
     assert info_for_file_name["site"] == "South"
     assert info_for_file_name["label"] == "test-corsika-runner"
+    assert info_for_file_name["model_version"] == model_version
     assert info_for_file_name["zenith"] == pytest.approx(20)
     assert info_for_file_name["azimuth"] == pytest.approx(0)
 
 
-def test_get_info_for_file_name_diffuse_gamma(runner_service_config_only_diffuse_gamma):
+def test_get_info_for_file_name_diffuse_gamma(
+    runner_service_config_only_diffuse_gamma, model_version
+):
     info_for_file_name = runner_service_config_only_diffuse_gamma._get_info_for_file_name(
         run_number=1
     )
@@ -87,6 +92,7 @@ def test_get_info_for_file_name_diffuse_gamma(runner_service_config_only_diffuse
     assert info_for_file_name["array_name"] == "test_layout"
     assert info_for_file_name["site"] == "South"
     assert info_for_file_name["label"] == "test-corsika-runner"
+    assert info_for_file_name["model_version"] == model_version
     assert info_for_file_name["zenith"] == pytest.approx(20)
     assert info_for_file_name["azimuth"] == pytest.approx(0)
 
@@ -110,7 +116,7 @@ def test_load_corsika_data_directories(runner_service_config_only):
         assert isinstance(item, pathlib.Path)
 
 
-def test_has_file(io_handler, runner_service):
+def test_has_file(io_handler, runner_service, file_base_name):
     corsika_file = io_handler.get_input_data_file(
         file_name="run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst", test=True
     )
@@ -123,20 +129,18 @@ def test_has_file(io_handler, runner_service):
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
         corsika_file,
-        output_directory.joinpath(
-            "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-runner.zst"
-        ),
+        output_directory.joinpath(f"{file_base_name}.zst"),
     )
     assert runner_service.has_file(file_type="corsika_output", run_number=1)
     assert not runner_service.has_file(file_type="log", run_number=1234)
 
 
-def test_get_file_basename(runner_service, file_base_name):
+def test_get_file_basename(runner_service, file_base_name, model_version):
     assert runner_service._get_file_basename(1) == file_base_name
     _runner_service_copy = copy.deepcopy(runner_service)
     _runner_service_copy.label = ""
     assert _runner_service_copy._get_file_basename(1) == (
-        "run000001_proton_za20deg_azm000deg_South_test_layout"
+        f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}"
     )
 
 

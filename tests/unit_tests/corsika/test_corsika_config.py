@@ -5,10 +5,13 @@ import pathlib
 from unittest.mock import Mock, patch
 
 import pytest
+from astropy import units as u
 
-from simtools.corsika.corsika_config import CorsikaConfig
+from simtools.corsika.corsika_config import CorsikaConfig, InvalidCorsikaInputError
 
 logger = logging.getLogger()
+
+CORSIKA_CONFIG_MODE_PARAMETER = "simtools.corsika.corsika_config.ModelParameter"
 
 
 @pytest.fixture
@@ -72,6 +75,51 @@ def test_fill_corsika_configuration(io_handler, corsika_config_mock_array_model)
         "IACT_PARAMETERS",
     ]:
         assert key in corsika_config_mock_array_model.config
+
+
+def test_fill_corsika_configuration_model_version(
+    io_handler, corsika_config_mock_array_model, gcm2
+):
+    """Test handling a list of model versions as input, taking the first one only."""
+
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
+        mock_params = Mock()
+        mock_params.get_simulation_software_parameters.return_value = {
+            "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
+            "corsika_cherenkov_photon_bunch_size": {"value": 5.0, "unit": None},
+            "corsika_first_interaction_height": {"value": 0.0, "unit": "cm"},
+            "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
+            "corsika_longitudinal_shower_development": {"value": 20.0, "unit": gcm2},
+            "corsika_cherenkov_photon_wavelength_range": {"value": [240.0, 1000.0], "unit": "nm"},
+            "corsika_iact_split_auto": {"value": 15000000, "unit": None},
+            "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
+            "corsika_particle_kinetic_energy_cutoff": {
+                "value": [0.3, 0.1, 0.020, 0.020],
+                "unit": "GeV",
+            },
+        }
+        mock_model_parameter.return_value = mock_params
+
+        args_dict = {
+            "model_version": ["5.0.0", "6.0.0"],
+            "azimuth_angle": 0 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "event_number_first_shower": 1,
+            "nshow": 100,
+            "eslope": 2.0,
+            "energy_range": [10 * u.GeV, 10000 * u.GeV],
+            "view_cone": [0 * u.deg, 0 * u.deg],
+            "core_scatter": [10, 140000 * u.cm],
+            "correct_for_b_field_alignment": True,
+        }
+        config = corsika_config_mock_array_model.fill_corsika_configuration(args_dict, db_config={})
+
+        # Verify ModelParameter was instantiated with the correct model (the first one)
+        mock_model_parameter.assert_called_with(mongo_db_config={}, model_version="5.0.0")
+        mock_params.get_simulation_software_parameters.assert_called_with("corsika")
+
+        assert isinstance(config, dict)
+        assert "USER_INPUT" in config
 
 
 def test_corsika_configuration_from_user_input(
@@ -461,3 +509,89 @@ def test_validate_run_number(corsika_config_no_array_model):
         corsika_config_no_array_model.validate_run_number(-1)
     with pytest.raises(ValueError, match=invalid_run_number):
         corsika_config_no_array_model.validate_run_number(123456789)
+
+
+def test_assert_corsika_configurations_match_success(corsika_config_mock_array_model):
+    """Test that assert_corsika_configurations_match does not raise an error when parameters match."""
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
+        mock_params = Mock()
+        mock_params.get_simulation_software_parameters.return_value = {
+            "param1": {"value": 10},
+            "param2": {"value": 20},
+            "corsika_iact_io_buffer": {"value": 800},  # Skipped parameter
+            "corsika_iact_split_auto": {"value": 15000000},  # Skipped parameter
+        }
+        mock_model_parameter.return_value = mock_params
+
+        corsika_config_mock_array_model.assert_corsika_configurations_match(
+            model_versions=["5.0.0", "6.0.0"], db_config={}
+        )
+
+        mock_model_parameter.assert_any_call(mongo_db_config={}, model_version="5.0.0")
+        mock_model_parameter.assert_any_call(mongo_db_config={}, model_version="6.0.0")
+        assert mock_model_parameter.call_count == 2
+
+
+def test_assert_corsika_configurations_match_failure(corsika_config_mock_array_model):
+    """Test that assert_corsika_configurations_match raises an error when parameters do not match."""
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
+        mock_params_1 = Mock()
+        mock_params_1.get_simulation_software_parameters.return_value = {
+            "param1": {"value": 10},
+            "param2": {"value": 20},
+        }
+        mock_params_2 = Mock()
+        mock_params_2.get_simulation_software_parameters.return_value = {
+            "param1": {"value": 10},
+            "param2": {"value": 30},  # Mismatch here
+        }
+        mock_model_parameter.side_effect = [mock_params_1, mock_params_2]
+
+        with pytest.raises(InvalidCorsikaInputError, match="CORSIKA parameter 'param2' differs"):
+            corsika_config_mock_array_model.assert_corsika_configurations_match(
+                model_versions=["5.0.0", "6.0.0"], db_config={}
+            )
+
+
+def test_assert_corsika_configurations_match_skip_parameters(corsika_config_mock_array_model):
+    """Test that assert_corsika_configurations_match skips specific parameters."""
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
+        mock_params_1 = Mock()
+        mock_params_1.get_simulation_software_parameters.return_value = {
+            "param1": {"value": 10},
+            "corsika_iact_io_buffer": {"value": 800},  # Skipped parameter
+        }
+        mock_params_2 = Mock()
+        mock_params_2.get_simulation_software_parameters.return_value = {
+            "param1": {"value": 10},
+            "corsika_iact_io_buffer": {"value": 900},  # Mismatch but skipped
+        }
+        mock_model_parameter.side_effect = [mock_params_1, mock_params_2]
+
+        corsika_config_mock_array_model.assert_corsika_configurations_match(
+            model_versions=["5.0.0", "6.0.0"], db_config={}
+        )
+
+        mock_model_parameter.assert_any_call(mongo_db_config={}, model_version="5.0.0")
+        mock_model_parameter.assert_any_call(mongo_db_config={}, model_version="6.0.0")
+        assert mock_model_parameter.call_count == 2
+
+
+def test_assert_corsika_configurations_match_single_version(corsika_config_mock_array_model):
+    """Test that assert_corsika_configurations_match returns early with single model version."""
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
+        # Even with different parameters, it should return early without checking
+        mock_params = Mock()
+        mock_params.get_simulation_software_parameters.return_value = {
+            "param1": {"value": 10},
+            "param2": {"value": 20},
+        }
+        mock_model_parameter.return_value = mock_params
+
+        # Should return early without any database calls
+        corsika_config_mock_array_model.assert_corsika_configurations_match(
+            model_versions=["5.0.0"], db_config={}
+        )
+
+        # Verify ModelParameter was never called
+        mock_model_parameter.assert_not_called()
