@@ -160,11 +160,11 @@ def test_load_parameters_from_db(telescope_model_lst, mocker):
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_db = mocker.patch.object(DatabaseHandler, "get_model_parameters")
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 4
+    assert mock_db.call_count == 3
 
     telescope_copy.db = None
     telescope_copy._load_parameters_from_db()
-    assert mock_db.call_count == 4
+    assert mock_db.call_count == 3
 
 
 def test_change_parameter(telescope_model_lst):
@@ -226,15 +226,6 @@ def test_flen_type(telescope_model_lst):
 
 
 def test_updating_export_model_files(db_config, io_handler, model_version):
-    """
-    It was found in derive_mirror_rnda_angle that the DB was being
-    accessed each time the model was changed, because the model
-    files were being re-exported. A flag called _is_exported_model_files_up_to_date
-    was added to prevent this behavior. This test is meant to assure
-    it is working properly.
-    """
-
-    # We need a brand new telescope_model to avoid interference
     tel = TelescopeModel(
         site="North",
         telescope_name="LSTN-01",
@@ -244,15 +235,16 @@ def test_updating_export_model_files(db_config, io_handler, model_version):
     )
 
     logger.debug(
-        "tel._is_exported_model_files should be False because export_config_file"
+        "tel._is_exported_model_files should be False because write_sim_telarray_config_file"
         " was not called yet."
     )
     assert False is tel._is_exported_model_files_up_to_date
 
     # Exporting config file
-    tel.export_config_file()
+    tel.write_sim_telarray_config_file()
     logger.debug(
-        "tel._is_exported_model_files should be True because export_config_file was called."
+        "tel._is_exported_model_files should be True because "
+        "write_sim_telarray_config_file was called."
     )
     assert tel._is_exported_model_files_up_to_date
 
@@ -267,7 +259,7 @@ def test_updating_export_model_files(db_config, io_handler, model_version):
 
     # Testing the DB connection
     logger.info("DB should NOT be read next.")
-    tel.export_config_file()
+    tel.write_sim_telarray_config_file()
 
     # Changing a parameter that is a file
     logger.debug("Changing a parameter that IS a file - camera_config_file")
@@ -310,20 +302,6 @@ def test_config_file_path(telescope_model_lst, mocker):
     telescope_copy._config_file_path = Path("test_path")
     assert telescope_copy.config_file_path == Path("test_path")
     not mock_config.assert_called_once()
-
-
-def test_get_config_file(telescope_model_lst, mocker):
-    assert isinstance(telescope_model_lst.get_config_file(), Path)
-
-    telescope_copy = copy.deepcopy(telescope_model_lst)
-    telescope_copy._is_config_file_up_to_date = False
-    mock_export = mocker.patch.object(TelescopeModel, "export_config_file")
-    telescope_copy.get_config_file()
-    mock_export.assert_called_once()
-
-    telescope_copy._is_config_file_up_to_date = False
-    telescope_copy.get_config_file(no_export=True)
-    not mock_export.assert_called_once()
 
 
 def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_model_lst, mocker):
@@ -379,3 +357,38 @@ def test_model_version_setter(mocker):
         ValueError, match="Only one model version can be passed to ModelParameter, not a list."
     ):
         model_param.model_version = ["7.0.0", "8.0.0"]
+
+
+def test_write_sim_telarray_config_file(telescope_model_lst, mocker):
+    """Test writing sim_telarray config file with and without additional model."""
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+
+    mock_writer = mocker.Mock()
+    mock_writer.write_telescope_config_file = mocker.Mock()
+
+    mock_export = mocker.patch.object(TelescopeModel, "export_model_files")
+    mock_load_writer = mocker.patch.object(
+        TelescopeModel,
+        "_load_simtel_config_writer",
+        side_effect=lambda: setattr(telescope_copy, "simtel_config_writer", mock_writer),
+    )
+
+    telescope_copy.write_sim_telarray_config_file()
+    mock_export.assert_called_once_with(update_if_necessary=True)
+    mock_load_writer.assert_called_once()
+    mock_writer.write_telescope_config_file.assert_called_once()
+
+    mock_export.reset_mock()
+    mock_load_writer.reset_mock()
+    mock_writer.write_telescope_config_file.reset_mock()
+
+    add_model = copy.deepcopy(telescope_model_lst)
+    add_model._parameters = {"test_param": "test_value"}
+
+    telescope_copy.write_sim_telarray_config_file(additional_model=add_model)
+    assert mock_export.call_count == 2  # Called for both models
+    mock_load_writer.assert_called_once()
+    assert telescope_copy.parameters.get("test_param") == "test_value"
+    mock_writer.write_telescope_config_file.assert_called_once()
+
+    mock_export.assert_any_call(telescope_copy.config_file_directory, update_if_necessary=True)

@@ -177,8 +177,10 @@ class CorsikaSimtelRunner:
         except TypeError:  # allow for self.label to be None
             weak_pointing = False
 
+        corsika_config.array_model.export_all_simtel_config_files()
+
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
-        command += f" -c {corsika_config.array_model.get_config_file()}"
+        command += f" -c {corsika_config.array_model.config_file_path}"
         command += f" -I{corsika_config.array_model.get_config_directory()}"
         command += simulator_array.get_config_option(
             "telescope_theta", corsika_config.zenith_angle, weak_option=weak_pointing
