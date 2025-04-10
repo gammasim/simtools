@@ -63,7 +63,7 @@ class SimulatorLightEmission(SimtelRunner):
         self.light_emission_config = light_emission_config
         self.distance = None
         self.light_source_type = light_source_type
-        self._telescope_model.export_config_file()
+        self._telescope_model.write_sim_telarray_config_file(additional_model=site_model)
         self.test = test
 
     @staticmethod
@@ -257,13 +257,9 @@ class SimulatorLightEmission(SimtelRunner):
         command = f"{self._simtel_path.joinpath('sim_telarray/bin/sim_telarray/')}"
         command += " -I"
         command += f" -I{self._telescope_model.config_file_directory}"
-        command += f" -c {self._telescope_model.get_config_file(no_export=True)}"
-        self._remove_line_from_config(
-            self._telescope_model.get_config_file(no_export=True), "array_triggers"
-        )
-        self._remove_line_from_config(
-            self._telescope_model.get_config_file(no_export=True), "axes_offsets"
-        )
+        command += f" -c {self._telescope_model.config_file_path}"
+        self._remove_line_from_config(self._telescope_model.config_file_path, "array_triggers")
+        self._remove_line_from_config(self._telescope_model.config_file_path, "axes_offsets")
 
         command += " -DNUM_TELESCOPES=1"
 

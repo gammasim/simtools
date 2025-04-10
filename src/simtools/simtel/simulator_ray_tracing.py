@@ -25,6 +25,8 @@ class SimulatorRayTracing(SimtelRunner):
     ----------
     telescope_model: TelescopeModel
         telescope model
+    site_model: SiteModel
+        site model
     label: str
         label used for output file naming.
     simtel_path: str or Path
@@ -41,6 +43,7 @@ class SimulatorRayTracing(SimtelRunner):
     def __init__(
         self,
         telescope_model,
+        site_model,
         label=None,
         simtel_path=None,
         config_data=None,
@@ -54,6 +57,7 @@ class SimulatorRayTracing(SimtelRunner):
         super().__init__(label=label, simtel_path=simtel_path)
 
         self.telescope_model = telescope_model
+        self.site_model = site_model
         self.label = label if label is not None else self.telescope_model.label
 
         self.io_handler = io_handler.IOHandler()
@@ -115,7 +119,7 @@ class SimulatorRayTracing(SimtelRunner):
                 file.write(f"#{50 * '='}\n")
                 file.write("# List of photons for RayTracing simulations\n")
                 file.write(f"#{50 * '='}\n")
-                file.write(f"# config_file = {self.telescope_model.get_config_file()}\n")
+                file.write(f"# config_file = {self.telescope_model.config_file_path}\n")
                 file.write(f"# zenith_angle [deg] = {self.config.zenith_angle}\n")
                 file.write(f"# off_axis_angle [deg] = {self.config.off_axis_angle}\n")
                 file.write(f"# source_distance [km] = {self.config.source_distance}\n")
@@ -137,7 +141,13 @@ class SimulatorRayTracing(SimtelRunner):
             self._write_out_single_pixel_camera_file()
 
     def _make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
-        """Generate sim_telarray run command."""
+        """
+        Generate simtel_array run command. Export sim_telarray configuration file(s).
+
+        The run_number and input_file parameters are not relevant for the ray tracing simulation.
+        """
+        self.telescope_model.write_sim_telarray_config_file(additional_model=self.site_model)
+
         if self.config.single_mirror_mode:
             # Note: no mirror length defined for dual-mirror telescopes
             _mirror_focal_length = float(
@@ -146,13 +156,13 @@ class SimulatorRayTracing(SimtelRunner):
 
         # RayTracing
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
-        command += f" -c {self.telescope_model.get_config_file()}"
+        command += f" -c {self.telescope_model.config_file_path}"
         command += f" -I{self.telescope_model.config_file_directory}"
         command += super().get_config_option("random_state", "none")
         command += super().get_config_option("IMAGING_LIST", str(self._photons_file))
         command += super().get_config_option("stars", str(self._stars_file))
         command += super().get_config_option(
-            "altitude", self.telescope_model.get_parameter_value("corsika_observation_level")
+            "altitude", self.site_model.get_parameter_value("corsika_observation_level")
         )
         command += super().get_config_option(
             "telescope_theta",
