@@ -398,3 +398,23 @@ def test_reset_required_arguments_group():
 
     for group in configurator.parser._mutually_exclusive_groups:
         assert group.required is False
+
+
+def test_set_model_versions(configurator):
+    assert "model_version" not in configurator.config
+
+    configurator.config["model_version"] = None
+    configurator._initialize_model_versions()
+    assert configurator.config["model_version"] is None
+
+    configurator.config["model_version"] = ["v1.0.0"]
+    configurator._initialize_model_versions()
+    assert configurator.config["model_version"] == "v1.0.0"
+
+    configurator.config["model_version"] = ["v1.0.0", "v1.1.0"]
+    configurator._initialize_model_versions()
+    assert configurator.config["model_version"] == ["v1.0.0", "v1.1.0"]
+
+    configurator.config["model_version"] = "v1.0.0"
+    configurator._initialize_model_versions()
+    assert configurator.config["model_version"] == "v1.0.0"
