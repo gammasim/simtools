@@ -1,3 +1,4 @@
+import re
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -142,6 +143,24 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     )
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
+
+    with Path(output_path / new_file).open("r", encoding="utf-8") as mdfile:
+        md_content = mdfile.read()
+
+    match = re.search(r"```\n(.*?)\n```", md_content, re.DOTALL)
+    assert match, "Code block with file contents not found"
+
+    code_block = match.group(1)
+    line_count = len(code_block.strip().splitlines())
+    assert line_count <= 30
+
+    # Compare to actual first 30 lines of input file
+    input_path = Path("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
+    with input_path.open("r", encoding="utf-8") as original_file:
+        expected_lines = original_file.read().splitlines()[:30]
+        expected_block = "\n".join(expected_lines)
+
+    assert code_block.strip() == expected_block.strip()
 
     # testing with non-utf-8 file
     new_file = read_parameters._convert_to_md(
