@@ -9,7 +9,9 @@ import simtools.utils.general as gen
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
-from simtools.production_configuration.event_scaler import EventScaler
+from simtools.production_configuration.derive_production_statistics import (
+    ProductionStatisticsDerivator,
+)
 from simtools.production_configuration.interpolation_handler import InterpolationHandler
 
 
@@ -98,21 +100,21 @@ def test_interpolation_handler(test_fits_file, test_fits_file_2, metric):
     assert isinstance(interpolated_threshold, float)
 
 
-def test_calculate_scaled_events(test_fits_file, metric):
-    """Test the calculation of scaled events for a specific grid point using EventScaler."""
+def test_calculate_production_statistics(test_fits_file, metric):
+    """Test the calculation of production statistics for a specific grid point using ProductionStatisticsHandler."""
 
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file, file_type="point-like", metrics=metric
     )
     evaluator.grid_point = (1.5, 180, 45, 0, 0.5)
 
-    event_scaler = EventScaler(evaluator, metrics=metric)
+    derive_production_statistics = ProductionStatisticsDerivator(evaluator, metrics=metric)
 
-    scaled_events = event_scaler.scale_events()
+    production_statistics = derive_production_statistics.derive_statistics()
 
-    assert isinstance(scaled_events, u.Quantity)
-    assert scaled_events.value == pytest.approx(41249903535849.58, rel=1e-0)
-    assert scaled_events.unit == u.ct
+    assert isinstance(production_statistics, u.Quantity)
+    assert production_statistics.value == pytest.approx(41249903535849.58, rel=1e-0)
+    assert production_statistics.unit == u.ct
 
 
 def test_calculate_metrics(test_fits_file, metric):
