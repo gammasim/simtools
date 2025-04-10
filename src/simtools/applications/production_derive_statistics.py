@@ -4,7 +4,7 @@ r"""
 Application to run the StatisticalErrorEvaluator and interpolate results.
 
 This application evaluates statistical uncertainties from DL2 MC event files
-based on input parameters like zenith angles and offsets, and performs interpolation
+based on input parameters like zenith angles and camera offsets, and performs interpolation
 for a specified query point.
 
 Command line arguments
@@ -13,7 +13,7 @@ base_path (str, required)
     Path to the directory containing the DL2 MC event file for interpolation.
 zeniths (list of int, required)
     List of zenith angles to consider.
-offsets (list of int, required)
+camera_offsets (list of int, required)
     List of offsets in degrees.
 query_point (list of float, required)
     Query point for interpolation. The query point must contain exactly 5 values:
@@ -37,7 +37,7 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 .. code-block:: console
 
     simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\
-        --zeniths 20 40 52 60 --offsets 0 --query_point 1 180 30 0 0 \\
+        --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\
         --metrics_file "path/to/metrics.yaml" \\
         --output_file "output.json"
 
@@ -78,7 +78,11 @@ def _parse(label, description):
         help="List of zenith angles.",
     )
     config.parser.add_argument(
-        "--camera_offsets", required=True, nargs="+", type=float, help="List of offsets in degrees."
+        "--camera_offsets",
+        required=True,
+        nargs="+",
+        type=float,
+        help="List of camera offsets in degrees.",
     )
     config.parser.add_argument(
         "--query_point",
