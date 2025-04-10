@@ -12,9 +12,10 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def ray_tracing_sst(telescope_model_sst, simtel_path):
+def ray_tracing_sst(telescope_model_sst, site_model_south, simtel_path):
     return RayTracing(
         telescope_model=telescope_model_sst,
+        site_model=site_model_south,
         simtel_path=simtel_path,
         label="test-simtel-runner-ray-tracing",
         source_distance=10 * u.km,
@@ -25,9 +26,10 @@ def ray_tracing_sst(telescope_model_sst, simtel_path):
 
 
 @pytest.fixture
-def ray_tracing_mst(telescope_model_mst, simtel_path):
+def ray_tracing_mst(telescope_model_mst, site_model_south, simtel_path):
     return RayTracing(
         telescope_model=telescope_model_mst,
+        site_model=site_model_south,
         simtel_path=simtel_path,
         label="test-simtel-runner-ray-tracing",
         source_distance=10 * u.km,
@@ -38,10 +40,11 @@ def ray_tracing_mst(telescope_model_mst, simtel_path):
 
 
 @pytest.fixture
-def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, simtel_path):
+def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, site_model_south, simtel_path):
     return SimulatorRayTracing(
         simtel_path=simtel_path,
         telescope_model=telescope_model_sst,
+        site_model=site_model_south,
         config_data={
             "zenith_angle": ray_tracing_sst.zenith_angle,
             "off_axis_angle": 0.0,
@@ -55,10 +58,13 @@ def simulator_ray_tracing_sst(ray_tracing_sst, telescope_model_sst, simtel_path)
 
 
 @pytest.fixture
-def simulator_ray_tracing_single_mirror(ray_tracing_mst, telescope_model_mst, simtel_path):
+def simulator_ray_tracing_single_mirror(
+    ray_tracing_mst, telescope_model_mst, site_model_south, simtel_path
+):
     return SimulatorRayTracing(
         simtel_path=simtel_path,
         telescope_model=telescope_model_mst,
+        site_model=site_model_south,
         config_data={
             "zenith_angle": ray_tracing_mst.zenith_angle,
             "off_axis_angle": 0.0,

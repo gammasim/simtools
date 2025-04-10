@@ -93,7 +93,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import simtools.utils.general as gen
 from simtools.configuration import configurator
 from simtools.io_operations import io_handler
-from simtools.model.telescope_model import TelescopeModel
+from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
@@ -304,7 +304,7 @@ def calculate_rmsd(data, sim):
     return np.sqrt(np.mean((data - sim) ** 2))
 
 
-def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
+def run_pars(tel_model, site_model, args_dict, pars, data_to_plot, radius, pdf_pages):
     """
     Run the tuning for one set of parameters, add a plot to the pdfPages and return RMSD and D80.
 
@@ -319,6 +319,7 @@ def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
 
     ray = RayTracing(
         telescope_model=tel_model,
+        site_model=site_model,
         simtel_path=args_dict["simtel_path"],
         zenith_angle=args_dict["zenith"] * u.deg,
         source_distance=args_dict["src_distance"] * u.km,
@@ -370,7 +371,9 @@ def run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages):
     return d80, rmsd
 
 
-def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, radius, pdf_pages):
+def find_best_parameters(
+    all_parameters, tel_model, site_model, args_dict, data_to_plot, radius, pdf_pages
+):
     """
     Find the best parameters from all parameter sets.
 
@@ -382,7 +385,7 @@ def find_best_parameters(all_parameters, tel_model, args_dict, data_to_plot, rad
     best_pars = None
 
     for pars in all_parameters:
-        _, rmsd = run_pars(tel_model, args_dict, pars, data_to_plot, radius, pdf_pages)
+        _, rmsd = run_pars(tel_model, site_model, args_dict, pars, data_to_plot, radius, pdf_pages)
         if rmsd < min_rmsd:
             min_rmsd = rmsd
             best_pars = pars
@@ -400,12 +403,12 @@ def main():  # noqa: D103
     # Output directory to save files related directly to this app
     _io_handler = io_handler.IOHandler()
     output_dir = _io_handler.get_output_directory(label, sub_dir="application-plots")
-    tel_model = TelescopeModel(
+    tel_model, site_model = initialize_simulation_models(
+        label=label,
+        db_config=db_config,
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
-        mongo_db_config=db_config,
         model_version=args_dict["model_version"],
-        label=label,
     )
 
     all_parameters = []
@@ -424,11 +427,11 @@ def main():  # noqa: D103
     pdf_pages = PdfPages(plot_file)
 
     best_pars, _ = find_best_parameters(
-        all_parameters, tel_model, args_dict, data_to_plot, radius, pdf_pages
+        all_parameters, tel_model, site_model, args_dict, data_to_plot, radius, pdf_pages
     )
 
     # Rerunning and plotting the best pars
-    run_pars(tel_model, args_dict, best_pars, data_to_plot, radius, pdf_pages)
+    run_pars(tel_model, site_model, args_dict, best_pars, data_to_plot, radius, pdf_pages)
     plt.close()
     pdf_pages.close()
 
