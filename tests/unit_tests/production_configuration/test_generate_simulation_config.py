@@ -60,7 +60,6 @@ def test_initialization(mock_statistical_error_evaluator):
 
     assert config.grid_point == grid_point
     assert config.file_path == PATH_FITS
-    assert config.file_type == "point-like"
 
 
 def test_configure_simulation(mock_statistical_error_evaluator):
@@ -115,7 +114,6 @@ def test_edge_cases(mock_statistical_error_evaluator, metric):
     config = SimulationConfig(
         grid_point=grid_point,
         file_path=PATH_FITS,
-        file_type="point-like",
         metrics=metric,
     )
     config.evaluator = mock_statistical_error_evaluator
