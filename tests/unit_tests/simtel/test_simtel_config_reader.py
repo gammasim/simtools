@@ -194,41 +194,43 @@ def test_resolve_all_in_column(config_reader_num_gains):
     assert _config._resolve_all_in_column(["all:1", "3:5"]) == (["1"], {"3": "5"})
 
 
-def test_add_value_from_simtel_cfg(config_reader_num_gains):
+def testextract_value_from_sim_telarray_column(config_reader_num_gains):
     _config = config_reader_num_gains
 
     # None
-    assert _config._add_value_from_simtel_cfg(["None"], dtype="str") == (None, 1)
-    assert _config._add_value_from_simtel_cfg(["none"], dtype="str") == (None, 1)
-    assert _config._add_value_from_simtel_cfg(["none"], dtype=None) == (None, 1)
-    assert _config._add_value_from_simtel_cfg(["22"], dtype=None) == ("22", 1)
+    assert _config.extract_value_from_sim_telarray_column(["None"], dtype="str") == (None, 1)
+    assert _config.extract_value_from_sim_telarray_column(["none"], dtype="str") == (None, 1)
+    assert _config.extract_value_from_sim_telarray_column(["none"], dtype=None) == (None, 1)
+    assert _config.extract_value_from_sim_telarray_column(["22"], dtype=None) == ("22", 1)
 
     # default
-    assert _config._add_value_from_simtel_cfg(["2"], dtype="int") == (2, 1)
-    assert _config._add_value_from_simtel_cfg(["all", "5"], dtype="int") == (5, 1)
-    assert _config._add_value_from_simtel_cfg(["all:5"], dtype="int") == (5, 1)
-    assert _config._add_value_from_simtel_cfg(["all: 5"], dtype="int") == (5, 1)
-    value, ndim = _config._add_value_from_simtel_cfg(["all:5", "2:1"], dtype="int", n_dim=4)
+    assert _config.extract_value_from_sim_telarray_column(["2"], dtype="int") == (2, 1)
+    assert _config.extract_value_from_sim_telarray_column(["all", "5"], dtype="int") == (5, 1)
+    assert _config.extract_value_from_sim_telarray_column(["all:5"], dtype="int") == (5, 1)
+    assert _config.extract_value_from_sim_telarray_column(["all: 5"], dtype="int") == (5, 1)
+    value, ndim = _config.extract_value_from_sim_telarray_column(
+        ["all:5", "2:1"], dtype="int", n_dim=4
+    )
     assert list(value) == [5, 5, 1, 5]
     assert ndim == 4
 
     # comma separated
-    _list, _ndim = _config._add_value_from_simtel_cfg(["0.89,0,0,0,0"], dtype="double")
+    _list, _ndim = _config.extract_value_from_sim_telarray_column(["0.89,0,0,0,0"], dtype="double")
     assert _list[0] == pytest.approx(0.89)
     assert _list[2] == pytest.approx(0.0)
     assert (len(_list), _ndim) == (5, 5)
 
     # boolean values with 0,1 as input
-    assert _config._add_value_from_simtel_cfg(["0"], dtype="bool") == (False, 1)
-    assert _config._add_value_from_simtel_cfg(["1"], dtype="bool") == (True, 1)
-    _list, _ndim = _config._add_value_from_simtel_cfg(["0", "1", "5"], dtype="bool")
+    assert _config.extract_value_from_sim_telarray_column(["0"], dtype="bool") == (False, 1)
+    assert _config.extract_value_from_sim_telarray_column(["1"], dtype="bool") == (True, 1)
+    _list, _ndim = _config.extract_value_from_sim_telarray_column(["0", "1", "5"], dtype="bool")
     assert _ndim == 3
     assert not _list[0]
     assert _list[1]
     assert _list[2]
 
     # no input / output
-    assert _config._add_value_from_simtel_cfg([], dtype="double") == (None, None)
+    assert _config.extract_value_from_sim_telarray_column([], dtype="double") == (None, None)
 
 
 def test_get_list_of_simtel_parameters(simtel_config_file):
