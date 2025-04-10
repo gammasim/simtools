@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g17fba72 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=56fed332"></script>
+    <script src="_static/documentation_options.js?v=3dc32d91"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g17fba72 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -216,9 +216,9 @@
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
-<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
-<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
@@ -496,11 +496,11 @@ document.write(`
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator.calculate_overall_metric">calculate_overall_metric() (production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.calculate_production_statistics_at_grid_point">calculate_production_statistics_at_grid_point() (production_configuration.derive_production_statistics.ProductionStatisticsDerivator method)</a>
+</li>
       <li><a href="api-reference/production_configuration.html#production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events">calculate_required_events() (production_configuration.generate_simulation_config.SimulationConfig method)</a>
 </li>
       <li><a href="user-guide/applications/simtools-derive-psf-parameters.html#derive_psf_parameters.calculate_rmsd">calculate_rmsd() (in module derive_psf_parameters)</a>
-</li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.event_scaler.EventScaler.calculate_scaled_events_at_grid_point">calculate_scaled_events_at_grid_point() (production_configuration.event_scaler.EventScaler method)</a>
 </li>
       <li>
     calculate_trigger_rate
@@ -836,8 +836,6 @@ document.write(`
         <li><a href="user-guide/applications/simtools-db-get-array-layouts-from-db.html#module-db_get_array_layouts_from_db">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     db_get_file_from_db
 
@@ -845,6 +843,8 @@ document.write(`
         <li><a href="user-guide/applications/simtools-db-get-file-from-db.html#module-db_get_file_from_db">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     db_get_parameter_from_db
 
@@ -900,6 +900,8 @@ document.write(`
 </li>
       <li><a href="api-reference/camera.html#camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum.derive_single_pe_spectrum">derive_single_pe_spectrum() (camera.single_photon_electron_spectrum.SinglePhotonElectronSpectrum method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.derive_statistics">derive_statistics() (production_configuration.derive_production_statistics.ProductionStatisticsDerivator method)</a>
+</li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.dict_1d_distributions">dict_1d_distributions (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.dict_2d_distributions">dict_2d_distributions (corsika.corsika_histograms.CorsikaHistograms property)</a>
@@ -951,8 +953,6 @@ document.write(`
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_first_interaction_heights">event_first_interaction_heights (corsika.corsika_histograms.CorsikaHistograms property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.event_zenith_angles">event_zenith_angles (corsika.corsika_histograms.CorsikaHistograms property)</a>
-</li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.event_scaler.EventScaler">EventScaler (class in production_configuration.event_scaler)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.array_model.ArrayModel.export_all_simtel_config_files">export_all_simtel_config_files() (model.array_model.ArrayModel method)</a>
 </li>
@@ -1358,7 +1358,7 @@ document.write(`
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_default_arguments">initialize_default_arguments() (configuration.commandline_parser.CommandLineParser method)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators">initialize_evaluators() (production_configuration.scale_events_manager.ScaleEventsManager method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators">initialize_evaluators() (production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler method)</a>
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments">initialize_job_submission_arguments() (configuration.commandline_parser.CommandLineParser method)</a>
 </li>
@@ -1552,11 +1552,11 @@ document.write(`
 </li>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#production_derive_corsika_limits.main">(in module production_derive_corsika_limits)</a>
 </li>
+        <li><a href="user-guide/applications/simtools-production-derive-statistics.html#production_derive_statistics.main">(in module production_derive_statistics)</a>
+</li>
         <li><a href="user-guide/applications/simtools-production-generate-grid.html#production_generate_grid.main">(in module production_generate_grid)</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#production_generate_simulation_config.main">(in module production_generate_simulation_config)</a>
-</li>
-        <li><a href="user-guide/applications/simtools-production-scale-events.html#production_scale_events.main">(in module production_scale_events)</a>
 </li>
         <li><a href="user-guide/applications/simtools-simulate-light-emission.html#simulate_light_emission.main">(in module simulate_light_emission)</a>
 </li>
@@ -1777,7 +1777,9 @@ document.write(`
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.derive_corsika_limits">production_configuration.derive_corsika_limits</a>
 </li>
-        <li><a href="api-reference/production_configuration.html#module-production_configuration.event_scaler">production_configuration.event_scaler</a>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.derive_production_statistics">production_configuration.derive_production_statistics</a>
+</li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.derive_production_statistics_handler">production_configuration.derive_production_statistics_handler</a>
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.generate_production_grid">production_configuration.generate_production_grid</a>
 </li>
@@ -1785,15 +1787,13 @@ document.write(`
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">production_configuration.interpolation_handler</a>
 </li>
-        <li><a href="api-reference/production_configuration.html#module-production_configuration.scale_events_manager">production_configuration.scale_events_manager</a>
-</li>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits">production_derive_corsika_limits</a>
+</li>
+        <li><a href="user-guide/applications/simtools-production-derive-statistics.html#module-production_derive_statistics">production_derive_statistics</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-grid.html#module-production_generate_grid">production_generate_grid</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#module-production_generate_simulation_config">production_generate_simulation_config</a>
-</li>
-        <li><a href="user-guide/applications/simtools-production-scale-events.html#module-production_scale_events">production_scale_events</a>
 </li>
         <li><a href="api-reference/ray_tracing.html#module-ray_tracing.mirror_panel_psf">ray_tracing.mirror_panel_psf</a>
 </li>
@@ -1940,7 +1940,7 @@ document.write(`
 </li>
       <li><a href="api-reference/corsika.html#corsika.primary_particle.PrimaryParticle.pdg_name">pdg_name (corsika.primary_particle.PrimaryParticle property)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation">perform_interpolation() (production_configuration.scale_events_manager.ScaleEventsManager method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation">perform_interpolation() (production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler method)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.PixelObject">PixelObject (class in visualization.legend_handlers)</a>
 </li>
@@ -2032,10 +2032,10 @@ document.write(`
       </ul></li>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script">prepare_script() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.primary">primary (corsika.corsika_config.CorsikaConfig property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.primary_particle">primary_particle (corsika.corsika_config.CorsikaConfig property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.primary_particle.PrimaryParticle">PrimaryParticle (class in corsika.primary_particle)</a>
@@ -2104,10 +2104,17 @@ document.write(`
 </li>
       </ul></li>
       <li>
-    production_configuration.event_scaler
+    production_configuration.derive_production_statistics
 
       <ul>
-        <li><a href="api-reference/production_configuration.html#module-production_configuration.event_scaler">module</a>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.derive_production_statistics">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_configuration.derive_production_statistics_handler
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.derive_production_statistics_handler">module</a>
 </li>
       </ul></li>
       <li>
@@ -2132,17 +2139,17 @@ document.write(`
 </li>
       </ul></li>
       <li>
-    production_configuration.scale_events_manager
-
-      <ul>
-        <li><a href="api-reference/production_configuration.html#module-production_configuration.scale_events_manager">module</a>
-</li>
-      </ul></li>
-      <li>
     production_derive_corsika_limits
 
       <ul>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_derive_statistics
+
+      <ul>
+        <li><a href="user-guide/applications/simtools-production-derive-statistics.html#module-production_derive_statistics">module</a>
 </li>
       </ul></li>
       <li>
@@ -2159,14 +2166,11 @@ document.write(`
         <li><a href="user-guide/applications/simtools-production-generate-simulation-config.html#module-production_generate_simulation_config">module</a>
 </li>
       </ul></li>
-      <li>
-    production_scale_events
-
-      <ul>
-        <li><a href="user-guide/applications/simtools-production-scale-events.html#module-production_scale_events">module</a>
-</li>
-      </ul></li>
       <li><a href="api-reference/testing.html#testing.configuration.ProductionDBError">ProductionDBError</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics.ProductionStatisticsDerivator">ProductionStatisticsDerivator (class in production_configuration.derive_production_statistics)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler">ProductionStatisticsHandler (class in production_configuration.derive_production_statistics_handler)</a>
 </li>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.psf_analysis.PSFImage">PSFImage (class in ray_tracing.psf_analysis)</a>
 </li>
@@ -2265,7 +2269,7 @@ document.write(`
 </li>
       <li><a href="api-reference/utils.html#utils.geometry.rotate">rotate() (in module utils.geometry)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.run">run() (production_configuration.scale_events_manager.ScaleEventsManager method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.run">run() (production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler method)</a>
 
       <ul>
         <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelRunner.run">(runners.simtel_runner.SimtelRunner method)</a>
@@ -2333,10 +2337,6 @@ document.write(`
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.save_figures_to_pdf">save_figures_to_pdf() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
       <li><a href="api-reference/simulators.html#simulator.Simulator.save_file_lists">save_file_lists() (simulator.Simulator method)</a>
-</li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.event_scaler.EventScaler.scale_events">scale_events() (production_configuration.event_scaler.EventScaler method)</a>
-</li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager">ScaleEventsManager (class in production_configuration.scale_events_manager)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.SCTHandler">SCTHandler (class in visualization.legend_handlers)</a>
 </li>
@@ -2446,10 +2446,10 @@ document.write(`
 </li>
       <li><a href="api-reference/utils.html#utils.names.simtel_single_mirror_list_file_name">simtel_single_mirror_list_file_name() (in module utils.names)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">SimtelConfigReader (class in simtel.simtel_config_reader)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter">SimtelConfigWriter (class in simtel.simtel_config_writer)</a>
 </li>
       <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelExecutionError">SimtelExecutionError</a>
@@ -2792,7 +2792,7 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">write_optimization_data() (ray_tracing.mirror_panel_psf.MirrorPanelPSF method)</a>
 </li>
-      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.write_output">write_output() (production_configuration.scale_events_manager.ScaleEventsManager method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.write_output">write_output() (production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.write_sim_telarray_config_file">write_sim_telarray_config_file() (model.model_parameter.ModelParameter method)</a>
 </li>

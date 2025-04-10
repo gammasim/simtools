@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_configuration.interpolation_handler &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
+    <title>production_configuration.interpolation_handler &#8212; simtools v0.1.dev1+g17fba72 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=56fed332"></script>
+    <script src="../../_static/documentation_options.js?v=3dc32d91"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g17fba72 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -216,9 +216,9 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
@@ -391,13 +391,15 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for production_configuration.interpolation_handler</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Interpolates between instances of StatisticalErrorEvaluator using EventScaler.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Handle interpolation between multiple StatisticalErrorEvaluator instances.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.interpolate</span><span class="w"> </span><span class="kn">import</span> <span class="n">griddata</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.event_scaler</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventScaler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_production_statistics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ProductionStatisticsDerivator</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InterpolationHandler&quot;</span><span class="p">]</span>
 
@@ -410,7 +412,9 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluators</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span> <span class="o">=</span> <span class="n">evaluators</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_scalers</span> <span class="o">=</span> <span class="p">[</span><span class="n">EventScaler</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">derive_production_statistics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ProductionStatisticsDerivator</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span>
+        <span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">azimuths</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">grid_point</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zeniths</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">grid_point</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span><span class="p">]</span>
@@ -421,8 +425,9 @@ document.write(`
             <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;bin_edges_low&quot;</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;bin_edges_high&quot;</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
             <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span>
         <span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scaled_events</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">scaler</span><span class="o">.</span><span class="n">scale_events</span><span class="p">(</span><span class="n">return_sum</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">scaler</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_scalers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">production_statistics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">derivator</span><span class="o">.</span><span class="n">derive_statistics</span><span class="p">(</span><span class="n">return_sum</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">derivator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">derive_production_statistics</span>
         <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">energy_thresholds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e</span><span class="o">.</span><span class="n">energy_threshold</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span><span class="p">])</span>
 
@@ -443,8 +448,8 @@ document.write(`
         <span class="n">flat_data_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">flat_grid_points</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">energy_grid</span><span class="p">,</span> <span class="n">scaled_events</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_grids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled_events</span>
+        <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">energy_grid</span><span class="p">,</span> <span class="n">production_statistics</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluators</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_grids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">production_statistics</span>
         <span class="p">):</span>
             <span class="n">az</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">energy_grid</span><span class="p">),</span> <span class="n">e</span><span class="o">.</span><span class="n">grid_point</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
             <span class="n">zen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">energy_grid</span><span class="p">),</span> <span class="n">e</span><span class="o">.</span><span class="n">grid_point</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -454,7 +459,7 @@ document.write(`
             <span class="c1"># Combine grid points and data</span>
             <span class="n">grid_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">energy_grid</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">az</span><span class="p">,</span> <span class="n">zen</span><span class="p">,</span> <span class="n">nsb</span><span class="p">,</span> <span class="n">offset</span><span class="p">])</span>
             <span class="n">flat_grid_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grid_points</span><span class="p">)</span>
-            <span class="n">flat_data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scaled_events</span><span class="p">)</span>
+            <span class="n">flat_data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">production_statistics</span><span class="p">)</span>
 
         <span class="c1"># Flatten the list and convert to numpy arrays</span>
         <span class="n">flat_grid_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">flat_grid_points</span><span class="p">)</span>
@@ -556,7 +561,7 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_comparison</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plot a comparison between the simulated, scaled, and reconstructed events.</span>
+<span class="sd">        Plot a comparison between the simulated, derived, and reconstructed events.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -579,7 +584,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid_points</span><span class="p">)</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">midpoints</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">scaled_events</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Scaled&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">midpoints</span><span class="p">,</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">production_statistics</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Derived&quot;</span><span class="p">)</span>
 
         <span class="n">reconstructed_event_histogram</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
             <span class="n">evaluator</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;event_energies_reco&quot;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">evaluator</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;bin_edges_low&quot;</span><span class="p">]</span>
@@ -590,7 +595,7 @@ document.write(`
         <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Energy (Midpoint of Bin Edges)&quot;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Event Count&quot;</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Comparison of Simulated, scaled, and reconstructed events&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Comparison of simulated, derived, and reconstructed events&quot;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 </div>
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_scale_events &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
+    <title>production_derive_statistics &#8212; simtools v0.1.dev1+g17fba72 Manual</title>
   
   
   
@@ -35,11 +35,11 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=56fed332"></script>
+    <script src="../_static/documentation_options.js?v=3dc32d91"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_scale_events';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_derive_statistics';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g17fba72 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -216,9 +216,9 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
@@ -316,7 +316,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/production_scale_events.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/production_derive_statistics.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -390,7 +390,7 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for production_scale_events</h1><div class="highlight"><pre>
+  <h1>Source code for production_derive_statistics</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/python3</span>
 
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -416,7 +416,7 @@ document.write(`
 <span class="sd">        - NSB (MHz)</span>
 <span class="sd">        - Offset (degrees)</span>
 <span class="sd">output_file (str, optional)</span>
-<span class="sd">    Output file to store the results. Default: &#39;interpolated_scaled_events.json&#39;.</span>
+<span class="sd">    Output file to store the results. Default: &#39;interpolated_production_statistics.json&#39;.</span>
 <span class="sd">metrics_file (str, optional)</span>
 <span class="sd">    Path to the metrics definition file. Default: &#39;production_simulation_config_metrics.yml&#39;.</span>
 <span class="sd">file_name_template (str, optional)</span>
@@ -429,20 +429,22 @@ document.write(`
 
 <span class="sd">.. code-block:: console</span>
 
-<span class="sd">    simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \\</span>
+<span class="sd">    simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\</span>
 <span class="sd">        --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\</span>
 <span class="sd">        --metrics_file &quot;path/to/metrics.yaml&quot; \\</span>
 <span class="sd">        --output_path simtools-output/derived_events \\</span>
 <span class="sd">        --output_file derived_events.json</span>
 
-<span class="sd">The output will display the scaled events for the specified query point and save</span>
+<span class="sd">The output will display the production statistics for the specified query point and save</span>
 <span class="sd"> the results to the specified output file.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">configurator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.scale_events_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScaleEventsManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_production_statistics_handler</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ProductionStatisticsHandler</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
@@ -501,16 +503,16 @@ document.write(`
 
 
 <div class="viewcode-block" id="main">
-<a class="viewcode-back" href="../user-guide/applications/simtools-production-scale-events.html#production_scale_events.main">[docs]</a>
+<a class="viewcode-back" href="../user-guide/applications/simtools-production-derive-statistics.html#production_derive_statistics.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the ScaleEventsManager.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the ProductionStatisticsHandler.&quot;&quot;&quot;</span>
     <span class="n">label</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
     <span class="n">args_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span>
         <span class="n">label</span><span class="p">,</span>
         <span class="s2">&quot;Evaluate statistical uncertainties from DL2 MC event files and interpolate results.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">manager</span> <span class="o">=</span> <span class="n">ScaleEventsManager</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="n">manager</span> <span class="o">=</span> <span class="n">ProductionStatisticsHandler</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
     <span class="n">manager</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
 
 

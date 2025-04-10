@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-scale-events &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
+    <title>simtools-production-derive-statistics &#8212; simtools v0.1.dev1+g17fba72 Manual</title>
   
   
   
@@ -36,14 +36,14 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=56fed332"></script>
+    <script src="../../_static/documentation_options.js?v=3dc32d91"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-scale-events';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-derive-statistics';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-run-application" href="simtools-run-application.html" />
+    <link rel="next" title="simtools-print-version" href="simtools-print-version.html" />
     <link rel="prev" title="simtools-production-generate-simulation-config" href="simtools-production-generate-simulation-config.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g17fba72 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -217,9 +217,9 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-production-scale-events</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-production-derive-statistics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
@@ -328,7 +328,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-production-scale-events.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-production-derive-statistics.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -345,7 +345,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-production-scale-events.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-production-derive-statistics.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -375,7 +375,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/simtools-production-scale-events.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simtools-production-derive-statistics.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -459,7 +459,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>simtools-production-scale-events</h1>
+    <h1>simtools-production-derive-statistics</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -471,7 +471,7 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_scale_events.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_statistics.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -483,8 +483,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-production_scale_events">
-<span id="simtools-production-scale-events"></span><h1>simtools-production-scale-events<a class="headerlink" href="#module-production_scale_events" title="Link to this heading">#</a></h1>
+  <section id="module-production_derive_statistics">
+<span id="simtools-production-derive-statistics"></span><h1>simtools-production-derive-statistics<a class="headerlink" href="#module-production_derive_statistics" title="Link to this heading">#</a></h1>
 <p>Application to run the StatisticalErrorEvaluator and interpolate results.</p>
 <p>This application evaluates statistical uncertainties from DL2 MC event files
 based on input parameters like zenith angles and camera offsets, and performs interpolation
@@ -509,7 +509,7 @@ for a specified query point.</p>
 </dd>
 </dl>
 </dd>
-<dt>output_file (str, optional)</dt><dd><p>Output file to store the results. Default: ‘interpolated_scaled_events.json’.</p>
+<dt>output_file (str, optional)</dt><dd><p>Output file to store the results. Default: ‘interpolated_production_statistics.json’.</p>
 </dd>
 <dt>metrics_file (str, optional)</dt><dd><p>Path to the metrics definition file. Default: ‘production_simulation_config_metrics.yml’.</p>
 </dd>
@@ -521,7 +521,7 @@ for a specified query point.</p>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>To evaluate statistical uncertainties and perform interpolation, run the command line script:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \\</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\</span>
 <span class="go">    --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\</span>
 <span class="go">    --metrics_file &quot;path/to/metrics.yaml&quot; \\</span>
 <span class="go">    --output_path simtools-output/derived_events \\</span>
@@ -529,14 +529,14 @@ for a specified query point.</p>
 </pre></div>
 </div>
 <dl class="simple">
-<dt>The output will display the scaled events for the specified query point and save</dt><dd><p>the results to the specified output file.</p>
+<dt>The output will display the production statistics for the specified query point and save</dt><dd><p>the results to the specified output file.</p>
 </dd>
 </dl>
 </section>
 <dl class="py function">
-<dt class="sig sig-object py" id="production_scale_events.main">
-<span class="sig-prename descclassname"><span class="pre">production_scale_events.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_scale_events.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_scale_events.main" title="Link to this definition">#</a></dt>
-<dd><p>Run the ScaleEventsManager.</p>
+<dt class="sig sig-object py" id="production_derive_statistics.main">
+<span class="sig-prename descclassname"><span class="pre">production_derive_statistics.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_derive_statistics.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_derive_statistics.main" title="Link to this definition">#</a></dt>
+<dd><p>Run the ProductionStatisticsHandler.</p>
 </dd></dl>
 
 </section>
@@ -562,11 +562,11 @@ for a specified query point.</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-run-application.html"
+       href="simtools-print-version.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-run-application</p>
+        <p class="prev-next-title">simtools-print-version</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -588,7 +588,7 @@ for a specified query point.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_scale_events.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#production_derive_statistics.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
   </nav></div>
 

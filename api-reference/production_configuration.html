@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Production Configuration &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
+    <title>Production Configuration &#8212; simtools v0.1.dev1+g17fba72 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=56fed332"></script>
+    <script src="../_static/documentation_options.js?v=3dc32d91"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g17fba72 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -217,9 +217,9 @@
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-grid.html">simtools-production-generate-grid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-generate-simulation-config.html">simtools-production-generate-simulation-config</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-scale-events.html">simtools-production-scale-events</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-production-derive-statistics.html">simtools-production-derive-statistics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-print-version.html">simtools-print-version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-run-application.html">simtools-run-application</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-light-emission.html">simtools-simulate-light-emission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod.html">simtools-simulate-prod</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user-guide/applications/simtools-simulate-prod-htcondor-generator.html">simtools-simulate-prod-htcondor-generator</a></li>
@@ -485,10 +485,45 @@ document.write(`
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.event_scaler">event_scaler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.event_scaler.EventScaler"><code class="docutils literal notranslate"><span class="pre">EventScaler</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.event_scaler.EventScaler.calculate_scaled_events_at_grid_point"><code class="docutils literal notranslate"><span class="pre">EventScaler.calculate_scaled_events_at_grid_point()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.event_scaler.EventScaler.scale_events"><code class="docutils literal notranslate"><span class="pre">EventScaler.scale_events()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_corsika_limits">derive_corsika_limits</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator"><code class="docutils literal notranslate"><span class="pre">LimitCalculator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radial_distance"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radial_distance()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.core_distance_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_production_statistics">derive_production_statistics</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.calculate_production_statistics_at_grid_point"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator.calculate_production_statistics_at_grid_point()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.derive_statistics"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator.derive_statistics()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_production_statistics_handler">derive_production_statistics_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.initialize_evaluators()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.perform_interpolation()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.run"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.write_output"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.write_output()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_production_grid">generate_production_grid</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration"><code class="docutils literal notranslate"><span class="pre">GridGeneration</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_altaz_to_radec()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.create_circular_binning"><code class="docutils literal notranslate"><span class="pre">GridGeneration.create_circular_binning()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.generate_grid"><code class="docutils literal notranslate"><span class="pre">GridGeneration.generate_grid()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_grid_points()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_quantity"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_quantity()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -506,41 +541,6 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate_energy_threshold()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.plot_comparison()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_corsika_limits">derive_corsika_limits</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator"><code class="docutils literal notranslate"><span class="pre">LimitCalculator</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radial_distance"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radial_distance()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.core_distance_bins</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_production_grid">generate_production_grid</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration"><code class="docutils literal notranslate"><span class="pre">GridGeneration</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_altaz_to_radec()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_coordinates()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.create_circular_binning"><code class="docutils literal notranslate"><span class="pre">GridGeneration.create_circular_binning()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.generate_grid"><code class="docutils literal notranslate"><span class="pre">GridGeneration.generate_grid()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_grid_points()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_quantity"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_quantity()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.scale_events_manager">scale_events_manager</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.initialize_evaluators()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.perform_interpolation()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.run"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.run()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.write_output"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.write_output()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -739,184 +739,8 @@ the calculation of the number of events to be simulated given a pre-determined m
 </dd></dl>
 
 </section>
-<section id="module-production_configuration.event_scaler">
-<span id="id2"></span><span id="event-scaler"></span><h2>event_scaler<a class="headerlink" href="#module-production_configuration.event_scaler" title="Link to this heading">#</a></h2>
-<p>Calculate the scaled number of events based on metrics.</p>
-<p>Module for scaling events based on statistical error metrics. Contains the <a class="reference internal" href="#production_configuration.event_scaler.EventScaler" title="production_configuration.event_scaler.EventScaler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EventScaler</span></code></a> class,
-which scales the number of events for both the entire dataset and specific grid points.
-Scaling factors are calculated using error metrics and the evaluator’s results.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.event_scaler.EventScaler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.event_scaler.</span></span><span class="sig-name descname"><span class="pre">EventScaler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/event_scaler.html#EventScaler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.event_scaler.EventScaler" title="Link to this definition">#</a></dt>
-<dd><p>Scales the number of events based on statistical error metrics.</p>
-<p>Supports scaling both the entire dataset and specific grid points like energy values.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.event_scaler.EventScaler.calculate_scaled_events_at_grid_point">
-<span class="sig-name descname"><span class="pre">calculate_scaled_events_at_grid_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.astropy.org/en/latest/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.1)"><span class="pre">Quantity</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/event_scaler.html#EventScaler.calculate_scaled_events_at_grid_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.event_scaler.EventScaler.calculate_scaled_events_at_grid_point" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the scaled number of events for a specific energy grid point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>grid_point</strong><span class="classifier">tuple</span></dt><dd><p>The grid point specifying energy, azimuth, zenith, NSB, and offset.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>float</dt><dd><p>The scaled number of events at the specified grid point (energy).</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.event_scaler.EventScaler.scale_events">
-<span class="sig-name descname"><span class="pre">scale_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_sum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.astropy.org/en/latest/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.1)"><span class="pre">Quantity</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/event_scaler.html#EventScaler.scale_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.event_scaler.EventScaler.scale_events" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the scaled number of events based on statistical error metrics.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>return_sum</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, returns the sum of scaled events for the entire set of MC events. If False,
-returns the scaled events for each grid point along the energy axis. Default is True.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>u.Quantity</dt><dd><p>If ‘return_sum’ is True, returns the total scaled number of events as a u.Quantity.
-If ‘return_sum’ is False, returns an array of scaled events along the energy axis as
-a u.Quantity.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-production_configuration.generate_simulation_config">
-<span id="id3"></span><span id="generate-simulation-config"></span><h2>generate_simulation_config<a class="headerlink" href="#module-production_configuration.generate_simulation_config" title="Link to this heading">#</a></h2>
-<p>Derives simulation configuration parameters for a grid point based on several metrics.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.generate_simulation_config.</span></span><span class="sig-name descname"><span class="pre">SimulationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig" title="Link to this definition">#</a></dt>
-<dd><p>Configures simulation parameters for a specific grid point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>grid_point</strong><span class="classifier">dict</span></dt><dd><p>Dictionary representing a grid point with azimuth, elevation, and night sky background.</p>
-</dd>
-<dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the DL2 MC event file for statistical uncertainty evaluation.</p>
-</dd>
-<dt><strong>metrics</strong><span class="classifier">dict, optional</span></dt><dd><p>Dictionary of metrics to evaluate.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events">
-<span class="sig-name descname"><span class="pre">calculate_required_events</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig.calculate_required_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the required number of simulated events based on statistical error metrics.</p>
-<p>Uses the EventScaler to scale the events.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>int</dt><dd><p>The number of simulated events required.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig.configure_simulation">
-<span class="sig-name descname"><span class="pre">configure_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig.configure_simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig.configure_simulation" title="Link to this definition">#</a></dt>
-<dd><p>Configure the simulation parameters for the grid point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>dict</dt><dd><dl class="simple">
-<dt>A dictionary with simulation parameters such as core scatter area,</dt><dd><p>viewcone, and number of simulated events.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="module-production_configuration.interpolation_handler">
-<span id="id4"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
-<p>Interpolates between instances of StatisticalErrorEvaluator using EventScaler.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.interpolation_handler.</span></span><span class="sig-name descname"><span class="pre">InterpolationHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler" title="Link to this definition">#</a></dt>
-<dd><p>Handle interpolation between multiple StatisticalErrorEvaluator instances.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.interpolate">
-<span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate" title="Link to this definition">#</a></dt>
-<dd><p>Interpolate the number of simulated events given query points.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>query_points</strong><span class="classifier">np.ndarray</span></dt><dd><p>Array of query points with shape (n, 5), where n is the number of points,
-and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>Interpolated values at the query points.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold">
-<span class="sig-name descname"><span class="pre">interpolate_energy_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.interpolate_energy_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold" title="Link to this definition">#</a></dt>
-<dd><p>Interpolate the energy threshold for a given grid point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>query_point</strong><span class="classifier">np.ndarray</span></dt><dd><p>Array specifying the grid point (energy, azimuth, zenith, NSB, offset).</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>float</dt><dd><p>Interpolated energy threshold.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.plot_comparison">
-<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.plot_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison" title="Link to this definition">#</a></dt>
-<dd><p>Plot a comparison between the simulated, scaled, and reconstructed events.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>evaluator</strong><span class="classifier">StatisticalErrorEvaluator</span></dt><dd><p>The evaluator for which to plot the comparison.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
 <section id="module-production_configuration.derive_corsika_limits">
-<span id="id5"></span><span id="derive-corsika-limits"></span><h2>derive_corsika_limits<a class="headerlink" href="#module-production_configuration.derive_corsika_limits" title="Link to this heading">#</a></h2>
+<span id="id2"></span><span id="derive-corsika-limits"></span><h2>derive_corsika_limits<a class="headerlink" href="#module-production_configuration.derive_corsika_limits" title="Link to this heading">#</a></h2>
 <p>Calculate CORSIKA thresholds for energy, radial distance, and viewcone.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.derive_corsika_limits.LimitCalculator">
@@ -1037,8 +861,113 @@ between the triggered events and the simulated events using the shower IDs.</p>
 </dd></dl>
 
 </section>
+<section id="module-production_configuration.derive_production_statistics">
+<span id="id3"></span><span id="derive-production-statistics"></span><h2>derive_production_statistics<a class="headerlink" href="#module-production_configuration.derive_production_statistics" title="Link to this heading">#</a></h2>
+<p>Calculate the event production statistics based on metrics.</p>
+<p>Module for calculating the production event statistics based on statistical error metrics.
+Contains the <a class="reference internal" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator" title="production_configuration.derive_production_statistics.ProductionStatisticsDerivator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator</span></code></a> class, which derives the number of events for
+both the entire dataset and specific grid points. Event statistic is calculated using error
+metrics and the evaluator’s results.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics.ProductionStatisticsDerivator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.derive_production_statistics.</span></span><span class="sig-name descname"><span class="pre">ProductionStatisticsDerivator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics.html#ProductionStatisticsDerivator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator" title="Link to this definition">#</a></dt>
+<dd><p>Derives the production statistics based on statistical error metrics.</p>
+<p>Supports deriving statistics for both the entire dataset and
+specific grid points like energy values.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics.ProductionStatisticsDerivator.calculate_production_statistics_at_grid_point">
+<span class="sig-name descname"><span class="pre">calculate_production_statistics_at_grid_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.astropy.org/en/latest/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.1)"><span class="pre">Quantity</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics.html#ProductionStatisticsDerivator.calculate_production_statistics_at_grid_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.calculate_production_statistics_at_grid_point" title="Link to this definition">#</a></dt>
+<dd><p>Derive the production statistics for a specific energy grid point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid_point</strong><span class="classifier">tuple</span></dt><dd><p>The grid point specifying energy, azimuth, zenith, NSB, and offset.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>The derived production statistics at the specified grid point (energy).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics.ProductionStatisticsDerivator.derive_statistics">
+<span class="sig-name descname"><span class="pre">derive_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_sum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.astropy.org/en/latest/api/astropy.units.Quantity.html#astropy.units.Quantity" title="(in Astropy v7.1)"><span class="pre">Quantity</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics.html#ProductionStatisticsDerivator.derive_statistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.derive_statistics" title="Link to this definition">#</a></dt>
+<dd><p>Derive the production statistics based on statistical error metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>return_sum</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, returns the sum of production statistics for the entire set of MC events.
+If False, returns the production statistics for each grid point along the energy axis.
+Default is True.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>u.Quantity</dt><dd><p>If ‘return_sum’ is True, returns the total
+derived production statistics as a u.Quantity.
+If ‘return_sum’ is False, returns an array of production statistics along the energy
+axis as a u.Quantity.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-production_configuration.derive_production_statistics_handler">
+<span id="id4"></span><span id="derive-production-statistics-handler"></span><h2>derive_production_statistics_handler<a class="headerlink" href="#module-production_configuration.derive_production_statistics_handler" title="Link to this heading">#</a></h2>
+<p>Module to run the StatisticalErrorEvaluator and interpolate results.</p>
+<p>This module provides the <a class="reference internal" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler" title="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductionStatisticsHandler</span></code></a> class, which manages the workflow for
+derivation of required number of events for a simulation production using pre-defined metrics.</p>
+<p>The module includes functionality to:
+- Initialize evaluators for statistical error calculations based on input parameters.
+- Perform interpolation using the initialized evaluators to estimate production statistics at a
+query point.
+- Write the results of the interpolation to an output file.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.derive_production_statistics_handler.</span></span><span class="sig-name descname"><span class="pre">ProductionStatisticsHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler" title="Link to this definition">#</a></dt>
+<dd><p>Handles the workflow for deriving production statistics.</p>
+<p>This class manages the evaluation of statistical uncertainties from DL2 MC event files
+and performs interpolation to estimate the required number of events for a simulation
+production at a specified query point.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators">
+<span class="sig-name descname"><span class="pre">initialize_evaluators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler.initialize_evaluators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators" title="Link to this definition">#</a></dt>
+<dd><p>Initialize StatisticalErrorEvaluator instances for the given zeniths and offsets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation">
+<span class="sig-name descname"><span class="pre">perform_interpolation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler.perform_interpolation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation" title="Link to this definition">#</a></dt>
+<dd><p>Perform interpolation for the query point.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.run" title="Link to this definition">#</a></dt>
+<dd><p>Run the scaling and interpolation workflow.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.write_output">
+<span class="sig-name descname"><span class="pre">write_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">production_statistics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/derive_production_statistics_handler.html#ProductionStatisticsHandler.write_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.write_output" title="Link to this definition">#</a></dt>
+<dd><p>Write the derived event statistics to a file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-production_configuration.generate_production_grid">
-<span id="id6"></span><span id="generate-production-grid"></span><h2>generate_production_grid<a class="headerlink" href="#module-production_configuration.generate_production_grid" title="Link to this heading">#</a></h2>
+<span id="id5"></span><span id="generate-production-grid"></span><h2>generate_production_grid<a class="headerlink" href="#module-production_configuration.generate_production_grid" title="Link to this heading">#</a></h2>
 <p>Module defines the <a class="reference internal" href="#production_configuration.generate_production_grid.GridGeneration" title="production_configuration.generate_production_grid.GridGeneration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GridGeneration</span></code></a> class.</p>
 <p>Used to generate a grid of simulation points based on flexible axes definitions such
 azimuth, zenith angle, night-sky background, and camera offset.
@@ -1158,45 +1087,120 @@ as keys and axis values as values. Axis values may include units where defined.<
 </dd></dl>
 
 </section>
-<section id="module-production_configuration.scale_events_manager">
-<span id="id7"></span><span id="scale-events-manager"></span><h2>scale_events_manager<a class="headerlink" href="#module-production_configuration.scale_events_manager" title="Link to this heading">#</a></h2>
-<p>Module to run the StatisticalErrorEvaluator and interpolate results.</p>
-<p>This module provides the <a class="reference internal" href="#production_configuration.scale_events_manager.ScaleEventsManager" title="production_configuration.scale_events_manager.ScaleEventsManager"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScaleEventsManager</span></code></a> class, which manages the workflow for scaling
-events and performing interpolation. It is designed to handle the evaluation of statistical
-uncertainties from DL2 Monte Carlo (MC) event files and perform interpolation for a specified
-query point.</p>
-<p>The module includes functionality to:
-- Initialize evaluators for statistical error calculations based on input parameters.
-- Perform interpolation using the initialized evaluators to estimate scaled events at a query point.
-- Write the results of the interpolation to an output file.</p>
+<section id="module-production_configuration.generate_simulation_config">
+<span id="id6"></span><span id="generate-simulation-config"></span><h2>generate_simulation_config<a class="headerlink" href="#module-production_configuration.generate_simulation_config" title="Link to this heading">#</a></h2>
+<p>Derives simulation configuration parameters for a grid point based on several metrics.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.scale_events_manager.</span></span><span class="sig-name descname"><span class="pre">ScaleEventsManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager" title="Link to this definition">#</a></dt>
-<dd><p>Manages the workflow for scaling events and performing interpolation.</p>
-<p>This class handles the evaluation of statistical uncertainties from DL2 MC event files
-and performs interpolation for a specified query point.</p>
+<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.generate_simulation_config.</span></span><span class="sig-name descname"><span class="pre">SimulationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig" title="Link to this definition">#</a></dt>
+<dd><p>Configures simulation parameters for a specific grid point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid_point</strong><span class="classifier">dict</span></dt><dd><p>Dictionary representing a grid point with azimuth, elevation, and night sky background.</p>
+</dd>
+<dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the DL2 MC event file for statistical uncertainty evaluation.</p>
+</dd>
+<dt><strong>metrics</strong><span class="classifier">dict, optional</span></dt><dd><p>Dictionary of metrics to evaluate.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators">
-<span class="sig-name descname"><span class="pre">initialize_evaluators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager.initialize_evaluators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators" title="Link to this definition">#</a></dt>
-<dd><p>Initialize StatisticalErrorEvaluator instances for the given zeniths and offsets.</p>
+<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events">
+<span class="sig-name descname"><span class="pre">calculate_required_events</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig.calculate_required_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig.calculate_required_events" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the required number of simulated events based on statistical error metrics.</p>
+<p>Uses the ProductionStatisticsDerivator to scale the events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>The number of simulated events required.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation">
-<span class="sig-name descname"><span class="pre">perform_interpolation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager.perform_interpolation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation" title="Link to this definition">#</a></dt>
-<dd><p>Perform interpolation for the query point.</p>
+<dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig.configure_simulation">
+<span class="sig-name descname"><span class="pre">configure_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig.configure_simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig.configure_simulation" title="Link to this definition">#</a></dt>
+<dd><p>Configure the simulation parameters for the grid point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><dl class="simple">
+<dt>A dictionary with simulation parameters such as core scatter area,</dt><dd><p>viewcone, and number of simulated events.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-production_configuration.interpolation_handler">
+<span id="id7"></span><span id="interpolation-handler"></span><h2>interpolation_handler<a class="headerlink" href="#module-production_configuration.interpolation_handler" title="Link to this heading">#</a></h2>
+<p>Handle interpolation between multiple StatisticalErrorEvaluator instances.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.interpolation_handler.</span></span><span class="sig-name descname"><span class="pre">InterpolationHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler" title="Link to this definition">#</a></dt>
+<dd><p>Handle interpolation between multiple StatisticalErrorEvaluator instances.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.interpolate">
+<span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate" title="Link to this definition">#</a></dt>
+<dd><p>Interpolate the number of simulated events given query points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>query_points</strong><span class="classifier">np.ndarray</span></dt><dd><p>Array of query points with shape (n, 5), where n is the number of points,
+and 5 represents (energy, azimuth, zenith, nsb, offset).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>Interpolated values at the query points.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager.run" title="Link to this definition">#</a></dt>
-<dd><p>Run the scaling and interpolation workflow.</p>
+<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold">
+<span class="sig-name descname"><span class="pre">interpolate_energy_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.interpolate_energy_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold" title="Link to this definition">#</a></dt>
+<dd><p>Interpolate the energy threshold for a given grid point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>query_point</strong><span class="classifier">np.ndarray</span></dt><dd><p>Array specifying the grid point (energy, azimuth, zenith, NSB, offset).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Interpolated energy threshold.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager.write_output">
-<span class="sig-name descname"><span class="pre">write_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaled_events</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager.write_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager.write_output" title="Link to this definition">#</a></dt>
-<dd><p>Write the derived event statistics to a file.</p>
+<dt class="sig sig-object py" id="production_configuration.interpolation_handler.InterpolationHandler.plot_comparison">
+<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/interpolation_handler.html#InterpolationHandler.plot_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison" title="Link to this definition">#</a></dt>
+<dd><p>Plot a comparison between the simulated, derived, and reconstructed events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>evaluator</strong><span class="classifier">StatisticalErrorEvaluator</span></dt><dd><p>The evaluator for which to plot the comparison.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1265,10 +1269,45 @@ and performs interpolation for a specified query point.</p>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.event_scaler">event_scaler</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.event_scaler.EventScaler"><code class="docutils literal notranslate"><span class="pre">EventScaler</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.event_scaler.EventScaler.calculate_scaled_events_at_grid_point"><code class="docutils literal notranslate"><span class="pre">EventScaler.calculate_scaled_events_at_grid_point()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.event_scaler.EventScaler.scale_events"><code class="docutils literal notranslate"><span class="pre">EventScaler.scale_events()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_corsika_limits">derive_corsika_limits</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator"><code class="docutils literal notranslate"><span class="pre">LimitCalculator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radial_distance"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radial_distance()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.core_distance_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_production_statistics">derive_production_statistics</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.calculate_production_statistics_at_grid_point"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator.calculate_production_statistics_at_grid_point()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics.ProductionStatisticsDerivator.derive_statistics"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsDerivator.derive_statistics()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_production_statistics_handler">derive_production_statistics_handler</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.initialize_evaluators()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.perform_interpolation()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.run"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.write_output"><code class="docutils literal notranslate"><span class="pre">ProductionStatisticsHandler.write_output()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_production_grid">generate_production_grid</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration"><code class="docutils literal notranslate"><span class="pre">GridGeneration</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_altaz_to_radec()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_coordinates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.create_circular_binning"><code class="docutils literal notranslate"><span class="pre">GridGeneration.create_circular_binning()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.generate_grid"><code class="docutils literal notranslate"><span class="pre">GridGeneration.generate_grid()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_grid_points()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_quantity"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_quantity()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1286,41 +1325,6 @@ and performs interpolation for a specified query point.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.interpolate_energy_threshold"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.interpolate_energy_threshold()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.interpolation_handler.InterpolationHandler.plot_comparison"><code class="docutils literal notranslate"><span class="pre">InterpolationHandler.plot_comparison()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.derive_corsika_limits">derive_corsika_limits</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator"><code class="docutils literal notranslate"><span class="pre">LimitCalculator</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_lower_energy_limit"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_lower_energy_limit()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_upper_radial_distance"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_upper_radial_distance()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.compute_viewcone"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.compute_viewcone()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.core_distance_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.core_distance_bins</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.energy_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.energy_bins</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.plot_data"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.plot_data()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.derive_corsika_limits.LimitCalculator.view_cone_bins"><code class="docutils literal notranslate"><span class="pre">LimitCalculator.view_cone_bins</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.generate_production_grid">generate_production_grid</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration"><code class="docutils literal notranslate"><span class="pre">GridGeneration</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_altaz_to_radec"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_altaz_to_radec()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.convert_coordinates"><code class="docutils literal notranslate"><span class="pre">GridGeneration.convert_coordinates()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.create_circular_binning"><code class="docutils literal notranslate"><span class="pre">GridGeneration.create_circular_binning()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.generate_grid"><code class="docutils literal notranslate"><span class="pre">GridGeneration.generate_grid()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_grid_points()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_quantity"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_quantity()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.scale_events_manager">scale_events_manager</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.initialize_evaluators()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.perform_interpolation()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.run"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.run()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.write_output"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.write_output()</span></code></a></li>
 </ul>
 </li>
 </ul>
