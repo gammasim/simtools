@@ -104,7 +104,7 @@ class ScaleEventsManager:
             json.dump(output_data, f, indent=4)
         self.logger.info(f"Output saved to {self.output_filepath}")
         self.logger.info(
-            f"Scaled events for grid point {self.args['query_point']}: {scaled_events}"
+            f"Scaled events for query point {self.args['query_point']}: {scaled_events}"
         )
 
     def run(self):
