@@ -27,9 +27,9 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - TEST_OUTPUT_FILES:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_proton_za20deg_azm180deg_North_alpha_check_output.log_hist.tar.gz
+        FILE: run000001_proton_za20deg_azm180deg_North_alpha_6.0.0_check_output.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_proton_za20deg_azm180deg_North_alpha_check_output.zst
+        FILE: run000001_proton_za20deg_azm180deg_North_alpha_6.0.0_check_output.zst
         EXPECTED_OUTPUT:
           trigger_time:
           - 0

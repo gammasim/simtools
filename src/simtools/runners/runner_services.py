@@ -52,6 +52,7 @@ class RunnerServices:
             "array_name": self.corsika_config.array_model.layout_name,
             "site": self.corsika_config.array_model.site,
             "label": self.label,
+            "model_version": self.corsika_config.array_model.model_version,
             "zenith": self.corsika_config.zenith_angle,
             "azimuth": self.corsika_config.azimuth_angle,
         }
@@ -141,7 +142,8 @@ class RunnerServices:
         return (
             f"{run_dir}_{info_for_file_name['primary']}_"
             f"za{round(zenith):02}deg_azm{azimuth:03}deg_"
-            f"{info_for_file_name['site']}_{info_for_file_name['array_name']}{file_label}"
+            f"{info_for_file_name['site']}_{info_for_file_name['array_name']}_"
+            f"{info_for_file_name['model_version']}{file_label}"
         )
 
     def _get_log_file_path(self, file_type, file_name):
