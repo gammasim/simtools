@@ -3,6 +3,7 @@
 r"""Class to read and manage relevant model parameters for a given telescope model."""
 
 import logging
+import re
 import textwrap
 from collections import defaultdict
 from itertools import groupby
@@ -91,6 +92,26 @@ class ReadParameters:
             if isinstance(unit, list)
             else ", ".join(f"{v} {unit}" for v in value_data)
         ).strip()
+
+    def _wrap_at_underscores(self, text, max_width):
+        """Wrap text at underscores to fit within a specified width."""
+        parts = text.split("_")
+        lines = []
+        current = []
+
+        for part in parts:
+            # Predict the new length if we add this part
+            next_line = "_".join([*current, part])
+            if len(next_line) <= max_width:
+                current.append(part)
+            else:
+                lines.append("_".join(current))
+                current = [part]
+
+        if current:
+            lines.append("_".join(current))
+
+        return " ".join(lines)
 
     def _group_model_versions_by_parameter_version(self, grouped_data):
         """Group model versions by parameter version and track the parameter values."""
@@ -234,8 +255,6 @@ class ReadParameters:
 
         for parameter in filter(all_parameter_data.__contains__, names.model_parameters().keys()):
             parameter_data = all_parameter_data.get(parameter)
-            if parameter_data["instrument"] != telescope_model.name:
-                continue
             parameter_version = telescope_model.get_parameter_version(parameter)
             unit = parameter_data.get("unit") or " "
             value_data = parameter_data.get("value")
@@ -247,8 +266,20 @@ class ReadParameters:
             value = self._format_parameter_value(parameter, value_data, unit, file_flag)
 
             description = parameter_descriptions[0].get(parameter)
-            short_description = parameter_descriptions[1].get(parameter, description)
+            short_description = parameter_descriptions[1].get(parameter)
+            if short_description is None:
+                short_description = description
             inst_class = parameter_descriptions[2].get(parameter)
+
+            matching_instrument = parameter_data["instrument"] == telescope_model.name
+            if not names.is_design_type(telescope_model.name) and matching_instrument:
+                parameter = f"***{parameter}***"
+                parameter_version = f"***{parameter_version}***"
+                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                    value = f"***{value}***"
+                description = f"***{description}***"
+                short_description = f"***{short_description}***"
+
             data.append(
                 [
                     inst_class,
@@ -296,7 +327,11 @@ class ReadParameters:
                 file.write(
                     "The design model can be found here: "
                     f"[{telescope_model.design_model}]"
-                    f"({telescope_model.design_model}.md).\n"
+                    f"({telescope_model.design_model}.md).\n\n"
+                )
+                file.write(
+                    "Parameters shown in ***bold and italics*** are specific to each telescope.\n"
+                    "Parameters without emphasis are inherited from the design model.\n"
                 )
                 file.write("\n\n")
 
@@ -313,7 +348,7 @@ class ReadParameters:
                 )
 
                 # Write table rows
-                column_widths = [20, 20, 20, 70]
+                column_widths = [10, 10, 20, 60]
                 for (
                     _,
                     parameter_name,
@@ -325,11 +360,13 @@ class ReadParameters:
                     text = short_description if short_description else description
                     wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
                     wrapped_text = " ".join(wrapped_text)
+                    parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
+
                     file.write(
                         f"| {parameter_name:{column_widths[0]}} |"
                         f" {parameter_version:{column_widths[1]}} |"
                         f" {value:{column_widths[2]}} |"
-                        f" {wrapped_text} |\n"
+                        f" {wrapped_text:{column_widths[3]}} |\n"
                     )
                 file.write("\n\n")
 
