@@ -332,12 +332,12 @@ class Configurator:
 
     def _initialize_model_versions(self):
         """Initialize model versions."""
-        if self.config.get("model_version", None):
-            if (
-                isinstance(self.config["model_version"], list)
-                and len(self.config["model_version"]) == 1
-            ):
-                self.config["model_version"] = self.config["model_version"][0]
+        if (
+            self.config.get("model_version", None)
+            and isinstance(self.config["model_version"], list)
+            and len(self.config["model_version"]) == 1
+        ):
+            self.config["model_version"] = self.config["model_version"][0]
 
     def _initialize_io_handler(self):
         """Initialize IOHandler with input and output paths."""

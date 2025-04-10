@@ -11,6 +11,8 @@ from simtools.corsika.corsika_config import CorsikaConfig, InvalidCorsikaInputEr
 
 logger = logging.getLogger()
 
+CORSIKA_CONFIG_MODE_PARAMETER = "simtools.corsika.corsika_config.ModelParameter"
+
 
 @pytest.fixture
 def corsika_config_no_array_model(corsika_config_data):
@@ -80,7 +82,7 @@ def test_fill_corsika_configuration_model_version(
 ):
     """Test handling a list of model versions as input, taking the first one only."""
 
-    with patch("simtools.corsika.corsika_config.ModelParameter") as mock_model_parameter:
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params = Mock()
         mock_params.get_simulation_software_parameters.return_value = {
             "corsika_iact_max_bunches": {"value": 1000000, "unit": None},
@@ -511,7 +513,7 @@ def test_validate_run_number(corsika_config_no_array_model):
 
 def test_assert_corsika_configurations_match_success(corsika_config_mock_array_model):
     """Test that assert_corsika_configurations_match does not raise an error when parameters match."""
-    with patch("simtools.corsika.corsika_config.ModelParameter") as mock_model_parameter:
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params = Mock()
         mock_params.get_simulation_software_parameters.return_value = {
             "param1": {"value": 10},
@@ -532,7 +534,7 @@ def test_assert_corsika_configurations_match_success(corsika_config_mock_array_m
 
 def test_assert_corsika_configurations_match_failure(corsika_config_mock_array_model):
     """Test that assert_corsika_configurations_match raises an error when parameters do not match."""
-    with patch("simtools.corsika.corsika_config.ModelParameter") as mock_model_parameter:
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params_1 = Mock()
         mock_params_1.get_simulation_software_parameters.return_value = {
             "param1": {"value": 10},
@@ -553,7 +555,7 @@ def test_assert_corsika_configurations_match_failure(corsika_config_mock_array_m
 
 def test_assert_corsika_configurations_match_skip_parameters(corsika_config_mock_array_model):
     """Test that assert_corsika_configurations_match skips specific parameters."""
-    with patch("simtools.corsika.corsika_config.ModelParameter") as mock_model_parameter:
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         mock_params_1 = Mock()
         mock_params_1.get_simulation_software_parameters.return_value = {
             "param1": {"value": 10},
@@ -577,7 +579,7 @@ def test_assert_corsika_configurations_match_skip_parameters(corsika_config_mock
 
 def test_assert_corsika_configurations_match_single_version(corsika_config_mock_array_model):
     """Test that assert_corsika_configurations_match returns early with single model version."""
-    with patch("simtools.corsika.corsika_config.ModelParameter") as mock_model_parameter:
+    with patch(CORSIKA_CONFIG_MODE_PARAMETER) as mock_model_parameter:
         # Even with different parameters, it should return early without checking
         mock_params = Mock()
         mock_params.get_simulation_software_parameters.return_value = {
