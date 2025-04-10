@@ -21,7 +21,6 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools.io_operations import io_handler
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
@@ -48,8 +47,8 @@ class ScaleEventsManager:
         """
         self.args = args_dict
         self.logger = logging.getLogger(__name__)
-        self.output_path = io_handler.IOHandler().get_output_directory(Path(__file__).stem)
-        self.output_filepath = Path(self.output_path).joinpath(f"{self.args['output_file']}")
+        self.output_path = self.args.get("output_path", None)
+        self.output_filepath = self.output_path.joinpath(f"{self.args['output_file']}")
         self.metrics = collect_data_from_file(self.args["metrics_file"])
         self.evaluator_instances = []
 
@@ -100,6 +99,7 @@ class ScaleEventsManager:
             "query_point": self.args["query_point"],
             "scaled_events": scaled_events.tolist(),
         }
+        self.output_filepath.parent.mkdir(parents=True, exist_ok=True)
         with open(self.output_filepath, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=4)
         self.logger.info(f"Output saved to {self.output_filepath}")
