@@ -64,7 +64,7 @@ def test_interpolation_handler_build_data_array(test_fits_file, test_fits_file_2
     handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)
     data, grid_points = handler._build_data_array()
     assert data.shape[0] == grid_points.shape[0]
-    assert grid_points.shape[1] == 5  # Ensure grid points have 5 dimensions
+    assert grid_points.shape[1] == 5
 
 
 def test_interpolation_handler_remove_flat_dimensions():
@@ -78,8 +78,8 @@ def test_interpolation_handler_remove_flat_dimensions():
     )
     handler = InterpolationHandler([], metrics={})
     reduced_grid_points, non_flat_mask = handler._remove_flat_dimensions(grid_points)
-    assert reduced_grid_points.shape[1] < grid_points.shape[1]  # Ensure dimensions are reduced
-    assert np.all(non_flat_mask == [False, False, True, False, False])  # Only zenith varies
+    assert reduced_grid_points.shape[1] < grid_points.shape[1]
+    assert np.all(non_flat_mask == [False, False, True, False, False])
 
 
 @patch("matplotlib.pyplot.show")
@@ -91,4 +91,4 @@ def test_interpolation_handler_plot_comparison(mock_show, test_fits_file, metric
     )
     handler = InterpolationHandler([evaluator], metrics=metric)
     handler.plot_comparison(evaluator)
-    mock_show.assert_called_once()  # Ensure the plot is displayed
+    mock_show.assert_called_once()
