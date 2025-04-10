@@ -2,9 +2,7 @@
 Module to run the StatisticalErrorEvaluator and interpolate results.
 
 This module provides the `ProductionStatisticsHandler` class, which manages the workflow for
-derivation of production statistics and performing interpolation. It is designed to handle the
-evaluation of statistical uncertainties from DL2 Monte Carlo (MC) event files and perform
-interpolation for a specified query point.
+derivation of required number of events for a simulation production using pre-defined metrics.
 
 The module includes functionality to:
 - Initialize evaluators for statistical error calculations based on input parameters.
