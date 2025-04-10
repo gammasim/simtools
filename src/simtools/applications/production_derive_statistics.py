@@ -36,7 +36,7 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 
 .. code-block:: console
 
-    simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \\
+    simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\
         --zeniths 20 40 52 60 --offsets 0 --query_point 1 180 30 0 0 \\
         --metrics_file "path/to/metrics.yaml" \\
         --output_file "output.json"

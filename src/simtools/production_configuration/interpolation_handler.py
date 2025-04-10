@@ -17,7 +17,7 @@ class InterpolationHandler:
     def __init__(self, evaluators, metrics: dict):
         self.evaluators = evaluators
         self.metrics = metrics
-        self.derive_production_statisticss = [
+        self.derive_production_statistics = [
             ProductionStatisticsDerivator(e, self.metrics) for e in self.evaluators
         ]
 
@@ -31,8 +31,8 @@ class InterpolationHandler:
             for e in self.evaluators
         ]
         self.production_statistics = [
-            scaler.derive_statistics(return_sum=False)
-            for scaler in self.derive_production_statisticss
+            derivator.derive_statistics(return_sum=False)
+            for derivator in self.derive_production_statistics
         ]
         self.energy_thresholds = np.array([e.energy_threshold for e in self.evaluators])
 
@@ -158,7 +158,7 @@ class InterpolationHandler:
 
     def plot_comparison(self, evaluator):
         """
-        Plot a comparison between the simulated, scaled, and reconstructed events.
+        Plot a comparison between the simulated, derived, and reconstructed events.
 
         Parameters
         ----------
@@ -192,5 +192,5 @@ class InterpolationHandler:
         plt.xscale("log")
         plt.xlabel("Energy (Midpoint of Bin Edges)")
         plt.ylabel("Event Count")
-        plt.title("Comparison of Simulated, scaled, and reconstructed events")
+        plt.title("Comparison of simulated, derived, and reconstructed events")
         plt.show()
