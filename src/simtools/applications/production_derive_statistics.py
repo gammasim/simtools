@@ -39,7 +39,8 @@ To evaluate statistical uncertainties and perform interpolation, run the command
     simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\
         --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\
         --metrics_file "path/to/metrics.yaml" \\
-        --output_file "output.json"
+        --output_path simtools-output/derived_events \\
+        --output_file derived_events.json
 
 The output will display the production statistics for the specified query point and save
  the results to the specified output file.
@@ -92,16 +93,6 @@ def _parse(label, description):
         help="Grid point for interpolation (energy, azimuth, zenith, NSB, offset).",
     )
     config.parser.add_argument(
-        "--output_file",
-        required=False,
-        type=str,
-        default="interpolated_production_statistics.json",
-        help=(
-            "Output file to store the results. "
-            "(default: 'interpolated_production_statistics.json')."
-        ),
-    )
-    config.parser.add_argument(
         "--metrics_file",
         required=False,
         type=str,
@@ -115,7 +106,7 @@ def _parse(label, description):
         default=("prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"),
         help=("Template for the DL2 MC event file name."),
     )
-    return config.initialize(db_config=False)
+    return config.initialize(db_config=False, output=True)
 
 
 def main():
