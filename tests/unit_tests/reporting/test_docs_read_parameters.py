@@ -177,6 +177,30 @@ def test__format_parameter_value(io_handler, db_config):
     assert result_4 == "1 m, 2 m, 3 m, 4 m"
 
 
+def test__wrap_at_underscores(io_handler, db_config):
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
+
+    # "this_is_a_test" -> parts: ['this', 'is', 'a', 'test']
+    # builds: "this" (4), "this_is" (7), "this_is_a" (9), "this_is_a_test" (14) > 10 -> wrap before "test"
+    result_1 = read_parameters._wrap_at_underscores("this_is_a_test", 10)
+    assert result_1 == "this_is_a test"
+
+    result_2 = read_parameters._wrap_at_underscores("this_is_a_really_long_test", 10)
+    assert result_2 == "this_is_a really long_test"
+
+    # No underscores -> nothing to wrap
+    result_3 = read_parameters._wrap_at_underscores("simpletext", 10)
+    assert result_3 == "simpletext"
+
+    # Whole string fits under max width
+    result_4 = read_parameters._wrap_at_underscores("this_is_short", 20)
+    assert result_4 == "this_is_short"
+
+    result_5 = read_parameters._wrap_at_underscores("this_is_exactly_10", 10)
+    assert result_5 == "this_is exactly_10"
+
+
 def test__group_model_versions_by_parameter_version(io_handler, db_config):
     output_path = io_handler.get_output_directory()
     read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
