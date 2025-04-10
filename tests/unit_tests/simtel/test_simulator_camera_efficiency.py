@@ -13,11 +13,12 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def simulator_camera_efficiency(camera_efficiency_sst, simtel_path):
+def simulator_camera_efficiency(camera_efficiency_sst, site_model_south, simtel_path):
     camera_efficiency_sst.export_model_files()
     return SimulatorCameraEfficiency(
         simtel_path=simtel_path,
         telescope_model=camera_efficiency_sst.telescope_model,
+        site_model=site_model_south,
         file_simtel=camera_efficiency_sst._file["simtel"],
         label="test-simtel-runner-camera-efficiency",
     )
