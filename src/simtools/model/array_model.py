@@ -117,6 +117,26 @@ class ArrayModel:
         return array_elements, site_model, telescope_model
 
     @property
+    def config_file_path(self) -> Path:
+        """
+        Return the path of the array config file for sim_telarray.
+
+        Returns
+        -------
+        Path
+            Path of the exported config file for sim_telarray.
+        """
+        if self._config_file_path is None:
+            config_file_name = names.simtel_config_file_name(
+                array_name=self.layout_name,
+                site=self.site_model.site,
+                model_version=self.model_version,
+                label=self.label,
+            )
+            self._config_file_path = self.get_config_directory().joinpath(config_file_name)
+        return self._config_file_path
+
+    @property
     def number_of_telescopes(self) -> int:
         """
         Return the number of telescopes.
@@ -187,7 +207,7 @@ class ArrayModel:
             )
             if name not in exported_models:
                 self._logger.debug(f"Exporting configuration file for telescope {name}")
-                tel_model.export_config_file()
+                tel_model.write_sim_telarray_config_file()
                 exported_models.append(name)
             else:
                 self._logger.debug(
@@ -198,17 +218,9 @@ class ArrayModel:
 
     def export_sim_telarray_config_file(self):
         """Export sim_telarray configuration file for the array into the model directory."""
-        # Setting file name and the location
-        config_file_name = names.simtel_config_file_name(
-            array_name=self.layout_name,
-            site=self.site_model.site,
-            model_version=self.model_version,
-            label=self.label,
-        )
-        self._config_file_path = self.get_config_directory().joinpath(config_file_name)
+        self.site_model.export_model_files()
 
-        # Writing parameters to the file
-        self._logger.info(f"Writing array configuration file into {self._config_file_path}")
+        self._logger.info(f"Writing array configuration file into {self.config_file_path}")
         simtel_writer = SimtelConfigWriter(
             site=self.site_model.site,
             layout_name=self.layout_name,
@@ -216,7 +228,7 @@ class ArrayModel:
             label=self.label,
         )
         simtel_writer.write_array_config_file(
-            config_file_path=self._config_file_path,
+            config_file_path=self.config_file_path,
             telescope_model=self.telescope_model,
             site_model=self.site_model,
         )
@@ -232,20 +244,6 @@ class ArrayModel:
             self.export_simtel_telescope_config_files()
         if not self._array_model_file_exported:
             self.export_sim_telarray_config_file()
-
-    def get_config_file(self) -> Path:
-        """
-        Return the path of the array config file for sim_telarray.
-
-        A new config file is produced if the file is not updated.
-
-        Returns
-        -------
-        Path
-            Path of the exported config file for sim_telarray.
-        """
-        self.export_all_simtel_config_files()
-        return self._config_file_path
 
     def get_config_directory(self) -> Path:
         """
