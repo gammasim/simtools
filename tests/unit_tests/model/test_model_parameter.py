@@ -9,7 +9,7 @@ from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.db.db_handler import DatabaseHandler
-from simtools.model.model_parameter import InvalidModelParameterError
+from simtools.model.model_parameter import InvalidModelParameterError, ModelParameter
 from simtools.model.telescope_model import TelescopeModel
 
 logger = logging.getLogger()
@@ -325,6 +325,38 @@ def test_export_nsb_spectrum_to_telescope_altitude_correction_file(telescope_mod
         },
         dest=model_directory,
     )
+
+
+def test_model_version_setter(mocker):
+    """Test the model_version setter property."""
+    model_version = "5.0.0"
+    mock_db = mocker.MagicMock()
+    mock_db.get_design_model.return_value = None
+
+    # Create minimal required parameters for ModelParameter initialization
+    mongo_db_config = {"test": "config"}
+
+    # Mock the DatabaseHandler constructor instead of trying to patch the db attribute
+    mocker.patch("simtools.db.db_handler.DatabaseHandler", return_value=mock_db)
+
+    # Create ModelParameter instance with required parameters
+    model_param = ModelParameter(mongo_db_config=mongo_db_config, model_version=model_version)
+
+    assert model_param.model_version == "5.0.0"
+
+    # Test setting a invalid single-element list model version
+    # It is invalid because a list with one element will always be converted to a string
+    # in the configurator
+    with pytest.raises(
+        ValueError, match="Only one model version can be passed to ModelParameter, not a list."
+    ):
+        model_param.model_version = ["6.0.0"]
+
+    # Test setting an invalid multi-element list model version
+    with pytest.raises(
+        ValueError, match="Only one model version can be passed to ModelParameter, not a list."
+    ):
+        model_param.model_version = ["7.0.0", "8.0.0"]
 
 
 def test_write_sim_telarray_config_file(telescope_model_lst, mocker):

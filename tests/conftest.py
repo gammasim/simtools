@@ -355,13 +355,14 @@ def corsika_config(io_handler, db_config, corsika_config_data, array_model_south
 
 
 @pytest.fixture
-def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data):
+def corsika_config_mock_array_model(io_handler, db_config, corsika_config_data, model_version):
     """Corsika configuration object (using array model South)."""
     array_model = mock.MagicMock()
     array_model.layout_name = "test_layout"
     array_model.corsika_config.primary = "proton"
     array_model.site_model = mock.MagicMock()
     array_model.site_model._parameters = {"geomag_rotation": -4.533}
+    array_model.model_version = model_version
 
     # Define get_parameter_value() to behave as expected
     def mock_get_parameter_value(par_name):
