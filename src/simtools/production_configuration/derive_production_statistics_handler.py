@@ -19,7 +19,6 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 
-from simtools.io_operations import io_handler
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
@@ -47,9 +46,8 @@ class ProductionStatisticsHandler:
         """
         self.args = args_dict
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        self.output_path = io_handler.IOHandler().get_output_directory(Path(__file__).stem)
-        self.output_filepath = Path(self.output_path).joinpath(f"{self.args['output_file']}")
+        self.output_path = Path(self.args.get("output_path", "."))
+        self.output_filepath = self.output_path.joinpath(f"{self.args['output_file']}")
         self.metrics = collect_data_from_file(self.args["metrics_file"])
         self.evaluator_instances = []
 
@@ -73,7 +71,7 @@ class ProductionStatisticsHandler:
             evaluator = StatisticalErrorEvaluator(
                 file_path,
                 metrics=self.metrics,
-                grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
+                grid_point=(None, None, zenith, None, offset * u.deg),
             )
             evaluator.calculate_metrics()
             self.evaluator_instances.append(evaluator)
@@ -100,6 +98,7 @@ class ProductionStatisticsHandler:
             "query_point": self.args["query_point"],
             "production_statistics": production_statistics.tolist(),
         }
+        self.output_filepath.parent.mkdir(parents=True, exist_ok=True)
         with open(self.output_filepath, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=4)
         self.logger.info(f"Output saved to {self.output_filepath}")
@@ -110,7 +109,11 @@ class ProductionStatisticsHandler:
 
     def run(self):
         """Run the scaling and interpolation workflow."""
-        self.logger.info(f"args dict: {self.args}")
+        self.logger.info(f"Zeniths: {self.args['zeniths']}")
+        self.logger.info(f"Camera offsets: {self.args['camera_offsets']}")
+        self.logger.info(f"Query Point: {self.args['query_point']}")
+        self.logger.info(f"Metrics File: {self.args['metrics_file']}")
+
         self.initialize_evaluators()
         production_statistics = self.perform_interpolation()
         self.write_output(production_statistics)
