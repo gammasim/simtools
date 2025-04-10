@@ -29,10 +29,11 @@ from simtools.utils.general import collect_data_from_file
 
 class ProductionStatisticsHandler:
     """
-    Manages the workflow for scaling events and performing interpolation.
+    Handles the workflow for deriving production statistics.
 
-    This class handles the evaluation of statistical uncertainties from DL2 MC event files
-    and performs interpolation for a specified query point.
+    This class manages the evaluation of statistical uncertainties from DL2 MC event files
+    and performs interpolation to estimate the required number of events for a simulation
+    production at a specified query point.
     """
 
     def __init__(self, args_dict):
