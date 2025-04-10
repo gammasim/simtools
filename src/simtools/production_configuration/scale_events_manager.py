@@ -110,7 +110,7 @@ class ScaleEventsManager:
     def run(self):
         """Run the scaling and interpolation workflow."""
         self.logger.info(f"Zeniths: {self.args['zeniths']}")
-        self.logger.info(f"camera_offsets: {self.args['camera_offsets']}")
+        self.logger.info(f"Camera offsets: {self.args['camera_offsets']}")
         self.logger.info(f"Query Point: {self.args['query_point']}")
         self.logger.info(f"Metrics File: {self.args['metrics_file']}")
 
