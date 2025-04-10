@@ -32,7 +32,7 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
     mock_telescope_model.site = "North"
     mock_telescope_model.name = "LSTN-01"
     mock_telescope_model.label = "ray_tracing"
-    mock_telescope_model.export_config_file = mocker.Mock()
+    mock_telescope_model.write_sim_telarray_config_file = mocker.Mock()
     mock_telescope_model.mirrors.get_single_mirror_parameters = mocker.Mock(
         return_value=(0, 0, 2600.0, 0, 0)
     )
@@ -42,11 +42,12 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
 
 
 @pytest.fixture
-def ray_tracing_lst(telescope_model_lst_mock, simtel_path):
+def ray_tracing_lst(telescope_model_lst_mock, site_model_north, simtel_path):
     """A RayTracing instance with results read in that were simulated before"""
 
     ray_tracing_lst = RayTracing(
         telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
         simtel_path=simtel_path,
         label="validate_optics",
         source_distance=10 * u.km,
@@ -69,10 +70,11 @@ def ray_tracing_lst(telescope_model_lst_mock, simtel_path):
 
 
 @pytest.fixture
-def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, simtel_path):
-    telescope_model_lst_mock.export_config_file()
+def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, site_model_north, simtel_path):
+    telescope_model_lst_mock.write_sim_telarray_config_file()
     return RayTracing(
         telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
         simtel_path=simtel_path,
         label="validate_optics",
         source_distance=10 * u.km,
@@ -83,10 +85,11 @@ def ray_tracing_lst_single_mirror_mode(telescope_model_lst_mock, simtel_path):
     )
 
 
-def test_ray_tracing_init(simtel_path, telescope_model_lst_mock, caplog):
+def test_ray_tracing_init(simtel_path, telescope_model_lst_mock, site_model_north, caplog):
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
+            site_model=site_model_north,
             simtel_path=simtel_path,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
@@ -100,12 +103,15 @@ def test_ray_tracing_init(simtel_path, telescope_model_lst_mock, caplog):
     assert repr(ray) == f"RayTracing(label={telescope_model_lst_mock.label})\n"
 
 
-def test_ray_tracing_single_mirror_mode(simtel_path, telescope_model_lst_mock, caplog):
-    telescope_model_lst_mock.export_config_file()
+def test_ray_tracing_single_mirror_mode(
+    simtel_path, telescope_model_lst_mock, site_model_north, caplog
+):
+    telescope_model_lst_mock.write_sim_telarray_config_file()
 
     with caplog.at_level(logging.DEBUG):
         ray = RayTracing(
             telescope_model=telescope_model_lst_mock,
+            site_model=site_model_north,
             simtel_path=simtel_path,
             zenith_angle=30 * u.deg,
             source_distance=10 * u.km,
@@ -122,11 +128,12 @@ def test_ray_tracing_single_mirror_mode(simtel_path, telescope_model_lst_mock, c
 
 
 def test_ray_tracing_single_mirror_mode_mirror_numbers(
-    simtel_path, telescope_model_lst_mock, mocker
+    simtel_path, telescope_model_lst_mock, site_model_north, mocker
 ):
-    telescope_model_lst_mock.export_config_file()
+    telescope_model_lst_mock.write_sim_telarray_config_file()
     ray = RayTracing(
         telescope_model=telescope_model_lst_mock,
+        site_model=site_model_north,
         simtel_path=simtel_path,
         source_distance=10 * u.km,
         zenith_angle=30 * u.deg,
@@ -409,7 +416,7 @@ def test_get_mirror_panel_focal_length_with_random_uniform(ray_tracing_lst, mock
     mock_rng_instance.uniform.assert_called_once_with(low=-1.0, high=1.0)
 
 
-def test_ray_tracing_simulate(ray_tracing_lst, caplog, mocker):
+def test_ray_tracing_simulate(ray_tracing_lst, site_model_north, caplog, mocker):
     mock_simulator = mocker.patch("simtools.ray_tracing.ray_tracing.SimulatorRayTracing")
     mock_simulator_instance = mock_simulator.return_value
     mock_simulator_instance.run = mocker.Mock()
@@ -425,6 +432,7 @@ def test_ray_tracing_simulate(ray_tracing_lst, caplog, mocker):
     mock_simulator.assert_called_once_with(
         simtel_path=ray_tracing_lst.simtel_path,
         telescope_model=ray_tracing_lst.telescope_model,
+        site_model=site_model_north,
         test=True,
         config_data={
             "zenith_angle": ray_tracing_lst.zenith_angle,
