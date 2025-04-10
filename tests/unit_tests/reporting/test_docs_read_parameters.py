@@ -152,7 +152,7 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
 
     code_block = match.group(1)
     line_count = len(code_block.strip().splitlines())
-    assert line_count <= 30
+    assert line_count == 30
 
     # Compare to actual first 30 lines of input file
     input_path = Path("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
