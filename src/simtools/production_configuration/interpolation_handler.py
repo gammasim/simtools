@@ -1,10 +1,12 @@
-"""Interpolates between instances of StatisticalErrorEvaluator using EventScaler."""
+"""Handle interpolation between multiple StatisticalErrorEvaluator instances."""
 
 import astropy.units as u
 import numpy as np
 from scipy.interpolate import griddata
 
-from simtools.production_configuration.event_scaler import EventScaler
+from simtools.production_configuration.derive_production_statistics import (
+    ProductionStatisticsDerivator,
+)
 
 __all__ = ["InterpolationHandler"]
 
@@ -15,7 +17,9 @@ class InterpolationHandler:
     def __init__(self, evaluators, metrics: dict):
         self.evaluators = evaluators
         self.metrics = metrics
-        self.event_scalers = [EventScaler(e, self.metrics) for e in self.evaluators]
+        self.derive_production_statistics = [
+            ProductionStatisticsDerivator(e, self.metrics) for e in self.evaluators
+        ]
 
         self.azimuths = [e.grid_point[1].to(u.deg).value for e in self.evaluators]
         self.zeniths = [e.grid_point[2].to(u.deg).value for e in self.evaluators]
@@ -26,8 +30,9 @@ class InterpolationHandler:
             (e.data["bin_edges_low"][:-1] + e.data["bin_edges_high"][:-1]) / 2
             for e in self.evaluators
         ]
-        self.scaled_events = [
-            scaler.scale_events(return_sum=False) for scaler in self.event_scalers
+        self.production_statistics = [
+            derivator.derive_statistics(return_sum=False)
+            for derivator in self.derive_production_statistics
         ]
         self.energy_thresholds = np.array([e.energy_threshold for e in self.evaluators])
 
@@ -48,8 +53,8 @@ class InterpolationHandler:
         flat_data_list = []
         flat_grid_points = []
 
-        for e, energy_grid, scaled_events in zip(
-            self.evaluators, self.energy_grids, self.scaled_events
+        for e, energy_grid, production_statistics in zip(
+            self.evaluators, self.energy_grids, self.production_statistics
         ):
             az = np.full(len(energy_grid), e.grid_point[1].to(u.deg).value)
             zen = np.full(len(energy_grid), e.grid_point[2].to(u.deg).value)
@@ -59,7 +64,7 @@ class InterpolationHandler:
             # Combine grid points and data
             grid_points = np.column_stack([energy_grid.to(u.TeV).value, az, zen, nsb, offset])
             flat_grid_points.append(grid_points)
-            flat_data_list.append(scaled_events)
+            flat_data_list.append(production_statistics)
 
         # Flatten the list and convert to numpy arrays
         flat_grid_points = np.vstack(flat_grid_points)
@@ -153,7 +158,7 @@ class InterpolationHandler:
 
     def plot_comparison(self, evaluator):
         """
-        Plot a comparison between the simulated, scaled, and reconstructed events.
+        Plot a comparison between the simulated, derived, and reconstructed events.
 
         Parameters
         ----------
@@ -176,7 +181,7 @@ class InterpolationHandler:
 
         self.interpolate(self.grid_points)
 
-        plt.plot(midpoints, evaluator.scaled_events, label="Scaled")
+        plt.plot(midpoints, evaluator.production_statistics, label="Derived")
 
         reconstructed_event_histogram, _ = np.histogram(
             evaluator.data["event_energies_reco"], bins=evaluator.data["bin_edges_low"]
@@ -187,5 +192,5 @@ class InterpolationHandler:
         plt.xscale("log")
         plt.xlabel("Energy (Midpoint of Bin Edges)")
         plt.ylabel("Event Count")
-        plt.title("Comparison of Simulated, scaled, and reconstructed events")
+        plt.title("Comparison of simulated, derived, and reconstructed events")
         plt.show()

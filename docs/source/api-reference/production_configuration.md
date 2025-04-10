@@ -15,12 +15,39 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(event-scaler)=
+(derive-corsika-limits)=
 
-## event_scaler
+## derive_corsika_limits
 
 ```{eval-rst}
-.. automodule:: production_configuration.event_scaler
+.. automodule:: production_configuration.derive_corsika_limits
+   :members:
+```
+
+(derive-production-statistics)=
+
+## derive_production_statistics
+
+```{eval-rst}
+.. automodule:: production_configuration.derive_production_statistics
+   :members:
+```
+
+(derive-production-statistics-handler)=
+
+## derive_production_statistics_handler
+
+```{eval-rst}
+.. automodule:: production_configuration.derive_production_statistics_handler
+   :members:
+```
+
+(generate-production-grid)=
+
+## generate_production_grid
+
+```{eval-rst}
+.. automodule:: production_configuration.generate_production_grid
    :members:
 ```
 
@@ -39,32 +66,5 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 ```{eval-rst}
 .. automodule:: production_configuration.interpolation_handler
-   :members:
-```
-
-(derive-corsika-limits)=
-
-## derive_corsika_limits
-
-```{eval-rst}
-.. automodule:: production_configuration.derive_corsika_limits
-   :members:
-```
-
-(generate-production-grid)=
-
-## generate_production_grid
-
-```{eval-rst}
-.. automodule:: production_configuration.generate_production_grid
-   :members:
-```
-
-(scale-events-manager)=
-
-## scale_events_manager
-
-```{eval-rst}
-.. automodule:: production_configuration.scale_events_manager
    :members:
 ```
