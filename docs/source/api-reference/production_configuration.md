@@ -59,3 +59,12 @@ the calculation of the number of events to be simulated given a pre-determined m
 .. automodule:: production_configuration.generate_production_grid
    :members:
 ```
+
+(scale-events-manager)=
+
+## scale_events_manager
+
+```{eval-rst}
+.. automodule:: production_configuration.scale_events_manager
+   :members:
+```

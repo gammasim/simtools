@@ -17,8 +17,6 @@ class StatisticalErrorEvaluator:
     ----------
     file_path : str
         Path to the DL2 MC event file.
-    file_type : str
-        Type of the file, either 'point-like' or 'cone'.
     metrics : dict, optional
         Dictionary of metrics to evaluate. Default is None.
     grid_point : tuple, optional
@@ -28,13 +26,11 @@ class StatisticalErrorEvaluator:
     def __init__(
         self,
         file_path: str,
-        file_type: str,
         metrics: dict[str, float],
         grid_point: tuple[float, float, float, float, float] | None = None,
     ):
         """Init the evaluator with a DL2 MC event file, its type, and metrics to calculate."""
         self._logger = logging.getLogger(__name__)
-        self.file_type = file_type
         self.metrics = metrics
         self.grid_point = grid_point
 
