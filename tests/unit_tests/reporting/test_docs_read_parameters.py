@@ -1,3 +1,4 @@
+import re
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -143,6 +144,24 @@ def test__convert_to_md(telescope_model_lst, io_handler, db_config):
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
 
+    with Path(output_path / new_file).open("r", encoding="utf-8") as mdfile:
+        md_content = mdfile.read()
+
+    match = re.search(r"```\n(.*?)\n```", md_content, re.DOTALL)
+    assert match, "Code block with file contents not found"
+
+    code_block = match.group(1)
+    line_count = len(code_block.strip().splitlines())
+    assert line_count == 30
+
+    # Compare to actual first 30 lines of input file
+    input_path = Path("tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat")
+    with input_path.open("r", encoding="utf-8") as original_file:
+        expected_lines = original_file.read().splitlines()[:30]
+        expected_block = "\n".join(expected_lines)
+
+    assert code_block.strip() == expected_block.strip()
+
     # testing with non-utf-8 file
     new_file = read_parameters._convert_to_md(
         parameter_name, "tests/resources/example_non_utf-8_file.lis"
@@ -175,6 +194,30 @@ def test__format_parameter_value(io_handler, db_config):
     mock_data_4 = [[1, 2, 3, 4], "m", None]
     result_4 = read_parameters._format_parameter_value(parameter_name, *mock_data_4)
     assert result_4 == "1 m, 2 m, 3 m, 4 m"
+
+
+def test__wrap_at_underscores(io_handler, db_config):
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args={}, output_path=output_path)
+
+    # "this_is_a_test" -> parts: ['this', 'is', 'a', 'test']
+    # builds: "this" (4), "this_is" (7), "this_is_a" (9), "this_is_a_test" (14) > 10 -> wrap before "test"
+    result_1 = read_parameters._wrap_at_underscores("this_is_a_test", 10)
+    assert result_1 == "this_is_a test"
+
+    result_2 = read_parameters._wrap_at_underscores("this_is_a_really_long_test", 10)
+    assert result_2 == "this_is_a really long_test"
+
+    # No underscores -> nothing to wrap
+    result_3 = read_parameters._wrap_at_underscores("simpletext", 10)
+    assert result_3 == "simpletext"
+
+    # Whole string fits under max width
+    result_4 = read_parameters._wrap_at_underscores("this_is_short", 20)
+    assert result_4 == "this_is_short"
+
+    result_5 = read_parameters._wrap_at_underscores("this_is_exactly_10", 10)
+    assert result_5 == "this_is exactly_10"
 
 
 def test__group_model_versions_by_parameter_version(io_handler, db_config):
