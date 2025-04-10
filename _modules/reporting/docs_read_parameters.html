@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+g0d223e9 Manual</title>
+    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+gc6ec78e Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=250b1b29"></script>
+    <script src="../../_static/documentation_options.js?v=84435803"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g0d223e9 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc6ec78e Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -450,11 +450,20 @@ document.write(`
                 <span class="k">with</span> <span class="n">output_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
                     <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# </span><span class="si">{</span><span class="n">input_file</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                        <span class="s2">&quot;The full file can be found in the Simulation Model repository [here]&quot;</span>
+                        <span class="s2">&quot;(https://gitlab.cta-observatory.org/cta-science/simulations/&quot;</span>
+                        <span class="s2">&quot;simulation-model/simulation-models/-/blob/main/simulation-models/&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;model_parameters/Files/</span><span class="si">{</span><span class="n">input_file</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">.dat).</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;![Parameter plot.](../</span><span class="si">{</span><span class="n">IMAGE_PATH</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">array_element</span><span class="si">}</span><span class="s2">_&quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.png)</span><span class="se">\n</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
+                    <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;The first 30 lines of the file are:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;```</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_contents</span><span class="p">)</span>
+                    <span class="n">first_30_lines</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_contents</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[:</span><span class="mi">30</span><span class="p">])</span>
+                    <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">first_30_lines</span><span class="p">)</span>
                     <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">```&quot;</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
