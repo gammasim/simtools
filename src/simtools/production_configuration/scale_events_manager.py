@@ -48,7 +48,6 @@ class ScaleEventsManager:
         """
         self.args = args_dict
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
         self.output_path = io_handler.IOHandler().get_output_directory(Path(__file__).stem)
         self.output_filepath = Path(self.output_path).joinpath(f"{self.args['output_file']}")
         self.metrics = collect_data_from_file(self.args["metrics_file"])
