@@ -55,14 +55,14 @@ class ProductionStatisticsHandler:
 
     def initialize_evaluators(self):
         """Initialize StatisticalErrorEvaluator instances for the given zeniths and offsets."""
-        if not (self.args["base_path"] and self.args["zeniths"] and self.args["offsets"]):
+        if not (self.args["base_path"] and self.args["zeniths"] and self.args["camera_offsets"]):
             self.logger.warning("No files read")
             self.logger.warning(f"Base Path: {self.args['base_path']}")
             self.logger.warning(f"Zeniths: {self.args['zeniths']}")
-            self.logger.warning(f"Offsets: {self.args['offsets']}")
+            self.logger.warning(f"Camera offsets: {self.args['camera_offsets']}")
             return
 
-        for zenith, offset in itertools.product(self.args["zeniths"], self.args["offsets"]):
+        for zenith, offset in itertools.product(self.args["zeniths"], self.args["camera_offsets"]):
             file_name = self.args["file_name_template"].format(zenith=int(zenith))
             file_path = Path(self.args["base_path"]).joinpath(file_name)
 
