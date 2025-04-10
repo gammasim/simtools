@@ -16,7 +16,7 @@ def args_dict(tmp_path, metrics_file):
     return {
         "base_path": "tests/resources/production_dl2_fits/",
         "zeniths": [20, 40],
-        "offsets": [0.5, 1.0],
+        "camera_offsets": [0.5, 1.0],
         "query_point": [1.0, 180.0, 20.0, 4.0, 0.5],
         "output_file": "production_statistics.json",
         "metrics_file": str(metrics_file),
@@ -84,7 +84,7 @@ def test_no_base_path(mock_get_output_directory, args_dict, tmp_path):
 def test_empty_offsets(mock_get_output_directory, args_dict, tmp_path):
     """Test behavior when offsets are empty."""
     mock_get_output_directory.return_value = str(tmp_path)
-    args_dict["offsets"] = []  # Empty offsets
+    args_dict["camera_offsets"] = []  # Empty offsets
     manager = ProductionStatisticsHandler(args_dict)
 
     manager.initialize_evaluators()
