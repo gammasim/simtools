@@ -12,7 +12,6 @@ from simtools.production_configuration.calculate_statistical_errors_grid_point i
 from simtools.production_configuration.derive_production_statistics import (
     ProductionStatisticsDerivator,
 )
-from simtools.production_configuration.interpolation_handler import InterpolationHandler
 
 
 @pytest.fixture
@@ -78,26 +77,6 @@ def test_missing_file():
 
     with pytest.raises(FileNotFoundError, match=f"Error loading file {file_path}:"):
         StatisticalErrorEvaluator(file_path, file_type, metrics)
-
-
-def test_interpolation_handler(test_fits_file, test_fits_file_2, metric):
-    """Test interpolation with the InterpolationHandler."""
-    grid_point1 = (1, 180, 45, 0, 0.5)
-    evaluator1 = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric, grid_point=grid_point1
-    )
-    grid_point2 = (1, 180, 60, 0, 0.5)
-    evaluator2 = StatisticalErrorEvaluator(
-        file_path=test_fits_file_2, file_type="point-like", metrics=metric, grid_point=grid_point2
-    )
-    handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)
-    query_point = np.array([[1, 180, 50, 0, 0.5]])
-    interpolated_values = handler.interpolate(query_point)
-    assert interpolated_values.shape[0] == query_point.shape[0]
-
-    query_point = np.array([[1e-3, 180, 40, 0, 0.5]])
-    interpolated_threshold = handler.interpolate_energy_threshold(query_point)
-    assert isinstance(interpolated_threshold, float)
 
 
 def test_calculate_production_statistics(test_fits_file, metric):
