@@ -3,7 +3,7 @@
 
 uncertainty_effective_area:
   description: |-
-    Relative uncertainty on the effective area
+    Relative uncertainty on the effective area.
   target_error:
     value: 0.02
   energy_range:

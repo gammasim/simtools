@@ -1,27 +1,29 @@
 """
-Calculate the scaled number of events based on metrics.
+Calculate the event production statistics based on metrics.
 
-Module for scaling events based on statistical error metrics. Contains the `EventScaler` class,
-which scales the number of events for both the entire dataset and specific grid points.
-Scaling factors are calculated using error metrics and the evaluator's results.
+Module for calculating the production event statistics based on statistical error metrics.
+Contains the `ProductionStatisticsDerivator` class, which derives the number of events for
+both the entire dataset and specific grid points. Event statistic is calculated using error
+metrics and the evaluator's results.
 """
 
 import astropy.units as u
 import numpy as np
 
-__all__ = ["EventScaler"]
+__all__ = ["ProductionStatisticsDerivator"]
 
 
-class EventScaler:
+class ProductionStatisticsDerivator:
     """
-    Scales the number of events based on statistical error metrics.
+    Derives the production statistics based on statistical error metrics.
 
-    Supports scaling both the entire dataset and specific grid points like energy values.
+    Supports deriving statistics for both the entire dataset and
+    specific grid points like energy values.
     """
 
     def __init__(self, evaluator, metrics: dict):
         """
-        Initialize the EventScaler with the evaluator and metrics.
+        Initialize the ProductionStatisticsDerivator with the evaluator and metrics.
 
         Parameters
         ----------
@@ -33,22 +35,24 @@ class EventScaler:
         self.evaluator = evaluator
         self.metrics = metrics
 
-    def scale_events(self, return_sum: bool = True) -> u.Quantity:
+    def derive_statistics(self, return_sum: bool = True) -> u.Quantity:
         """
-        Calculate the scaled number of events based on statistical error metrics.
+        Derive the production statistics based on statistical error metrics.
 
         Parameters
         ----------
         return_sum : bool, optional
-            If True, returns the sum of scaled events for the entire set of MC events. If False,
-            returns the scaled events for each grid point along the energy axis. Default is True.
+            If True, returns the sum of production statistics for the entire set of MC events.
+            If False, returns the production statistics for each grid point along the energy axis.
+            Default is True.
 
         Returns
         -------
         u.Quantity
-            If 'return_sum' is True, returns the total scaled number of events as a u.Quantity.
-            If 'return_sum' is False, returns an array of scaled events along the energy axis as
-            a u.Quantity.
+            If 'return_sum' is True, returns the total
+            derived production statistics as a u.Quantity.
+            If 'return_sum' is False, returns an array of production statistics along the energy
+            axis as a u.Quantity.
         """
         scaling_factor = self._compute_scaling_factor()
 
@@ -87,12 +91,12 @@ class EventScaler:
         """
         return self.evaluator.data.get("simulated_event_histogram")
 
-    def calculate_scaled_events_at_grid_point(
+    def calculate_production_statistics_at_grid_point(
         self,
         grid_point: tuple,
     ) -> u.Quantity:
         """
-        Calculate the scaled number of events for a specific energy grid point.
+        Derive the production statistics for a specific energy grid point.
 
         Parameters
         ----------
@@ -102,7 +106,7 @@ class EventScaler:
         Returns
         -------
         float
-            The scaled number of events at the specified grid point (energy).
+            The derived production statistics at the specified grid point (energy).
         """
         energy = grid_point[0]
         bin_edges = self.evaluator.create_bin_edges()
@@ -113,7 +117,7 @@ class EventScaler:
         simulated_event_histogram = self.evaluator.data.get("simulated_event_histogram", [])
 
         if bin_idx < 0 or bin_idx >= len(simulated_event_histogram):
-            raise ValueError(f"Energy {energy} is outside the range of the simulated events data.")
+            raise ValueError(f"Energy {energy} is outside therange of the simulated events data.")
 
         base_events = self._number_of_simulated_events()
         base_event_at_energy = base_events[bin_idx]

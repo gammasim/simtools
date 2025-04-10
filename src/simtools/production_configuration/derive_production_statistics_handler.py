@@ -1,16 +1,14 @@
-r"""
+"""
 Module to run the StatisticalErrorEvaluator and interpolate results.
 
-This module provides the `ScaleEventsManager` class, which manages the workflow for scaling
-events and performing interpolation. It is designed to handle the evaluation of statistical
-uncertainties from DL2 Monte Carlo (MC) event files and perform interpolation for a specified
-query point.
+This module provides the `ProductionStatisticsHandler` class, which manages the workflow for
+derivation of required number of events for a simulation production using pre-defined metrics.
 
 The module includes functionality to:
 - Initialize evaluators for statistical error calculations based on input parameters.
-- Perform interpolation using the initialized evaluators to estimate scaled events at a query point.
+- Perform interpolation using the initialized evaluators to estimate production statistics at a
+query point.
 - Write the results of the interpolation to an output file.
-
 """
 
 import itertools
@@ -28,12 +26,13 @@ from simtools.production_configuration.interpolation_handler import Interpolatio
 from simtools.utils.general import collect_data_from_file
 
 
-class ScaleEventsManager:
+class ProductionStatisticsHandler:
     """
-    Manages the workflow for scaling events and performing interpolation.
+    Handles the workflow for deriving production statistics.
 
-    This class handles the evaluation of statistical uncertainties from DL2 MC event files
-    and performs interpolation for a specified query point.
+    This class manages the evaluation of statistical uncertainties from DL2 MC event files
+    and performs interpolation to estimate the required number of events for a simulation
+    production at a specified query point.
     """
 
     def __init__(self, args_dict):
@@ -93,18 +92,19 @@ class ScaleEventsManager:
         query_points = np.array([self.args["query_point"]])
         return interpolation_handler.interpolate(query_points)
 
-    def write_output(self, scaled_events):
+    def write_output(self, production_statistics):
         """Write the derived event statistics to a file."""
         output_data = {
             "query_point": self.args["query_point"],
-            "scaled_events": scaled_events.tolist(),
+            "production_statistics": production_statistics.tolist(),
         }
         self.output_filepath.parent.mkdir(parents=True, exist_ok=True)
         with open(self.output_filepath, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=4)
         self.logger.info(f"Output saved to {self.output_filepath}")
         self.logger.info(
-            f"Scaled events for query point {self.args['query_point']}: {scaled_events}"
+            f"production statistics for grid point "
+            f"{self.args['query_point']}: {production_statistics}"
         )
 
     def run(self):
@@ -115,5 +115,5 @@ class ScaleEventsManager:
         self.logger.info(f"Metrics File: {self.args['metrics_file']}")
 
         self.initialize_evaluators()
-        scaled_events = self.perform_interpolation()
-        self.write_output(scaled_events)
+        production_statistics = self.perform_interpolation()
+        self.write_output(production_statistics)
