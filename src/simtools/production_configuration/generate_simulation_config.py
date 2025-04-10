@@ -3,7 +3,9 @@
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
-from simtools.production_configuration.event_scaler import EventScaler
+from simtools.production_configuration.derive_production_statistics import (
+    ProductionStatisticsDerivator,
+)
 
 __all__ = ["SimulationConfig"]
 
@@ -33,7 +35,9 @@ class SimulationConfig:
         self.file_path = file_path
         self.metrics = metrics or {}
         self.evaluator = StatisticalErrorEvaluator(file_path, metrics)
-        self.event_scaler = EventScaler(self.evaluator, self.metrics)
+        self.derive_production_statistics = ProductionStatisticsDerivator(
+            self.evaluator, self.metrics
+        )
         self.simulation_params = {}
 
     def configure_simulation(self) -> dict[str, float]:
@@ -57,14 +61,14 @@ class SimulationConfig:
         """
         Calculate the required number of simulated events based on statistical error metrics.
 
-        Uses the EventScaler to scale the events.
+        Uses the ProductionStatisticsDerivator to scale the events.
 
         Returns
         -------
         int
             The number of simulated events required.
         """
-        return self.event_scaler.scale_events()
+        return self.derive_production_statistics.derive_statistics()
 
     def _calculate_core_scatter_area(self) -> float:
         """

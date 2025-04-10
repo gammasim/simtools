@@ -23,7 +23,7 @@ query_point (list of float, required)
         - NSB (MHz)
         - Offset (degrees)
 output_file (str, optional)
-    Output file to store the results. Default: 'interpolated_scaled_events.json'.
+    Output file to store the results. Default: 'interpolated_production_statistics.json'.
 metrics_file (str, optional)
     Path to the metrics definition file. Default: 'production_simulation_config_metrics.yml'.
 file_name_template (str, optional)
@@ -36,20 +36,22 @@ To evaluate statistical uncertainties and perform interpolation, run the command
 
 .. code-block:: console
 
-    simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \\
+    simtools-production-derive-statistics --base_path tests/resources/production_dl2_fits/ \\
         --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\
         --metrics_file "path/to/metrics.yaml" \\
         --output_path simtools-output/derived_events \\
         --output_file derived_events.json
 
-The output will display the scaled events for the specified query point and save
+The output will display the production statistics for the specified query point and save
  the results to the specified output file.
 """
 
 from pathlib import Path
 
 from simtools.configuration import configurator
-from simtools.production_configuration.scale_events_manager import ScaleEventsManager
+from simtools.production_configuration.derive_production_statistics_handler import (
+    ProductionStatisticsHandler,
+)
 
 
 def _parse(label, description):
@@ -108,14 +110,14 @@ def _parse(label, description):
 
 
 def main():
-    """Run the ScaleEventsManager."""
+    """Run the ProductionStatisticsHandler."""
     label = Path(__file__).stem
     args_dict, _ = _parse(
         label,
         "Evaluate statistical uncertainties from DL2 MC event files and interpolate results.",
     )
 
-    manager = ScaleEventsManager(args_dict)
+    manager = ProductionStatisticsHandler(args_dict)
     manager.run()
 
 
