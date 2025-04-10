@@ -37,19 +37,14 @@ def metric():
 
 def test_initialization(test_fits_file, metric):
     """Test the initialization of the StatisticalErrorEvaluator."""
-    evaluator = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric
-    )
-    assert evaluator.file_type == "point-like"
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
     assert isinstance(evaluator.data, dict)
     assert "event_energies_reco" in evaluator.data
 
 
 def test_calculate_uncertainty_effective_area(test_fits_file, metric):
     """Test the calculation of effective area error."""
-    evaluator = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric
-    )
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.calculate_metrics()
     errors = evaluator.calculate_uncertainty_effective_area()
     assert "relative_errors" in errors
@@ -58,9 +53,7 @@ def test_calculate_uncertainty_effective_area(test_fits_file, metric):
 
 def test_calculate_energy_estimate(test_fits_file, metric):
     """Test the calculation of energy estimate error."""
-    evaluator = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric
-    )
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.calculate_metrics()
     error, sigma, delta = evaluator.calculate_energy_estimate()
     assert isinstance(sigma, list)
@@ -70,21 +63,18 @@ def test_calculate_energy_estimate(test_fits_file, metric):
 def test_missing_file():
     """Test initialization with a missing file."""
     file_path = "nonexistent_file.fits"
-    file_type = "point-like"
     metrics = {
         "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
     }
 
     with pytest.raises(FileNotFoundError, match=f"Error loading file {file_path}:"):
-        StatisticalErrorEvaluator(file_path, file_type, metrics)
+        StatisticalErrorEvaluator(file_path, metrics)
 
 
 def test_calculate_production_statistics(test_fits_file, metric):
     """Test the calculation of production statistics for a specific grid point using ProductionStatisticsHandler."""
 
-    evaluator = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric
-    )
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
     evaluator.grid_point = (1.5, 180, 45, 0, 0.5)
 
     derive_production_statistics = ProductionStatisticsDerivator(evaluator, metrics=metric)
@@ -98,9 +88,7 @@ def test_calculate_production_statistics(test_fits_file, metric):
 
 def test_calculate_metrics(test_fits_file, metric):
     """Test the calculation of metrics."""
-    evaluator = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric
-    )
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
 
     evaluator.calculate_energy_estimate = lambda: (
         0.33,
@@ -128,12 +116,9 @@ def test_calculate_metrics(test_fits_file, metric):
 @pytest.fixture
 def setup_evaluator(metric):
     file_path = "path_to_fits_file"
-    file_type = "point-like"
     grid_point = (1.0, 45.0, 30.0, 0.1, 0.05)
 
-    evaluator = StatisticalErrorEvaluator(
-        file_path, file_type, metrics=metric, grid_point=grid_point
-    )
+    evaluator = StatisticalErrorEvaluator(file_path, metrics=metric, grid_point=grid_point)
 
     evaluator.metric_results = {
         "uncertainty_effective_area": {"relative_errors": np.array([0.04, 0.05, 0.06])},
@@ -149,7 +134,6 @@ def setup_evaluator(metric):
 def test_calculate_overall_metric_average(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file,
-        file_type="point-like",
         metrics={
             "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
         },
@@ -169,7 +153,6 @@ def test_calculate_overall_metric_average(test_fits_file):
 def test_calculate_overall_metric_maximum(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file,
-        file_type="point-like",
         metrics={
             "uncertainty_effective_area": {"target_error": {"value": 0.1, "unit": "dimensionless"}}
         },
@@ -190,9 +173,7 @@ def test_calculate_overall_metric_maximum(test_fits_file):
 
 def test_create_bin_edges(test_fits_file, metric):
     """Test the creation of unique energy bin edges."""
-    evaluator = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric
-    )
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
 
     evaluator.data = {
         "bin_edges_low": np.array([1.0, 2.0, 3.0]),
@@ -209,9 +190,7 @@ def test_create_bin_edges(test_fits_file, metric):
 
 
 def test_compute_efficiency_and_errors(test_fits_file, metric):
-    evaluator = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric
-    )
+    evaluator = StatisticalErrorEvaluator(file_path=test_fits_file, metrics=metric)
 
     reconstructed_event_counts = np.array([10, 20, 5, 0]) * u.ct
     simulated_event_counts = np.array([100, 200, 50, 0]) * u.ct
@@ -239,7 +218,6 @@ def test_compute_efficiency_and_errors(test_fits_file, metric):
 def test_calculate_overall_metric_invalid_metric(test_fits_file):
     evaluator = StatisticalErrorEvaluator(
         file_path=test_fits_file,
-        file_type="point-like",
         metrics={"invalid_metric": {"target_error": {"value": 0.1, "unit": "dimensionless"}}},
     )
 
@@ -249,7 +227,7 @@ def test_calculate_overall_metric_invalid_metric(test_fits_file):
 
 def test_set_grid_point_single_azimuth_zenith(caplog):
     with patch.object(StatisticalErrorEvaluator, "load_data_from_file", return_value={}):
-        evaluator = StatisticalErrorEvaluator(file_path="", file_type="point-like", metrics={})
+        evaluator = StatisticalErrorEvaluator(file_path="", metrics={})
         events_data = {"PNT_AZ": np.array([45.0]), "PNT_ALT": np.array([45.0])}
         evaluator._set_grid_point(events_data)
         assert evaluator.grid_point == (1 * u.TeV, 45 * u.deg, 45 * u.deg, 0, 0 * u.deg)

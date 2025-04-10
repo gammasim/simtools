@@ -2,9 +2,7 @@
 Module to run the StatisticalErrorEvaluator and interpolate results.
 
 This module provides the `ProductionStatisticsHandler` class, which manages the workflow for
-derivation of production statistics and performing interpolation. It is designed to handle the
-evaluation of statistical uncertainties from DL2 Monte Carlo (MC) event files and perform
-interpolation for a specified query point.
+derivation of required number of events for a simulation production using pre-defined metrics.
 
 The module includes functionality to:
 - Initialize evaluators for statistical error calculations based on input parameters.
@@ -31,10 +29,11 @@ from simtools.utils.general import collect_data_from_file
 
 class ProductionStatisticsHandler:
     """
-    Manages the workflow for scaling events and performing interpolation.
+    Handles the workflow for deriving production statistics.
 
-    This class handles the evaluation of statistical uncertainties from DL2 MC event files
-    and performs interpolation for a specified query point.
+    This class manages the evaluation of statistical uncertainties from DL2 MC event files
+    and performs interpolation to estimate the required number of events for a simulation
+    production at a specified query point.
     """
 
     def __init__(self, args_dict):
@@ -73,7 +72,6 @@ class ProductionStatisticsHandler:
 
             evaluator = StatisticalErrorEvaluator(
                 file_path,
-                file_type="Gamma-cone",
                 metrics=self.metrics,
                 grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
             )
