@@ -30,10 +30,10 @@ CTA_SIMPIPE:
     - OUTPUT_FILE: 'corsika/data/run000011/run000011_gamma_North_test_layout_za020-azm000deg_test-production-North-corsika-corsika7-particle-id_North_test_layout_test-production-North-corsika-corsika7-particle-id.zst
 
         '
-    - OUTPUT_FILE: 'corsika/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North-corsika-corsika7-particle-id.corsika.log.gz
+    - OUTPUT_FILE: 'corsika/logs/run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North-corsika-corsika7-particle-id.corsika.log.gz
 
         '
-    - OUTPUT_FILE: 'corsika/logs/run000011_gamma_za20deg_azm000deg_North_test_layout_test-production-North-corsika-corsika7-particle-id.corsika.log.gz
+    - OUTPUT_FILE: 'corsika/logs/run000011_gamma_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North-corsika-corsika7-particle-id.corsika.log.gz
 
         '
 SCHEMA_NAME: application_workflow.metaschema

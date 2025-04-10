@@ -111,13 +111,6 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
     assert "Invalid simulation software" in caplog.text
 
 
-def test_initialize_array_model(shower_simulator, db_config):
-    assert isinstance(
-        shower_simulator._initialize_array_model(mongo_db_config=db_config),
-        ArrayModel,
-    )
-
-
 def test_initialize_run_list(shower_simulator, caplog):
     assert shower_simulator._initialize_run_list() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     test_shower_simulator = copy.deepcopy(shower_simulator)
@@ -372,3 +365,26 @@ def test_pack_for_register(array_simulator, mocker, caplog):
     shutil.move.assert_any_call(
         Path("output_file2"), Path("directory_for_grid_upload/output_file2")
     )
+
+
+def test_initialize_array_models_with_single_version(shower_simulator, db_config, model_version):
+    # Test with a single model version
+    array_models = shower_simulator._initialize_array_models(mongo_db_config=db_config)
+    assert len(array_models) == 1
+    assert isinstance(array_models[0], ArrayModel)
+    assert array_models[0].model_version == model_version
+    assert array_models[0].site == shower_simulator.args_dict.get("site")
+    assert array_models[0].layout_name == shower_simulator.args_dict.get("array_layout_name")
+
+
+def test_initialize_array_models_with_multiple_versions(shower_simulator, db_config):
+    # Test with multiple model versions
+    model_versions = ["5.0.0", "6.0.0"]
+    shower_simulator.args_dict["model_version"] = model_versions
+    array_models = shower_simulator._initialize_array_models(mongo_db_config=db_config)
+    assert len(array_models) == 2
+    for i, model_version in enumerate(model_versions):
+        assert isinstance(array_models[i], ArrayModel)
+        assert array_models[i].model_version == model_version
+        assert array_models[i].site == shower_simulator.args_dict.get("site")
+        assert array_models[i].layout_name == shower_simulator.args_dict.get("array_layout_name")

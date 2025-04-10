@@ -74,7 +74,7 @@ class Simulator:
         self._submit_options = self.args_dict.get("submit_options", None)
         self._extra_commands = extra_commands
 
-        self.array_model = self._initialize_array_model(mongo_db_config)
+        self.array_models = self._initialize_array_models(mongo_db_config)
         self._simulation_runner = self._initialize_simulation_runner(mongo_db_config)
 
     @property
@@ -103,9 +103,9 @@ class Simulator:
             raise gen.InvalidConfigDataError
         self._simulation_software = simulation_software.lower()
 
-    def _initialize_array_model(self, mongo_db_config):
+    def _initialize_array_models(self, mongo_db_config):
         """
-        Initialize array simulation model.
+        Initialize array simulation models.
 
         Parameters
         ----------
@@ -114,16 +114,22 @@ class Simulator:
 
         Returns
         -------
-        ArrayModel
-            ArrayModel object.
+        list
+            List of ArrayModel objects.
         """
-        return ArrayModel(
-            label=self.label,
-            site=self.args_dict.get("site"),
-            layout_name=self.args_dict.get("array_layout_name"),
-            mongo_db_config=mongo_db_config,
-            model_version=self.args_dict.get("model_version", None),
-        )
+        model_version = self.args_dict.get("model_version", [])
+        versions = [model_version] if not isinstance(model_version, list) else model_version
+
+        return [
+            ArrayModel(
+                label=self.label,
+                site=self.args_dict.get("site"),
+                layout_name=self.args_dict.get("array_layout_name"),
+                mongo_db_config=mongo_db_config,
+                model_version=version,
+            )
+            for version in versions
+        ]
 
     def _initialize_run_list(self):
         """
@@ -214,12 +220,16 @@ class Simulator:
         CorsikaRunner or SimulatorArray or CorsikaSimtelRunner
             Simulation runner object.
         """
-        corsika_config = CorsikaConfig(
-            array_model=self.array_model,
-            label=self.label,
-            args_dict=self.args_dict,
-            db_config=db_config,
-        )
+        corsika_configurations = []
+        for array_model in self.array_models:
+            corsika_configurations.append(
+                CorsikaConfig(
+                    array_model=array_model,
+                    label=self.label,
+                    args_dict=self.args_dict,
+                    db_config=db_config,
+                )
+            )
 
         runner_class = {
             "corsika": CorsikaRunner,
@@ -227,9 +237,16 @@ class Simulator:
             "corsika_simtel": CorsikaSimtelRunner,
         }.get(self.simulation_software)
 
+        # In case of CorsikaSimtelRunner we should pass all corsika_configurations
+        # to the runner, since we define multiple configurations to run in a single job
+        # using multipipe. In other cases we pass only the first one (there's only one anyway).
         runner_args = {
             "label": self.label,
-            "corsika_config": corsika_config,
+            "corsika_config": (
+                corsika_configurations
+                if runner_class is CorsikaSimtelRunner
+                else corsika_configurations[0]
+            ),
             "simtel_path": self.args_dict.get("simtel_path"),
             "use_multipipe": runner_class is CorsikaSimtelRunner,
         }
