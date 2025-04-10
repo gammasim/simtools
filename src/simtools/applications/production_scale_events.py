@@ -76,7 +76,7 @@ def _parse(label, description):
         help="List of zenith angles.",
     )
     config.parser.add_argument(
-        "--offsets", required=True, nargs="+", type=float, help="List of offsets in degrees."
+        "--camera_offsets", required=True, nargs="+", type=float, help="List of offsets in degrees."
     )
     config.parser.add_argument(
         "--query_point",
