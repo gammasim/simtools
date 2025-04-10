@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+g3a381fc Manual</title>
+    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+g0d223e9 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=262a52b6"></script>
+    <script src="../../_static/documentation_options.js?v=250b1b29"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g3a381fc Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g0d223e9 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -396,6 +396,7 @@ document.write(`
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class to read and manage relevant model parameters for a given telescope model.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">groupby</span>
@@ -477,6 +478,26 @@ document.write(`
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
             <span class="k">else</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value_data</span><span class="p">)</span>
         <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_wrap_at_underscores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">max_width</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap text at underscores to fit within a specified width.&quot;&quot;&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+            <span class="c1"># Predict the new length if we add this part</span>
+            <span class="n">next_line</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="o">*</span><span class="n">current</span><span class="p">,</span> <span class="n">part</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_line</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">max_width</span><span class="p">:</span>
+                <span class="n">current</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current</span><span class="p">))</span>
+                <span class="n">current</span> <span class="o">=</span> <span class="p">[</span><span class="n">part</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">current</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_group_model_versions_by_parameter_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grouped_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Group model versions by parameter version and track the parameter values.&quot;&quot;&quot;</span>
@@ -625,8 +646,6 @@ document.write(`
 
         <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">all_parameter_data</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">,</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">parameter_data</span> <span class="o">=</span> <span class="n">all_parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">parameter_data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-                <span class="k">continue</span>
             <span class="n">parameter_version</span> <span class="o">=</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">get_parameter_version</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
             <span class="n">unit</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot; &quot;</span>
             <span class="n">value_data</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
@@ -638,8 +657,20 @@ document.write(`
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_parameter_value</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">file_flag</span><span class="p">)</span>
 
             <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="n">short_description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+            <span class="n">short_description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">short_description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">short_description</span> <span class="o">=</span> <span class="n">description</span>
             <span class="n">inst_class</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+
+            <span class="n">matching_instrument</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="o">.</span><span class="n">is_design_type</span><span class="p">(</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">matching_instrument</span><span class="p">:</span>
+                <span class="n">parameter</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">***&quot;</span>
+                <span class="n">parameter_version</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">parameter_version</span><span class="si">}</span><span class="s2">***&quot;</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\[.*\]\(.*\)$&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">***&quot;</span>
+                <span class="n">description</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="s2">***&quot;</span>
+                <span class="n">short_description</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">short_description</span><span class="si">}</span><span class="s2">***&quot;</span>
+
             <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">inst_class</span><span class="p">,</span>
@@ -690,7 +721,11 @@ document.write(`
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
                     <span class="s2">&quot;The design model can be found here: &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">design_model</span><span class="si">}</span><span class="s2">]&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">design_model</span><span class="si">}</span><span class="s2">.md).</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">design_model</span><span class="si">}</span><span class="s2">.md).</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                    <span class="s2">&quot;Parameters shown in ***bold and italics*** are specific to each telescope.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;Parameters without emphasis are inherited from the design model.</span><span class="se">\n</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -707,7 +742,7 @@ document.write(`
                 <span class="p">)</span>
 
                 <span class="c1"># Write table rows</span>
-                <span class="n">column_widths</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">70</span><span class="p">]</span>
+                <span class="n">column_widths</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">60</span><span class="p">]</span>
                 <span class="k">for</span> <span class="p">(</span>
                     <span class="n">_</span><span class="p">,</span>
                     <span class="n">parameter_name</span><span class="p">,</span>
@@ -719,11 +754,13 @@ document.write(`
                     <span class="n">text</span> <span class="o">=</span> <span class="n">short_description</span> <span class="k">if</span> <span class="n">short_description</span> <span class="k">else</span> <span class="n">description</span>
                     <span class="n">wrapped_text</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="n">column_widths</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="n">wrapped_text</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wrapped_text</span><span class="p">)</span>
+                    <span class="n">parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_at_underscores</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">,</span> <span class="n">column_widths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
                     <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;| </span><span class="si">{</span><span class="n">parameter_name</span><span class="si">:{</span><span class="n">column_widths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}}</span><span class="s2"> |&quot;</span>
                         <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">parameter_version</span><span class="si">:{</span><span class="n">column_widths</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}}</span><span class="s2"> |&quot;</span>
                         <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">value</span><span class="si">:{</span><span class="n">column_widths</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}}</span><span class="s2"> |&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">wrapped_text</span><span class="si">}</span><span class="s2"> |</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">wrapped_text</span><span class="si">:{</span><span class="n">column_widths</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}}</span><span class="s2"> |</span><span class="se">\n</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
