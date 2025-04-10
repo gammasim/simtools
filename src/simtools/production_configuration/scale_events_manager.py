@@ -94,7 +94,7 @@ class ScaleEventsManager:
         return interpolation_handler.interpolate(query_points)
 
     def write_output(self, scaled_events):
-        """Write the interpolation results to a file."""
+        """Write the derived event statistics to a file."""
         output_data = {
             "query_point": self.args["query_point"],
             "scaled_events": scaled_events.tolist(),
