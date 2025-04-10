@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_generate_simulation_config &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
+    <title>production_generate_simulation_config &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=819338f9"></script>
+    <script src="../_static/documentation_options.js?v=56fed332"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -424,8 +424,6 @@ document.write(`
 <span class="sd">file_path (str, required)</span>
 <span class="sd">        Path to file with MC events at CTAO DL2 data level.</span>
 <span class="sd">        Used for statistical uncertainty evaluation.</span>
-<span class="sd">file_type (str, required)</span>
-<span class="sd">        Type of the DL2 MC event file (&#39;point-like&#39; or &#39;cone&#39;).</span>
 <span class="sd">metrics (str, required)</span>
 <span class="sd">        Path to a YAML file containing metrics for evaluation.</span>
 <span class="sd">site (str, required)</span>
@@ -439,7 +437,6 @@ document.write(`
 
 <span class="sd">        simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \</span>
 <span class="sd">                --nsb 0.3 --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \</span>
-<span class="sd">                --file_type &quot;point-like&quot;    \</span>
 <span class="sd">                --metrics_file tests/resources/production_simulation_config_metrics.yml --site North</span>
 
 <span class="sd">The output will show the derived simulation parameters.</span>
@@ -477,12 +474,6 @@ document.write(`
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--file_path&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to MC event file in DL2 format.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--file_type&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Type of the DL2 MC event file (&#39;point-like&#39; or &#39;cone&#39;).&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">config</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--metrics_file&quot;</span><span class="p">,</span>
@@ -533,7 +524,6 @@ document.write(`
     <span class="n">simulation_config</span> <span class="o">=</span> <span class="n">SimulationConfig</span><span class="p">(</span>
         <span class="n">grid_point</span><span class="o">=</span><span class="n">grid_point_config</span><span class="p">,</span>
         <span class="n">file_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_path&quot;</span><span class="p">],</span>
-        <span class="n">file_type</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;file_type&quot;</span><span class="p">],</span>
         <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
     <span class="p">)</span>
 

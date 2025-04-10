@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=819338f9"></script>
+    <script src="_static/documentation_options.js?v=56fed332"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -1358,6 +1358,8 @@ document.write(`
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_default_arguments">initialize_default_arguments() (configuration.commandline_parser.CommandLineParser method)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators">initialize_evaluators() (production_configuration.scale_events_manager.ScaleEventsManager method)</a>
+</li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_job_submission_arguments">initialize_job_submission_arguments() (configuration.commandline_parser.CommandLineParser method)</a>
 </li>
       <li><a href="api-reference/configuration_module.html#configuration.commandline_parser.CommandLineParser.initialize_output_arguments">initialize_output_arguments() (configuration.commandline_parser.CommandLineParser method)</a>
@@ -1380,10 +1382,10 @@ document.write(`
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.interpolation_handler.InterpolationHandler">InterpolationHandler (class in production_configuration.interpolation_handler)</a>
 </li>
-      <li><a href="api-reference/utils.html#utils.general.InvalidConfigDataError">InvalidConfigDataError</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/utils.html#utils.general.InvalidConfigDataError">InvalidConfigDataError</a>
+</li>
       <li><a href="api-reference/configuration_module.html#configuration.configurator.InvalidConfigurationParameterError">InvalidConfigurationParameterError</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.InvalidCoordSystemErrorError">InvalidCoordSystemErrorError</a>
@@ -1783,6 +1785,8 @@ document.write(`
 </li>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">production_configuration.interpolation_handler</a>
 </li>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.scale_events_manager">production_configuration.scale_events_manager</a>
+</li>
         <li><a href="user-guide/applications/simtools-production-derive-corsika-limits.html#module-production_derive_corsika_limits">production_derive_corsika_limits</a>
 </li>
         <li><a href="user-guide/applications/simtools-production-generate-grid.html#module-production_generate_grid">production_generate_grid</a>
@@ -1936,6 +1940,8 @@ document.write(`
 </li>
       <li><a href="api-reference/corsika.html#corsika.primary_particle.PrimaryParticle.pdg_name">pdg_name (corsika.primary_particle.PrimaryParticle property)</a>
 </li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation">perform_interpolation() (production_configuration.scale_events_manager.ScaleEventsManager method)</a>
+</li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.PixelObject">PixelObject (class in visualization.legend_handlers)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.plot_tables.plot">plot() (in module visualization.plot_tables)</a>
@@ -2024,10 +2030,10 @@ document.write(`
         <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelRunner.prepare_run_script">(runners.simtel_runner.SimtelRunner method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/sim_telarray.html#simtel.simulator_light_emission.SimulatorLightEmission.prepare_script">prepare_script() (simtel.simulator_light_emission.SimulatorLightEmission method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.primary">primary (corsika.corsika_config.CorsikaConfig property)</a>
 </li>
       <li><a href="api-reference/corsika.html#corsika.corsika_config.CorsikaConfig.primary_particle">primary_particle (corsika.corsika_config.CorsikaConfig property)</a>
@@ -2123,6 +2129,13 @@ document.write(`
 
       <ul>
         <li><a href="api-reference/production_configuration.html#module-production_configuration.interpolation_handler">module</a>
+</li>
+      </ul></li>
+      <li>
+    production_configuration.scale_events_manager
+
+      <ul>
+        <li><a href="api-reference/production_configuration.html#module-production_configuration.scale_events_manager">module</a>
 </li>
       </ul></li>
       <li>
@@ -2252,8 +2265,12 @@ document.write(`
 </li>
       <li><a href="api-reference/utils.html#utils.geometry.rotate">rotate() (in module utils.geometry)</a>
 </li>
-      <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelRunner.run">run() (runners.simtel_runner.SimtelRunner method)</a>
+      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.run">run() (production_configuration.scale_events_manager.ScaleEventsManager method)</a>
+
+      <ul>
+        <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelRunner.run">(runners.simtel_runner.SimtelRunner method)</a>
 </li>
+      </ul></li>
       <li>
     run_application
 
@@ -2318,6 +2335,8 @@ document.write(`
       <li><a href="api-reference/simulators.html#simulator.Simulator.save_file_lists">save_file_lists() (simulator.Simulator method)</a>
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.event_scaler.EventScaler.scale_events">scale_events() (production_configuration.event_scaler.EventScaler method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager">ScaleEventsManager (class in production_configuration.scale_events_manager)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.legend_handlers.SCTHandler">SCTHandler (class in visualization.legend_handlers)</a>
 </li>
@@ -2772,6 +2791,8 @@ document.write(`
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/ray_tracing.html#ray_tracing.mirror_panel_psf.MirrorPanelPSF.write_optimization_data">write_optimization_data() (ray_tracing.mirror_panel_psf.MirrorPanelPSF method)</a>
+</li>
+      <li><a href="api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.write_output">write_output() (production_configuration.scale_events_manager.ScaleEventsManager method)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.model_parameter.ModelParameter.write_sim_telarray_config_file">write_sim_telarray_config_file() (model.model_parameter.ModelParameter method)</a>
 </li>

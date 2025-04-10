@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>production_configuration.generate_simulation_config &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
+    <title>production_configuration.generate_simulation_config &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=819338f9"></script>
+    <script src="../../_static/documentation_options.js?v=56fed332"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -413,8 +413,6 @@ document.write(`
 <span class="sd">        Dictionary representing a grid point with azimuth, elevation, and night sky background.</span>
 <span class="sd">    file_path : str</span>
 <span class="sd">        Path to the DL2 MC event file for statistical uncertainty evaluation.</span>
-<span class="sd">    file_type : str</span>
-<span class="sd">        Type of the DL2 MC event file (&#39;point-like&#39; or &#39;cone&#39;).</span>
 <span class="sd">    metrics : dict, optional</span>
 <span class="sd">        Dictionary of metrics to evaluate.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -423,15 +421,13 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">grid_point</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
         <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">file_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the simulation configuration for a grid point.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grid_point</span> <span class="o">=</span> <span class="n">grid_point</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">file_type</span> <span class="o">=</span> <span class="n">file_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">StatisticalErrorEvaluator</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">StatisticalErrorEvaluator</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">event_scaler</span> <span class="o">=</span> <span class="n">EventScaler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simulation_params</span> <span class="o">=</span> <span class="p">{}</span>
 

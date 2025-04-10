@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-scale-events &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
+    <title>simtools-production-scale-events &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=819338f9"></script>
+    <script src="../../_static/documentation_options.js?v=56fed332"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -487,7 +487,7 @@ document.write(`
 <span id="simtools-production-scale-events"></span><h1>simtools-production-scale-events<a class="headerlink" href="#module-production_scale_events" title="Link to this heading">#</a></h1>
 <p>Application to run the StatisticalErrorEvaluator and interpolate results.</p>
 <p>This application evaluates statistical uncertainties from DL2 MC event files
-based on input parameters like zenith angles and offsets, and performs interpolation
+based on input parameters like zenith angles and camera offsets, and performs interpolation
 for a specified query point.</p>
 <section id="command-line-arguments">
 <h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
@@ -496,7 +496,7 @@ for a specified query point.</p>
 </dd>
 <dt>zeniths (list of int, required)</dt><dd><p>List of zenith angles to consider.</p>
 </dd>
-<dt>offsets (list of int, required)</dt><dd><p>List of offsets in degrees.</p>
+<dt>camera_offsets (list of int, required)</dt><dd><p>List of offsets in degrees.</p>
 </dd>
 <dt>query_point (list of float, required)</dt><dd><dl class="simple">
 <dt>Query point for interpolation. The query point must contain exactly 5 values:</dt><dd><ul class="simple">
@@ -522,9 +522,10 @@ for a specified query point.</p>
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
 <p>To evaluate statistical uncertainties and perform interpolation, run the command line script:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-scale-events --base_path tests/resources/production_dl2_fits/ \\</span>
-<span class="go">    --zeniths 20 40 52 60 --offsets 0 --query_point 1 180 30 0 0 \\</span>
+<span class="go">    --zeniths 20 40 52 60 --camera_offsets 0 --query_point 1 180 30 0 0 \\</span>
 <span class="go">    --metrics_file &quot;path/to/metrics.yaml&quot; \\</span>
-<span class="go">    --output_file &quot;output.json&quot;</span>
+<span class="go">    --output_path simtools-output/derived_events \\</span>
+<span class="go">    --output_file derived_events.json</span>
 </pre></div>
 </div>
 <dl class="simple">
@@ -535,7 +536,7 @@ for a specified query point.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="production_scale_events.main">
 <span class="sig-prename descclassname"><span class="pre">production_scale_events.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/production_scale_events.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_scale_events.main" title="Link to this definition">#</a></dt>
-<dd><p>Run the evaluator and interpolate.</p>
+<dd><p>Run the ScaleEventsManager.</p>
 </dd></dl>
 
 </section>

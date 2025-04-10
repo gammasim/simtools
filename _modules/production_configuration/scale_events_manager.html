@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.calibration_model &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
+    <title>production_configuration.scale_events_manager &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/model/calibration_model';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/scale_events_manager';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -316,7 +316,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/model/calibration_model.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/production_configuration/scale_events_manager.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -390,59 +390,140 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for model.calibration_model</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Definition and modeling of a calibration device.&quot;&quot;&quot;</span>
+  <h1>Source code for production_configuration.scale_events_manager</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module to run the StatisticalErrorEvaluator and interpolate results.</span>
 
+<span class="sd">This module provides the `ScaleEventsManager` class, which manages the workflow for scaling</span>
+<span class="sd">events and performing interpolation. It is designed to handle the evaluation of statistical</span>
+<span class="sd">uncertainties from DL2 Monte Carlo (MC) event files and perform interpolation for a specified</span>
+<span class="sd">query point.</span>
+
+<span class="sd">The module includes functionality to:</span>
+<span class="sd">- Initialize evaluators for statistical error calculations based on input parameters.</span>
+<span class="sd">- Perform interpolation using the initialized evaluators to estimate scaled events at a query point.</span>
+<span class="sd">- Write the results of the interpolation to an output file.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.model_parameter</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelParameter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CalibrationModel&quot;</span><span class="p">]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.calculate_statistical_errors_grid_point</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StatisticalErrorEvaluator</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.interpolation_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">InterpolationHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">collect_data_from_file</span>
 
 
-<div class="viewcode-block" id="CalibrationModel">
-<a class="viewcode-back" href="../../api-reference/mc_model.html#model.calibration_model.CalibrationModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">CalibrationModel</span><span class="p">(</span><span class="n">ModelParameter</span><span class="p">):</span>
+<div class="viewcode-block" id="ScaleEventsManager">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScaleEventsManager</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    CalibrationModel represents the MC model of an individual calibration device.</span>
+<span class="sd">    Manages the workflow for scaling events and performing interpolation.</span>
 
-<span class="sd">    It provides functionality to read the required parameters from the DB.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    site: str</span>
-<span class="sd">        Site name (e.g., South or North).</span>
-<span class="sd">    calibration_device_model_name: str</span>
-<span class="sd">        Calibration device model name (ex. ILLS-01, ILLN-01, ...).</span>
-<span class="sd">    mongo_db_config: dict</span>
-<span class="sd">        MongoDB configuration.</span>
-<span class="sd">    model_version: str</span>
-<span class="sd">        Model version.</span>
-<span class="sd">    label: str, optional</span>
-<span class="sd">        Instance label. Important for output file naming.</span>
+<span class="sd">    This class handles the evaluation of statistical uncertainties from DL2 MC event files</span>
+<span class="sd">    and performs interpolation for a specified query point.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">site</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">calibration_device_model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">mongo_db_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-        <span class="n">model_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize CalibrationModel.&quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">,</span>
-            <span class="n">array_element_name</span><span class="o">=</span><span class="n">calibration_device_model_name</span><span class="p">,</span>
-            <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span><span class="p">,</span>
-            <span class="n">mongo_db_config</span><span class="o">=</span><span class="n">mongo_db_config</span><span class="p">,</span>
-            <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
-            <span class="n">db</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the manager with the provided arguments.</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Init CalibrationModel </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">calibration_device_model_name</span><span class="p">)</span></div>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args_dict : dict</span>
+<span class="sd">            Dictionary of command-line arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;output_file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">collect_data_from_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;metrics_file&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator_instances</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="ScaleEventsManager.initialize_evaluators">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_evaluators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize StatisticalErrorEvaluator instances for the given zeniths and offsets.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;base_path&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;zeniths&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;camera_offsets&quot;</span><span class="p">]):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No files read&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Base Path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;base_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Zeniths: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;zeniths&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Camera offsets: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;camera_offsets&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">zenith</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;zeniths&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;camera_offsets&quot;</span><span class="p">]):</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;file_name_template&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">zenith</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">zenith</span><span class="p">))</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;base_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File not found: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">. Skipping.&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">evaluator</span> <span class="o">=</span> <span class="n">StatisticalErrorEvaluator</span><span class="p">(</span>
+                <span class="n">file_path</span><span class="p">,</span>
+                <span class="n">metrics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">,</span>
+                <span class="n">grid_point</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">zenith</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">offset</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">evaluator</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluator_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluator</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ScaleEventsManager.perform_interpolation">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">perform_interpolation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform interpolation for the query point.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator_instances</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No evaluators initialized. Cannot perform interpolation.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">interpolation_handler</span> <span class="o">=</span> <span class="n">InterpolationHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluator_instances</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="n">query_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_point&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">query_point</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_point</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid query point format. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected 5 values, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">query_point</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">query_point</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;None&#39;</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">query_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;query_point&quot;</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">interpolation_handler</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">query_points</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ScaleEventsManager.write_output">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.write_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scaled_events</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the derived event statistics to a file.&quot;&quot;&quot;</span>
+        <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;query_point&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;query_point&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;scaled_events&quot;</span><span class="p">:</span> <span class="n">scaled_events</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">output_data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output saved to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Scaled events for query point </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;query_point&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">scaled_events</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ScaleEventsManager.run">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.scale_events_manager.ScaleEventsManager.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the scaling and interpolation workflow.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Zeniths: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;zeniths&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Camera offsets: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;camera_offsets&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Query Point: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;query_point&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metrics File: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;metrics_file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_evaluators</span><span class="p">()</span>
+        <span class="n">scaled_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perform_interpolation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_output</span><span class="p">(</span><span class="n">scaled_events</span><span class="p">)</span></div>
+</div>
 
 </pre></div>
 

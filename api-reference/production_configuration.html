@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Production Configuration &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
+    <title>Production Configuration &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=819338f9"></script>
+    <script src="../_static/documentation_options.js?v=56fed332"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -535,6 +535,16 @@ document.write(`
 </li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.scale_events_manager">scale_events_manager</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.initialize_evaluators()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.perform_interpolation()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.run"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.write_output"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.write_output()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -556,14 +566,12 @@ the calculation of the number of events to be simulated given a pre-determined m
 <p>Evaluate statistical uncertainties from DL2 MC event files.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.calculate_statistical_errors_grid_point.</span></span><span class="sig-name descname"><span class="pre">StatisticalErrorEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.calculate_statistical_errors_grid_point.</span></span><span class="sig-name descname"><span class="pre">StatisticalErrorEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/calculate_statistical_errors_grid_point.html#StatisticalErrorEvaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.calculate_statistical_errors_grid_point.StatisticalErrorEvaluator" title="Link to this definition">#</a></dt>
 <dd><p>Evaluates statistical uncertainties from a DL2 MC event file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the DL2 MC event file.</p>
-</dd>
-<dt><strong>file_type</strong><span class="classifier">str</span></dt><dd><p>Type of the file, either ‘point-like’ or ‘cone’.</p>
 </dd>
 <dt><strong>metrics</strong><span class="classifier">dict, optional</span></dt><dd><p>Dictionary of metrics to evaluate. Default is None.</p>
 </dd>
@@ -793,7 +801,7 @@ a u.Quantity.</p>
 <p>Derives simulation configuration parameters for a grid point based on several metrics.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="production_configuration.generate_simulation_config.SimulationConfig">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.generate_simulation_config.</span></span><span class="sig-name descname"><span class="pre">SimulationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.generate_simulation_config.</span></span><span class="sig-name descname"><span class="pre">SimulationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.11/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.11/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/generate_simulation_config.html#SimulationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.generate_simulation_config.SimulationConfig" title="Link to this definition">#</a></dt>
 <dd><p>Configures simulation parameters for a specific grid point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -801,8 +809,6 @@ a u.Quantity.</p>
 <dt><strong>grid_point</strong><span class="classifier">dict</span></dt><dd><p>Dictionary representing a grid point with azimuth, elevation, and night sky background.</p>
 </dd>
 <dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the DL2 MC event file for statistical uncertainty evaluation.</p>
-</dd>
-<dt><strong>file_type</strong><span class="classifier">str</span></dt><dd><p>Type of the DL2 MC event file (‘point-like’ or ‘cone’).</p>
 </dd>
 <dt><strong>metrics</strong><span class="classifier">dict, optional</span></dt><dd><p>Dictionary of metrics to evaluate.</p>
 </dd>
@@ -1152,6 +1158,50 @@ as keys and axis values as values. Axis values may include units where defined.<
 </dd></dl>
 
 </section>
+<section id="module-production_configuration.scale_events_manager">
+<span id="id7"></span><span id="scale-events-manager"></span><h2>scale_events_manager<a class="headerlink" href="#module-production_configuration.scale_events_manager" title="Link to this heading">#</a></h2>
+<p>Module to run the StatisticalErrorEvaluator and interpolate results.</p>
+<p>This module provides the <a class="reference internal" href="#production_configuration.scale_events_manager.ScaleEventsManager" title="production_configuration.scale_events_manager.ScaleEventsManager"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScaleEventsManager</span></code></a> class, which manages the workflow for scaling
+events and performing interpolation. It is designed to handle the evaluation of statistical
+uncertainties from DL2 Monte Carlo (MC) event files and perform interpolation for a specified
+query point.</p>
+<p>The module includes functionality to:
+- Initialize evaluators for statistical error calculations based on input parameters.
+- Perform interpolation using the initialized evaluators to estimate scaled events at a query point.
+- Write the results of the interpolation to an output file.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">production_configuration.scale_events_manager.</span></span><span class="sig-name descname"><span class="pre">ScaleEventsManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager" title="Link to this definition">#</a></dt>
+<dd><p>Manages the workflow for scaling events and performing interpolation.</p>
+<p>This class handles the evaluation of statistical uncertainties from DL2 MC event files
+and performs interpolation for a specified query point.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators">
+<span class="sig-name descname"><span class="pre">initialize_evaluators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager.initialize_evaluators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators" title="Link to this definition">#</a></dt>
+<dd><p>Initialize StatisticalErrorEvaluator instances for the given zeniths and offsets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation">
+<span class="sig-name descname"><span class="pre">perform_interpolation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager.perform_interpolation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation" title="Link to this definition">#</a></dt>
+<dd><p>Perform interpolation for the query point.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager.run" title="Link to this definition">#</a></dt>
+<dd><p>Run the scaling and interpolation workflow.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="production_configuration.scale_events_manager.ScaleEventsManager.write_output">
+<span class="sig-name descname"><span class="pre">write_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaled_events</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/production_configuration/scale_events_manager.html#ScaleEventsManager.write_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#production_configuration.scale_events_manager.ScaleEventsManager.write_output" title="Link to this definition">#</a></dt>
+<dd><p>Write the derived event statistics to a file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -1261,6 +1311,16 @@ as keys and axis values as values. Axis values may include units where defined.<
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.generate_grid"><code class="docutils literal notranslate"><span class="pre">GridGeneration.generate_grid()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_grid_points"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_grid_points()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.generate_production_grid.GridGeneration.serialize_quantity"><code class="docutils literal notranslate"><span class="pre">GridGeneration.serialize_quantity()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-production_configuration.scale_events_manager">scale_events_manager</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.initialize_evaluators"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.initialize_evaluators()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.perform_interpolation"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.perform_interpolation()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.run"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production_configuration.scale_events_manager.ScaleEventsManager.write_output"><code class="docutils literal notranslate"><span class="pre">ScaleEventsManager.write_output()</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-production-generate-simulation-config &#8212; simtools v0.1.dev1+g04a7d63 Manual</title>
+    <title>simtools-production-generate-simulation-config &#8212; simtools v0.1.dev1+gab3dd17 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=819338f9"></script>
+    <script src="../../_static/documentation_options.js?v=56fed332"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g04a7d63 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gab3dd17 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -517,8 +517,6 @@ azimuth, and night sky background.</p>
 <dt>file_path (str, required)</dt><dd><p>Path to file with MC events at CTAO DL2 data level.
 Used for statistical uncertainty evaluation.</p>
 </dd>
-<dt>file_type (str, required)</dt><dd><p>Type of the DL2 MC event file (‘point-like’ or ‘cone’).</p>
-</dd>
 <dt>metrics (str, required)</dt><dd><p>Path to a YAML file containing metrics for evaluation.</p>
 </dd>
 <dt>site (str, required)</dt><dd><p>The observatory site (North or South).</p>
@@ -530,7 +528,6 @@ Used for statistical uncertainty evaluation.</p>
 <p>To run the simulation configuration, execute the script as follows:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \</span>
 <span class="go">        --nsb 0.3 --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \</span>
-<span class="go">        --file_type &quot;point-like&quot;    \</span>
 <span class="go">        --metrics_file tests/resources/production_simulation_config_metrics.yml --site North</span>
 </pre></div>
 </div>
