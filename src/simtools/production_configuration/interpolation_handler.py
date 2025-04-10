@@ -49,6 +49,9 @@ class InterpolationHandler:
         np.ndarray
             The corresponding grid points.
         """
+        if not self.evaluators:
+            return np.array([]), np.array([])
+
         # Flatten the energy grid and other dimensions into a combined array
         flat_data_list = []
         flat_grid_points = []
@@ -167,15 +170,22 @@ class InterpolationHandler:
         """
         import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
 
-        midpoints = 0.5 * (evaluator.data["bin_edges_high"] + evaluator.data["bin_edges_low"])
-
+        midpoints = (
+            0.5
+            * (evaluator.data["bin_edges_high"] + evaluator.data["bin_edges_low"]).to(u.TeV).value
+        )
+        print(f"Midpoints: {midpoints}")
+        print("Grid Points:")
+        print(self.grid_points)
+        print("evaluator.grid_point:")
+        print(evaluator.grid_point)
         self.grid_points = np.column_stack(
             [
                 midpoints,
-                np.full_like(midpoints, evaluator.grid_point[1]),
+                np.full_like(midpoints, evaluator.grid_point[1].to(u.deg).value),
                 np.full_like(midpoints, evaluator.grid_point[2]),
-                np.full_like(midpoints, evaluator.grid_point[3]),
-                np.full_like(midpoints, evaluator.grid_point[4]),
+                np.full_like(midpoints, evaluator.grid_point[3].to(u.deg).value),
+                np.full_like(midpoints, evaluator.grid_point[4].to(u.deg).value),
             ]
         )
 
@@ -190,7 +200,7 @@ class InterpolationHandler:
 
         plt.legend()
         plt.xscale("log")
-        plt.xlabel("Energy (Midpoint of Bin Edges)")
+        plt.xlabel("Energy (TeV)")
         plt.ylabel("Event Count")
         plt.title("Comparison of simulated, derived, and reconstructed events")
         plt.show()
