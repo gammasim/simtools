@@ -47,7 +47,7 @@ class ScaleEventsManager:
         """
         self.args = args_dict
         self.logger = logging.getLogger(__name__)
-        self.output_path = self.args.get("output_path", None)
+        self.output_path = Path(self.args.get("output_path", "."))
         self.output_filepath = self.output_path.joinpath(f"{self.args['output_file']}")
         self.metrics = collect_data_from_file(self.args["metrics_file"])
         self.evaluator_instances = []
@@ -72,7 +72,7 @@ class ScaleEventsManager:
             evaluator = StatisticalErrorEvaluator(
                 file_path,
                 metrics=self.metrics,
-                grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
+                grid_point=(None, None, zenith, None, offset * u.deg),
             )
             evaluator.calculate_metrics()
             self.evaluator_instances.append(evaluator)
