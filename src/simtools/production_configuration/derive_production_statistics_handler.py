@@ -72,7 +72,6 @@ class ProductionStatisticsHandler:
 
             evaluator = StatisticalErrorEvaluator(
                 file_path,
-                file_type="Gamma-cone",
                 metrics=self.metrics,
                 grid_point=(1 * u.TeV, 180 * u.deg, zenith, 0, offset * u.deg),
             )

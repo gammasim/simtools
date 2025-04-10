@@ -78,7 +78,7 @@ def _parse(label, description):
         help="List of zenith angles.",
     )
     config.parser.add_argument(
-        "--offsets", required=True, nargs="+", type=float, help="List of offsets in degrees."
+        "--camera_offsets", required=True, nargs="+", type=float, help="List of offsets in degrees."
     )
     config.parser.add_argument(
         "--query_point",
@@ -109,10 +109,7 @@ def _parse(label, description):
         required=False,
         type=str,
         default=("prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"),
-        help=(
-            "Template for the file name. (default: "
-            "'prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits'"
-        ),
+        help=("Template for the DL2 MC event file name."),
     )
     return config.initialize(db_config=False)
 

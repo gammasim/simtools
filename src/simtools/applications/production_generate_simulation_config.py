@@ -31,8 +31,6 @@ nsb (float, required)
 file_path (str, required)
         Path to file with MC events at CTAO DL2 data level.
         Used for statistical uncertainty evaluation.
-file_type (str, required)
-        Type of the DL2 MC event file ('point-like' or 'cone').
 metrics (str, required)
         Path to a YAML file containing metrics for evaluation.
 site (str, required)
@@ -46,7 +44,6 @@ To run the simulation configuration, execute the script as follows:
 
         simtools-production-generate-simulation-config --azimuth 60.0 --elevation 45.0 \
                 --nsb 0.3 --file_path tests/resources/production_dl2_fits/dl2_mc_events_file.fits \
-                --file_type "point-like"    \
                 --metrics_file tests/resources/production_simulation_config_metrics.yml --site North
 
 The output will show the derived simulation parameters.
@@ -84,12 +81,6 @@ def _parse(label):
     )
     config.parser.add_argument(
         "--file_path", type=str, required=True, help="Path to MC event file in DL2 format."
-    )
-    config.parser.add_argument(
-        "--file_type",
-        type=str,
-        required=True,
-        help="Type of the DL2 MC event file ('point-like' or 'cone').",
     )
     config.parser.add_argument(
         "--metrics_file",
@@ -138,7 +129,6 @@ def main():
     simulation_config = SimulationConfig(
         grid_point=grid_point_config,
         file_path=args_dict["file_path"],
-        file_type=args_dict["file_type"],
         metrics=metrics,
     )
 
