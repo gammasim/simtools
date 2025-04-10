@@ -95,7 +95,7 @@ class ProductionStatisticsHandler:
         return interpolation_handler.interpolate(query_points)
 
     def write_output(self, production_statistics):
-        """Write the interpolation results to a file."""
+        """Write the derived production statistics for a grid point to a file."""
         output_data = {
             "query_point": self.args["query_point"],
             "production_statistics": production_statistics.tolist(),
