@@ -5,7 +5,10 @@ import logging
 import numpy as np
 
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
-from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
+from simtools.simtel.simtel_io_metadata import (
+    get_sim_telarray_telescope_id,
+    read_sim_telarray_metadata,
+)
 from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
@@ -32,6 +35,11 @@ def assert_sim_telarray_metadata(file, array_model):
             f"number of telescopes in array model ({len(array_model.telescope_model)})"
         )
 
+    for telescope_name in array_model.telescope_model.keys():
+        print("FFFF", telescope_name, get_sim_telarray_telescope_id(telescope_name, file))
+        if not get_sim_telarray_telescope_id(telescope_name, file):
+            raise ValueError(f"Telescope {telescope_name} not found in sim_telarray file metadata")
+
     telescope_parameter_mismatch = [
         _assert_model_parameters(telescope_meta[i], model)
         for i, (_, model) in enumerate(array_model.telescope_model.items(), start=1)
@@ -49,9 +57,6 @@ def assert_sim_telarray_metadata(file, array_model):
             f"Telescope model parameters do not match sim_telarray metadata: "
             f"{telescope_parameter_mismatch}"
         )
-
-    print("FFFF", telescope_meta.keys())
-    print(telescope_meta)
 
 
 def _assert_model_parameters(global_meta, model):
@@ -72,9 +77,6 @@ def _assert_model_parameters(global_meta, model):
 
     """
     config_reader = SimtelConfigReader()
-
-    global_meta = {k.lower().lstrip("*"): v for k, v in global_meta.items()}
-    global_meta = {k: v.strip() if isinstance(v, str) else v for k, v in global_meta.items()}
 
     invalid_parameter_list = []
 
