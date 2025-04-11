@@ -399,12 +399,20 @@ def test_validate_metadata(array_simulator, mocker, caplog):
 
     # Test when simulation software is simtel and there are output files
     array_simulator.simulation_software = "simtel"
-    mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1"])
+    mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1_6.0.0"])
     mock_assert_sim_telarray_metadata = mocker.patch(
         "simtools.simulator.assert_sim_telarray_metadata"
     )
     with caplog.at_level(logging.INFO):
         array_simulator.validate_metadata()
-    assert "Validating metadata for output_file1" in caplog.text
-    assert "Metadata for sim_telarray file output_file1 is valid." in caplog.text
+    assert "Validating metadata for output_file1_6.0.0" in caplog.text
+    assert "Metadata for sim_telarray file output_file1_6.0.0 is valid." in caplog.text
     assert mock_assert_sim_telarray_metadata.call_count == 1
+
+    mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1_5.0.0"])
+    mock_assert_sim_telarray_metadata = mocker.patch(
+        "simtools.simulator.assert_sim_telarray_metadata"
+    )
+    with caplog.at_level(logging.WARNING):
+        array_simulator.validate_metadata()
+    assert "No sim_telarray file found for model version 6.0.0:" in caplog.text

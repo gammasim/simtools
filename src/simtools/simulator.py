@@ -632,10 +632,14 @@ class Simulator:
             self._logger.info("No sim_telarray files to validate.")
             return
 
-        for array_model, output_file in zip(
-            self.array_models, self.get_file_list(file_type="output")
-        ):
+        for model in self.array_models:
+            files = self.get_file_list(file_type="output")
+            output_file = next((f for f in files if model.model_version in f), None)
             if output_file:
                 self._logger.info(f"Validating metadata for {output_file}")
-                assert_sim_telarray_metadata(output_file, array_model)
+                assert_sim_telarray_metadata(output_file, model)
                 self._logger.info(f"Metadata for sim_telarray file {output_file} is valid.")
+            else:
+                self._logger.warning(
+                    f"No sim_telarray file found for model version {model.model_version}: {files}"
+                )
