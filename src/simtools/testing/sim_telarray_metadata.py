@@ -36,7 +36,6 @@ def assert_sim_telarray_metadata(file, array_model):
         )
 
     for telescope_name in array_model.telescope_model.keys():
-        print("FFFF", telescope_name, get_sim_telarray_telescope_id(telescope_name, file))
         if not get_sim_telarray_telescope_id(telescope_name, file):
             raise ValueError(f"Telescope {telescope_name} not found in sim_telarray file metadata")
 
@@ -59,13 +58,13 @@ def assert_sim_telarray_metadata(file, array_model):
         )
 
 
-def _assert_model_parameters(global_meta, model):
+def _assert_model_parameters(metadata, model):
     """
     Assert that model parameter values matches the values in the sim_telarray metadata.
 
     Parameters
     ----------
-    global_meta: dict
+    metadata: dict
         Metadata dictionary.
     model: SiteModel, TelescopeModel
         Model to compare with.
@@ -82,14 +81,14 @@ def _assert_model_parameters(global_meta, model):
 
     for param in model.parameters:
         sim_telarray_name = _sim_telarray_name_from_parameter_name(param)
-        if sim_telarray_name in global_meta.keys():
+        if sim_telarray_name in metadata.keys():
             parameter_type = model.parameters[param]["type"]
             if parameter_type not in ("string", "dict", "boolean"):
                 value, _ = config_reader.extract_value_from_sim_telarray_column(
-                    [global_meta[sim_telarray_name]], parameter_type
+                    [metadata[sim_telarray_name]], parameter_type
                 )
             else:
-                value = global_meta[sim_telarray_name]
+                value = metadata[sim_telarray_name]
                 value = (int)(value) if value.isnumeric() else value
 
             _logger.info(
@@ -150,5 +149,5 @@ def is_equal(value1, value2, value_type):
     if value_type == "boolean":
         return bool(value1) == bool(value2)
     if isinstance(value1, np.ndarray | list) and isinstance(value2, np.ndarray | list):
-        return np.allclose(np.array(value1), np.array(value2), rtol=1e-10)
-    return np.isclose(float(value1), float(value2), rtol=1e-10)
+        return bool(np.allclose(np.array(value1), np.array(value2), rtol=1e-10))
+    return bool(np.isclose(float(value1), float(value2), rtol=1e-10))
