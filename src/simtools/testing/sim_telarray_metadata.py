@@ -116,9 +116,13 @@ def _sim_telarray_name_from_parameter_name(parameter_name):
     return sim_telarray_name
 
 
+# pylint: disable=too-many-return-statements
 def is_equal(value1, value2, value_type):
     """
     Check if two values are equal based on their type.
+
+    The complexity of this function reflects the complexity of the sim_telarray
+    metadata output.
 
     Parameters
     ----------
@@ -147,4 +151,10 @@ def is_equal(value1, value2, value_type):
         return bool(value1) == bool(value2)
     if isinstance(value1, np.ndarray | list) and isinstance(value2, np.ndarray | list):
         return bool(np.allclose(np.array(value1), np.array(value2), rtol=1e-10))
+    if isinstance(value1, list) and isinstance(value2, float | int | np.integer | np.floating):
+        if all(x == value1[0] for x in value1):
+            return bool(np.isclose(float(value1[0]), float(value2), rtol=1e-10))
+    if isinstance(value2, list) and isinstance(value1, float | int | np.integer | np.floating):
+        if all(x == value2[0] for x in value2):
+            return bool(np.isclose(float(value1), float(value2[0]), rtol=1e-10))
     return bool(np.isclose(float(value1), float(value2), rtol=1e-10))

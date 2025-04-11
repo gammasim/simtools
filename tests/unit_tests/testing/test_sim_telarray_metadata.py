@@ -128,6 +128,8 @@ def test_is_equal():
     assert is_equal(True, False, "boolean") is False
     assert is_equal([1.0, 2.0], [1.0, 2.0], "list") is True
     assert is_equal([1.0, 2.0], [1.0, 2.1], "list") is False
+    assert is_equal(1.0, [1.0, 1.0], "list") is True
+    assert is_equal([1.0, 1.0], 1.0, "list") is True
     assert is_equal(np.array([1.0, 2.0]), np.array([1.0, 2.0]), "array") is True
     assert is_equal(np.array([1.0, 2.0]), np.array([1.0, 2.1]), "array") is False
     assert is_equal((1.0,), 1.0, "float") is True
