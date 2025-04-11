@@ -58,6 +58,15 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## simtel_io_metadata
+
+(simtel-io-metadata-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simtel_io_metadata
+   :members:
+```
+
 ## simulator_array
 
 (simulate-array-1)=
