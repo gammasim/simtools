@@ -91,7 +91,7 @@ def _assert_model_parameters(metadata, model):
                 value = metadata[sim_telarray_name]
                 value = (int)(value) if value.isnumeric() else value
 
-            _logger.info(
+            _logger.debug(
                 f"Parameter {param} in sim_telarray file: {value}, "
                 f"in model: {model.parameters[param]['value']}"
             )
