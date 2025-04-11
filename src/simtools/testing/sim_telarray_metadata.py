@@ -116,7 +116,6 @@ def _sim_telarray_name_from_parameter_name(parameter_name):
     return sim_telarray_name
 
 
-# pylint: disable=too-many-return-statements
 def is_equal(value1, value2, value_type):
     """
     Check if two values are equal based on their type.
@@ -149,6 +148,11 @@ def is_equal(value1, value2, value_type):
         return value1 == value2
     if value_type == "boolean":
         return bool(value1) == bool(value2)
+    return _is_equal_floats_or_ints(value1, value2)
+
+
+def _is_equal_floats_or_ints(value1, value2):
+    """Check if floats and ints are equal."""
     if isinstance(value1, np.ndarray | list) and isinstance(value2, np.ndarray | list):
         return bool(np.allclose(np.array(value1), np.array(value2), rtol=1e-10))
     if isinstance(value1, list) and isinstance(value2, float | int | np.integer | np.floating):
