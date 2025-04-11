@@ -74,15 +74,14 @@ def get_sim_telarray_telescope_id(telescope_name, file):
 
     Returns
     -------
-    int
-        Telescope ID.
+    int, None
+        Telescope ID. Returns None if not found.
     """
     _, telescope_meta = read_sim_telarray_metadata(file)
     telescope_name_to_sim_telarray_id = {}
     for tel_id in telescope_meta.keys():
         _optics_name = telescope_meta[tel_id].get("optics_config_name", None)
         _camera_name = telescope_meta[tel_id].get("camera_config_name", None)
-        print("AAAA", _optics_name, _camera_name, telescope_name)
         if _optics_name == _camera_name and _optics_name == telescope_name:
             telescope_name_to_sim_telarray_id[telescope_name] = tel_id
 
