@@ -645,3 +645,31 @@ def test__write_parameters_table(io_handler, db_config):
         "| array_triggers | [View Trigger Configurations](#array-trigger-configurations) | 3.0.0 |"
         in output
     )
+
+
+def test_model_version_setter_with_valid_string(db_config, io_handler):
+    """Test setting model_version with a valid string."""
+    args = {"model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    read_parameters.model_version = "7.0.0"
+    assert read_parameters.model_version == "7.0.0"
+
+
+def test_model_version_setter_with_invalid_list(db_config, io_handler):
+    """Test setting model_version with an invalid list containing more than one element."""
+    args = {"model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory()
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    error_message = "Only one model version can be passed to ReadParameters, not a list."
+
+    with pytest.raises(ValueError, match=error_message):
+        read_parameters.model_version = ["7.0.0"]
+
+    with pytest.raises(ValueError, match=error_message):
+        read_parameters.model_version = ["7.0.0", "8.0.0"]
+
+    with pytest.raises(ValueError, match=error_message):
+        read_parameters.model_version = []

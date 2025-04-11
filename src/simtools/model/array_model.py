@@ -160,6 +160,34 @@ class ArrayModel:
         """
         return self.site_model.site
 
+    @property
+    def model_version(self):
+        """Model version."""
+        return self._model_version
+
+    @model_version.setter
+    def model_version(self, model_version):
+        """
+        Set model version.
+
+        Parameters
+        ----------
+        _model_version: str or list
+            Model version (e.g., "6.0.0").
+            If a list is passed, it must contain exactly one element,
+            and only that element will be used.
+
+        Raises
+        ------
+        ValueError
+            If more than one model version is passed.
+        """
+        if isinstance(model_version, list):
+            raise ValueError(
+                f"Only one model version can be passed to {self.__class__.__name__}, not a list."
+            )
+        self._model_version = model_version
+
     def _build_telescope_models(self, site_model: SiteModel, array_elements: dict) -> dict:
         """
         Build the the telescope models for all telescopes of this array.
@@ -255,7 +283,9 @@ class ArrayModel:
             Path of the config directory path for sim_telarray.
         """
         if self._config_file_directory is None:
-            self._config_file_directory = self.io_handler.get_output_directory(self.label, "model")
+            self._config_file_directory = self.io_handler.get_output_directory(
+                self.label, f"model/{self.model_version}"
+            )
         return self._config_file_directory
 
     def _load_array_element_positions_from_file(

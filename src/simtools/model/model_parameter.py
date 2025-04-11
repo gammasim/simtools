@@ -88,6 +88,34 @@ class ModelParameter:
         self._is_exported_model_files_up_to_date = False
 
     @property
+    def model_version(self):
+        """Model version."""
+        return self._model_version
+
+    @model_version.setter
+    def model_version(self, model_version):
+        """
+        Set model version.
+
+        Parameters
+        ----------
+        model_version: str or list
+            Model version (e.g., "6.0.0").
+            If a list is passed, it must contain exactly one element,
+            and only that element will be used.
+
+        Raises
+        ------
+        ValueError
+            If more than one model version is passed.
+        """
+        if isinstance(model_version, list):
+            raise ValueError(
+                f"Only one model version can be passed to {self.__class__.__name__}, not a list."
+            )
+        self._model_version = model_version
+
+    @property
     def parameters(self):
         """
         Model parameters dictionary.
@@ -280,7 +308,7 @@ class ModelParameter:
             return
 
         self._config_file_directory = self.io_handler.get_output_directory(
-            label=self.label, sub_dir="model"
+            label=self.label, sub_dir=f"model/{self.model_version}"
         )
 
         # Setting file name and the location

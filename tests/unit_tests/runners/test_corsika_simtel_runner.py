@@ -28,9 +28,12 @@ def show_all():
 
 
 @pytest.fixture
-def simulation_file():
+def simulation_file(model_version):
     """Base name for simulation test file."""
-    return "run000001_proton_za20deg_azm000deg_South_test_layout_test-corsika-simtel-runner"
+    return (
+        f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}_"
+        "test-corsika-simtel-runner"
+    )
 
 
 @pytest.fixture
@@ -46,7 +49,7 @@ def corsika_simtel_runner(io_handler, corsika_config_mock_array_model, simtel_pa
 
 def test_corsika_simtel_runner(corsika_simtel_runner):
     assert isinstance(corsika_simtel_runner.corsika_runner, CorsikaRunner)
-    assert isinstance(corsika_simtel_runner.simulator_array, SimulatorArray)
+    assert isinstance(corsika_simtel_runner.simulator_array[0], SimulatorArray)
 
 
 def test_prepare_run_script(corsika_simtel_runner):
@@ -83,8 +86,8 @@ def test_prepare_run_script_with_invalid_run(corsika_simtel_runner):
 
 def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all):
     corsika_simtel_runner._export_multipipe_script(run_number=1)
-    script = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
-        corsika_simtel_runner.corsika_config.get_corsika_config_file_name("multipipe")
+    script = Path(corsika_simtel_runner.base_corsika_config.config_file_path.parent).joinpath(
+        corsika_simtel_runner.base_corsika_config.get_corsika_config_file_name("multipipe")
     )
 
     assert script.exists()
@@ -98,11 +101,11 @@ def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all
 
 def test_write_multipipe_script(corsika_simtel_runner):
     corsika_simtel_runner._export_multipipe_script(run_number=1)
-    multipipe_file = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
-        corsika_simtel_runner.corsika_config.get_corsika_config_file_name("multipipe")
-    )
+    multipipe_file = Path(
+        corsika_simtel_runner.base_corsika_config.config_file_path.parent
+    ).joinpath(corsika_simtel_runner.base_corsika_config.get_corsika_config_file_name("multipipe"))
     corsika_simtel_runner._write_multipipe_script(multipipe_file)
-    script = Path(corsika_simtel_runner.corsika_config.config_file_path.parent).joinpath(
+    script = Path(corsika_simtel_runner.base_corsika_config.config_file_path.parent).joinpath(
         "run_cta_multipipe"
     )
 
@@ -114,28 +117,54 @@ def test_write_multipipe_script(corsika_simtel_runner):
         assert "'Fan-out failed'" in script_content
 
 
-def test_make_run_command(corsika_simtel_runner, simtel_command, show_all):
-    command = corsika_simtel_runner._make_run_command(input_file="-", run_number=1)
+def test_make_run_command(corsika_simtel_runner, simtel_command, show_all, model_version):
+    command = corsika_simtel_runner._make_run_command(
+        input_file="-",
+        run_number=1,
+        corsika_config=corsika_simtel_runner.base_corsika_config,
+        simulator_array=corsika_simtel_runner.simulator_array[0],
+    )
     assert simtel_command in command
     assert "-C telescope_theta=20" in command
     assert "-C telescope_phi=0" in command
     assert show_all in command
-    assert "run000001_proton_za20deg_azm000deg_South_test_layout_test" in command
+    assert f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}" in command
+    assert "random_seed" not in command
 
     _test_corsika_simtel_runner = copy.deepcopy(corsika_simtel_runner)
     _test_corsika_simtel_runner.label = None
-    command = _test_corsika_simtel_runner._make_run_command(input_file="-", run_number=1)
+    command = _test_corsika_simtel_runner._make_run_command(
+        input_file="-",
+        run_number=1,
+        corsika_config=corsika_simtel_runner.base_corsika_config,
+        simulator_array=corsika_simtel_runner.simulator_array[0],
+    )
     assert "-W" not in command
 
+    corsika_simtel_runner.sim_telarray_seeds = "12345"
+    command = corsika_simtel_runner._make_run_command(
+        input_file="-",
+        run_number=1,
+        corsika_config=corsika_simtel_runner.base_corsika_config,
+        simulator_array=corsika_simtel_runner.simulator_array[0],
+    )
+    assert "random_seed" in command
+    assert "12345" in command
 
-def test_make_run_command_divergent(corsika_simtel_runner, simtel_command, show_all):
+
+def test_make_run_command_divergent(corsika_simtel_runner, simtel_command, show_all, model_version):
     corsika_simtel_runner.label = "test-corsika-simtel-runner-divergent-pointing"
-    command = corsika_simtel_runner._make_run_command(input_file="-", run_number=1)
+    command = corsika_simtel_runner._make_run_command(
+        input_file="-",
+        run_number=1,
+        corsika_config=corsika_simtel_runner.base_corsika_config,
+        simulator_array=corsika_simtel_runner.simulator_array[0],
+    )
     assert simtel_command in command
     assert "-W telescope_theta=20" in command  # -W is for pointing
     assert "-W telescope_phi=0" in command
     assert show_all in command
-    assert "run000001_proton_za20deg_azm000deg_South_test_layout_test" in command
+    assert f"run000001_proton_za20deg_azm000deg_South_test_layout_{model_version}" in command
 
 
 def test_get_file_name(corsika_simtel_runner, simulation_file):

@@ -27,8 +27,8 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - TEST_OUTPUT_FILES:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.log_hist.tar.gz
+        FILE: run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000010_gamma_za20deg_azm000deg_North_test_layout_test-production-North.zst
+        FILE: run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.zst
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0
