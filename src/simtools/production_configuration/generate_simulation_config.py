@@ -3,7 +3,9 @@
 from simtools.production_configuration.calculate_statistical_errors_grid_point import (
     StatisticalErrorEvaluator,
 )
-from simtools.production_configuration.event_scaler import EventScaler
+from simtools.production_configuration.derive_production_statistics import (
+    ProductionStatisticsDerivator,
+)
 
 __all__ = ["SimulationConfig"]
 
@@ -18,8 +20,6 @@ class SimulationConfig:
         Dictionary representing a grid point with azimuth, elevation, and night sky background.
     file_path : str
         Path to the DL2 MC event file for statistical uncertainty evaluation.
-    file_type : str
-        Type of the DL2 MC event file ('point-like' or 'cone').
     metrics : dict, optional
         Dictionary of metrics to evaluate.
     """
@@ -28,16 +28,16 @@ class SimulationConfig:
         self,
         grid_point: dict[str, float],
         file_path: str,
-        file_type: str,
         metrics: dict[str, float] | None = None,
     ):
         """Initialize the simulation configuration for a grid point."""
         self.grid_point = grid_point
         self.file_path = file_path
-        self.file_type = file_type
         self.metrics = metrics or {}
-        self.evaluator = StatisticalErrorEvaluator(file_path, file_type, metrics)
-        self.event_scaler = EventScaler(self.evaluator, self.metrics)
+        self.evaluator = StatisticalErrorEvaluator(file_path, metrics)
+        self.derive_production_statistics = ProductionStatisticsDerivator(
+            self.evaluator, self.metrics
+        )
         self.simulation_params = {}
 
     def configure_simulation(self) -> dict[str, float]:
@@ -61,14 +61,14 @@ class SimulationConfig:
         """
         Calculate the required number of simulated events based on statistical error metrics.
 
-        Uses the EventScaler to scale the events.
+        Uses the ProductionStatisticsDerivator to scale the events.
 
         Returns
         -------
         int
             The number of simulated events required.
         """
-        return self.event_scaler.scale_events()
+        return self.derive_production_statistics.derive_statistics()
 
     def _calculate_core_scatter_area(self) -> float:
         """

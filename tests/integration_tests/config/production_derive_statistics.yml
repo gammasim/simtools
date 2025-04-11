@@ -1,8 +1,8 @@
 ---
 CTA_SIMPIPE:
   APPLICATIONS:
-  - APPLICATION: simtools-production-scale-events
-    TEST_NAME: production_scale_events
+  - APPLICATION: simtools-production-derive-statistics
+    TEST_NAME: production_derive_statistics
     CONFIGURATION:
       BASE_PATH: tests/resources/production_dl2_fits/
       ZENITHS:
@@ -10,7 +10,7 @@ CTA_SIMPIPE:
       - 40
       - 52
       - 60
-      OFFSETS:
+      CAMERA_OFFSETS:
       - 0
       QUERY_POINT:
       - 1
@@ -19,10 +19,10 @@ CTA_SIMPIPE:
       - 0
       - 0
       OUTPUT_PATH: simtools-output
-      OUTPUT_FILE: interpolated_scaled_events.json
+      OUTPUT_FILE: interpolated_production_statistics.json
       METRICS_FILE: tests/resources/production_simulation_config_metrics.yml
       FILE_NAME_TEMPLATE: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: interpolated_scaled_events.json
+    - OUTPUT_FILE: interpolated_production_statistics.json
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

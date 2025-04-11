@@ -163,6 +163,7 @@ class Configurator:
             self.config["activity_id"] = str(uuid.uuid4())
         if self.config["label"] is None:
             self.config["label"] = self.label
+        self._initialize_model_versions()
 
         self._initialize_io_handler()
         if output:
@@ -328,6 +329,15 @@ class Configurator:
                 _env_dict[key] = env_value
 
         self._fill_from_config_dict(_env_dict)
+
+    def _initialize_model_versions(self):
+        """Initialize model versions."""
+        if (
+            self.config.get("model_version", None)
+            and isinstance(self.config["model_version"], list)
+            and len(self.config["model_version"]) == 1
+        ):
+            self.config["model_version"] = self.config["model_version"][0]
 
     def _initialize_io_handler(self):
         """Initialize IOHandler with input and output paths."""

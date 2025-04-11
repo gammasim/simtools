@@ -60,7 +60,6 @@ def test_initialization(mock_statistical_error_evaluator):
 
     assert config.grid_point == grid_point
     assert config.file_path == PATH_FITS
-    assert config.file_type == "point-like"
 
 
 def test_configure_simulation(mock_statistical_error_evaluator):
@@ -75,7 +74,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
             "energy_range": {"value": [0.04, 200], "unit": "TeV"},
         },
     }
-    config = SimulationConfig(grid_point, PATH_FITS, "Off-source", metrics)
+    config = SimulationConfig(grid_point, PATH_FITS, metrics)
     config.evaluator = mock_statistical_error_evaluator
 
     params = config.configure_simulation()
@@ -85,7 +84,7 @@ def test_configure_simulation(mock_statistical_error_evaluator):
 
 def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 45.0, "elevation": 60.0}
-    config = SimulationConfig(grid_point, PATH_FITS, "point-like")
+    config = SimulationConfig(grid_point, PATH_FITS)
     config.evaluator = mock_statistical_error_evaluator
 
     # Mocking the method calculate_core_scatter_area
@@ -98,7 +97,7 @@ def test_calculate_core_scatter_area(mock_statistical_error_evaluator):
 
 def test_calculate_viewcone(mock_statistical_error_evaluator):
     grid_point = {"azimuth": 15.0, "elevation": 25.0}
-    config = SimulationConfig(grid_point, PATH_FITS, "Off-source")
+    config = SimulationConfig(grid_point, PATH_FITS)
     config.evaluator = mock_statistical_error_evaluator
 
     # Mocking the method calculate_viewcone
@@ -115,7 +114,6 @@ def test_edge_cases(mock_statistical_error_evaluator, metric):
     config = SimulationConfig(
         grid_point=grid_point,
         file_path=PATH_FITS,
-        file_type="point-like",
         metrics=metric,
     )
     config.evaluator = mock_statistical_error_evaluator
