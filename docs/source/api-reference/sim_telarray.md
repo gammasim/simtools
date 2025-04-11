@@ -69,9 +69,6 @@ Support modules for running sim_telarray.
 
 ## simulator_array
 
-
-## simulator_array
-
 (simulate-array-1)=
 
 ```{eval-rst}
