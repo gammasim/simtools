@@ -10,7 +10,11 @@ from simtools.simtel.simtel_io_metadata import (
 
 @pytest.fixture
 def test_sim_telarray_file():
-    return "tests/resources/run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0_test-production-North.simtel.zst"
+    return (
+        "tests/resources/"
+        "run000010_gamma_za20deg_azm000deg_North_test_layout_6.0.0"
+        "_test-production-North.simtel.zst"
+    )
 
 
 def test_read_sim_telarray_metadata(test_sim_telarray_file):
