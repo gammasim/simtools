@@ -9,7 +9,6 @@ from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
 )
-from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
 
@@ -106,8 +105,6 @@ def _assert_model_parameters(metadata, model):
 
 def _sim_telarray_name_from_parameter_name(parameter_name):
     """Return sim_telarray parameter name. Some specific fine tuning."""
-    sim_telarray_name = names.get_simulation_software_name_from_parameter_name(parameter_name)
-
     # parameters like "reference_point_latitude"
     sim_telarray_name = parameter_name.replace("reference_point_", "")
 
