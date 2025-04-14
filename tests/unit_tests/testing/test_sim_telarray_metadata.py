@@ -29,8 +29,8 @@ def test_metadata(test_metadata_file):
     return read_sim_telarray_metadata(test_metadata_file)
 
 
-def test_assert_sim_telarray_metadata_success(test_metadata_file):
-    """Test assert_sim_telarray_metadata with successful comparison."""
+def test_assert_sim_telarray_metadata(test_metadata_file):
+    """Test assert_sim_telarray_metadata."""
     array_model_mock = MagicMock()
     array_model_mock.site_model.parameters = {
         "altitude": {"value": 2158.0, "type": "float"},
@@ -92,7 +92,7 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
     )
 
     with pytest.raises(
-        ValueError, match=r"^Site model parameters do not match sim_telarray metadata: "
+        ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
     ):
         assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_site)
 
@@ -102,7 +102,7 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
     ]["value"] = 0.99
 
     with pytest.raises(
-        ValueError, match=r"^Telescope model parameters do not match sim_telarray metadata: "
+        ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
     ):
         assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_telescope)
 

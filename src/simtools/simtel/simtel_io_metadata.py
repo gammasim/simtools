@@ -36,9 +36,12 @@ def read_sim_telarray_metadata(file, encoding="utf8"):
     telescope_meta = {}
 
     with EventIOFile(file) as f:
+        found_meta = False
         for o in f:
-            if not isinstance(o, HistoryMeta):
-                if global_meta is not None:
+            if isinstance(o, HistoryMeta):
+                found_meta = True
+            else:
+                if found_meta:
                     break
                 continue
 

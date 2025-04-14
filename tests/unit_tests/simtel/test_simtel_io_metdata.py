@@ -30,6 +30,9 @@ def test_read_sim_telarray_metadata(test_sim_telarray_file):
         assert key.strip() == key
         assert key.lower() == key
 
+    assert (float)(global_meta["latitude"]) > 0.0
+    assert global_meta["array_config_name"] == "test_layout"
+
 
 def test_get_sim_telarray_telescope_id(test_sim_telarray_file):
     assert get_sim_telarray_telescope_id("LSTN-01", test_sim_telarray_file) == 1
