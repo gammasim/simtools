@@ -2,6 +2,7 @@
 """Configuration file writer for sim_telarray."""
 
 import logging
+from copy import deepcopy
 from pathlib import Path
 
 import astropy.units as u
@@ -49,7 +50,7 @@ class SimtelConfigWriter:
         self._layout_name = layout_name
         self._telescope_model_name = telescope_model_name
 
-    def write_telescope_config_file(self, config_file_path, parameters):
+    def write_telescope_config_file(self, config_file_path, parameters, telescope_name=None):
         """
         Write the sim_telarray config file for a single telescope.
 
@@ -59,17 +60,20 @@ class SimtelConfigWriter:
             Path of the file to write on.
         parameters: dict
             Model parameters
+        telescope_name: str
+            Name of the telescope (use self._telescope_model_name if None)
         """
         self._logger.debug(f"Writing telescope config file {config_file_path}")
 
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "TELESCOPE CONFIGURATION FILE")
 
+            telescope_name = telescope_name or self._telescope_model_name
             file.write("#ifdef TELESCOPE\n")
-            file.write(
-                f"   echo Configuration for {self._telescope_model_name} - TELESCOPE $(TELESCOPE)\n"
-            )
+            file.write(f"   echo Configuration for {telescope_name} - TELESCOPE $(TELESCOPE)\n")
             file.write("#endif\n\n")
+            if telescope_name == "DummyTelescope":
+                file.write("#define DUMMY_CONFIG 1\n")
 
             for par, value in parameters.items():
                 simtel_name, value = self._convert_model_parameters_to_simtel_format(
@@ -84,7 +88,7 @@ class SimtelConfigWriter:
                     file.write(f"{simtel_name} = {self._get_value_string_for_simtel(value)}\n")
             if "stars" not in parameters:  # sim_telarray requires 'stars' to be set
                 file.write("stars = none\n")
-            for meta in self._get_sim_telarray_metadata("telescope", parameters):
+            for meta in self._get_sim_telarray_metadata("telescope", parameters, telescope_name):
                 file.write(f"{meta}\n")
 
     def _get_value_string_for_simtel(self, value):
@@ -108,7 +112,7 @@ class SimtelConfigWriter:
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
-    def _get_sim_telarray_metadata(self, config_type, model_parameters):
+    def _get_sim_telarray_metadata(self, config_type, model_parameters, telescope_model_name=None):
         """
         Return sim_telarray metadata.
 
@@ -118,12 +122,15 @@ class SimtelConfigWriter:
             Type of the configuration file (telescope, site)
         model_parameters: dict
             Model parameters dictionary.
+        telescope_model_name: str
+            Name of the telescope model (use self._telescope_model_name if None)
 
         Returns
         -------
         list
             List with sim_telarray metadata.
         """
+        telescope_model_name = telescope_model_name or self._telescope_model_name
         meta_parameters = [
             f"config_release = {self._model_version} with simtools v{simtools.version.__version__}",
             f"config_version = {self._model_version}",
@@ -131,10 +138,10 @@ class SimtelConfigWriter:
         if config_type == "telescope":
             meta_parameters.extend(
                 [
-                    f"camera_config_name = {self._telescope_model_name}",
+                    f"camera_config_name = {telescope_model_name}",
                     "camera_config_variant = ",
                     f"camera_config_version = {self._model_version}",
-                    f"optics_config_name = {self._telescope_model_name}",
+                    f"optics_config_name = {telescope_model_name}",
                     "optics_config_variant = ",
                     f"optics_config_version = {self._model_version}",
                 ]
@@ -206,12 +213,17 @@ class SimtelConfigWriter:
 
             # Default telescope in sim_telarray - 0th tel in telescope list
             _, first_telescope = next(iter(telescope_model.items()))
-            tel_config_file = first_telescope.config_file_path.name
-            file.write(f"# include <{tel_config_file}>\n\n")
+            # tel_config_file = first_telescope.config_file_path.name
+            # file.write(f"# include <{tel_config_file}>\n\n")
+            file.write("# include <dummy_telescope.cfg>\n\n")
+            self.write_dummy_telescope_configuration_file(
+                deepcopy(first_telescope.parameters),
+                Path(config_file_path).parent / "dummy_telescope.cfg",
+            )
 
             for count, (tel_name, tel_model) in enumerate(telescope_model.items()):
                 tel_config_file = tel_model.config_file_path.name
-                file.write(f"%{tel_name}\n")
+                file.write(f"% {tel_name}\n")
                 file.write(f"#elif TELESCOPE == {count + 1}\n\n")
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
@@ -264,7 +276,7 @@ class SimtelConfigWriter:
                 f"{shape_type} 0.\n"
             )
 
-    def _write_header(self, file, title, comment_char="%"):
+    def _write_header(self, file, title, comment_char="%", telescope_name=None, layout_name=None):
         """
         Write a generic header.
 
@@ -276,21 +288,23 @@ class SimtelConfigWriter:
             Title of the header.
         comment_char: str
             Character to be used for comments, which differs among ctypes of config files.
+        telescope_name : str
+            Name of the telescope.
+        layout_name : str
+            Name of the layout.
         """
+        telescope_name = telescope_name or self._telescope_model_name
+        layout_name = layout_name or self._layout_name
         header = f"{comment_char}{50 * '='}\n"
         header += f"{comment_char} {title}\n"
         header += f"{comment_char} Site: {self._site}\n"
         header += f"{comment_char} ModelVersion: {self._model_version}\n"
         header += (
-            f"{comment_char} TelescopeModelName: {self._telescope_model_name}\n"
-            if self._telescope_model_name is not None
+            f"{comment_char} TelescopeModelName: {telescope_name}\n"
+            if telescope_name is not None
             else ""
         )
-        header += (
-            f"{comment_char} LayoutName: {self._layout_name}\n"
-            if self._layout_name is not None
-            else ""
-        )
+        header += f"{comment_char} LayoutName: {layout_name}\n" if layout_name is not None else ""
         header += f"{comment_char} Label: {self._label}\n" if self._label is not None else ""
         header += f"{comment_char}{50 * '='}\n"
         header += f"{comment_char}\n"
@@ -422,3 +436,67 @@ class SimtelConfigWriter:
             if trigger_dict["name"] == telescope_type + "_array":
                 return trigger_dict
         return None
+
+    def write_dummy_telescope_configuration_file(self, parameters, config_file_path):
+        """
+        Write 'dummy' telescope configuration file used as zeroth telescope in sim_telarray.
+
+        Replaces key telescope configuration values with dummy values.
+
+        Parameters
+        ----------
+        parameters: dict
+            Telescope parameters used as template.
+        config_file_path: str or Path
+            Path of the dummy configuration file to write on.
+        """
+        self._logger.debug(f"Writing dummy telescope config file {config_file_path}")
+
+        parameters["camera_config_file"]["value"] = "single_pixel_camera.dat"
+        parameters["discriminator_pulse_shape"]["value"] = "dummy_pulse.dat"
+        parameters["fadc_pulse_shape"]["value"] = "dummy_pulse.dat"
+        parameters["mirror_list"]["value"] = "dummy_single_12m_mirror.dat"
+        parameters["mirror_reflectivity"]["value"] = "dummy_reflectivity.dat"
+        parameters["camera_pixels"]["value"] = 1
+        parameters["trigger_pixels"]["value"] = 1
+        parameters["num_gains"]["value"] = 1
+        parameters["fadc_bins"]["value"] = 10
+        parameters["disc_bins"]["value"] = 10
+        parameters["fadc_sum_bins"]["value"] = 10
+        parameters["fadc_sum_offset"]["value"] = 0
+        for key in ["asum_threshold", "dsum_threshold"]:
+            if key in parameters:
+                parameters[key]["value"] = 0
+        parameters["discriminator_threshold"]["value"] = 1
+        parameters["fadc_amplitude"]["value"] = 1.0
+        parameters["discriminator_amplitude"]["value"] = 1.0
+
+        self.write_telescope_config_file(config_file_path, parameters, "DummyTelescope")
+
+        config_file_directory = Path(config_file_path).parent
+        self._write_dummy_mirror_list_file(config_file_directory)
+        self._write_dummy_camera_file(config_file_directory)
+
+    def _write_dummy_mirror_list_file(self, config_directory):
+        """Write dummy mirror list with single mirror and reflectivity file."""
+        with open(config_directory / "dummy_single_12m_mirror.dat", "w", encoding="utf-8") as file:
+            file.write("0 0 1200 0.0 0\n")
+        with open(config_directory / "dummy_reflectivity.dat", "w", encoding="utf-8") as file:
+            file.writelines(f"{w} 0.8\n" for w in range(200, 801, 50))
+
+    def _write_dummy_camera_file(self, config_directory):
+        """Write dummy camera, pulse shape, and funnels file with a single pixel."""
+        with open(
+            config_directory / "dummy_single_pixel_camera.dat", "w", encoding="utf-8"
+        ) as file:
+            file.write('PixType 1   0  0 300   1 300 0.00   "dummy_funnels.dat"\n')
+            file.write("Pixel 0 1 0. 0.  0  0  0 0x00 1\n")
+            file.write("Trigger 1 of 0\n")
+
+        with open(config_directory / "dummy_funnel.dat", "w", encoding="utf-8") as file:
+            file.writelines(f"{a} 0.78 1.5\n" for a in range(36))
+
+        with open(config_directory / "dummy_pulse.dat", "w", encoding="utf-8") as file:
+            file.write("0 0 0\n")
+            file.write("1 1 1\n")
+            file.write("2 0 0\n")
