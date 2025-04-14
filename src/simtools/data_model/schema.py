@@ -203,6 +203,11 @@ def _add_array_elements(key, schema):
 
     """
     _list_of_array_elements = sorted(names.array_elements().keys())
+    for array_element in names.array_elements().keys():
+        design_types = names.array_element_design_types(array_element)
+        for design_type in design_types:
+            _list_of_array_elements.append(f"{array_element}-{design_type}")
+    _list_of_array_elements = sorted(set(_list_of_array_elements))
 
     def recursive_search(sub_schema, key):
         if key in sub_schema:
