@@ -21,8 +21,8 @@ data:
 instrument:
   class: Camera
   type:
-    - MSTN
-    - MSTS
+    - MSTx-NectarCam
+    - MSTx-FlashCam
     - SSTS
     - SCTS
 activity:
