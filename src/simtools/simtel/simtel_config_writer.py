@@ -116,7 +116,7 @@ class SimtelConfigWriter:
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
-    def _get_sim_telarray_metadata(self, config_type, model_parameters, telescope_model_name=None):
+    def _get_sim_telarray_metadata(self, config_type, model_parameters, telescope_model_name):
         """
         Return sim_telarray metadata.
 
@@ -127,14 +127,13 @@ class SimtelConfigWriter:
         model_parameters: dict
             Model parameters dictionary.
         telescope_model_name: str
-            Name of the telescope model (use self._telescope_model_name if None)
+            Name of the telescope model
 
         Returns
         -------
         list
             List with sim_telarray metadata.
         """
-        telescope_model_name = telescope_model_name or self._telescope_model_name
         meta_parameters = [
             f"config_release = {self._model_version} with simtools v{simtools.version.__version__}",
             f"config_version = {self._model_version}",
@@ -339,7 +338,9 @@ class SimtelConfigWriter:
             )
             if simtel_name is not None:
                 file.write(f"{self.TAB}{simtel_name} = {value}\n")
-        for meta in self._get_sim_telarray_metadata("site", site_parameters):
+        for meta in self._get_sim_telarray_metadata(
+            "site", site_parameters, self._telescope_model_name
+        ):
             file.write(f"{self.TAB}{meta}\n")
         file.write("\n")
 
@@ -503,7 +504,7 @@ class SimtelConfigWriter:
         with open(
             config_directory / f"{telescope_name}_single_pixel_camera.dat", "w", encoding="utf-8"
         ) as file:
-            file.write('PixType 1   0  0 300   1 300 0.00   "dummy_funnels.dat"\n')
+            file.write(f'PixType 1   0  0 300   1 300 0.00   "{telescope_name}_funnels.dat"\n')
             file.write("Pixel 0 1 0. 0.  0  0  0 0x00 1\n")
             file.write("Trigger 1 of 0\n")
 
