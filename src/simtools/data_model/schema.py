@@ -182,6 +182,15 @@ def load_schema(schema_file=None, schema_version=None):
     return schema
 
 
+def _get_array_element_list():
+    """Build complete list of array elements including design types."""
+    elements = set(names.array_elements().keys())
+    for array_element in names.array_elements():
+        for design_type in names.array_element_design_types(array_element):
+            elements.add(f"{array_element}-{design_type}")
+    return sorted(elements)
+
+
 def _add_array_elements(key, schema):
     """
     Add list of array elements to schema.
@@ -200,27 +209,23 @@ def _add_array_elements(key, schema):
     -------
     dict
         Schema dictionary with added array elements.
-
     """
-    _list_of_array_elements = sorted(names.array_elements().keys())
-    for array_element in names.array_elements().keys():
-        design_types = names.array_element_design_types(array_element)
-        for design_type in design_types:
-            _list_of_array_elements.append(f"{array_element}-{design_type}")
-    _list_of_array_elements = sorted(set(_list_of_array_elements))
+    array_elements = _get_array_element_list()
 
-    def recursive_search(sub_schema, key):
-        if key in sub_schema:
-            if "enum" in sub_schema[key] and isinstance(sub_schema[key]["enum"], list):
-                sub_schema[key]["enum"] = list(
-                    set(sub_schema[key]["enum"] + _list_of_array_elements)
-                )
-            else:
-                sub_schema[key]["enum"] = _list_of_array_elements
+    def update_enum(sub_schema):
+        if "enum" in sub_schema and isinstance(sub_schema["enum"], list):
+            sub_schema["enum"] = list(set(sub_schema["enum"] + array_elements))
         else:
-            for _, v in sub_schema.items():
-                if isinstance(v, dict):
-                    recursive_search(v, key)
+            sub_schema["enum"] = array_elements
+
+    def recursive_search(sub_schema, target_key):
+        if target_key in sub_schema:
+            update_enum(sub_schema[target_key])
+            return
+
+        for v in sub_schema.values():
+            if isinstance(v, dict):
+                recursive_search(v, target_key)
 
     recursive_search(schema, key)
     return schema
