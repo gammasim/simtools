@@ -153,7 +153,8 @@ def test_load_simulation_software_parameter(telescope_model_lst, caplog):
     telescope_copy._simulation_config_parameters = {"not_corsika": {}, "not_simtel": {}}
     with caplog.at_level(logging.WARNING):
         telescope_copy._load_simulation_software_parameter()
-    assert "No not_corsika parameters found for North" in caplog.text
+
+    assert len(caplog.records) == 0
 
 
 def test_load_parameters_from_db(telescope_model_lst, mocker):

@@ -49,8 +49,8 @@ instrument:
   type:
     - LSTN
     - LSTS
-    - MSTS
-    - MSTN
+    - MSTx-FlashCam
+    - MSTx-NectarCam
 activity:
   setting:
     - SetParameterFromExternal
