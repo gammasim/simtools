@@ -276,7 +276,7 @@ class SimtelConfigWriter:
                 f"{shape_type} 0.\n"
             )
 
-    def _write_header(self, file, title, comment_char="%", telescope_name=None, layout_name=None):
+    def _write_header(self, file, title, comment_char="%"):
         """
         Write a generic header.
 
@@ -288,23 +288,21 @@ class SimtelConfigWriter:
             Title of the header.
         comment_char: str
             Character to be used for comments, which differs among ctypes of config files.
-        telescope_name : str
-            Name of the telescope.
-        layout_name : str
-            Name of the layout.
         """
-        telescope_name = telescope_name or self._telescope_model_name
-        layout_name = layout_name or self._layout_name
         header = f"{comment_char}{50 * '='}\n"
         header += f"{comment_char} {title}\n"
         header += f"{comment_char} Site: {self._site}\n"
         header += f"{comment_char} ModelVersion: {self._model_version}\n"
         header += (
-            f"{comment_char} TelescopeModelName: {telescope_name}\n"
-            if telescope_name is not None
+            f"{comment_char} TelescopeModelName: {self._telescope_model_name}\n"
+            if self._telescope_model_name is not None
             else ""
         )
-        header += f"{comment_char} LayoutName: {layout_name}\n" if layout_name is not None else ""
+        header += (
+            f"{comment_char} LayoutName: {self._layout_name}\n"
+            if self._layout_name is not None
+            else ""
+        )
         header += f"{comment_char} Label: {self._label}\n" if self._label is not None else ""
         header += f"{comment_char}{50 * '='}\n"
         header += f"{comment_char}\n"
