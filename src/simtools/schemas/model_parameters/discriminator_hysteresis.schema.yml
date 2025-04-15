@@ -16,8 +16,8 @@ instrument:
   type:
     - LSTN
     - LSTS
-    - MSTN
-    - MSTS
+    - MSTx-NectarCam
+    - MSTx-FlashCam
     - SSTS
     - SCTS
 data:
