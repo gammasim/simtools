@@ -150,6 +150,7 @@ def main():  # noqa: D103
     )
 
     simulator.simulate()
+    simulator.validate_metadata()
 
     if simulator.submit_engine == "local":
         logger.info(
