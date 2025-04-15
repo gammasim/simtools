@@ -578,7 +578,7 @@ def test__write_array_layouts_section(io_handler, db_config, mocker):
     assert "[MST2](MST2.md)" in output
 
     # Verify image links
-    assert "![Layout1 Layout](../../_images/OBS-North_Layout1_6.png)" in output
+    assert "![Layout1 Layout](../../_images/OBS-North_Layout1_6-0-0.png)" in output
 
 
 def test__write_array_triggers_section(io_handler, db_config):
@@ -673,3 +673,106 @@ def test_model_version_setter_with_invalid_list(db_config, io_handler):
 
     with pytest.raises(ValueError, match=error_message):
         read_parameters.model_version = []
+
+
+def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_config):
+    args = {
+        "telescope": telescope_model_lst.name,
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+        "software": "corsika",
+    }
+    output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    mock_param_dict = {
+        "corsika cherenkov photon bunch_size": {
+            "value": 5.0,
+            "unit": "",
+            "parameter_version": "1.0.0",
+        },
+        "corsika particle kinetic energy cutoff": {
+            "value": [0.3, 0.1, 0.02, 0.02],
+            "unit": "GeV",
+            "parameter_version": "1.0.0",
+        },
+    }
+
+    mock_descriptions = (
+        {
+            "corsika cherenkov photon bunch_size": "Cherenkov bunch size definition.",
+            "corsika particle kinetic energy cutoff": "Kinetic energy cutoffs for different particle types.",
+        },
+        {
+            "corsika cherenkov photon bunch_size": "Bunch size",
+            "corsika particle kinetic energy cutoff": "Energy cutoffs",
+        },
+    )
+
+    with (
+        patch.object(
+            read_parameters, "get_all_parameter_descriptions", return_value=mock_descriptions
+        ),
+        patch.object(read_parameters.db, "export_model_files") as mock_export,
+        patch.object(
+            read_parameters.db,
+            "get_simulation_configuration_parameters",
+            return_value=mock_param_dict,
+        ),
+    ):
+        data = read_parameters.get_simulation_configuration_data()
+
+        assert isinstance(data, list)
+        assert len(data) == 2
+        assert data[0][0] == "corsika cherenkov photon bunch_size"
+        assert data[0][1] == "1.0.0"
+        assert data[0][2] == "5.0"
+        assert data[0][4] == "Bunch size"
+        assert data[1][2] == "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV"
+        mock_export.assert_called_once()
+
+
+def test_produce_simulation_configuration_report(telescope_model_lst, io_handler, db_config):
+    args = {
+        "telescope": telescope_model_lst.name,
+        "site": telescope_model_lst.site,
+        "model_version": telescope_model_lst.model_version,
+        "software": "corsika",
+    }
+    output_path = io_handler.get_output_directory(
+        label="reports", sub_dir=f"productions/{telescope_model_lst.model_version}"
+    )
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    mock_data = [
+        (
+            "corsika cherenkov photon bunch_size",
+            "1.0.0",
+            "5.0 ",
+            "Cherenkov bunch size definition.",
+            "Bunch size",
+        ),
+        (
+            "corsika particle kinetic energy cutoff",
+            "1.0.0",
+            "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV",
+            "Kinetic energy cutoffs for different particle types.",
+            "Energy cutoffs",
+        ),
+    ]
+
+    with patch.object(read_parameters, "get_simulation_configuration_data", return_value=mock_data):
+        read_parameters.produce_simulation_configuration_report()
+
+        report_file = (
+            output_path / f"{telescope_model_lst.name}_configuration_{args.get('software')}.md"
+        )
+        assert report_file.exists()
+
+        content = report_file.read_text()
+
+        assert f"# configuration_{args.get('software')}" in content
+        assert "| Parameter Name" in content
+        assert "corsika cherenkov photon bunch_size" in content
+        assert "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV" in content
+        assert "Energy cutoffs" in content
