@@ -32,6 +32,9 @@ class ReadParameters:
         self.model_version = args.get("model_version", None)
         self.output_path = output_path
         self.observatory = args.get("observatory")
+        self.software = args.get("simulation_software", None)
+        if self.software == "simtel":
+            self.software = "sim_telarray"
 
     @property
     def model_version(self):
@@ -232,7 +235,7 @@ class ReadParameters:
 
         return self._group_model_versions_by_parameter_version(grouped_data)
 
-    def get_all_parameter_descriptions(self):
+    def get_all_parameter_descriptions(self, collection="telescopes"):
         """
         Get descriptions for all model parameters.
 
@@ -245,7 +248,7 @@ class ReadParameters:
         """
         parameter_description, short_description, inst_class = {}, {}, {}
 
-        for instrument_class in names.db_collection_to_instrument_class_key("telescopes"):
+        for instrument_class in names.db_collection_to_instrument_class_key(collection):
             for parameter, details in names.model_parameters(instrument_class).items():
                 parameter_description[parameter] = details.get("description")
                 short_description[parameter] = details.get("short_description")
@@ -320,6 +323,87 @@ class ReadParameters:
             )
 
         return data
+
+    def get_simulation_configuration_data(self):
+        """Get data and descriptions for simulation configuration parameters."""
+        param_dict = db_handler.DatabaseHandler(
+            self.db_config
+        ).get_simulation_configuration_parameters(
+            simulation_software=self.software,
+            site=self.site,
+            array_element_name=self.array_element,
+            model_version=self.model_version,
+        )
+
+        parameter_descriptions = self.get_all_parameter_descriptions(
+            collection=f"configuration_{self.software}"
+        )
+        Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
+        self.db.export_model_files(parameters=param_dict, dest=f"{self.output_path}/model")
+        data = []
+        for parameter, parameter_data in param_dict.items():
+            description = parameter_descriptions[0].get(parameter)
+            short_description = parameter_descriptions[1].get(parameter)
+            if short_description is None:
+                short_description = description
+            unit = parameter_data.get("unit") or " "
+            value_data = parameter_data.get("value")
+
+            if value_data is None:
+                continue
+
+            file_flag = parameter_data.get("file", False)
+            parameter_version = parameter_data.get("parameter_version")
+            value = self._format_parameter_value(parameter, value_data, unit, file_flag)
+            data.append(
+                [
+                    parameter,
+                    parameter_version,
+                    value,
+                    description,
+                    short_description,
+                ]
+            )
+        return data
+
+    def produce_simulation_configuration_report(self):
+        """Write simulation configuration report."""
+        output_filename = Path(self.output_path / (f"configuration_{self.software}.md"))
+        output_filename.parent.mkdir(parents=True, exist_ok=True)
+        data = self.get_simulation_configuration_data()
+
+        with output_filename.open("w", encoding="utf-8") as file:
+            file.write(f"# configuration_{self.software}\n")
+            file.write("\n\n")
+            # Write table header and separator row
+            file.write(
+                "| Parameter Name      |  Parameter Version     "
+                "| Values      | Short Description           |\n"
+                "|---------------------|------------------------"
+                "|-------------|-----------------------------|\n"
+            )
+
+            # Write table rows
+            column_widths = [10, 10, 20, 60]
+            for (
+                parameter_name,
+                parameter_version,
+                value,
+                description,
+                short_description,
+            ) in data:
+                text = short_description if short_description else description
+                wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
+                wrapped_text = " ".join(wrapped_text)
+                parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
+
+                file.write(
+                    f"| {parameter_name:{column_widths[0]}} |"
+                    f" {parameter_version:{column_widths[1]}} |"
+                    f" {value:{column_widths[2]}} |"
+                    f" {wrapped_text:{column_widths[3]}} |\n"
+                )
+            file.write("\n\n")
 
     def produce_array_element_report(self):
         """
