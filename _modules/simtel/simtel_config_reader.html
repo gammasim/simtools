@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g5eca445 Manual</title>
+    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g5ea3005 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f318cd37"></script>
+    <script src="../../_static/documentation_options.js?v=52fb5d43"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g5eca445 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ea3005 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -464,9 +464,9 @@ document.write(`
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">schema_file</span><span class="p">,</span>
-        <span class="n">simtel_config_file</span><span class="p">,</span>
-        <span class="n">simtel_telescope_name</span><span class="p">,</span>
+        <span class="n">schema_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">simtel_config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">simtel_telescope_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">parameter_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">camera_pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -486,11 +486,13 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span>
             <span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simtel_parameter_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">if</span> <span class="n">parameter_name</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simtel_telescope_name</span> <span class="o">=</span> <span class="n">simtel_telescope_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">camera_pixels</span> <span class="o">=</span> <span class="n">camera_pixels</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_simtel_config_file</span><span class="p">(</span>
-            <span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read_simtel_config_file</span><span class="p">(</span><span class="n">simtel_config_file</span><span class="p">,</span> <span class="n">simtel_telescope_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">simtel_config_file</span>
+            <span class="k">else</span> <span class="p">{}</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_should_skip_limits_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
@@ -620,7 +622,7 @@ document.write(`
         <span class="c1"># (order of keys matter; not all field are present for all parameters)</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">simtel_telescope_name</span><span class="p">,</span> <span class="s2">&quot;limits&quot;</span><span class="p">]:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">_para_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_value_from_simtel_cfg</span><span class="p">(</span>
+                <span class="n">_para_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_value_from_sim_telarray_column</span><span class="p">(</span>
                     <span class="n">matching_lines</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">_para_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">),</span>
                     <span class="n">n_dim</span><span class="o">=</span><span class="n">_para_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dimension&quot;</span><span class="p">),</span>
@@ -675,7 +677,11 @@ document.write(`
 
         <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="n">except_from_all</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_add_value_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_limit</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="SimtelConfigReader.extract_value_from_sim_telarray_column">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.extract_value_from_sim_telarray_column">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_value_from_sim_telarray_column</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_limit</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extract value(s) from simtel configuration file columns.</span>
 
@@ -722,7 +728,8 @@ document.write(`
         <span class="n">column</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_column</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_limit</span><span class="p">:</span>
             <span class="n">column</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_units</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="n">ndim</span>
+        <span class="k">return</span> <span class="n">column</span><span class="p">,</span> <span class="n">ndim</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_add_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -758,7 +765,7 @@ document.write(`
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Process and return column prepared in _add_value_from_simtel_cfg.</span>
+<span class="sd">        Process and return column prepared in extract_value_from_sim_telarray_column.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

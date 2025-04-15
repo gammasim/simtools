@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; simtools v0.1.dev1+g5eca445 Manual</title>
+    <title>Index &#8212; simtools v0.1.dev1+g5ea3005 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=f318cd37"></script>
+    <script src="_static/documentation_options.js?v=52fb5d43"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g5eca445 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ea3005 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -455,6 +455,8 @@ document.write(`
       <li><a href="api-reference/testing.html#testing.assertions.assert_file_type">assert_file_type() (in module testing.assertions)</a>
 </li>
       <li><a href="api-reference/testing.html#testing.assertions.assert_n_showers_and_energy_range">assert_n_showers_and_energy_range() (in module testing.assertions)</a>
+</li>
+      <li><a href="api-reference/testing.html#testing.sim_telarray_metadata.assert_sim_telarray_metadata">assert_sim_telarray_metadata() (in module testing.sim_telarray_metadata)</a>
 </li>
       <li><a href="api-reference/reporting.html#reporting.docs_auto_report_generator.ReportGenerator.auto_generate_array_element_reports">auto_generate_array_element_reports() (reporting.docs_auto_report_generator.ReportGenerator method)</a>
 </li>
@@ -1008,6 +1010,8 @@ document.write(`
 </li>
       <li><a href="api-reference/utils.html#utils.value_conversion.extract_type_of_value">extract_type_of_value() (in module utils.value_conversion)</a>
 </li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader.extract_value_from_sim_telarray_column">extract_value_from_sim_telarray_column() (simtel.simtel_config_reader.SimtelConfigReader method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1176,10 +1180,10 @@ document.write(`
 </li>
       <li><a href="api-reference/io_operations.html#io_operations.io_handler.IOHandler.get_input_data_file">get_input_data_file() (io_operations.io_handler.IOHandler method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.get_lightguide_efficiency_angle_file_name">get_lightguide_efficiency_angle_file_name() (model.camera.Camera method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.get_lightguide_efficiency_wavelength_file_name">get_lightguide_efficiency_wavelength_file_name() (model.camera.Camera method)</a>
 </li>
       <li><a href="api-reference/visualization.html#visualization.visualize.get_lines">get_lines() (in module visualization.visualize)</a>
@@ -1269,6 +1273,8 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="api-reference/corsika.html#corsika.corsika_histograms.CorsikaHistograms.get_run_info">get_run_info() (corsika.corsika_histograms.CorsikaHistograms method)</a>
+</li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_metadata.get_sim_telarray_telescope_id">get_sim_telarray_telescope_id() (in module simtel.simtel_io_metadata)</a>
 </li>
       <li><a href="api-reference/dependencies.html#dependencies.get_sim_telarray_version">get_sim_telarray_version() (in module dependencies)</a>
 </li>
@@ -1382,10 +1388,10 @@ document.write(`
 </li>
       <li><a href="api-reference/production_configuration.html#production_configuration.interpolation_handler.InterpolationHandler">InterpolationHandler (class in production_configuration.interpolation_handler)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/utils.html#utils.general.InvalidConfigDataError">InvalidConfigDataError</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/configuration_module.html#configuration.configurator.InvalidConfigurationParameterError">InvalidConfigurationParameterError</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.InvalidCoordSystemErrorError">InvalidCoordSystemErrorError</a>
@@ -1428,6 +1434,8 @@ document.write(`
       <li><a href="api-reference/io_operations.html#io_operations.io_handler.IOHandlerSingleton">IOHandlerSingleton (class in io_operations.io_handler)</a>
 </li>
       <li><a href="api-reference/array_layout.html#layout.telescope_position.TelescopePosition.is_coordinate_system">is_coordinate_system() (layout.telescope_position.TelescopePosition method)</a>
+</li>
+      <li><a href="api-reference/testing.html#testing.sim_telarray_metadata.is_equal">is_equal() (in module testing.sim_telarray_metadata)</a>
 </li>
       <li><a href="api-reference/mc_model.html#model.telescope_model.TelescopeModel.is_file_2d">is_file_2d() (model.telescope_model.TelescopeModel method)</a>
 </li>
@@ -1825,6 +1833,8 @@ document.write(`
 </li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_histograms">simtel.simtel_io_histograms</a>
 </li>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_metadata">simtel.simtel_io_metadata</a>
+</li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_table_reader">simtel.simtel_table_reader</a>
 </li>
         <li><a href="api-reference/sim_telarray.html#module-simtel.simulator_array">simtel.simulator_array</a>
@@ -1852,6 +1862,8 @@ document.write(`
         <li><a href="api-reference/testing.html#module-testing.configuration">testing.configuration</a>
 </li>
         <li><a href="api-reference/testing.html#module-testing.helpers">testing.helpers</a>
+</li>
+        <li><a href="api-reference/testing.html#module-testing.sim_telarray_metadata">testing.sim_telarray_metadata</a>
 </li>
         <li><a href="api-reference/testing.html#module-testing.validate_output">testing.validate_output</a>
 </li>
@@ -2223,6 +2235,8 @@ document.write(`
 </li>
       <li><a href="api-reference/mc_model.html#model.camera.Camera.read_pixel_list">read_pixel_list() (model.camera.Camera static method)</a>
 </li>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_io_metadata.read_sim_telarray_metadata">read_sim_telarray_metadata() (in module simtel.simtel_io_metadata)</a>
+</li>
       <li><a href="user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html#convert_all_model_parameters_from_simtel.read_simtel_config_file">read_simtel_config_file() (in module convert_all_model_parameters_from_simtel)</a>
 
       <ul>
@@ -2408,6 +2422,13 @@ document.write(`
 </li>
       </ul></li>
       <li>
+    simtel.simtel_io_metadata
+
+      <ul>
+        <li><a href="api-reference/sim_telarray.html#module-simtel.simtel_io_metadata">module</a>
+</li>
+      </ul></li>
+      <li>
     simtel.simtel_table_reader
 
       <ul>
@@ -2446,10 +2467,10 @@ document.write(`
 </li>
       <li><a href="api-reference/utils.html#utils.names.simtel_single_mirror_list_file_name">simtel_single_mirror_list_file_name() (in module utils.names)</a>
 </li>
-      <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">SimtelConfigReader (class in simtel.simtel_config_reader)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_reader.SimtelConfigReader">SimtelConfigReader (class in simtel.simtel_config_reader)</a>
+</li>
       <li><a href="api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter">SimtelConfigWriter (class in simtel.simtel_config_writer)</a>
 </li>
       <li><a href="api-reference/runners.html#runners.simtel_runner.SimtelExecutionError">SimtelExecutionError</a>
@@ -2585,8 +2606,6 @@ document.write(`
         <li><a href="api-reference/testing.html#module-testing.assertions">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     testing.configuration
 
@@ -2594,11 +2613,20 @@ document.write(`
         <li><a href="api-reference/testing.html#module-testing.configuration">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     testing.helpers
 
       <ul>
         <li><a href="api-reference/testing.html#module-testing.helpers">module</a>
+</li>
+      </ul></li>
+      <li>
+    testing.sim_telarray_metadata
+
+      <ul>
+        <li><a href="api-reference/testing.html#module-testing.sim_telarray_metadata">module</a>
 </li>
       </ul></li>
       <li>
@@ -2711,7 +2739,11 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="user-guide/applications/simtools-validate-file-using-schema.html#validate_file_using_schema.validate_metadata">validate_metadata() (in module validate_file_using_schema)</a>
+
+      <ul>
+        <li><a href="api-reference/simulators.html#simulator.Simulator.validate_metadata">(simulator.Simulator method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-reference/data_model.html#data_model.validate_data.DataValidator.validate_model_parameter">validate_model_parameter() (data_model.validate_data.DataValidator static method)</a>

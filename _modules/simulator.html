@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+g5eca445 Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+g5ea3005 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=f318cd37"></script>
+    <script src="../_static/documentation_options.js?v=52fb5d43"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g5eca445 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ea3005 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -410,6 +410,7 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.corsika_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaRunner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners.corsika_simtel_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">CorsikaSimtelRunner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simulator_array</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulatorArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.testing.sim_telarray_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">assert_sim_telarray_metadata</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;InvalidRunsToSimulateError&quot;</span><span class="p">,</span>
@@ -1039,6 +1040,27 @@ document.write(`
             <span class="c1"># so no files are expected there.</span>
             <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">destination_file</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output files for the grid placed in </span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulator.validate_metadata">
+<a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.validate_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate metadata in the sim_telarray output files.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;simtel&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No sim_telarray files to validate.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">)</span>
+            <span class="n">output_file</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating metadata for </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">assert_sim_telarray_metadata</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Metadata for sim_telarray file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> is valid.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No sim_telarray file found for model version </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">files</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span></div>
 </div>
 
 </pre></div>

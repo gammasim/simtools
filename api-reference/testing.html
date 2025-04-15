@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Testing &#8212; simtools v0.1.dev1+g5eca445 Manual</title>
+    <title>Testing &#8212; simtools v0.1.dev1+g5ea3005 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=f318cd37"></script>
+    <script src="../_static/documentation_options.js?v=52fb5d43"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g5eca445 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ea3005 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -476,6 +476,11 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.check_output_from_sim_telarray"><code class="docutils literal notranslate"><span class="pre">check_output_from_sim_telarray()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.sim_telarray_metadata">sim_telarray_metadata</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.sim_telarray_metadata.assert_sim_telarray_metadata"><code class="docutils literal notranslate"><span class="pre">assert_sim_telarray_metadata()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.sim_telarray_metadata.is_equal"><code class="docutils literal notranslate"><span class="pre">is_equal()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.configuration">configuration</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.ProductionDBError"><code class="docutils literal notranslate"><span class="pre">ProductionDBError</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.configuration.VersionError"><code class="docutils literal notranslate"><span class="pre">VersionError</span></code></a></li>
@@ -577,6 +582,52 @@ and the energies simulated are required to be within the configured ones.</p>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>ValueError</dt><dd><p>If the file is not a zstd compressed file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-testing.sim_telarray_metadata">
+<span id="sim-telarray-metadata"></span><span id="simtelarraymodule"></span><h2>sim_telarray_metadata<a class="headerlink" href="#module-testing.sim_telarray_metadata" title="Link to this heading">#</a></h2>
+<p>Test consistency of sim_telarray metadata.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.sim_telarray_metadata.assert_sim_telarray_metadata">
+<span class="sig-prename descclassname"><span class="pre">testing.sim_telarray_metadata.</span></span><span class="sig-name descname"><span class="pre">assert_sim_telarray_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/sim_telarray_metadata.html#assert_sim_telarray_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.sim_telarray_metadata.assert_sim_telarray_metadata" title="Link to this definition">#</a></dt>
+<dd><p>Assert consistency of sim_telarray metadata with given array model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file: Path</strong></dt><dd><p>Path to the sim_telarray file.</p>
+</dd>
+<dt><strong>array_model: ArrayModel</strong></dt><dd><p>Array model to compare with.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="testing.sim_telarray_metadata.is_equal">
+<span class="sig-prename descclassname"><span class="pre">testing.sim_telarray_metadata.</span></span><span class="sig-name descname"><span class="pre">is_equal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/testing/sim_telarray_metadata.html#is_equal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#testing.sim_telarray_metadata.is_equal" title="Link to this definition">#</a></dt>
+<dd><p>Check if two values are equal based on their type.</p>
+<p>The complexity of this function reflects the complexity of the sim_telarray
+metadata output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>value1: any</strong></dt><dd><p>First value to compare.</p>
+</dd>
+<dt><strong>value2: any</strong></dt><dd><p>Second value to compare.</p>
+</dd>
+<dt><strong>value_type: str</strong></dt><dd><p>Type of the values (‘string’, ‘dict’, etc.).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the values are equal, False otherwise.</p>
 </dd>
 </dl>
 </dd>
@@ -861,6 +912,11 @@ equals the model version from the configuration file.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.assert_file_type"><code class="docutils literal notranslate"><span class="pre">assert_file_type()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.assert_n_showers_and_energy_range"><code class="docutils literal notranslate"><span class="pre">assert_n_showers_and_energy_range()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.assertions.check_output_from_sim_telarray"><code class="docutils literal notranslate"><span class="pre">check_output_from_sim_telarray()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.sim_telarray_metadata">sim_telarray_metadata</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.sim_telarray_metadata.assert_sim_telarray_metadata"><code class="docutils literal notranslate"><span class="pre">assert_sim_telarray_metadata()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing.sim_telarray_metadata.is_equal"><code class="docutils literal notranslate"><span class="pre">is_equal()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-testing.configuration">configuration</a><ul class="nav section-nav flex-column">

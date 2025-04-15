@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g5eca445 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g5ea3005 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=f318cd37"></script>
+    <script src="../_static/documentation_options.js?v=52fb5d43"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g5eca445 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g5ea3005 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -472,6 +472,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-config-reader">simtel_config_reader</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.compare_simtel_config_with_schema()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.extract_value_from_sim_telarray_column"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.extract_value_from_sim_telarray_column()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.read_simtel_config_file()</span></code></a></li>
 </ul>
 </li>
@@ -520,6 +521,11 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histograms.SimtelIOHistograms.plot_one_histogram"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistograms.plot_one_histogram()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-metadata">simtel_io_metadata</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.get_sim_telarray_telescope_id"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_telescope_id()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.read_sim_telarray_metadata"><code class="docutils literal notranslate"><span class="pre">read_sim_telarray_metadata()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-array">simulator_array</a><ul class="nav section-nav flex-column">
@@ -576,7 +582,7 @@ document.write(`
 <p id="module-simtel.simtel_config_reader"><span id="simtel-config-reader-1"></span>Read model parameters and configuration from sim_telarray configuration files.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simtel.simtel_config_reader.SimtelConfigReader">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_config_reader.</span></span><span class="sig-name descname"><span class="pre">SimtelConfigReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_pixels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_reader.html#SimtelConfigReader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_reader.SimtelConfigReader" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simtel.simtel_config_reader.</span></span><span class="sig-name descname"><span class="pre">SimtelConfigReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simtel_telescope_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_pixels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_reader.html#SimtelConfigReader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_reader.SimtelConfigReader" title="Link to this definition">#</a></dt>
 <dd><p>Reads model parameters from configuration files and converts to the simtools representation.</p>
 <p>The output format are simtool-db-style json dicts.
 Model parameters are read from sim_telarray configuration files.
@@ -607,6 +613,33 @@ The sim_telarray configuration can be generated using e.g., the following sim_te
 <dd><p>Compare limits and defaults reported by sim_telarray with schema.</p>
 <p>This is mostly for debugging purposes and includes simple printing.
 Check for differences in ‘default’ and ‘limits’ entries.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simtel_config_reader.SimtelConfigReader.extract_value_from_sim_telarray_column">
+<span class="sig-name descname"><span class="pre">extract_value_from_sim_telarray_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_config_reader.html#SimtelConfigReader.extract_value_from_sim_telarray_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_config_reader.SimtelConfigReader.extract_value_from_sim_telarray_column" title="Link to this definition">#</a></dt>
+<dd><p>Extract value(s) from simtel configuration file columns.</p>
+<p>This function is fine-tuned to the simtel configuration output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>column: list</strong></dt><dd><p>List of strings to extract value from.</p>
+</dd>
+<dt><strong>dtype: str</strong></dt><dd><p>Data type to convert value to.</p>
+</dd>
+<dt><strong>n_dim: int</strong></dt><dd><p>Length of array to be returned.</p>
+</dd>
+<dt><strong>default: object</strong></dt><dd><p>Default value to extend array to required length.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>object, int</dt><dd><p>Values extracted from column. Of object is a list of array, return length of array.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1016,6 +1049,58 @@ Only filled if stack_files is False.</p>
 </dd></dl>
 
 </section>
+<section id="simtel-io-metadata">
+<h2>simtel_io_metadata<a class="headerlink" href="#simtel-io-metadata" title="Link to this heading">#</a></h2>
+<p id="module-simtel.simtel_io_metadata"><span id="simtel-io-metadata-1"></span>Read metadata from sim_telarray files.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="simtel.simtel_io_metadata.get_sim_telarray_telescope_id">
+<span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_metadata.</span></span><span class="sig-name descname"><span class="pre">get_sim_telarray_telescope_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_metadata.html#get_sim_telarray_telescope_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_metadata.get_sim_telarray_telescope_id" title="Link to this definition">#</a></dt>
+<dd><p>Return the telescope ID for a given telescope name in a sim_telarray file.</p>
+<p>Translates e.g. ‘LSTN-01’ to the corresponding telescope ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>telescope_name: str</strong></dt><dd><p>Name of the telescope.</p>
+</dd>
+<dt><strong>file: str</strong></dt><dd><p>Path to the sim_telarray file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int, None</dt><dd><p>Telescope ID. Returns None if not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simtel.simtel_io_metadata.read_sim_telarray_metadata">
+<span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_metadata.</span></span><span class="sig-name descname"><span class="pre">read_sim_telarray_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf8'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_metadata.html#read_sim_telarray_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_metadata.read_sim_telarray_metadata" title="Link to this definition">#</a></dt>
+<dd><p>Return global and per-telescope metadata from sim_telarray file.</p>
+<p>Cached to avoid re-reading the file multiple times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file: str</strong></dt><dd><p>Path to the sim_telarray file.</p>
+</dd>
+<dt><strong>encoding: str</strong></dt><dd><p>Encoding to use for decoding metadata. Default is ‘utf8’.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>global_meta: dict</dt><dd><p>Global metadata dictionary.</p>
+</dd>
+<dt>telescope_meta: dict</dt><dd><p>Dictionary of telescope metadata, keyed by telescope ID.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="simulator-array">
 <h2>simulator_array<a class="headerlink" href="#simulator-array" title="Link to this heading">#</a></h2>
 <p id="module-simtel.simulator_array"><span id="simulate-array-1"></span>Simulation runner for array simulations.</p>
@@ -1320,6 +1405,7 @@ mirror_numbers.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-config-reader">simtel_config_reader</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.compare_simtel_config_with_schema"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.compare_simtel_config_with_schema()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.extract_value_from_sim_telarray_column"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.extract_value_from_sim_telarray_column()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_config_reader.SimtelConfigReader.read_simtel_config_file"><code class="docutils literal notranslate"><span class="pre">SimtelConfigReader.read_simtel_config_file()</span></code></a></li>
 </ul>
 </li>
@@ -1368,6 +1454,11 @@ mirror_numbers.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_histograms.SimtelIOHistograms.plot_one_histogram"><code class="docutils literal notranslate"><span class="pre">SimtelIOHistograms.plot_one_histogram()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-metadata">simtel_io_metadata</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.get_sim_telarray_telescope_id"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_telescope_id()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.read_sim_telarray_metadata"><code class="docutils literal notranslate"><span class="pre">read_sim_telarray_metadata()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-array">simulator_array</a><ul class="nav section-nav flex-column">
