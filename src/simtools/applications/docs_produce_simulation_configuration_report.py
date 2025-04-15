@@ -34,7 +34,9 @@ def main():  # noqa: D103
     logger = logging.getLogger()
     logger.setLevel(gen.get_log_level_from_user(args["log_level"]))
 
-    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+    read_parameters = ReadParameters(
+        db_config=db_config, args=args, output_path=output_path / f"{args.get('model_version')}"
+    )
 
     read_parameters.produce_simulation_configuration_report()
 

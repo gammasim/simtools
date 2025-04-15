@@ -368,7 +368,9 @@ class ReadParameters:
 
     def produce_simulation_configuration_report(self):
         """Write simulation configuration report."""
-        output_filename = Path(self.output_path / (f"configuration_{self.software}.md"))
+        output_filename = Path(
+            self.output_path / (f"{self.array_element}_configuration_{self.software}.md")
+        )
         output_filename.parent.mkdir(parents=True, exist_ok=True)
         data = self.get_simulation_configuration_data()
 
