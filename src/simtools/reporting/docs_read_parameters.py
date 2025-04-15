@@ -89,11 +89,11 @@ class ReadParameters:
                         "The full file can be found in the Simulation Model repository [here]"
                         "(https://gitlab.cta-observatory.org/cta-science/simulations/"
                         "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                        f"model_parameters/Files/{input_file.stem}.dat).\n\n"
+                        f"model_parameters/Files/{input_file.name}).\n\n"
                     )
                     outfile.write(
                         f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_"
-                        f"{parameter}_{self.model_version.split('.')[0]}.png)\n"
+                        f"{parameter}_{self.model_version.replace('.', '-')}.png)\n"
                     )
                     outfile.write("\n\n")
                     outfile.write("The first 30 lines of the file are:\n")
@@ -326,9 +326,7 @@ class ReadParameters:
 
     def get_simulation_configuration_data(self):
         """Get data and descriptions for simulation configuration parameters."""
-        param_dict = db_handler.DatabaseHandler(
-            self.db_config
-        ).get_simulation_configuration_parameters(
+        param_dict = self.db.get_simulation_configuration_parameters(
             simulation_software=self.software,
             site=self.site,
             array_element_name=self.array_element,
@@ -371,6 +369,7 @@ class ReadParameters:
         output_filename = Path(
             self.output_path / (f"{self.array_element}_configuration_{self.software}.md")
         )
+        print("outfile: ", output_filename)
         output_filename.parent.mkdir(parents=True, exist_ok=True)
         data = self.get_simulation_configuration_data()
 
@@ -556,9 +555,9 @@ class ReadParameters:
             for element in sorted(elements):
                 file.write(f"| [{element}]({element}.md) |\n")
             file.write("\n")
-            image_path = (
-                f"{IMAGE_PATH}/OBS-{self.site}_{layout_name}_{self.model_version.split('.')[0]}.png"
-            )
+            version = self.model_version.replace(".", "-")
+            filename = f"OBS-{self.site}_{layout_name}_{version}.png"
+            image_path = f"{IMAGE_PATH}/{filename}"
             file.write(f"![{layout_name} Layout]({image_path})\n\n")
             file.write("\n")
 
