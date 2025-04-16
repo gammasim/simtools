@@ -1,7 +1,6 @@
 FROM almalinux:9.5 AS build_image
 WORKDIR /workdir/sim_telarray
 ARG BUILD_OPT="prod6-sc"
-ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="no_opt"
 ARG CORSIKA_VERSION="77550"
@@ -15,17 +14,16 @@ RUN yum update -y && yum install -y \
 ADD corsika_simtelarray.tar.gz .
 RUN rm -f examples-with-data.tar.gz && \
     rm -f sim_telarray_config.tar.gz && \
-    export EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
+    ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 
 # corsika source code is removed to follow
 # the corsika non-distribution policy.
-RUN mv ./corsika-77*/run corsika-run && \
+RUN mv ./corsika-7*/run corsika-run && \
     rm -rf ./corsika-7[0-9]* && \
     find . -name "*.tar.gz" -delete
 
 # create a yml file in workdir with the build options
 RUN echo "build_opt: $BUILD_OPT" > /workdir/sim_telarray/build_opts.yml && \
-    echo "extra_def: $EXTRA_DEF" >> /workdir/sim_telarray/build_opts.yml && \
     echo "hadronic_model: $HADRONIC_MODEL" >> /workdir/sim_telarray/build_opts.yml && \
     echo "avx_flag: $AVX_FLAG" >> /workdir/sim_telarray/build_opts.yml && \
     echo "corsika_version: $CORSIKA_VERSION" >> /workdir/sim_telarray/build_opts.yml && \
