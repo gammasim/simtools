@@ -204,13 +204,13 @@ class CorsikaSimtelRunner:
         )
         command += simulator_array.get_config_option("random_state", "none")
 
-        if self.sim_telarray_seeds.get("random_instances"):
+        if self.sim_telarray_seeds and self.sim_telarray_seeds.get("random_instances"):
             config_dir = Path(corsika_config.array_model.config_file_path).parent
             command += simulator_array.get_config_option(
                 "random_seed",
                 f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file_name']},auto",
             )
-        elif self.sim_telarray_seeds.get("seed"):
+        elif self.sim_telarray_seeds and self.sim_telarray_seeds.get("seed"):
             command += simulator_array.get_config_option(
                 "random_seed", self.sim_telarray_seeds["seed"]
             )
