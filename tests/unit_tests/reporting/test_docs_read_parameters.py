@@ -680,7 +680,7 @@ def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_c
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
         "model_version": telescope_model_lst.model_version,
-        "software": "corsika",
+        "simulation_software": "corsika",
     }
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
@@ -696,16 +696,23 @@ def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_c
             "unit": "GeV",
             "parameter_version": "1.0.0",
         },
+        "none_value": {
+            "value": None,
+            "unit": "GeV",
+            "parameter_version": "1.0.0",
+        },
     }
 
     mock_descriptions = (
         {
             "corsika cherenkov photon bunch_size": "Cherenkov bunch size definition.",
             "corsika particle kinetic energy cutoff": "Kinetic energy cutoffs for different particle types.",
+            "none_value": "None value parameter description.",
         },
         {
             "corsika cherenkov photon bunch_size": "Bunch size",
             "corsika particle kinetic energy cutoff": "Energy cutoffs",
+            "none_value": None,
         },
     )
 
@@ -732,32 +739,32 @@ def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_c
         mock_export.assert_called_once()
 
 
-def test_produce_simulation_configuration_report(telescope_model_lst, io_handler, db_config):
+def test_produce_simulation_configuration_report(io_handler, db_config):
     args = {
-        "telescope": telescope_model_lst.name,
-        "site": telescope_model_lst.site,
-        "model_version": telescope_model_lst.model_version,
-        "software": "corsika",
+        "telescope": "LSTN-01",
+        "site": "North",
+        "model_version": "6.0.0",
+        "simulation_software": "simtel",
     }
     output_path = io_handler.get_output_directory(
-        label="reports", sub_dir=f"productions/{telescope_model_lst.model_version}"
+        label="reports", sub_dir=f"productions/{args.get('model_version')}"
     )
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
     mock_data = [
         (
-            "corsika cherenkov photon bunch_size",
+            "iobuf maximum",
             "1.0.0",
-            "5.0 ",
-            "Cherenkov bunch size definition.",
-            "Bunch size",
+            "100 byte",
+            "Description",
+            "Buffer limits for input and output of eventio data.",
         ),
         (
-            "corsika particle kinetic energy cutoff",
+            "random generator",
             "1.0.0",
-            "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV",
-            "Kinetic energy cutoffs for different particle types.",
-            "Energy cutoffs",
+            "mt19937",
+            "Random generator used.",
+            None,
         ),
     ]
 
@@ -765,14 +772,14 @@ def test_produce_simulation_configuration_report(telescope_model_lst, io_handler
         read_parameters.produce_simulation_configuration_report()
 
         report_file = (
-            output_path / f"{telescope_model_lst.name}_configuration_{args.get('software')}.md"
+            output_path
+            / f"{read_parameters.array_element}_configuration_{read_parameters.software}.md"
         )
         assert report_file.exists()
 
         content = report_file.read_text()
 
-        assert f"# configuration_{args.get('software')}" in content
+        assert f"# configuration_{read_parameters.software}" in content
         assert "| Parameter Name" in content
-        assert "corsika cherenkov photon bunch_size" in content
-        assert "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV" in content
-        assert "Energy cutoffs" in content
+        assert "Buffer limits for input and output of eventio data." in content
+        assert "mt19937" in content
