@@ -1,6 +1,7 @@
 """Simulation runner for array simulations."""
 
 import logging
+from pathlib import Path
 
 from simtools.io_operations import io_handler
 from simtools.runners.simtel_runner import InvalidOutputFileError, SimtelRunner
@@ -23,6 +24,8 @@ class SimulatorArray(SimtelRunner):
         Instance label.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
+    sim_telarray_seeds: dict
+        Dictionary with configuration for sim_telarray random instrument setup.
     """
 
     def __init__(
@@ -82,8 +85,14 @@ class SimulatorArray(SimtelRunner):
         command += super().get_config_option("histogram_file", histogram_file)
         command += super().get_config_option("output_file", output_file)
         command += super().get_config_option("random_state", "none")
-        if self.sim_telarray_seeds:
-            command += super().get_config_option("random_seed", self.sim_telarray_seeds)
+        if self.sim_telarray_seeds.get("random_instrument_instances"):
+            config_dir = Path(self.corsika_config.array_model.config_file_path).parent
+            command += super().get_config_option(
+                "random_seed",
+                f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file']},auto",
+            )
+        elif self.sim_telarray_seeds.get("seed"):
+            command += super().get_config_option("random_seed", self.sim_telarray_seeds["seed"])
         command += super().get_config_option("show", "all")
         command += f" {input_file}"
         command += f" > {self._log_file} 2>&1 || exit"
