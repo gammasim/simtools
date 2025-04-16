@@ -27,8 +27,8 @@ class ReadParameters:
         self._logger = logging.getLogger(__name__)
         self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
         self.db_config = db_config
-        self.array_element = args.get("telescope")
-        self.site = args.get("site")
+        self.array_element = args.get("telescope", None)
+        self.site = args.get("site", None)
         self.model_version = args.get("model_version", None)
         self.output_path = output_path
         self.observatory = args.get("observatory")
@@ -324,87 +324,114 @@ class ReadParameters:
 
         return data
 
+    def _write_to_file(self, data, file):
+        # Write table header and separator row
+        file.write(
+            "| Parameter Name      |  Parameter Version     "
+            "| Values      | Short Description           |\n"
+            "|---------------------|------------------------"
+            "|-------------|-----------------------------|\n"
+        )
+
+        # Write table rows
+        column_widths = [10, 10, 20, 60]
+        for (
+            _,
+            parameter_name,
+            parameter_version,
+            value,
+            description,
+            short_description,
+        ) in data:
+            text = short_description if short_description else description
+            wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
+            wrapped_text = " ".join(wrapped_text)
+            parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
+
+            file.write(
+                f"| {parameter_name:{column_widths[0]}} |"
+                f" {parameter_version:{column_widths[1]}} |"
+                f" {value:{column_widths[2]}} |"
+                f" {wrapped_text:{column_widths[3]}} |\n"
+            )
+        file.write("\n\n")
+
     def get_simulation_configuration_data(self):
         """Get data and descriptions for simulation configuration parameters."""
-        param_dict = self.db.get_simulation_configuration_parameters(
-            simulation_software=self.software,
-            site=self.site,
-            array_element_name=self.array_element,
-            model_version=self.model_version,
-        )
 
-        parameter_descriptions = self.get_all_parameter_descriptions(
-            collection=f"configuration_{self.software}"
-        )
-        Path(f"{self.output_path}/model").mkdir(parents=True, exist_ok=True)
-        self.db.export_model_files(parameters=param_dict, dest=f"{self.output_path}/model")
-        data = []
-        for parameter, parameter_data in param_dict.items():
-            description = parameter_descriptions[0].get(parameter)
-            short_description = parameter_descriptions[1].get(parameter)
-            if short_description is None:
-                short_description = description
-            unit = parameter_data.get("unit") or " "
-            value_data = parameter_data.get("value")
-
-            if value_data is None:
-                continue
-
-            file_flag = parameter_data.get("file", False)
-            parameter_version = parameter_data.get("parameter_version")
-            value = self._format_parameter_value(parameter, value_data, unit, file_flag)
-            data.append(
-                [
-                    parameter,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ]
+        def get_param_data(telescope, site):
+            """Retrieve and format parameter data for one telescope-site combo."""
+            param_dict = self.db.get_simulation_configuration_parameters(
+                simulation_software=self.software,
+                site=site,
+                array_element_name=telescope,
+                model_version=self.model_version,
             )
-        return data
+
+            parameter_descriptions = self.get_all_parameter_descriptions(
+                collection=f"configuration_{self.software}"
+            )
+
+            model_output_path = Path(f"{self.output_path}/model")
+            model_output_path.mkdir(parents=True, exist_ok=True)
+            self.db.export_model_files(parameters=param_dict, dest=str(model_output_path))
+
+            data = []
+            for parameter, parameter_data in param_dict.items():
+                description = parameter_descriptions[0].get(parameter)
+                short_description = parameter_descriptions[1].get(parameter, description)
+                value_data = parameter_data.get("value")
+
+                if value_data is None:
+                    continue
+
+                unit = parameter_data.get("unit") or " "
+                file_flag = parameter_data.get("file", False)
+                parameter_version = parameter_data.get("parameter_version")
+                value = self._format_parameter_value(parameter, value_data, unit, file_flag)
+
+                data.append(
+                    [
+                        telescope,
+                        parameter,
+                        parameter_version,
+                        value,
+                        description,
+                        short_description,
+                    ]
+                )
+            return data
+
+        if self.software == "sim_telarray":
+            results = []
+            telescopes = self.db.get_array_elements(self.model_version)
+            for telescope in telescopes:
+                valid_site = names.get_site_from_array_element_name(telescope)
+                if not isinstance(valid_site, list):
+                    results.extend(get_param_data(telescope, valid_site))
+                else:
+                    for site in valid_site:
+                        results.extend(get_param_data(telescope, site))
+            return results
+        return get_param_data(self.array_element, self.site)
 
     def produce_simulation_configuration_report(self):
         """Write simulation configuration report."""
-        output_filename = Path(
-            self.output_path / (f"{self.array_element}_configuration_{self.software}.md")
-        )
-        print("outfile: ", output_filename)
+        output_filename = Path(self.output_path / (f"configuration_{self.software}.md"))
         output_filename.parent.mkdir(parents=True, exist_ok=True)
         data = self.get_simulation_configuration_data()
 
         with output_filename.open("w", encoding="utf-8") as file:
             file.write(f"# configuration_{self.software}\n")
             file.write("\n\n")
-            # Write table header and separator row
-            file.write(
-                "| Parameter Name      |  Parameter Version     "
-                "| Values      | Short Description           |\n"
-                "|---------------------|------------------------"
-                "|-------------|-----------------------------|\n"
-            )
-
-            # Write table rows
-            column_widths = [10, 10, 20, 60]
-            for (
-                parameter_name,
-                parameter_version,
-                value,
-                description,
-                short_description,
-            ) in data:
-                text = short_description if short_description else description
-                wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
-                wrapped_text = " ".join(wrapped_text)
-                parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
-
-                file.write(
-                    f"| {parameter_name:{column_widths[0]}} |"
-                    f" {parameter_version:{column_widths[1]}} |"
-                    f" {value:{column_widths[2]}} |"
-                    f" {wrapped_text:{column_widths[3]}} |\n"
-                )
-            file.write("\n\n")
+            if self.software == "sim_telarray":
+                data.sort(key=lambda x: (x[0], x[1]))
+                for telescope, group in groupby(data, key=lambda x: x[0]):
+                    file.write(f"## [{telescope}]({telescope}.md)\n")
+                    file.write("\n\n")
+                    self._write_to_file(group, file)
+            else:
+                self._write_to_file(data, file)
 
     def produce_array_element_report(self):
         """
@@ -451,37 +478,7 @@ class ReadParameters:
             for class_name, group in groupby(data, key=lambda x: x[0]):
                 group = sorted(group, key=lambda x: x[1])
                 file.write(f"## {class_name}\n\n")
-
-                # Write table header and separator row
-                file.write(
-                    "| Parameter Name      |  Parameter Version     "
-                    "| Values      | Short Description           |\n"
-                    "|---------------------|------------------------"
-                    "|-------------|-----------------------------|\n"
-                )
-
-                # Write table rows
-                column_widths = [10, 10, 20, 60]
-                for (
-                    _,
-                    parameter_name,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ) in group:
-                    text = short_description if short_description else description
-                    wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
-                    wrapped_text = " ".join(wrapped_text)
-                    parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
-
-                    file.write(
-                        f"| {parameter_name:{column_widths[0]}} |"
-                        f" {parameter_version:{column_widths[1]}} |"
-                        f" {value:{column_widths[2]}} |"
-                        f" {wrapped_text:{column_widths[3]}} |\n"
-                    )
-                file.write("\n\n")
+                self._write_to_file(group, file)
 
     def produce_model_parameter_reports(self):
         """

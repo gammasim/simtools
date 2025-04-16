@@ -675,7 +675,117 @@ def test_model_version_setter_with_invalid_list(db_config, io_handler):
         read_parameters.model_version = []
 
 
-def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_config):
+@pytest.mark.parametrize(
+    ("simulation_software", "param_dict", "descriptions"),
+    [
+        (
+            "corsika",
+            {
+                "corsika cherenkov photon bunch_size": {
+                    "value": 5.0,
+                    "unit": "",
+                    "parameter_version": "1.0.0",
+                },
+                "corsika particle kinetic energy cutoff": {
+                    "value": [0.3, 0.1, 0.02, 0.02],
+                    "unit": "GeV",
+                    "parameter_version": "1.0.0",
+                },
+                "none_value": {
+                    "value": None,
+                    "unit": "GeV",
+                    "parameter_version": "1.0.0",
+                },
+            },
+            (
+                {
+                    "corsika cherenkov photon bunch_size": "Cherenkov bunch size definition.",
+                    "corsika particle kinetic energy cutoff": "Kinetic energy cutoffs for different particle types.",
+                    "none_value": "None value parameter description.",
+                },
+                {
+                    "corsika cherenkov photon bunch_size": "Bunch size",
+                    "corsika particle kinetic energy cutoff": "Energy cutoffs",
+                    "none_value": None,
+                },
+            ),
+        ),
+        (
+            "simtel",
+            {
+                "param1": {
+                    "value": 5.0,
+                    "unit": "",
+                    "parameter_version": "1.0.0",
+                },
+                "param2": {
+                    "value": [0.3, 0.1, 0.02, 0.02],
+                    "unit": "GeV",
+                    "parameter_version": "1.0.0",
+                },
+                "none_value": {
+                    "value": None,
+                    "unit": "GeV",
+                    "parameter_version": "1.0.0",
+                },
+            },
+            (
+                {
+                    "param1": "Description 1",
+                    "param2": "Description 2",
+                    "none_value": "None value parameter description.",
+                },
+                {
+                    "param1": "Short description 1",
+                    "param2": "Short description 2",
+                    "none_value": None,
+                },
+            ),
+        ),
+    ],
+)
+def test_get_simulation_configuration_data(
+    simulation_software, param_dict, descriptions, io_handler, db_config
+):
+    args = {
+        "model_version": "6.0.0",
+        "simulation_software": simulation_software,
+    }
+    output_path = io_handler.get_output_directory(sub_dir=f"{args['model_version']}")
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    with (
+        patch.object(read_parameters, "get_all_parameter_descriptions", return_value=descriptions),
+        patch.object(read_parameters.db, "export_model_files") as mock_export,
+        patch.object(
+            read_parameters.db, "get_simulation_configuration_parameters", return_value=param_dict
+        ),
+    ):
+        data = read_parameters.get_simulation_configuration_data()
+
+        assert isinstance(data, list)
+
+        if simulation_software == "corsika":
+            assert len(data) == 2
+            assert data[0][1] == "corsika cherenkov photon bunch_size"  # Parameter name
+            assert data[0][2] == "1.0.0"  # Parameter version
+            assert data[0][3] == "5.0"  # Value (formatted)
+            assert data[0][5] == "Bunch size"  # Short description
+            assert data[1][3] == "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV"
+            mock_export.assert_called_once()
+
+        elif simulation_software == "simtel":
+            assert len(data) > 0  # Ensure data is not empty
+            assert data[0][0] == "LSTN-01"
+            assert data[0][1] == "param1"  # Parameter name
+            assert data[0][2] == "1.0.0"  # Parameter version
+            assert data[0][3] == "5.0"  # Value (formatted)
+            assert data[0][5] == "Short description 1"  # Short description
+            assert data[1][3] == "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV"
+            assert data[1][5] == "Short description 2"  # Short description
+
+
+def test__write_to_file(telescope_model_lst, io_handler, db_config):
     args = {
         "telescope": telescope_model_lst.name,
         "site": telescope_model_lst.site,
@@ -685,60 +795,29 @@ def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_c
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
-    param1 = "corsika cherenkov photon bunch_size"
-    param2 = "corsika particle kinetic energy cutoff"
-    mock_param_dict = {
-        param1: {
-            "value": 5.0,
-            "unit": "",
-            "parameter_version": "1.0.0",
-        },
-        param2: {
-            "value": [0.3, 0.1, 0.02, 0.02],
-            "unit": "GeV",
-            "parameter_version": "1.0.0",
-        },
-        "none_value": {
-            "value": None,
-            "unit": "GeV",
-            "parameter_version": "1.0.0",
-        },
-    }
+    mock_data = [
+        [telescope_model_lst.name, "param_1", "1.0.0", "5.0", "Full description 1", "Short 1"],
+        [
+            telescope_model_lst.name,
+            "param_2",
+            "2.1.0",
+            "0.3 GeV, 0.2 GeV",
+            "Energy cutoff details",
+            "Short 2",
+        ],
+    ]
 
-    mock_descriptions = (
-        {
-            param1: "Cherenkov bunch size definition.",
-            param2: "Kinetic energy cutoffs for different particle types.",
-            "none_value": "None value parameter description.",
-        },
-        {
-            param1: "Bunch size",
-            param2: "Energy cutoffs",
-            "none_value": None,
-        },
-    )
+    output_file = output_path / "output.md"
 
-    with (
-        patch.object(
-            read_parameters, "get_all_parameter_descriptions", return_value=mock_descriptions
-        ),
-        patch.object(read_parameters.db, "export_model_files") as mock_export,
-        patch.object(
-            read_parameters.db,
-            "get_simulation_configuration_parameters",
-            return_value=mock_param_dict,
-        ),
-    ):
-        data = read_parameters.get_simulation_configuration_data()
+    with output_file.open("w") as f:
+        read_parameters._write_to_file(mock_data, f)
 
-        assert isinstance(data, list)
-        assert len(data) == 2
-        assert data[0][0] == param1
-        assert data[0][1] == "1.0.0"
-        assert data[0][2] == "5.0"
-        assert data[0][4] == "Bunch size"
-        assert data[1][2] == "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV"
-        mock_export.assert_called_once()
+    result = output_file.read_text()
+
+    assert "| Parameter Name" in result
+    assert "| param_1" in result
+    assert "Short 1" in result
+    assert "0.3 GeV, 0.2 GeV" in result
 
 
 def test_produce_simulation_configuration_report(io_handler, db_config):
@@ -755,6 +834,7 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
 
     mock_data = [
         (
+            "LSTN-01",
             "iobuf maximum",
             "1.0.0",
             "100 byte",
@@ -762,6 +842,7 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
             "Buffer limits for input and output of eventio data.",
         ),
         (
+            "LSTN-01",
             "random generator",
             "1.0.0",
             "mt19937",
@@ -773,10 +854,7 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
     with patch.object(read_parameters, "get_simulation_configuration_data", return_value=mock_data):
         read_parameters.produce_simulation_configuration_report()
 
-        report_file = (
-            output_path
-            / f"{read_parameters.array_element}_configuration_{read_parameters.software}.md"
-        )
+        report_file = output_path / f"configuration_{read_parameters.software}.md"
         assert report_file.exists()
 
         content = report_file.read_text()
@@ -785,3 +863,17 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
         assert "| Parameter Name" in content
         assert "Buffer limits for input and output of eventio data." in content
         assert "mt19937" in content
+
+    # testing for corsika
+    args["simulation_software"] = "corsika"
+    read_parameters_corsika = ReadParameters(
+        db_config=db_config, args=args, output_path=output_path
+    )
+
+    with patch.object(
+        read_parameters_corsika, "get_simulation_configuration_data", return_value=mock_data
+    ):
+        read_parameters_corsika.produce_simulation_configuration_report()
+
+        report_file_corsika = output_path / f"configuration_{read_parameters.software}.md"
+        assert report_file_corsika.exists()

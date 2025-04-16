@@ -19,7 +19,7 @@ def _parse(label):
 
     return config.initialize(
         db_config=True,
-        simulation_model=["site", "telescope", "model_version"],
+        simulation_model=["model_version"],
         simulation_configuration=["software"],
     )
 
