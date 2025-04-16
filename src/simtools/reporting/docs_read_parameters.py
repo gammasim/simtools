@@ -402,18 +402,19 @@ class ReadParameters:
                 )
             return data
 
-        if self.software == "sim_telarray":
-            results = []
-            telescopes = self.db.get_array_elements(self.model_version)
-            for telescope in telescopes:
-                valid_site = names.get_site_from_array_element_name(telescope)
-                if not isinstance(valid_site, list):
-                    results.extend(get_param_data(telescope, valid_site))
-                else:
-                    for site in valid_site:
-                        results.extend(get_param_data(telescope, site))
-            return results
-        return get_param_data(self.array_element, self.site)
+        if self.software == "corsika":
+            return get_param_data(self.array_element, self.site)
+
+        results = []
+        telescopes = self.db.get_array_elements(self.model_version)
+        for telescope in telescopes:
+            valid_site = names.get_site_from_array_element_name(telescope)
+            if not isinstance(valid_site, list):
+                results.extend(get_param_data(telescope, valid_site))
+            else:
+                for site in valid_site:
+                    results.extend(get_param_data(telescope, site))
+        return results
 
     def produce_simulation_configuration_report(self):
         """Write simulation configuration report."""
