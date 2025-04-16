@@ -221,7 +221,7 @@ class SimtelConfigWriter:
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
 
-        if sim_telarray_seeds:
+        if sim_telarray_seeds and sim_telarray_seeds.get("random_instances"):
             self._write_random_seeds_file(sim_telarray_seeds, Path(config_file_path).parent)
 
     def _write_random_seeds_file(self, sim_telarray_seeds, config_file_directory):
