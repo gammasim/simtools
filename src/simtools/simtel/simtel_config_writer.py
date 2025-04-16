@@ -290,7 +290,7 @@ class SimtelConfigWriter:
         title: str
             Title of the header.
         comment_char: str
-            Character to be used for comments, which differs among ctypes of config files.
+            Character to be used for comments, which differs among types of config files.
         """
         header = f"{comment_char}{50 * '='}\n"
         header += f"{comment_char} {title}\n"
