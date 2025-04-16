@@ -193,6 +193,7 @@ class SimtelConfigWriter:
         site_model: Site model
             Site model.
         """
+        config_file_directory = Path(config_file_path).parent
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "ARRAY CONFIGURATION FILE")
 
@@ -209,7 +210,7 @@ class SimtelConfigWriter:
             file.write(self.TAB + "echo *****************************\n\n")
 
             self._write_site_parameters(
-                file, site_model.parameters, Path(config_file_path).parent, telescope_model
+                file, site_model.parameters, config_file_directory, telescope_model
             )
 
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
@@ -220,7 +221,7 @@ class SimtelConfigWriter:
             file.write(f"# include <{invalid_telescope_name}.cfg>\n\n")
             self.write_dummy_telescope_configuration_file(
                 deepcopy(first_telescope.parameters),
-                Path(config_file_path).parent / f"{invalid_telescope_name}.cfg",
+                config_file_directory / f"{invalid_telescope_name}.cfg",
                 invalid_telescope_name,
             )
 
@@ -458,7 +459,7 @@ class SimtelConfigWriter:
             Name of the telescope.
         """
         self._logger.debug(f"Writing {telescope_name} telescope config file {config_file_path}")
-        defaults = {
+        dummy_defaults = {
             "camera_config_file": f"{telescope_name}_single_pixel_camera.dat",
             "discriminator_pulse_shape": f"{telescope_name}_pulse.dat",
             "fadc_pulse_shape": f"{telescope_name}_pulse.dat",
@@ -478,17 +479,19 @@ class SimtelConfigWriter:
             "discriminator_amplitude": 1.0,
         }
 
-        for key, val in defaults.items():
+        for key, val in dummy_defaults.items():
             if key in parameters:
                 parameters[key]["value"] = val
 
-        self.write_telescope_config_file(config_file_path, parameters, telescope_name, True)
+        self.write_telescope_config_file(
+            config_file_path, parameters, telescope_name, write_dummy_config=True
+        )
 
         config_file_directory = Path(config_file_path).parent
-        self._write_dummy_mirror_list_file(config_file_directory, telescope_name)
-        self._write_dummy_camera_file(config_file_directory, telescope_name)
+        self._write_dummy_mirror_list_files(config_file_directory, telescope_name)
+        self._write_dummy_camera_files(config_file_directory, telescope_name)
 
-    def _write_dummy_mirror_list_file(self, config_directory, telescope_name):
+    def _write_dummy_mirror_list_files(self, config_directory, telescope_name):
         """Write dummy mirror list with single mirror and reflectivity file."""
         with open(
             config_directory / f"{telescope_name}_single_12m_mirror.dat", "w", encoding="utf-8"
@@ -499,7 +502,7 @@ class SimtelConfigWriter:
         ) as file:
             file.writelines(f"{w} 0.8\n" for w in range(200, 801, 50))
 
-    def _write_dummy_camera_file(self, config_directory, telescope_name):
+    def _write_dummy_camera_files(self, config_directory, telescope_name):
         """Write dummy camera, pulse shape, and funnels file with a single pixel."""
         with open(
             config_directory / f"{telescope_name}_single_pixel_camera.dat", "w", encoding="utf-8"
