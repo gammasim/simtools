@@ -245,6 +245,11 @@ class SimtelConfigWriter:
         with open(
             config_file_directory / sim_telarray_seeds["seed_file_name"], "w", encoding="utf-8"
         ) as file:
+            file.write(
+                "# Random seeds for instrument configuration generated with seed "
+                f"{sim_telarray_seeds['seed']}"
+                f" (model version {self._model_version}, site {self._site})\n"
+            )
             for number in random_integers:
                 file.write(f"{number}\n")
 
