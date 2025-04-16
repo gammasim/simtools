@@ -685,13 +685,15 @@ def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_c
     output_path = io_handler.get_output_directory(sub_dir=f"{telescope_model_lst.model_version}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
 
+    param1 = "corsika cherenkov photon bunch_size"
+    param2 = "corsika particle kinetic energy cutoff"
     mock_param_dict = {
-        "corsika cherenkov photon bunch_size": {
+        param1: {
             "value": 5.0,
             "unit": "",
             "parameter_version": "1.0.0",
         },
-        "corsika particle kinetic energy cutoff": {
+        param2: {
             "value": [0.3, 0.1, 0.02, 0.02],
             "unit": "GeV",
             "parameter_version": "1.0.0",
@@ -705,13 +707,13 @@ def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_c
 
     mock_descriptions = (
         {
-            "corsika cherenkov photon bunch_size": "Cherenkov bunch size definition.",
-            "corsika particle kinetic energy cutoff": "Kinetic energy cutoffs for different particle types.",
+            param1: "Cherenkov bunch size definition.",
+            param2: "Kinetic energy cutoffs for different particle types.",
             "none_value": "None value parameter description.",
         },
         {
-            "corsika cherenkov photon bunch_size": "Bunch size",
-            "corsika particle kinetic energy cutoff": "Energy cutoffs",
+            param1: "Bunch size",
+            param2: "Energy cutoffs",
             "none_value": None,
         },
     )
@@ -731,7 +733,7 @@ def test_get_simulation_configuration_data(telescope_model_lst, io_handler, db_c
 
         assert isinstance(data, list)
         assert len(data) == 2
-        assert data[0][0] == "corsika cherenkov photon bunch_size"
+        assert data[0][0] == param1
         assert data[0][1] == "1.0.0"
         assert data[0][2] == "5.0"
         assert data[0][4] == "Bunch size"
