@@ -205,6 +205,8 @@ def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
 
     with open(seed_file_path, encoding="utf-8") as file:
         lines = file.readlines()
-        assert len(lines) == sim_telarray_seeds["random_instances"]
+        assert len(lines) == sim_telarray_seeds["random_instances"] + 1
         for line in lines:
+            if line[0] == "#":
+                continue
             assert line.strip().isdigit()
