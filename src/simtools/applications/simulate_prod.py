@@ -122,13 +122,23 @@ def _parse(description=None):
         required=False,
         default=False,
     )
-    config.parser.add_argument(
-        "--sim_telarray_seeds",
+    sim_telarray_seed_group = config.parser.add_argument_group(
+        title="Random seeds for sim_telarray instrument setup",
+    )
+    sim_telarray_seed_group.add_argument(
+        "--sim_telarray_instrument_seeds",
         help=(
-            "Use the provided random seed for sim_telarray instrument setup."
-            "Used only for testing purposes for now."
+            "Random seed used for sim_telarray instrument setup. "
+            "If '--sim_telarray_random_instrument_instances is not set: use as sim_telarray seed. "
+            "Otherwise: use as base seed for the generation of random instrument instance seeds."
         ),
         type=str,
+        required=False,
+    )
+    sim_telarray_seed_group.add_argument(
+        "--sim_telarray_random_instrument_instances",
+        help="Number of random instrument instances initialized in sim_telarray.",
+        type=int,
         required=False,
     )
     return config.initialize(

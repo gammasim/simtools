@@ -75,6 +75,11 @@ class Simulator:
         self._submit_options = self.args_dict.get("submit_options", None)
         self._extra_commands = extra_commands
 
+        self.sim_telarray_seeds = {
+            "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
+            "random_instances": self.args_dict.get("sim_telarray_random_instrument_instances"),
+            "seed_file_name": "random_seeds.txt",  # name only; will be place in config dir
+        }
         self.array_models = self._initialize_array_models(mongo_db_config)
         self._simulation_runner = self._initialize_simulation_runner(mongo_db_config)
 
@@ -128,9 +133,44 @@ class Simulator:
                 layout_name=self.args_dict.get("array_layout_name"),
                 mongo_db_config=mongo_db_config,
                 model_version=version,
+                sim_telarray_seeds={
+                    "seed": self._get_seed_for_random_instances_of_instrument(
+                        self.sim_telarray_seeds["seed"], version
+                    ),
+                    "random_instances": self.sim_telarray_seeds["random_instances"],
+                    "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
+                },
             )
             for version in versions
         ]
+
+    def _get_seed_for_random_instances_of_instrument(self, seed, model_version):
+        """
+        Generate seed for random instances of the instrument.
+
+        Parameters
+        ----------
+        seed : str
+            Seed string given through configuration.
+        model_version: str
+            Model version.
+
+        Returns
+        -------
+        int
+            Seed for random instances of the instrument.
+        """
+        if seed:
+            return int(seed.split(",")[0].strip())
+
+        def semver_to_int(version: str):
+            major, minor, patch = map(int, version.split("."))
+            return major * 10000 + minor * 100 + patch
+
+        seed = semver_to_int(model_version) * 10000000
+        seed = seed + 1000000 if self.args_dict.get("site") != "North" else seed + 2000000
+        seed = seed + self.args_dict["zenith_angle"].value * 1000
+        return seed + self.args_dict["azimuth_angle"].value
 
     def _initialize_run_list(self):
         """
@@ -255,7 +295,7 @@ class Simulator:
         if runner_class is not SimulatorArray:
             runner_args["keep_seeds"] = self.args_dict.get("corsika_test_seeds", False)
         if runner_class is not CorsikaRunner:
-            runner_args["sim_telarray_seeds"] = self.args_dict.get("sim_telarray_seeds")
+            runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
 
         return runner_class(**runner_args)
 

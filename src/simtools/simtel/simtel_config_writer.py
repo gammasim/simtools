@@ -2,6 +2,7 @@
 """Configuration file writer for sim_telarray."""
 
 import logging
+import random
 from pathlib import Path
 
 import astropy.units as u
@@ -170,7 +171,9 @@ class SimtelConfigWriter:
 
         return meta_parameters
 
-    def write_array_config_file(self, config_file_path, telescope_model, site_model):
+    def write_array_config_file(
+        self, config_file_path, telescope_model, site_model, sim_telarray_seeds=None
+    ):
         """
         Write the sim_telarray config file for an array of telescopes.
 
@@ -182,6 +185,8 @@ class SimtelConfigWriter:
             Dictionary of TelescopeModel's instances as used by the ArrayModel instance.
         site_model: Site model
             Site model.
+        sim_telarray_seeds: dict
+            Dictionary with configuration for sim_telarray random instrument setup.
         """
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "ARRAY CONFIGURATION FILE")
@@ -215,6 +220,33 @@ class SimtelConfigWriter:
                 file.write(f"#elif TELESCOPE == {count + 1}\n\n")
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
+
+        if sim_telarray_seeds:
+            self._write_random_seeds_file(sim_telarray_seeds, Path(config_file_path).parent)
+
+    def _write_random_seeds_file(self, sim_telarray_seeds, config_file_directory):
+        """
+        Write list of random number used to generate random instances of instrument.
+
+        Parameters
+        ----------
+        random_instances_of_instrument: int
+            Number of random instances of the instrument.
+        """
+        random.seed(sim_telarray_seeds["seed"])
+        self._logger.info(
+            "Writing random seed file "
+            f"{config_file_directory}/{sim_telarray_seeds['seed_file_name']}"
+            f" (global seed {sim_telarray_seeds['seed']})"
+        )
+        random_integers = [
+            random.randint(0, 2**32 - 1) for _ in range(sim_telarray_seeds["random_instances"])
+        ]
+        with open(
+            config_file_directory / sim_telarray_seeds["seed_file_name"], "w", encoding="utf-8"
+        ) as file:
+            for number in random_integers:
+                file.write(f"{number}\n")
 
     def write_single_mirror_list_file(
         self, mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False
