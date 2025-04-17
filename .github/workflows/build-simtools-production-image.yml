@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        simtel_version: ['240205', '240927']
+        simtel_version: ['240205', '240927', '250403']
 
     steps:
       - name: Checkout repository
@@ -57,17 +57,17 @@ jobs:
     strategy:
       matrix:
         production:
-          - {build_opt: 'prod6-sc', extra_def: '-DMAXIMUM_TELESCOPES=128'}
+          - {build_opt: 'prod6-sc', extra_def: ''}
           - {build_opt: 'prod6-baseline', extra_def: ''}
-          - {build_opt: 'prod5', extra_def: ''}
-          - {build_opt: 'prod5-sc', extra_def: ''}
+          # - {build_opt: 'prod5', extra_def: ''}
+          # - {build_opt: 'prod5-sc', extra_def: ''}
         version:
           # - {simtel_version: '240205', corsika_version: '77500', bernlohr_version: '1.67'}
-          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68'}
-        hadronic_model: ['qgs2']
+          - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68', hadronic_model: 'qgs2'}
+          - {simtel_version: '250403', corsika_version: '78000', bernlohr_version: '1.69', hadronic_model: 'qgs3'}
 
     env:
-      LABELS: '${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.hadronic_model }}'
+      LABELS: '${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}'
 
     steps:
       - name: Checkout repository
@@ -117,7 +117,7 @@ jobs:
           build-args: |
            BUILD_OPT=${{ matrix.production.build_opt }}
            EXTRA_DEF=${{ matrix.production.extra_def }}
-           HADRONIC_MODEL=${{ matrix.hadronic_model }}
+           HADRONIC_MODEL=${{ matrix.version.hadronic_model }}
            SIMTEL_VERSION=${{ matrix.version.simtel_version }}
            CORSIKA_VERSION=${{ matrix.version.corsika_version }}
            BERNLOHR_VERSION=${{ matrix.version.bernlohr_version }}
@@ -140,7 +140,7 @@ jobs:
           - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68'}
         hadronic_model: ['qgs2']
         production:
-          - {build_opt: 'prod6-sc', extra_def: '-DMAXIMUM_TELESCOPES=128'}
+          - {build_opt: 'prod6-sc', extra_def: ''}
           - {build_opt: 'prod6-baseline', extra_def: ''}
           # - {build_opt: 'prod5', extra_def: ''}
           # - {build_opt: 'prod5-sc', extra_def: ''}
@@ -227,7 +227,7 @@ jobs:
           - {simtel_version: '240927', corsika_version: '77550', bernlohr_version: '1.68'}
         hadronic_model: ['qgs2']
         production:
-          - {build_opt: 'prod6-sc', extra_def: '-DMAXIMUM_TELESCOPES=128'}
+          - {build_opt: 'prod6-sc', extra_def: ''}
           - {build_opt: 'prod6-baseline', extra_def: ''}
         avx_instruction: ['no_opt']
     container:

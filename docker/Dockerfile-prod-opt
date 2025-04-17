@@ -2,7 +2,7 @@ FROM almalinux:9.5 AS build_image
 WORKDIR /workdir/sim_telarray
 ENV GCC_PATH="/usr/bin/"
 ARG BUILD_OPT="prod6-sc"
-ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
+ARG EXTRA_DEF=""
 ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG CORSIKA_VERSION="77550"
@@ -44,7 +44,7 @@ RUN make -C corsika-$CORSIKA_VERSION clean && rm -f */*.a lib/*/*.a && \
     if [[ "$AVX_FLAG" == "no_opt" ]]; then \
         CFLAGS="-g  -std=c99 -O3"; \
         CXXFLAGS="-g  -std=c99 -O3"; \
-        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -std=c99 -O3"; \
+        FFLAGS="-g -ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy -O3"; \
     else \
         CFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
         CXXFLAGS="-g -DCERENKOPT -DVLIBM -std=c99 -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${avx_512_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
@@ -63,16 +63,25 @@ RUN make -C corsika-$CORSIKA_VERSION clean && rm -f */*.a lib/*/*.a && \
 # Rename executable to 'corsika'
 RUN mv -f corsika-$CORSIKA_VERSION/run/corsika$CORSIKA_VERSIONLinux_* corsika-$CORSIKA_VERSION/run/corsika
 # Build sim_telarray
-RUN export NO_CORSIKA=1 EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
+RUN touch corsika-$CORSIKA_VERSION.tar.gz && \
+    export NO_CORSIKA=1 EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 
 # CORSIKA source code is removed to follow
 # the CORSIKA non-distribution policy.
-RUN mv ./corsika-77*/run corsika-run && \
+RUN mv ./corsika-7*/run corsika-run && \
     rm -rf ./corsika-7[0-9]* && \
     find . -name "*.tar.gz" -delete && \
     find . -name "doc*" -type d -exec rm -rf {} + 2>/dev/null && \
     find . -name "*.o" -delete && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
+
+# remove unnecessary large QGSJet tables (e.g. remove qgs3 tables when using qgs2)
+RUN if [[ "$HADRONIC_MODEL" == "qgs3" ]]; then \
+        find . -name "qgsdat-II-04.bz2" -exec rm -fv {} \; ; \
+    fi && \
+    if [[ "$HADRONIC_MODEL" == "qgs2" ]]; then \
+        find . -name "qgsdat-III.bz2" -exec rm -fv {} \; ; \
+    fi
 
 # create a yml file in workdir with the build options
 RUN echo "build_opt: $BUILD_OPT" > /workdir/sim_telarray/build_opts.yml && \
@@ -90,8 +99,16 @@ ARG PYTHON_VERSION=3.12
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
 RUN microdnf update -y && microdnf install -y \
-    bc findutils gcc-c++ git gsl-devel gcc-fortran libgfortran \
-    procps python${PYTHON_VERSION}-devel zstd && \
+    bc \
+    zstd \
+    gsl-devel \
+    gcc-fortran \
+    procps \
+    findutils \
+    gcc-c++ \
+    git \
+    libgfortran \
+    python${PYTHON_VERSION}-devel && \
     microdnf clean all
 
 RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') \
@@ -101,6 +118,5 @@ RUN BUILD_BRANCH=$(echo $BUILD_BRANCH | sed 's#refs/tags/##') \
   && pip install -U pip \
   && pip install --no-cache-dir "git+${SIMTOOLS_REQUIREMENT}@${BUILD_BRANCH}"
 
-ENV SIMTEL_PATH="/workdir/sim_telarray/"
+ENV SIMTEL_PATH="/workdir/sim_telarray"
 ENV PATH="/workdir/env/bin/:$PATH"
-SHELL ["/bin/bash", "-c"]
