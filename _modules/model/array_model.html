@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>model.array_model &#8212; simtools v0.1.dev1+gfb81797 Manual</title>
+    <title>model.array_model &#8212; simtools v0.1.dev1+g9f3985b Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=3d43c231"></script>
+    <script src="../../_static/documentation_options.js?v=0c2c112f"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gfb81797 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9f3985b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -432,6 +432,8 @@ document.write(`
 <span class="sd">    array_elements: Union[str, Path, List[str]], optional</span>
 <span class="sd">        Array element definitions (list of array element or path to file with</span>
 <span class="sd">        the array element positions).</span>
+<span class="sd">    sim_telarray_seeds : dict, optional</span>
+<span class="sd">        Dictionary with configuration for sim_telarray random instrument setup.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -442,6 +444,7 @@ document.write(`
         <span class="n">site</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">layout_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">array_elements</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sim_telarray_seeds</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize ArrayModel.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -461,6 +464,7 @@ document.write(`
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_telescope_model_files_exported</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="o">=</span> <span class="n">sim_telarray_seeds</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">array_elements_config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -663,6 +667,7 @@ document.write(`
             <span class="n">config_file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">,</span>
             <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
             <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
+            <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array_model_file_exported</span> <span class="o">=</span> <span class="kc">True</span></div>
 

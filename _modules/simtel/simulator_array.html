@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simulator_array &#8212; simtools v0.1.dev1+gfb81797 Manual</title>
+    <title>simtel.simulator_array &#8212; simtools v0.1.dev1+g9f3985b Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=3d43c231"></script>
+    <script src="../../_static/documentation_options.js?v=0c2c112f"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gfb81797 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9f3985b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -419,6 +419,8 @@ document.write(`
 <span class="sd">        Instance label.</span>
 <span class="sd">    use_multipipe: bool</span>
 <span class="sd">        Use multipipe to run CORSIKA and sim_telarray.</span>
+<span class="sd">    sim_telarray_seeds: dict</span>
+<span class="sd">        Dictionary with configuration for sim_telarray random instrument setup.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -460,13 +462,14 @@ document.write(`
 <span class="sd">        str</span>
 <span class="sd">            Command to run sim_telarray.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">get_config_directory</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
         <span class="n">histogram_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
         <span class="n">output_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
 
         <span class="n">command</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simtel_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;sim_telarray/bin/sim_telarray&quot;</span><span class="p">))</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -c </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">config_file_path</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">array_model</span><span class="o">.</span><span class="n">get_config_directory</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; -I</span><span class="si">{</span><span class="n">config_dir</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_theta&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;telescope_phi&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">corsika_config</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
@@ -478,8 +481,13 @@ document.write(`
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;histogram_file&quot;</span><span class="p">,</span> <span class="n">histogram_file</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_state&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">:</span>
-            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_instrument_instances&quot;</span><span class="p">):</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span>
+                <span class="s2">&quot;random_seed&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;file-by-run:</span><span class="si">{</span><span class="n">config_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s1">&#39;seed_file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">,auto&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">):</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">])</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config_option</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">command</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; &gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span><span class="si">}</span><span class="s2"> 2&gt;&amp;1 || exit&quot;</span>

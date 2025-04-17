@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_writer &#8212; simtools v0.1.dev1+gfb81797 Manual</title>
+    <title>simtel.simtel_config_writer &#8212; simtools v0.1.dev1+g9f3985b Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=3d43c231"></script>
+    <script src="../../_static/documentation_options.js?v=0c2c112f"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gfb81797 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9f3985b Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -396,6 +396,7 @@ document.write(`
 <span class="sd">&quot;&quot;&quot;Configuration file writer for sim_telarray.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
@@ -571,7 +572,9 @@ document.write(`
 
 <div class="viewcode-block" id="SimtelConfigWriter.write_array_config_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_array_config_file">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">write_array_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_array_config_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">,</span> <span class="n">telescope_model</span><span class="p">,</span> <span class="n">site_model</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write the sim_telarray config file for an array of telescopes.</span>
 
@@ -583,7 +586,10 @@ document.write(`
 <span class="sd">            Dictionary of TelescopeModel&#39;s instances as used by the ArrayModel instance.</span>
 <span class="sd">        site_model: Site model</span>
 <span class="sd">            Site model.</span>
+<span class="sd">        sim_telarray_seeds: dict</span>
+<span class="sd">            Dictionary with configuration for sim_telarray random instrument setup.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config_file_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_write_header</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;ARRAY CONFIGURATION FILE&quot;</span><span class="p">)</span>
 
@@ -600,7 +606,7 @@ document.write(`
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="s2">&quot;echo *****************************</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_write_site_parameters</span><span class="p">(</span>
-                <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">telescope_model</span>
+                <span class="n">file</span><span class="p">,</span> <span class="n">site_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">config_file_directory</span><span class="p">,</span> <span class="n">telescope_model</span>
             <span class="p">)</span>
 
             <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TAB</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;maximum_telescopes = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">telescope_model</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -615,8 +621,40 @@ document.write(`
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;%</span><span class="si">{</span><span class="n">tel_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#elif TELESCOPE == </span><span class="si">{</span><span class="n">count</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# include &lt;</span><span class="si">{</span><span class="n">tel_config_file</span><span class="si">}</span><span class="s2">&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#endif </span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># configuration files need to end with \n\n</span></div>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#endif </span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># configuration files need to end with \n\n</span>
 
+        <span class="k">if</span> <span class="n">sim_telarray_seeds</span> <span class="ow">and</span> <span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_instances&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_random_seeds_file</span><span class="p">(</span><span class="n">sim_telarray_seeds</span><span class="p">,</span> <span class="n">config_file_directory</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_random_seeds_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span><span class="p">,</span> <span class="n">config_file_directory</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write list of random number used to generate random instances of instrument.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        random_instances_of_instrument: int</span>
+<span class="sd">            Number of random instances of the instrument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Writing random seed file &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_file_directory</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s1">&#39;seed_file_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; (global seed </span><span class="si">{</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">random_integers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s2">&quot;random_instances&quot;</span><span class="p">])</span>
+        <span class="p">]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span>
+            <span class="n">config_file_directory</span> <span class="o">/</span> <span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s2">&quot;seed_file_name&quot;</span><span class="p">],</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s2">&quot;# Random seeds for instrument configuration generated with seed &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sim_telarray_seeds</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (model version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_version</span><span class="si">}</span><span class="s2">, site </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_site</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">random_integers</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">number</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SimtelConfigWriter.write_single_mirror_list_file">
 <a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_config_writer.SimtelConfigWriter.write_single_mirror_list_file">[docs]</a>
