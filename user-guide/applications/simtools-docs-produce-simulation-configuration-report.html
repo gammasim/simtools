@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>simtools-docs-produce-model-parameter-reports &#8212; simtools v0.1.dev1+gfb81797 Manual</title>
+    <title>simtools-docs-produce-simulation-configuration-report &#8212; simtools v0.1.dev1+gfb81797 Manual</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-docs-produce-model-parameter-reports';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-docs-produce-simulation-configuration-report';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="simtools-docs-produce-simulation-configuration-report" href="simtools-docs-produce-simulation-configuration-report.html" />
-    <link rel="prev" title="simtools-docs-produce-array-element-report" href="simtools-docs-produce-array-element-report.html" />
+    <link rel="next" title="simtools-generate-array-config" href="simtools-generate-array-config.html" />
+    <link rel="prev" title="simtools-docs-produce-model-parameter-reports" href="simtools-docs-produce-model-parameter-reports.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -205,8 +205,8 @@
 <li class="toctree-l3"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-docs-produce-model-parameter-reports</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">simtools-docs-produce-simulation-configuration-report</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-array-config.html">simtools-generate-array-config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
@@ -329,7 +329,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-docs-produce-model-parameter-reports.rst?plain=1" target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/blob/main/docs/source/user-guide/applications/simtools-docs-produce-simulation-configuration-report.rst?plain=1" target="_blank"
    class="btn btn-sm btn-source-file-button dropdown-item"
    title="Show source"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -346,7 +346,7 @@
       
       
       
-      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-docs-produce-model-parameter-reports.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2Fuser-guide/applications/simtools-docs-produce-simulation-configuration-report.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -376,7 +376,7 @@
       
       
       
-      <li><a href="../../_sources/user-guide/applications/simtools-docs-produce-model-parameter-reports.rst" target="_blank"
+      <li><a href="../../_sources/user-guide/applications/simtools-docs-produce-simulation-configuration-report.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -458,7 +458,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>simtools-docs-produce-model-parameter-reports</h1>
+    <h1>simtools-docs-produce-simulation-configuration-report</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -472,12 +472,9 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-docs_produce_model_parameter_reports">
-<span id="simtools-docs-produce-model-parameter-reports"></span><h1>simtools-docs-produce-model-parameter-reports<a class="headerlink" href="#module-docs_produce_model_parameter_reports" title="Link to this heading">#</a></h1>
-<p>Produce a model parameter report per array element.</p>
-<p>The markdown reports include detailed information on each parameter,
-comparing their values over various model versions.
-Currently only implemented for telescopes.</p>
+  <section id="module-docs_produce_simulation_configuration_report">
+<span id="simtools-docs-produce-simulation-configuration-report"></span><h1>simtools-docs-produce-simulation-configuration-report<a class="headerlink" href="#module-docs_produce_simulation_configuration_report" title="Link to this heading">#</a></h1>
+<p>Produces a markdown file for a given simulation configuration.</p>
 </section>
 
 
@@ -492,20 +489,20 @@ Currently only implemented for telescopes.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="simtools-docs-produce-array-element-report.html"
+       href="simtools-docs-produce-model-parameter-reports.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">simtools-docs-produce-array-element-report</p>
+        <p class="prev-next-title">simtools-docs-produce-model-parameter-reports</p>
       </div>
     </a>
     <a class="right-next"
-       href="simtools-docs-produce-simulation-configuration-report.html"
+       href="simtools-generate-array-config.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">simtools-docs-produce-simulation-configuration-report</p>
+        <p class="prev-next-title">simtools-generate-array-config</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
