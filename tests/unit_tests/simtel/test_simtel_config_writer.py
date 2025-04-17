@@ -207,6 +207,14 @@ def test_write_dummy_telescope_configuration_file(
             "unit": None,
             "meta_parameter": False,
         },
+        # this needs to be a parameter which is not overwritten by the
+        # dummy telescope configuration
+        "fadc_pedestal": {
+            "parameter": "fadc_pedestal",
+            "value": 10.0,
+            "unit": None,
+            "meta_parameter": False,
+        },
     }
 
     simtel_config_writer.write_dummy_telescope_configuration_file(
@@ -225,3 +233,9 @@ def test_write_dummy_telescope_configuration_file(
     camera_file = Path(tmp_test_directory) / f"{telescope_name}_single_pixel_camera.dat"
     assert camera_file.exists()
     assert file_has_text(camera_file, f'"{telescope_name}_funnels.dat"')
+
+    # ensure that non-dummy telescopes are not lost
+    assert file_has_text(config_file_path, "fadc_pedestal = 10.0")
+
+    # ensure that the dummy configuration is not adding extra parameters
+    assert not file_has_text(config_file_path, "trigger_pixels = 1")
