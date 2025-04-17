@@ -8,6 +8,7 @@ import tarfile
 from pathlib import Path
 
 import pytest
+from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.model.array_model import ArrayModel
@@ -414,3 +415,28 @@ def test_validate_metadata(array_simulator, mocker, caplog):
     with caplog.at_level(logging.WARNING):
         array_simulator.validate_metadata()
     assert "No sim_telarray file found for model version 6.0.0:" in caplog.text
+
+
+def test_get_seed_for_random_instances_of_instrument(shower_simulator):
+    # Test with a seed provided in the configuration
+    shower_simulator.sim_telarray_seeds["seed"] = "12345, 67890"
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 12345
+
+    # Test without a seed provided in the configuration
+    shower_simulator.sim_telarray_seeds["seed"] = None
+    shower_simulator.args_dict["site"] = "North"
+    shower_simulator.args_dict["zenith_angle"] = 20 * u.deg
+    shower_simulator.args_dict["azimuth_angle"] = 180 * u.deg
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 600010000000 + 2000000 + 20 * 1000 + 180
+
+    shower_simulator.args_dict["site"] = "South"
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
