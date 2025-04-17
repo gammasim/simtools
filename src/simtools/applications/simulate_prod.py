@@ -129,7 +129,8 @@ def _parse(description=None):
         "--sim_telarray_instrument_seeds",
         help=(
             "Random seed used for sim_telarray instrument setup. "
-            "If '--sim_telarray_random_instrument_instances is not set: use as sim_telarray seed. "
+            "If '--sim_telarray_random_instrument_instances is not set: use as sim_telarray seed "
+            " ('random_seed' parameter). "
             "Otherwise: use as base seed for the generation of random instrument instance seeds."
         ),
         type=str,

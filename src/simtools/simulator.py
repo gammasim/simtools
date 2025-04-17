@@ -78,7 +78,7 @@ class Simulator:
         self.sim_telarray_seeds = {
             "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
             "random_instances": self.args_dict.get("sim_telarray_random_instrument_instances"),
-            "seed_file_name": "random_seeds.txt",  # name only; will be place in config dir
+            "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
         }
         self.array_models = self._initialize_array_models(mongo_db_config)
         self._simulation_runner = self._initialize_simulation_runner(mongo_db_config)
