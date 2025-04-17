@@ -27,11 +27,14 @@ class ReadParameters:
         self._logger = logging.getLogger(__name__)
         self.db = db_handler.DatabaseHandler(mongo_db_config=db_config)
         self.db_config = db_config
-        self.array_element = args.get("telescope")
-        self.site = args.get("site")
+        self.array_element = args.get("telescope", None)
+        self.site = args.get("site", None)
         self.model_version = args.get("model_version", None)
         self.output_path = output_path
         self.observatory = args.get("observatory")
+        self.software = args.get("simulation_software", None)
+        if self.software == "simtel":
+            self.software = "sim_telarray"
 
     @property
     def model_version(self):
@@ -86,11 +89,11 @@ class ReadParameters:
                         "The full file can be found in the Simulation Model repository [here]"
                         "(https://gitlab.cta-observatory.org/cta-science/simulations/"
                         "simulation-model/simulation-models/-/blob/main/simulation-models/"
-                        f"model_parameters/Files/{input_file.stem}.dat).\n\n"
+                        f"model_parameters/Files/{input_file.name}).\n\n"
                     )
                     outfile.write(
                         f"![Parameter plot.](../{IMAGE_PATH}/{self.array_element}_"
-                        f"{parameter}_{self.model_version.split('.')[0]}.png)\n"
+                        f"{parameter}_{self.model_version.replace('.', '-')}.png)\n"
                     )
                     outfile.write("\n\n")
                     outfile.write("The first 30 lines of the file are:\n")
@@ -232,7 +235,7 @@ class ReadParameters:
 
         return self._group_model_versions_by_parameter_version(grouped_data)
 
-    def get_all_parameter_descriptions(self):
+    def get_all_parameter_descriptions(self, collection="telescopes"):
         """
         Get descriptions for all model parameters.
 
@@ -245,7 +248,7 @@ class ReadParameters:
         """
         parameter_description, short_description, inst_class = {}, {}, {}
 
-        for instrument_class in names.db_collection_to_instrument_class_key("telescopes"):
+        for instrument_class in names.db_collection_to_instrument_class_key(collection):
             for parameter, details in names.model_parameters(instrument_class).items():
                 parameter_description[parameter] = details.get("description")
                 short_description[parameter] = details.get("short_description")
@@ -321,6 +324,116 @@ class ReadParameters:
 
         return data
 
+    def _write_to_file(self, data, file):
+        # Write table header and separator row
+        file.write(
+            "| Parameter Name      |  Parameter Version     "
+            "| Values      | Short Description           |\n"
+            "|---------------------|------------------------"
+            "|-------------|-----------------------------|\n"
+        )
+
+        # Write table rows
+        column_widths = [10, 10, 20, 60]
+        for (
+            _,
+            parameter_name,
+            parameter_version,
+            value,
+            description,
+            short_description,
+        ) in data:
+            text = short_description if short_description else description
+            wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
+            wrapped_text = " ".join(wrapped_text)
+            parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
+
+            file.write(
+                f"| {parameter_name:{column_widths[0]}} |"
+                f" {parameter_version:{column_widths[1]}} |"
+                f" {value:{column_widths[2]}} |"
+                f" {wrapped_text:{column_widths[3]}} |\n"
+            )
+        file.write("\n\n")
+
+    def get_simulation_configuration_data(self):
+        """Get data and descriptions for simulation configuration parameters."""
+
+        def get_param_data(telescope, site):
+            """Retrieve and format parameter data for one telescope-site combo."""
+            param_dict = self.db.get_simulation_configuration_parameters(
+                simulation_software=self.software,
+                site=site,
+                array_element_name=telescope,
+                model_version=self.model_version,
+            )
+
+            parameter_descriptions = self.get_all_parameter_descriptions(
+                collection=f"configuration_{self.software}"
+            )
+
+            model_output_path = Path(f"{self.output_path}/model")
+            model_output_path.mkdir(parents=True, exist_ok=True)
+            self.db.export_model_files(parameters=param_dict, dest=str(model_output_path))
+
+            data = []
+            for parameter, parameter_data in param_dict.items():
+                description = parameter_descriptions[0].get(parameter)
+                short_description = parameter_descriptions[1].get(parameter, description)
+                value_data = parameter_data.get("value")
+
+                if value_data is None:
+                    continue
+
+                unit = parameter_data.get("unit") or " "
+                file_flag = parameter_data.get("file", False)
+                parameter_version = parameter_data.get("parameter_version")
+                value = self._format_parameter_value(parameter, value_data, unit, file_flag)
+
+                data.append(
+                    [
+                        telescope,
+                        parameter,
+                        parameter_version,
+                        value,
+                        description,
+                        short_description,
+                    ]
+                )
+            return data
+
+        if self.software == "corsika":
+            return get_param_data(self.array_element, self.site)
+
+        results = []
+        telescopes = self.db.get_array_elements(self.model_version)
+        for telescope in telescopes:
+            valid_site = names.get_site_from_array_element_name(telescope)
+            if not isinstance(valid_site, list):
+                results.extend(get_param_data(telescope, valid_site))
+            else:
+                for site in valid_site:
+                    results.extend(get_param_data(telescope, site))
+        return results
+
+    def produce_simulation_configuration_report(self):
+        """Write simulation configuration report."""
+        output_filename = Path(self.output_path / (f"configuration_{self.software}.md"))
+        output_filename.parent.mkdir(parents=True, exist_ok=True)
+        data = self.get_simulation_configuration_data()
+
+        with output_filename.open("w", encoding="utf-8") as file:
+            file.write(f"# configuration_{self.software}\n")
+            file.write("\n\n")
+            if self.software == "sim_telarray":
+                data.sort(key=lambda x: (x[0], x[1]))
+                for telescope, group in groupby(data, key=lambda x: x[0]):
+                    file.write(f"## [{telescope}]({telescope}.md)\n")
+                    file.write("\n\n")
+                    self._write_to_file(group, file)
+            else:
+                self._write_to_file(data, file)
+
     def produce_array_element_report(self):
         """
         Produce a markdown report of all model parameters per array element.
@@ -366,37 +479,7 @@ class ReadParameters:
             for class_name, group in groupby(data, key=lambda x: x[0]):
                 group = sorted(group, key=lambda x: x[1])
                 file.write(f"## {class_name}\n\n")
-
-                # Write table header and separator row
-                file.write(
-                    "| Parameter Name      |  Parameter Version     "
-                    "| Values      | Short Description           |\n"
-                    "|---------------------|------------------------"
-                    "|-------------|-----------------------------|\n"
-                )
-
-                # Write table rows
-                column_widths = [10, 10, 20, 60]
-                for (
-                    _,
-                    parameter_name,
-                    parameter_version,
-                    value,
-                    description,
-                    short_description,
-                ) in group:
-                    text = short_description if short_description else description
-                    wrapped_text = textwrap.fill(str(text), column_widths[3]).split("\n")
-                    wrapped_text = " ".join(wrapped_text)
-                    parameter_name = self._wrap_at_underscores(parameter_name, column_widths[0])
-
-                    file.write(
-                        f"| {parameter_name:{column_widths[0]}} |"
-                        f" {parameter_version:{column_widths[1]}} |"
-                        f" {value:{column_widths[2]}} |"
-                        f" {wrapped_text:{column_widths[3]}} |\n"
-                    )
-                file.write("\n\n")
+                self._write_to_file(group, file)
 
     def produce_model_parameter_reports(self):
         """
@@ -470,9 +553,9 @@ class ReadParameters:
             for element in sorted(elements):
                 file.write(f"| [{element}]({element}.md) |\n")
             file.write("\n")
-            image_path = (
-                f"{IMAGE_PATH}/OBS-{self.site}_{layout_name}_{self.model_version.split('.')[0]}.png"
-            )
+            version = self.model_version.replace(".", "-")
+            filename = f"OBS-{self.site}_{layout_name}_{version}.png"
+            image_path = f"{IMAGE_PATH}/{filename}"
             file.write(f"![{layout_name} Layout]({image_path})\n\n")
             file.write("\n")
 
