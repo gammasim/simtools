@@ -1,0 +1,14 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-docs-produce-simulation-configuration-report
+    TEST_NAME: run
+    CONFIGURATION:
+      MODEL_VERSION: 6.0.0
+      SIMULATION_SOFTWARE: corsika
+      OUTPUT_PATH: simtools-output/reports/productions/
+      USE_PLAIN_OUTPUT_PATH: true
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: 6.0.0/configuration_corsika.md
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
