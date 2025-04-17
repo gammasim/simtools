@@ -188,6 +188,7 @@ class SimtelConfigWriter:
         sim_telarray_seeds: dict
             Dictionary with configuration for sim_telarray random instrument setup.
         """
+        config_file_directory = Path(config_file_path).parent
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "ARRAY CONFIGURATION FILE")
 
@@ -204,7 +205,7 @@ class SimtelConfigWriter:
             file.write(self.TAB + "echo *****************************\n\n")
 
             self._write_site_parameters(
-                file, site_model.parameters, Path(config_file_path).parent, telescope_model
+                file, site_model.parameters, config_file_directory, telescope_model
             )
 
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
@@ -222,7 +223,7 @@ class SimtelConfigWriter:
             file.write("#endif \n\n")  # configuration files need to end with \n\n
 
         if sim_telarray_seeds and sim_telarray_seeds.get("random_instances"):
-            self._write_random_seeds_file(sim_telarray_seeds, Path(config_file_path).parent)
+            self._write_random_seeds_file(sim_telarray_seeds, config_file_directory)
 
     def _write_random_seeds_file(self, sim_telarray_seeds, config_file_directory):
         """
