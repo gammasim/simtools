@@ -23,6 +23,8 @@ class SimulatorArray(SimtelRunner):
         Instance label.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
+    sim_telarray_seeds: dict
+        Dictionary with configuration for sim_telarray random instrument setup.
     """
 
     def __init__(
@@ -64,13 +66,14 @@ class SimulatorArray(SimtelRunner):
         str
             Command to run sim_telarray.
         """
+        config_dir = self.corsika_config.array_model.get_config_directory()
         self._log_file = self.get_file_name(file_type="log", run_number=run_number)
         histogram_file = self.get_file_name(file_type="histogram", run_number=run_number)
         output_file = self.get_file_name(file_type="output", run_number=run_number)
 
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {self.corsika_config.array_model.config_file_path}"
-        command += f" -I{self.corsika_config.array_model.get_config_directory()}"
+        command += f" -I{config_dir}"
         command += super().get_config_option("telescope_theta", self.corsika_config.zenith_angle)
         command += super().get_config_option("telescope_phi", self.corsika_config.azimuth_angle)
         command += super().get_config_option(
@@ -82,8 +85,13 @@ class SimulatorArray(SimtelRunner):
         command += super().get_config_option("histogram_file", histogram_file)
         command += super().get_config_option("output_file", output_file)
         command += super().get_config_option("random_state", "none")
-        if self.sim_telarray_seeds:
-            command += super().get_config_option("random_seed", self.sim_telarray_seeds)
+        if self.sim_telarray_seeds and self.sim_telarray_seeds.get("random_instrument_instances"):
+            command += super().get_config_option(
+                "random_seed",
+                f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file']},auto",
+            )
+        elif self.sim_telarray_seeds and self.sim_telarray_seeds.get("seed"):
+            command += super().get_config_option("random_seed", self.sim_telarray_seeds["seed"])
         command += super().get_config_option("show", "all")
         command += f" {input_file}"
         command += f" > {self._log_file} 2>&1 || exit"
