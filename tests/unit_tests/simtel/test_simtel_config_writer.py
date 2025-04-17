@@ -45,6 +45,22 @@ def test_write_array_config_file(
         assert lines[-2].endswith("\n")
         assert lines[-1] == "\n"
 
+    with mock.patch.object(
+        SimtelConfigWriter,
+        "_write_random_seeds_file",
+    ) as write_random_seeds_file_mock:
+        simtel_config_writer.write_array_config_file(
+            config_file_path=file,
+            telescope_model=telescope_model,
+            site_model=site_model_north,
+            sim_telarray_seeds={
+                "seed": 12345,
+                "seed_file_name": "sim_telarray_instrument_seeds.txt",
+                "random_instances": 5,
+            },
+        )
+        write_random_seeds_file_mock.assert_called_once()
+
 
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt")
@@ -171,3 +187,26 @@ def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer
 
     with pytest.raises(ValueError, match=r"^Unknown metadata type"):
         simtel_config_writer._get_sim_telarray_metadata("unknown", None)
+
+
+def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
+    config_file_directory = Path(tmp_test_directory) / "model"
+    config_file_directory.mkdir(exist_ok=True)
+    sim_telarray_seeds = {
+        "seed": 12345,
+        "seed_file_name": "sim_telarray_instrument_seeds.txt",
+        "random_instances": 5,
+    }
+
+    simtel_config_writer._write_random_seeds_file(sim_telarray_seeds, config_file_directory)
+
+    seed_file_path = config_file_directory / sim_telarray_seeds["seed_file_name"]
+    assert seed_file_path.exists()
+
+    with open(seed_file_path, encoding="utf-8") as file:
+        lines = file.readlines()
+        assert len(lines) == sim_telarray_seeds["random_instances"] + 1
+        for line in lines:
+            if line[0] == "#":
+                continue
+            assert line.strip().isdigit()
