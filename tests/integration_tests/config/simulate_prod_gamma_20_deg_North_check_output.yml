@@ -19,7 +19,7 @@ CTA_SIMPIPE:
       CORE_SCATTER: 10 500 m
       DATA_DIRECTORY: simtools-data
       OUTPUT_PATH: simtools-output
-      SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES: 100
+      SIM_TELARRAY_SEEDS: 1745,290
       CORSIKA_TEST_SEEDS: true
       PACK_FOR_GRID_REGISTER: simtools-grid-output
       LOG_LEVEL: DEBUG
