@@ -67,12 +67,13 @@ class SimulatorArray(SimtelRunner):
         str
             Command to run sim_telarray.
         """
+        config_file_path = self.corsika_config.array_model.config_file_path
         self._log_file = self.get_file_name(file_type="log", run_number=run_number)
         histogram_file = self.get_file_name(file_type="histogram", run_number=run_number)
         output_file = self.get_file_name(file_type="output", run_number=run_number)
 
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
-        command += f" -c {self.corsika_config.array_model.config_file_path}"
+        command += f" -c {config_file_path}"
         command += f" -I{self.corsika_config.array_model.get_config_directory()}"
         command += super().get_config_option("telescope_theta", self.corsika_config.zenith_angle)
         command += super().get_config_option("telescope_phi", self.corsika_config.azimuth_angle)
@@ -86,7 +87,7 @@ class SimulatorArray(SimtelRunner):
         command += super().get_config_option("output_file", output_file)
         command += super().get_config_option("random_state", "none")
         if self.sim_telarray_seeds and self.sim_telarray_seeds.get("random_instrument_instances"):
-            config_dir = Path(self.corsika_config.array_model.config_file_path).parent
+            config_dir = Path(config_file_path).parent
             command += super().get_config_option(
                 "random_seed",
                 f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file']},auto",

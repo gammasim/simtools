@@ -174,6 +174,7 @@ class CorsikaSimtelRunner:
         str:
             Command to run sim_telarray.
         """
+        config_dir = corsika_config.array_model.get_config_directory()
         try:
             weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
         except TypeError:  # allow for self.label to be None
@@ -183,7 +184,7 @@ class CorsikaSimtelRunner:
 
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {corsika_config.array_model.config_file_path}"
-        command += f" -I{corsika_config.array_model.get_config_directory()}"
+        command += f" -I{config_dir}"
         command += simulator_array.get_config_option(
             "telescope_theta", corsika_config.zenith_angle, weak_option=weak_pointing
         )
@@ -205,7 +206,6 @@ class CorsikaSimtelRunner:
         command += simulator_array.get_config_option("random_state", "none")
 
         if self.sim_telarray_seeds and self.sim_telarray_seeds.get("random_instances"):
-            config_dir = Path(corsika_config.array_model.config_file_path).parent
             command += simulator_array.get_config_option(
                 "random_seed",
                 f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file_name']},auto",

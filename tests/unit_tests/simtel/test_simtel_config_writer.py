@@ -55,7 +55,7 @@ def test_write_array_config_file(
             site_model=site_model_north,
             sim_telarray_seeds={
                 "seed": 12345,
-                "seed_file_name": "random_seeds.txt",
+                "seed_file_name": "sim_telarray_instrument_seeds.txt",
                 "random_instances": 5,
             },
         )
@@ -190,11 +190,11 @@ def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer
 
 
 def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
-    config_file_directory = Path(tmp_test_directory) / "config"
+    config_file_directory = Path(tmp_test_directory) / "model"
     config_file_directory.mkdir(exist_ok=True)
     sim_telarray_seeds = {
         "seed": 12345,
-        "seed_file_name": "random_seeds.txt",
+        "seed_file_name": "sim_telarray_instrument_seeds.txt",
         "random_instances": 5,
     }
 
