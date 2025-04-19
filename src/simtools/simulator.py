@@ -17,6 +17,7 @@ from simtools.model.array_model import ArrayModel
 from simtools.runners.corsika_runner import CorsikaRunner
 from simtools.runners.corsika_simtel_runner import CorsikaSimtelRunner
 from simtools.simtel.simulator_array import SimulatorArray
+from simtools.testing.sim_telarray_metadata import assert_sim_telarray_metadata
 
 __all__ = [
     "InvalidRunsToSimulateError",
@@ -74,6 +75,11 @@ class Simulator:
         self._submit_options = self.args_dict.get("submit_options", None)
         self._extra_commands = extra_commands
 
+        self.sim_telarray_seeds = {
+            "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
+            "random_instances": self.args_dict.get("sim_telarray_random_instrument_instances"),
+            "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
+        }
         self.array_models = self._initialize_array_models(mongo_db_config)
         self._simulation_runner = self._initialize_simulation_runner(mongo_db_config)
 
@@ -127,9 +133,44 @@ class Simulator:
                 layout_name=self.args_dict.get("array_layout_name"),
                 mongo_db_config=mongo_db_config,
                 model_version=version,
+                sim_telarray_seeds={
+                    "seed": self._get_seed_for_random_instances_of_instrument(
+                        self.sim_telarray_seeds["seed"], version
+                    ),
+                    "random_instances": self.sim_telarray_seeds["random_instances"],
+                    "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
+                },
             )
             for version in versions
         ]
+
+    def _get_seed_for_random_instances_of_instrument(self, seed, model_version):
+        """
+        Generate seed for random instances of the instrument.
+
+        Parameters
+        ----------
+        seed : str
+            Seed string given through configuration.
+        model_version: str
+            Model version.
+
+        Returns
+        -------
+        int
+            Seed for random instances of the instrument.
+        """
+        if seed:
+            return int(seed.split(",")[0].strip())
+
+        def semver_to_int(version: str):
+            major, minor, patch = map(int, version.split("."))
+            return major * 10000 + minor * 100 + patch
+
+        seed = semver_to_int(model_version) * 10000000
+        seed = seed + 1000000 if self.args_dict.get("site") != "North" else seed + 2000000
+        seed = seed + (int)(self.args_dict["zenith_angle"].value) * 1000
+        return seed + (int)(self.args_dict["azimuth_angle"].value)
 
     def _initialize_run_list(self):
         """
@@ -254,7 +295,7 @@ class Simulator:
         if runner_class is not SimulatorArray:
             runner_args["keep_seeds"] = self.args_dict.get("corsika_test_seeds", False)
         if runner_class is not CorsikaRunner:
-            runner_args["sim_telarray_seeds"] = self.args_dict.get("sim_telarray_seeds")
+            runner_args["sim_telarray_seeds"] = self.sim_telarray_seeds
 
         return runner_class(**runner_args)
 
@@ -624,3 +665,21 @@ class Simulator:
             # so no files are expected there.
             shutil.move(source_file, destination_file)
         self._logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
+
+    def validate_metadata(self):
+        """Validate metadata in the sim_telarray output files."""
+        if "simtel" not in self.simulation_software:
+            self._logger.info("No sim_telarray files to validate.")
+            return
+
+        for model in self.array_models:
+            files = self.get_file_list(file_type="output")
+            output_file = next((f for f in files if model.model_version in f), None)
+            if output_file:
+                self._logger.info(f"Validating metadata for {output_file}")
+                assert_sim_telarray_metadata(output_file, model)
+                self._logger.info(f"Metadata for sim_telarray file {output_file} is valid.")
+            else:
+                self._logger.warning(
+                    f"No sim_telarray file found for model version {model.model_version}: {files}"
+                )

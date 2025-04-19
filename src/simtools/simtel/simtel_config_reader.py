@@ -69,9 +69,9 @@ class SimtelConfigReader:
 
     def __init__(
         self,
-        schema_file,
-        simtel_config_file,
-        simtel_telescope_name,
+        schema_file=None,
+        simtel_config_file=None,
+        simtel_telescope_name=None,
         parameter_name=None,
         camera_pixels=None,
     ):
@@ -91,11 +91,13 @@ class SimtelConfigReader:
                 self.parameter_name
             ).upper()
         except (KeyError, AttributeError):
-            self.simtel_parameter_name = self.parameter_name.upper()
+            self.simtel_parameter_name = self.parameter_name.upper() if parameter_name else None
         self.simtel_telescope_name = simtel_telescope_name
         self.camera_pixels = camera_pixels
-        self.parameter_dict = self.read_simtel_config_file(
-            simtel_config_file, simtel_telescope_name
+        self.parameter_dict = (
+            self.read_simtel_config_file(simtel_config_file, simtel_telescope_name)
+            if simtel_config_file
+            else {}
         )
 
     def _should_skip_limits_check(self, data_type):
@@ -220,7 +222,7 @@ class SimtelConfigReader:
         # (order of keys matter; not all field are present for all parameters)
         for key in ["default", simtel_telescope_name, "limits"]:
             try:
-                _para_dict[key], _ = self._add_value_from_simtel_cfg(
+                _para_dict[key], _ = self.extract_value_from_sim_telarray_column(
                     matching_lines[key],
                     dtype=_para_dict.get("type"),
                     n_dim=_para_dict.get("dimension"),
@@ -274,7 +276,9 @@ class SimtelConfigReader:
 
         return column, except_from_all
 
-    def _add_value_from_simtel_cfg(self, column, dtype=None, n_dim=1, default=None, is_limit=False):
+    def extract_value_from_sim_telarray_column(
+        self, column, dtype=None, n_dim=1, default=None, is_limit=False
+    ):
         """
         Extract value(s) from simtel configuration file columns.
 
@@ -357,7 +361,7 @@ class SimtelConfigReader:
 
     def _process_column(self, column, dtype):
         """
-        Process and return column prepared in _add_value_from_simtel_cfg.
+        Process and return column prepared in extract_value_from_sim_telarray_column.
 
         Parameters
         ----------

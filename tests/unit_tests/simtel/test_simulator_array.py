@@ -29,14 +29,42 @@ def test_simtel_runner(simtel_runner):
 
 
 def test_make_run_command(simtel_runner):
+    input_file = "test_make_run_command.inp"
     run_command = simtel_runner._make_run_command(
-        run_number=3, input_file="test_make_run_command.inp"
+        run_number=3,
+        input_file=input_file,
     )
     assert "sim_telarray" in run_command
     assert "-run" in run_command
     assert "3" in run_command
     assert "test-simtel-runner.zst" in run_command
     assert "test_make_run_command.inp" in run_command
+    assert "random_seed" not in run_command
+
+    simtel_runner.sim_telarray_seeds = {
+        "seed": 12345,
+        "random_instrument_instances": None,
+        "seed_file": None,
+    }
+    run_command = simtel_runner._make_run_command(
+        run_number=3,
+        input_file=input_file,
+    )
+    assert "random_seed" in run_command
+    assert "12345" in run_command
+
+    simtel_runner.sim_telarray_seeds = {
+        "seed": None,
+        "random_instrument_instances": 10,
+        "seed_file": "test_file_with_seeds.txt",
+    }
+    run_command = simtel_runner._make_run_command(
+        run_number=3,
+        input_file=input_file,
+    )
+    assert "random_seed" in run_command
+    assert "file-by-run" in run_command
+    assert "test_file_with_seeds.txt" in run_command
 
 
 def test_check_run_result(simtel_runner):

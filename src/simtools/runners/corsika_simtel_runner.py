@@ -31,6 +31,8 @@ class CorsikaSimtelRunner:
         Use seeds based on run number and primary particle. If False, use sim_telarray seeds.
     use_multipipe : bool
         Use multipipe to run CORSIKA and sim_telarray.
+    sim_telarray_seeds : dict
+        Dictionary with configuration for sim_telarray random instrument setup.
     """
 
     def __init__(
@@ -172,6 +174,7 @@ class CorsikaSimtelRunner:
         str:
             Command to run sim_telarray.
         """
+        config_dir = corsika_config.array_model.get_config_directory()
         try:
             weak_pointing = any(pointing in self.label for pointing in ["divergent", "convergent"])
         except TypeError:  # allow for self.label to be None
@@ -181,7 +184,7 @@ class CorsikaSimtelRunner:
 
         command = str(self._simtel_path.joinpath("sim_telarray/bin/sim_telarray"))
         command += f" -c {corsika_config.array_model.config_file_path}"
-        command += f" -I{corsika_config.array_model.get_config_directory()}"
+        command += f" -I{config_dir}"
         command += simulator_array.get_config_option(
             "telescope_theta", corsika_config.zenith_angle, weak_option=weak_pointing
         )
@@ -201,8 +204,16 @@ class CorsikaSimtelRunner:
             ),
         )
         command += simulator_array.get_config_option("random_state", "none")
-        if self.sim_telarray_seeds:
-            command += simulator_array.get_config_option("random_seed", self.sim_telarray_seeds)
+
+        if self.sim_telarray_seeds and self.sim_telarray_seeds.get("random_instances"):
+            command += simulator_array.get_config_option(
+                "random_seed",
+                f"file-by-run:{config_dir}/{self.sim_telarray_seeds['seed_file_name']},auto",
+            )
+        elif self.sim_telarray_seeds and self.sim_telarray_seeds.get("seed"):
+            command += simulator_array.get_config_option(
+                "random_seed", self.sim_telarray_seeds["seed"]
+            )
         command += simulator_array.get_config_option("show", "all")
         command += simulator_array.get_config_option(
             "output_file",

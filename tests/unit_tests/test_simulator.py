@@ -8,6 +8,7 @@ import tarfile
 from pathlib import Path
 
 import pytest
+from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.model.array_model import ArrayModel
@@ -388,3 +389,54 @@ def test_initialize_array_models_with_multiple_versions(shower_simulator, db_con
         assert array_models[i].model_version == model_version
         assert array_models[i].site == shower_simulator.args_dict.get("site")
         assert array_models[i].layout_name == shower_simulator.args_dict.get("array_layout_name")
+
+
+def test_validate_metadata(array_simulator, mocker, caplog):
+    # Test when simulation software is not simtel
+    array_simulator.simulation_software = "corsika"
+    with caplog.at_level(logging.INFO):
+        array_simulator.validate_metadata()
+    assert "No sim_telarray files to validate." in caplog.text
+
+    # Test when simulation software is simtel and there are output files
+    array_simulator.simulation_software = "simtel"
+    mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1_6.0.0"])
+    mock_assert_sim_telarray_metadata = mocker.patch(
+        "simtools.simulator.assert_sim_telarray_metadata"
+    )
+    with caplog.at_level(logging.INFO):
+        array_simulator.validate_metadata()
+    assert "Validating metadata for output_file1_6.0.0" in caplog.text
+    assert "Metadata for sim_telarray file output_file1_6.0.0 is valid." in caplog.text
+    assert mock_assert_sim_telarray_metadata.call_count == 1
+
+    mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1_5.0.0"])
+    mocker.patch("simtools.simulator.assert_sim_telarray_metadata")
+    with caplog.at_level(logging.WARNING):
+        array_simulator.validate_metadata()
+    assert "No sim_telarray file found for model version 6.0.0:" in caplog.text
+
+
+def test_get_seed_for_random_instances_of_instrument(shower_simulator):
+    # Test with a seed provided in the configuration
+    shower_simulator.sim_telarray_seeds["seed"] = "12345, 67890"
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 12345
+
+    # Test without a seed provided in the configuration
+    shower_simulator.sim_telarray_seeds["seed"] = None
+    shower_simulator.args_dict["site"] = "North"
+    shower_simulator.args_dict["zenith_angle"] = 20 * u.deg
+    shower_simulator.args_dict["azimuth_angle"] = 180 * u.deg
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 600010000000 + 2000000 + 20 * 1000 + 180
+
+    shower_simulator.args_dict["site"] = "South"
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
