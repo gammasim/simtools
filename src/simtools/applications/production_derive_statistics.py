@@ -106,6 +106,14 @@ def _parse(label, description):
         default=("prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"),
         help=("Template for the DL2 MC event file name."),
     )
+    config.parser.add_argument(
+        "--plot_production_statistics",
+        required=False,
+        action="store_true",
+        default=False,
+        help="Plot production statistics.",
+    )
+
     return config.initialize(db_config=False, output=True)
 
 

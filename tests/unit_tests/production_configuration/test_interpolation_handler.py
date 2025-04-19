@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 
@@ -35,11 +33,11 @@ def test_interpolation_handler_interpolate(test_fits_file, test_fits_file_2, met
     """Test interpolation with the InterpolationHandler."""
     grid_point1 = (1, 180, 45, 0, 0.5)
     evaluator1 = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric, grid_point=grid_point1
+        file_path=test_fits_file, metrics=metric, grid_point=grid_point1
     )
     grid_point2 = (1, 180, 60, 0, 0.5)
     evaluator2 = StatisticalErrorEvaluator(
-        file_path=test_fits_file_2, file_type="point-like", metrics=metric, grid_point=grid_point2
+        file_path=test_fits_file_2, metrics=metric, grid_point=grid_point2
     )
     handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)
     query_point = np.array([[1, 180, 50, 0, 0.5]])
@@ -55,11 +53,11 @@ def test_interpolation_handler_build_data_array(test_fits_file, test_fits_file_2
     """Test the _build_data_array method of InterpolationHandler."""
     grid_point1 = (1, 180, 45, 0, 0.5)
     evaluator1 = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric, grid_point=grid_point1
+        file_path=test_fits_file, metrics=metric, grid_point=grid_point1
     )
     grid_point2 = (1, 180, 60, 0, 0.5)
     evaluator2 = StatisticalErrorEvaluator(
-        file_path=test_fits_file_2, file_type="point-like", metrics=metric, grid_point=grid_point2
+        file_path=test_fits_file_2, metrics=metric, grid_point=grid_point2
     )
     handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)
     data, grid_points = handler._build_data_array()
@@ -82,13 +80,29 @@ def test_interpolation_handler_remove_flat_dimensions():
     assert np.all(non_flat_mask == [False, False, True, False, False])
 
 
-@patch("matplotlib.pyplot.show")
-def test_interpolation_handler_plot_comparison(mock_show, test_fits_file, metric):
+def test_interpolation_handler_plot_comparison(test_fits_file, test_fits_file_2, metric):
     """Test the plot_comparison method of InterpolationHandler."""
-    grid_point = (1, 180, 45, 0, 0.5)
-    evaluator = StatisticalErrorEvaluator(
-        file_path=test_fits_file, file_type="point-like", metrics=metric, grid_point=grid_point
+    grid_point1 = (1, 180, 45, 0, 0.5)
+    evaluator1 = StatisticalErrorEvaluator(
+        file_path=test_fits_file, metrics=metric, grid_point=grid_point1
     )
-    handler = InterpolationHandler([evaluator], metrics=metric)
-    handler.plot_comparison(evaluator)
-    mock_show.assert_called_once()
+    grid_point2 = (1, 180, 60, 0, 0.7)
+    evaluator2 = StatisticalErrorEvaluator(
+        file_path=test_fits_file_2, metrics=metric, grid_point=grid_point2
+    )
+    handler = InterpolationHandler([evaluator1, evaluator2], metrics=metric)
+    query_point = np.array([[1, 180, 50, 0, 0.5]])
+    handler.interpolate(query_point)
+
+    ax = handler.plot_comparison()
+    assert ax is not None
+    assert ax.get_title() == "Comparison of Interpolated and Reconstructed Events"
+    assert ax.get_xlabel() == "Energy (TeV)"
+    assert ax.get_ylabel() == "Event Count"
+
+    lines = ax.get_lines()
+    assert len(lines) == 2
+
+    line_labels = [line.get_label() for line in lines]
+    assert "Interpolated Production Statistics" in line_labels
+    assert "Reconstructed Events" in line_labels
