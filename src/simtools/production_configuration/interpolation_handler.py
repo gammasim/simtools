@@ -1,5 +1,7 @@
 """Handle interpolation between multiple StatisticalErrorEvaluator instances."""
 
+import logging
+
 import astropy.units as u
 import numpy as np
 from scipy.interpolate import griddata
@@ -15,6 +17,8 @@ class InterpolationHandler:
     """Handle interpolation between multiple StatisticalErrorEvaluator instances."""
 
     def __init__(self, evaluators, metrics: dict):
+        self._logger = logging.getLogger(__name__)
+
         self.evaluators = evaluators
         self.metrics = metrics
         self.derive_production_statistics = [
@@ -25,7 +29,6 @@ class InterpolationHandler:
         self.zeniths = [e.grid_point[2].to(u.deg).value for e in self.evaluators]
         self.nsbs = [e.grid_point[3] for e in self.evaluators]
         self.offsets = [e.grid_point[4].to(u.deg).value for e in self.evaluators]
-
         self.energy_grids = [
             (e.data["bin_edges_low"][:-1] + e.data["bin_edges_high"][:-1]) / 2
             for e in self.evaluators
@@ -34,9 +37,12 @@ class InterpolationHandler:
             derivator.derive_statistics(return_sum=False)
             for derivator in self.derive_production_statistics
         ]
+
         self.energy_thresholds = np.array([e.energy_threshold for e in self.evaluators])
 
         self.data, self.grid_points = self._build_data_array()
+        self.interpolated_production_statistics = None
+        self.interpolated_production_statistics_with_energy = None
 
     def _build_data_array(self):
         """
@@ -102,11 +108,12 @@ class InterpolationHandler:
         np.ndarray
             Interpolated values at the query points.
         """
+        # Remove flat dimensions for interpolation
         reduced_grid_points, non_flat_mask = self._remove_flat_dimensions(self.grid_points)
         reduced_query_points = query_points[:, non_flat_mask]
 
         # Interpolate using the reduced dimensions
-        return griddata(
+        self.interpolated_production_statistics = griddata(
             reduced_grid_points,
             self.data,
             reduced_query_points,
@@ -114,6 +121,33 @@ class InterpolationHandler:
             fill_value=np.nan,
             rescale=True,
         )
+
+        energy_dependent_statistics = []
+        # Check if all energy grids are the same
+        if not all(np.array_equal(self.energy_grids[0], grid) for grid in self.energy_grids):
+            self._logger.warning(
+                "Energy grids are not identical across evaluators "
+                "(only relevant for comparison plots)."
+            )
+        for energy_bin in self.energy_grids[
+            0
+        ]:  # assuming here the energy grid is similar for all evaluators
+            query_with_energy = np.zeros(len(non_flat_mask))
+            query_with_energy[non_flat_mask] = reduced_query_points[0]
+            query_with_energy[0] = energy_bin.to(u.TeV).value
+
+            interpolated_value = griddata(
+                reduced_grid_points,
+                self.data,
+                query_with_energy[non_flat_mask],
+                method="linear",
+                fill_value=np.nan,
+                rescale=True,
+            )
+            energy_dependent_statistics.append(interpolated_value)
+        self.interpolated_production_statistics_with_energy = np.array(energy_dependent_statistics)
+
+        return self.interpolated_production_statistics
 
     def interpolate_energy_threshold(self, query_point: np.ndarray) -> float:
         """
@@ -159,48 +193,46 @@ class InterpolationHandler:
 
         return interpolated_threshold.item()
 
-    def plot_comparison(self, evaluator):
+    def plot_comparison(self):
         """
-        Plot a comparison between the simulated, derived, and reconstructed events.
+        Plot a comparison between the interpolated production statistics and reconstructed events.
 
         Parameters
         ----------
         evaluator : StatisticalErrorEvaluator
             The evaluator for which to plot the comparison.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The Axes object containing the plot.
         """
         import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
 
-        midpoints = (
-            0.5
-            * (evaluator.data["bin_edges_high"] + evaluator.data["bin_edges_low"]).to(u.TeV).value
-        )
-        print(f"Midpoints: {midpoints}")
-        print("Grid Points:")
-        print(self.grid_points)
-        print("evaluator.grid_point:")
-        print(evaluator.grid_point)
-        self.grid_points = np.column_stack(
-            [
-                midpoints,
-                np.full_like(midpoints, evaluator.grid_point[1].to(u.deg).value),
-                np.full_like(midpoints, evaluator.grid_point[2]),
-                np.full_like(midpoints, evaluator.grid_point[3].to(u.deg).value),
-                np.full_like(midpoints, evaluator.grid_point[4].to(u.deg).value),
-            ]
-        )
+        # use first of the evaluators to get the bin edges and the events to compare to
+        bin_edges_low = self.evaluators[0].data["bin_edges_low"][:-1]
+        bin_edges_high = self.evaluators[0].data["bin_edges_high"][:-1]
+        midpoints = (bin_edges_low + bin_edges_high) / 2
 
-        self.interpolate(self.grid_points)
+        _, ax = plt.subplots()
 
-        plt.plot(midpoints, evaluator.production_statistics, label="Derived")
+        ax.plot(
+            midpoints,
+            self.interpolated_production_statistics_with_energy,
+            label="Interpolated Production Statistics",
+        )
 
         reconstructed_event_histogram, _ = np.histogram(
-            evaluator.data["event_energies_reco"], bins=evaluator.data["bin_edges_low"]
+            self.evaluators[0].data["event_energies_reco"],
+            bins=self.evaluators[0].data["bin_edges_low"],
         )
-        plt.plot(midpoints[:-1], reconstructed_event_histogram, label="Reconstructed")
+        ax.plot(midpoints, reconstructed_event_histogram, label="Reconstructed Events")
 
-        plt.legend()
-        plt.xscale("log")
-        plt.xlabel("Energy (TeV)")
-        plt.ylabel("Event Count")
-        plt.title("Comparison of simulated, derived, and reconstructed events")
-        plt.show()
+        ax.legend()
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("Energy (TeV)")
+        ax.set_ylabel("Event Count")
+        ax.set_title("Comparison of Interpolated and Reconstructed Events")
+
+        return ax
