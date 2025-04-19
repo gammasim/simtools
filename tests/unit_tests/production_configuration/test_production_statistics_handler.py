@@ -167,3 +167,49 @@ def test_perform_interpolation_with_valid_query_point(mock_interpolate, args_dic
     np.testing.assert_array_equal(actual_query_points, expected_query_points)
 
     assert np.array_equal(result, np.array([12345]))
+
+
+def test_plot_production_statistics_comparison(args_dict, tmp_path):
+    """Test the plot_production_statistics_comparison method."""
+    manager = ProductionStatisticsHandler(args_dict)
+    manager.interpolation_handler = MagicMock()
+    mock_axes = MagicMock()
+    mock_figure = MagicMock()
+    manager.interpolation_handler.plot_comparison.return_value = mock_axes
+    mock_axes.figure = mock_figure
+
+    manager.plot_production_statistics_comparison()
+
+    plot_path = Path(tmp_path) / "production_statistics_comparison.png"
+    mock_figure.savefig.assert_called_once_with(plot_path)
+
+
+@patch("matplotlib.pyplot.Figure.savefig")
+@patch(
+    "simtools.production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.initialize_evaluators"
+)
+@patch(
+    "simtools.production_configuration.derive_production_statistics_handler.ProductionStatisticsHandler.perform_interpolation"
+)
+def test_run_with_plot_production_statistics(
+    mock_perform_interpolation, mock_initialize_evaluators, mock_savefig, args_dict, tmp_path
+):
+    """Test the run method when plot_production_statistics is enabled."""
+    args_dict["plot_production_statistics"] = True
+    manager = ProductionStatisticsHandler(args_dict)
+
+    mock_initialize_evaluators.return_value = None
+    mock_perform_interpolation.return_value = np.array([10000])
+    manager.interpolation_handler = MagicMock()
+    mock_axes = MagicMock()
+    mock_figure = MagicMock()
+    manager.interpolation_handler.plot_comparison.return_value = mock_axes
+    mock_axes.figure = mock_figure
+
+    manager.run()
+
+    plot_path = Path(tmp_path) / "production_statistics_comparison.png"
+    mock_figure.savefig.assert_called_once_with(plot_path)
+
+    mock_initialize_evaluators.assert_called_once()
+    mock_perform_interpolation.assert_called_once()
