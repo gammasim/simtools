@@ -1,4 +1,46 @@
-%YAML 1.2
+---
+title: Schema for corsika_starting_grammage model parameter
+version: 0.2.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: corsika_starting_grammage
+description: |-
+  Starting altitude of the primary particle in mass overburden for all showers.
+  This parameter should be set to values other than '0.' for specialized studies
+  only. See CORSIKA manual for details.
+instrument:
+  class: configuration_corsika
+data:
+  - type: dict
+    json_schema:
+      type: array
+      items:
+        type: object
+        properties:
+          primary_particle:
+            type: string
+            default: "default"
+            description: "Primary particle type."
+            enum: ["muon", "default"]
+          value:
+            type: number
+            default: 0.0
+            minimum: 0.0
+        required:
+          - primary_particle
+          - value
+        additionalProperties: false
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Configuration
+simulation_software:
+  - name: corsika
+...
 ---
 title: Schema for corsika_starting_grammage model parameter
 version: 0.1.0

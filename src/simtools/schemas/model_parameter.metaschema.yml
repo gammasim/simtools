@@ -91,6 +91,10 @@ definitions:
         anyOf:
           - type: string
         description: "Metaschema version."
+      model_parameter_schema_version:
+        anyOf:
+          - type: string
+        description: "Model parameter schema version."
       unique_id:
         anyOf:
           - type: string

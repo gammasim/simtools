@@ -177,7 +177,9 @@ class DataValidator:
         if is_model_parameter:
             self._prepare_model_parameter()
 
-        self._data_description = self._read_validation_schema(self.schema_file_name)
+        self._data_description = self._read_validation_schema(
+            self.schema_file_name, self.data_dict.get("model_parameter_schema_version")
+        )
 
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
 
@@ -701,14 +703,19 @@ class DataValidator:
 
         return False
 
-    def _read_validation_schema(self, schema_file):
+    def _read_validation_schema(self, schema_file, schema_version=None):
         """
         Read validation schema from file.
+
+        The schema file can be a yaml file with several documents, each document
+        describing a different schema version.
 
         Parameters
         ----------
         schema_file: Path
             Schema file describing input data.
+        schema_version: str
+            Version of the schema to be used.
 
         Returns
         -------
@@ -721,9 +728,21 @@ class DataValidator:
             if 'data' can not be read from dict in schema file
         """
         try:
-            return gen.collect_data_from_file(file_name=schema_file)["data"]
+            schema_data = gen.collect_data_from_file(file_name=schema_file)
         except KeyError as exc:
             raise KeyError(f"Error reading validation schema from {schema_file}") from exc
+
+        if isinstance(schema_data, dict):
+            if schema_version == schema_data.get("version", None) or not schema_version:
+                return schema_data.get("data", None)
+        elif isinstance(schema_data, list):
+            for entry in schema_data:
+                # returns first entry when no schema_version is requested
+                if entry.get("version", None) == schema_version or not schema_version:
+                    return entry.get("data", None)
+        raise ValueError(
+            f"Schema version {schema_version} not found in schema file '{schema_file}'. "
+        )
 
     def _get_data_description(self, column_name=None, status_test=False):
         """
