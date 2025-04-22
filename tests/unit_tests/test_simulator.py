@@ -9,6 +9,7 @@ import tarfile
 from pathlib import Path
 
 import pytest
+from astropy import units as u
 
 import simtools.utils.general as gen
 from simtools.model.array_model import ArrayModel
@@ -526,3 +527,28 @@ def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_tes
 
     # Ensure the new log file was added to the corsika_log_files list
     assert str(new_log_file) in corsika_log_files
+
+
+def test_get_seed_for_random_instances_of_instrument(shower_simulator):
+    # Test with a seed provided in the configuration
+    shower_simulator.sim_telarray_seeds["seed"] = "12345, 67890"
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 12345
+
+    # Test without a seed provided in the configuration
+    shower_simulator.sim_telarray_seeds["seed"] = None
+    shower_simulator.args_dict["site"] = "North"
+    shower_simulator.args_dict["zenith_angle"] = 20 * u.deg
+    shower_simulator.args_dict["azimuth_angle"] = 180 * u.deg
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 600010000000 + 2000000 + 20 * 1000 + 180
+
+    shower_simulator.args_dict["site"] = "South"
+    seed = shower_simulator._get_seed_for_random_instances_of_instrument(
+        shower_simulator.sim_telarray_seeds["seed"], model_version="6.0.1"
+    )
+    assert seed == 600010000000 + 1000000 + 20 * 1000 + 180
