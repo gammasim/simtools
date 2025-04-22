@@ -50,7 +50,7 @@ class SimtelRunner:
 
         self.runner_service = RunnerServices(corsika_config, label)
         self._directory = self.runner_service.load_data_directories(
-            "corsika_simtel" if use_multipipe else "simtel"
+            "corsika_sim_telarray" if use_multipipe else "sim_telarray"
         )
 
     def __repr__(self):

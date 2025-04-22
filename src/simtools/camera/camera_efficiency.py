@@ -106,10 +106,10 @@ class CameraEfficiency:
         }
 
     def _load_files(self):
-        """Define the variables for the file names, including the results, simtel and log file."""
+        """Define variables used for file names, including results, sim_telarray and log file."""
         _file = {}
         for label, suffix in zip(
-            ["results", "simtel", "log"],
+            ["results", "sim_telarray", "log"],
             [".ecsv", ".dat", ".log"],
         ):
             file_name = names.generate_file_name(
@@ -141,7 +141,7 @@ class CameraEfficiency:
             telescope_model=self.telescope_model,
             site_model=self.site_model,
             zenith_angle=self.config["zenith_angle"],
-            file_simtel=self._file["simtel"],
+            file_simtel=self._file["sim_telarray"],
             file_log=self._file["log"],
             label=self.label,
             nsb_spectrum=self.config["nsb_spectrum"],
@@ -212,7 +212,7 @@ class CameraEfficiency:
 
         # Search for at least 5 consecutive numbers to see that we are in the table
         re_table = re.compile("{0}{0}{0}{0}{0}".format(r"[-+]?[0-9]*\.?[0-9]+\s+"))
-        with open(self._file["simtel"], encoding="utf-8") as file:
+        with open(self._file["sim_telarray"], encoding="utf-8") as file:
             for line in file:
                 if re_table.match(line):
                     words = line.split()
