@@ -106,7 +106,7 @@ class CameraEfficiency:
         }
 
     def _load_files(self):
-        """Define variables used for file names, including results, sim_telarray and log file."""
+        """Define variables used for file names, including results, sim_telarray and log files."""
         _file = {}
         for label, suffix in zip(
             ["results", "sim_telarray", "log"],
