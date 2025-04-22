@@ -728,23 +728,15 @@ class DataValidator:
             if 'data' can not be read from dict in schema file
         """
         schema_data = gen.collect_data_from_file(file_name=schema_file)
+        entries = schema_data if isinstance(schema_data, list) else [schema_data]
 
-        if isinstance(schema_data, dict):
-            if schema_version == schema_data.get("version", None) or not schema_version:
+        for entry in entries:
+            # returns first entry when no schema_version is requested
+            if not schema_version or entry.get("version") == schema_version:
                 try:
-                    return schema_data["data"]
+                    return entry["data"]
                 except KeyError as exc:
                     raise KeyError(f"Error reading validation schema from {schema_file}") from exc
-        elif isinstance(schema_data, list):
-            for entry in schema_data:
-                # returns first entry when no schema_version is requested
-                if entry.get("version", None) == schema_version or not schema_version:
-                    try:
-                        return entry["data"]
-                    except KeyError as exc:
-                        raise KeyError(
-                            f"Error reading validation schema from {schema_file}"
-                        ) from exc
         raise ValueError(
             f"Schema version {schema_version} not found in schema file '{schema_file}'. "
         )
