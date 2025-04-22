@@ -64,9 +64,20 @@ def _validate_output_files(config, integration_test):
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
     """Test simtel cfg files."""
-    test_simtel_cfg_file = integration_test.get("TEST_SIMTEL_CFG_FILES", {}).get(
-        from_command_line or from_config_file
-    )
+    test_simtel_cfg_file = None
+    test_simtel_cfg_files = integration_test.get("TEST_SIMTEL_CFG_FILES", {})
+    if isinstance(from_command_line, list):
+        for version in from_command_line:
+            if version in test_simtel_cfg_files:
+                test_simtel_cfg_file = test_simtel_cfg_files[version]
+                break
+    elif isinstance(from_config_file, list):
+        for version in from_config_file:
+            if version in test_simtel_cfg_files:
+                test_simtel_cfg_file = test_simtel_cfg_files[version]
+                break
+    else:
+        test_simtel_cfg_file = test_simtel_cfg_files.get(from_command_line or from_config_file)
     if test_simtel_cfg_file:
         _validate_simtel_cfg_files(config, test_simtel_cfg_file)
 
