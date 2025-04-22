@@ -9,6 +9,7 @@ import pytest
 
 from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 from simtools.testing.sim_telarray_metadata import (
+    _assert_sim_telarray_seed,
     _sim_telarray_name_from_parameter_name,
     assert_sim_telarray_metadata,
     is_equal,
@@ -136,3 +137,26 @@ def test_is_equal():
     assert is_equal(None, None, "any") is True
     assert is_equal("none", None, "any") is True
     assert is_equal(None, "none", "any") is True
+
+
+def test_assert_sim_telarray_seed(caplog):
+    """Test _assert_sim_telarray_seed."""
+
+    metadata = {"sim_telarray_seeds": "12345"}
+    sim_telarray_seeds = {"seed": "12345"}
+
+    # Test with matching seeds
+    with caplog.at_level(level=10):
+        assert _assert_sim_telarray_seed(metadata, sim_telarray_seeds) is None
+        assert "sim_telarray_seeds in sim_telarray file: 12345, and model: 12345" in caplog.text
+
+    # Test with mismatched seeds
+    metadata = {"sim_telarray_seeds": "12345"}
+    sim_telarray_seeds = {"seed": "54321"}
+    assert (
+        _assert_sim_telarray_seed(metadata, sim_telarray_seeds)
+        == "Parameter sim_telarray_seeds mismatch between sim_telarray file: 12345, and model: 54321"
+    )
+
+    # Test with sim_telarray_seeds is None
+    assert _assert_sim_telarray_seed(metadata, None) is None
