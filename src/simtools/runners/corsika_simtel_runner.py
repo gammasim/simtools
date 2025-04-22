@@ -45,9 +45,9 @@ class CorsikaSimtelRunner:
         sim_telarray_seeds=None,
     ):
         self._logger = logging.getLogger(__name__)
-        if not isinstance(corsika_config, list):
-            corsika_config = [corsika_config]
-        self.corsika_config = corsika_config
+        self.corsika_config = (
+            corsika_config if isinstance(corsika_config, list) else [corsika_config]
+        )
         # the base corsika config is the one used to define the CORSIKA specific parameters.
         # The others are used for the array configurations.
         self.base_corsika_config = corsika_config[0]
@@ -264,7 +264,7 @@ class CorsikaSimtelRunner:
             File name with full path.
         """
         if simulation_software is None:
-            # preference to simtel output (multipipe)
+            # preference to sim_telarray output (multipipe)
             simulation_software = "sim_telarray" if self.simulator_array else "corsika"
 
         runner = (
