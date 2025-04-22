@@ -708,7 +708,8 @@ class DataValidator:
         Read validation schema from file.
 
         The schema file can be a yaml file with several documents, each document
-        describing a different schema version.
+        describing a different schema version. Returns first document if no
+        schema version is requested.
 
         Parameters
         ----------
@@ -726,12 +727,13 @@ class DataValidator:
         ------
         KeyError
             if 'data' can not be read from dict in schema file
+        ValueError
+            if schema version is not found in schema file
         """
         schema_data = gen.collect_data_from_file(file_name=schema_file)
         entries = schema_data if isinstance(schema_data, list) else [schema_data]
 
         for entry in entries:
-            # returns first entry when no schema_version is requested
             if not schema_version or entry.get("version") == schema_version:
                 try:
                     return entry["data"]
