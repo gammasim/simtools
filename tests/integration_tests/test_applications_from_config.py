@@ -47,8 +47,10 @@ def test_applications_from_config(tmp_test_directory, config, request):
     if skip_message:
         pytest.skip(skip_message)
 
+    model_version = request.config.getoption("--model_version").split(",")
+    model_version = model_version[0] if len(model_version) == 1 else model_version
     logger.info(f"Test configuration from config file: {tmp_config}")
-    logger.info(f"Model version: {request.config.getoption('--model_version')}")
+    logger.info(f"Model version: {model_version}")
     logger.info(f"Application configuration: {tmp_config}")
     logger.info(f"Test requirement: {config.get('TEST_REQUIREMENT')}")
     logger.info(f"Test use case: {config.get('TEST_USE_CASE')}")
@@ -65,6 +67,6 @@ def test_applications_from_config(tmp_test_directory, config, request):
 
     validate_output.validate_application_output(
         tmp_config,
-        request.config.getoption("--model_version"),
-        config_file_model_version or request.config.getoption("--model_version"),
+        model_version,
+        config_file_model_version or model_version,
     )
