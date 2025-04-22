@@ -464,13 +464,13 @@ class Simulator:
         if "simtel" in self.simulation_software:
             results["log"] = str(
                 self._simulation_runner.get_file_name(
-                    file_type="log", simulation_software="simtel", run_number=run_number
+                    file_type="log", simulation_software="sim_telarray", run_number=run_number
                 )
             )
             results["input"] = str(file)
             results["hist"] = str(
                 self._simulation_runner.get_file_name(
-                    file_type="histogram", simulation_software="simtel", run_number=run_number
+                    file_type="histogram", simulation_software="sim_telarray", run_number=run_number
                 )
             )
 
