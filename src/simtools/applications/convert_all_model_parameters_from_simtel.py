@@ -198,7 +198,7 @@ def read_and_export_parameters(args_dict, logger):
         List of simtools parameter not found in simtel configuration file.
 
     """
-    _parameters, _schema_files = schema.get_get_model_parameter_schema_files()
+    _parameters, _schema_files = schema.get_model_parameter_schema_files()
     _simtel_parameters = simtel_config_reader.get_list_of_simtel_parameters(
         args_dict["simtel_cfg_file"]
     )
