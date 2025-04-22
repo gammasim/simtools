@@ -33,3 +33,24 @@ def _new_testeff_version():
             return False
     except FileNotFoundError as exc:
         raise FileNotFoundError("The testeff executable could not be found.") from exc
+
+
+def skip_multiple_version_test(config, model_version):
+    """Skip a test which is not meant for multiple versions if multiple versions are given."""
+    message = "Skipping test not meant for multiple model versions."
+
+    if not isinstance(model_version, list):
+        return None
+
+    config_model_version = config.get("CONFIGURATION", {}).get("MODEL_VERSION", [])
+
+    if not isinstance(config_model_version, list):
+        config_model_version = [config_model_version]
+
+    if 1 < len(model_version) != len(config_model_version):
+        return message
+
+    if len(model_version) > 1 and len(model_version) != len(config_model_version):
+        return message
+
+    return None
