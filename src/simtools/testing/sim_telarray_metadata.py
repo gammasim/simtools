@@ -120,8 +120,8 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seeds):
         Error message if sim_telarray seeds do not match.
 
     """
-    if sim_telarray_seeds is not None:
-        if int(metadata.get("sim_telarray_seeds")) != int(sim_telarray_seeds.get("seed")):
+    if sim_telarray_seeds and metadata and "sim_telarray_seeds" in metadata.keys():
+        if str(metadata.get("sim_telarray_seeds")) != str(sim_telarray_seeds.get("seed")):
             return (
                 "Parameter sim_telarray_seeds mismatch between sim_telarray file: "
                 f"{metadata['sim_telarray_seeds']}, and model: {sim_telarray_seeds.get('seed')}"
