@@ -27,6 +27,11 @@ def assert_sim_telarray_metadata(file, array_model):
     global_meta, telescope_meta = read_sim_telarray_metadata(file)
     _logger.info(f"Found metadata in sim_telarray file for {len(telescope_meta)} telescopes")
     site_parameter_mismatch = _assert_model_parameters(global_meta, array_model.site_model)
+    sim_telarray_seed_mismatch = _assert_sim_telarray_seed(
+        global_meta, array_model.sim_telarray_seeds
+    )
+    if sim_telarray_seed_mismatch:
+        site_parameter_mismatch.append(sim_telarray_seed_mismatch)
 
     if len(telescope_meta) != len(array_model.telescope_model):
         raise ValueError(
@@ -96,6 +101,36 @@ def _assert_model_parameters(metadata, model):
                 )
 
     return invalid_parameter_list
+
+
+def _assert_sim_telarray_seed(metadata, sim_telarray_seeds):
+    """
+    Assert that sim_telarray seed matches the values in the sim_telarray metadata.
+
+    Parameters
+    ----------
+    metadata: dict
+        Metadata dictionary.
+    sim_telarray_seeds: dict
+        Dictionary of sim_telarray seeds.
+
+    Returns
+    -------
+    invalid_parameter_list: list
+        Error message if sim_telarray seeds do not match.
+
+    """
+    if sim_telarray_seeds is not None:
+        if int(metadata.get("sim_telarray_seeds")) != int(sim_telarray_seeds.get("seed")):
+            return (
+                "Parameter sim_telarray_seeds mismatch between sim_telarray file: "
+                f"{metadata['sim_telarray_seeds']}, and model: {sim_telarray_seeds.get('seed')}"
+            )
+        _logger.info(
+            f"sim_telarray_seeds in sim_telarray file: {metadata['sim_telarray_seeds']}, "
+            f"and model: {sim_telarray_seeds.get('seed')}"
+        )
+    return None
 
 
 def _sim_telarray_name_from_parameter_name(parameter_name):
