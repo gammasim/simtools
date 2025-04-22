@@ -47,8 +47,10 @@ def test_applications_from_config(tmp_test_directory, config, request):
     if skip_message:
         pytest.skip(skip_message)
 
-    model_version = request.config.getoption("--model_version").split(",")
-    model_version = model_version[0] if len(model_version) == 1 else model_version
+    model_version = request.config.getoption("--model_version", default=None)
+    if model_version:
+        model_version = model_version.split(",")
+        model_version = model_version[0] if len(model_version) == 1 else model_version
     skip_message = helpers.skip_multiple_version_test(tmp_config, model_version)
     if skip_message:
         pytest.skip(skip_message)
