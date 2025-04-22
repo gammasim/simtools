@@ -141,7 +141,11 @@ def test_make_run_command(corsika_simtel_runner, simtel_command, show_all, model
     )
     assert "-W" not in command
 
-    corsika_simtel_runner.sim_telarray_seeds = "12345"
+    corsika_simtel_runner.sim_telarray_seeds = {
+        "seed": "12345",
+        "random_instances": None,
+        "seed_file_name": None,
+    }
     command = corsika_simtel_runner._make_run_command(
         input_file="-",
         run_number=1,
@@ -150,6 +154,21 @@ def test_make_run_command(corsika_simtel_runner, simtel_command, show_all, model
     )
     assert "random_seed" in command
     assert "12345" in command
+
+    corsika_simtel_runner.sim_telarray_seeds = {
+        "seed": "None",
+        "random_instances": 100,
+        "seed_file_name": "test_seed_file.txt",
+    }
+    command = corsika_simtel_runner._make_run_command(
+        input_file="-",
+        run_number=1,
+        corsika_config=corsika_simtel_runner.base_corsika_config,
+        simulator_array=corsika_simtel_runner.simulator_array[0],
+    )
+    assert "random_seed" in command
+    assert "file-by-run" in command
+    assert "test_seed_file.txt" in command
 
 
 def test_make_run_command_divergent(corsika_simtel_runner, simtel_command, show_all, model_version):
