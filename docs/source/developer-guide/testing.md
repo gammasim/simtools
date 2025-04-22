@@ -43,7 +43,7 @@ It is recommended to write unit tests in parallel with the modules to assure tha
 
 :::{warning}
 The simtools project aims for a high test coverage.
-Code lines without coverage should be the exception and the aim should be to achieve a coverage greater than 90%
+Code lines without coverage should be the exception and the aim should be to achieve a coverage close to 100%
 (the CTAO quality requirements aim for a coverage of at least 80%).
 :::
 
@@ -55,6 +55,23 @@ Good practice:
 - at least one test for every function in a module clearly testing the function's behavior (including edge cases).
 - sort tests in the testing module in the same sequence as the functions in the module.
 - unit tests need to be fast.
+- use mocking to avoid external dependencies (e.g., database connections, file I/O); see below
+
+### Mocking
+
+Mocking is used to replace parts of the system under test and make assertions about how they have been used.
+Mocking is used to avoid external dependencies (e.g., database connections, file I/O) and to test the behavior of the code under test.
+
+The [unittest.mock](https://docs.python.org/3/library/unittest.mock.html) module is used for mocking.
+The `mock` module is used to replace parts of the system under test and make assertions about how they have been used. An example is e.g.
+
+```python
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader._read_simtel_data_for_atmospheric_transmission"
+    ) as mock_read:
+        simtel_table_reader.read_simtel_table("atmospheric_transmission", "test_file")
+        mock_read.assert_called_once()
+```
 
 ## Integration tests
 
