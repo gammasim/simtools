@@ -133,20 +133,9 @@ def collect_data_from_http(url):
     try:
         with tempfile.NamedTemporaryFile(mode="w+t") as tmp_file:
             urllib.request.urlretrieve(url, tmp_file.name)
-            if url.endswith("yml") or url.endswith("yaml"):
-                try:
-                    data = yaml.safe_load(tmp_file)
-                except yaml.constructor.ConstructorError:
-                    data = _load_yaml_using_astropy(tmp_file)
-            elif url.endswith("json"):
-                data = json.load(tmp_file)
-            elif url.endswith("list"):
-                lines = tmp_file.readlines()
-                data = [line.strip() for line in lines]
-            else:
-                msg = f"File extension of {url} not supported (should be json or yaml)"
-                _logger.error(msg)
-                raise TypeError(msg)
+            data = _collect_data_from_different_file_types(
+                tmp_file, url, Path(url).suffix.lower(), None
+            )
     except TypeError as exc:
         msg = "Invalid url {url}"
         _logger.error(msg)
@@ -182,16 +171,22 @@ def collect_data_from_file(file_name, yaml_document=None):
     suffix = Path(file_name).suffix.lower()
     try:
         with open(file_name, encoding="utf-8") as file:
-            if suffix == ".json":
-                return json.load(file)
-            if suffix == ".list":
-                return [line.strip() for line in file.readlines()]
-            if suffix in [".yml", ".yaml"]:
-                return _collect_data_from_yaml_file(file, file_name, yaml_document)
+            return _collect_data_from_different_file_types(file, file_name, suffix, yaml_document)
     # broad exception to catch all possible errors in reading the file
     except Exception as exc:  # pylint: disable=broad-except
         raise type(exc)(f"Failed to read file {file_name}: {exc}") from exc
     return None
+
+
+def _collect_data_from_different_file_types(file, file_name, suffix, yaml_document):
+    """Collect data from different file types."""
+    if suffix == ".json":
+        return json.load(file)
+    if suffix == ".list":
+        return [line.strip() for line in file.readlines()]
+    if suffix in [".yml", ".yaml"]:
+        return _collect_data_from_yaml_file(file, file_name, yaml_document)
+    raise TypeError(f"File type {suffix} not supported.")
 
 
 def _collect_data_from_yaml_file(file, file_name, yaml_document):
