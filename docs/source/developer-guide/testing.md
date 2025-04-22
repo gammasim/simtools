@@ -60,7 +60,7 @@ Good practice:
 ### Mocking
 
 Mocking is used to replace parts of the system under test and make assertions about how they have been used.
-Mocking is used to avoid external dependencies (e.g., database connections, file I/O) and to test the behavior of the code under test.
+Mocking is used to avoid external dependencies (e.g., database connections, file I/O).
 
 The [unittest.mock](https://docs.python.org/3/library/unittest.mock.html) module is used for mocking.
 The `mock` module is used to replace parts of the system under test and make assertions about how they have been used. An example is e.g.
