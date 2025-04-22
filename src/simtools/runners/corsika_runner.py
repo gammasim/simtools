@@ -221,7 +221,12 @@ class CorsikaRunner:
         return cmd
 
     def get_file_name(
-        self, simulation_software="corsika", file_type=None, run_number=None, mode=""
+        self,
+        simulation_software="corsika",
+        file_type=None,
+        run_number=None,
+        mode="",
+        model_version_index=0,
     ):
         """
         Get the full path of a file for a given run number.
@@ -234,6 +239,10 @@ class CorsikaRunner:
             File type.
         run_number: int
             Run number.
+        model_version_index: int
+            Index of the model version.
+            This is used to select the correct simulator_array instance in case
+            multiple array models are simulated.
 
         Returns
         -------
@@ -248,4 +257,5 @@ class CorsikaRunner:
             file_type=file_type,
             run_number=run_number,
             mode=mode,
+            model_version_index=model_version_index,
         )
