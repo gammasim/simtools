@@ -81,7 +81,7 @@ class SimtelConfigReader:
 
         self.schema_file = schema_file
         self.schema_dict = (
-            gen.collect_data_from_file(file_name=self.schema_file)
+            gen.collect_data_from_file(file_name=self.schema_file, yaml_document=0)
             if self.schema_file is not None
             else None
         )
