@@ -58,12 +58,10 @@ def test_collect_dict_data(io_handler) -> None:
         gen.collect_data_from_file(MODEL_PARAMETER_METASCHEMA, 999)
 
     # document type not supported
-    assert (
+    with pytest.raises(TypeError, match=r"^Failed to read file"):
         gen.collect_data_from_file(
             "tests/resources/run1_proton_za20deg_azm0deg_North_1LST_test-lst-array.corsika.zst"
         )
-        is None
-    )
 
 
 def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
@@ -90,8 +88,8 @@ def test_collect_data_from_file_exceptions(io_handler, caplog) -> None:
     with open(test_unsupported, "w") as f:
         f.write("some content")
 
-    result = gen.collect_data_from_file(test_unsupported)
-    assert result is None
+    with pytest.raises(TypeError, match=r"^Failed to read"):
+        gen.collect_data_from_file(test_unsupported)
 
 
 def test_collect_dict_from_url(io_handler) -> None:
