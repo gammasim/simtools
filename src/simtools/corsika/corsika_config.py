@@ -296,18 +296,13 @@ class CorsikaConfig:
 
     def _input_config_corsika_starting_grammage(self, entry):
         """Return FIXCHI parameter CORSIKA format."""
-        if isinstance(entry["value"], list):
-            value = None
-            default_value = None
-            for data in entry["value"]:
-                if data.get("primary_particle") == self.primary_particle.name:
-                    value = data.get("value")
-                if data.get("primary_particle") == "default":
-                    default_value = data.get("value")
-            value = value if value is not None else default_value
-        else:
-            value = entry["value"]
-        return f"{value * u.Unit(entry['unit']).to('g/cm2')}"
+        value = entry["value"]
+        if isinstance(value, list):
+            value_map = {v["primary_particle"]: v["value"] for v in value}
+            value = value_map.get(self.primary_particle.name, value_map.get("default"))
+
+        unit = u.Unit(entry["unit"]).to("g/cm2")
+        return f"{value * unit}"
 
     def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
         """Return ECUTS parameter CORSIKA format."""
