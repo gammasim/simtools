@@ -741,7 +741,10 @@ class Simulator:
         original_version = next(
             model.model_version
             for model in self.array_models
-            if model.model_version in original_log.name
+            if re.search(
+                rf"(?<![0-9A-Za-z]){re.escape(model.model_version)}(?![0-9A-Za-z])",
+                original_log.name,
+            )
         )
 
         for model in self.array_models:
