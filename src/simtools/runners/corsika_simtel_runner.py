@@ -50,7 +50,7 @@ class CorsikaSimtelRunner:
         )
         # the base corsika config is the one used to define the CORSIKA specific parameters.
         # The others are used for the array configurations.
-        self.base_corsika_config = corsika_config[0]
+        self.base_corsika_config = self.corsika_config[0]
         self._simtel_path = simtel_path
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label

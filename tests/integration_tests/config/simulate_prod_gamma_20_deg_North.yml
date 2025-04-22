@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-simulate-prod
     TEST_NAME: gamma_20_deg_north
     CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_simtel
+      SIMULATION_SOFTWARE: corsika_sim_telarray
       LABEL: test-production-North
       MODEL_VERSION: 6.0.0
       SITE: North

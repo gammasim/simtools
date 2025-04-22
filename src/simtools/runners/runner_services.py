@@ -71,8 +71,8 @@ class RunnerServices:
         """
         software_map = {
             "corsika": ["corsika"],
-            "simtel": ["simtel"],
-            "corsika_simtel": ["corsika", "simtel"],
+            "sim_telarray": ["sim_telarray"],
+            "corsika_sim_telarray": ["corsika", "sim_telarray"],
         }
         return software_map.get(simulation_software.lower(), [])
 
