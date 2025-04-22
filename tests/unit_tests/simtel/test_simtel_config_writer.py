@@ -166,27 +166,95 @@ def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
         "simtools.utils.names.get_simulation_software_name_from_parameter_name",
         side_effect=mock_get_name,
     ):
-        tel_meta = simtel_config_writer._get_sim_telarray_metadata("telescope", model_parameters)
+        tel_meta = simtel_config_writer._get_sim_telarray_metadata(
+            "telescope", model_parameters, "test_telescope"
+        )
         assert "metaparam telescope add test_add_param" in tel_meta
         assert "metaparam telescope set test_set_param_meta=42" in tel_meta
 
-        site_meta = simtel_config_writer._get_sim_telarray_metadata("site", model_parameters)
+        site_meta = simtel_config_writer._get_sim_telarray_metadata("site", model_parameters, None)
         assert "metaparam global add test_add_param" in site_meta
         assert "metaparam global set test_set_param_meta=42" in site_meta
 
 
 def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer):
-    _tel = simtel_config_writer._get_sim_telarray_metadata("telescope", None)
+    _tel = simtel_config_writer._get_sim_telarray_metadata(
+        "telescope", None, simtel_config_writer._telescope_model_name
+    )
     assert len(_tel) == 8
     assert f"camera_config_name = {simtel_config_writer._telescope_model_name}" in _tel
     assert f"optics_config_name = {simtel_config_writer._telescope_model_name}" in _tel
 
-    _site = simtel_config_writer._get_sim_telarray_metadata("site", None)
+    _site = simtel_config_writer._get_sim_telarray_metadata("site", None, None)
     assert f"site_config_name = {simtel_config_writer._site}" in _site
     assert f"array_config_name = {simtel_config_writer._layout_name}" in _site
 
     with pytest.raises(ValueError, match=r"^Unknown metadata type"):
-        simtel_config_writer._get_sim_telarray_metadata("unknown", None)
+        simtel_config_writer._get_sim_telarray_metadata("unknown", None, None)
+
+
+def test_write_dummy_telescope_configuration_file(
+    simtel_config_writer, io_handler, tmp_test_directory, file_has_text
+):
+    config_file_path = Path(tmp_test_directory) / "dummy_config.cfg"
+    telescope_name = "DummyTel"
+    parameters = {
+        "camera_config_file": {
+            "parameter": "camera_config_file",
+            "value": "camera.dat",
+            "unit": None,
+            "meta_parameter": False,
+        },
+        "discriminator_pulse_shape": {
+            "parameter": "discriminator_pulse_shape",
+            "value": "pulse.dat",
+            "unit": None,
+            "meta_parameter": False,
+        },
+        "mirror_list": {
+            "parameter": "mirror_list",
+            "value": "mirror.dat",
+            "unit": None,
+            "meta_parameter": False,
+        },
+        "camera_pixels": {
+            "parameter": "camera_pixels",
+            "value": 1024,
+            "unit": None,
+            "meta_parameter": False,
+        },
+        # this needs to be a parameter which is not overwritten by the
+        # dummy telescope configuration
+        "fadc_pedestal": {
+            "parameter": "fadc_pedestal",
+            "value": 10.0,
+            "unit": None,
+            "meta_parameter": False,
+        },
+    }
+
+    simtel_config_writer.write_dummy_telescope_configuration_file(
+        parameters, config_file_path, telescope_name
+    )
+
+    assert config_file_path.exists()
+    assert file_has_text(config_file_path, "camera_config_file = DummyTel_single_pixel_camera.dat")
+    assert file_has_text(config_file_path, "mirror_list = DummyTel_single_12m_mirror.dat")
+    assert file_has_text(config_file_path, "camera_pixels = 1")
+
+    mirror_file = Path(tmp_test_directory) / f"{telescope_name}_single_12m_mirror.dat"
+    assert mirror_file.exists()
+    assert file_has_text(mirror_file, "0 0 1200 0.0 0")
+
+    camera_file = Path(tmp_test_directory) / f"{telescope_name}_single_pixel_camera.dat"
+    assert camera_file.exists()
+    assert file_has_text(camera_file, f'"{telescope_name}_funnels.dat"')
+
+    # ensure that non-dummy telescopes are not lost
+    assert file_has_text(config_file_path, "fadc_pedestal = 10.0")
+
+    # ensure that the dummy configuration is not adding extra parameters
+    assert not file_has_text(config_file_path, "trigger_pixels = 1")
 
 
 def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
