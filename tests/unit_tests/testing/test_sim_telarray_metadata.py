@@ -2,7 +2,7 @@
 
 import copy
 import re
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -160,3 +160,18 @@ def test_assert_sim_telarray_seed(caplog):
 
     # Test with sim_telarray_seeds is None
     assert _assert_sim_telarray_seed(metadata, None) is None
+
+
+def test_assert_sim_telarray_metadata_seed_mismatch(test_metadata_file, array_model_north):
+    """Test assert_sim_telarray_metadata with mismatched seeds."""
+    array_model_mismatched_seed = copy.deepcopy(array_model_north)
+    array_model_mismatched_seed.sim_telarray_seeds = {"seed": "54321"}
+
+    with patch(
+        "simtools.testing.sim_telarray_metadata._assert_sim_telarray_seed",
+        return_value="Parameter sim_telarray_seeds mismatch",
+    ):
+        with pytest.raises(
+            ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
+        ):
+            assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_seed)
