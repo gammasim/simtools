@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Runners for simulation software. &#8212; simtools v0.1.dev1+gce0a24f Manual</title>
+    <title>Runners for simulation software. &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=8d027c87"></script>
+    <script src="../_static/documentation_options.js?v=8691d1e6"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gce0a24f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -554,7 +554,7 @@ externally or by the simulator module simulator.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="runners.corsika_runner.CorsikaRunner.get_file_name">
-<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corsika'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_runner.html#CorsikaRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_runner.CorsikaRunner.get_file_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corsika'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/corsika_runner.html#CorsikaRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.corsika_runner.CorsikaRunner.get_file_name" title="Link to this definition">#</a></dt>
 <dd><p>Get the full path of a file for a given run number.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -564,6 +564,10 @@ externally or by the simulator module simulator.</p>
 <dt><strong>file_type: str</strong></dt><dd><p>File type.</p>
 </dd>
 <dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
+</dd>
+<dt><strong>model_version_index: int</strong></dt><dd><p>Index of the model version.
+This is used to select the correct simulator_array instance in case
+multiple array models are simulated.</p>
 </dd>
 </dl>
 </dd>
@@ -670,7 +674,7 @@ externally or by the simulator module simulator.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="runners.simtel_runner.SimtelRunner.get_file_name">
-<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'simtel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner.get_file_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'simtel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner.get_file_name" title="Link to this definition">#</a></dt>
 <dd><p>Get the full path of a file for a given run number.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -680,6 +684,10 @@ externally or by the simulator module simulator.</p>
 <dt><strong>file_type: str</strong></dt><dd><p>File type.</p>
 </dd>
 <dt><strong>run_number: int</strong></dt><dd><p>Run number.</p>
+</dd>
+<dt><strong>model_version_index: int</strong></dt><dd><p>Index of the model version.
+This is used to select the correct simulator_array instance in case
+multiple array models are simulated.</p>
 </dd>
 </dl>
 </dd>
@@ -847,7 +855,7 @@ in case multiple array models are simulated.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="runners.runner_services.RunnerServices.get_file_name">
-<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/runner_services.html#RunnerServices.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.runner_services.RunnerServices.get_file_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/runner_services.html#RunnerServices.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.runner_services.RunnerServices.get_file_name" title="Link to this definition">#</a></dt>
 <dd><p>Get a CORSIKA/sim_telarray style file name for various log and data file types.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -857,6 +865,11 @@ in case multiple array models are simulated.</p>
 <dt><strong>run_number</strong><span class="classifier">int</span></dt><dd><p>Run number.</p>
 </dd>
 <dt><strong>mode: str</strong></dt><dd><p>out or err (optional, relevant only for sub_log).</p>
+</dd>
+<dt><strong>model_version_index: int</strong></dt><dd><p>Index of the model version.
+This is not used here, but in other implementations of this function is
+used to select the correct simulator_array instance in case
+multiple array models are simulated.</p>
 </dd>
 </dl>
 </dd>

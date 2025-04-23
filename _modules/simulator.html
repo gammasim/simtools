@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+gce0a24f Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=8d027c87"></script>
+    <script src="../_static/documentation_options.js?v=8691d1e6"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gce0a24f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -394,6 +394,7 @@ document.write(`
   <h1>Source code for simulator</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Simulator class for managing simulations of showers and array of telescopes.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
@@ -852,39 +853,66 @@ document.write(`
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;sub_out&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">]</span>
-        <span class="n">defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">defaults</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
-        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;sub_out&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;sub_log&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="s2">&quot;simtel&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
-            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;hist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
 
-        <span class="k">if</span> <span class="s2">&quot;corsika&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
-            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;sub_out&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
-                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span>
+                    <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;sub_log&quot;</span><span class="p">,</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">,</span>
+                    <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">model_version_index</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">):</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
+                        <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
+                        <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                        <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;simtel&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
+                            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span>
+                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span>
+                            <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                            <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;hist&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
+                            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
+                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span>
+                            <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                            <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;corsika&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
+                            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">,</span>
+                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span>
+                            <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                            <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
 <div class="viewcode-block" id="Simulator.get_file_list">
 <a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.get_file_list">[docs]</a>
@@ -1037,6 +1065,8 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Pack simulation output files for registering on the grid.</span>
 
+<span class="sd">        Creates separate tarballs for each model version&#39;s log files.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        directory_for_grid_upload: str</span>
@@ -1050,7 +1080,7 @@ document.write(`
         <span class="n">log_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
         <span class="n">corsika_log_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;corsika_log&quot;</span><span class="p">)</span>
         <span class="n">histogram_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;hist&quot;</span><span class="p">)</span>
-        <span class="n">tar_file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">log_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;log.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;log_hist.tar.gz&quot;</span><span class="p">)</span>
+
         <span class="n">directory_for_grid_upload</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="n">directory_for_grid_upload</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">directory_for_grid_upload</span>
@@ -1060,26 +1090,36 @@ document.write(`
         <span class="p">)</span>
         <span class="n">directory_for_grid_upload</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">tar_file_name</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">)</span>
+        <span class="c1"># If there are more than one model version,</span>
+        <span class="c1"># duplicate the corsika log file to have one for each model version with the &quot;right name&quot;.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">corsika_log_files</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_corsika_log_file_for_all_versions</span><span class="p">(</span><span class="n">corsika_log_files</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">,</span> <span class="s2">&quot;w:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
-            <span class="n">files_to_tar</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">(</span><span class="n">log_files</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">log_files</span> <span class="k">else</span> <span class="p">[])</span>
-                <span class="o">+</span> <span class="p">(</span><span class="n">histogram_files</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">histogram_files</span> <span class="k">else</span> <span class="p">[])</span>
-                <span class="o">+</span> <span class="p">(</span><span class="n">corsika_log_files</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">corsika_log_files</span> <span class="k">else</span> <span class="p">[])</span>
-            <span class="p">)</span>
-            <span class="k">for</span> <span class="n">file_to_tar</span> <span class="ow">in</span> <span class="n">files_to_tar</span><span class="p">:</span>
-                <span class="n">tar</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file_to_tar</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">file_to_tar</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="c1"># Group files by model version</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
+            <span class="n">model_version</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span>
 
-        <span class="k">for</span> <span class="n">file_to_move</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">output_files</span><span class="p">]:</span>
+            <span class="c1"># Filter files for this model version</span>
+            <span class="n">model_logs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">log_files</span> <span class="k">if</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+            <span class="n">model_hists</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">histogram_files</span> <span class="k">if</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+            <span class="n">model_corsika_logs</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">corsika_log_files</span> <span class="k">if</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">model_logs</span><span class="p">:</span>
+                <span class="n">tar_file_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_logs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;log.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;log_hist.tar.gz&quot;</span><span class="p">)</span>
+                <span class="n">tar_file_path</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">tar_file_name</span><span class="p">)</span>
+
+                <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tar_file_path</span><span class="p">,</span> <span class="s2">&quot;w:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+                    <span class="n">files_to_tar</span> <span class="o">=</span> <span class="n">model_logs</span> <span class="o">+</span> <span class="n">model_hists</span> <span class="o">+</span> <span class="n">model_corsika_logs</span>
+                    <span class="k">for</span> <span class="n">file_to_tar</span> <span class="ow">in</span> <span class="n">files_to_tar</span><span class="p">:</span>
+                        <span class="n">tar</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file_to_tar</span><span class="p">,</span> <span class="n">arcname</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">file_to_tar</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">file_to_move</span> <span class="ow">in</span> <span class="n">output_files</span><span class="p">:</span>
             <span class="n">source_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_to_move</span><span class="p">)</span>
             <span class="n">destination_file</span> <span class="o">=</span> <span class="n">directory_for_grid_upload</span> <span class="o">/</span> <span class="n">source_file</span><span class="o">.</span><span class="n">name</span>
             <span class="k">if</span> <span class="n">destination_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overwriting existing file: </span><span class="si">{</span><span class="n">destination_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="c1"># Note that this will overwrite previous files which exist in the directory</span>
-            <span class="c1"># It should be fine for normal production since each run is on a separate node</span>
-            <span class="c1"># so no files are expected there.</span>
             <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">destination_file</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output files for the grid placed in </span><span class="si">{</span><span class="n">directory_for_grid_upload</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
@@ -1102,7 +1142,51 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;No sim_telarray file found for model version </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">files</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span></div>
-</div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_copy_corsika_log_file_for_all_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corsika_log_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create copies of the CORSIKA log file for each model version.</span>
+
+<span class="sd">        Adds a header comment to each copy explaining its relationship to the original.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        corsika_log_files: list</span>
+<span class="sd">            List containing the original CORSIKA log file path.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">original_log</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">corsika_log_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># Find which model version the original log belongs to</span>
+        <span class="n">original_version</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">model_version</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+                <span class="sa">rf</span><span class="s2">&quot;(?&lt;![0-9A-Za-z])</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="p">)</span><span class="si">}</span><span class="s2">(?![0-9A-Za-z])&quot;</span><span class="p">,</span>
+                <span class="n">original_log</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">array_models</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span> <span class="o">==</span> <span class="n">original_version</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">new_log</span> <span class="o">=</span> <span class="n">original_log</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">original_log</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                <span class="n">original_version</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">model_version</span>
+            <span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">new_log</span><span class="p">,</span> <span class="s2">&quot;wt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">new_file</span><span class="p">:</span>
+                <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;###############################################################</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Copy of CORSIKA log file from model version </span><span class="si">{</span><span class="n">original_version</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Applicable also for </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">model_version</span><span class="si">}</span><span class="s2"> (same CORSIKA configuration,</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;different sim_telarray model versions in the same run).</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;###############################################################</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">original_log</span><span class="p">,</span> <span class="s2">&quot;rt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">orig_file</span><span class="p">:</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copyfileobj</span><span class="p">(</span><span class="n">orig_file</span><span class="p">,</span> <span class="n">new_file</span><span class="p">)</span>
+
+            <span class="n">corsika_log_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">new_log</span><span class="p">))</span></div>
 
 </pre></div>
 

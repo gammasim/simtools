@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runners.corsika_runner &#8212; simtools v0.1.dev1+gce0a24f Manual</title>
+    <title>runners.corsika_runner &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=8d027c87"></script>
+    <script src="../../_static/documentation_options.js?v=8691d1e6"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gce0a24f Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -628,7 +628,12 @@ document.write(`
 <div class="viewcode-block" id="CorsikaRunner.get_file_name">
 <a class="viewcode-back" href="../../api-reference/runners.html#runners.corsika_runner.CorsikaRunner.get_file_name">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_file_name</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span>
+        <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">run_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">model_version_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the full path of a file for a given run number.</span>
@@ -641,6 +646,10 @@ document.write(`
 <span class="sd">            File type.</span>
 <span class="sd">        run_number: int</span>
 <span class="sd">            Run number.</span>
+<span class="sd">        model_version_index: int</span>
+<span class="sd">            Index of the model version.</span>
+<span class="sd">            This is used to select the correct simulator_array instance in case</span>
+<span class="sd">            multiple array models are simulated.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -655,6 +664,7 @@ document.write(`
             <span class="n">file_type</span><span class="o">=</span><span class="n">file_type</span><span class="p">,</span>
             <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+            <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>
 
