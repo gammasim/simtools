@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>utils.general &#8212; simtools v0.1.dev1+g7e47e39 Manual</title>
+    <title>utils.general &#8212; simtools v0.1.dev1+g14e18d7 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=af91e7b7"></script>
+    <script src="../../_static/documentation_options.js?v=5d4fa54b"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g7e47e39 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g14e18d7 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -530,28 +530,13 @@ document.write(`
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w+t&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp_file</span><span class="p">:</span>
             <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">tmp_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;yml&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;yaml&quot;</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">tmp_file</span><span class="p">)</span>
-                <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">:</span>
-                    <span class="n">data</span> <span class="o">=</span> <span class="n">_load_yaml_using_astropy</span><span class="p">(</span><span class="n">tmp_file</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">):</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">tmp_file</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;list&quot;</span><span class="p">):</span>
-                <span class="n">lines</span> <span class="o">=</span> <span class="n">tmp_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File extension of </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> not supported (should be json or yaml)&quot;</span>
-                <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">_collect_data_from_different_file_types</span><span class="p">(</span>
+                <span class="n">tmp_file</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="kc">None</span>
+            <span class="p">)</span>
     <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid url </span><span class="si">{url}</span><span class="s2">&quot;</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid url </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
     <span class="k">except</span> <span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Failed to download file from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to download file from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
     <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloaded file from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span>
@@ -581,12 +566,7 @@ document.write(`
     <span class="n">suffix</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.list&quot;</span><span class="p">:</span>
-                <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
-            <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">]:</span>
-                <span class="k">return</span> <span class="n">_collect_data_from_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_collect_data_from_different_file_types</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">)</span>
     <span class="c1"># broad exception to catch all possible errors in reading the file</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
         <span class="k">raise</span> <span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)(</span><span class="sa">f</span><span class="s2">&quot;Failed to read file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
@@ -594,8 +574,19 @@ document.write(`
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_data_from_different_file_types</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect data from different file types.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.list&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">_collect_data_from_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File type </span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2"> not supported.&quot;</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_collect_data_from_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">yaml_document</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect data from a yaml file.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect data from a yaml file (allow for multi-document yaml files).&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">:</span>
