@@ -50,7 +50,4 @@ def skip_multiple_version_test(config, model_version):
     if 1 < len(model_version) != len(config_model_version):
         return message
 
-    if len(model_version) > 1 and len(model_version) != len(config_model_version):
-        return message
-
     return None
