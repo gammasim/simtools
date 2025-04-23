@@ -455,3 +455,99 @@ def test_compare_value_from_parameter_dict():
     data_3 = "pixel_list.dat"
     assert validate_output._compare_value_from_parameter_dict(data_1, data_2)
     assert not validate_output._compare_value_from_parameter_dict(data_1, data_3)
+
+
+def test_test_simtel_cfg_files_with_command_line_version(mocker):
+    mock_validate_simtel_cfg_files = mocker.patch(
+        "simtools.testing.validate_output._validate_simtel_cfg_files"
+    )
+    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    integration_test = {
+        "TEST_SIMTEL_CFG_FILES": {
+            "6.0.0": "/path/to/simtel_cfg_6.0.0.cfg",
+            "7.0.0": "/path/to/simtel_cfg_7.0.0.cfg",
+        }
+    }
+    from_command_line = ["5.0.0", "6.0.0"]
+    from_config_file = None
+
+    validate_output._test_simtel_cfg_files(
+        config, integration_test, from_command_line, from_config_file
+    )
+
+    mock_validate_simtel_cfg_files.assert_called_once_with(config, "/path/to/simtel_cfg_6.0.0.cfg")
+
+
+def test_test_simtel_cfg_files_with_config_file_version(mocker):
+    mock_validate_simtel_cfg_files = mocker.patch(
+        "simtools.testing.validate_output._validate_simtel_cfg_files"
+    )
+    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    integration_test = {
+        "TEST_SIMTEL_CFG_FILES": {
+            "6.0.0": "/path/to/simtel_cfg_6.0.0.cfg",
+            "7.0.0": "/path/to/simtel_cfg_7.0.0.cfg",
+        }
+    }
+    from_command_line = None
+    from_config_file = ["7.0.0", "8.0.0"]
+
+    validate_output._test_simtel_cfg_files(
+        config, integration_test, from_command_line, from_config_file
+    )
+
+    mock_validate_simtel_cfg_files.assert_called_once_with(config, "/path/to/simtel_cfg_7.0.0.cfg")
+
+
+def test_test_simtel_cfg_files_with_single_version(mocker):
+    mock_validate_simtel_cfg_files = mocker.patch(
+        "simtools.testing.validate_output._validate_simtel_cfg_files"
+    )
+    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    integration_test = {
+        "TEST_SIMTEL_CFG_FILES": {
+            "6.0.0": "/path/to/simtel_cfg_6.0.0.cfg",
+            "7.0.0": "/path/to/simtel_cfg_7.0.0.cfg",
+        }
+    }
+    from_command_line = "6.0.0"
+    from_config_file = None
+
+    validate_output._test_simtel_cfg_files(
+        config, integration_test, from_command_line, from_config_file
+    )
+
+    mock_validate_simtel_cfg_files.assert_called_once_with(config, "/path/to/simtel_cfg_6.0.0.cfg")
+
+
+def test_test_simtel_cfg_files_no_matching_version(mocker):
+    mock_validate_simtel_cfg_files = mocker.patch(
+        "simtools.testing.validate_output._validate_simtel_cfg_files"
+    )
+    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    integration_test = {
+        "TEST_SIMTEL_CFG_FILES": {
+            "6.0.0": "/path/to/simtel_cfg_6.0.0.cfg",
+            "7.0.0": "/path/to/simtel_cfg_7.0.0.cfg",
+        }
+    }
+    from_command_line = ["5.0.0"]
+    from_config_file = ["8.0.0"]
+
+    validate_output._test_simtel_cfg_files(
+        config, integration_test, from_command_line, from_config_file
+    )
+
+    mock_validate_simtel_cfg_files.assert_not_called()
+
+
+def test_test_simtel_cfg_files_no_test_simtel_cfg_files(mocker):
+    mock_validate_simtel_cfg_files = mocker.patch(
+        "simtools.testing.validate_output._validate_simtel_cfg_files"
+    )
+    config = {"CONFIGURATION": {"OUTPUT_PATH": "/path/to/output"}}
+    integration_test = {}
+
+    validate_output._test_simtel_cfg_files(config, integration_test, None, None)
+
+    mock_validate_simtel_cfg_files.assert_not_called()

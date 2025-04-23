@@ -82,7 +82,7 @@ def test_load_files(camera_efficiency_lst):
     _name = "camera-efficiency-table-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
     assert camera_efficiency_lst._file["results"].name == _name + ".ecsv"
     _name = "camera-efficiency-North-LSTN-01-za20.0deg_azm000deg_validate_camera_efficiency"
-    assert camera_efficiency_lst._file["simtel"].name == _name + ".dat"
+    assert camera_efficiency_lst._file["sim_telarray"].name == _name + ".dat"
     assert camera_efficiency_lst._file["log"].name == _name + ".log"
 
 
@@ -162,7 +162,7 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
 
 
 def test_analyze_from_file(camera_efficiency_lst, mocker):
-    camera_efficiency_lst._file["simtel"] = (
+    camera_efficiency_lst._file["sim_telarray"] = (
         "tests/resources/"
         "camera-efficiency-North-MSTx-NectarCam-za20.0deg_azm000deg_validate_camera_efficiency.dat"
     )
