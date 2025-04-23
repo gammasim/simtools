@@ -137,13 +137,9 @@ def collect_data_from_http(url):
                 tmp_file, url, Path(url).suffix.lower(), None
             )
     except TypeError as exc:
-        msg = "Invalid url {url}"
-        _logger.error(msg)
-        raise TypeError(msg) from exc
+        raise TypeError(f"Invalid url {url}") from exc
     except urllib.error.HTTPError as exc:
-        msg = f"Failed to download file from {url}"
-        _logger.error(msg)
-        raise FileNotFoundError(msg) from exc
+        raise FileNotFoundError(f"Failed to download file from {url}") from exc
 
     _logger.debug(f"Downloaded file from {url}")
     return data
@@ -190,7 +186,7 @@ def _collect_data_from_different_file_types(file, file_name, suffix, yaml_docume
 
 
 def _collect_data_from_yaml_file(file, file_name, yaml_document):
-    """Collect data from a yaml file."""
+    """Collect data from a yaml file (allow for multi-document yaml files)."""
     try:
         return yaml.safe_load(file)
     except yaml.constructor.ConstructorError:
