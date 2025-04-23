@@ -711,7 +711,7 @@ def test_model_version_setter_with_invalid_list(db_config, io_handler):
             ),
         ),
         (
-            "simtel",
+            "sim_telarray",
             {
                 "param1": {
                     "value": 5.0,
@@ -774,7 +774,7 @@ def test_get_simulation_configuration_data(
             assert data[1][3] == "0.3 GeV, 0.1 GeV, 0.02 GeV, 0.02 GeV"
             mock_export.assert_called_once()
 
-        elif simulation_software == "simtel":
+        elif simulation_software == "sim_telarray":
             assert len(data) > 0  # Ensure data is not empty
             assert data[0][0] == "LSTN-01"
             assert data[0][1] == "param1"  # Parameter name
@@ -825,7 +825,7 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
         "telescope": "LSTN-01",
         "site": "North",
         "model_version": "6.0.0",
-        "simulation_software": "simtel",
+        "simulation_software": "sim_telarray",
     }
     output_path = io_handler.get_output_directory(
         label="reports", sub_dir=f"productions/{args.get('model_version')}"

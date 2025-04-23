@@ -30,6 +30,8 @@ class SimulatorCameraEfficiency(SimtelRunner):
         Zenith angle given in the config to CameraEfficiency.
     nsb_spectrum: str or Path
         Path to the nsb spectrum file.
+    skip_correction_to_nsb_spectrum: bool
+        If True, skip the correction to the original altitude where the NSB spectrum was derived.
     """
 
     def __init__(

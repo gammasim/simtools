@@ -2,9 +2,9 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-simulate-prod
-    TEST_NAME: gamma_20_deg_north_for_trigger_rates
+    TEST_NAME: gamma_20_deg_south_for_trigger_rates
     CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_simtel
+      SIMULATION_SOFTWARE: corsika_sim_telarray
       LABEL: test-production-South-for-trigger-rates
       MODEL_VERSION: 6.0.0
       SITE: South
@@ -24,13 +24,13 @@ CTA_SIMPIPE:
       SAVE_FILE_LISTS: true
       LOG_LEVEL: DEBUG
     INTEGRATION_TESTS:
-    - OUTPUT_FILE: 'simtel/data/run000001/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.zst
+    - OUTPUT_FILE: 'sim_telarray/data/run000001/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.zst
 
         '
-    - OUTPUT_FILE: 'simtel/logs/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.log.gz
+    - OUTPUT_FILE: 'sim_telarray/logs/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.log.gz
 
         '
-    - OUTPUT_FILE: 'simtel/logs/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.hdata.zst
+    - OUTPUT_FILE: 'sim_telarray/logs/run000001_proton_za20deg_azm000deg_South_4mst_6.0.0_test-production-South-for-trigger-rates.hdata.zst
 
         '
     - OUTPUT_FILE: log_files.txt

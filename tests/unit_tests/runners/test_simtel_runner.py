@@ -103,6 +103,8 @@ def test_get_file_name(simtel_runner):
         simtel_runner.get_file_name(simulation_software="test")
 
     assert isinstance(
-        simtel_runner.get_file_name(simulation_software="simtel", file_type="output", run_number=3),
+        simtel_runner.get_file_name(
+            simulation_software="sim_telarray", file_type="output", run_number=3
+        ),
         Path,
     )
