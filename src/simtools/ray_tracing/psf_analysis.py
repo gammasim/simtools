@@ -91,7 +91,7 @@ class PSFImage:
 
     def _process_simtel_file_using_rx(self, photon_file):
         """
-        Process a simtel file with photon lists using the RX method.
+        Process a sim_telarray file with photon lists using the RX method.
 
         Parameters
         ----------
@@ -152,7 +152,7 @@ class PSFImage:
                 self._process_simtel_line(line)
 
         if not self._is_photon_positions_ok():
-            msg = "Problems reading Simtel file - invalid data"
+            msg = "Problems reading sim_telarray file - invalid data"
             self._logger.error(msg)
             raise RuntimeError(msg)
 
