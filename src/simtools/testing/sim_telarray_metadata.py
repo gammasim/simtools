@@ -120,14 +120,14 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seeds):
         Error message if sim_telarray seeds do not match.
 
     """
-    if sim_telarray_seeds and metadata and "sim_telarray_seeds" in metadata.keys():
-        if str(metadata.get("sim_telarray_seeds")) != str(sim_telarray_seeds.get("seed")):
+    if sim_telarray_seeds and metadata and "instrument_seed" in metadata.keys():
+        if str(metadata.get("instrument_seed")) != str(sim_telarray_seeds.get("seed")):
             return (
-                "Parameter sim_telarray_seeds mismatch between sim_telarray file: "
-                f"{metadata['sim_telarray_seeds']}, and model: {sim_telarray_seeds.get('seed')}"
+                "Parameter instrument_seed mismatch between sim_telarray file: "
+                f"{metadata['instrument_seed']}, and model: {sim_telarray_seeds.get('seed')}"
             )
         _logger.info(
-            f"sim_telarray_seeds in sim_telarray file: {metadata['sim_telarray_seeds']}, "
+            f"sim_telarray_seed in sim_telarray file: {metadata['instrument_seed']}, "
             f"and model: {sim_telarray_seeds.get('seed')}"
         )
     return None
