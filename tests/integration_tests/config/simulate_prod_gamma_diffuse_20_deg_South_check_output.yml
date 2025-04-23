@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-simulate-prod
     TEST_NAME: gamma_diffuse_20_deg_south_check_output
     CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_simtel
+      SIMULATION_SOFTWARE: corsika_sim_telarray
       LABEL: check_output
       MODEL_VERSION: 6.0.0
       SITE: South

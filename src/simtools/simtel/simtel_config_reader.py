@@ -15,7 +15,7 @@ __all__ = ["SimtelConfigReader"]
 
 def get_list_of_simtel_parameters(simtel_config_file):
     """
-    Return list of simtel parameters found in simtel configuration file.
+    Return list of sim_telarray parameters found in sim_telarray configuration file.
 
     Parameters
     ----------
@@ -25,7 +25,7 @@ def get_list_of_simtel_parameters(simtel_config_file):
     Returns
     -------
     list
-        List of parameters found in simtel configuration file.
+        List of parameters found in sim_telarray configuration file.
 
     """
     simtel_parameter_set = set()
@@ -240,7 +240,7 @@ class SimtelConfigReader:
 
         This needs to resolve the following cases:
         no 'all' in any entry; ['all:', '5'], ['all: 5'], ['all:5', '3:1']
-        This function is fine-tuned to the simtel configuration output.
+        This function is fine-tuned to the sim_telarray configuration output.
 
         Parameters
         ----------
@@ -280,9 +280,9 @@ class SimtelConfigReader:
         self, column, dtype=None, n_dim=1, default=None, is_limit=False
     ):
         """
-        Extract value(s) from simtel configuration file columns.
+        Extract value(s) from sim_telarray configuration file columns.
 
-        This function is fine-tuned to the simtel configuration output.
+        This function is fine-tuned to the sim_telarray configuration output.
 
         Parameters
         ----------
@@ -382,7 +382,7 @@ class SimtelConfigReader:
 
     def _get_type_and_dimension_from_simtel_cfg(self, column):
         """
-        Return type and dimension from simtel configuration column.
+        Return type and dimension from sim_telarray configuration column.
 
         'Func' type from simtel is treated as string. Return number
         of camera pixel for a hard-wired set up parameters.
