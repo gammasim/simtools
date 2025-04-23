@@ -33,8 +33,6 @@ class ReadParameters:
         self.output_path = output_path
         self.observatory = args.get("observatory")
         self.software = args.get("simulation_software", None)
-        if self.software == "simtel":
-            self.software = "sim_telarray"
 
     @property
     def model_version(self):

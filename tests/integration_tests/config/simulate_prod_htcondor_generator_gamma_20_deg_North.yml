@@ -7,7 +7,7 @@ CTA_SIMPIPE:
       OUTPUT_PATH: htcondor_submit
       APPTAINER_IMAGE: test.sif
       PRIORITY: 5
-      SIMULATION_SOFTWARE: corsika_simtel
+      SIMULATION_SOFTWARE: corsika_sim_telarray
       LABEL: test-production-North
       MODEL_VERSION: 6.0.0
       SITE: North

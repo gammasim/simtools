@@ -4,7 +4,7 @@ r"""
 
     Check value, type, and range, convert units using schema files. Write json files
     ready to be submitted to the model database. Prints out parameters which are not found
-    in simtel configuration file and parameters which are not found in simtools schema files.
+    in sim_telarray configuration file and parameters which are not found in simtools schema files.
 
     Note that all parameters are assigned the same parameter version.
 
@@ -116,7 +116,7 @@ def _parse(label=None, description=None):
 
 def read_simtel_config_file(args_dict, schema_file, camera_pixels=None):
     """
-    Read the simtel configuration file.
+    Read the sim_telarray configuration file.
 
     Parameters
     ----------
@@ -146,7 +146,7 @@ def read_simtel_config_file(args_dict, schema_file, camera_pixels=None):
 
 def get_number_of_camera_pixel(args_dict, logger):
     """
-    Get the number of camera pixels from the simtel configuration file.
+    Get the number of camera pixels from the sim_telarray configuration file.
 
     Required to set the dimension some of the parameter correctly, as simtel
     in some cases does not provide the dimension ('all:' in the parameter files).
@@ -178,7 +178,7 @@ def get_number_of_camera_pixel(args_dict, logger):
 
 def read_and_export_parameters(args_dict, logger):
     """
-    Read and export parameters from simtel configuration file to json files.
+    Read and export parameters from sim_telarray configuration file to json files.
 
     Provide extensive logging information on the parameters found in the simtel
     configuration file.
@@ -193,16 +193,16 @@ def read_and_export_parameters(args_dict, logger):
     Returns
     -------
     list
-        List of simtel parameters not found in schema files.
+        List of sim_telarray parameters not found in schema files.
     list
-        List of simtools parameter not found in simtel configuration file.
+        List of simtools parameter not found in sim_telarray configuration file.
 
     """
     _parameters, _schema_files = schema.get_model_parameter_schema_files()
     _simtel_parameters = simtel_config_reader.get_list_of_simtel_parameters(
         args_dict["simtel_cfg_file"]
     )
-    logger.info(f"Found {len(_simtel_parameters)} parameters in simtel configuration file.")
+    logger.info(f"Found {len(_simtel_parameters)} parameters in sim_telarray configuration file.")
 
     io_handler = IOHandler()
     io_handler.set_paths(output_path=args_dict["output_path"])
@@ -223,7 +223,7 @@ def read_and_export_parameters(args_dict, logger):
             _parameters_not_in_simtel.append(_parameter)
             continue
 
-        logger.info(f"Simtel parameter: {config_reader.parameter_dict}")
+        logger.info(f"sim_telarray parameter: {config_reader.parameter_dict}")
 
         _json_dict = writer.ModelDataWriter.dump_model_parameter(
             parameter_name=_parameter,
@@ -252,15 +252,15 @@ def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, ar
     """
     Print simtel/simtools parameter not found in schema and configuration files.
 
-    For simtel parameters not found, check if the setting for the chose
+    For sim_telarray parameters not found, check if the setting for the chose
     telescope is different from the default values.
 
     Parameters
     ----------
     _parameters_not_in_simtel: list
-        List of simtel parameters not found in schema files.
+        List of sim_telarray parameters not found in schema files.
     _simtel_parameters: list
-        List of simtel parameters not found in simtools schema files.
+        List of sim_telarray parameters not found in simtools schema files.
     args_dict: dict
         Dictionary with command line arguments.
     logger: logging.Logger
@@ -273,9 +273,9 @@ def print_parameters_not_found(_parameters_not_in_simtel, _simtel_parameters, ar
     for para in sorted(_parameters_not_in_simtel):
         logger.info(f"  {para}")
 
-    logger.info(f"Simtel parameters not found in schema files ({len(_simtel_parameters)}):")
+    logger.info(f"sim_telarray parameters not found in schema files ({len(_simtel_parameters)}):")
     for para in sorted(_simtel_parameters):
-        logger.info(f"Simtel parameter: {para}")
+        logger.info(f"sim_telarray parameter: {para}")
         config_reader = simtel_config_reader.SimtelConfigReader(
             schema_file=None,
             simtel_config_file=args_dict["simtel_cfg_file"],

@@ -21,7 +21,10 @@ class InvalidOutputFileError(Exception):
 
 class SimtelRunner:
     """
-    Base class for running sim_telarray simulations.
+    Base class for running simulations based on the sim_telarray software stack.
+
+    The sim_telarray software stack includes sim_telarray itself and e.g., testeff,
+    LightEmission, and other software packages.
 
     Parameters
     ----------
@@ -29,6 +32,10 @@ class SimtelRunner:
         Location of sim_telarray installation.
     label: str
         Instance label. Important for output file naming.
+    corsika_config: CorsikaConfig
+        CORSIKA configuration.
+    use_multipipe: bool
+        Use multipipe to run CORSIKA and sim_telarray.
     """
 
     def __init__(self, simtel_path, label=None, corsika_config=None, use_multipipe=False):
@@ -43,7 +50,7 @@ class SimtelRunner:
 
         self.runner_service = RunnerServices(corsika_config, label)
         self._directory = self.runner_service.load_data_directories(
-            "corsika_simtel" if use_multipipe else "simtel"
+            "corsika_sim_telarray" if use_multipipe else "sim_telarray"
         )
 
     def __repr__(self):
@@ -70,12 +77,8 @@ class SimtelRunner:
         Path
             Full path of the run script.
         """
-        self._logger.debug("Creating run bash script")
-
         script_file_path = self.get_file_name(file_type="sub_script", run_number=run_number)
-
         self._logger.debug(f"Run bash script - {script_file_path}")
-
         self._logger.debug(f"Extra commands to be added to the run script {extra_commands}")
 
         command = self._make_run_command(run_number=run_number, input_file=input_file)
@@ -216,7 +219,14 @@ class SimtelRunner:
         """Return computing resources used."""
         return self.runner_service.get_resources(run_number)
 
-    def get_file_name(self, simulation_software="simtel", file_type=None, run_number=None, mode=""):
+    def get_file_name(
+        self,
+        simulation_software="sim_telarray",
+        file_type=None,
+        run_number=None,
+        mode="",
+        model_version_index=0,
+    ):
         """
         Get the full path of a file for a given run number.
 
@@ -228,16 +238,23 @@ class SimtelRunner:
             File type.
         run_number: int
             Run number.
+        model_version_index: int
+            Index of the model version.
+            This is used to select the correct simulator_array instance in case
+            multiple array models are simulated.
 
         Returns
         -------
         str
             File name with full path.
         """
-        if simulation_software.lower() != "simtel":
+        if simulation_software.lower() != "sim_telarray":
             raise ValueError(
                 f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
             )
         return self.runner_service.get_file_name(
-            file_type=file_type, run_number=run_number, mode=mode
+            file_type=file_type,
+            run_number=run_number,
+            mode=mode,
+            model_version_index=model_version_index,
         )

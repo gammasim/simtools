@@ -342,9 +342,9 @@ class CommandLineParser(argparse.ArgumentParser):
             "--simulation_software",
             help="Simulation software steps.",
             type=str,
-            choices=["corsika", "simtel", "corsika_simtel"],
+            choices=["corsika", "sim_telarray", "corsika_sim_telarray"],
             required=True,
-            default="corsika_simtel",
+            default="corsika_sim_telarray",
         )
 
     @staticmethod
