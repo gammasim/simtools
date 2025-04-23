@@ -45,12 +45,12 @@ class CorsikaSimtelRunner:
         sim_telarray_seeds=None,
     ):
         self._logger = logging.getLogger(__name__)
-        if not isinstance(corsika_config, list):
-            corsika_config = [corsika_config]
-        self.corsika_config = corsika_config
+        self.corsika_config = (
+            corsika_config if isinstance(corsika_config, list) else [corsika_config]
+        )
         # the base corsika config is the one used to define the CORSIKA specific parameters.
         # The others are used for the array configurations.
-        self.base_corsika_config = corsika_config[0]
+        self.base_corsika_config = self.corsika_config[0]
         self._simtel_path = simtel_path
         self.sim_telarray_seeds = sim_telarray_seeds
         self.label = label
@@ -200,7 +200,7 @@ class CorsikaSimtelRunner:
         command += simulator_array.get_config_option(
             "histogram_file",
             simulator_array.get_file_name(
-                simulation_software="simtel", file_type="histogram", run_number=run_number
+                simulation_software="sim_telarray", file_type="histogram", run_number=run_number
             ),
         )
         command += simulator_array.get_config_option("random_state", "none")
@@ -218,12 +218,12 @@ class CorsikaSimtelRunner:
         command += simulator_array.get_config_option(
             "output_file",
             simulator_array.get_file_name(
-                simulation_software="simtel", file_type="output", run_number=run_number
+                simulation_software="sim_telarray", file_type="output", run_number=run_number
             ),
         )
         command += f" {input_file}"
         _log_file = simulator_array.get_file_name(
-            simulation_software="simtel", file_type="log", run_number=run_number
+            simulation_software="sim_telarray", file_type="log", run_number=run_number
         )
         command += f" | gzip > {_log_file} 2>&1 || exit"
 
@@ -264,8 +264,8 @@ class CorsikaSimtelRunner:
             File name with full path.
         """
         if simulation_software is None:
-            # preference to simtel output (multipipe)
-            simulation_software = "simtel" if self.simulator_array else "corsika"
+            # preference to sim_telarray output (multipipe)
+            simulation_software = "sim_telarray" if self.simulator_array else "corsika"
 
         runner = (
             self.corsika_runner

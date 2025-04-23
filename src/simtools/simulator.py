@@ -96,8 +96,8 @@ class Simulator:
 
         Parameters
         ----------
-        simulation_software: choices: [simtel, corsika, corsika_simtel]
-            implemented are sim_telarray and CORSIKA or corsika_simtel
+        simulation_software: choices: [sim_telarray, corsika, corsika_sim_telarray]
+            implemented are sim_telarray and CORSIKA or corsika_sim_telarray
             (running CORSIKA and piping it directly to sim_telarray)
 
         Raises
@@ -105,7 +105,7 @@ class Simulator:
         gen.InvalidConfigDataError
 
         """
-        if simulation_software not in ["simtel", "corsika", "corsika_simtel"]:
+        if simulation_software not in ["sim_telarray", "corsika", "corsika_sim_telarray"]:
             self._logger.error(f"Invalid simulation software: {simulation_software}")
             raise gen.InvalidConfigDataError
         self._simulation_software = simulation_software.lower()
@@ -275,8 +275,8 @@ class Simulator:
 
         runner_class = {
             "corsika": CorsikaRunner,
-            "simtel": SimulatorArray,
-            "corsika_simtel": CorsikaSimtelRunner,
+            "sim_telarray": SimulatorArray,
+            "corsika_sim_telarray": CorsikaSimtelRunner,
         }.get(self.simulation_software)
 
         # In case of CorsikaSimtelRunner we should pass all corsika_configurations
@@ -384,10 +384,10 @@ class Simulator:
         _runs_and_files = {}
         self._logger.debug(f"Getting runs and files to submit ({input_file_list})")
 
-        if self.simulation_software == "simtel":
+        if self.simulation_software == "sim_telarray":
             input_file_list = self._enforce_list_type(input_file_list)
             _runs_and_files = {self._guess_run_from_file(file): file for file in input_file_list}
-        elif self.simulation_software in ["corsika", "corsika_simtel"]:
+        elif self.simulation_software in ["corsika", "corsika_sim_telarray"]:
             _runs_and_files = dict.fromkeys(self._get_runs_to_simulate())
         if len(_runs_and_files) == 0:
             raise ValueError("No runs to submit.")
@@ -453,7 +453,7 @@ class Simulator:
         keys = ["output", "sub_out", "log", "input", "hist", "corsika_log"]
         results = {key: [] for key in keys}
 
-        if "simtel" in self.simulation_software:
+        if "sim_telarray" in self.simulation_software:
             results["input"].append(str(file))
 
         results["sub_out"].append(
@@ -476,12 +476,12 @@ class Simulator:
                     )
                 )
             )
-            if "simtel" in self.simulation_software:
+            if "sim_telarray" in self.simulation_software:
                 results["log"].append(
                     str(
                         self._simulation_runner.get_file_name(
                             file_type="log",
-                            simulation_software="simtel",
+                            simulation_software="sim_telarray",
                             run_number=run_number,
                             model_version_index=model_version_index,
                         )
@@ -491,7 +491,7 @@ class Simulator:
                     str(
                         self._simulation_runner.get_file_name(
                             file_type="histogram",
-                            simulation_software="simtel",
+                            simulation_software="sim_telarray",
                             run_number=run_number,
                             model_version_index=model_version_index,
                         )
@@ -708,7 +708,7 @@ class Simulator:
 
     def validate_metadata(self):
         """Validate metadata in the sim_telarray output files."""
-        if "simtel" not in self.simulation_software:
+        if "sim_telarray" not in self.simulation_software:
             self._logger.info("No sim_telarray files to validate.")
             return
 
