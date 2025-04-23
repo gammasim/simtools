@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-simulate-prod
     TEST_NAME: gamma_20_deg_multiple_model_versions
     CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_simtel
+      SIMULATION_SOFTWARE: corsika_sim_telarray
       LABEL: multiple_model_versions
       MODEL_VERSION: [6.0.0, 5.0.0]
       SITE: South

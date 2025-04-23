@@ -83,7 +83,6 @@ class SimulatorArray(SimtelRunner):
             ),
         )
         command += super().get_config_option("histogram_file", histogram_file)
-        command += super().get_config_option("output_file", output_file)
         command += super().get_config_option("random_state", "none")
         if self.sim_telarray_seeds and self.sim_telarray_seeds.get("random_instrument_instances"):
             command += super().get_config_option(
@@ -93,6 +92,7 @@ class SimulatorArray(SimtelRunner):
         elif self.sim_telarray_seeds and self.sim_telarray_seeds.get("seed"):
             command += super().get_config_option("random_seed", self.sim_telarray_seeds["seed"])
         command += super().get_config_option("show", "all")
+        command += super().get_config_option("output_file", output_file)
         command += f" {input_file}"
         command += f" > {self._log_file} 2>&1 || exit"
 

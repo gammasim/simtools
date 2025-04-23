@@ -100,10 +100,12 @@ def test_get_info_for_file_name_diffuse_gamma(
 def test_get_simulation_software_list(runner_service_config_only):
     assert runner_service_config_only._get_simulation_software_list("corsika") == ["corsika"]
     assert runner_service_config_only._get_simulation_software_list("CoRsIka") == ["corsika"]
-    assert runner_service_config_only._get_simulation_software_list("simtel") == ["simtel"]
-    assert runner_service_config_only._get_simulation_software_list("corsika_simtel") == [
+    assert runner_service_config_only._get_simulation_software_list("sim_telarray") == [
+        "sim_telarray"
+    ]
+    assert runner_service_config_only._get_simulation_software_list("corsika_sim_telarray") == [
         "corsika",
-        "simtel",
+        "sim_telarray",
     ]
     assert runner_service_config_only._get_simulation_software_list("something_else") == []
 

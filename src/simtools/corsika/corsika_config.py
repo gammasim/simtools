@@ -647,7 +647,7 @@ class CorsikaConfig:
         str
             Output file name.
         """
-        sub_dir = "corsika_simtel" if use_multipipe else "corsika"
+        sub_dir = "corsika_sim_telarray" if use_multipipe else "corsika"
         config_file_name = self.get_corsika_config_file_name(file_type="config")
         file_directory = self.io_handler.get_output_directory(label=self.label, sub_dir=sub_dir)
         self._logger.debug(f"Creating directory {file_directory}")
