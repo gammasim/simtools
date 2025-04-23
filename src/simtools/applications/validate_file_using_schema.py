@@ -141,8 +141,7 @@ def validate_dict_using_schema(args_dict, logger):
         try:
             data = gen.collect_data_from_file(file_name=file_name)
         except FileNotFoundError as exc:
-            logger.error(f"Error reading schema file from {file_name}")
-            raise exc
+            raise FileNotFoundError(f"Error reading schema file from {file_name}") from exc
         data = data if isinstance(data, list) else [data]
         for data_dict in data:
             schema.validate_dict_using_schema(
