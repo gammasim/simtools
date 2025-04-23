@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Testing &#8212; simtools v0.1.dev1+g14e18d7 Manual</title>
+    <title>Testing &#8212; simtools v0.1.dev1+gce0a24f Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=5d4fa54b"></script>
+    <script src="../_static/documentation_options.js?v=8d027c87"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g14e18d7 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gce0a24f Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -471,7 +471,10 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pytest-fixtures">Pytest fixtures</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-tests">Unit tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-tests">Unit tests</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mocking">Mocking</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-tests">Integration tests</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-versions-for-integration-tests">Model versions for integration tests</a></li>
 </ul>
@@ -528,7 +531,7 @@ It is recommended to write unit tests in parallel with the modules to assure tha
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The simtools project aims for a high test coverage.
-Code lines without coverage should be the exception and the aim should be to achieve a coverage greater than 90%
+Code lines without coverage should be the exception and the aim should be to achieve a coverage close to 100%
 (the CTAO quality requirements aim for a coverage of at least 80%).</p>
 </div>
 <p>Check the test coverage with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-n</span> <span class="pre">auto</span> <span class="pre">--cov-report-html</span>&#160; <span class="pre">tests/unit_tests/</span> <span class="pre">tests/integration_tests/</span></code>.
@@ -538,7 +541,22 @@ Coverage reports can be accessed through the <code class="docutils literal notra
 <li><p>at least one test for every function in a module clearly testing the function’s behavior (including edge cases).</p></li>
 <li><p>sort tests in the testing module in the same sequence as the functions in the module.</p></li>
 <li><p>unit tests need to be fast.</p></li>
+<li><p>use mocking to avoid external dependencies (e.g., database connections, file I/O); see below</p></li>
 </ul>
+<section id="mocking">
+<h3>Mocking<a class="headerlink" href="#mocking" title="Link to this heading">#</a></h3>
+<p>Mocking is used to replace parts of the system under test and make assertions about how they have been used.
+Mocking is used to avoid external dependencies (e.g., database connections, file I/O).</p>
+<p>The <a class="reference external" href="https://docs.python.org/3/library/unittest.mock.html">unittest.mock</a> module is used for mocking.
+The <code class="docutils literal notranslate"><span class="pre">mock</span></code> module is used to replace parts of the system under test and make assertions about how they have been used. An example is e.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">with</span> <span class="n">mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span>
+        <span class="s2">&quot;simtools.simtel.simtel_table_reader._read_simtel_data_for_atmospheric_transmission&quot;</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">mock_read</span><span class="p">:</span>
+        <span class="n">simtel_table_reader</span><span class="o">.</span><span class="n">read_simtel_table</span><span class="p">(</span><span class="s2">&quot;atmospheric_transmission&quot;</span><span class="p">,</span> <span class="s2">&quot;test_file&quot;</span><span class="p">)</span>
+        <span class="n">mock_read</span><span class="o">.</span><span class="n">assert_called_once</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="integration-tests">
 <h2>Integration tests<a class="headerlink" href="#integration-tests" title="Link to this heading">#</a></h2>
@@ -651,7 +669,10 @@ Example:</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pytest-fixtures">Pytest fixtures</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-tests">Unit tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-tests">Unit tests</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mocking">Mocking</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-tests">Integration tests</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-versions-for-integration-tests">Model versions for integration tests</a></li>
 </ul>
