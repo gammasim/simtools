@@ -176,3 +176,22 @@ def test_assert_sim_telarray_metadata_seed_mismatch(test_metadata_file, array_mo
             ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
         ):
             assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_seed)
+
+
+def test_assert_sim_telarray_seed_with_rng_select_seed(caplog):
+    """Test _assert_sim_telarray_seed with rng_select_seed."""
+    metadata = {
+        "instrument_seed": "12345",
+        "instrument_instances": 100,
+        "rng_select_seed": "12394",
+    }
+    sim_telarray_seeds = {"seed": "12345", "instrument_instances": 100}
+
+    with patch(
+        "simtools.testing.sim_telarray_metadata.get_corsika_run_number", return_value=10
+    ) as get_corsika_run_number_mock:
+        with caplog.at_level(logging.INFO):
+            result = _assert_sim_telarray_seed(metadata, sim_telarray_seeds, "test_file")
+            assert "Parameter rng_select_seed mismatch between sim_telarray file" in result
+            assert "sim_telarray_seed in sim_telarray file: 12345, and model: 12345" in caplog.text
+            get_corsika_run_number_mock.assert_called_once_with("test_file")
