@@ -64,11 +64,21 @@ def _validate_output_files(config, integration_test):
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
     """Test simtel cfg files."""
-    test_simtel_cfg_file = integration_test.get("TEST_SIMTEL_CFG_FILES", {}).get(
-        from_command_line or from_config_file
+    cfg_files = integration_test.get("TEST_SIMTEL_CFG_FILES", {})
+    sources = (
+        from_command_line
+        if isinstance(from_command_line, list)
+        else (
+            from_config_file
+            if isinstance(from_config_file, list)
+            else [from_command_line or from_config_file]
+        )
     )
-    if test_simtel_cfg_file:
-        _validate_simtel_cfg_files(config, test_simtel_cfg_file)
+    for version in sources:
+        cfg = cfg_files.get(version)
+        if cfg:
+            _validate_simtel_cfg_files(config, cfg)
+            break
 
 
 def _validate_reference_output_file(config, integration_test):
