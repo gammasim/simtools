@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>camera.camera_efficiency &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
+    <title>camera.camera_efficiency &#8212; simtools v0.1.dev1+gef614d4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=8691d1e6"></script>
+    <script src="../../_static/documentation_options.js?v=2a00868d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef614d4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -502,10 +502,10 @@ document.write(`
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define the variables for the file names, including the results, simtel and log file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define variables used for file names, including results, sim_telarray and log files.&quot;&quot;&quot;</span>
         <span class="n">_file</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">],</span>
             <span class="p">[</span><span class="s2">&quot;.ecsv&quot;</span><span class="p">,</span> <span class="s2">&quot;.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;.log&quot;</span><span class="p">],</span>
         <span class="p">):</span>
             <span class="n">file_name</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">generate_file_name</span><span class="p">(</span>
@@ -539,7 +539,7 @@ document.write(`
             <span class="n">telescope_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">,</span>
             <span class="n">site_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_model</span><span class="p">,</span>
             <span class="n">zenith_angle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">],</span>
-            <span class="n">file_simtel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">],</span>
+            <span class="n">file_simtel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">],</span>
             <span class="n">file_log</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">],</span>
             <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
             <span class="n">nsb_spectrum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;nsb_spectrum&quot;</span><span class="p">],</span>
@@ -616,7 +616,7 @@ document.write(`
 
         <span class="c1"># Search for at least 5 consecutive numbers to see that we are in the table</span>
         <span class="n">re_table</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}{0}{0}{0}{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[-+]?[0-9]*\.?[0-9]+\s+&quot;</span><span class="p">))</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">],</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">],</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">re_table</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
                     <span class="n">words</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>

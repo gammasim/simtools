@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
+    <title>convert_all_model_parameters_from_simtel &#8212; simtools v0.1.dev1+gef614d4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=8691d1e6"></script>
+    <script src="../_static/documentation_options.js?v=2a00868d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef614d4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -398,7 +398,7 @@ document.write(`
 
 <span class="sd">    Check value, type, and range, convert units using schema files. Write json files</span>
 <span class="sd">    ready to be submitted to the model database. Prints out parameters which are not found</span>
-<span class="sd">    in simtel configuration file and parameters which are not found in simtools schema files.</span>
+<span class="sd">    in sim_telarray configuration file and parameters which are not found in simtools schema files.</span>
 
 <span class="sd">    Note that all parameters are assigned the same parameter version.</span>
 
@@ -512,7 +512,7 @@ document.write(`
 <a class="viewcode-back" href="../user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html#convert_all_model_parameters_from_simtel.read_simtel_config_file">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_simtel_config_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">schema_file</span><span class="p">,</span> <span class="n">camera_pixels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read the simtel configuration file.</span>
+<span class="sd">    Read the sim_telarray configuration file.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -545,7 +545,7 @@ document.write(`
 <a class="viewcode-back" href="../user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html#convert_all_model_parameters_from_simtel.get_number_of_camera_pixel">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_number_of_camera_pixel</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the number of camera pixels from the simtel configuration file.</span>
+<span class="sd">    Get the number of camera pixels from the sim_telarray configuration file.</span>
 
 <span class="sd">    Required to set the dimension some of the parameter correctly, as simtel</span>
 <span class="sd">    in some cases does not provide the dimension (&#39;all:&#39; in the parameter files).</span>
@@ -580,7 +580,7 @@ document.write(`
 <a class="viewcode-back" href="../user-guide/applications/simtools-convert-all-model-parameters-from-simtel.html#convert_all_model_parameters_from_simtel.read_and_export_parameters">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_and_export_parameters</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read and export parameters from simtel configuration file to json files.</span>
+<span class="sd">    Read and export parameters from sim_telarray configuration file to json files.</span>
 
 <span class="sd">    Provide extensive logging information on the parameters found in the simtel</span>
 <span class="sd">    configuration file.</span>
@@ -595,16 +595,16 @@ document.write(`
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list</span>
-<span class="sd">        List of simtel parameters not found in schema files.</span>
+<span class="sd">        List of sim_telarray parameters not found in schema files.</span>
 <span class="sd">    list</span>
-<span class="sd">        List of simtools parameter not found in simtel configuration file.</span>
+<span class="sd">        List of simtools parameter not found in sim_telarray configuration file.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_parameters</span><span class="p">,</span> <span class="n">_schema_files</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_get_model_parameter_schema_files</span><span class="p">()</span>
     <span class="n">_simtel_parameters</span> <span class="o">=</span> <span class="n">simtel_config_reader</span><span class="o">.</span><span class="n">get_list_of_simtel_parameters</span><span class="p">(</span>
         <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtel_cfg_file&quot;</span><span class="p">]</span>
     <span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">_simtel_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2"> parameters in simtel configuration file.&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">_simtel_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2"> parameters in sim_telarray configuration file.&quot;</span><span class="p">)</span>
 
     <span class="n">io_handler</span> <span class="o">=</span> <span class="n">IOHandler</span><span class="p">()</span>
     <span class="n">io_handler</span><span class="o">.</span><span class="n">set_paths</span><span class="p">(</span><span class="n">output_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">])</span>
@@ -625,7 +625,7 @@ document.write(`
             <span class="n">_parameters_not_in_simtel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_parameter</span><span class="p">)</span>
             <span class="k">continue</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simtel parameter: </span><span class="si">{</span><span class="n">config_reader</span><span class="o">.</span><span class="n">parameter_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sim_telarray parameter: </span><span class="si">{</span><span class="n">config_reader</span><span class="o">.</span><span class="n">parameter_dict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">_json_dict</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
             <span class="n">parameter_name</span><span class="o">=</span><span class="n">_parameter</span><span class="p">,</span>
@@ -657,15 +657,15 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print simtel/simtools parameter not found in schema and configuration files.</span>
 
-<span class="sd">    For simtel parameters not found, check if the setting for the chose</span>
+<span class="sd">    For sim_telarray parameters not found, check if the setting for the chose</span>
 <span class="sd">    telescope is different from the default values.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    _parameters_not_in_simtel: list</span>
-<span class="sd">        List of simtel parameters not found in schema files.</span>
+<span class="sd">        List of sim_telarray parameters not found in schema files.</span>
 <span class="sd">    _simtel_parameters: list</span>
-<span class="sd">        List of simtel parameters not found in simtools schema files.</span>
+<span class="sd">        List of sim_telarray parameters not found in simtools schema files.</span>
 <span class="sd">    args_dict: dict</span>
 <span class="sd">        Dictionary with command line arguments.</span>
 <span class="sd">    logger: logging.Logger</span>
@@ -678,9 +678,9 @@ document.write(`
     <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_parameters_not_in_simtel</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">para</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simtel parameters not found in schema files (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">_simtel_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2">):&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sim_telarray parameters not found in schema files (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">_simtel_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2">):&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_simtel_parameters</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simtel parameter: </span><span class="si">{</span><span class="n">para</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sim_telarray parameter: </span><span class="si">{</span><span class="n">para</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">config_reader</span> <span class="o">=</span> <span class="n">simtel_config_reader</span><span class="o">.</span><span class="n">SimtelConfigReader</span><span class="p">(</span>
             <span class="n">schema_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">simtel_config_file</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtel_cfg_file&quot;</span><span class="p">],</span>

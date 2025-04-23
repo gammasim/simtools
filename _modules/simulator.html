@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simulator &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
+    <title>simulator &#8212; simtools v0.1.dev1+gef614d4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=8691d1e6"></script>
+    <script src="../_static/documentation_options.js?v=2a00868d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef614d4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -495,8 +495,8 @@ document.write(`
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        simulation_software: choices: [simtel, corsika, corsika_simtel]</span>
-<span class="sd">            implemented are sim_telarray and CORSIKA or corsika_simtel</span>
+<span class="sd">        simulation_software: choices: [sim_telarray, corsika, corsika_sim_telarray]</span>
+<span class="sd">            implemented are sim_telarray and CORSIKA or corsika_sim_telarray</span>
 <span class="sd">            (running CORSIKA and piping it directly to sim_telarray)</span>
 
 <span class="sd">        Raises</span>
@@ -504,7 +504,7 @@ document.write(`
 <span class="sd">        gen.InvalidConfigDataError</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">simulation_software</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">simulation_software</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid simulation software: </span><span class="si">{</span><span class="n">simulation_software</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">gen</span><span class="o">.</span><span class="n">InvalidConfigDataError</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_software</span> <span class="o">=</span> <span class="n">simulation_software</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
@@ -674,8 +674,8 @@ document.write(`
 
         <span class="n">runner_class</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;corsika&quot;</span><span class="p">:</span> <span class="n">CorsikaRunner</span><span class="p">,</span>
-            <span class="s2">&quot;simtel&quot;</span><span class="p">:</span> <span class="n">SimulatorArray</span><span class="p">,</span>
-            <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">:</span> <span class="n">CorsikaSimtelRunner</span><span class="p">,</span>
+            <span class="s2">&quot;sim_telarray&quot;</span><span class="p">:</span> <span class="n">SimulatorArray</span><span class="p">,</span>
+            <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">:</span> <span class="n">CorsikaSimtelRunner</span><span class="p">,</span>
         <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">)</span>
 
         <span class="c1"># In case of CorsikaSimtelRunner we should pass all corsika_configurations</span>
@@ -786,10 +786,10 @@ document.write(`
         <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting runs and files to submit (</span><span class="si">{</span><span class="n">input_file_list</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;simtel&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="o">==</span> <span class="s2">&quot;sim_telarray&quot;</span><span class="p">:</span>
             <span class="n">input_file_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enforce_list_type</span><span class="p">(</span><span class="n">input_file_list</span><span class="p">)</span>
             <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess_run_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">):</span> <span class="n">file</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">input_file_list</span><span class="p">}</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_simtel&quot;</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;corsika&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_sim_telarray&quot;</span><span class="p">]:</span>
             <span class="n">_runs_and_files</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_runs_to_simulate</span><span class="p">())</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_runs_and_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No runs to submit.&quot;</span><span class="p">)</span>
@@ -855,7 +855,7 @@ document.write(`
         <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;sub_out&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;hist&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika_log&quot;</span><span class="p">]</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
 
-        <span class="k">if</span> <span class="s2">&quot;simtel&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
             <span class="n">results</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
 
         <span class="n">results</span><span class="p">[</span><span class="s2">&quot;sub_out&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -878,12 +878,12 @@ document.write(`
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;simtel&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
                 <span class="n">results</span><span class="p">[</span><span class="s2">&quot;log&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="nb">str</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
                             <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span>
-                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span>
+                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
                             <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
                             <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
                         <span class="p">)</span>
@@ -893,7 +893,7 @@ document.write(`
                     <span class="nb">str</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_runner</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span>
                             <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;simtel&quot;</span><span class="p">,</span>
+                            <span class="n">simulation_software</span><span class="o">=</span><span class="s2">&quot;sim_telarray&quot;</span><span class="p">,</span>
                             <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
                             <span class="n">model_version_index</span><span class="o">=</span><span class="n">model_version_index</span><span class="p">,</span>
                         <span class="p">)</span>
@@ -1127,7 +1127,7 @@ document.write(`
 <a class="viewcode-back" href="../api-reference/simulators.html#simulator.Simulator.validate_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate metadata in the sim_telarray output files.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="s2">&quot;simtel&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;sim_telarray&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_software</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No sim_telarray files to validate.&quot;</span><span class="p">)</span>
             <span class="k">return</span>
 

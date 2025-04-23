@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Runners for simulation software. &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
+    <title>Runners for simulation software. &#8212; simtools v0.1.dev1+gef614d4 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=8691d1e6"></script>
+    <script src="../_static/documentation_options.js?v=2a00868d"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef614d4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -637,13 +637,19 @@ multiple array models are simulated.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="runners.simtel_runner.SimtelRunner">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">runners.simtel_runner.</span></span><span class="sig-name descname"><span class="pre">SimtelRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simtel_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corsika_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multipipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner" title="Link to this definition">#</a></dt>
-<dd><p>Base class for running sim_telarray simulations.</p>
+<dd><p>Base class for running simulations based on the sim_telarray software stack.</p>
+<p>The sim_telarray software stack includes sim_telarray itself and e.g., testeff,
+LightEmission, and other software packages.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>simtel_path: str or Path</strong></dt><dd><p>Location of sim_telarray installation.</p>
 </dd>
 <dt><strong>label: str</strong></dt><dd><p>Instance label. Important for output file naming.</p>
+</dd>
+<dt><strong>corsika_config: CorsikaConfig</strong></dt><dd><p>CORSIKA configuration.</p>
+</dd>
+<dt><strong>use_multipipe: bool</strong></dt><dd><p>Use multipipe to run CORSIKA and sim_telarray.</p>
 </dd>
 </dl>
 </dd>
@@ -674,7 +680,7 @@ multiple array models are simulated.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="runners.simtel_runner.SimtelRunner.get_file_name">
-<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'simtel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner.get_file_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_software</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sim_telarray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/runners/simtel_runner.html#SimtelRunner.get_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runners.simtel_runner.SimtelRunner.get_file_name" title="Link to this definition">#</a></dt>
 <dd><p>Get the full path of a file for a given run number.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

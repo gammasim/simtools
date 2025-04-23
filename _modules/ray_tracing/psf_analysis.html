@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ray_tracing.psf_analysis &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
+    <title>ray_tracing.psf_analysis &#8212; simtools v0.1.dev1+gef614d4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=8691d1e6"></script>
+    <script src="../../_static/documentation_options.js?v=2a00868d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef614d4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -490,7 +490,7 @@ document.write(`
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_simtel_file_using_rx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_file</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Process a simtel file with photon lists using the RX method.</span>
+<span class="sd">        Process a sim_telarray file with photon lists using the RX method.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -553,7 +553,7 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">_process_simtel_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_photon_positions_ok</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Problems reading Simtel file - invalid data&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Problems reading sim_telarray file - invalid data&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 

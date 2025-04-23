@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+g9eb5d54 Manual</title>
+    <title>simtel.simtel_config_reader &#8212; simtools v0.1.dev1+gef614d4 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=8691d1e6"></script>
+    <script src="../../_static/documentation_options.js?v=2a00868d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g9eb5d54 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gef614d4 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -409,7 +409,7 @@ document.write(`
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_list_of_simtel_parameters</span><span class="p">(</span><span class="n">simtel_config_file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return list of simtel parameters found in simtel configuration file.</span>
+<span class="sd">    Return list of sim_telarray parameters found in sim_telarray configuration file.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -419,7 +419,7 @@ document.write(`
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list</span>
-<span class="sd">        List of parameters found in simtel configuration file.</span>
+<span class="sd">        List of parameters found in sim_telarray configuration file.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">simtel_parameter_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -642,7 +642,7 @@ document.write(`
 
 <span class="sd">        This needs to resolve the following cases:</span>
 <span class="sd">        no &#39;all&#39; in any entry; [&#39;all:&#39;, &#39;5&#39;], [&#39;all: 5&#39;], [&#39;all:5&#39;, &#39;3:1&#39;]</span>
-<span class="sd">        This function is fine-tuned to the simtel configuration output.</span>
+<span class="sd">        This function is fine-tuned to the sim_telarray configuration output.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -684,9 +684,9 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_limit</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Extract value(s) from simtel configuration file columns.</span>
+<span class="sd">        Extract value(s) from sim_telarray configuration file columns.</span>
 
-<span class="sd">        This function is fine-tuned to the simtel configuration output.</span>
+<span class="sd">        This function is fine-tuned to the sim_telarray configuration output.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -787,7 +787,7 @@ document.write(`
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_type_and_dimension_from_simtel_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return type and dimension from simtel configuration column.</span>
+<span class="sd">        Return type and dimension from sim_telarray configuration column.</span>
 
 <span class="sd">        &#39;Func&#39; type from simtel is treated as string. Return number</span>
 <span class="sd">        of camera pixel for a hard-wired set up parameters.</span>
