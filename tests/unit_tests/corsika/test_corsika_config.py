@@ -201,12 +201,14 @@ def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model,
 def test_input_config_corsika_starting_grammage_muon_grammage(
     corsika_config_mock_array_model, corsika_configuration_parameters_muon_grammage, gcm2
 ):
+    # default behavior with proton as primary
     assert (
         corsika_config_mock_array_model._input_config_corsika_starting_grammage(
             corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
         )
         == "0.0"
     )
+    # change primary to mu+
     corsika_config_mock_array_model_muon = copy.deepcopy(corsika_config_mock_array_model)
     corsika_config_mock_array_model_muon.primary_particle = {
         "primary": "mu+",
@@ -217,6 +219,16 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
             corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
         )
         == "10.0"
+    )
+    corsika_config_mock_array_model_muon.primary_particle = {
+        "primary": "gamma",
+        "primary_id_type": "common_name",
+    }
+    assert (
+        corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
+        )
+        == "0.0"
     )
 
 

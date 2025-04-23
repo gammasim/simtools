@@ -299,7 +299,7 @@ class CorsikaConfig:
         value = entry["value"]
         if isinstance(value, list):
             value_map = {v["primary_particle"]: v["value"] for v in value}
-            value = value_map.get(self.primary_particle.name, value_map.get("default"))
+            value = value_map.get(self.primary_particle.name, value_map.get("default", 0))
 
         unit = u.Unit(entry["unit"]).to("g/cm2")
         return f"{value * unit}"
