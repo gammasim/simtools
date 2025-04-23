@@ -131,10 +131,10 @@ jobs:
             --cov=simtools --cov-report=xml
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v5.0.0
-        if: contains(matrix.extra-args, 'codecov')
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - uses: SonarSource/sonarqube-scan-action@v5.0.0
+      #  if: contains(matrix.extra-args, 'codecov')
+      #  env:
+      #    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
