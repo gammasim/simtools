@@ -53,7 +53,7 @@ def corsika_configuration_parameters_muon_grammage(gcm2, corsika_configuration_p
     params["corsika_starting_grammage"] = {
         "value": [
             {
-                "primary_particle": "mu+",
+                "primary_particle": "muon+",
                 "value": 10.0,
             },
             {
@@ -208,10 +208,10 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
         )
         == "0.0"
     )
-    # change primary to mu+
+    # change primary to muon+
     corsika_config_mock_array_model_muon = copy.deepcopy(corsika_config_mock_array_model)
     corsika_config_mock_array_model_muon.primary_particle = {
-        "primary": "mu+",
+        "primary": "muon+",
         "primary_id_type": "common_name",
     }
     assert (
