@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import copy
+import logging
 import re
 from unittest.mock import MagicMock, patch
 
@@ -142,20 +143,20 @@ def test_is_equal():
 def test_assert_sim_telarray_seed(caplog):
     """Test _assert_sim_telarray_seed."""
 
-    metadata = {"sim_telarray_seeds": "12345"}
-    sim_telarray_seeds = {"seed": "12345"}
+    metadata = {"instrument_seed": "12345", "instrument_instances": 100}
+    sim_telarray_seeds = {"seed": "12345", "instrument_instances": 100}
 
     # Test with matching seeds
-    with caplog.at_level(level=10):
+    with caplog.at_level(logging.INFO):
         assert _assert_sim_telarray_seed(metadata, sim_telarray_seeds) is None
-        assert "sim_telarray_seeds in sim_telarray file: 12345, and model: 12345" in caplog.text
+        assert "sim_telarray_seed in sim_telarray file: 12345, and model: 12345" in caplog.text
 
     # Test with mismatched seeds
-    metadata = {"sim_telarray_seeds": "12345"}
-    sim_telarray_seeds = {"seed": "54321"}
+    metadata = {"instrument_seed": "12345", "instrument_instances": 100}
+    sim_telarray_seeds = {"seed": "54321", "instrument_instances": 100}
     assert (
         _assert_sim_telarray_seed(metadata, sim_telarray_seeds)
-        == "Parameter sim_telarray_seeds mismatch between sim_telarray file: 12345, and model: 54321"
+        == "Parameter instrument_seed mismatch between sim_telarray file: 12345, and model: 54321"
     )
 
     # Test with sim_telarray_seeds is None
