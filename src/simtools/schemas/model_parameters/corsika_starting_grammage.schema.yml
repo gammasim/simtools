@@ -20,9 +20,9 @@ data:
         properties:
           primary_particle:
             type: string
+            format: common_particle_name
             default: "default"
             description: "Primary particle type."
-            enum: ["muon", "default"]
           value:
             type: number
             default: 0.0
