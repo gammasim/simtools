@@ -420,7 +420,7 @@ def test_pack_for_register_with_multiple_versions(
     io_handler, simulations_args_dict, db_config, mocker, caplog
 ):
     args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "corsika_simtel"
+    args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "local-test-shower-array-simulator"
     model_versions = ["5.0.0", "6.0.0"]
     args_dict["model_version"] = model_versions
