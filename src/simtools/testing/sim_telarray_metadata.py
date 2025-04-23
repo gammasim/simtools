@@ -5,7 +5,9 @@ import logging
 import numpy as np
 
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
+from simtools.simtel.simtel_config_writer import sim_telarray_random_seeds
 from simtools.simtel.simtel_io_metadata import (
+    get_corsika_run_number,
     get_sim_telarray_telescope_id,
     read_sim_telarray_metadata,
 )
@@ -28,7 +30,7 @@ def assert_sim_telarray_metadata(file, array_model):
     _logger.info(f"Found metadata in sim_telarray file for {len(telescope_meta)} telescopes")
     site_parameter_mismatch = _assert_model_parameters(global_meta, array_model.site_model)
     sim_telarray_seed_mismatch = _assert_sim_telarray_seed(
-        global_meta, array_model.sim_telarray_seeds
+        global_meta, array_model.sim_telarray_seeds, file
     )
     if sim_telarray_seed_mismatch:
         site_parameter_mismatch.append(sim_telarray_seed_mismatch)
@@ -90,10 +92,6 @@ def _assert_model_parameters(metadata, model):
                 value = metadata[sim_telarray_name]
                 value = (int)(value) if value.isnumeric() else value
 
-            _logger.debug(
-                f"Parameter {param} in sim_telarray file: {value}, "
-                f"in model: {model.parameters[param]['value']}"
-            )
             if not is_equal(value, model.parameters[param]["value"], parameter_type):
                 invalid_parameter_list.append(
                     f"Parameter {param} mismatch between sim_telarray file: {value}, "
@@ -103,9 +101,11 @@ def _assert_model_parameters(metadata, model):
     return invalid_parameter_list
 
 
-def _assert_sim_telarray_seed(metadata, sim_telarray_seeds):
+def _assert_sim_telarray_seed(metadata, sim_telarray_seeds, file):
     """
     Assert that sim_telarray seed matches the values in the sim_telarray metadata.
+
+    Regenerate seeds using the sim_telarray_random_seeds function and compare with the metadata.
 
     Parameters
     ----------
@@ -113,6 +113,8 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seeds):
         Metadata dictionary.
     sim_telarray_seeds: dict
         Dictionary of sim_telarray seeds.
+    file : Path
+        Path to the sim_telarray file.
 
     Returns
     -------
@@ -120,7 +122,10 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seeds):
         Error message if sim_telarray seeds do not match.
 
     """
-    if sim_telarray_seeds and metadata and "instrument_seed" in metadata.keys():
+    if not sim_telarray_seeds or not metadata:
+        return None
+
+    if "instrument_seed" in metadata.keys() and "instrument_instances" in metadata.keys():
         if str(metadata.get("instrument_seed")) != str(sim_telarray_seeds.get("seed")):
             return (
                 "Parameter instrument_seed mismatch between sim_telarray file: "
@@ -130,6 +135,18 @@ def _assert_sim_telarray_seed(metadata, sim_telarray_seeds):
             f"sim_telarray_seed in sim_telarray file: {metadata['instrument_seed']}, "
             f"and model: {sim_telarray_seeds.get('seed')}"
         )
+        run_number_modified = get_corsika_run_number(file) - 1
+        test_seeds = sim_telarray_random_seeds(
+            int(metadata["instrument_seed"]), int(metadata["instrument_instances"])
+        )
+        # no +1 as in sim_telarray (as we count from 0)
+        seed_used = run_number_modified % int(metadata["instrument_instances"])
+        if str(metadata.get("rng_select_seed")) != str(test_seeds[seed_used]):
+            return (
+                "Parameter rng_select_seed mismatch between sim_telarray file: "
+                f"{metadata['rng_select_seed']}, and model: {test_seeds[seed_used]}"
+            )
+
     return None
 
 
