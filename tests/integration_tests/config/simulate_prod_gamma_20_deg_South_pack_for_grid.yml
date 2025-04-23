@@ -4,7 +4,7 @@ CTA_SIMPIPE:
   - APPLICATION: simtools-simulate-prod
     TEST_NAME: gamma_20_deg_south_pack_for_grid
     CONFIGURATION:
-      SIMULATION_SOFTWARE: corsika_simtel
+      SIMULATION_SOFTWARE: corsika_sim_telarray
       LABEL: test-production-South-pack-for-grid
       MODEL_VERSION: 6.0.0
       SITE: South

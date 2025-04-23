@@ -40,7 +40,7 @@ def submit_engine():
 def simulations_args_dict(corsika_config_data, model_version, simtel_path, submit_engine):
     """Return a dictionary with the simulation command line arguments."""
     args_dict = copy.deepcopy(corsika_config_data)
-    args_dict["simulation_software"] = "simtel"
+    args_dict["simulation_software"] = "sim_telarray"
     args_dict["simtel_path"] = simtel_path
     args_dict["model_version"] = model_version
     args_dict["label"] = "test-array-simulator"
@@ -57,7 +57,7 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
 @pytest.fixture
 def array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "simtel"
+    args_dict["simulation_software"] = "sim_telarray"
 
     return Simulator(
         label=args_dict["label"],
@@ -82,7 +82,7 @@ def shower_simulator(io_handler, db_config, simulations_args_dict):
 @pytest.fixture
 def shower_array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "corsika_simtel"
+    args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "test-shower-array-simulator"
     return Simulator(
         label=args_dict["label"],
@@ -98,9 +98,9 @@ def test_init_simulator(shower_simulator, array_simulator, shower_array_simulato
 
 
 def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator, caplog):
-    assert array_simulator.simulation_software == "simtel"
+    assert array_simulator.simulation_software == "sim_telarray"
     assert shower_simulator.simulation_software == "corsika"
-    assert shower_array_simulator.simulation_software == "corsika_simtel"
+    assert shower_array_simulator.simulation_software == "corsika_sim_telarray"
 
     # setting
     test_array_simulator = copy.deepcopy(array_simulator)
@@ -398,7 +398,7 @@ def test_validate_metadata(array_simulator, mocker, caplog):
     assert "No sim_telarray files to validate." in caplog.text
 
     # Test when simulation software is simtel and there are output files
-    array_simulator.simulation_software = "simtel"
+    array_simulator.simulation_software = "sim_telarray"
     mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1_6.0.0"])
     mock_assert_sim_telarray_metadata = mocker.patch(
         "simtools.simulator.assert_sim_telarray_metadata"
@@ -420,7 +420,7 @@ def test_pack_for_register_with_multiple_versions(
     io_handler, simulations_args_dict, db_config, mocker, caplog
 ):
     args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "corsika_simtel"
+    args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "local-test-shower-array-simulator"
     model_versions = ["5.0.0", "6.0.0"]
     args_dict["model_version"] = model_versions
