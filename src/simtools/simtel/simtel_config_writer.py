@@ -167,6 +167,7 @@ class SimtelConfigWriter:
                 ]
             )
             prefix = "metaparam global"
+            meta_parameters.append("metaparam global add random_seed")
         else:
             raise ValueError(f"Unknown metadata type {config_type}")
 
@@ -183,7 +184,10 @@ class SimtelConfigWriter:
                 if simtel_name and value.get("meta_parameter"):
                     meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
         if sim_telarray_seeds and sim_telarray_seeds.get("random_instances"):
-            meta_parameters.append(f"{prefix} set sim_telarray_seeds={sim_telarray_seeds['seed']}")
+            meta_parameters.append(f"{prefix} set instrument_seed={sim_telarray_seeds['seed']}")
+            meta_parameters.append(
+                f"{prefix} set instrument_instances={sim_telarray_seeds['random_instances']}"
+            )
 
         return meta_parameters
 
