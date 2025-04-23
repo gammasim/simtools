@@ -70,57 +70,57 @@ def test_new_testeff_version_file_not_found(builtins_open):
 
 
 def test_skip_multiple_version_test_single_version():
-    config = {"CONFIGURATION": {"MODEL_VERSION": "v1"}}
-    model_version = ["v1"]
+    config = {"CONFIGURATION": {"MODEL_VERSION": "5.0.0"}}
+    model_version = ["5.0.0"]
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result is None
 
 
 def test_skip_multiple_version_test_matching_multiple_versions():
-    config = {"CONFIGURATION": {"MODEL_VERSION": ["v1", "v2"]}}
-    model_version = ["v1", "v2"]
+    config = {"CONFIGURATION": {"MODEL_VERSION": ["5.0.0", "6.0.0"]}}
+    model_version = ["5.0.0", "6.0.0"]
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result is None
 
 
 def test_skip_multiple_version_test_mismatched_multiple_versions():
-    config = {"CONFIGURATION": {"MODEL_VERSION": ["v1"]}}
-    model_version = ["v1", "v2"]
+    config = {"CONFIGURATION": {"MODEL_VERSION": ["5.0.0"]}}
+    model_version = ["5.0.0", "6.0.0"]
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result == "Skipping test not meant for multiple model versions."
 
 
 def test_skip_multiple_version_test_no_model_version_in_config():
     config = {"CONFIGURATION": {}}
-    model_version = ["v1", "v2"]
+    model_version = ["5.0.0", "6.0.0"]
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result == "Skipping test not meant for multiple model versions."
 
 
 def test_skip_multiple_version_test_empty_model_version_list():
     config = {"CONFIGURATION": {"MODEL_VERSION": []}}
-    model_version = ["v1", "v2"]
+    model_version = ["5.0.0", "6.0.0"]
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result == "Skipping test not meant for multiple model versions."
 
 
 def test_skip_multiple_version_test_config_model_version_not_list():
-    config = {"CONFIGURATION": {"MODEL_VERSION": "v1"}}
-    model_version = ["v1", "v2"]
+    config = {"CONFIGURATION": {"MODEL_VERSION": "5.0.0"}}
+    model_version = ["5.0.0", "6.0.0"]
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result == "Skipping test not meant for multiple model versions."
 
 
 def test_skip_multiple_version_test_no_configuration_key():
     config = {}
-    model_version = ["v1", "v2"]
+    model_version = ["5.0.0", "6.0.0"]
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result == "Skipping test not meant for multiple model versions."
 
 
 def test_skip_multiple_version_test_single_model_version_no_config_model_version():
     config = {"CONFIGURATION": {}}
-    model_version = ["v1"]
+    model_version = ["5.0.0"]
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result is None
 
@@ -133,7 +133,14 @@ def test_skip_multiple_version_test_empty_model_version():
 
 
 def test_skip_multiple_version_test_model_version_not_a_list():
-    config = {"CONFIGURATION": {"MODEL_VERSION": "v1"}}
-    model_version = "v1"
+    config = {"CONFIGURATION": {"MODEL_VERSION": "5.0.0"}}
+    model_version = "5.0.0"
+    result = helpers.skip_multiple_version_test(config, model_version)
+    assert result is None
+
+
+def test_skip_multiple_version_test_model_version_not_list():
+    config = {"CONFIGURATION": {"MODEL_VERSION": ["5.0.0", "6.0.0"]}}
+    model_version = "5.0.0"  # Not a list
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result is None
