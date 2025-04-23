@@ -178,7 +178,9 @@ class DataValidator:
             self._prepare_model_parameter()
 
         self._data_description = self._read_validation_schema(
-            self.schema_file_name, self.data_dict.get("model_parameter_schema_version")
+            self.schema_file_name,
+            # use 0.1.0 as default; this corresponds to the first definition of the schema
+            self.data_dict.get("model_parameter_schema_version", "0.1.0"),
         )
 
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
