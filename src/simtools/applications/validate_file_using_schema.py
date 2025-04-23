@@ -143,7 +143,11 @@ def validate_dict_using_schema(args_dict, logger):
         except FileNotFoundError as exc:
             logger.error(f"Error reading schema file from {file_name}")
             raise exc
-        schema.validate_dict_using_schema(data, _get_schema_file_name(args_dict, data))
+        data = data if isinstance(data, list) else [data]
+        for data_dict in data:
+            schema.validate_dict_using_schema(
+                data_dict, _get_schema_file_name(args_dict, data_dict)
+            )
         logger.info(f"Successful validation of file {file_name}")
 
 
