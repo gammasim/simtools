@@ -220,7 +220,12 @@ class SimtelRunner:
         return self.runner_service.get_resources(run_number)
 
     def get_file_name(
-        self, simulation_software="sim_telarray", file_type=None, run_number=None, mode=""
+        self,
+        simulation_software="sim_telarray",
+        file_type=None,
+        run_number=None,
+        mode="",
+        model_version_index=0,
     ):
         """
         Get the full path of a file for a given run number.
@@ -233,6 +238,10 @@ class SimtelRunner:
             File type.
         run_number: int
             Run number.
+        model_version_index: int
+            Index of the model version.
+            This is used to select the correct simulator_array instance in case
+            multiple array models are simulated.
 
         Returns
         -------
@@ -244,5 +253,8 @@ class SimtelRunner:
                 f"simulation_software ({simulation_software}) is not supported in SimulatorArray"
             )
         return self.runner_service.get_file_name(
-            file_type=file_type, run_number=run_number, mode=mode
+            file_type=file_type,
+            run_number=run_number,
+            mode=mode,
+            model_version_index=model_version_index,
         )

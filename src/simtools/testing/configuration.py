@@ -102,6 +102,11 @@ def configure(config, tmp_test_directory, request):
     """
     tmp_output_path = create_tmp_output_path(tmp_test_directory, config)
     model_version_requested = request.config.getoption("--model_version")
+    model_version_requested = (
+        model_version_requested.split(",") if model_version_requested else None
+    )
+    if isinstance(model_version_requested, list) and len(model_version_requested) == 1:
+        model_version_requested = model_version_requested[0]
 
     if "CONFIGURATION" in config:
         _skip_test_for_model_version(config, model_version_requested)
