@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import copy
+import gzip
 import logging
 import math
 import shutil
@@ -39,7 +40,7 @@ def submit_engine():
 def simulations_args_dict(corsika_config_data, model_version, simtel_path, submit_engine):
     """Return a dictionary with the simulation command line arguments."""
     args_dict = copy.deepcopy(corsika_config_data)
-    args_dict["simulation_software"] = "simtel"
+    args_dict["simulation_software"] = "sim_telarray"
     args_dict["simtel_path"] = simtel_path
     args_dict["model_version"] = model_version
     args_dict["label"] = "test-array-simulator"
@@ -56,7 +57,7 @@ def simulations_args_dict(corsika_config_data, model_version, simtel_path, submi
 @pytest.fixture
 def array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "simtel"
+    args_dict["simulation_software"] = "sim_telarray"
 
     return Simulator(
         label=args_dict["label"],
@@ -81,7 +82,7 @@ def shower_simulator(io_handler, db_config, simulations_args_dict):
 @pytest.fixture
 def shower_array_simulator(io_handler, db_config, simulations_args_dict):
     args_dict = copy.deepcopy(simulations_args_dict)
-    args_dict["simulation_software"] = "corsika_simtel"
+    args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "test-shower-array-simulator"
     return Simulator(
         label=args_dict["label"],
@@ -97,9 +98,9 @@ def test_init_simulator(shower_simulator, array_simulator, shower_array_simulato
 
 
 def test_simulation_software(array_simulator, shower_simulator, shower_array_simulator, caplog):
-    assert array_simulator.simulation_software == "simtel"
+    assert array_simulator.simulation_software == "sim_telarray"
     assert shower_simulator.simulation_software == "corsika"
-    assert shower_array_simulator.simulation_software == "corsika_simtel"
+    assert shower_array_simulator.simulation_software == "corsika_sim_telarray"
 
     # setting
     test_array_simulator = copy.deepcopy(array_simulator)
@@ -257,7 +258,7 @@ def test_fill_results(array_simulator, shower_simulator, shower_array_simulator,
     shower_simulator._fill_results(input_file_list[1], run_number=5)
     assert len(shower_simulator.get_file_list("output")) == 1
     assert len(shower_simulator.get_file_list("corsika_log")) == 1
-    assert shower_simulator.get_file_list("hist")[0] is None
+    assert len(shower_simulator.get_file_list("hist")) == 0
 
 
 def test_get_list_of_files(shower_simulator):
@@ -338,15 +339,15 @@ def test_save_file_lists(shower_simulator, mocker, caplog):
     assert "No files to save for output files." in caplog.text
 
 
-def test_pack_for_register(array_simulator, mocker, caplog):
+def test_pack_for_register(array_simulator, mocker, model_version, caplog):
     mocker.patch.object(
         array_simulator,
         "get_file_list",
         side_effect=[
-            ["output_file1", "output_file2"],
-            ["log_file1", "log_file2"],
-            ["hist_file1", "hist_file2"],
-            ["corsika_log_file1", "corsika_log_file2"],
+            [f"output_file_{model_version}_simtel.zst"],
+            [f"log_file_{model_version}_simtel.log.gz"],
+            [f"log_file_corsika_{model_version}.log.gz"],
+            [f"hist_file_{model_version}_hist_log.zst"],
         ],
     )
     mocker.patch("shutil.move")
@@ -361,10 +362,8 @@ def test_pack_for_register(array_simulator, mocker, caplog):
     assert "Output files for the grid placed in" in caplog.text
     tarfile.open.assert_called_once()
     shutil.move.assert_any_call(
-        Path("output_file1"), Path("directory_for_grid_upload/output_file1")
-    )
-    shutil.move.assert_any_call(
-        Path("output_file2"), Path("directory_for_grid_upload/output_file2")
+        Path(f"output_file_{model_version}_simtel.zst"),
+        Path(f"directory_for_grid_upload/output_file_{model_version}_simtel.zst"),
     )
 
 
@@ -399,7 +398,7 @@ def test_validate_metadata(array_simulator, mocker, caplog):
     assert "No sim_telarray files to validate." in caplog.text
 
     # Test when simulation software is simtel and there are output files
-    array_simulator.simulation_software = "simtel"
+    array_simulator.simulation_software = "sim_telarray"
     mocker.patch.object(array_simulator, "get_file_list", return_value=["output_file1_6.0.0"])
     mock_assert_sim_telarray_metadata = mocker.patch(
         "simtools.simulator.assert_sim_telarray_metadata"
@@ -415,6 +414,119 @@ def test_validate_metadata(array_simulator, mocker, caplog):
     with caplog.at_level(logging.WARNING):
         array_simulator.validate_metadata()
     assert "No sim_telarray file found for model version 6.0.0:" in caplog.text
+
+
+def test_pack_for_register_with_multiple_versions(
+    io_handler, simulations_args_dict, db_config, mocker, caplog
+):
+    args_dict = copy.deepcopy(simulations_args_dict)
+    args_dict["simulation_software"] = "corsika_sim_telarray"
+    args_dict["label"] = "local-test-shower-array-simulator"
+    model_versions = ["5.0.0", "6.0.0"]
+    args_dict["model_version"] = model_versions
+    local_shower_array_simulator = Simulator(
+        label=args_dict["label"],
+        args_dict=args_dict,
+        mongo_db_config=db_config,
+    )
+
+    # Define file patterns
+    file_patterns = {
+        "output": "output_file_{}_simtel.zst",
+        "log": "log_file_{}_simtel.log.gz",
+        "corsika_log": "log_file_corsika_{}.log.gz",
+        "hist": "hist_file_{}_hist_log.zst",
+    }
+
+    # Generate file lists for side effects
+    side_effects = [
+        [file_patterns["output"].format(v) for v in model_versions],
+        [file_patterns["log"].format(v) for v in model_versions],
+        [file_patterns["corsika_log"].format(model_versions[0])],
+        [file_patterns["hist"].format(v) for v in model_versions],
+    ]
+
+    # Mocking methods and objects
+    mocker.patch.object(local_shower_array_simulator, "get_file_list", side_effect=side_effects)
+    mocker.patch("shutil.move")
+
+    # Create a mock for tarfile.open that returns a mock context manager
+    mock_tar = mocker.MagicMock()
+    mock_tar_cm = mocker.MagicMock()
+    mock_tar_cm.__enter__ = mocker.MagicMock(return_value=mock_tar)
+    mock_tar_cm.__exit__ = mocker.MagicMock(return_value=None)
+    mock_tarfile_open = mocker.patch("tarfile.open", return_value=mock_tar_cm)
+
+    mocker.patch("pathlib.Path.exists", return_value=True)
+    mocker.patch.object(local_shower_array_simulator, "_copy_corsika_log_file_for_all_versions")
+
+    # Call the method
+    with caplog.at_level(logging.INFO):
+        local_shower_array_simulator.pack_for_register("directory_for_grid_upload")
+
+    # Assertions
+    assert "Packing the output files for registering on the grid" in caplog.text
+    assert "Output files for the grid placed in" in caplog.text
+    local_shower_array_simulator._copy_corsika_log_file_for_all_versions.assert_called_once()
+
+    # Verify tarfile operations
+    assert mock_tarfile_open.call_count > 0
+
+    # Generate expected additions using the same patterns
+    expected_additions = []
+    for version in model_versions:
+        for file_type in ["log", "hist"]:
+            filename = file_patterns[file_type].format(version)
+            expected_additions.append((filename, filename))
+
+    # Check tarball additions
+    for filepath, arcname in expected_additions:
+        mock_tar.add.assert_any_call(filepath, arcname=arcname)
+
+    # Check file movement
+    for version in model_versions:
+        output_file = file_patterns["output"].format(version)
+        shutil.move.assert_any_call(
+            Path(output_file),
+            Path(f"directory_for_grid_upload/{output_file}"),
+        )
+
+
+def test_copy_corsika_log_file_for_all_versions(array_simulator, mocker, tmp_test_directory):
+    # Mock array_models with multiple versions
+    array_simulator.array_models = [
+        mocker.Mock(model_version="5.0.0"),
+        mocker.Mock(model_version="6.0.0"),
+    ]
+
+    # Create a temporary directory for log files
+    original_log_dir = tmp_test_directory / "logs"
+    original_log_dir.mkdir()
+
+    # Create a mock original log file
+    original_log_file = original_log_dir / "log_file_5.0.0.log.gz"
+    with gzip.open(original_log_file, "wt") as f:
+        f.write("Original CORSIKA log content.")
+
+    # Mock the input corsika_log_files list
+    corsika_log_files = [str(original_log_file)]
+
+    # Call the method
+    array_simulator._copy_corsika_log_file_for_all_versions(corsika_log_files)
+
+    # Check that the new log file for the second model version was created
+    new_log_file = original_log_dir / "log_file_6.0.0.log.gz"
+    assert new_log_file.exists()
+
+    # Verify the content of the new log file
+    with gzip.open(new_log_file, "rt") as f:
+        content = f.read()
+        assert "Copy of CORSIKA log file from model version 5.0.0." in content
+        assert "Applicable also for 6.0.0" in content
+        assert "Original CORSIKA log content." in content
+
+    # Ensure the new log file was added to the corsika_log_files list
+    assert str(new_log_file) in corsika_log_files
 
 
 def test_get_seed_for_random_instances_of_instrument(shower_simulator):
