@@ -637,6 +637,11 @@ def test_read_validation_schema(tmp_test_directory):
     with pytest.raises(KeyError, match=r"Error reading validation schema from .*wrong_schema.yml"):
         data_validator._read_validation_schema(schema_file=tmp_test_directory / "wrong_schema.yml")
 
+    with pytest.raises(ValueError, match=r"^Schema version not_a_version not found"):
+        data_validator._read_validation_schema(
+            schema_file=tmp_test_directory / "wrong_schema.yml", schema_version="not_a_version"
+        )
+
 
 # incomplete test
 def test_validate_data_dict():
