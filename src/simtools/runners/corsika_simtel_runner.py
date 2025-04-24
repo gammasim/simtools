@@ -125,12 +125,33 @@ class CorsikaSimtelRunner:
                 run_command = simulator_array.make_run_command(
                     run_number=run_number,
                     input_file="-",  # instruct sim_telarray to take input from standard output
-                    pointing_option=self.label,
+                    weak_pointing=self._determine_pointing_option(self.label),
                 )
                 file.write(f"{run_command}")
                 file.write("\n")
         self._logger.info(f"Multipipe script: {multipipe_file}")
         self._write_multipipe_script(multipipe_file)
+
+    @staticmethod
+    def _determine_pointing_option(label):
+        """
+        Determine the pointing option for sim_telarray.
+
+        Parameters
+        ----------
+        label: str
+            Label of the simulation.
+
+        Returns
+        -------
+        str:
+            Pointing option.
+        """
+        try:
+            return any(pointing in label for pointing in ["divergent", "convergent"])
+        except TypeError:  # allow for pointing_option to be None
+            pass
+        return False
 
     def _write_multipipe_script(self, multipipe_file):
         """

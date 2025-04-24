@@ -72,7 +72,7 @@ def test_make_run_command_divergent(simtel_runner):
     run_command = simtel_runner.make_run_command(
         run_number=3,
         input_file=input_file,
-        pointing_option="test-corsika-simtel-runner-divergent-pointing",
+        weak_pointing=True,
     )
     assert "-W telescope_theta=20" in run_command
     assert "-W telescope_phi=0" in run_command
