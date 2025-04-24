@@ -33,7 +33,7 @@ def sim_telarray_random_seeds(seed, number):
     """
     rng = np.random.default_rng(seed)
     max_int32 = np.iinfo(np.int32).max  # sim_telarray requires 32 bit integers
-    return list(rng.integers(low=1, high=max_int32 + 1, size=number, dtype=np.int32))
+    return list(rng.integers(low=1, high=max_int32, size=number, dtype=np.int32))
 
 
 class SimtelConfigWriter:
