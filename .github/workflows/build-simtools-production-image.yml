@@ -229,17 +229,27 @@ jobs:
           # list of productions build options: 'prod6-sc', 'prod6-baseline', 'prod5', 'prod5-sc'
           - {build_opt: 'prod6-sc', extra_def: ''}
           - {build_opt: 'prod6-baseline', extra_def: ''}
+        model_version:
+          - "6.0.0"
     container:
       image: ghcr.io/gammasim/simtools-prod-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}-${{ matrix.version.avx_instruction }}
-      env:
-        SIMTOOLS_SIMTEL_PATH: "/workdir/sim_telarray"
-        SIMTOOLS_DB_API_PORT: ${{ env.SIMTOOLS_DB_API_PORT }}
-        SIMTOOLS_DB_API_USER: ${{ env.SIMTOOLS_DB_API_USER }}
-        SIMTOOLS_DB_API_PW: ${{ env.SIMTOOLS_DB_API_PW }}
-        SIMTOOLS_DB_SERVER: ${{ env.SIMTOOLS_DB_SERVER }}
+
+    services:
+      mongodb:
+        image: mongo:latest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: api
+          MONGO_INITDB_ROOT_PASSWORD: password
+        options: >-
+          --health-cmd "mongosh --host localhost --port 27017 -u api -p password --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
-      - name: Checkout repository
+      - name: checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set sim_telarray path
         run: |
@@ -251,10 +261,30 @@ jobs:
           SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
           echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
 
-      - name: Run integration tests
-        env:
-          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+      - name: Create environment file (local DB)
+        run: |
+          {
+            echo "SIMTOOLS_DB_SERVER=mongodb"
+            echo "SIMTOOLS_DB_API_USER=api"
+            echo "SIMTOOLS_DB_API_PW=password"
+            echo "SIMTOOLS_DB_API_PORT=27017"
+            echo "SIMTOOLS_DB_SIMULATION_MODEL=${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}"
+            echo "SIMTOOLS_SIMTEL_PATH=/workdir/sim_telarray/"
+          } > .env
+
+      - name: Upload data to MongoDB
         run: |
           source /workdir/env/bin/activate
-          pip install --no-cache-dir pytest pytest-cov pytest-requirements pytest-xdist
-          pytest --no-cov --color=yes -n auto tests/integration_tests/test_applications_from_config.py
+          pip install --no-cache-dir -e '.[tests,dev,doc]'
+          cd database_scripts/
+          ./upload_from_model_repository_to_db.sh ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+
+      - name: Integration tests
+        shell: bash -l {0}
+        env:
+          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          SIMTOOLS_DB_SERVER: 'mongodb'
+        run: |
+          source /workdir/env/bin/activate
+          pip install --no-cache-dir -e '.[tests,dev,doc]'
+          pytest -model_version=${{ matrix.model_version}} --durations=20 -n 4 --dist loadscope --no-cov tests/integration_tests/test_applications_from_config.py
