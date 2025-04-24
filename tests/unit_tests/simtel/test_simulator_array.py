@@ -43,7 +43,7 @@ def test_make_run_command(simtel_runner):
 
     simtel_runner.sim_telarray_seeds = {
         "seed": 12345,
-        "random_instances": None,
+        "random_instrument_instances": None,
         "seed_file_name": None,
     }
     run_command = simtel_runner.make_run_command(
@@ -55,7 +55,7 @@ def test_make_run_command(simtel_runner):
 
     simtel_runner.sim_telarray_seeds = {
         "seed": None,
-        "random_instances": 10,
+        "random_instrument_instances": 10,
         "seed_file_name": "test_file_with_seeds.txt",
     }
     run_command = simtel_runner.make_run_command(
