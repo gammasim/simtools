@@ -50,7 +50,7 @@ class SimulatorArray(SimtelRunner):
         self.io_handler = io_handler.IOHandler()
         self._log_file = None
 
-    def make_run_command(self, run_number=None, input_file=None, pointing_option=None):
+    def make_run_command(self, run_number=None, input_file=None, weak_pointing=None):
         """
         Build and return the command to run sim_telarray.
 
@@ -60,21 +60,14 @@ class SimulatorArray(SimtelRunner):
             Full path of the input CORSIKA file
         run_number: int (optional)
             run number
-        pointing_option: str (optional)
-            Determine point option for sim_telarray.
+        weak_pointing: str (optional)
+            Determine weak pointing option for sim_telarray.
 
         Returns
         -------
         str
             Command to run sim_telarray.
         """
-        try:
-            weak_pointing = any(
-                pointing in pointing_option for pointing in ["divergent", "convergent"]
-            )
-        except TypeError:  # allow for pointing_option to be None
-            weak_pointing = False
-
         config_dir = self.corsika_config.array_model.get_config_directory()
         self._log_file = self.get_file_name(file_type="log", run_number=run_number)
         histogram_file = self.get_file_name(file_type="histogram", run_number=run_number)

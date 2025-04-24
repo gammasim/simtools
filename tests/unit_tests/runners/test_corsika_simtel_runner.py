@@ -152,3 +152,11 @@ def test_get_file_name(corsika_simtel_runner, simulation_file):
         ).name
         == simtel_simulation_file
     )
+
+
+def test_determine_pointing_option(corsika_simtel_runner):
+    assert corsika_simtel_runner._determine_pointing_option(None) is False
+
+    assert corsika_simtel_runner._determine_pointing_option("divergent") is True
+    assert corsika_simtel_runner._determine_pointing_option("convergent") is True
+    assert corsika_simtel_runner._determine_pointing_option("test") is False
