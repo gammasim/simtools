@@ -246,7 +246,7 @@ class SimtelConfigWriter:
 
         Parameters
         ----------
-        random_instances_of_instrument: int
+        random_instrument_instances: int
             Number of random instances of the instrument.
         """
         random.seed(sim_telarray_seeds["seed"])
