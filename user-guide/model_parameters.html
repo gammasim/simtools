@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Simulation Model &#8212; simtools v0.1.dev1+gef614d4 Manual</title>
+    <title>Simulation Model &#8212; simtools v0.1.dev1+g4399056 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2a00868d"></script>
+    <script src="../_static/documentation_options.js?v=46c34912"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gef614d4 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g4399056 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -471,8 +471,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description-of-model-parameters">Description of model parameters</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description-of-model-parameters-through-schemas">Description of model parameters through schemas</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#valid-keys">Valid Keys</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#header-section">Header section</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#parameter-description">Parameter description</a></li>
@@ -485,7 +484,6 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation-software-description">Simulation software description</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structure-for-model-parameters">Data structure for model parameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#updating-the-model-database">Updating the model database</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-a-single-model-parameter">Update a single model parameter</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-a-complete-simulation-model-from-model-repository-to-model-database">Upload a complete simulation model from model repository to model database</a></li>
@@ -512,42 +510,66 @@ document.write(`
 <h1>Simulation Model<a class="headerlink" href="#simulation-model" title="Link to this heading">#</a></h1>
 <section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
-<p>Simulation model parameters describe properties of all relevant elements of the observatory including site,
+<p>Simulation model parameters describe properties of all relevant elements of the observatory. This includes site,
 telescopes, and calibration devices.
-The management, definition, derivation, verification, and validation of the simulation model is central to the functionality of simtools.
-Model parameters are centrally stored (in a database and repository) and described and defined by <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters">schema files</a>.</p>
-<p>Examples for model parameters are those describing atmospheric model (profile, transmission) or geomagnetic field characteristics for the site,
-descriptions of optical and mechanical properties of the telescope, and detector plan, trigger, and readout settings for the cameras (see <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters">model parameter schema files</a> for all model parameters.)</p>
-<p>For simplicity, the term parameter is used for values, (multi-dimensional) vectors of values
+The management, definition, derivation, verification, and validation of the simulation model is central to simtools.
+For simplicity, the term <em>model parameter</em> refers to values, (multi-dimensional) vectors of values
 (e.g., the mirror reflectivity vs wavelength and photon incident angle), functions, and algorithms
-(e.g., the telescope trigger algorithm).
-Parameters might be fixed in time (e.g., the number of mirrors on a certain telescope), or variable
-on different time scales (e.g., compare the degradation of the mirror reflectivity over several months
-with the nightly variability of the atmospheric parameters).</p>
-<p>The major components to handle the simulation model in simtools are:</p>
+(e.g., the telescope trigger algorithm).</p>
+<p>Model parameters describe for example:</p>
+<ul class="simple">
+<li><p>Atmospheric model parameters (profile, transmission)</p></li>
+<li><p>Geomagnetic field characteristics</p></li>
+<li><p>Optical and mechanical telescope properties</p></li>
+<li><p>Detector plane settings</p></li>
+<li><p>Trigger configurations</p></li>
+<li><p>Camera readout parameters</p></li>
+<li><p>Simulation production related software parameters</p></li>
+</ul>
+<p>The major components of the simulation model are:</p>
 <ol class="arabic simple">
+<li><p><strong>Model parameter schema files:</strong> The schema files define the model parameters and their properties. Every model parameter is defined in a schema file, see the
+<a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters">schema file directory</a>.</p></li>
+<li><p><strong>Model parameter repository:</strong> The simulation model is stored in a <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">gitlab repository</a>. Review and revision control of the simulation model is done using this repository.</p></li>
 <li><p><strong>Model parameter databases:</strong> The simulation model is stored in <a class="reference internal" href="databases.html#databases"><span class="std std-ref">mongoDB databases</span></a>.
-The <a class="reference internal" href="../api-reference/db_handler.html#dbhandler"><span class="std std-ref">db_handler module</span></a> provides reading and writing interfaces to the database.</p></li>
-<li><p><strong>Model parameter management:</strong> The <a class="reference internal" href="#mcmodel.md#model-parameters"><span class="xref myst">model parameters module</span></a> provides interfaces to manage the simulation model parameters.</p></li>
-<li><p>A <strong>model of an array and its elements</strong> consists of the <a class="reference internal" href="#mcmodel.md#site-model"><span class="xref myst">SiteModel</span></a> and several <a class="reference internal" href="#mcmodel.md#telescope-model"><span class="xref myst">TelescopeModel</span></a>`and <a class="reference internal" href="#mcmodel.md#calibration-model"><span class="xref myst">CalibrationModel</span></a> instances.</p></li>
+The <a class="reference internal" href="../api-reference/db_handler.html#dbhandler"><span class="std std-ref">db_handler module</span></a> provides reading and writing interfaces to the database.
+The model parameter database holds all values from the simulation model repository and is updated for each release of the simulation model repository.</p></li>
 </ol>
-<p>Simtools includes applications to write new model parameters to the databases and the export or import model parameters from sim_telarray configuration files (see following sections).</p>
-<p>Review and revision control of the simulation models uses a <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">gitlab repository</a>. Simtools provides applications to read, write, and update the databases from this repository.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The simulation model is a central part of the CTAO Simulation Pipeline. The responsibility for the values and the correctness of the simulation model parameters is with the CTAO Simulation Team.</p>
 </div>
 </section>
-<section id="description-of-model-parameters">
-<h2>Description of model parameters<a class="headerlink" href="#description-of-model-parameters" title="Link to this heading">#</a></h2>
-<p>Schema files define all simulation model parameters are part of <a class="reference external" href="https://github.com/gammasim/simtools">simtools</a> and can be found in <a class="reference external" href="https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters">simtools/schemas/model_parameters</a>.</p>
-<p>These files describe the simulation model parameters including (among others fields) name, type, format, units, applicable telescopes, and parameter description.
-They include information about setting and validation activities, data sources, and simulation software.
-The schema files and especially the model parameter descriptions are derived from (and planned to be synchronized with) the <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray manual</a>.</p>
-<p>The schema files are in human readable YAML format and follow a fixed meta metaschema (see <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml">model_parameter_and_data_schema.metaschema.yml</a>; found in simtools schema directory).</p>
-<section id="example">
-<h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
-<p>The following example is for a single parameter description.</p>
+<section id="description-of-model-parameters-through-schemas">
+<h2>Description of model parameters through schemas<a class="headerlink" href="#description-of-model-parameters-through-schemas" title="Link to this heading">#</a></h2>
+<p>Model parameter data structures are defined in schema files.
+To ensure consistency and correctness of the model parameters, these schema files are used to validate the model parameter files with <code class="docutils literal notranslate"><span class="pre">simtools-validate-file-using-schema</span></code>.
+Strict versioning of schemas and metaschema is introduced to ensure that the model parameters are always compatible with the schema files.</p>
+<p>The model parameters are stored in json-style in the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">model repository</a> and database.
+A typical model parameter file looks like:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;model_parameter_schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;parameter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;num_gains&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;instrument&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LSTN-01&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;site&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;North&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;parameter_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;unique_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Two types of schema definitions need to be distinguished:</p>
+<ol class="arabic simple">
+<li><p><strong>Meta schema:</strong> The meta schema defines the structure of the model parameter file. It is a multi-document YAML file including several schema versions. The meta schema is used to validate the model parameter files. The <code class="docutils literal notranslate"><span class="pre">schema_version</span></code> field is used to identify the correct meta schema.</p></li>
+<li><p><strong>Model parameter schema:</strong> The model parameter schema defines the properties of the model parameter. It is a human-readable YAML file that describes the model parameter in detail. The <code class="docutils literal notranslate"><span class="pre">model_parameter_schema_version</span></code> field is used to identify the correct model parameter schema (optional field; default value is <code class="docutils literal notranslate"><span class="pre">0.1.0</span></code>).</p></li>
+</ol>
+<p>The metaschema <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter.metaschema.yml">model_parameter.metaschema.yml</a> defines the json data structure used for model parameters. This meta schema defines e.g., that <code class="docutils literal notranslate"><span class="pre">parameter</span></code> must be a string or <code class="docutils literal notranslate"><span class="pre">file</span></code> a boolean. No additional properties are allowed.</p>
+<p>Model parameter schemas are defined in YAML format and located in the <code class="docutils literal notranslate"><span class="pre">simtools/schemas/model_parameters</span></code> directory. Each schema file specifies fields such as <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">type</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">units</span></code>, and applicable telescopes.  Schemas also include metadata on default values, validation rules, data sources, and links to relevant simulation software.  Model parameter descriptions are primarily derived from the <a class="reference external" href="https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/">sim_telarray manual</a>, ensuring alignment with its definitions and conventions.</p>
+<p>For above example the schema file <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameters/num_gains.schema.yml">num_gains.schema.yml</a> is:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">%YAML</span><span class="w"> </span><span class="m">1.2</span>
 <span class="nn">---</span>
 <span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Schema for num_gains model parameter</span>
@@ -584,7 +606,7 @@ The schema files and especially the model parameter descriptions are derived fro
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sim_telarray</span>
 </pre></div>
 </div>
-</section>
+<p>Model parameter schema files follow the fixed meta schema (see <code class="docutils literal notranslate"><span class="pre">meta_schema</span></code>, <code class="docutils literal notranslate"><span class="pre">meta_schema_url</span></code>, and <code class="docutils literal notranslate"><span class="pre">meta_schema_version</span></code> fields in above example and <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml">model_parameter_and_data_schema.metaschema.yml</a>).</p>
 <section id="valid-keys">
 <h3>Valid Keys<a class="headerlink" href="#valid-keys" title="Link to this heading">#</a></h3>
 <p>Valid keys are described in detail in <a class="reference external" href="https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml">model_parameter_and_data_schema.metaschema.yml</a>. The most important parameters are:</p>
@@ -684,25 +706,6 @@ This is important to write correct and consistent CORSIKA or sim_telarray config
 </pre></div>
 </div>
 </section>
-</section>
-<section id="data-structure-for-model-parameters">
-<h2>Data structure for model parameters<a class="headerlink" href="#data-structure-for-model-parameters" title="Link to this heading">#</a></h2>
-<p>The model parameters are stored in json-style in the <a class="reference external" href="https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models">model repository</a> and database.
-A typical model parameter file looks like:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;parameter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;num_gains&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;instrument&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LSTN-01&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;site&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;North&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;parameter_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;unique_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="p">}</span>
-</pre></div>
-</div>
 </section>
 <section id="updating-the-model-database">
 <h2>Updating the model database<a class="headerlink" href="#updating-the-model-database" title="Link to this heading">#</a></h2>
@@ -842,8 +845,7 @@ To import these positions into the model parameter repository, see the following
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description-of-model-parameters">Description of model parameters</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description-of-model-parameters-through-schemas">Description of model parameters through schemas</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#valid-keys">Valid Keys</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#header-section">Header section</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#parameter-description">Parameter description</a></li>
@@ -856,7 +858,6 @@ To import these positions into the model parameter repository, see the following
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation-software-description">Simulation software description</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structure-for-model-parameters">Data structure for model parameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#updating-the-model-database">Updating the model database</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-a-single-model-parameter">Update a single model parameter</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-a-complete-simulation-model-from-model-repository-to-model-database">Upload a complete simulation model from model repository to model database</a></li>
