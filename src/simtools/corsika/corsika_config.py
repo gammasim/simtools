@@ -295,7 +295,12 @@ class CorsikaConfig:
         return [f"{entry['value'] * u.Unit(entry['unit']).to('cm'):.2f}", "0"]
 
     def _input_config_corsika_starting_grammage(self, entry):
-        """Return FIXCHI parameter CORSIKA format."""
+        """
+        Return FIXCHI parameter CORSIKA format.
+
+        Use the primary particle name to get the value from the list of values.
+        If not found, use the default value.
+        """
         value = entry["value"]
         if isinstance(value, list):
             value_map = {v["primary_particle"]: v["value"] for v in value}

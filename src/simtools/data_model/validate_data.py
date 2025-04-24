@@ -742,7 +742,7 @@ class DataValidator:
                 except KeyError as exc:
                     raise KeyError(f"Error reading validation schema from {schema_file}") from exc
         raise ValueError(
-            f"Schema version {schema_version} not found in schema file '{schema_file}'. "
+            f"Schema version {schema_version} not found in schema file {schema_file}. "
         )
 
     def _get_data_description(self, column_name=None, status_test=False):

@@ -35,6 +35,7 @@ def get_model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PAT
         raise FileNotFoundError(f"No schema files found in {schema_directory}")
     parameters = []
     for schema_file in schema_files:
+        # reading parameter 'name' only - first document in schema file should be ok
         schema_dict = gen.collect_data_from_file(file_name=schema_file, yaml_document=0)
         parameters.append(schema_dict.get("name"))
     return parameters, schema_files
