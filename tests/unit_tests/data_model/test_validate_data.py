@@ -11,7 +11,7 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
-from simtools.constants import SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema, validate_data
 
 logger = logging.getLogger()
@@ -641,6 +641,23 @@ def test_read_validation_schema(tmp_test_directory):
         data_validator._read_validation_schema(
             schema_file=tmp_test_directory / "wrong_schema.yml", schema_version="not_a_version"
         )
+
+    # test model parameter schema with multiple documents - no version given
+    dict_1 = data_validator._read_validation_schema(
+        MODEL_PARAMETER_SCHEMA_PATH / "corsika_starting_grammage.schema.yml"
+    )
+    assert isinstance(dict_1[0], dict)
+
+    # test model parameter schema with multiple documents - version given
+    dict_2 = data_validator._read_validation_schema(
+        MODEL_PARAMETER_SCHEMA_PATH / "corsika_starting_grammage.schema.yml", schema_version="0.2.0"
+    )
+    assert dict_2[0]["type"] == "dict"
+    # test model parameter schema with multiple documents - version given
+    dict_3 = data_validator._read_validation_schema(
+        MODEL_PARAMETER_SCHEMA_PATH / "corsika_starting_grammage.schema.yml", schema_version="0.1.0"
+    )
+    assert dict_3[0]["type"] == "float64"
 
 
 # incomplete test
