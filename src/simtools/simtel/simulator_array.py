@@ -61,7 +61,7 @@ class SimulatorArray(SimtelRunner):
         run_number: int (optional)
             run number
         weak_pointing: str (optional)
-            Determine weak pointing option for sim_telarray.
+            Specify weak pointing option for sim_telarray.
 
         Returns
         -------
