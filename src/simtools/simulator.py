@@ -78,7 +78,9 @@ class Simulator:
 
         self.sim_telarray_seeds = {
             "seed": self.args_dict.get("sim_telarray_instrument_seeds"),
-            "random_instances": self.args_dict.get("sim_telarray_random_instrument_instances"),
+            "random_instrument_instances": self.args_dict.get(
+                "sim_telarray_random_instrument_instances"
+            ),
             "seed_file_name": "sim_telarray_instrument_seeds.txt",  # name only; no directory
         }
         self.array_models = self._initialize_array_models(mongo_db_config)
@@ -138,7 +140,9 @@ class Simulator:
                     "seed": self._get_seed_for_random_instances_of_instrument(
                         self.sim_telarray_seeds["seed"], version
                     ),
-                    "random_instances": self.sim_telarray_seeds["random_instances"],
+                    "random_instrument_instances": self.sim_telarray_seeds[
+                        "random_instrument_instances"
+                    ],
                     "seed_file_name": self.sim_telarray_seeds["seed_file_name"],
                 },
             )

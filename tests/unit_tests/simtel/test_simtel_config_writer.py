@@ -56,7 +56,7 @@ def test_write_array_config_file(
             sim_telarray_seeds={
                 "seed": 12345,
                 "seed_file_name": "sim_telarray_instrument_seeds.txt",
-                "random_instances": 5,
+                "random_instrument_instances": 5,
             },
         )
         write_random_seeds_file_mock.assert_called_once()
@@ -263,7 +263,7 @@ def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
     sim_telarray_seeds = {
         "seed": 12345,
         "seed_file_name": "sim_telarray_instrument_seeds.txt",
-        "random_instances": 5,
+        "random_instrument_instances": 5,
     }
 
     simtel_config_writer._write_random_seeds_file(sim_telarray_seeds, config_file_directory)
@@ -273,7 +273,7 @@ def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
 
     with open(seed_file_path, encoding="utf-8") as file:
         lines = file.readlines()
-        assert len(lines) == sim_telarray_seeds["random_instances"] + 1
+        assert len(lines) == sim_telarray_seeds["random_instrument_instances"] + 1
         for line in lines:
             if line[0] == "#":
                 continue
