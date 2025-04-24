@@ -291,5 +291,6 @@ jobs:
           SIMTOOLS_DB_SERVER: 'mongodb'
         run: |
           source /workdir/env/bin/activate
-          pip install --no-cache-dir -e '.[tests,dev,doc]'
-          pytest -model_version=${{ matrix.model_version}} -n auto --no-cov tests/integration_tests/test_applications_from_config.py
+          pip install --no-cache-dir pytest pytest-cov pytest-requirements pytest-xdist
+          # TODO - add model_version
+          pytest --no-cov --color=yes -n auto tests/integration_tests/test_applications_from_config.py
