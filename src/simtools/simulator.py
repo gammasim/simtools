@@ -137,7 +137,7 @@ class Simulator:
                 mongo_db_config=mongo_db_config,
                 model_version=version,
                 sim_telarray_seeds={
-                    "seed": self._get_seed_for_random_instances_of_instrument(
+                    "seed": self._get_seed_for_random_instrument_instances(
                         self.sim_telarray_seeds["seed"], version
                     ),
                     "random_instrument_instances": self.sim_telarray_seeds[
@@ -149,7 +149,7 @@ class Simulator:
             for version in versions
         ]
 
-    def _get_seed_for_random_instances_of_instrument(self, seed, model_version):
+    def _get_seed_for_random_instrument_instances(self, seed, model_version):
         """
         Generate seed for random instances of the instrument.
 
