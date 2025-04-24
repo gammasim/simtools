@@ -233,6 +233,7 @@ jobs:
           - "6.0.0"
     container:
       image: ghcr.io/gammasim/simtools-prod-${{ matrix.version.simtel_version }}-corsika-${{ matrix.version.corsika_version }}-bernlohr-${{ matrix.version.bernlohr_version }}-${{ matrix.production.build_opt }}-${{ matrix.version.hadronic_model }}-${{ matrix.version.avx_instruction }}
+      options: --user 0
 
     services:
       mongodb:
@@ -245,6 +246,10 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -287,4 +292,4 @@ jobs:
         run: |
           source /workdir/env/bin/activate
           pip install --no-cache-dir -e '.[tests,dev,doc]'
-          pytest -model_version=${{ matrix.model_version}} --durations=20 -n 4 --dist loadscope --no-cov tests/integration_tests/test_applications_from_config.py
+          pytest -model_version=${{ matrix.model_version}} -n 4 --dist loadscope --no-cov tests/integration_tests/test_applications_from_config.py
