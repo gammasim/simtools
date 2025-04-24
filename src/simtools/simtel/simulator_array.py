@@ -60,7 +60,7 @@ class SimulatorArray(SimtelRunner):
             Full path of the input CORSIKA file
         run_number: int (optional)
             run number
-        weak_pointing: str (optional)
+        weak_pointing: bool (optional)
             Specify weak pointing option for sim_telarray.
 
         Returns
