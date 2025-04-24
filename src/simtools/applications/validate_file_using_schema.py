@@ -131,6 +131,7 @@ def validate_dict_using_schema(args_dict, logger):
     """
     Validate a schema file (or several files) given in yaml or json format.
 
+    This function validate all documents in a multi-document YAML file.
     Schema is either given as command line argument, read from the meta_schema_url or from
     the metadata section of the data dictionary.
 
