@@ -296,6 +296,7 @@ def test_sim_telarray_random_seeds():
     seeds = sim_telarray_random_seeds(seed, number)
     assert len(seeds) == number
     assert all(isinstance(s, np.int32) for s in seeds)
+    assert all(s >= 1 for s in seeds)  # sim_telarray seeds needs to be >0
 
     seed = 54321
     number = 10
