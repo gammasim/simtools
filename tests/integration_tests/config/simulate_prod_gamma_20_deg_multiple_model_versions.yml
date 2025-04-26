@@ -2,11 +2,11 @@
 CTA_SIMPIPE:
   APPLICATIONS:
   - APPLICATION: simtools-simulate-prod
-    TEST_NAME: gamma_20_deg_south_check_output
+    TEST_NAME: gamma_20_deg_multiple_model_versions
     CONFIGURATION:
       SIMULATION_SOFTWARE: corsika_sim_telarray
-      LABEL: check_output
-      MODEL_VERSION: 6.0.0
+      LABEL: multiple_model_versions
+      MODEL_VERSION: [6.0.0, 5.0.0]
       SITE: South
       ARRAY_LAYOUT_NAME: alpha
       PRIMARY: gamma
@@ -26,18 +26,12 @@ CTA_SIMPIPE:
     INTEGRATION_TESTS:
     - TEST_OUTPUT_FILES:
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_6.0.0_check_output.log_hist.tar.gz
+        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.log_hist.tar.gz
       - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
-        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_6.0.0_check_output.zst
-        EXPECTED_OUTPUT:
-          trigger_time:
-          - 0
-          - 50
-          pe_sum:
-          - 20
-          - 1000
-          photons:
-          - 90
-          - 1000
+        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_6.0.0_multiple_model_versions.zst
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_5.0.0_multiple_model_versions.log_hist.tar.gz
+      - PATH_DESCRIPTOR: PACK_FOR_GRID_REGISTER
+        FILE: run000001_gamma_za20deg_azm180deg_South_alpha_5.0.0_multiple_model_versions.zst
 SCHEMA_NAME: application_workflow.metaschema
 SCHEMA_VERSION: 0.3.0

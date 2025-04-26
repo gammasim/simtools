@@ -142,7 +142,7 @@ class SimulatorRayTracing(SimtelRunner):
 
     def _make_run_command(self, run_number=None, input_file=None):  # pylint: disable=unused-argument
         """
-        Generate simtel_array run command. Export sim_telarray configuration file(s).
+        Generate sim_telarray run command. Export sim_telarray configuration file(s).
 
         The run_number and input_file parameters are not relevant for the ray tracing simulation.
         """
