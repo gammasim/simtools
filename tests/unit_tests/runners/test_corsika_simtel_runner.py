@@ -198,7 +198,7 @@ def test_get_file_name(corsika_simtel_runner, simulation_file):
 
     assert (
         corsika_simtel_runner.get_file_name(
-            simulation_software="simtel", file_type="simtel_output", run_number=1
+            simulation_software="sim_telarray", file_type="simtel_output", run_number=1
         ).name
         == simtel_simulation_file
     )

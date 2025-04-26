@@ -71,8 +71,8 @@ class RunnerServices:
         """
         software_map = {
             "corsika": ["corsika"],
-            "simtel": ["simtel"],
-            "corsika_simtel": ["corsika", "simtel"],
+            "sim_telarray": ["sim_telarray"],
+            "corsika_sim_telarray": ["corsika", "sim_telarray"],
         }
         return software_map.get(simulation_software.lower(), [])
 
@@ -222,7 +222,13 @@ class RunnerServices:
         sub_log_file_dir.mkdir(parents=True, exist_ok=True)
         return sub_log_file_dir.joinpath(f"sub_{file_name}{suffix}")
 
-    def get_file_name(self, file_type, run_number=None, mode=None):
+    def get_file_name(
+        self,
+        file_type,
+        run_number=None,
+        mode=None,
+        model_version_index=0,
+    ):  # pylint: disable=unused-argument
         """
         Get a CORSIKA/sim_telarray style file name for various log and data file types.
 
@@ -234,6 +240,11 @@ class RunnerServices:
             Run number.
         mode: str
             out or err (optional, relevant only for sub_log).
+        model_version_index: int
+            Index of the model version.
+            This is not used here, but in other implementations of this function is
+            used to select the correct simulator_array instance in case
+            multiple array models are simulated.
 
         Returns
         -------

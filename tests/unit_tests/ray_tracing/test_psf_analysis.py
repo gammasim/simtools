@@ -85,7 +85,7 @@ def test_reading_simtel_file(args_dict, io_handler, tmp_test_directory, mocker, 
     mocker.patch.object(image_not_ok, "_is_photon_positions_ok", return_value=False)
     with (
         caplog.at_level(logging.ERROR),
-        pytest.raises(RuntimeError, match="Problems reading Simtel file - invalid data"),
+        pytest.raises(RuntimeError, match="Problems reading sim_telarray file - invalid data"),
     ):
         image_not_ok.read_photon_list_from_simtel_file(test_file)
 

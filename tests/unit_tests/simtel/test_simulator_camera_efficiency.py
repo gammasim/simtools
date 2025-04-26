@@ -19,7 +19,7 @@ def simulator_camera_efficiency(camera_efficiency_sst, site_model_south, simtel_
         simtel_path=simtel_path,
         telescope_model=camera_efficiency_sst.telescope_model,
         site_model=site_model_south,
-        file_simtel=camera_efficiency_sst._file["simtel"],
+        file_simtel=camera_efficiency_sst._file["sim_telarray"],
         label="test-simtel-runner-camera-efficiency",
     )
 
@@ -121,7 +121,7 @@ def test_get_one_dim_distribution(io_handler, db_config, simtel_path, model_vers
     simulator_camera_efficiency_prod5 = SimulatorCameraEfficiency(
         simtel_path=simtel_path,
         telescope_model=camera_efficiency_sst_prod5.telescope_model,
-        file_simtel=camera_efficiency_sst_prod5._file["simtel"],
+        file_simtel=camera_efficiency_sst_prod5._file["sim_telarray"],
         label="test-simtel-runner-camera-efficiency",
     )
     camera_filter_file = simulator_camera_efficiency_prod5._get_one_dim_distribution(
