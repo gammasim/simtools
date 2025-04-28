@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simtel.simtel_io_metadata &#8212; simtools v0.1.dev1+g1a6a6af Manual</title>
+    <title>simtel.simtel_io_metadata &#8212; simtools v0.1.dev1+g863d592 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=864b8493"></script>
+    <script src="../../_static/documentation_options.js?v=bb9c4455"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1a6a6af Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g863d592 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -398,7 +398,7 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cache</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">HistoryMeta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">HistoryMeta</span><span class="p">,</span> <span class="n">RunHeader</span>
 
 
 <div class="viewcode-block" id="read_sim_telarray_metadata">
@@ -488,6 +488,38 @@ document.write(`
             <span class="n">telescope_name_to_sim_telarray_id</span><span class="p">[</span><span class="n">telescope_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tel_id</span>
 
     <span class="k">return</span> <span class="n">telescope_name_to_sim_telarray_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">telescope_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_corsika_run_number">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_metadata.get_corsika_run_number">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_corsika_run_number</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the CORSIKA run number from a sim_telarray file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file: str</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int, None</span>
+<span class="sd">        CORSIKA run number. Returns None if not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">run_header</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">found_run_header</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">RunHeader</span><span class="p">):</span>
+                <span class="n">found_run_header</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">found_run_header</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">continue</span>
+            <span class="n">run_header</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">run_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">run_header</span> <span class="k">else</span> <span class="kc">None</span></div>
 
 </pre></div>
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.sim_telarray_metadata &#8212; simtools v0.1.dev1+g1a6a6af Manual</title>
+    <title>testing.sim_telarray_metadata &#8212; simtools v0.1.dev1+g863d592 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=864b8493"></script>
+    <script src="../../_static/documentation_options.js?v=bb9c4455"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1a6a6af Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g863d592 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -399,7 +399,9 @@ document.write(`
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_config_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimtelConfigReader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_config_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">sim_telarray_random_seeds</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simtools.simtel.simtel_io_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_corsika_run_number</span><span class="p">,</span>
     <span class="n">get_sim_telarray_telescope_id</span><span class="p">,</span>
     <span class="n">read_sim_telarray_metadata</span><span class="p">,</span>
 <span class="p">)</span>
@@ -423,6 +425,11 @@ document.write(`
     <span class="n">global_meta</span><span class="p">,</span> <span class="n">telescope_meta</span> <span class="o">=</span> <span class="n">read_sim_telarray_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found metadata in sim_telarray file for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">telescope_meta</span><span class="p">)</span><span class="si">}</span><span class="s2"> telescopes&quot;</span><span class="p">)</span>
     <span class="n">site_parameter_mismatch</span> <span class="o">=</span> <span class="n">_assert_model_parameters</span><span class="p">(</span><span class="n">global_meta</span><span class="p">,</span> <span class="n">array_model</span><span class="o">.</span><span class="n">site_model</span><span class="p">)</span>
+    <span class="n">sim_telarray_seed_mismatch</span> <span class="o">=</span> <span class="n">_assert_sim_telarray_seed</span><span class="p">(</span>
+        <span class="n">global_meta</span><span class="p">,</span> <span class="n">array_model</span><span class="o">.</span><span class="n">sim_telarray_seeds</span><span class="p">,</span> <span class="n">file</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">sim_telarray_seed_mismatch</span><span class="p">:</span>
+        <span class="n">site_parameter_mismatch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_telarray_seed_mismatch</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">telescope_meta</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array_model</span><span class="o">.</span><span class="n">telescope_model</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -482,10 +489,6 @@ document.write(`
                 <span class="n">value</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">sim_telarray_name</span><span class="p">]</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">)(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">()</span> <span class="k">else</span> <span class="n">value</span>
 
-            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> in sim_telarray file: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;in model: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_equal</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">parameter_type</span><span class="p">):</span>
                 <span class="n">invalid_parameter_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> mismatch between sim_telarray file: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">, &quot;</span>
@@ -493,6 +496,56 @@ document.write(`
                 <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">invalid_parameter_list</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_assert_sim_telarray_seed</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">sim_telarray_seeds</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assert that sim_telarray seed matches the values in the sim_telarray metadata.</span>
+
+<span class="sd">    Regenerate seeds using the sim_telarray_random_seeds function and compare with the metadata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    metadata: dict</span>
+<span class="sd">        Metadata dictionary.</span>
+<span class="sd">    sim_telarray_seeds: dict</span>
+<span class="sd">        Dictionary of sim_telarray seeds.</span>
+<span class="sd">    file : Path</span>
+<span class="sd">        Path to the sim_telarray file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    invalid_parameter_list: list</span>
+<span class="sd">        Error message if sim_telarray seeds do not match.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sim_telarray_seeds</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">metadata</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="s2">&quot;instrument_seed&quot;</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;instrument_instances&quot;</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instrument_seed&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="s2">&quot;Parameter instrument_seed mismatch between sim_telarray file: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;instrument_seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, and model: </span><span class="si">{</span><span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;sim_telarray_seed in sim_telarray file: </span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;instrument_seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;and model: </span><span class="si">{</span><span class="n">sim_telarray_seeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">run_number_modified</span> <span class="o">=</span> <span class="n">get_corsika_run_number</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">test_seeds</span> <span class="o">=</span> <span class="n">sim_telarray_random_seeds</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;instrument_seed&quot;</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;instrument_instances&quot;</span><span class="p">])</span>
+            <span class="p">)</span>
+            <span class="c1"># no +1 as in sim_telarray (as we count from 0)</span>
+            <span class="n">seed_used</span> <span class="o">=</span> <span class="n">run_number_modified</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;instrument_instances&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rng_select_seed&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">test_seeds</span><span class="p">[</span><span class="n">seed_used</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="s2">&quot;Parameter rng_select_seed mismatch between sim_telarray file: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;rng_select_seed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, and model: </span><span class="si">{</span><span class="n">test_seeds</span><span class="p">[</span><span class="n">seed_used</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_sim_telarray_name_from_parameter_name</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">):</span>

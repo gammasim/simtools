@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g1a6a6af Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+g863d592 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=864b8493"></script>
+    <script src="../_static/documentation_options.js?v=bb9c4455"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g1a6a6af Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g863d592 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -526,6 +526,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-metadata">simtel_io_metadata</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.get_corsika_run_number"><code class="docutils literal notranslate"><span class="pre">get_corsika_run_number()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.get_sim_telarray_telescope_id"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_telescope_id()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.read_sim_telarray_metadata"><code class="docutils literal notranslate"><span class="pre">read_sim_telarray_metadata()</span></code></a></li>
 </ul>
@@ -1080,6 +1081,26 @@ Only filled if stack_files is False.</p>
 <h2>simtel_io_metadata<a class="headerlink" href="#simtel-io-metadata" title="Link to this heading">#</a></h2>
 <p id="module-simtel.simtel_io_metadata"><span id="simtel-io-metadata-1"></span>Read metadata from sim_telarray files.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="simtel.simtel_io_metadata.get_corsika_run_number">
+<span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_metadata.</span></span><span class="sig-name descname"><span class="pre">get_corsika_run_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_metadata.html#get_corsika_run_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_metadata.get_corsika_run_number" title="Link to this definition">#</a></dt>
+<dd><p>Return the CORSIKA run number from a sim_telarray file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file: str</strong></dt><dd><p>Path to the sim_telarray file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int, None</dt><dd><p>CORSIKA run number. Returns None if not found.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="simtel.simtel_io_metadata.get_sim_telarray_telescope_id">
 <span class="sig-prename descclassname"><span class="pre">simtel.simtel_io_metadata.</span></span><span class="sig-name descname"><span class="pre">get_sim_telarray_telescope_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">telescope_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simtel_io_metadata.html#get_sim_telarray_telescope_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simtel_io_metadata.get_sim_telarray_telescope_id" title="Link to this definition">#</a></dt>
 <dd><p>Return the telescope ID for a given telescope name in a sim_telarray file.</p>
@@ -1489,6 +1510,7 @@ mirror_numbers.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel-io-metadata">simtel_io_metadata</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.get_corsika_run_number"><code class="docutils literal notranslate"><span class="pre">get_corsika_run_number()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.get_sim_telarray_telescope_id"><code class="docutils literal notranslate"><span class="pre">get_sim_telarray_telescope_id()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simtel_io_metadata.read_sim_telarray_metadata"><code class="docutils literal notranslate"><span class="pre">read_sim_telarray_metadata()</span></code></a></li>
 </ul>
