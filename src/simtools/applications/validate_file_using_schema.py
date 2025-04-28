@@ -131,6 +131,7 @@ def validate_dict_using_schema(args_dict, logger):
     """
     Validate a schema file (or several files) given in yaml or json format.
 
+    This function validate all documents in a multi-document YAML file.
     Schema is either given as command line argument, read from the meta_schema_url or from
     the metadata section of the data dictionary.
 
@@ -141,9 +142,12 @@ def validate_dict_using_schema(args_dict, logger):
         try:
             data = gen.collect_data_from_file(file_name=file_name)
         except FileNotFoundError as exc:
-            logger.error(f"Error reading schema file from {file_name}")
-            raise exc
-        schema.validate_dict_using_schema(data, _get_schema_file_name(args_dict, data))
+            raise FileNotFoundError(f"Error reading schema file from {file_name}") from exc
+        data = data if isinstance(data, list) else [data]
+        for data_dict in data:
+            schema.validate_dict_using_schema(
+                data_dict, _get_schema_file_name(args_dict, data_dict)
+            )
         logger.info(f"Successful validation of file {file_name}")
 
 
