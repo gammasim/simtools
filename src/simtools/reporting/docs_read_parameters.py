@@ -745,7 +745,7 @@ class ReadParameters:
                     )
                     file.write(
                         "Parameters shown in ***bold and italics*** are specific"
-                        " to each telescope.\n"
+                        " to each array element.\n"
                         "Parameters without emphasis are inherited from the design model.\n"
                     )
                     file.write("\n\n")
