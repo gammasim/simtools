@@ -895,16 +895,19 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
             "value": 0,
             "unit": None,
             "parameter_version": "1.0.0",
+            "instrument": "ILLN-01",
         },
         "laser_events": {
             "value": 10,
             "unit": None,
             "parameter_version": "1.0.0",
+            "instrument": "ILLN-design",
         },
         "pedestal_events": {
             "value": 100,
             "unit": None,
             "parameter_version": "1.0.0",
+            "instrument": "ILLN-01",
         },
     }
 
@@ -932,7 +935,7 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
 
     with patch.object(read_parameters, "get_all_parameter_descriptions") as mock_desc:
         mock_desc.return_value = mock_descriptions
-        result = read_parameters.get_calibration_data(all_parameter_data)
+        result = read_parameters.get_calibration_data(all_parameter_data, "ILLN-01")
 
         # Verify the structure and ordering of the result
         assert len(result) == 3
@@ -962,7 +965,6 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
     assert "| Values" in content
     assert "| Short Description" in content
     assert "1.0.0" in content
-    assert "| dark events |" in content
     assert "| laser events |" in content
 
 
@@ -978,21 +980,25 @@ def test_get_calibration_data(io_handler, db_config):
             "value": 1,
             "unit": None,
             "parameter_version": "1.0.0",
+            "instrument": "ILLN-design",
         },
         "laser_events": {
             "value": 10,
             "unit": None,
             "parameter_version": "1.0.0",
+            "instrument": "ILLN-01",
         },
         "pedestal_events": {
             "value": 100,
             "unit": None,
             "parameter_version": "1.0.0",
+            "instrument": "ILLN-01",
         },
         "none_value": {
             "value": None,
             "unit": None,
             "parameter_version": "1.0.0",
+            "instrument": "ILLN-design",
         },
     }
 
@@ -1021,7 +1027,7 @@ def test_get_calibration_data(io_handler, db_config):
     # Mock descriptions using patch
     with patch.object(read_parameters, "get_all_parameter_descriptions") as mock_desc:
         mock_desc.return_value = mock_descriptions
-        result = read_parameters.get_calibration_data(mock_data)
+        result = read_parameters.get_calibration_data(mock_data, "ILLN-01")
 
     # Assert the result contains the expected data
     assert result[0][0] == "Camera"

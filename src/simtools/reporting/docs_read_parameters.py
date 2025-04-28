@@ -640,7 +640,7 @@ class ReadParameters:
                     file, all_parameter_data["array_triggers"]["value"]
                 )
 
-    def get_calibration_data(self, all_parameter_data):
+    def get_calibration_data(self, all_parameter_data, array_element):
         """Get calibration data and descriptions for a given array element."""
         parameter_descriptions = self.get_all_parameter_descriptions(
             collection="calibration_devices"
@@ -672,6 +672,15 @@ class ReadParameters:
             inst_class = parameter_descriptions[2].get(
                 parameter, telescope_descriptions[2].get(parameter)
             )
+
+            matching_instrument = parameter_data["instrument"] == array_element
+            if not names.is_design_type(array_element) and matching_instrument:
+                parameter = f"***{parameter}***"
+                parameter_version = f"***{parameter_version}***"
+                if not re.match(r"^\[.*\]\(.*\)$", value.strip()):
+                    value = f"***{value}***"
+                description = f"***{description}***"
+                short_description = f"***{short_description}***"
 
             # Group by class name
             if inst_class not in class_grouped_data:
@@ -719,11 +728,29 @@ class ReadParameters:
 
             output_filename = Path(self.output_path / (f"{calibration_device}.md"))
             output_filename.parent.mkdir(parents=True, exist_ok=True)
-            data = self.get_calibration_data(all_parameter_data)
+            data = self.get_calibration_data(all_parameter_data, calibration_device)
+
+            design_model = self.db.get_design_model(
+                self.model_version, calibration_device, "calibration_devices"
+            )
 
             with output_filename.open("w", encoding="utf-8") as file:
                 file.write(f"# {calibration_device}\n")
                 file.write("\n\n")
+
+                if not names.is_design_type(calibration_device):
+                    file.write(
+                        "The design model can be found here: "
+                        f"[{design_model}]"
+                        f"({design_model}.md).\n\n"
+                    )
+                    file.write(
+                        "Parameters shown in ***bold and italics*** are specific"
+                        " to each telescope.\n"
+                        "Parameters without emphasis are inherited from the design model.\n"
+                    )
+                    file.write("\n\n")
+
                 for class_name, group in groupby(data, key=lambda x: x[0]):
                     group = sorted(group, key=lambda x: x[1])
                     file.write(f"## {class_name}\n\n")
