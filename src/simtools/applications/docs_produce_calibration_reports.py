@@ -20,7 +20,6 @@ def _parse(label):
     return config.initialize(
         db_config=True,
         simulation_model=["model_version"],
-        simulation_configuration=["software"],
     )
 
 
@@ -38,12 +37,12 @@ def main():  # noqa: D103
         db_config=db_config, args=args, output_path=output_path / f"{args.get('model_version')}"
     )
 
-    read_parameters.produce_simulation_configuration_report()
+    read_parameters.produce_calibration_reports()
 
     logger.info(
-        f"Configuration reports for {args.get('simulation_software')} produced successfully."
+        f"Calibation reports for model version {args.get('model_version')} produced successfully."
     )
-    logger.info(f"Output path: {output_path}/{args.get('model_version')}/")
+    logger.info(f"Output path: {output_path}/f'{args.get('model_version')}'/")
 
 
 if __name__ == "__main__":
