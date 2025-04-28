@@ -639,3 +639,84 @@ class ReadParameters:
                 self._write_array_triggers_section(
                     file, all_parameter_data["array_triggers"]["value"]
                 )
+
+    def get_calibration_data(self, all_parameter_data):
+        """Get calibration data and descriptions for a given array element."""
+        parameter_descriptions = self.get_all_parameter_descriptions(
+            collection="calibration_devices"
+        )
+        telescope_descriptions = self.get_all_parameter_descriptions(collection="telescopes")
+        data = []
+        class_grouped_data = {}
+
+        for parameter in all_parameter_data.keys():
+            parameter_data = all_parameter_data.get(parameter)
+            parameter_version = parameter_data.get("parameter_version")
+            unit = parameter_data.get("unit") or " "
+            value_data = parameter_data.get("value")
+
+            if value_data is None:
+                continue
+
+            file_flag = parameter_data.get("file", False)
+            value = self._format_parameter_value(parameter, value_data, unit, file_flag)
+
+            description = parameter_descriptions[0].get(
+                parameter, telescope_descriptions[0].get(parameter)
+            )
+            short_description = parameter_descriptions[1].get(
+                parameter, telescope_descriptions[1].get(parameter)
+            )
+            if short_description is None:
+                short_description = description
+            inst_class = parameter_descriptions[2].get(
+                parameter, telescope_descriptions[2].get(parameter)
+            )
+
+            # Group by class name
+            if inst_class not in class_grouped_data:
+                class_grouped_data[inst_class] = []
+
+            class_grouped_data[inst_class].append(
+                [
+                    inst_class,
+                    parameter,
+                    parameter_version,
+                    value,
+                    description,
+                    short_description,
+                ]
+            )
+
+        data = []
+        for class_name in sorted(class_grouped_data.keys(), reverse=True):
+            if class_name in class_grouped_data:
+                sorted_class_data = sorted(class_grouped_data[class_name], key=lambda x: x[1])
+                data.extend(sorted_class_data)
+
+        return data
+
+    def produce_calibration_reports(self):
+        """Write calibration reports."""
+        array_elements = self.db.get_array_elements(
+            self.model_version, collection="calibration_devices"
+        )
+        for calibration_device in array_elements:
+            all_parameter_data = self.db.get_model_parameters(
+                site=names.get_site_from_array_element_name(calibration_device),
+                array_element_name=calibration_device,
+                collection="calibration_devices",
+                model_version=self.model_version,
+            )
+
+            output_filename = Path(self.output_path / (f"{calibration_device}.md"))
+            output_filename.parent.mkdir(parents=True, exist_ok=True)
+            data = self.get_calibration_data(all_parameter_data)
+
+            with output_filename.open("w", encoding="utf-8") as file:
+                file.write(f"# {calibration_device}\n")
+                file.write("\n\n")
+                for class_name, group in groupby(data, key=lambda x: x[0]):
+                    group = sorted(group, key=lambda x: x[1])
+                    file.write(f"## {class_name}\n\n")
+                    self._write_to_file(group, file)

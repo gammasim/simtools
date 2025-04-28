@@ -877,3 +877,154 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
 
         report_file_corsika = output_path / f"configuration_{read_parameters.software}.md"
         assert report_file_corsika.exists()
+
+
+def test_produce_calibration_reports(io_handler, db_config, mocker):
+    """Test generation of calibration report for an array element."""
+    args = {"model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory(sub_dir=f"{args['model_version']}")
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    # Mock array elements
+    mock_array_elements = ["ILLN-01"]
+    mocker.patch.object(read_parameters.db, "get_array_elements", return_value=mock_array_elements)
+
+    # Mock parameter data
+    all_parameter_data = {
+        "dark_events": {
+            "value": 0,
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+        "laser_events": {
+            "value": 10,
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+        "pedestal_events": {
+            "value": 100,
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+    }
+
+    # Mock get_model_parameters
+    mocker.patch.object(read_parameters.db, "get_model_parameters", return_value=all_parameter_data)
+
+    # Mock descriptions
+    mock_descriptions = (
+        {  # Full descriptions
+            "dark_events": "Dark pedestal events",
+            "laser_events": "Laser calibration events",
+            "pedestal_events": "Pedestal events with open lid",
+        },
+        {  # Short descriptions
+            "dark_events": "Dark events",
+            "laser_events": "Laser events",
+            "pedestal_events": "Pedestal events",
+        },
+        {  # Classes
+            "dark_events": "Calibration",
+            "laser_events": "Calibration",
+            "pedestal_events": "Camera",
+        },
+    )
+
+    with patch.object(read_parameters, "get_all_parameter_descriptions") as mock_desc:
+        mock_desc.return_value = mock_descriptions
+        result = read_parameters.get_calibration_data(all_parameter_data)
+
+        # Verify the structure and ordering of the result
+        assert len(result) == 3
+
+        # Check that parameters within each class are sorted alphabetically
+        assert result[1][1] < result[2][1]  # dark_events should come before laser_events
+
+        # Verify the content of a specific entry
+        laser_event = next(x for x in result if x[1] == "laser_events")
+        assert laser_event[2] == "1.0.0"  # parameter version
+        assert laser_event[3] == "10"  # value
+        assert laser_event[4] == "Laser calibration events"  # description
+        assert laser_event[5] == "Laser events"  # short description
+
+    # Run the method
+    read_parameters.produce_calibration_reports()
+
+    # Verify output file exists
+    output_file = Path(output_path) / "ILLN-01.md"
+    assert output_file.exists()
+
+    # Check file content
+    content = output_file.read_text()
+
+    assert "# ILLN-01" in content
+    assert "## Calibration" in content
+    assert "| Parameter Name" in content
+    assert "| Values" in content
+    assert "| Short Description" in content
+    assert "1.0.0" in content
+    assert "| dark events |" in content
+    assert "| laser events |" in content
+
+
+def test_get_calibration_data(io_handler, db_config):
+    args = {
+        "model_version": "6.0.0",
+    }
+    output_path = io_handler.get_output_directory(sub_dir=f"{args.get('model_version')}")
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    mock_data = {
+        "dark_events": {
+            "value": 1,
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+        "laser_events": {
+            "value": 10,
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+        "pedestal_events": {
+            "value": 100,
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+        "none_value": {
+            "value": None,
+            "unit": None,
+            "parameter_version": "1.0.0",
+        },
+    }
+
+    # Mock descriptions
+    mock_descriptions = (
+        {  # Full descriptions
+            "dark_events": "Dark pedestal events",
+            "laser_events": "Laser calibration events",
+            "pedestal_events": "Pedestal events with open lid",
+            "none_value": "None value parameter description.",
+        },
+        {  # Short descriptions
+            "dark_events": "Dark events",
+            "laser_events": None,
+            "pedestal_events": "Pedestal events",
+            "none_value": "Short description for none value",
+        },
+        {  # Classes
+            "dark_events": "Calibration",
+            "laser_events": "Calibration",
+            "pedestal_events": "Camera",
+            "none_value": "Calibration",
+        },
+    )
+
+    # Mock descriptions using patch
+    with patch.object(read_parameters, "get_all_parameter_descriptions") as mock_desc:
+        mock_desc.return_value = mock_descriptions
+        result = read_parameters.get_calibration_data(mock_data)
+
+    # Assert the result contains the expected data
+    assert result[0][0] == "Camera"
+    assert len(result[0]) == 6
+    assert len(result) == 3
