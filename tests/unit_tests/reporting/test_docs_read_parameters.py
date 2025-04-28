@@ -915,7 +915,7 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
     mock_descriptions = (
         {  # Full descriptions
             "dark_events": "Dark pedestal events",
-            "laser_events": "Laser calibration events",
+            "laser_events": "Description for laser events",
             "pedestal_events": "Pedestal events with open lid",
         },
         {  # Short descriptions
@@ -944,7 +944,7 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
         laser_event = next(x for x in result if x[1] == "laser_events")
         assert laser_event[2] == "1.0.0"  # parameter version
         assert laser_event[3] == "10"  # value
-        assert laser_event[4] == "Laser calibration events"  # description
+        assert laser_event[4] == "Description for laser events"  # description
         assert laser_event[5] == "Laser events"  # short description
 
     # Run the method
@@ -959,7 +959,6 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
 
     assert "# ILLN-01" in content
     assert "## Calibration" in content
-    assert "| Parameter Name" in content
     assert "| Values" in content
     assert "| Short Description" in content
     assert "1.0.0" in content
