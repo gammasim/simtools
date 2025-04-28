@@ -1,7 +1,7 @@
 ---
 CTA_SIMPIPE:
   APPLICATIONS:
-  - APPLICATION: simtools-docs-produce-caibration-reports
+  - APPLICATION: simtools-docs-produce-calibration-reports
     TEST_NAME: run
     CONFIGURATION:
       MODEL_VERSION: 6.0.0
