@@ -1,14 +1,16 @@
 #!/usr/bin/python3
 
 import copy
+import logging
 import re
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 
 from simtools.simtel.simtel_io_metadata import read_sim_telarray_metadata
 from simtools.testing.sim_telarray_metadata import (
+    _assert_sim_telarray_seed,
     _sim_telarray_name_from_parameter_name,
     assert_sim_telarray_metadata,
     is_equal,
@@ -91,9 +93,8 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
         "wrong_file.dat"
     )
 
-    with pytest.raises(
-        ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
-    ):
+    mismatch_message = r"^Telescope or site model parameters do not match sim_telarray "
+    with pytest.raises(ValueError, match=mismatch_message):
         assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_site)
 
     array_model_mismatched_telescope = copy.deepcopy(array_model_north)
@@ -101,9 +102,7 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
         "random_mono_probability"
     ]["value"] = 0.99
 
-    with pytest.raises(
-        ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
-    ):
+    with pytest.raises(ValueError, match=mismatch_message):
         assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_telescope)
 
 
@@ -136,3 +135,60 @@ def test_is_equal():
     assert is_equal(None, None, "any") is True
     assert is_equal("none", None, "any") is True
     assert is_equal(None, "none", "any") is True
+
+
+def test_assert_sim_telarray_seed(caplog):
+    """Test _assert_sim_telarray_seed."""
+
+    metadata = {"instrument_seed": "12345", "instrument_instances": 100}
+    sim_telarray_seeds = {"seed": "12345", "instrument_instances": 100}
+
+    # Test with matching seeds
+    with caplog.at_level(logging.INFO):
+        assert _assert_sim_telarray_seed(metadata, sim_telarray_seeds) is None
+        assert "sim_telarray_seed in sim_telarray file: 12345, and model: 12345" in caplog.text
+
+    # Test with mismatched seeds
+    metadata = {"instrument_seed": "12345", "instrument_instances": 100}
+    sim_telarray_seeds = {"seed": "54321", "instrument_instances": 100}
+    assert (
+        _assert_sim_telarray_seed(metadata, sim_telarray_seeds)
+        == "Parameter instrument_seed mismatch between sim_telarray file: 12345, and model: 54321"
+    )
+
+    # Test with sim_telarray_seeds is None
+    assert _assert_sim_telarray_seed(metadata, None) is None
+
+
+def test_assert_sim_telarray_metadata_seed_mismatch(test_metadata_file, array_model_north):
+    """Test assert_sim_telarray_metadata with mismatched seeds."""
+    array_model_mismatched_seed = copy.deepcopy(array_model_north)
+    array_model_mismatched_seed.sim_telarray_seeds = {"seed": "54321"}
+
+    with patch(
+        "simtools.testing.sim_telarray_metadata._assert_sim_telarray_seed",
+        return_value="Parameter sim_telarray_seeds mismatch",
+    ):
+        with pytest.raises(
+            ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
+        ):
+            assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_seed)
+
+
+def test_assert_sim_telarray_seed_with_rng_select_seed(caplog):
+    """Test _assert_sim_telarray_seed with rng_select_seed."""
+    metadata = {
+        "instrument_seed": "12345",
+        "instrument_instances": 100,
+        "rng_select_seed": "12394",
+    }
+    sim_telarray_seeds = {"seed": "12345", "instrument_instances": 100}
+
+    with patch(
+        "simtools.testing.sim_telarray_metadata.get_corsika_run_number", return_value=10
+    ) as get_corsika_run_number_mock:
+        with caplog.at_level(logging.INFO):
+            result = _assert_sim_telarray_seed(metadata, sim_telarray_seeds, "test_file")
+            assert "Parameter rng_select_seed mismatch between sim_telarray file" in result
+            assert "sim_telarray_seed in sim_telarray file: 12345, and model: 12345" in caplog.text
+            get_corsika_run_number_mock.assert_called_once_with("test_file")

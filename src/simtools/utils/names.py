@@ -148,15 +148,18 @@ def _load_model_parameters():
     """
     Get model parameters properties from schema files.
 
+    For schema files including multiple schemas, only the first one is returned
+    (as this is the most recent definition).
+
     Returns
     -------
     dict
         Model parameters definitions for all model parameters.
     """
     _parameters = {}
-    for schema_file in list(Path(MODEL_PARAMETER_SCHEMA_PATH).rglob("*.yml")):
+    for schema_file in Path(MODEL_PARAMETER_SCHEMA_PATH).rglob("*.yml"):
         with open(schema_file, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+            data = next(yaml.safe_load_all(f))
             _parameters[data["name"]] = data
     return _parameters
 
