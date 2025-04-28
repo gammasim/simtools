@@ -18,7 +18,7 @@ from simtools.utils import names
 _logger = logging.getLogger(__name__)
 
 
-def get_get_model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PATH):
+def get_model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PATH):
     """
     Return list of parameters and schema files located in schema file directory.
 
@@ -35,7 +35,8 @@ def get_get_model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA
         raise FileNotFoundError(f"No schema files found in {schema_directory}")
     parameters = []
     for schema_file in schema_files:
-        schema_dict = gen.collect_data_from_file(file_name=schema_file)
+        # reading parameter 'name' only - first document in schema file should be ok
+        schema_dict = gen.collect_data_from_file(file_name=schema_file, yaml_document=0)
         parameters.append(schema_dict.get("name"))
     return parameters, schema_files
 
