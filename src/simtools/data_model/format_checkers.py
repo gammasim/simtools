@@ -5,6 +5,7 @@ import re
 import astropy.units as u
 import jsonschema
 
+from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.utils import names
 
 format_checker = jsonschema.FormatChecker()
@@ -50,3 +51,11 @@ def check_array_triggers_name(name):
         raise ValueError(f"Array trigger name '{name}' does not match pattern '{pattern}'")
     names.validate_array_element_type(re.match(pattern, name).group(1))
     return True
+
+
+@format_checker.checks("common_particle_name")
+def check_common_particle_name(name):
+    """Validate common particle names for jsonschema."""
+    if name in PrimaryParticle.particle_names() or name == "default":
+        return True
+    raise ValueError(f"Invalid common particle name: '{name}'")
