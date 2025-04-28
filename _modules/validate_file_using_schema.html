@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>validate_file_using_schema &#8212; simtools v0.1.dev1+g863d592 Manual</title>
+    <title>validate_file_using_schema &#8212; simtools v0.1.dev1+g21dd558 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=bb9c4455"></script>
+    <script src="../_static/documentation_options.js?v=439519f9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g863d592 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g21dd558 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -527,6 +527,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate a schema file (or several files) given in yaml or json format.</span>
 
+<span class="sd">    This function validate all documents in a multi-document YAML file.</span>
 <span class="sd">    Schema is either given as command line argument, read from the meta_schema_url or from</span>
 <span class="sd">    the metadata section of the data dictionary.</span>
 
@@ -537,9 +538,12 @@ document.write(`
         <span class="k">try</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading schema file from </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">exc</span>
-        <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading schema file from </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">data</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">data_dict</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">schema</span><span class="o">.</span><span class="n">validate_dict_using_schema</span><span class="p">(</span>
+                <span class="n">data_dict</span><span class="p">,</span> <span class="n">_get_schema_file_name</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful validation of file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 

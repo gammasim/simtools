@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>data_model.schema &#8212; simtools v0.1.dev1+g863d592 Manual</title>
+    <title>data_model.schema &#8212; simtools v0.1.dev1+g21dd558 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=bb9c4455"></script>
+    <script src="../../_static/documentation_options.js?v=439519f9"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g863d592 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g21dd558 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -412,9 +412,9 @@ document.write(`
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_get_model_parameter_schema_files">
-<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.schema.get_get_model_parameter_schema_files">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_get_model_parameter_schema_files</span><span class="p">(</span><span class="n">schema_directory</span><span class="o">=</span><span class="n">MODEL_PARAMETER_SCHEMA_PATH</span><span class="p">):</span>
+<div class="viewcode-block" id="get_model_parameter_schema_files">
+<a class="viewcode-back" href="../../api-reference/data_model.html#data_model.schema.get_model_parameter_schema_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_model_parameter_schema_files</span><span class="p">(</span><span class="n">schema_directory</span><span class="o">=</span><span class="n">MODEL_PARAMETER_SCHEMA_PATH</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return list of parameters and schema files located in schema file directory.</span>
 
@@ -431,7 +431,8 @@ document.write(`
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No schema files found in </span><span class="si">{</span><span class="n">schema_directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">parameters</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">schema_file</span> <span class="ow">in</span> <span class="n">schema_files</span><span class="p">:</span>
-        <span class="n">schema_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">schema_file</span><span class="p">)</span>
+        <span class="c1"># reading parameter &#39;name&#39; only - first document in schema file should be ok</span>
+        <span class="n">schema_dict</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">schema_file</span><span class="p">,</span> <span class="n">yaml_document</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">schema_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">schema_files</span></div>
 
