@@ -1,0 +1,13 @@
+---
+CTA_SIMPIPE:
+  APPLICATIONS:
+  - APPLICATION: simtools-docs-produce-caibration-reports
+    TEST_NAME: run
+    CONFIGURATION:
+      MODEL_VERSION: 6.0.0
+      OUTPUT_PATH: simtools-output/reports/productions/
+      USE_PLAIN_OUTPUT_PATH: true
+    INTEGRATION_TESTS:
+    - OUTPUT_FILE: 6.0.0/ILLN-01.md
+SCHEMA_NAME: application_workflow.metaschema
+SCHEMA_VERSION: 0.3.0
