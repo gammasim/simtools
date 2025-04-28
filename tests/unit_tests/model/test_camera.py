@@ -10,6 +10,11 @@ from simtools.model.camera import Camera
 logger = logging.getLogger()
 
 
+@pytest.fixture
+def camera_config_file():
+    return "dummy.dat"
+
+
 def test_focal_length():
     with pytest.raises(ValueError, match="The focal length must be larger than zero"):
         Camera(
@@ -58,7 +63,7 @@ def test_find_neighbors_square():
     assert neighbors_radius_sqrt_2 == expected_neighbors_radius_sqrt_2
 
 
-def test_validate_pixels_valid():
+def test_validate_pixels_valid(camera_config_file):
     """Test validate_pixels with a valid pixel dictionary."""
     pixels = {
         "pixel_diameter": 10,
@@ -72,11 +77,10 @@ def test_validate_pixels_valid():
         "pix_id": [],
         "pix_on": [],
     }
-    camera_config_file = "dummy.dat"
     Camera.validate_pixels(pixels, camera_config_file)  # Should not raise an exception
 
 
-def test_validate_pixels_invalid_diameter():
+def test_validate_pixels_invalid_diameter(camera_config_file):
     """Test validate_pixels with an invalid pixel diameter."""
     pixels = {
         "pixel_diameter": 9999,
@@ -90,14 +94,13 @@ def test_validate_pixels_invalid_diameter():
         "pix_id": [],
         "pix_on": [],
     }
-    camera_config_file = "dummy.dat"
     with pytest.raises(
         ValueError, match=f"Could not read the pixel diameter from {camera_config_file} file"
     ):
         Camera.validate_pixels(pixels, camera_config_file)
 
 
-def test_validate_pixels_invalid_shape():
+def test_validate_pixels_invalid_shape(camera_config_file):
     """Test validate_pixels with an invalid pixel shape."""
     pixels = {
         "pixel_diameter": 10,
@@ -111,7 +114,6 @@ def test_validate_pixels_invalid_shape():
         "pix_id": [],
         "pix_on": [],
     }
-    camera_config_file = "dummy.dat"
     with pytest.raises(
         ValueError,
         match=f"Pixel shape in {camera_config_file} unrecognized \\(has to be 1, 2 or 3\\)",
