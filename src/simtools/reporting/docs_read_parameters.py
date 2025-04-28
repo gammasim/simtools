@@ -698,9 +698,17 @@ class ReadParameters:
 
     def produce_calibration_reports(self):
         """Write calibration reports."""
-        array_elements = self.db.get_array_elements(
+        calibration_array_elements = self.db.get_array_elements(
             self.model_version, collection="calibration_devices"
         )
+        array_elements = calibration_array_elements.copy()
+        for element in calibration_array_elements:
+            design_model = self.db.get_design_model(
+                self.model_version, element, "calibration_devices"
+            )
+            if design_model and design_model not in array_elements:
+                array_elements.append(design_model)
+
         for calibration_device in array_elements:
             all_parameter_data = self.db.get_model_parameters(
                 site=names.get_site_from_array_element_name(calibration_device),
