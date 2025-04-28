@@ -193,10 +193,11 @@ class SimtelConfigWriter:
 
         self._add_model_parameters_to_metadata(model_parameters, meta_parameters, prefix)
 
-        if sim_telarray_seeds and sim_telarray_seeds.get("random_instances"):
+        if sim_telarray_seeds and sim_telarray_seeds.get("random_instrument_instances"):
             meta_parameters.append(f"{prefix} set instrument_seed={sim_telarray_seeds['seed']}")
             meta_parameters.append(
-                f"{prefix} set instrument_instances={sim_telarray_seeds['random_instances']}"
+                f"{prefix} set instrument_instances="
+                f"{sim_telarray_seeds['random_instrument_instances']}"
             )
 
         return meta_parameters
@@ -278,7 +279,7 @@ class SimtelConfigWriter:
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
 
-        if sim_telarray_seeds and sim_telarray_seeds.get("random_instances"):
+        if sim_telarray_seeds and sim_telarray_seeds.get("random_instrument_instances"):
             self._write_random_seeds_file(sim_telarray_seeds, config_file_directory)
 
     def _write_random_seeds_file(self, sim_telarray_seeds, config_file_directory):
@@ -287,7 +288,7 @@ class SimtelConfigWriter:
 
         Parameters
         ----------
-        random_instances_of_instrument: int
+        random_instrument_instances: int
             Number of random instances of the instrument.
         """
         self._logger.info(
@@ -295,10 +296,10 @@ class SimtelConfigWriter:
             f"{config_file_directory}/{sim_telarray_seeds['seed_file_name']}"
             f" (global seed {sim_telarray_seeds['seed']})"
         )
-        if sim_telarray_seeds["random_instances"] > 1024:
+        if sim_telarray_seeds["random_instrument_instances"] > 1024:
             raise ValueError("Number of random instances of instrument must be less than 1024")
         random_integers = sim_telarray_random_seeds(
-            sim_telarray_seeds["seed"], sim_telarray_seeds["random_instances"]
+            sim_telarray_seeds["seed"], sim_telarray_seeds["random_instrument_instances"]
         )
         with open(
             config_file_directory / sim_telarray_seeds["seed_file_name"], "w", encoding="utf-8"
