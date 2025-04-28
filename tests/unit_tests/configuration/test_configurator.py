@@ -48,7 +48,7 @@ def test_fill_from_command_line(configurator, args_dict):
         configurator._fill_from_command_line(arg_list=None)
 
     configurator._fill_from_command_line(arg_list=["--config", Path("abc")])
-    configurator.config.get("config") == "abc"
+    assert configurator.config.get("config") == "abc"
 
 
 def test_fill_from_config_dict(configurator, args_dict):
