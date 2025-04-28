@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>sim_telarray &#8212; simtools v0.1.dev1+g21dd558 Manual</title>
+    <title>sim_telarray &#8212; simtools v0.1.dev1+gac66c2c Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=439519f9"></script>
+    <script src="../_static/documentation_options.js?v=da5ea8ef"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -135,7 +135,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g21dd558 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gac66c2c Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -534,6 +534,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-array">simulator_array</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray"><code class="docutils literal notranslate"><span class="pre">SimulatorArray</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.get_power_law_for_sim_telarray_histograms()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.make_run_command"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.make_run_command()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1194,6 +1195,30 @@ the difference between this exponent and the one used for the shower simulations
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="simtel.simulator_array.SimulatorArray.make_run_command">
+<span class="sig-name descname"><span class="pre">make_run_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weak_pointing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simtel/simulator_array.html#SimulatorArray.make_run_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simtel.simulator_array.SimulatorArray.make_run_command" title="Link to this definition">#</a></dt>
+<dd><p>Build and return the command to run sim_telarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_file: str</strong></dt><dd><p>Full path of the input CORSIKA file</p>
+</dd>
+<dt><strong>run_number: int (optional)</strong></dt><dd><p>run number</p>
+</dd>
+<dt><strong>weak_pointing: bool (optional)</strong></dt><dd><p>Specify weak pointing option for sim_telarray.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>Command to run sim_telarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -1518,6 +1543,7 @@ mirror_numbers.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulator-array">simulator_array</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray"><code class="docutils literal notranslate"><span class="pre">SimulatorArray</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.get_power_law_for_sim_telarray_histograms"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.get_power_law_for_sim_telarray_histograms()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simtel.simulator_array.SimulatorArray.make_run_command"><code class="docutils literal notranslate"><span class="pre">SimulatorArray.make_run_command()</span></code></a></li>
 </ul>
 </li>
 </ul>
