@@ -699,9 +699,8 @@ class ReadParameters:
 
         data = []
         for class_name in sorted(class_grouped_data.keys(), reverse=True):
-            if class_name in class_grouped_data:
-                sorted_class_data = sorted(class_grouped_data[class_name], key=lambda x: x[1])
-                data.extend(sorted_class_data)
+            sorted_class_data = sorted(class_grouped_data[class_name], key=lambda x: x[1])
+            data.extend(sorted_class_data)
 
         return data
 
