@@ -7,7 +7,7 @@ from unittest import mock
 import numpy as np
 import pytest
 
-from simtools.simtel.simtel_config_writer import SimtelConfigWriter
+from simtools.simtel.simtel_config_writer import SimtelConfigWriter, sim_telarray_random_seeds
 
 logger = logging.getLogger()
 
@@ -258,11 +258,12 @@ def test_write_dummy_telescope_configuration_file(
 
 
 def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
+    seed_file_name = "sim_telarray_instrument_seeds.txt"
     config_file_directory = Path(tmp_test_directory) / "model"
     config_file_directory.mkdir(exist_ok=True)
     sim_telarray_seeds = {
         "seed": 12345,
-        "seed_file_name": "sim_telarray_instrument_seeds.txt",
+        "seed_file_name": seed_file_name,
         "random_instrument_instances": 5,
     }
 
@@ -278,3 +279,34 @@ def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
             if line[0] == "#":
                 continue
             assert line.strip().isdigit()
+
+    sim_telarray_seeds = {
+        "seed": 12345,
+        "seed_file_name": seed_file_name,
+        "random_instrument_instances": 1025,
+    }
+    with pytest.raises(
+        ValueError, match="Number of random instances of instrument must be less than 1024"
+    ):
+        simtel_config_writer._write_random_seeds_file(sim_telarray_seeds, config_file_directory)
+
+
+def test_sim_telarray_random_seeds():
+    seed = 12345
+    number = 5
+    seeds = sim_telarray_random_seeds(seed, number)
+    assert len(seeds) == number
+    assert all(isinstance(s, np.int32) for s in seeds)
+    assert all(s >= 1 for s in seeds)  # sim_telarray seeds needs to be >0
+
+    seed = 54321
+    number = 10
+    seeds = sim_telarray_random_seeds(seed, number)
+    assert len(seeds) == number
+    assert all(isinstance(s, np.int32) for s in seeds)
+
+    # Test with zero number of seeds
+    seed = 12345
+    number = 0
+    seeds = sim_telarray_random_seeds(seed, number)
+    assert len(seeds) == number
