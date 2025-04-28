@@ -634,28 +634,30 @@ def test_read_validation_schema(tmp_test_directory):
     # read a 'wrong' schema file with no 'data' key included
     with open(tmp_test_directory / "wrong_schema.yml", "w") as _file:
         yaml.dump({"wrong_key": []}, _file)
+    wrong_schema = "wrong_schema.yml"
     with pytest.raises(KeyError, match=r"Error reading validation schema from .*wrong_schema.yml"):
-        data_validator._read_validation_schema(schema_file=tmp_test_directory / "wrong_schema.yml")
+        data_validator._read_validation_schema(schema_file=tmp_test_directory / wrong_schema)
 
     with pytest.raises(ValueError, match=r"^Schema version not_a_version not found"):
         data_validator._read_validation_schema(
-            schema_file=tmp_test_directory / "wrong_schema.yml", schema_version="not_a_version"
+            schema_file=tmp_test_directory / wrong_schema, schema_version="not_a_version"
         )
 
+    corsika_starting_grammage = "corsika_starting_grammage.schema.yml"
     # test model parameter schema with multiple documents - no version given
     dict_1 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / "corsika_starting_grammage.schema.yml"
+        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage
     )
     assert isinstance(dict_1[0], dict)
 
     # test model parameter schema with multiple documents - version given
     dict_2 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / "corsika_starting_grammage.schema.yml", schema_version="0.2.0"
+        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage, schema_version="0.2.0"
     )
     assert dict_2[0]["type"] == "dict"
     # test model parameter schema with multiple documents - version given
     dict_3 = data_validator._read_validation_schema(
-        MODEL_PARAMETER_SCHEMA_PATH / "corsika_starting_grammage.schema.yml", schema_version="0.1.0"
+        MODEL_PARAMETER_SCHEMA_PATH / corsika_starting_grammage, schema_version="0.1.0"
     )
     assert dict_3[0]["type"] == "float64"
 
