@@ -16,19 +16,19 @@ from simtools.data_model import schema
 from simtools.utils import general as gen
 
 
-def test_get_get_model_parameter_schema_files(tmp_test_directory):
-    par, files = schema.get_get_model_parameter_schema_files()
+def test_get_model_parameter_schema_files(tmp_test_directory):
+    par, files = schema.get_model_parameter_schema_files()
     assert len(files)
     assert files[0].is_file()
     assert "num_gains" in par
 
     # no files in the directory
     with pytest.raises(FileNotFoundError, match=r"^No schema files"):
-        schema.get_get_model_parameter_schema_files(tmp_test_directory)
+        schema.get_model_parameter_schema_files(tmp_test_directory)
 
     # directory does not exist
     with pytest.raises(FileNotFoundError, match=r"^No schema files"):
-        schema.get_get_model_parameter_schema_files("not_a_directory")
+        schema.get_model_parameter_schema_files("not_a_directory")
 
 
 def test_get_model_parameter_schema_file():

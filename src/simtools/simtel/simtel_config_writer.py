@@ -2,7 +2,6 @@
 """Configuration file writer for sim_telarray."""
 
 import logging
-import random
 from copy import deepcopy
 from pathlib import Path
 
@@ -14,6 +13,27 @@ import simtools.version
 from simtools.utils import names
 
 __all__ = ["SimtelConfigWriter"]
+
+
+def sim_telarray_random_seeds(seed, number):
+    """
+    Generate random seeds to be used in sim_telarray.
+
+    Parameters
+    ----------
+    seed: int
+        Seed for the random number generator.
+    number: int
+        Number of random seeds to generate.
+
+    Returns
+    -------
+    list
+        List of random seeds.
+    """
+    rng = np.random.default_rng(seed)
+    max_int32 = np.iinfo(np.int32).max  # sim_telarray requires 32 bit integers
+    return list(rng.integers(low=1, high=max_int32, size=number, dtype=np.int32))
 
 
 class SimtelConfigWriter:
@@ -117,7 +137,9 @@ class SimtelConfigWriter:
             value = gen.convert_list_to_string(value, shorten_list=True)
         return value
 
-    def _get_sim_telarray_metadata(self, config_type, model_parameters, telescope_model_name):
+    def _get_sim_telarray_metadata(
+        self, config_type, model_parameters, telescope_model_name, sim_telarray_seeds=None
+    ):
         """
         Return sim_telarray metadata.
 
@@ -129,6 +151,8 @@ class SimtelConfigWriter:
             Model parameters dictionary.
         telescope_model_name: str
             Name of the telescope model
+        sim_telarray_seeds: dict
+            Dictionary with configuration for sim_telarray random instrument setup.
 
         Returns
         -------
@@ -163,23 +187,36 @@ class SimtelConfigWriter:
                 ]
             )
             prefix = "metaparam global"
+            meta_parameters.append("metaparam global add random_seed")
         else:
             raise ValueError(f"Unknown metadata type {config_type}")
 
-        if model_parameters:
-            for key, value in model_parameters.items():
-                simtel_name = names.get_simulation_software_name_from_parameter_name(
-                    key, software_name="sim_telarray", set_meta_parameter=False
-                )
-                if simtel_name and value.get("meta_parameter"):
-                    meta_parameters.append(f"{prefix} add {simtel_name}")
-                simtel_name = names.get_simulation_software_name_from_parameter_name(
-                    key, software_name="sim_telarray", set_meta_parameter=True
-                )
-                if simtel_name and value.get("meta_parameter"):
-                    meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
+        self._add_model_parameters_to_metadata(model_parameters, meta_parameters, prefix)
+
+        if sim_telarray_seeds and sim_telarray_seeds.get("random_instances"):
+            meta_parameters.append(f"{prefix} set instrument_seed={sim_telarray_seeds['seed']}")
+            meta_parameters.append(
+                f"{prefix} set instrument_instances={sim_telarray_seeds['random_instances']}"
+            )
 
         return meta_parameters
+
+    def _add_model_parameters_to_metadata(self, model_parameters, meta_parameters, prefix):
+        """Add model parameters to metadata."""
+        if not model_parameters:
+            return
+
+        for key, value in model_parameters.items():
+            simtel_name = names.get_simulation_software_name_from_parameter_name(
+                key, software_name="sim_telarray", set_meta_parameter=False
+            )
+            if simtel_name and value.get("meta_parameter"):
+                meta_parameters.append(f"{prefix} add {simtel_name}")
+            simtel_name = names.get_simulation_software_name_from_parameter_name(
+                key, software_name="sim_telarray", set_meta_parameter=True
+            )
+            if simtel_name and value.get("meta_parameter"):
+                meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
 
     def write_array_config_file(
         self, config_file_path, telescope_model, site_model, sim_telarray_seeds=None
@@ -215,7 +252,11 @@ class SimtelConfigWriter:
             file.write(self.TAB + "echo *****************************\n\n")
 
             self._write_site_parameters(
-                file, site_model.parameters, config_file_directory, telescope_model
+                file,
+                site_model.parameters,
+                config_file_directory,
+                telescope_model,
+                sim_telarray_seeds,
             )
 
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
@@ -249,15 +290,16 @@ class SimtelConfigWriter:
         random_instances_of_instrument: int
             Number of random instances of the instrument.
         """
-        random.seed(sim_telarray_seeds["seed"])
         self._logger.info(
             "Writing random seed file "
             f"{config_file_directory}/{sim_telarray_seeds['seed_file_name']}"
             f" (global seed {sim_telarray_seeds['seed']})"
         )
-        random_integers = [
-            random.randint(0, 2**32 - 1) for _ in range(sim_telarray_seeds["random_instances"])
-        ]
+        if sim_telarray_seeds["random_instances"] > 1024:
+            raise ValueError("Number of random instances of instrument must be less than 1024")
+        random_integers = sim_telarray_random_seeds(
+            sim_telarray_seeds["seed"], sim_telarray_seeds["random_instances"]
+        )
         with open(
             config_file_directory / sim_telarray_seeds["seed_file_name"], "w", encoding="utf-8"
         ) as file:
@@ -349,7 +391,9 @@ class SimtelConfigWriter:
         header += f"{comment_char}\n"
         file.write(header)
 
-    def _write_site_parameters(self, file, site_parameters, model_path, telescope_model):
+    def _write_site_parameters(
+        self, file, site_parameters, model_path, telescope_model, sim_telarray_seeds=None
+    ):
         """
         Write site parameters.
 
@@ -363,6 +407,8 @@ class SimtelConfigWriter:
             Path to the model for writing of additional files.
         telescope_model: dict of TelescopeModel
             Telescope models.
+        sim_telarray_seeds: dict
+            Dictionary with configuration for sim_telarray random instrument setup.
         """
         file.write(self.TAB + "% Site parameters\n")
         for par, value in site_parameters.items():
@@ -377,7 +423,7 @@ class SimtelConfigWriter:
             if simtel_name is not None:
                 file.write(f"{self.TAB}{simtel_name} = {value}\n")
         for meta in self._get_sim_telarray_metadata(
-            "site", site_parameters, self._telescope_model_name
+            "site", site_parameters, self._telescope_model_name, sim_telarray_seeds
         ):
             file.write(f"{self.TAB}{meta}\n")
         file.write("\n")
