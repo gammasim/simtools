@@ -2,49 +2,71 @@
 
 ## Introduction
 
-Simulation model parameters describe properties of all relevant elements of the observatory including site,
+Simulation model parameters describe properties of all relevant elements of the observatory. This includes site,
 telescopes, and calibration devices.
-The management, definition, derivation, verification, and validation of the simulation model is central to the functionality of simtools.
-Model parameters are centrally stored (in a database and repository) and described and defined by [schema files](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters).
-
-Examples for model parameters are those describing atmospheric model (profile, transmission) or geomagnetic field characteristics for the site,
-descriptions of optical and mechanical properties of the telescope, and detector plan, trigger, and readout settings for the cameras (see [model parameter schema files](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters) for all model parameters.)
-
-For simplicity, the term parameter is used for values, (multi-dimensional) vectors of values
+The management, definition, derivation, verification, and validation of the simulation model is central to simtools.
+For simplicity, the term *model parameter* refers to values, (multi-dimensional) vectors of values
 (e.g., the mirror reflectivity vs wavelength and photon incident angle), functions, and algorithms
 (e.g., the telescope trigger algorithm).
-Parameters might be fixed in time (e.g., the number of mirrors on a certain telescope), or variable
-on different time scales (e.g., compare the degradation of the mirror reflectivity over several months
-with the nightly variability of the atmospheric parameters).
 
-The major components to handle the simulation model in simtools are:
+Model parameters describe for example:
 
-1. **Model parameter databases:** The simulation model is stored in [mongoDB databases](databases.md#databases).
+- Atmospheric model parameters (profile, transmission)
+- Geomagnetic field characteristics
+- Optical and mechanical telescope properties
+- Detector plane settings
+- Trigger configurations
+- Camera readout parameters
+- Simulation production related software parameters
+
+The major components of the simulation model are:
+
+1. **Model parameter schema files:** The schema files define the model parameters and their properties. Every model parameter is defined in a schema file, see the
+   [schema file directory](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters).
+2. **Model parameter repository:** The simulation model is stored in a [gitlab repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models). Review and revision control of the simulation model is done using this repository.
+3. **Model parameter databases:** The simulation model is stored in [mongoDB databases](databases.md#databases).
 The {ref}`db_handler module <DBHANDLER>` provides reading and writing interfaces to the database.
-2. **Model parameter management:** The [model parameters module](mcmodel.md#model-parameters) provides interfaces to manage the simulation model parameters.
-3. A **model of an array and its elements** consists of the [SiteModel](mcmodel.md#site-model) and several [TelescopeModel](mcmodel.md#telescope-model)`and [CalibrationModel](mcmodel.md#calibration-model) instances.
-
-Simtools includes applications to write new model parameters to the databases and the export or import model parameters from sim_telarray configuration files (see following sections).
-
-Review and revision control of the simulation models uses a [gitlab repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models). Simtools provides applications to read, write, and update the databases from this repository.
+The model parameter database holds all values from the simulation model repository and is updated for each release of the simulation model repository.
 
 :::{Note}
 The simulation model is a central part of the CTAO Simulation Pipeline. The responsibility for the values and the correctness of the simulation model parameters is with the CTAO Simulation Team.
 :::
 
-## Description of model parameters
+## Description of model parameters through schemas
 
-Schema files define all simulation model parameters are part of [simtools](https://github.com/gammasim/simtools) and can be found in [simtools/schemas/model_parameters](https://github.com/gammasim/simtools/tree/main/simtools/schemas/model_parameters).
+Model parameter data structures are defined in schema files.
+To ensure consistency and correctness of the model parameters, these schema files are used to validate the model parameter files with `simtools-validate-file-using-schema`.
+Strict versioning of schemas and metaschema is introduced to ensure that the model parameters are always compatible with the schema files.
 
-These files describe the simulation model parameters including (among others fields) name, type, format, units, applicable telescopes, and parameter description.
-They include information about setting and validation activities, data sources, and simulation software.
-The schema files and especially the model parameter descriptions are derived from (and planned to be synchronized with) the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/).
+The model parameters are stored in json-style in the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) and database.
+A typical model parameter file looks like:
 
-The schema files are in human readable YAML format and follow a fixed meta metaschema (see [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml); found in simtools schema directory).
+```json
+{
+    "schema_version": "0.1.0",
+    "model_parameter_schema_version": "0.1.0",
+    "parameter": "num_gains",
+    "instrument": "LSTN-01",
+    "site": "North",
+    "parameter_version": "1.0.0",
+    "unique_id": null,
+    "value": 2,
+    "unit": null,
+    "type": "int64",
+    "file": false
+}
+```
 
-### Example
+Two types of schema definitions need to be distinguished:
 
-The following example is for a single parameter description.
+1. **Meta schema:** The meta schema defines the structure of the model parameter file. It is a multi-document YAML file including several schema versions. The meta schema is used to validate the model parameter files. The `schema_version` field is used to identify the correct meta schema.
+2. **Model parameter schema:** The model parameter schema defines the properties of the model parameter. It is a human-readable YAML file that describes the model parameter in detail. The `model_parameter_schema_version` field is used to identify the correct model parameter schema (optional field; default value is `0.1.0`).
+
+The metaschema [model_parameter.metaschema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameter.metaschema.yml) defines the json data structure used for model parameters. This meta schema defines e.g., that `parameter` must be a string or `file` a boolean. No additional properties are allowed.
+
+Model parameter schemas are defined in YAML format and located in the `simtools/schemas/model_parameters` directory. Each schema file specifies fields such as `name`, `type`, `format`, `units`, and applicable telescopes.  Schemas also include metadata on default values, validation rules, data sources, and links to relevant simulation software.  Model parameter descriptions are primarily derived from the [sim_telarray manual](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/), ensuring alignment with its definitions and conventions.
+
+For above example the schema file [num_gains.schema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/model_parameters/num_gains.schema.yml) is:
 
 ```yaml
 %YAML 1.2
@@ -82,6 +104,8 @@ source:
 simulation_software:
   - name: sim_telarray
 ```
+
+Model parameter schema files follow the fixed meta schema (see `meta_schema`, `meta_schema_url`, and `meta_schema_version` fields in above example and [model_parameter_and_data_schema.metaschema.yml](https://github.com/gammasim/simtools/blob/main/simtools/schemas/model_parameter_and_data_schema.metaschema.yml)).
 
 ### Valid Keys
 
@@ -180,26 +204,6 @@ This is important to write correct and consistent CORSIKA or sim\_telarray confi
 simulation_software:
   - name: sim_telarray
     internal_parameter_name: secondary_ref_radius
-```
-
-## Data structure for model parameters
-
-The model parameters are stored in json-style in the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) and database.
-A typical model parameter file looks like:
-
-```json
-{
-    "schema_version": "0.1.0",
-    "parameter": "num_gains",
-    "instrument": "LSTN-01",
-    "site": "North",
-    "parameter_version": "1.0.0",
-    "unique_id": null,
-    "value": 2,
-    "unit": null,
-    "type": "int64",
-    "file": false
-}
 ```
 
 ## Updating the model database
