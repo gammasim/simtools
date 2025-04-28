@@ -295,8 +295,19 @@ class CorsikaConfig:
         return [f"{entry['value'] * u.Unit(entry['unit']).to('cm'):.2f}", "0"]
 
     def _input_config_corsika_starting_grammage(self, entry):
-        """Return FIXCHI parameter CORSIKA format."""
-        return f"{entry['value'] * u.Unit(entry['unit']).to('g/cm2')}"
+        """
+        Return FIXCHI parameter CORSIKA format.
+
+        Use the primary particle name to get the value from the list of values.
+        If not found, use the default value.
+        """
+        value = entry["value"]
+        if isinstance(value, list):
+            value_map = {v["primary_particle"]: v["value"] for v in value}
+            value = value_map.get(self.primary_particle.name, value_map.get("default", 0))
+
+        unit = u.Unit(entry["unit"]).to("g/cm2")
+        return f"{value * unit}"
 
     def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
         """Return ECUTS parameter CORSIKA format."""
