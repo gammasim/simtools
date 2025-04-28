@@ -191,18 +191,8 @@ class SimtelConfigWriter:
         else:
             raise ValueError(f"Unknown metadata type {config_type}")
 
-        if model_parameters:
-            for key, value in model_parameters.items():
-                simtel_name = names.get_simulation_software_name_from_parameter_name(
-                    key, software_name="sim_telarray", set_meta_parameter=False
-                )
-                if simtel_name and value.get("meta_parameter"):
-                    meta_parameters.append(f"{prefix} add {simtel_name}")
-                simtel_name = names.get_simulation_software_name_from_parameter_name(
-                    key, software_name="sim_telarray", set_meta_parameter=True
-                )
-                if simtel_name and value.get("meta_parameter"):
-                    meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
+        self._add_model_parameters_to_metadata(model_parameters, meta_parameters, prefix)
+
         if sim_telarray_seeds and sim_telarray_seeds.get("random_instances"):
             meta_parameters.append(f"{prefix} set instrument_seed={sim_telarray_seeds['seed']}")
             meta_parameters.append(
@@ -210,6 +200,23 @@ class SimtelConfigWriter:
             )
 
         return meta_parameters
+
+    def _add_model_parameters_to_metadata(self, model_parameters, meta_parameters, prefix):
+        """Add model parameters to metadata."""
+        if not model_parameters:
+            return
+
+        for key, value in model_parameters.items():
+            simtel_name = names.get_simulation_software_name_from_parameter_name(
+                key, software_name="sim_telarray", set_meta_parameter=False
+            )
+            if simtel_name and value.get("meta_parameter"):
+                meta_parameters.append(f"{prefix} add {simtel_name}")
+            simtel_name = names.get_simulation_software_name_from_parameter_name(
+                key, software_name="sim_telarray", set_meta_parameter=True
+            )
+            if simtel_name and value.get("meta_parameter"):
+                meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
 
     def write_array_config_file(
         self, config_file_path, telescope_model, site_model, sim_telarray_seeds=None

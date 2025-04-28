@@ -93,9 +93,8 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
         "wrong_file.dat"
     )
 
-    with pytest.raises(
-        ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
-    ):
+    mismatch_message = r"^Telescope or site model parameters do not match sim_telarray "
+    with pytest.raises(ValueError, match=mismatch_message):
         assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_site)
 
     array_model_mismatched_telescope = copy.deepcopy(array_model_north)
@@ -103,9 +102,7 @@ def test_assert_sim_telarray_metadata_with_mismatched_parameters(
         "random_mono_probability"
     ]["value"] = 0.99
 
-    with pytest.raises(
-        ValueError, match=r"^Telescope or site model parameters do not match sim_telarray "
-    ):
+    with pytest.raises(ValueError, match=mismatch_message):
         assert_sim_telarray_metadata(test_metadata_file, array_model_mismatched_telescope)
 
 
