@@ -258,11 +258,12 @@ def test_write_dummy_telescope_configuration_file(
 
 
 def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
+    seed_file_name = "sim_telarray_instrument_seeds.txt"
     config_file_directory = Path(tmp_test_directory) / "model"
     config_file_directory.mkdir(exist_ok=True)
     sim_telarray_seeds = {
         "seed": 12345,
-        "seed_file_name": "sim_telarray_instrument_seeds.txt",
+        "seed_file_name": seed_file_name,
         "random_instances": 5,
     }
 
@@ -281,7 +282,7 @@ def test_write_random_seeds_file(simtel_config_writer, tmp_test_directory):
 
     sim_telarray_seeds = {
         "seed": 12345,
-        "seed_file_name": "sim_telarray_instrument_seeds.txt",
+        "seed_file_name": seed_file_name,
         "random_instances": 1025,
     }
     with pytest.raises(
