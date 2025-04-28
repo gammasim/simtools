@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Produces a markdown file for a given simulation configuration."""
+r"""Produces a markdown file for calibration reports."""
 
 import logging
 
@@ -14,7 +14,7 @@ def _parse(label):
     """Parse command line configuration."""
     config = configurator.Configurator(
         label=label,
-        description=("Produce a markdown report for model parameters."),
+        description=("Produce a markdown report for calibration parameters."),
     )
 
     return config.initialize(
