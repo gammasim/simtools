@@ -177,7 +177,11 @@ class DataValidator:
         if is_model_parameter:
             self._prepare_model_parameter()
 
-        self._data_description = self._read_validation_schema(self.schema_file_name)
+        self._data_description = self._read_validation_schema(
+            self.schema_file_name,
+            # use 0.1.0 as default; this corresponds to the first definition of the schema
+            self.data_dict.get("model_parameter_schema_version", "0.1.0"),
+        )
 
         value_as_list, unit_as_list = self._get_value_and_units_as_lists()
 
@@ -701,14 +705,20 @@ class DataValidator:
 
         return False
 
-    def _read_validation_schema(self, schema_file):
+    def _read_validation_schema(self, schema_file, schema_version=None):
         """
         Read validation schema from file.
+
+        The schema file can be a yaml file with several documents, each document
+        describing a different schema version. Returns first document if no
+        schema version is requested.
 
         Parameters
         ----------
         schema_file: Path
             Schema file describing input data.
+        schema_version: str
+            Version of the schema to be used.
 
         Returns
         -------
@@ -719,11 +729,21 @@ class DataValidator:
         ------
         KeyError
             if 'data' can not be read from dict in schema file
+        ValueError
+            if schema version is not found in schema file
         """
-        try:
-            return gen.collect_data_from_file(file_name=schema_file)["data"]
-        except KeyError as exc:
-            raise KeyError(f"Error reading validation schema from {schema_file}") from exc
+        schema_data = gen.collect_data_from_file(file_name=schema_file)
+        entries = schema_data if isinstance(schema_data, list) else [schema_data]
+
+        for entry in entries:
+            if not schema_version or entry.get("version") == schema_version:
+                try:
+                    return entry["data"]
+                except KeyError as exc:
+                    raise KeyError(f"Error reading validation schema from {schema_file}") from exc
+        raise ValueError(
+            f"Schema version {schema_version} not found in schema file {schema_file}. "
+        )
 
     def _get_data_description(self, column_name=None, status_test=False):
         """

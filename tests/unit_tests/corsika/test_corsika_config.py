@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import copy
 import logging
 import pathlib
 from unittest.mock import Mock, patch
@@ -43,6 +44,26 @@ def corsika_configuration_parameters(gcm2):
         "corsika_starting_grammage": {"value": 0.0, "unit": gcm2},
         "corsika_iact_io_buffer": {"value": 800, "unit": "MB"},
     }
+
+
+@pytest.fixture
+def corsika_configuration_parameters_muon_grammage(gcm2, corsika_configuration_parameters):
+    """Fixture for CORSIKA configuration parameters with muon grammage."""
+    params = corsika_configuration_parameters.copy()
+    params["corsika_starting_grammage"] = {
+        "value": [
+            {
+                "primary_particle": "muon+",
+                "value": 10.0,
+            },
+            {
+                "primary_particle": "default",
+                "value": 0.0,
+            },
+        ],
+        "unit": gcm2,
+    }
+    return params
 
 
 def test_repr(corsika_config_mock_array_model):
@@ -158,6 +179,10 @@ def test_input_config_first_interaction_height(corsika_config_mock_array_model):
     ) == ["1000.00", "0"]
 
 
+def test_primary_particle(corsika_config_mock_array_model):
+    assert corsika_config_mock_array_model.primary == "proton"
+
+
 def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model, gcm2):
     assert (
         corsika_config_mock_array_model._input_config_corsika_starting_grammage(
@@ -170,6 +195,40 @@ def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model,
             {"value": 10.0, "unit": "kg/cm2"}
         )
         == "10000.0"
+    )
+
+
+def test_input_config_corsika_starting_grammage_muon_grammage(
+    corsika_config_mock_array_model, corsika_configuration_parameters_muon_grammage, gcm2
+):
+    # default behavior with proton as primary
+    assert (
+        corsika_config_mock_array_model._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
+        )
+        == "0.0"
+    )
+    # change primary to muon+
+    corsika_config_mock_array_model_muon = copy.deepcopy(corsika_config_mock_array_model)
+    corsika_config_mock_array_model_muon.primary_particle = {
+        "primary": "muon+",
+        "primary_id_type": "common_name",
+    }
+    assert (
+        corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
+        )
+        == "10.0"
+    )
+    corsika_config_mock_array_model_muon.primary_particle = {
+        "primary": "gamma",
+        "primary_id_type": "common_name",
+    }
+    assert (
+        corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
+        )
+        == "0.0"
     )
 
 

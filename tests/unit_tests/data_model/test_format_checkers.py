@@ -57,3 +57,16 @@ def test_check_array_triggers_name():
 
     with pytest.raises(ValueError, match=r"^Array trigger name"):
         format_checkers.check_array_triggers_name("MSTN")
+
+
+def test_common_particle_name():
+    assert format_checkers.check_common_particle_name("gamma")
+    assert format_checkers.check_common_particle_name("electron")
+    assert format_checkers.check_common_particle_name("muon+")
+
+    # must be muon+ or muon-
+    with pytest.raises(ValueError, match=r"^Invalid common"):
+        format_checkers.check_common_particle_name("muon")
+
+    with pytest.raises(ValueError, match=r"^Invalid common"):
+        format_checkers.check_common_particle_name("not_a_particle")
