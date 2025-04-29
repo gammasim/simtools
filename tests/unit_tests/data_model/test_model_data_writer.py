@@ -274,6 +274,7 @@ def test_get_validated_parameter_dict():
         "type": "int64",
         "file": False,
         "meta_parameter": False,
+        "model_parameter_schema_version": "0.1.0",
     }
 
     assert w1.get_validated_parameter_dict(
@@ -293,6 +294,7 @@ def test_get_validated_parameter_dict():
         "type": "float64",
         "file": False,
         "meta_parameter": False,
+        "model_parameter_schema_version": "0.1.0",
     }
 
     assert w1.get_validated_parameter_dict(
@@ -312,6 +314,7 @@ def test_get_validated_parameter_dict():
         "type": "float64",
         "file": False,
         "meta_parameter": False,
+        "model_parameter_schema_version": "0.1.0",
     }
 
 

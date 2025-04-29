@@ -642,6 +642,7 @@ class ArrayLayout:
             "type": "float64",
             "file": False,
             "meta_parameter": False,
+            "model_parameter_schema_version": "0.1.0",
         }
 
     def get_number_of_telescopes(self):
