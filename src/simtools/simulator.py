@@ -704,7 +704,7 @@ class Simulator:
                             raise ValueError(f"Found irregular file while packing: {file_path}")
                         if file_path.is_symlink():
                             raise ValueError(f"Found symlink while packing: {file_path}")
-                        tar.add(file_to_tar, arcname=Path(file_to_tar).name)
+                        tar.add(file_to_tar, arcname=file_path.name)
 
         for file_to_move in output_files:
             source_file = Path(file_to_move)
