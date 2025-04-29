@@ -270,6 +270,9 @@ class ModelDataWriter:
             "type": self._get_parameter_type(),
             "file": self._parameter_is_a_file(),
             "meta_parameter": False,
+            "model_parameter_schema_version": self.schema_dict.get(
+                "model_parameter_schema_version", "0.1.0"
+            ),
         }
         return self.validate_and_transform(
             product_data_dict=data_dict,
