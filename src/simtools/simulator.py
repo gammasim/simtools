@@ -693,18 +693,12 @@ class Simulator:
             model_corsika_logs = [f for f in corsika_log_files if model_version in f]
 
             if model_logs:
-                tar_file_name = Path(model_logs[0]).name.replace("log.gz", "log_hist.tar.gz")
-                tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
-
-                with tarfile.open(tar_file_path, "w:gz") as tar:
-                    files_to_tar = model_logs + model_hists + model_corsika_logs
-                    for file_to_tar in files_to_tar:
-                        file_path = Path(file_to_tar)
-                        if not file_path.is_file():
-                            raise ValueError(f"Found irregular file while packing: {file_path}")
-                        if file_path.is_symlink():
-                            raise ValueError(f"Found symlink while packing: {file_path}")
-                        tar.add(file_to_tar, arcname=file_path.name)
+                self._pack_files_to_tarball(
+                    model_logs=model_logs,
+                    model_hists=model_hists,
+                    model_corsika_logs=model_corsika_logs,
+                    directory_for_grid_upload=directory_for_grid_upload,
+                )
 
         for file_to_move in output_files:
             source_file = Path(file_to_move)
@@ -714,6 +708,23 @@ class Simulator:
             shutil.move(source_file, destination_file)
 
         self._logger.info(f"Output files for the grid placed in {directory_for_grid_upload!s}")
+
+    def _pack_files_to_tarball(
+        self, model_logs, model_hists, model_corsika_logs, directory_for_grid_upload
+    ):
+        """Write the files to a tarball."""
+        tar_file_name = Path(model_logs[0]).name.replace("log.gz", "log_hist.tar.gz")
+        tar_file_path = directory_for_grid_upload.joinpath(tar_file_name)
+
+        with tarfile.open(tar_file_path, "w:gz") as tar:
+            files_to_tar = model_logs + model_hists + model_corsika_logs
+            for file_to_tar in files_to_tar:
+                file_path = Path(file_to_tar)
+                if not file_path.is_file():
+                    raise ValueError(f"Found irregular file while packing: {file_path}")
+                if file_path.is_symlink():
+                    raise ValueError(f"Found symlink while packing: {file_path}")
+                tar.add(file_to_tar, arcname=file_path.name)
 
     def validate_metadata(self):
         """Validate metadata in the sim_telarray output files."""

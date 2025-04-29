@@ -353,8 +353,10 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog):
     mocker.patch("shutil.move")
     mocker.patch("tarfile.open")
     mocker.patch("pathlib.Path.exists", return_value=True)
-    mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.is_symlink", return_value=False)
+    is_file = "pathlib.Path.is_file"
+    is_symlink = "pathlib.Path.is_symlink"
+    mocker.patch(is_file, return_value=True)
+    mocker.patch(is_symlink, return_value=False)
 
     with caplog.at_level(logging.INFO):
         array_simulator.pack_for_register("directory_for_grid_upload")
@@ -368,13 +370,13 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog):
         Path(f"directory_for_grid_upload/output_file_{model_version}_simtel.zst"),
     )
 
-    mocker.patch("pathlib.Path.is_symlink", return_value=True)
+    mocker.patch(is_symlink, return_value=True)
 
     with pytest.raises(ValueError, match="^Found symlink while packing"):
         array_simulator.pack_for_register("directory_for_grid_upload")
 
-    mocker.patch("pathlib.Path.is_file", return_value=False)
-    mocker.patch("pathlib.Path.is_symlink", return_value=False)
+    mocker.patch(is_file, return_value=False)
+    mocker.patch(is_symlink, return_value=False)
     with pytest.raises(ValueError, match="^Found irregular file while packing"):
         array_simulator.pack_for_register("directory_for_grid_upload")
 
