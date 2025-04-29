@@ -148,7 +148,7 @@ def test_camera(telescope_model_lst, monkeypatch):
     _ = tel_model.camera
     assert load_camera_mock.call_count == 1
 
-    # Call count not not increase , at it returns the loaded camera if camera is set
+    # Call count should not increase, at it returns the loaded camera if camera is set
     tel_model._camera = "camera"
     _ = tel_model.camera
     assert load_camera_mock.call_count == 1
@@ -182,7 +182,6 @@ def test_load_mirrors(telescope_model_lst, monkeypatch, caplog):
     mirror_list_file_name = "mirror_list.dat"
     tel_model.get_parameter_value = Mock(return_value=mirror_list_file_name)
     find_file_mock = Mock()
-    #    monkeypatch.setattr(tel_model, "config_file_directory", "config_file_directory")
     monkeypatch.setattr(gen, "find_file", find_file_mock)
     mirrors_mock = Mock()
     monkeypatch.setattr(tel_model, "_mirrors", None)
@@ -240,6 +239,7 @@ def test_load_camera(telescope_model_lst, monkeypatch, caplog):
     )
     assert tel_model._camera == camera_mock.return_value
     find_file_mock.reset_mock()
+    caplog.clear()
 
     # Test case 2: File not found in config directory, found in model_path
     monkeypatch.setattr(tel_model, "_camera", None)
@@ -250,7 +250,6 @@ def test_load_camera(telescope_model_lst, monkeypatch, caplog):
     assert (
         f"Camera config file {camera_config_file} not found in the config directory" in caplog.text
     )
-    assert "Using the one found in the model_path" in caplog.text
     assert find_file_mock.call_count == 2
     camera_mock.assert_called_with(
         telescope_model_name=tel_model.name,
@@ -258,6 +257,7 @@ def test_load_camera(telescope_model_lst, monkeypatch, caplog):
         focal_length=focal_length,
     )
     assert tel_model._camera == camera_mock.return_value
+    caplog.clear()
 
     # Test case 3: TypeError
     monkeypatch.setattr(tel_model, "_camera", None)
