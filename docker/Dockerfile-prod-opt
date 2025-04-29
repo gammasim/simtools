@@ -2,7 +2,7 @@ FROM almalinux:9.5 AS build_image
 WORKDIR /workdir/sim_telarray
 ENV GCC_PATH="/usr/bin/"
 ARG BUILD_OPT="prod6-sc"
-ARG EXTRA_DEF=""
+ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG CORSIKA_VERSION="77550"
