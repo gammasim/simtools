@@ -13,5 +13,6 @@
     "unit": "m",
     "type": "float64",
     "file": false,
-    "meta_parameter": false
+    "meta_parameter": false,
+    "model_parameter_schema_version": "0.1.0"
 }
