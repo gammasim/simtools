@@ -699,6 +699,11 @@ class Simulator:
                 with tarfile.open(tar_file_path, "w:gz") as tar:
                     files_to_tar = model_logs + model_hists + model_corsika_logs
                     for file_to_tar in files_to_tar:
+                        file_path = Path(file_to_tar)
+                        if not file_path.is_file():
+                            raise ValueError(f"Found irregular file while packing: {file_path}")
+                        if file_path.is_symlink():
+                            raise ValueError(f"Found symlink while packing: {file_path}")
                         tar.add(file_to_tar, arcname=Path(file_to_tar).name)
 
         for file_to_move in output_files:
