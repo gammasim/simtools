@@ -144,3 +144,26 @@ def test_skip_multiple_version_test_model_version_not_list():
     model_version = "5.0.0"  # Not a list
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result is None
+
+
+def test_skip_specific_model_version_skip():
+    config = {
+        "APPLICATION": "simtools-docs-produce-calibration-reports",
+        "CONFIGURATION": {"MODEL_VERSION": "6.0.0"},
+    }
+    model_version = "5.0.0"
+    result = helpers.skip_specific_model_version(config, model_version)
+    assert result == (
+        "Skipping test for model_version 5.0.0 as calibration devices are "
+        "specified from 6.0.0 onward."
+    )
+
+
+def test_skip_specific_model_version_different_application():
+    config = {
+        "APPLICATION": "other-application",
+        "CONFIGURATION": {"MODEL_VERSION": "6.0.0"},
+    }
+    model_version = "5.0.0"
+    result = helpers.skip_specific_model_version(config, model_version)
+    assert result is None
