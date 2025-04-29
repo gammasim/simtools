@@ -12,7 +12,7 @@ description: |-
   The camera lid is assumed to be open, i.e. events will also be subject to NSB.\
   A value of zero means that the data will not contain any such events.
 short_description: |-
-  Relative variation of laser shots from shot to shot.
+  Laser events for calibration at the start of the run.
 data:
   - type: int64
     unit: dimensionless
