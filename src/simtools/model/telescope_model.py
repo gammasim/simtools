@@ -220,8 +220,8 @@ class TelescopeModel(ModelParameter):
         """
         try:
             file_name = self.get_parameter_value(par)
-        except KeyError:
-            logging.error(f"Parameter {par} does not exist")
+        except InvalidModelParameterError:
+            logging.warning(f"Parameter {par} does not exist")
             return False
 
         file = self.config_file_directory.joinpath(file_name)
@@ -269,11 +269,11 @@ class TelescopeModel(ModelParameter):
             self.config_file_directory.joinpath(self.get_parameter_value("optics_properties"))
         )
         if not np.isclose(ray_tracing_data["Off-axis angle"][0], 0):
-            self._logger.error(
+            msg = (
                 f"No value for the on-axis effective optical area exists."
                 f" The minimum off-axis angle is {ray_tracing_data['Off-axis angle'][0]}"
             )
-            raise ValueError
+            raise ValueError(msg)
         return ray_tracing_data["eff_area"][0]
 
     def read_incidence_angle_distribution(self, incidence_angle_dist_file: str) -> Table:
