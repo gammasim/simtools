@@ -19,9 +19,18 @@ RUN rm -f examples-with-data.tar.gz && \
 
 # corsika source code is removed to follow
 # the corsika non-distribution policy.
-RUN mv ./corsika-77*/run corsika-run && \
+RUN mv ./corsika-7*/run corsika-run && \
     rm -rf ./corsika-7[0-9]* && \
-    find . -name "*.tar.gz" -delete
+    find . -name "*.tar.gz" -delete && \
+    rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
+
+# remove unnecessary large QGSJet tables (e.g. remove qgs3 tables when using qgs2)
+RUN if [[ "$HADRONIC_MODEL" == "qgs3" ]]; then \
+        find . -name "qgsdat-II-04.bz2" -exec rm -fv {} \; ; \
+    fi && \
+    if [[ "$HADRONIC_MODEL" == "qgs2" ]]; then \
+        find . -name "qgsdat-III.bz2" -exec rm -fv {} \; ; \
+    fi
 
 # create a yml file in workdir with the build options
 RUN echo "build_opt: $BUILD_OPT" > /workdir/sim_telarray/build_opts.yml && \
@@ -47,6 +56,4 @@ RUN microdnf update -y && microdnf install -y \
 RUN cprog=$(/bin/ls /workdir/sim_telarray/corsika-run/corsika*$(uname)_* 2>/dev/null | tail -1) && \
     ln -sf $cprog /workdir/sim_telarray/corsika-run/corsika
 
-ENV SIMTEL_PATH="/workdir/sim_telarray/"
-
-SHELL ["/bin/bash", "-c"]
+ENV SIMTEL_PATH="/workdir/sim_telarray"
