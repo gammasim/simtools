@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>layout.ctao_array_layouts &#8212; simtools v0.1.dev1+gbbbed56 Manual</title>
+    <title>simtel.simtel_io_file_info &#8212; simtools v0.1.dev1+gbbbed56 Manual</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/layout/ctao_array_layouts';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtel/simtel_io_file_info';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -317,7 +317,7 @@
 <div class="article-header-buttons">
 
 
-<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/layout/ctao_array_layouts.html&body=Your%20issue%20content%20here." target="_blank"
+<a href="https://github.com/gammasim/simtools/issues/new?title=Issue%20on%20page%20%2F_modules/simtel/simtel_io_file_info.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button"
    title="Open an issue"
    data-bs-placement="bottom" data-bs-toggle="tooltip"
@@ -391,187 +391,69 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for layout.ctao_array_layouts</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Retrieve, merge, and write layouts from CTAO common identifiers repository.&quot;&quot;&quot;</span>
+  <h1>Source code for simtel.simtel_io_file_info</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="sd">&quot;&quot;&quot;Read file info and run headers from sim_telarray files.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.model_data_writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelDataWriter</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">names</span>
-
-<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventIOFile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">eventio.simtel</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCRunHeader</span><span class="p">,</span> <span class="n">RunHeader</span>
 
 
-<div class="viewcode-block" id="retrieve_array_layouts">
-<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.ctao_array_layouts.retrieve_array_layouts">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">retrieve_array_layouts</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">repository_url</span><span class="p">,</span> <span class="n">branch_name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="get_corsika_run_number">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_file_info.get_corsika_run_number">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_corsika_run_number</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Retrieve array layouts from CTAO common identifiers repository.</span>
+<span class="sd">    Return the CORSIKA run number from a sim_telarray file.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    site : str</span>
-<span class="sd">        Site identifier.</span>
-<span class="sd">    repository_url : str</span>
-<span class="sd">        URL or path to CTAO common identifiers</span>
-<span class="sd">    branch_name : str</span>
-<span class="sd">        Repository branch to use for CTAO common identifiers.</span>
+<span class="sd">    file: str</span>
+<span class="sd">        Path to the sim_telarray file.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Array layouts for all CTAO sites.</span>
+<span class="sd">    int, None</span>
+<span class="sd">        CORSIKA run number. Returns None if not found.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retrieving array layouts from </span><span class="si">{</span><span class="n">repository_url</span><span class="si">}</span><span class="s2"> on branch </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">gen</span><span class="o">.</span><span class="n">is_url</span><span class="p">(</span><span class="n">repository_url</span><span class="p">):</span>
-        <span class="n">array_element_ids</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_http</span><span class="p">(</span>
-            <span class="n">url</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">repository_url</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">/array-element-ids.json&quot;</span>
-        <span class="p">)</span>
-        <span class="n">sub_arrays</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_http</span><span class="p">(</span>
-            <span class="n">url</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">repository_url</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">/subarray-ids.json&quot;</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">array_element_ids</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span>
-            <span class="n">Path</span><span class="p">(</span><span class="n">repository_url</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;array-element-ids.json&quot;</span>
-        <span class="p">)</span>
-        <span class="n">sub_arrays</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">repository_url</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;subarray-ids.json&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_get_layouts_per_site</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">sub_arrays</span><span class="p">,</span> <span class="n">array_element_ids</span><span class="p">)</span></div>
+    <span class="n">run_header</span> <span class="o">=</span> <span class="n">get_corsika_run_header</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">run_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">run_header</span> <span class="k">else</span> <span class="kc">None</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_layouts_per_site</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">sub_arrays</span><span class="p">,</span> <span class="n">array_element_ids</span><span class="p">):</span>
+<div class="viewcode-block" id="get_corsika_run_header">
+<a class="viewcode-back" href="../../api-reference/sim_telarray.html#simtel.simtel_io_file_info.get_corsika_run_header">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_corsika_run_header</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get array layouts for CTAO sites.</span>
+<span class="sd">    Return the CORSIKA run header from a sim_telarray file.</span>
+
+<span class="sd">    Reads both RunHeader and MCRunHeader object from file and</span>
+<span class="sd">    returns a merged dictionary.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    site : str</span>
-<span class="sd">        Site identifier.</span>
-<span class="sd">    sub_arrays : dict</span>
-<span class="sd">        Sub-array definitions.</span>
-<span class="sd">    array_element_ids : dict</span>
-<span class="sd">        Array element definitions.</span>
+<span class="sd">    file: str</span>
+<span class="sd">        Path to the sim_telarray file.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Array layouts for CTAO sites.</span>
+<span class="sd">    dict, None</span>
+<span class="sd">        CORSIKA run header. Returns None if not found.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">layouts_per_site</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">run_header</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">mc_run_header</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">for</span> <span class="n">array</span> <span class="ow">in</span> <span class="n">sub_arrays</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subarrays&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-        <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_element_ids&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-            <span class="n">element_name</span> <span class="o">=</span> <span class="n">_get_array_element_name</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">array_element_ids</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">element_name</span><span class="p">)</span> <span class="o">!=</span> <span class="n">site</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">EventIOFile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">RunHeader</span><span class="p">)</span> <span class="ow">and</span> <span class="n">run_header</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">run_header</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">MCRunHeader</span><span class="p">)</span> <span class="ow">and</span> <span class="n">mc_run_header</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mc_run_header</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">run_header</span> <span class="ow">and</span> <span class="n">mc_run_header</span><span class="p">:</span>
                 <span class="k">break</span>
-            <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element_name</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">array_layout</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">array</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span>
-                <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">elements</span><span class="p">,</span>
-            <span class="p">}</span>
-            <span class="n">layouts_per_site</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">array_layout</span><span class="p">)</span>
 
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CTAO array layout definition: </span><span class="si">{</span><span class="n">layouts_per_site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">layouts_per_site</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_array_element_name</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">array_element_ids</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return array element name for common identifier.&quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">array_element_ids</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_elements&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-        <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">ids</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="kc">None</span>
-
-
-<div class="viewcode-block" id="merge_array_layouts">
-<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.ctao_array_layouts.merge_array_layouts">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">merge_array_layouts</span><span class="p">(</span><span class="n">layouts_1</span><span class="p">,</span> <span class="n">layouts_2</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compare array layout dictionaries and merge them.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    layouts_1 : dict</span>
-<span class="sd">        Array layout dictionary 1.</span>
-<span class="sd">    layouts_2 : dict</span>
-<span class="sd">        Array layout dictionary 2.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        Merged array layout dictionary based on layout_1.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">merged_layout</span> <span class="o">=</span> <span class="n">layouts_1</span>
-    <span class="k">for</span> <span class="n">layout_2</span> <span class="ow">in</span> <span class="n">layouts_2</span><span class="p">:</span>
-        <span class="n">layout_found</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">for</span> <span class="n">layout_1</span> <span class="ow">in</span> <span class="n">layouts_1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="p">{}):</span>
-            <span class="k">if</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">layout_1</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">layout_2</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">]):</span>
-                <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Equal telescope list: simtools &#39;</span><span class="si">{</span><span class="n">layout_1</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;and CTAO &#39;</span><span class="si">{</span><span class="n">layout_2</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
-                <span class="p">)</span>
-                <span class="n">layout_1</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layout_2</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-                <span class="n">layout_found</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">layout_found</span><span class="p">:</span>
-            <span class="n">merged_layout</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">layout_2</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
-                    <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">layout_2</span><span class="p">[</span><span class="s2">&quot;elements&quot;</span><span class="p">],</span>
-                <span class="p">}</span>
-            <span class="p">)</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding </span><span class="si">{</span><span class="n">layout_2</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="n">layout_2</span><span class="p">[</span><span class="s1">&#39;elements&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">merged_layout</span></div>
-
-
-
-<div class="viewcode-block" id="write_array_layouts">
-<a class="viewcode-back" href="../../api-reference/array_layout.html#layout.ctao_array_layouts.write_array_layouts">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">write_array_layouts</span><span class="p">(</span><span class="n">array_layouts</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">db_config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Write array layouts as model parameter.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    args_dict : dict</span>
-<span class="sd">        Command line arguments.</span>
-<span class="sd">    array_layouts : dict</span>
-<span class="sd">        Array layouts to be written.</span>
-<span class="sd">    db_config : dict</span>
-<span class="sd">        Database configuration.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing updated array layouts to the database for site </span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;site&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-    <span class="n">io_handler_instance</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span>
-    <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">set_paths</span><span class="p">(</span>
-        <span class="n">output_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">],</span>
-        <span class="n">use_plain_output_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;use_plain_output_path&quot;</span><span class="p">],</span>
-    <span class="p">)</span>
-    <span class="n">output_file</span> <span class="o">=</span> <span class="n">io_handler_instance</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;array-layouts-</span><span class="si">{</span><span class="n">args_dict</span><span class="p">[</span><span class="s1">&#39;updated_parameter_version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.json&quot;</span>
-    <span class="p">)</span>
-
-    <span class="n">ModelDataWriter</span><span class="o">.</span><span class="n">dump_model_parameter</span><span class="p">(</span>
-        <span class="n">parameter_name</span><span class="o">=</span><span class="s2">&quot;array_layouts&quot;</span><span class="p">,</span>
-        <span class="n">value</span><span class="o">=</span><span class="n">array_layouts</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
-        <span class="n">instrument</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
-        <span class="n">parameter_version</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;updated_parameter_version&quot;</span><span class="p">),</span>
-        <span class="n">output_file</span><span class="o">=</span><span class="n">output_file</span><span class="p">,</span>
-        <span class="n">use_plain_output_path</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;use_plain_output_path&quot;</span><span class="p">],</span>
-        <span class="n">db_config</span><span class="o">=</span><span class="n">db_config</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">MetadataCollector</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
-        <span class="n">args_dict</span><span class="p">,</span>
-        <span class="n">output_file</span><span class="p">,</span>
-        <span class="n">add_activity_name</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="n">run_header</span> <span class="o">=</span> <span class="n">run_header</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">mc_run_header</span> <span class="o">=</span> <span class="n">mc_run_header</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">run_header</span> <span class="o">|</span> <span class="n">mc_run_header</span> <span class="ow">or</span> <span class="kc">None</span></div>
 
 </pre></div>
 
