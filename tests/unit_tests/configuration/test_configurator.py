@@ -4,6 +4,7 @@ import logging
 import os
 from copy import copy
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import astropy.units as u
 import pytest
@@ -28,6 +29,7 @@ def configurator(tmp_test_directory, _mock_settings_env_vars, simtel_path):
 
 
 def test_fill_from_command_line(configurator, args_dict):
+    assert args_dict == configurator.config
     configurator._fill_from_command_line(arg_list=[], require_command_line=False)
     assert args_dict == configurator.config
 
@@ -41,6 +43,12 @@ def test_fill_from_command_line(configurator, args_dict):
 
     with pytest.raises(SystemExit):
         configurator._fill_from_command_line(arg_list=["--data_pth", Path("abc")])
+
+    with pytest.raises(SystemExit):
+        configurator._fill_from_command_line(arg_list=None)
+
+    configurator._fill_from_command_line(arg_list=["--config", Path("abc")])
+    assert configurator.config.get("config") == "abc"
 
 
 def test_fill_from_config_dict(configurator, args_dict):
@@ -420,3 +428,64 @@ def test_set_model_versions(configurator):
     configurator.config["model_version"] = model_version_1
     configurator._initialize_model_versions()
     assert configurator.config["model_version"] == model_version_1
+
+
+def test_initialize(configurator):
+    configurator.parser.initialize_default_arguments = MagicMock()
+    configurator._fill_from_command_line = MagicMock()
+    configurator._fill_from_config_file = MagicMock()
+    configurator._fill_from_config_dict = MagicMock()
+    configurator._fill_from_environmental_variables = MagicMock()
+    configurator._initialize_model_versions = MagicMock()
+    configurator._initialize_io_handler = MagicMock()
+    configurator._initialize_output = MagicMock()
+    configurator._get_db_parameters = MagicMock(return_value={"db_param": "test"})
+
+    # Call initialize with default parameters
+    config, db_dict = configurator.initialize()
+
+    # Assert that the methods were called
+    configurator.parser.initialize_default_arguments.assert_called_once()
+    configurator._fill_from_command_line.assert_called_once_with(require_command_line=True)
+    configurator._fill_from_config_file.assert_called_once_with(None)
+    configurator._fill_from_config_dict.assert_called_once_with(None)
+    configurator._fill_from_environmental_variables.assert_called_once()
+    configurator._initialize_model_versions.assert_called_once()
+    configurator._initialize_io_handler.assert_called_once()
+    configurator._initialize_output.assert_not_called()
+    configurator._get_db_parameters.assert_called_once()
+    configurator._get_db_parameters.reset_mock()
+
+    # Assert that activity_id and label are set
+    assert "activity_id" in config
+    assert config["label"] == configurator.label
+    assert db_dict == {"db_param": "test"}
+
+    # Call initialize with custom parameters
+    configurator.initialize(
+        require_command_line=False,
+        paths=False,
+        output=True,
+        simulation_model=["site"],
+        simulation_configuration={"test": "test"},
+        db_config=True,
+        job_submission=True,
+    )
+
+    # Assert that the methods were called with the correct parameters
+    configurator.parser.initialize_default_arguments.assert_called()
+    configurator._fill_from_command_line.assert_called()
+    configurator._fill_from_config_file.assert_called()
+    configurator._fill_from_config_dict.assert_called()
+    configurator._fill_from_environmental_variables.assert_called()
+    configurator._initialize_model_versions.assert_called()
+    configurator._initialize_io_handler.assert_called()
+    configurator._initialize_output.assert_called_once()
+    configurator._get_db_parameters.assert_called_once()
+
+    # test activity_id and label
+    configurator.config["activity_id"] = "test_activity_id"
+    configurator.config["label"] = "test_label"
+    configurator.initialize()
+    assert configurator.config["activity_id"] == "test_activity_id"
+    assert configurator.config["label"] == "test_label"
