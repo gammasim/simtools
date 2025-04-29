@@ -1,5 +1,5 @@
 {
-    "schema_version": "0.2.0",
+    "schema_version": "0.3.0",
     "parameter": "mirror_list",
     "instrument": "LSTN-01",
     "site": "North",
@@ -9,5 +9,6 @@
     "unit": null,
     "type": "string",
     "file": true,
-    "meta_parameter": true
+    "meta_parameter": true,
+    "model_parameter_schema_version": "0.1.0"
 }

@@ -120,6 +120,7 @@ def test_get_telescope_position_parameter(array_model, io_handler):
         "type": "float64",
         "file": False,
         "meta_parameter": False,
+        "model_parameter_schema_version": "0.1.0",
     }
 
 
