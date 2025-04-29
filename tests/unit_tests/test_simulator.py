@@ -340,19 +340,21 @@ def test_save_file_lists(shower_simulator, mocker, caplog):
 
 
 def test_pack_for_register(array_simulator, mocker, model_version, caplog):
-    mocker.patch.object(
-        array_simulator,
-        "get_file_list",
-        side_effect=[
-            [f"output_file_{model_version}_simtel.zst"],
-            [f"log_file_{model_version}_simtel.log.gz"],
-            [f"log_file_corsika_{model_version}.log.gz"],
-            [f"hist_file_{model_version}_hist_log.zst"],
-        ],
-    )
+    def get_file_list_side_effect(file_type):
+        return {
+            "output": [f"output_file_{model_version}_simtel.zst"],
+            "log": [f"log_file_{model_version}_simtel.log.gz"],
+            "corsika_log": [f"log_file_corsika_{model_version}.log.gz"],
+            "hist": [f"hist_file_{model_version}_hist_log.zst"],
+        }[file_type]
+
+    mocker.patch.object(array_simulator, "get_file_list", side_effect=get_file_list_side_effect)
+
     mocker.patch("shutil.move")
     mocker.patch("tarfile.open")
     mocker.patch("pathlib.Path.exists", return_value=True)
+    mocker.patch("pathlib.Path.is_file", return_value=True)
+    mocker.patch("pathlib.Path.is_symlink", return_value=False)
 
     with caplog.at_level(logging.INFO):
         array_simulator.pack_for_register("directory_for_grid_upload")
@@ -365,6 +367,16 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog):
         Path(f"output_file_{model_version}_simtel.zst"),
         Path(f"directory_for_grid_upload/output_file_{model_version}_simtel.zst"),
     )
+
+    mocker.patch("pathlib.Path.is_symlink", return_value=True)
+
+    with pytest.raises(ValueError, match="^Found symlink while packing"):
+        array_simulator.pack_for_register("directory_for_grid_upload")
+
+    mocker.patch("pathlib.Path.is_file", return_value=False)
+    mocker.patch("pathlib.Path.is_symlink", return_value=False)
+    with pytest.raises(ValueError, match="^Found irregular file while packing"):
+        array_simulator.pack_for_register("directory_for_grid_upload")
 
 
 def test_initialize_array_models_with_single_version(shower_simulator, db_config, model_version):
@@ -458,6 +470,7 @@ def test_pack_for_register_with_multiple_versions(
     mock_tarfile_open = mocker.patch("tarfile.open", return_value=mock_tar_cm)
 
     mocker.patch("pathlib.Path.exists", return_value=True)
+    mocker.patch("pathlib.Path.is_file", return_value=True)
     mocker.patch.object(local_shower_array_simulator, "_copy_corsika_log_file_for_all_versions")
 
     # Call the method
