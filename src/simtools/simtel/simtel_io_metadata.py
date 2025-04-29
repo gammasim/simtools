@@ -4,7 +4,7 @@
 from functools import cache
 
 from eventio import EventIOFile
-from eventio.simtel import HistoryMeta, RunHeader
+from eventio.simtel import HistoryMeta
 
 
 @cache
@@ -89,32 +89,3 @@ def get_sim_telarray_telescope_id(telescope_name, file):
             telescope_name_to_sim_telarray_id[telescope_name] = tel_id
 
     return telescope_name_to_sim_telarray_id.get(telescope_name, None)
-
-
-def get_corsika_run_number(file):
-    """
-    Return the CORSIKA run number from a sim_telarray file.
-
-    Parameters
-    ----------
-    file: str
-        Path to the sim_telarray file.
-
-    Returns
-    -------
-    int, None
-        CORSIKA run number. Returns None if not found.
-    """
-    run_header = None
-    with EventIOFile(file) as f:
-        found_run_header = False
-        for o in f:
-            if isinstance(o, RunHeader):
-                found_run_header = True
-            else:
-                if found_run_header:
-                    break
-                continue
-            run_header = o.parse()
-
-    return run_header.get("run") if run_header else None

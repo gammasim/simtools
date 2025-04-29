@@ -85,6 +85,7 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
         schema.validate_dict_using_schema(data, schema_file)
 
 
+@pytest.mark.xfail(reason="No network connection")
 def test_validate_schema_astropy_units(caplog):
     success_string = "Successful validation of data using schema"
 

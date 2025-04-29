@@ -11,7 +11,8 @@ from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
 from ctao_cr_spectra.spectral import cone_solid_angle
 from eventio import EventIOFile, Histograms
 from eventio.search_utils import yield_toplevel_of_type
-from eventio.simtel import MCRunHeader
+
+from simtools.simtel.simtel_io_file_info import get_corsika_run_header
 
 __all__ = [
     "HistogramIdNotFoundError",
@@ -135,14 +136,9 @@ class SimtelIOHistogram:
         Returns
         -------
         dict:
-            dictionary with information about the simulation (pyeventio MCRunHeader object).
+            dictionary with information about the simulation
         """
-        if self._config is None:
-            with EventIOFile(self.histogram_file) as f:
-                self._config = next(
-                    (obj.parse() for obj in f if isinstance(obj, MCRunHeader)), None
-                )
-        return self._config
+        return self._config if self._config else get_corsika_run_header(self.histogram_file)
 
     @property
     def total_number_of_events(self):
