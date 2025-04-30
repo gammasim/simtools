@@ -889,33 +889,49 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
     mock_array_elements = ["ILLN-01"]
     mocker.patch.object(read_parameters.db, "get_array_elements", return_value=mock_array_elements)
 
-    # Mock parameter data
-    all_parameter_data = {
-        "dark_events": {
-            "value": 0,
-            "unit": None,
-            "parameter_version": "1.0.0",
-            "instrument": "ILLN-01",
-        },
-        "laser_events": {
-            "value": 10,
-            "unit": None,
-            "parameter_version": "1.0.0",
-            "instrument": "ILLN-design",
-        },
-        "pedestal_events": {
-            "value": 100,
-            "unit": None,
-            "parameter_version": "1.0.0",
-            "instrument": "ILLN-01",
+    mock_data = {
+        "5.0.0": {},
+        "6.0.0": {
+            "dark_events": {
+                "value": 0,
+                "unit": None,
+                "parameter_version": "1.0.0",
+                "instrument": "ILLN-01",
+                "collection": "telescopes",
+            },
+            "laser_events": {
+                "value": 10,
+                "unit": None,
+                "parameter_version": "1.0.0",
+                "instrument": "ILLN-design",
+                "collection": "calibration_devices",
+            },
+            "pedestal_events": {
+                "value": 100,
+                "unit": None,
+                "parameter_version": "1.0.0",
+                "instrument": "ILLN-01",
+                "collection": "calibration_devices",
+            },
+            "array_element_position_ground": {
+                "value": [0.0, 0.0, 0.0],
+                "unit": "m",
+                "parameter_version": "1.0.0",
+                "instrument": "ILLN-01",
+                "collection": "calibration_devices",
+            },
         },
     }
 
     # Mock get_model_parameters
-    mocker.patch.object(read_parameters.db, "get_model_parameters", return_value=all_parameter_data)
+    mocker.patch.object(
+        read_parameters.db,
+        "get_model_parameters",
+        return_value=mock_data[args.get("model_version")],
+    )
 
     # Mock descriptions
-    mock_descriptions = (
+    mock_calib_descriptions = (
         {  # Full descriptions
             "dark_events": "Dark pedestal events",
             "laser_events": "Description for laser events",
@@ -933,15 +949,34 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
         },
     )
 
-    with patch.object(read_parameters, "get_all_parameter_descriptions") as mock_desc:
-        mock_desc.return_value = mock_descriptions
-        result = read_parameters.get_calibration_data(all_parameter_data, "ILLN-01")
+    mock_position_descriptions = (
+        {  # Full descriptions
+            "array_element_position_ground": "Position of the telescope",
+        },
+        {  # Short descriptions
+            "array_element_position_ground": "Position",
+        },
+        {  # Classes
+            "array_element_position_ground": "Structure",
+        },
+    )
+
+    with patch.object(
+        read_parameters,
+        "get_all_parameter_descriptions",
+        side_effect=lambda collection: mock_position_descriptions
+        if collection == "telescopes"
+        else mock_calib_descriptions,
+    ) as mock_desc:
+        result = read_parameters.get_calibration_data(
+            mock_data[args.get("model_version")], "ILLN-01"
+        )
+
+        # Check that descriptions were fetched for both collections
+        assert mock_desc.call_count == 2
 
         # Verify the structure and ordering of the result
-        assert len(result) == 3
-
-        # Check that parameters within each class are sorted alphabetically
-        assert result[1][1] < result[2][1]  # dark_events should come before laser_events
+        assert len(result) == 4
 
         # Verify the content of a specific entry
         laser_event = next(x for x in result if x[1] == "laser_events")
@@ -950,8 +985,8 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
         assert laser_event[4] == "Description for laser events"  # description
         assert laser_event[5] == "Laser events"  # short description
 
-    # Run the method
-    read_parameters.produce_calibration_reports()
+        # Run the method
+        read_parameters.produce_calibration_reports()
 
     # Verify output file exists
     output_file = Path(output_path) / "ILLN-01.md"
@@ -966,6 +1001,14 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
     assert "| Short Description" in content
     assert "1.0.0" in content
     assert "| laser events |" in content
+
+    # Check comparison reports
+    output_path_2 = Path(output_path).parent.parent / "parameters"
+    output_file_2 = output_path_2 / "ILLN-01/array_element_position_ground.md"
+    assert output_file_2.exists()
+    content_2 = output_file_2.read_text()
+    assert "# array_element_position_ground" in content_2
+    assert "**Telescope**: ILLN-01" in content_2
 
 
 def test_get_calibration_data(io_handler, db_config):
