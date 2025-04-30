@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+gfe87c77 Manual</title>
+    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+g8709515 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=ab973ea6"></script>
+    <script src="../../_static/documentation_options.js?v=56a9e1af"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+gfe87c77 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g8709515 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -204,6 +204,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user-guide/applications/simtools-generate-array-config.html">simtools-generate-array-config</a></li>
@@ -892,7 +893,7 @@ document.write(`
 
 <div class="viewcode-block" id="ReadParameters.produce_model_parameter_reports">
 <a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.produce_model_parameter_reports">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">produce_model_parameter_reports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">produce_model_parameter_reports</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce a markdown report per parameter for a given array element.</span>
 
@@ -908,7 +909,7 @@ document.write(`
 
         <span class="n">all_parameter_names</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="n">all_parameter_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters_for_all_model_versions</span><span class="p">(</span>
-            <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">array_element_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_element</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span>
+            <span class="n">site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">array_element_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_element</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="n">collection</span>
         <span class="p">)</span>
 
         <span class="n">comparison_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compare_parameter_across_versions</span><span class="p">(</span>
@@ -921,7 +922,10 @@ document.write(`
                 <span class="k">continue</span>
 
             <span class="n">output_filename</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">.md&quot;</span>
-            <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">parameter</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">),</span>
+            <span class="p">)</span>
             <span class="k">with</span> <span class="n">output_filename</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
                 <span class="c1"># Write header</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
@@ -1055,6 +1059,136 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">_write_array_triggers_section</span><span class="p">(</span>
                     <span class="n">file</span><span class="p">,</span> <span class="n">all_parameter_data</span><span class="p">[</span><span class="s2">&quot;array_triggers&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
                 <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReadParameters.get_calibration_data">
+<a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.get_calibration_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_calibration_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parameter_data</span><span class="p">,</span> <span class="n">array_element</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get calibration data and descriptions for a given array element.&quot;&quot;&quot;</span>
+        <span class="n">parameter_descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span>
+            <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span>
+        <span class="p">)</span>
+        <span class="c1"># get descriptions of array element positions from the telescope collection</span>
+        <span class="n">telescope_descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">class_grouped_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">all_parameter_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">parameter_data</span> <span class="o">=</span> <span class="n">all_parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="n">parameter_version</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">)</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot; &quot;</span>
+            <span class="n">value_data</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">value_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">file_flag</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_parameter_value</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">file_flag</span><span class="p">)</span>
+
+            <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">parameter</span><span class="p">,</span> <span class="n">telescope_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">short_description</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">telescope_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">))</span>
+                <span class="ow">or</span> <span class="n">description</span>
+            <span class="p">)</span>
+            <span class="n">inst_class</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">parameter</span><span class="p">,</span> <span class="n">telescope_descriptions</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">matching_instrument</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">array_element</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="o">.</span><span class="n">is_design_type</span><span class="p">(</span><span class="n">array_element</span><span class="p">)</span> <span class="ow">and</span> <span class="n">matching_instrument</span><span class="p">:</span>
+                <span class="n">parameter</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">***&quot;</span>
+                <span class="n">parameter_version</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">parameter_version</span><span class="si">}</span><span class="s2">***&quot;</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\[.*\]\(.*\)$&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">***&quot;</span>
+                <span class="n">description</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="s2">***&quot;</span>
+                <span class="n">short_description</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;***</span><span class="si">{</span><span class="n">short_description</span><span class="si">}</span><span class="s2">***&quot;</span>
+
+            <span class="c1"># Group by class name</span>
+            <span class="k">if</span> <span class="n">inst_class</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">class_grouped_data</span><span class="p">:</span>
+                <span class="n">class_grouped_data</span><span class="p">[</span><span class="n">inst_class</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">class_grouped_data</span><span class="p">[</span><span class="n">inst_class</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">inst_class</span><span class="p">,</span>
+                    <span class="n">parameter</span><span class="p">,</span>
+                    <span class="n">parameter_version</span><span class="p">,</span>
+                    <span class="n">value</span><span class="p">,</span>
+                    <span class="n">description</span><span class="p">,</span>
+                    <span class="n">short_description</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">class_grouped_data</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">sorted_class_data</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">class_grouped_data</span><span class="p">[</span><span class="n">class_name</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">sorted_class_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="ReadParameters.produce_calibration_reports">
+<a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.produce_calibration_reports">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">produce_calibration_reports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write calibration reports.&quot;&quot;&quot;</span>
+        <span class="n">calibration_array_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_array_elements</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span>
+        <span class="p">)</span>
+        <span class="n">array_elements</span> <span class="o">=</span> <span class="n">calibration_array_elements</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">calibration_array_elements</span><span class="p">:</span>
+            <span class="n">design_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_design_model</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s2">&quot;calibration_devices&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">design_model</span> <span class="ow">and</span> <span class="n">design_model</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">:</span>
+                <span class="n">array_elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">design_model</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">calibration_device</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">:</span>
+            <span class="n">all_parameter_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_model_parameters</span><span class="p">(</span>
+                <span class="n">site</span><span class="o">=</span><span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">calibration_device</span><span class="p">),</span>
+                <span class="n">array_element_name</span><span class="o">=</span><span class="n">calibration_device</span><span class="p">,</span>
+                <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span><span class="p">,</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">output_filename</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">/</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">calibration_device</span><span class="si">}</span><span class="s2">.md&quot;</span><span class="p">))</span>
+            <span class="n">output_filename</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_calibration_data</span><span class="p">(</span><span class="n">all_parameter_data</span><span class="p">,</span> <span class="n">calibration_device</span><span class="p">)</span>
+
+            <span class="n">design_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get_design_model</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_version</span><span class="p">,</span> <span class="n">calibration_device</span><span class="p">,</span> <span class="s2">&quot;calibration_devices&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">output_filename</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# </span><span class="si">{</span><span class="n">calibration_device</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="o">.</span><span class="n">is_design_type</span><span class="p">(</span><span class="n">calibration_device</span><span class="p">):</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                        <span class="s2">&quot;The design model can be found here: &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">design_model</span><span class="si">}</span><span class="s2">]&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">design_model</span><span class="si">}</span><span class="s2">.md).</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                        <span class="s2">&quot;Parameters shown in ***bold and italics*** are specific&quot;</span>
+                        <span class="s2">&quot; to each array element.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="s2">&quot;Parameters without emphasis are inherited from the design model.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">class_name</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groupby</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="n">group</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;## </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_write_to_file</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+
+        <span class="n">new_output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;parameters&quot;</span>
+        <span class="n">new_output_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">new_output_path</span>
+        <span class="k">for</span> <span class="n">calibration_device</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">calibration_device</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array_element</span> <span class="o">=</span> <span class="n">calibration_device</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;cal: &quot;</span><span class="p">,</span> <span class="n">calibration_device</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">produce_model_parameter_reports</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
