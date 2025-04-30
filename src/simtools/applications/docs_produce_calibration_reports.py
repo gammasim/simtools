@@ -42,7 +42,7 @@ def main():  # noqa: D103
     logger.info(
         f"Calibation reports for model version {args.get('model_version')} produced successfully."
     )
-    logger.info(f"Output path: {output_path}/f'{args.get('model_version')}'/")
+    logger.info(f"Output path: {output_path}/{args.get('model_version')}/")
 
 
 if __name__ == "__main__":

@@ -479,7 +479,7 @@ class ReadParameters:
                 file.write(f"## {class_name}\n\n")
                 self._write_to_file(group, file)
 
-    def produce_model_parameter_reports(self):
+    def produce_model_parameter_reports(self, collection="telescopes"):
         """
         Produce a markdown report per parameter for a given array element.
 
@@ -495,7 +495,7 @@ class ReadParameters:
 
         all_parameter_names = names.model_parameters(None).keys()
         all_parameter_data = self.db.get_model_parameters_for_all_model_versions(
-            site=self.site, array_element_name=self.array_element, collection="telescopes"
+            site=self.site, array_element_name=self.array_element, collection=collection
         )
 
         comparison_data = self._compare_parameter_across_versions(
@@ -508,7 +508,10 @@ class ReadParameters:
                 continue
 
             output_filename = output_path / f"{parameter}.md"
-            description = self.get_all_parameter_descriptions()[0].get(parameter)
+            description = self.get_all_parameter_descriptions(collection=collection)[0].get(
+                parameter,
+                self.get_all_parameter_descriptions(collection="telescopes")[0].get(parameter),
+            )
             with output_filename.open("w", encoding="utf-8") as file:
                 # Write header
                 file.write(
@@ -754,3 +757,12 @@ class ReadParameters:
                     group = sorted(group, key=lambda x: x[1])
                     file.write(f"## {class_name}\n\n")
                     self._write_to_file(group, file)
+
+        new_output_path = Path(self.output_path).parent.parent / "parameters"
+        new_output_path.mkdir(parents=True, exist_ok=True)
+        self.output_path = new_output_path
+        for calibration_device in array_elements:
+            self.site = names.get_site_from_array_element_name(calibration_device)
+            self.array_element = calibration_device
+            print("cal: ", calibration_device)
+            self.produce_model_parameter_reports(collection="calibration_devices")
