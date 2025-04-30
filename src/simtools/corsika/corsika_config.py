@@ -315,18 +315,15 @@ class CorsikaConfig:
         """
         value = entry["value"]
         if isinstance(value, list):
-            telescope_type = self._get_largest_telescope_type()
-            value_map = {}
-            for val in value:
-                if isinstance(val, dict) and "instrument" in val:
-                    if val["instrument"] == telescope_type:
-                        value_map[val["primary_particle"]] = val["value"]
-                else:
-                    value_map[val["primary_particle"]] = val["value"]
+            tel_type = self._get_largest_telescope_type()
+            value_map = {
+                v["primary_particle"]: v["value"]
+                for v in value
+                if not isinstance(v, dict) or "instrument" not in v or v["instrument"] == tel_type
+            }
             value = value_map.get(self.primary_particle.name, value_map.get("default", 0))
 
-        unit = u.Unit(entry["unit"]).to("g/cm2")
-        return f"{value * unit}"
+        return f"{value * u.Unit(entry['unit']).to('g/cm2')}"
 
     def _get_largest_telescope_type(self):
         """
@@ -337,12 +334,11 @@ class CorsikaConfig:
         str
             Largest telescope type.
         """
-        telescope_types = {}
-        for telescope in self.array_model.telescope_model.values():
-            telescope_types[telescope.design_model] = telescope.get_parameter_value_with_unit(
-                "telescope_sphere_radius"
-            ).to("cm")
-        return max(telescope_types, key=lambda k: telescope_types[k])
+        types = {
+            tel.design_model: tel.get_parameter_value_with_unit("telescope_sphere_radius").to("cm")
+            for tel in self.array_model.telescope_model.values()
+        }
+        return max(types, key=types.get)
 
     def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
         """Return ECUTS parameter CORSIKA format."""
