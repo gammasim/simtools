@@ -227,7 +227,7 @@ class RunnerServices:
         file_type,
         run_number=None,
         mode=None,
-        model_version_index=0,
+        _model_version_index=0,
     ):  # pylint: disable=unused-argument
         """
         Get a CORSIKA/sim_telarray style file name for various log and data file types.
