@@ -648,6 +648,7 @@ class ReadParameters:
         parameter_descriptions = self.get_all_parameter_descriptions(
             collection="calibration_devices"
         )
+        # get descriptions of array element positions from the telescope collection
         telescope_descriptions = self.get_all_parameter_descriptions(collection="telescopes")
         data = []
         class_grouped_data = {}
