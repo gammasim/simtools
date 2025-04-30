@@ -114,6 +114,7 @@ class ProductionStatisticsHandler:
         """Plot the derived event statistics."""
         ax = self.interpolation_handler.plot_comparison()
         plot_path = self.output_path.joinpath("production_statistics_comparison.png")
+        plot_path.parent.mkdir(parents=True, exist_ok=True)
         ax.figure.savefig(plot_path)
         self.logger.info(f"Plot saved to {plot_path}")
 
