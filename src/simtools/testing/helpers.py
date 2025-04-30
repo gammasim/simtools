@@ -51,16 +51,3 @@ def skip_multiple_version_test(config, model_version):
         return message
 
     return None
-
-
-def skip_specific_model_version(config, model_version):
-    """Skip a test if the model_version is 5.0.0 for calibration device reports."""
-    if (
-        model_version == "5.0.0"
-        and config.get("APPLICATION") == "simtools-docs-produce-calibration-reports"
-    ):
-        return (
-            "Skipping test for model_version 5.0.0 as calibration devices are "
-            "specified from 6.0.0 onward."
-        )
-    return None

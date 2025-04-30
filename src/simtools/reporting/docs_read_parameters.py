@@ -667,11 +667,10 @@ class ReadParameters:
             description = parameter_descriptions[0].get(
                 parameter, telescope_descriptions[0].get(parameter)
             )
-            short_description = parameter_descriptions[1].get(
-                parameter, telescope_descriptions[1].get(parameter)
+            short_description = (
+                parameter_descriptions[1].get(parameter, telescope_descriptions[1].get(parameter))
+                or description
             )
-            if short_description is None:
-                short_description = description
             inst_class = parameter_descriptions[2].get(
                 parameter, telescope_descriptions[2].get(parameter)
             )
