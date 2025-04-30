@@ -13,6 +13,7 @@ from simtools.corsika.corsika_config import CorsikaConfig, InvalidCorsikaInputEr
 logger = logging.getLogger()
 
 CORSIKA_CONFIG_MODE_PARAMETER = "simtools.corsika.corsika_config.ModelParameter"
+MUON_PLUS_PARTICLE = "muon+"
 
 
 @pytest.fixture
@@ -53,7 +54,7 @@ def corsika_configuration_parameters_muon_grammage(gcm2, corsika_configuration_p
     params["corsika_starting_grammage"] = {
         "value": [
             {
-                "primary_particle": "muon+",
+                "primary_particle": MUON_PLUS_PARTICLE,
                 "value": 10.0,
             },
             {
@@ -74,7 +75,7 @@ def corsika_configuration_parameters_teltype_grammage(gcm2, corsika_configuratio
         "value": [
             {
                 "instrument": "LSTS-design",
-                "primary_particle": "muon+",
+                "primary_particle": MUON_PLUS_PARTICLE,
                 "value": 10.0,
             },
             {
@@ -84,7 +85,7 @@ def corsika_configuration_parameters_teltype_grammage(gcm2, corsika_configuratio
             },
             {
                 "instrument": "SSTS-design",
-                "primary_particle": "muon+",
+                "primary_particle": MUON_PLUS_PARTICLE,
                 "value": 50.0,
             },
             {

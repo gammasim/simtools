@@ -295,46 +295,46 @@ class CorsikaConfig:
         return [f"{entry['value'] * u.Unit(entry['unit']).to('cm'):.2f}", "0"]
 
     def _input_config_corsika_starting_grammage(self, entry):
-        """
-        Return FIXCHI parameter CORSIKA format.
+        """Return FIXCHI parameter CORSIKA format."""
+        value = self._get_starting_grammage_value(entry["value"])
+        return f"{value * u.Unit(entry['unit']).to('g/cm2')}"
 
-        Use the primary particle name to get the value from the list of values.
-        If not found, use the default value. For muon simulations, this value
-        is telescope-type dependent. Uses minimum value in case of multiple values
-        (highest up).
+    def _get_starting_grammage_value(self, value_entry):
+        """
+        Get appropriate starting grammage value from entry values.
 
         Parameters
         ----------
-        entry : dict
-            Dictionary with the value and unit of the starting grammage.
+        value_entry : float or list
+            Value or list of grammage configurations
 
         Returns
         -------
-        str
-            Starting grammage in g/cm2.
+        float
+            Selected grammage value
         """
-        value = entry["value"]
-        if isinstance(value, list):
-            tel_types = {tel.design_model for tel in self.array_model.telescope_model.values()}
+        if not isinstance(value_entry, list):
+            return value_entry
 
-            particle = self.primary_particle.name
-            matched_values = []
-            default_values = []
+        tel_types = {tel.design_model for tel in self.array_model.telescope_model.values()}
+        particle = self.primary_particle.name
+        matched_values = self._get_matching_grammage_values(value_entry, tel_types, particle)
 
-            for v in value:
-                instr = v.get("instrument")
-                if instr is None or instr in tel_types:
-                    if v["primary_particle"] == particle:
-                        matched_values.append(v["value"])
-                    elif v["primary_particle"] == "default":
-                        default_values.append(v["value"])
+        return min(matched_values) if matched_values else 0
 
-            if matched_values:
-                value = min(matched_values)
-            else:
-                value = min(default_values) if default_values else 0
+    def _get_matching_grammage_values(self, configs, tel_types, particle):
+        """Get list of matching grammage values for particle and telescope types."""
+        matched = []
+        defaults = []
 
-        return f"{value * u.Unit(entry['unit']).to('g/cm2')}"
+        for config in configs:
+            if config.get("instrument") is None or config.get("instrument") in tel_types:
+                if config["primary_particle"] == particle:
+                    matched.append(config["value"])
+                elif config["primary_particle"] == "default":
+                    defaults.append(config["value"])
+
+        return matched if matched else defaults
 
     def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
         """Return ECUTS parameter CORSIKA format."""
