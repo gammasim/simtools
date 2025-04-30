@@ -3,7 +3,7 @@
 import copy
 import logging
 import pathlib
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from astropy import units as u
@@ -80,17 +80,17 @@ def corsika_configuration_parameters_teltype_grammage(gcm2, corsika_configuratio
             {
                 "instrument": "LSTS-design",
                 "primary_particle": "default",
-                "value": 0.0,
+                "value": 3.0,  # default values are set to non-standard values for testing
             },
             {
                 "instrument": "SSTS-design",
                 "primary_particle": "muon+",
-                "value": 5.0,
+                "value": 50.0,
             },
             {
                 "instrument": "SSTS-design",
                 "primary_particle": "default",
-                "value": 0.0,
+                "value": 2.0,  # default values are set to non-standard values for testing
             },
         ],
         "unit": gcm2,
@@ -235,53 +235,75 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
     corsika_configuration_parameters_muon_grammage,
     corsika_configuration_parameters_teltype_grammage,
 ):
-    with patch.object(
-        type(corsika_config_mock_array_model),
-        "_get_largest_telescope_type",
-        return_value="SSTS-design",
-    ):
-        # default behavior with proton as primary
-        assert (
-            corsika_config_mock_array_model._input_config_corsika_starting_grammage(
-                corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
-            )
-            == "0.0"
+    # default behavior with proton as primary
+    assert (
+        corsika_config_mock_array_model._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
         )
-        # change primary to muon+
-        corsika_config_mock_array_model_muon = copy.deepcopy(corsika_config_mock_array_model)
-        corsika_config_mock_array_model_muon.primary_particle = {
-            "primary": "muon+",
-            "primary_id_type": "common_name",
-        }
-        assert (
-            corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
-                corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
-            )
-            == "10.0"
+        == "0.0"
+    )
+    # change primary to muon+
+    corsika_config_mock_array_model_muon = copy.deepcopy(corsika_config_mock_array_model)
+    corsika_config_mock_array_model_muon.primary_particle = {
+        "primary": "muon+",
+        "primary_id_type": "common_name",
+    }
+    assert (
+        corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
         )
-        corsika_config_mock_array_model_muon.primary_particle = {
-            "primary": "gamma",
-            "primary_id_type": "common_name",
-        }
-        assert (
-            corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
-                corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
-            )
-            == "0.0"
+        == "10.0"
+    )
+    corsika_config_mock_array_model_muon.primary_particle = {
+        "primary": "gamma",
+        "primary_id_type": "common_name",
+    }
+    assert (
+        corsika_config_mock_array_model_muon._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
         )
+        == "0.0"
+    )
 
-        # test with telescope type (note the return value of _get_largest_telescope_type is "SSTS")
-        corsika_config_mock_array_model_teltype = copy.deepcopy(corsika_config_mock_array_model)
-        corsika_config_mock_array_model_teltype.primary_particle = {
-            "primary": "muon+",
-            "primary_id_type": "common_name",
-        }
-        assert (
-            corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
-                corsika_configuration_parameters_teltype_grammage["corsika_starting_grammage"]
-            )
-            == "5.0"
+    # Telescope-type dependent starting grammage
+    tel1 = MagicMock()
+    tel1.design_model = "LSTS-design"
+    tel1.__str__.return_value = "LSTS-01"
+
+    tel2 = MagicMock()
+    tel2.design_model = "SSTS-design"
+    tel2.__str__.return_value = "SSTS-14"
+
+    corsika_config_mock_array_model_teltype = copy.deepcopy(corsika_config_mock_array_model)
+    corsika_config_mock_array_model_teltype.array_model = MagicMock()
+
+    # Create telescope model mock that behaves like a dictionary
+    telescope_model_mock = MagicMock()
+    telescope_model_mock.values = MagicMock(return_value=[tel1, tel2])
+    corsika_config_mock_array_model_teltype.array_model.telescope_model = telescope_model_mock
+
+    corsika_config_mock_array_model_teltype.primary_particle = {
+        "primary": "muon+",
+        "primary_id_type": "common_name",
+    }
+
+    assert (
+        corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_teltype_grammage["corsika_starting_grammage"]
         )
+        == "10.0"
+    )
+
+    corsika_config_mock_array_model_teltype.primary_particle = {
+        "primary": "proton",
+        "primary_id_type": "common_name",
+    }
+    assert (
+        corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_teltype_grammage["corsika_starting_grammage"]
+        )
+        == "2.0"
+    )
 
 
 def test_input_config_corsika_particle_kinetic_energy_cutoff(corsika_config_mock_array_model):
@@ -706,23 +728,3 @@ def test_assert_corsika_configurations_match_single_version(corsika_config_mock_
 
         # Verify ModelParameter was never called
         mock_model_parameter.assert_not_called()
-
-
-def test_get_largest_telescope_type(corsika_config_mock_array_model):
-    """Test determination of largest telescope type based on telescope radius."""
-    test_data = [
-        {"radius": 5.5 * u.m, "type": "SSTS-design"},
-        {"radius": 9.5 * u.m, "type": "MSTx-FlashCam"},
-        {"radius": 12.5 * u.m, "type": "LSTN-design"},
-    ]
-
-    telescope_mocks = {}
-    for i, data in enumerate(test_data):
-        tel_mock = Mock(design_model=data["type"])
-        tel_mock.get_parameter_value_with_unit.return_value = data["radius"]
-        telescope_mocks[f"tel_{i}"] = tel_mock
-
-    array_model_mock = Mock(telescope_model=telescope_mocks)
-    corsika_config_mock_array_model.array_model = array_model_mock
-    print(corsika_config_mock_array_model._get_largest_telescope_type(), "LSTN-design")
-    assert corsika_config_mock_array_model._get_largest_telescope_type() == "LSTN-design"
