@@ -1,3 +1,9 @@
+# Dockerfile for CORSIKA and sim_telarray.
+#
+# Contains CORSIKA (non-optimized) and sim_telarray.
+# Used as base image for the simtools-dev image.
+#
+# hadolint global ignore=DL3013,DL3033,DL3041
 FROM almalinux:9.5 AS build_image
 WORKDIR /workdir/sim_telarray
 ARG BUILD_OPT="prod6-sc"
@@ -9,38 +15,48 @@ ARG BERNLOHR_VERSION="1.68"
 
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
-    csh patch perl which && \
-    yum clean all
+    csh patch perl which bzip2 && \
+    yum clean all && \
+    rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
 ADD corsika_simtelarray.tar.gz .
 RUN rm -f examples-with-data.tar.gz && \
     rm -f sim_telarray_config.tar.gz && \
     export EXTRA_DEFINES="${EXTRA_DEF}" && ./build_all $BUILD_OPT $HADRONIC_MODEL gsl
 
-# corsika source code is removed to follow
-# the corsika non-distribution policy.
+# CORSIKA source code is removed to follow
+# the CORSIKA non-distribution policy.
 RUN mv ./corsika-7*/run corsika-run && \
     rm -rf ./corsika-7[0-9]* && \
     find . -name "*.tar.gz" -delete && \
     rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 
-# remove unnecessary large QGSJet tables (e.g. remove qgs3 tables when using qgs2)
-RUN if [[ "$HADRONIC_MODEL" == "qgs3" ]]; then \
-        find . -name "qgsdat-II-04.bz2" -exec rm -fv {} \; ; \
+# Unzip QGSJet tables; remove tables not needed (e.g. remove qgs3 tables when using qgs2)
+WORKDIR /workdir/sim_telarray/corsika-run
+RUN if [ "$HADRONIC_MODEL" = "qgs3" ]; then \
+        if [ -f qgsdat-III.bz2 ]; then \
+            bzip2 -dq qgsdat-III.bz2; \
+        fi; \
+        rm -f -v qgsdat-II-04.bz2; \
     fi && \
-    if [[ "$HADRONIC_MODEL" == "qgs2" ]]; then \
-        find . -name "qgsdat-III.bz2" -exec rm -fv {} \; ; \
+    if [ "$HADRONIC_MODEL" = "qgs2" ]; then \
+        if [ -f qgsdat-II-04.bz2 ]; then \
+            bzip2 -dq qgsdat-II-04.bz2; \
+        fi; \
+        rm -f -v qgsdat-III.bz2; \
     fi
 
-# create a yml file in workdir with the build options
-RUN echo "build_opt: $BUILD_OPT" > /workdir/sim_telarray/build_opts.yml && \
-    echo "extra_def: $EXTRA_DEF" >> /workdir/sim_telarray/build_opts.yml && \
-    echo "hadronic_model: $HADRONIC_MODEL" >> /workdir/sim_telarray/build_opts.yml && \
-    echo "avx_flag: $AVX_FLAG" >> /workdir/sim_telarray/build_opts.yml && \
-    echo "corsika_version: $CORSIKA_VERSION" >> /workdir/sim_telarray/build_opts.yml && \
-    echo "bernlohr_version: $BERNLOHR_VERSION" >> /workdir/sim_telarray/build_opts.yml
+# Add a yml file in workdir with the build options
+WORKDIR /workdir/sim_telarray
+RUN echo "build_opt: $BUILD_OPT" > ./build_opts.yml && \
+    echo "extra_def: $EXTRA_DEF" >> ./build_opts.yml && \
+    echo "hadronic_model: $HADRONIC_MODEL" >> ./build_opts.yml && \
+    echo "avx_flag: $AVX_FLAG" >> ./build_opts.yml && \
+    echo "corsika_version: $CORSIKA_VERSION" >> ./build_opts.yml && \
+    echo "bernlohr_version: $BERNLOHR_VERSION" >> ./build_opts.yml
 
 FROM almalinux:9.5-minimal
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 WORKDIR /workdir
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 
@@ -50,10 +66,11 @@ RUN microdnf update -y && microdnf install -y \
     gsl-devel \
     gcc-fortran \
     procps && \
-    microdnf clean all
+    microdnf clean all && \
+    rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
 
 # create a symbolic link to the corsika executable
-RUN cprog=$(/bin/ls /workdir/sim_telarray/corsika-run/corsika*$(uname)_* 2>/dev/null | tail -1) && \
-    ln -sf $cprog /workdir/sim_telarray/corsika-run/corsika
+RUN cprog=$(/bin/ls /workdir/sim_telarray/corsika-run/corsika*"$(uname)"_* 2>/dev/null | tail -1) && \
+    ln -sf "$cprog" /workdir/sim_telarray/corsika-run/corsika
 
 ENV SIMTEL_PATH="/workdir/sim_telarray"
