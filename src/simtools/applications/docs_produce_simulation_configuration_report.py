@@ -40,6 +40,11 @@ def main():  # noqa: D103
 
     read_parameters.produce_simulation_configuration_report()
 
+    logger.info(
+        f"Configuration reports for {args.get('simulation_software')} produced successfully."
+    )
+    logger.info(f"Output path: {output_path}/{args.get('model_version')}/")
+
 
 if __name__ == "__main__":
     main()
