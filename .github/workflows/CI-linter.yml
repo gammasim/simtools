@@ -79,10 +79,16 @@ jobs:
         run: |
           pre-commit run --all-files
 
+      - name: Get Dockerfile list
+        id: dockerfile-list
+        run: |
+          files=$(find ./docker -name "Dockerfile-*" | paste -sd " " -)
+          echo "docker_files=$files" >> "$GITHUB_OUTPUT"
+
       - name: Lint docker files
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: ./docker/Dockerfile-*
+          dockerfile: ${{ steps.dockerfile-list.outputs.docker_files }}
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v7
