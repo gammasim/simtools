@@ -4,7 +4,7 @@
 # Requires CORSIKA and sim_telarray source code tarballs (plus tarball for
 # CORSIKA optimized build) to be in the same directory as this Dockerfile.
 #
-# hadolint global ignore=DL3013,DL3033,DL3041
+## hadolint global ignore=DL3013,DL3033,DL3041
 FROM almalinux:9.5 AS build_image
 ARG BUILD_OPT="prod6-sc"
 ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
