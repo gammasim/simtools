@@ -79,6 +79,11 @@ jobs:
         run: |
           pre-commit run --all-files
 
+      - name: Lint docker files
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./docker/Dockerfile-*
+
       - name: Lint Code Base
         uses: super-linter/super-linter@v7
         env:
