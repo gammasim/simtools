@@ -877,3 +877,202 @@ def test_produce_simulation_configuration_report(io_handler, db_config):
 
         report_file_corsika = output_path / f"configuration_{read_parameters.software}.md"
         assert report_file_corsika.exists()
+
+
+def test_produce_calibration_reports(io_handler, db_config, mocker):
+    """Test generation of calibration report for an array element."""
+    args = {"model_version": "6.0.0"}
+    output_path = io_handler.get_output_directory(sub_dir=f"{args['model_version']}")
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    # Mock array elements
+    mock_array_elements = ["ILLN-01"]
+    mocker.patch.object(read_parameters.db, "get_array_elements", return_value=mock_array_elements)
+
+    mock_data = {
+        "5.0.0": {},
+        "6.0.0": {
+            "dark_events": {
+                "value": 0,
+                "unit": None,
+                "parameter_version": "1.0.0",
+                "instrument": "ILLN-01",
+                "collection": "telescopes",
+            },
+            "laser_events": {
+                "value": 10,
+                "unit": None,
+                "parameter_version": "1.0.0",
+                "instrument": "ILLN-design",
+                "collection": "calibration_devices",
+            },
+            "pedestal_events": {
+                "value": 100,
+                "unit": None,
+                "parameter_version": "1.0.0",
+                "instrument": "ILLN-01",
+                "collection": "calibration_devices",
+            },
+            "array_element_position_ground": {
+                "value": [0.0, 0.0, 0.0],
+                "unit": "m",
+                "parameter_version": "1.0.0",
+                "instrument": "ILLN-01",
+                "collection": "calibration_devices",
+            },
+        },
+    }
+
+    # Mock get_model_parameters
+    mocker.patch.object(
+        read_parameters.db,
+        "get_model_parameters",
+        return_value=mock_data[args.get("model_version")],
+    )
+
+    # Mock descriptions
+    mock_calib_descriptions = (
+        {  # Full descriptions
+            "dark_events": "Dark pedestal events",
+            "laser_events": "Description for laser events",
+            "pedestal_events": "Pedestal events with open lid",
+        },
+        {  # Short descriptions
+            "dark_events": "Dark events",
+            "laser_events": "Laser events",
+            "pedestal_events": "Pedestal events",
+        },
+        {  # Classes
+            "dark_events": "Calibration",
+            "laser_events": "Calibration",
+            "pedestal_events": "Camera",
+        },
+    )
+
+    mock_position_descriptions = (
+        {  # Full descriptions
+            "array_element_position_ground": "Position of the telescope",
+        },
+        {  # Short descriptions
+            "array_element_position_ground": "Position",
+        },
+        {  # Classes
+            "array_element_position_ground": "Structure",
+        },
+    )
+
+    with patch.object(
+        read_parameters,
+        "get_all_parameter_descriptions",
+        side_effect=lambda collection: mock_position_descriptions
+        if collection == "telescopes"
+        else mock_calib_descriptions,
+    ) as mock_desc:
+        result = read_parameters.get_calibration_data(
+            mock_data[args.get("model_version")], "ILLN-01"
+        )
+
+        # Check that descriptions were fetched for both collections
+        assert mock_desc.call_count == 2
+
+        # Verify the structure and ordering of the result
+        assert len(result) == 4
+
+        # Verify the content of a specific entry
+        laser_event = next(x for x in result if x[1] == "laser_events")
+        assert laser_event[2] == "1.0.0"  # parameter version
+        assert laser_event[3] == "10"  # value
+        assert laser_event[4] == "Description for laser events"  # description
+        assert laser_event[5] == "Laser events"  # short description
+
+        # Run the method
+        read_parameters.produce_calibration_reports()
+
+    # Verify output file exists
+    output_file = Path(output_path) / "ILLN-01.md"
+    assert output_file.exists()
+
+    # Check file content
+    content = output_file.read_text()
+
+    assert "# ILLN-01" in content
+    assert "## Calibration" in content
+    assert "| Values" in content
+    assert "| Short Description" in content
+    assert "1.0.0" in content
+    assert "| laser events |" in content
+
+    # Check comparison reports
+    output_path_2 = Path(output_path).parent.parent / "parameters"
+    output_file_2 = output_path_2 / "ILLN-01/array_element_position_ground.md"
+    assert output_file_2.exists()
+    content_2 = output_file_2.read_text()
+    assert "# array_element_position_ground" in content_2
+    assert "**Telescope**: ILLN-01" in content_2
+
+
+def test_get_calibration_data(io_handler, db_config):
+    args = {
+        "model_version": "6.0.0",
+    }
+    output_path = io_handler.get_output_directory(sub_dir=f"{args.get('model_version')}")
+    read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
+
+    mock_data = {
+        "dark_events": {
+            "value": 1,
+            "unit": None,
+            "parameter_version": "1.0.0",
+            "instrument": "ILLN-design",
+        },
+        "laser_events": {
+            "value": 10,
+            "unit": None,
+            "parameter_version": "1.0.0",
+            "instrument": "ILLN-01",
+        },
+        "pedestal_events": {
+            "value": 100,
+            "unit": None,
+            "parameter_version": "1.0.0",
+            "instrument": "ILLN-01",
+        },
+        "none_value": {
+            "value": None,
+            "unit": None,
+            "parameter_version": "1.0.0",
+            "instrument": "ILLN-design",
+        },
+    }
+
+    # Mock descriptions
+    mock_descriptions = (
+        {  # Full descriptions
+            "dark_events": "Dark pedestal events",
+            "laser_events": "Laser calibration events",
+            "pedestal_events": "Pedestal events with open lid",
+            "none_value": "None value parameter description.",
+        },
+        {  # Short descriptions
+            "dark_events": "Dark events",
+            "laser_events": None,
+            "pedestal_events": "Pedestal events",
+            "none_value": "Short description for none value",
+        },
+        {  # Classes
+            "dark_events": "Calibration",
+            "laser_events": "Calibration",
+            "pedestal_events": "Camera",
+            "none_value": "Calibration",
+        },
+    )
+
+    # Mock descriptions using patch
+    with patch.object(read_parameters, "get_all_parameter_descriptions") as mock_desc:
+        mock_desc.return_value = mock_descriptions
+        result = read_parameters.get_calibration_data(mock_data, "ILLN-01")
+
+    # Assert the result contains the expected data
+    assert result[0][0] == "Camera"
+    assert len(result[0]) == 6
+    assert len(result) == 3
