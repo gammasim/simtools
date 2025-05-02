@@ -45,6 +45,12 @@ jobs:
             exit 1
           fi
 
+      - name: Lint Docker files
+        run: |
+          find ./docker -name "Dockerfile-*" -print0 | while IFS= read -r -d '' dockerfile; do
+            docker run --rm -i ghcr.io/hadolint/hadolint < "$dockerfile"
+          done
+
       - name: install packages not included in super-linter
         run: |
           pip install validate-pyproject
@@ -78,18 +84,6 @@ jobs:
       - name: Pre-commit
         run: |
           pre-commit run --all-files
-
-      - name: Get Dockerfile list
-        id: dockerfile-list
-        run: |
-          files=$(find ./docker -name "Dockerfile-*" | paste -sd " " -)
-          echo "docker_files=$files" >> "$GITHUB_OUTPUT"
-
-      - name: Lint Docker files
-        run: |
-          for dockerfile in $(find ./docker -name "Dockerfile-*"); do
-            docker run --rm -i ghcr.io/hadolint/hadolint < "$dockerfile"
-          done
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v7
