@@ -3,7 +3,7 @@
 import copy
 import logging
 import pathlib
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from astropy import units as u
@@ -13,6 +13,8 @@ from simtools.corsika.corsika_config import CorsikaConfig, InvalidCorsikaInputEr
 logger = logging.getLogger()
 
 CORSIKA_CONFIG_MODE_PARAMETER = "simtools.corsika.corsika_config.ModelParameter"
+MUON_PLUS_PARTICLE = "muon+"
+PROTON_PARTICLE = "proton"
 
 
 @pytest.fixture
@@ -53,12 +55,44 @@ def corsika_configuration_parameters_muon_grammage(gcm2, corsika_configuration_p
     params["corsika_starting_grammage"] = {
         "value": [
             {
-                "primary_particle": "muon+",
+                "primary_particle": MUON_PLUS_PARTICLE,
                 "value": 10.0,
             },
             {
                 "primary_particle": "default",
                 "value": 0.0,
+            },
+        ],
+        "unit": gcm2,
+    }
+    return params
+
+
+@pytest.fixture
+def corsika_configuration_parameters_teltype_grammage(gcm2, corsika_configuration_parameters):
+    """Fixture for CORSIKA configuration parameters with muon grammage."""
+    params = corsika_configuration_parameters.copy()
+    params["corsika_starting_grammage"] = {
+        "value": [
+            {
+                "instrument": "LSTS-design",
+                "primary_particle": MUON_PLUS_PARTICLE,
+                "value": 10.0,
+            },
+            {
+                "instrument": "LSTS-design",
+                "primary_particle": "default",
+                "value": 3.0,  # default values are set to non-standard values for testing
+            },
+            {
+                "instrument": "SSTS-design",
+                "primary_particle": MUON_PLUS_PARTICLE,
+                "value": 50.0,
+            },
+            {
+                "instrument": "SSTS-design",
+                "primary_particle": "default",
+                "value": 2.0,  # default values are set to non-standard values for testing
             },
         ],
         "unit": gcm2,
@@ -199,7 +233,9 @@ def test_input_config_corsika_starting_grammage(corsika_config_mock_array_model,
 
 
 def test_input_config_corsika_starting_grammage_muon_grammage(
-    corsika_config_mock_array_model, corsika_configuration_parameters_muon_grammage, gcm2
+    corsika_config_mock_array_model,
+    corsika_configuration_parameters_muon_grammage,
+    corsika_configuration_parameters_teltype_grammage,
 ):
     # default behavior with proton as primary
     assert (
@@ -211,7 +247,7 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
     # change primary to muon+
     corsika_config_mock_array_model_muon = copy.deepcopy(corsika_config_mock_array_model)
     corsika_config_mock_array_model_muon.primary_particle = {
-        "primary": "muon+",
+        "primary": MUON_PLUS_PARTICLE,
         "primary_id_type": "common_name",
     }
     assert (
@@ -229,6 +265,46 @@ def test_input_config_corsika_starting_grammage_muon_grammage(
             corsika_configuration_parameters_muon_grammage["corsika_starting_grammage"]
         )
         == "0.0"
+    )
+
+    # Telescope-type dependent starting grammage
+    tel1 = MagicMock()
+    tel1.design_model = "LSTS-design"
+    tel1.__str__.return_value = "LSTS-01"
+
+    tel2 = MagicMock()
+    tel2.design_model = "SSTS-design"
+    tel2.__str__.return_value = "SSTS-14"
+
+    corsika_config_mock_array_model_teltype = copy.deepcopy(corsika_config_mock_array_model)
+    corsika_config_mock_array_model_teltype.array_model = MagicMock()
+
+    # Create telescope model mock that behaves like a dictionary
+    telescope_model_mock = MagicMock()
+    telescope_model_mock.values = MagicMock(return_value=[tel1, tel2])
+    corsika_config_mock_array_model_teltype.array_model.telescope_model = telescope_model_mock
+
+    corsika_config_mock_array_model_teltype.primary_particle = {
+        "primary": MUON_PLUS_PARTICLE,
+        "primary_id_type": "common_name",
+    }
+
+    assert (
+        corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_teltype_grammage["corsika_starting_grammage"]
+        )
+        == "10.0"
+    )
+
+    corsika_config_mock_array_model_teltype.primary_particle = {
+        "primary": PROTON_PARTICLE,
+        "primary_id_type": "common_name",
+    }
+    assert (
+        corsika_config_mock_array_model_teltype._input_config_corsika_starting_grammage(
+            corsika_configuration_parameters_teltype_grammage["corsika_starting_grammage"]
+        )
+        == "2.0"
     )
 
 
@@ -398,17 +474,17 @@ def test_set_primary_particle(corsika_config_mock_array_model):
     )
 
     p_common_name = cc._set_primary_particle(
-        args_dict={"primary": "proton", "primary_id_type": "common_name"}
+        args_dict={"primary": PROTON_PARTICLE, "primary_id_type": "common_name"}
     )
-    assert p_common_name.name == "proton"
+    assert p_common_name.name == PROTON_PARTICLE
 
     p_corsika7_id = cc._set_primary_particle(
         args_dict={"primary": 14, "primary_id_type": "corsika7_id"}
     )
-    assert p_corsika7_id.name == "proton"
+    assert p_corsika7_id.name == PROTON_PARTICLE
 
     p_pdg_id = cc._set_primary_particle(args_dict={"primary": 2212, "primary_id_type": "pdg_id"})
-    assert p_pdg_id.name == "proton"
+    assert p_pdg_id.name == PROTON_PARTICLE
 
 
 def test_get_config_parameter(corsika_config_mock_array_model, caplog):
@@ -654,3 +730,56 @@ def test_assert_corsika_configurations_match_single_version(corsika_config_mock_
 
         # Verify ModelParameter was never called
         mock_model_parameter.assert_not_called()
+
+
+def test_get_matching_grammage_values(corsika_config_mock_array_model):
+    # Test case 1: Direct match for particle and instrument
+    configs = [
+        {"instrument": "LSTS-design", "primary_particle": PROTON_PARTICLE, "value": 10.0},
+        {"instrument": "SSTS-design", "primary_particle": "default", "value": 5.0},
+    ]
+    tel_types = {"LSTS-design"}
+    assert corsika_config_mock_array_model._get_matching_grammage_values(
+        configs, tel_types, PROTON_PARTICLE
+    ) == [10.0]
+
+    # Test case 2: No direct match, fallback to default
+    configs = [
+        {"instrument": "LSTS-design", "primary_particle": MUON_PLUS_PARTICLE, "value": 10.0},
+        {"instrument": "LSTS-design", "primary_particle": "default", "value": 5.0},
+    ]
+    tel_types = {"LSTS-design"}
+    assert corsika_config_mock_array_model._get_matching_grammage_values(
+        configs, tel_types, PROTON_PARTICLE
+    ) == [5.0]
+
+    # Test case 3: Multiple matching values
+    configs = [
+        {"instrument": "LSTS-design", "primary_particle": PROTON_PARTICLE, "value": 10.0},
+        {"instrument": None, "primary_particle": PROTON_PARTICLE, "value": 15.0},
+    ]
+    tel_types = {"LSTS-design"}
+    assert corsika_config_mock_array_model._get_matching_grammage_values(
+        configs, tel_types, PROTON_PARTICLE
+    ) == [10.0, 15.0]
+
+    # Test case 4: Empty config list
+    assert (
+        corsika_config_mock_array_model._get_matching_grammage_values(
+            [], {"LSTS-design"}, PROTON_PARTICLE
+        )
+        == []
+    )
+
+    # Test case 5: No matches and no defaults
+    configs = [
+        {"instrument": "LSTS-design", "primary_particle": MUON_PLUS_PARTICLE, "value": 10.0},
+        {"instrument": "SSTS-design", "primary_particle": MUON_PLUS_PARTICLE, "value": 15.0},
+    ]
+    tel_types = {"MSTS-design"}
+    assert (
+        corsika_config_mock_array_model._get_matching_grammage_values(
+            configs, tel_types, PROTON_PARTICLE
+        )
+        == []
+    )

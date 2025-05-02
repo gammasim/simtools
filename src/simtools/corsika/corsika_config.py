@@ -295,19 +295,46 @@ class CorsikaConfig:
         return [f"{entry['value'] * u.Unit(entry['unit']).to('cm'):.2f}", "0"]
 
     def _input_config_corsika_starting_grammage(self, entry):
-        """
-        Return FIXCHI parameter CORSIKA format.
+        """Return FIXCHI parameter CORSIKA format."""
+        value = self._get_starting_grammage_value(entry["value"])
+        return f"{value * u.Unit(entry['unit']).to('g/cm2')}"
 
-        Use the primary particle name to get the value from the list of values.
-        If not found, use the default value.
+    def _get_starting_grammage_value(self, value_entry):
         """
-        value = entry["value"]
-        if isinstance(value, list):
-            value_map = {v["primary_particle"]: v["value"] for v in value}
-            value = value_map.get(self.primary_particle.name, value_map.get("default", 0))
+        Get appropriate starting grammage value from entry values.
 
-        unit = u.Unit(entry["unit"]).to("g/cm2")
-        return f"{value * unit}"
+        Parameters
+        ----------
+        value_entry : float or list
+            Value or list of grammage configurations
+
+        Returns
+        -------
+        float
+            Selected grammage value
+        """
+        if not isinstance(value_entry, list):
+            return value_entry
+
+        tel_types = {tel.design_model for tel in self.array_model.telescope_model.values()}
+        particle = self.primary_particle.name
+        matched_values = self._get_matching_grammage_values(value_entry, tel_types, particle)
+
+        return min(matched_values) if matched_values else 0
+
+    def _get_matching_grammage_values(self, configs, tel_types, particle):
+        """Get list of matching grammage values for particle and telescope types."""
+        matched = []
+        defaults = []
+
+        for config in configs:
+            if config.get("instrument") is None or config.get("instrument") in tel_types:
+                if config["primary_particle"] == particle:
+                    matched.append(config["value"])
+                elif config["primary_particle"] == "default":
+                    defaults.append(config["value"])
+
+        return matched if matched else defaults
 
     def _input_config_corsika_particle_kinetic_energy_cutoff(self, entry):
         """Return ECUTS parameter CORSIKA format."""
