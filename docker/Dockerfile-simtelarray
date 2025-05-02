@@ -5,13 +5,15 @@
 #
 # hadolint global ignore=DL3013,DL3033,DL3041
 FROM almalinux:9.5 AS build_image
-WORKDIR /workdir/sim_telarray
 ARG BUILD_OPT="prod6-sc"
 ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
 ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="no_opt"
 ARG CORSIKA_VERSION="77550"
 ARG BERNLOHR_VERSION="1.68"
+
+ENV GCC_PATH="/usr/bin/"
+WORKDIR /workdir/sim_telarray
 
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
@@ -56,9 +58,9 @@ RUN echo "build_opt: $BUILD_OPT" > ./build_opts.yml && \
     echo "bernlohr_version: $BERNLOHR_VERSION" >> ./build_opts.yml
 
 FROM almalinux:9.5-minimal
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-WORKDIR /workdir
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
+WORKDIR /workdir
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN microdnf update -y && microdnf install -y \
     bc \
