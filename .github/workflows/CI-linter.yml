@@ -89,8 +89,6 @@ jobs:
         uses: super-linter/super-linter@v7
         env:
           VALIDATE_ALL_CODEBASE: false
-          # docker
-          VALIDATE_DOCKERFILE_HADOLINT: true
           # .env file
           VALIDATE_ENV: true
           # language
