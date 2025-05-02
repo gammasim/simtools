@@ -85,10 +85,11 @@ jobs:
           files=$(find ./docker -name "Dockerfile-*" | paste -sd " " -)
           echo "docker_files=$files" >> "$GITHUB_OUTPUT"
 
-      - name: Lint docker files
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: ${{ steps.dockerfile-list.outputs.docker_files }}
+      - name: Lint Docker files
+        run: |
+          for dockerfile in $(find ./docker -name "Dockerfile-*"); do
+            docker run --rm -i ghcr.io/hadolint/hadolint < "$dockerfile"
+          done
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v7
