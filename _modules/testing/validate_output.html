@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>testing.validate_output &#8212; simtools v0.1.dev1+g784c255 Manual</title>
+    <title>testing.validate_output &#8212; simtools v0.1.dev1+g752b800 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=cf619b36"></script>
+    <script src="../../_static/documentation_options.js?v=13ba6e12"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g784c255 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g752b800 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -463,15 +463,12 @@ document.write(`
 <span class="k">def</span><span class="w"> </span><span class="nf">_test_simtel_cfg_files</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">integration_test</span><span class="p">,</span> <span class="n">from_command_line</span><span class="p">,</span> <span class="n">from_config_file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Test simtel cfg files.&quot;&quot;&quot;</span>
     <span class="n">cfg_files</span> <span class="o">=</span> <span class="n">integration_test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TEST_SIMTEL_CFG_FILES&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="n">sources</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">from_command_line</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_command_line</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-        <span class="k">else</span> <span class="p">(</span>
-            <span class="n">from_config_file</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_config_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-            <span class="k">else</span> <span class="p">[</span><span class="n">from_command_line</span> <span class="ow">or</span> <span class="n">from_config_file</span><span class="p">]</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_command_line</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="n">from_command_line</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_config_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="n">from_config_file</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">from_command_line</span> <span class="ow">or</span> <span class="n">from_config_file</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
         <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg_files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">cfg</span><span class="p">:</span>
