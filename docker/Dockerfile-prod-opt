@@ -13,8 +13,18 @@ ARG SIMTOOLS_REQUIREMENT="git+https://github.com/gammasim/simtools.git"
 
 RUN yum update -y && yum install -y \
     gcc-fortran gsl-devel libgfortran \
-    autoconf automake csh patch perl which bzip2 && \
+    automake csh patch perl which bzip2 \
+    wget make tar m4 && \
     yum clean all
+
+RUN cd /tmp && \
+    wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz && \
+    tar -xzf autoconf-2.71.tar.gz && \
+    cd autoconf-2.71 && \
+    ./configure --prefix=/usr && \
+    make -j$(nproc) && \
+    make install && \
+    cd / && rm -rf /tmp/autoconf-2.71*
 
 ADD corsika_simtelarray.tar.gz .
 ADD corsikaOptPatch.tar.gz ./corsika-$CORSIKA_VERSION
