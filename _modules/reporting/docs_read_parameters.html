@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+ge76c6ed Manual</title>
+    <title>reporting.docs_read_parameters &#8212; simtools v0.1.dev1+gc044533 Manual</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=a769d4a2"></script>
+    <script src="../../_static/documentation_options.js?v=4e463b01"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+ge76c6ed Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+gc044533 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -633,25 +633,28 @@ document.write(`
 <div class="viewcode-block" id="ReadParameters.get_all_parameter_descriptions">
 <a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.get_all_parameter_descriptions">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_all_parameter_descriptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get descriptions for all model parameters.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get descriptions for all model parameters.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">            tuple: A tuple containing two dictionaries:</span>
-<span class="sd">                - parameter_description: Maps parameter names to their descriptions.</span>
-<span class="sd">                - short_description: Maps parameter names to their short descriptions.</span>
-<span class="sd">                - inst_class: Maps parameter names to their respective class.</span>
+<span class="sd">        dict</span>
+<span class="sd">            Nested dictionaries with first key as the parameter name and</span>
+<span class="sd">            the following dictionary as the value:</span>
+<span class="sd">            - key: description, value: description of the parameter.</span>
+<span class="sd">            - key: short_description, value: short description of the parameter.</span>
+<span class="sd">            - key: inst_class, value: class, for eg. Structure, Camera, etc.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parameter_description</span><span class="p">,</span> <span class="n">short_description</span><span class="p">,</span> <span class="n">inst_class</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+        <span class="n">parameter_dict</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">instrument_class</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">db_collection_to_instrument_class_key</span><span class="p">(</span><span class="n">collection</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">details</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">(</span><span class="n">instrument_class</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">parameter_description</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
-                <span class="n">short_description</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;short_description&quot;</span><span class="p">)</span>
-                <span class="n">inst_class</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">instrument_class</span>
+                <span class="n">parameter_dict</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;short_description&quot;</span><span class="p">:</span> <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;short_description&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;inst_class&quot;</span><span class="p">:</span> <span class="n">instrument_class</span><span class="p">,</span>
+                <span class="p">}</span>
 
-        <span class="k">return</span> <span class="n">parameter_description</span><span class="p">,</span> <span class="n">short_description</span><span class="p">,</span> <span class="n">inst_class</span></div>
+        <span class="k">return</span> <span class="n">parameter_dict</span></div>
 
 
 <div class="viewcode-block" id="ReadParameters.get_array_element_parameter_data">
@@ -696,11 +699,11 @@ document.write(`
             <span class="n">file_flag</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_parameter_value</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">file_flag</span><span class="p">)</span>
 
-            <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="n">short_description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">short_description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">short_description</span> <span class="o">=</span> <span class="n">description</span>
-            <span class="n">inst_class</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
+            <span class="n">short_description</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;short_description&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">description</span>
+            <span class="p">)</span>
+            <span class="n">inst_class</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inst_class&quot;</span><span class="p">)</span>
 
             <span class="n">matching_instrument</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="o">.</span><span class="n">is_design_type</span><span class="p">(</span><span class="n">telescope_model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">matching_instrument</span><span class="p">:</span>
@@ -781,8 +784,10 @@ document.write(`
 
             <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">parameter_data</span> <span class="ow">in</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-                <span class="n">short_description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+                <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
+                <span class="n">short_description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">&quot;short_description&quot;</span><span class="p">,</span> <span class="n">description</span>
+                <span class="p">)</span>
                 <span class="n">value_data</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">value_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -922,10 +927,12 @@ document.write(`
                 <span class="k">continue</span>
 
             <span class="n">output_filename</span> <span class="o">=</span> <span class="n">output_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">.md&quot;</span>
-            <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                <span class="n">parameter</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">),</span>
-            <span class="p">)</span>
+
+            <span class="n">parameter_descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">parameter</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;telescopes&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+
+            <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
             <span class="k">with</span> <span class="n">output_filename</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
                 <span class="c1"># Write header</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
@@ -1065,7 +1072,7 @@ document.write(`
 <a class="viewcode-back" href="../../api-reference/reporting.html#reporting.docs_read_parameters.ReadParameters.get_calibration_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_calibration_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_parameter_data</span><span class="p">,</span> <span class="n">array_element</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get calibration data and descriptions for a given array element.&quot;&quot;&quot;</span>
-        <span class="n">parameter_descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span>
+        <span class="n">calibration_descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_parameter_descriptions</span><span class="p">(</span>
             <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span>
         <span class="p">)</span>
         <span class="c1"># get descriptions of array element positions from the telescope collection</span>
@@ -1074,6 +1081,10 @@ document.write(`
         <span class="n">class_grouped_data</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">all_parameter_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">parameter_descriptions</span> <span class="o">=</span> <span class="n">calibration_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">parameter</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="n">telescope_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+
             <span class="n">parameter_data</span> <span class="o">=</span> <span class="n">all_parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
             <span class="n">parameter_version</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_version&quot;</span><span class="p">)</span>
             <span class="n">unit</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;unit&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot; &quot;</span>
@@ -1085,16 +1096,10 @@ document.write(`
             <span class="n">file_flag</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_parameter_value</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">file_flag</span><span class="p">)</span>
 
-            <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                <span class="n">parameter</span><span class="p">,</span> <span class="n">telescope_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">short_description</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">telescope_descriptions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">))</span>
-                <span class="ow">or</span> <span class="n">description</span>
-            <span class="p">)</span>
-            <span class="n">inst_class</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                <span class="n">parameter</span><span class="p">,</span> <span class="n">telescope_descriptions</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
-            <span class="p">)</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
+            <span class="n">short_description</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;short_description&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">description</span>
+
+            <span class="n">inst_class</span> <span class="o">=</span> <span class="n">parameter_descriptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inst_class&quot;</span><span class="p">)</span>
 
             <span class="n">matching_instrument</span> <span class="o">=</span> <span class="n">parameter_data</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">array_element</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="o">.</span><span class="n">is_design_type</span><span class="p">(</span><span class="n">array_element</span><span class="p">)</span> <span class="ow">and</span> <span class="n">matching_instrument</span><span class="p">:</span>
@@ -1187,7 +1192,6 @@ document.write(`
         <span class="k">for</span> <span class="n">calibration_device</span> <span class="ow">in</span> <span class="n">array_elements</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">get_site_from_array_element_name</span><span class="p">(</span><span class="n">calibration_device</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">array_element</span> <span class="o">=</span> <span class="n">calibration_device</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;cal: &quot;</span><span class="p">,</span> <span class="n">calibration_device</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">produce_model_parameter_reports</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;calibration_devices&quot;</span><span class="p">)</span></div>
 </div>
 
