@@ -234,17 +234,16 @@ class ReadParameters:
         return self._group_model_versions_by_parameter_version(grouped_data)
 
     def get_all_parameter_descriptions(self, collection="telescopes"):
-        """
-        Get descriptions for all model parameters.
+        """Get descriptions for all model parameters.
 
         Returns
         -------
         dict
             Nested dictionaries with first key as the parameter name and
             the following dictionary as the value:
-                - key: description, value: description of the parameter.
-                - key: short_description, value: short description of the parameter.
-                - key: inst_class, value: class, for eg. Structure, Camera, etc.
+            - key: description, value: description of the parameter.
+            - key: short_description, value: short description of the parameter.
+            - key: inst_class, value: class, for eg. Structure, Camera, etc.
         """
         parameter_dict = {}
 
@@ -666,12 +665,6 @@ class ReadParameters:
                 parameter
             ) or telescope_descriptions.get(parameter)
 
-            print(parameter)
-            print(parameter_descriptions.get("description"))
-            print()
-            print()
-            print()
-
             parameter_data = all_parameter_data.get(parameter)
             parameter_version = parameter_data.get("parameter_version")
             unit = parameter_data.get("unit") or " "
@@ -776,5 +769,4 @@ class ReadParameters:
         for calibration_device in array_elements:
             self.site = names.get_site_from_array_element_name(calibration_device)
             self.array_element = calibration_device
-            print("cal: ", calibration_device)
             self.produce_model_parameter_reports(collection="calibration_devices")
