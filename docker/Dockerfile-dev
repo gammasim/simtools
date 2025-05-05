@@ -6,8 +6,10 @@
 # simtools is installed in an external directory
 # mounted in the container.
 #
-# hadolint global ignore=DL3007,DL3013,DL3041
-# (ignore warning about using latest - this is a dev image)
+# hadolint global ignore=DL3007,DL3013,DL3041,SC1091
+# - DL3007, DL3041: ignore warnings about using latest
+# - DL3013: ignore warnings about installing non-specific versions with microdnf)
+# - SC1091: ignore warning about not being able to source the bashrc
 ARG BUILD_OPT="prod6-baseline"
 ARG HADRONIC_MODEL="qgs2"
 ARG SIMTEL_VERSION="240927"
@@ -22,7 +24,6 @@ RUN microdnf update -y && microdnf install -y \
     python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel wget && \
     microdnf clean all
 
-# hadolint ignore=SC1091
 RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
     python${PYTHON_VERSION} -m venv env && \
     source env/bin/activate && \
