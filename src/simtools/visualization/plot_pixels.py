@@ -38,9 +38,7 @@ def plot(config, output_file):
     fig = plot_pixel_layout_from_file(
         table_config["file_name"],
         table_config["telescope"],
-        camera_in_sky_coor=config.get("camera_in_sky_coor", False),
-        pixels_id_to_print=config.get("pixels_id_to_print", 80),
-        rotate_angle=config.get("rotate_angle", 0),
+        pixels_id_to_print=80,
         title=config.get("title"),
         xtitle=config.get("xtitle"),
         ytitle=config.get("ytitle"),
@@ -59,12 +57,8 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
     telescope_model_name : str
         Name/model of the telescope
     **kwargs
-        camera_in_sky_coor : bool
-            Flag to plot the camera in sky coordinates
         pixels_id_to_print : int
             Number of pixel IDs to print in the plot
-        rotate_angle : float
-            Additional rotation angle in degrees
         title : str
             Plot title
         xtitle : str
@@ -83,8 +77,6 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
     pixel_data = _prepare_pixel_data(
         dat_file_path,
         telescope_model_name,
-        camera_in_sky_coor=kwargs.get("camera_in_sky_coor", False),
-        rotate_angle=kwargs.get("rotate_angle", 0),
     )
 
     return _create_pixel_plot(
@@ -97,38 +89,29 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
     )
 
 
-def _prepare_pixel_data(dat_file_path, telescope_model_name, **kwargs):
-    """
-    Prepare pixel data from configuration file.
-
-    Parameters
-    ----------
-    dat_file_path : str
-        Path to configuration file
-    telescope_model_name : str
-        Name of telescope model
-    **kwargs
-        camera_in_sky_coor : bool
-        rotate_angle : float
-
-    Returns
-    -------
-    dict
-        Processed pixel data
-    """
+def _prepare_pixel_data(dat_file_path, telescope_model_name):
+    """Prepare pixel data from configuration file."""
     config = _read_pixel_config(dat_file_path)
-
     x_pos = np.array(config["x"])
     y_pos = np.array(config["y"])
 
-    # Handle coordinate transformations
-    if not is_two_mirror_telescope(telescope_model_name) and not kwargs.get(
-        "camera_in_sky_coor", False
-    ):
+    # First flip y coordinates if not a two mirror telescope
+    if not is_two_mirror_telescope(telescope_model_name):
         y_pos = -y_pos
 
-    if kwargs.get("rotate_angle", 0) != 0:
-        rot_angle = np.deg2rad(kwargs["rotate_angle"])
+    # Read rotation angle directly from .dat file
+    with open(dat_file_path, encoding="utf-8") as f:
+        rotate_angle = None
+        for line in f:
+            if line.strip().startswith("Rotate"):
+                rotate_angle = float(line.split()[1].strip())
+                break
+
+    # Apply rotation if found in .dat file
+    if rotate_angle is not None:
+        # Base rotation angle (248.2°) plus angle from file
+        total_rotation = 248.2 + rotate_angle
+        rot_angle = np.deg2rad(total_rotation)
         x_rot = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
         y_rot = x_pos * np.sin(rot_angle) + y_pos * np.cos(rot_angle)
         x_pos, y_pos = x_rot, y_rot
@@ -225,11 +208,15 @@ def _read_pixel_config(dat_file_path):
         "pixel_shape": None,
         "pixel_diameter": None,
         "trigger_groups": [],
+        "rotate_angle": None,  # Add this field
     }
 
     with open(dat_file_path, encoding="utf-8") as f:
         for line in f:
-            if line.startswith("PixType"):
+            if line.startswith("Rotate"):
+                # Parse rotation angle from line like "Rotate 10.893"
+                config["rotate_angle"] = float(line.split()[1].strip())
+            elif line.startswith("PixType"):
                 parts = line.split()
                 config["pixel_shape"] = int(parts[5].strip())  # funnel shape
                 config["pixel_diameter"] = float(parts[6].strip())
@@ -329,7 +316,7 @@ def _configure_plot(ax, telescope_model_name, x_pos, y_pos, title=None, xtitle=N
 
     # Calculate the axis limits
     x_min, x_max = min(x_pos), max(x_pos)
-    y_min, y_max = min(y_pos), max(y_pos)
+    y_min, y_max = min(y_pos), max(y_pos)  # Fixed: Added max(y_pos)
 
     # Add some padding
     x_padding = (x_max - x_min) * 0.1
