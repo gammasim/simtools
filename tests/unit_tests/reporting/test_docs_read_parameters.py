@@ -893,7 +893,7 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
     args = {"model_version": "6.0.0"}
     output_path = io_handler.get_output_directory(sub_dir=f"{args['model_version']}")
     read_parameters = ReadParameters(db_config=db_config, args=args, output_path=output_path)
-
+    description = "Description for laser events"
     # Mock array elements
     mock_array_elements = ["ILLN-01"]
     mocker.patch.object(read_parameters.db, "get_array_elements", return_value=mock_array_elements)
@@ -947,7 +947,7 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
             "inst_class": "Calibration",
         },
         "laser_events": {
-            "description": "Description for laser events",
+            "description": description,
             "short_description": None,
             "inst_class": "Calibration",
         },
@@ -987,8 +987,8 @@ def test_produce_calibration_reports(io_handler, db_config, mocker):
         laser_event = next(x for x in result if x[1] == "laser_events")
         assert laser_event[2] == "1.0.0"  # parameter version
         assert laser_event[3] == "10"  # value
-        assert laser_event[4] == "Description for laser events"  # description
-        assert laser_event[5] == "Description for laser events"  # short description
+        assert laser_event[4] == description  # description
+        assert laser_event[5] == description  # short description set to description when None
 
         # Run the method
         read_parameters.produce_calibration_reports()
