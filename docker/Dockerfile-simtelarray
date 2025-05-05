@@ -4,6 +4,8 @@
 # Used as base image for the simtools-dev image.
 #
 # hadolint global ignore=DL3013,DL3033,DL3041
+# - DL3041: ignore warnings about using latest
+# - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
 FROM almalinux:9.5 AS build_image
 ARG BUILD_OPT="prod6-sc"
 ARG EXTRA_DEF="-DMAXIMUM_TELESCOPES=128"
