@@ -298,9 +298,9 @@ class ReadParameters:
             value = self._format_parameter_value(parameter, value_data, unit, file_flag)
 
             description = parameter_descriptions.get(parameter).get("description")
-            short_description = parameter_descriptions.get(parameter).get("short_description")
-            if short_description is None:
-                short_description = description
+            short_description = (
+                parameter_descriptions.get(parameter).get("short_description") or description
+            )
             inst_class = parameter_descriptions.get(parameter).get("inst_class")
 
             matching_instrument = parameter_data["instrument"] == telescope_model.name
