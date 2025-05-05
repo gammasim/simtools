@@ -39,7 +39,7 @@ def plot(config, output_file):
         table_config["file_name"],
         table_config["telescope"],
         camera_in_sky_coor=config.get("camera_in_sky_coor", False),
-        pixels_id_to_print=config.get("pixels_id_to_print", 50),
+        pixels_id_to_print=config.get("pixels_id_to_print", 80),
         rotate_angle=config.get("rotate_angle", 0),
         title=config.get("title"),
         xtitle=config.get("xtitle"),
@@ -246,6 +246,51 @@ def _read_pixel_config(dat_file_path):
     return config
 
 
+def _create_patch(x, y, diameter, shape):
+    """Create a single matplotlib patch for a pixel.
+
+    Parameters
+    ----------
+    x, y : float
+        Center coordinates of the pixel
+    diameter : float
+        Diameter of the pixel
+    shape : int
+        Pixel shape type:
+        0: circular
+        1: hexagonal (flat x)
+        2: square
+        3: hexagonal (flat y)
+    """
+    if shape == 0:  # Circular
+        return mpatches.Circle((x, y), radius=diameter / 2)
+    if shape in (1, 3):  # Hexagonal
+        return mpatches.RegularPolygon(
+            (x, y),
+            numVertices=6,
+            radius=diameter / np.sqrt(3),
+            orientation=np.deg2rad(30 if shape == 3 else 0),
+        )
+    # Square
+    return mpatches.Rectangle((x - diameter / 2, y - diameter / 2), width=diameter, height=diameter)
+
+
+def _is_edge_pixel(x, y, x_pos, y_pos, diameter, shape):
+    """Determine if a pixel is on the edge based on neighbor count."""
+    if shape == 0:  # Circular
+        return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.1) < 6
+    if shape in (1, 3):  # Hexagonal
+        return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.1) < 6
+    # Square
+    return _count_neighbors(x, y, x_pos, y_pos, diameter * 1.4) < 4
+
+
+def _add_pixel_id(x, y, pixel_id, telescope_model_name):
+    """Add pixel ID text to the plot."""
+    font_size = 2 if "SCT" in names.get_array_element_type_from_name(telescope_model_name) else 4
+    plt.text(x, y, pixel_id, ha="center", va="center", fontsize=font_size)
+
+
 def _create_pixel_patches(
     x_pos, y_pos, diameter, shape, pixels_on, pixel_ids, pixels_id_to_print, telescope_model_name
 ):
@@ -253,23 +298,10 @@ def _create_pixel_patches(
     on_pixels, edge_pixels, off_pixels = [], [], []
 
     for i, (x, y) in enumerate(zip(x_pos, y_pos)):
-        if shape in (1, 3):  # Hexagonal
-            patch = mpatches.RegularPolygon(
-                (x, y),
-                numVertices=6,
-                radius=diameter / np.sqrt(3),
-                orientation=np.deg2rad(30 if shape == 3 else 0),
-            )
-        else:  # Square
-            patch = mpatches.Rectangle(
-                (x - diameter / 2, y - diameter / 2), width=diameter, height=diameter
-            )
+        patch = _create_patch(x, y, diameter, shape)
 
         if pixels_on[i]:
-            # Check if edge pixel based on number of neighbors
-            if (shape in (1, 3) and _count_neighbors(x, y, x_pos, y_pos, diameter * 1.1) < 6) or (
-                shape == 2 and _count_neighbors(x, y, x_pos, y_pos, diameter * 1.4) < 4
-            ):
+            if _is_edge_pixel(x, y, x_pos, y_pos, diameter, shape):
                 edge_pixels.append(patch)
             else:
                 on_pixels.append(patch)
@@ -277,13 +309,7 @@ def _create_pixel_patches(
             off_pixels.append(patch)
 
         if pixel_ids[i] < pixels_id_to_print:
-            # printing all ids clutters the plot too much
-            font_size = (
-                4
-                if "SCT" not in names.get_array_element_type_from_name(telescope_model_name)
-                else 2
-            )
-            plt.text(x, y, pixel_ids[i], ha="center", va="center", fontsize=font_size)
+            _add_pixel_id(x, y, pixel_ids[i], telescope_model_name)
 
     return on_pixels, edge_pixels, off_pixels
 
@@ -298,14 +324,24 @@ def _count_neighbors(x, y, x_pos, y_pos, max_dist):
 
 
 def _configure_plot(ax, telescope_model_name, x_pos, y_pos, title=None, xtitle=None, ytitle=None):
-    """Configure plot axes, labels, title etc."""
-    plt.axis("equal")
-    plt.grid(True)
-    ax.set_axisbelow(True)
+    # First set the aspect ratio
+    ax.set_aspect("equal")
 
+    # Calculate the axis limits
     x_min, x_max = min(x_pos), max(x_pos)
     y_min, y_max = min(y_pos), max(y_pos)
-    plt.axis([x_min, x_max, y_min * 1.42, y_max * 1.42])
+
+    # Add some padding
+    x_padding = (x_max - x_min) * 0.1
+    y_padding = (y_max - y_min) * 0.1
+
+    # Set limits with padding
+    ax.set_xlim(x_min - x_padding, x_max + x_padding)
+    ax.set_ylim(y_min - y_padding, y_max + y_padding)
+
+    # Rest of your configuration code...
+    plt.grid(True)
+    ax.set_axisbelow(True)
 
     plt.xlabel(xtitle or "Horizontal scale [cm]", fontsize=18, labelpad=0)
     plt.ylabel(ytitle or "Vertical scale [cm]", fontsize=18, labelpad=0)
