@@ -95,26 +95,25 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
     x_pos = np.array(config["x"])
     y_pos = np.array(config["y"])
 
-    # First flip y coordinates if not a two mirror telescope
+    # Don't flip y coordinates for two mirror telescopes (SCT and SST)
     if not is_two_mirror_telescope(telescope_model_name):
         y_pos = -y_pos
 
-    # Read rotation angle directly from .dat file
-    with open(dat_file_path, encoding="utf-8") as f:
-        rotate_angle = None
-        for line in f:
-            if line.strip().startswith("Rotate"):
-                rotate_angle = float(line.split()[1].strip())
-                break
+    # For SST, apply 90 degree rotation
+    if "SST" in telescope_model_name:
+        base_angle = 90
+    else:
+        base_angle = 248.2
 
-    # Apply rotation if found in .dat file
-    if rotate_angle is not None:
-        # Base rotation angle (248.2°) plus angle from file
-        total_rotation = 248.2 + rotate_angle
-        rot_angle = np.deg2rad(total_rotation)
-        x_rot = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
-        y_rot = x_pos * np.sin(rot_angle) + y_pos * np.cos(rot_angle)
-        x_pos, y_pos = x_rot, y_rot
+    # Apply base rotation and any additional rotation from config
+    total_rotation = base_angle
+    if config["rotate_angle"] is not None:
+        total_rotation += config["rotate_angle"]
+
+    rot_angle = np.deg2rad(total_rotation)
+    x_rot = x_pos * np.cos(rot_angle) - y_pos * np.sin(rot_angle)
+    y_rot = y_pos * np.cos(rot_angle) + x_pos * np.sin(rot_angle)
+    x_pos, y_pos = x_rot, y_rot
 
     return {
         "x": x_pos,
@@ -123,6 +122,7 @@ def _prepare_pixel_data(dat_file_path, telescope_model_name):
         "pixels_on": config["pixels_on"],
         "pixel_shape": config["pixel_shape"],
         "pixel_diameter": config["pixel_diameter"],
+        "rotation": total_rotation,
     }
 
 
