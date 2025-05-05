@@ -234,25 +234,28 @@ class ReadParameters:
         return self._group_model_versions_by_parameter_version(grouped_data)
 
     def get_all_parameter_descriptions(self, collection="telescopes"):
-        """
-        Get descriptions for all model parameters.
+        """Get descriptions for all model parameters.
 
         Returns
         -------
-            tuple: A tuple containing two dictionaries:
-                - parameter_description: Maps parameter names to their descriptions.
-                - short_description: Maps parameter names to their short descriptions.
-                - inst_class: Maps parameter names to their respective class.
+        dict
+            Nested dictionaries with first key as the parameter name and
+            the following dictionary as the value:
+            - key: description, value: description of the parameter.
+            - key: short_description, value: short description of the parameter.
+            - key: inst_class, value: class, for eg. Structure, Camera, etc.
         """
-        parameter_description, short_description, inst_class = {}, {}, {}
+        parameter_dict = {}
 
         for instrument_class in names.db_collection_to_instrument_class_key(collection):
             for parameter, details in names.model_parameters(instrument_class).items():
-                parameter_description[parameter] = details.get("description")
-                short_description[parameter] = details.get("short_description")
-                inst_class[parameter] = instrument_class
+                parameter_dict[parameter] = {
+                    "description": details.get("description"),
+                    "short_description": details.get("short_description"),
+                    "inst_class": instrument_class,
+                }
 
-        return parameter_description, short_description, inst_class
+        return parameter_dict
 
     def get_array_element_parameter_data(self, telescope_model, collection="telescopes"):
         """
@@ -294,11 +297,11 @@ class ReadParameters:
             file_flag = parameter_data.get("file", False)
             value = self._format_parameter_value(parameter, value_data, unit, file_flag)
 
-            description = parameter_descriptions[0].get(parameter)
-            short_description = parameter_descriptions[1].get(parameter)
-            if short_description is None:
-                short_description = description
-            inst_class = parameter_descriptions[2].get(parameter)
+            description = parameter_descriptions.get(parameter).get("description")
+            short_description = (
+                parameter_descriptions.get(parameter).get("short_description") or description
+            )
+            inst_class = parameter_descriptions.get(parameter).get("inst_class")
 
             matching_instrument = parameter_data["instrument"] == telescope_model.name
             if not names.is_design_type(telescope_model.name) and matching_instrument:
@@ -376,8 +379,10 @@ class ReadParameters:
 
             data = []
             for parameter, parameter_data in param_dict.items():
-                description = parameter_descriptions[0].get(parameter)
-                short_description = parameter_descriptions[1].get(parameter, description)
+                description = parameter_descriptions.get(parameter).get("description")
+                short_description = parameter_descriptions.get(parameter).get(
+                    "short_description", description
+                )
                 value_data = parameter_data.get("value")
 
                 if value_data is None:
@@ -508,10 +513,12 @@ class ReadParameters:
                 continue
 
             output_filename = output_path / f"{parameter}.md"
-            description = self.get_all_parameter_descriptions(collection=collection)[0].get(
-                parameter,
-                self.get_all_parameter_descriptions(collection="telescopes")[0].get(parameter),
-            )
+
+            parameter_descriptions = self.get_all_parameter_descriptions(collection=collection).get(
+                parameter
+            ) or self.get_all_parameter_descriptions(collection="telescopes").get(parameter)
+
+            description = parameter_descriptions.get("description")
             with output_filename.open("w", encoding="utf-8") as file:
                 # Write header
                 file.write(
@@ -645,7 +652,7 @@ class ReadParameters:
 
     def get_calibration_data(self, all_parameter_data, array_element):
         """Get calibration data and descriptions for a given array element."""
-        parameter_descriptions = self.get_all_parameter_descriptions(
+        calibration_descriptions = self.get_all_parameter_descriptions(
             collection="calibration_devices"
         )
         # get descriptions of array element positions from the telescope collection
@@ -654,6 +661,10 @@ class ReadParameters:
         class_grouped_data = {}
 
         for parameter in all_parameter_data.keys():
+            parameter_descriptions = calibration_descriptions.get(
+                parameter
+            ) or telescope_descriptions.get(parameter)
+
             parameter_data = all_parameter_data.get(parameter)
             parameter_version = parameter_data.get("parameter_version")
             unit = parameter_data.get("unit") or " "
@@ -665,16 +676,10 @@ class ReadParameters:
             file_flag = parameter_data.get("file", False)
             value = self._format_parameter_value(parameter, value_data, unit, file_flag)
 
-            description = parameter_descriptions[0].get(
-                parameter, telescope_descriptions[0].get(parameter)
-            )
-            short_description = (
-                parameter_descriptions[1].get(parameter, telescope_descriptions[1].get(parameter))
-                or description
-            )
-            inst_class = parameter_descriptions[2].get(
-                parameter, telescope_descriptions[2].get(parameter)
-            )
+            description = parameter_descriptions.get("description")
+            short_description = parameter_descriptions.get("short_description") or description
+
+            inst_class = parameter_descriptions.get("inst_class")
 
             matching_instrument = parameter_data["instrument"] == array_element
             if not names.is_design_type(array_element) and matching_instrument:
@@ -764,5 +769,4 @@ class ReadParameters:
         for calibration_device in array_elements:
             self.site = names.get_site_from_array_element_name(calibration_device)
             self.array_element = calibration_device
-            print("cal: ", calibration_device)
             self.produce_model_parameter_reports(collection="calibration_devices")
