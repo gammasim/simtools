@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Maintainer documentation &#8212; simtools v0.1.dev1+g872b4e6 Manual</title>
+    <title>Maintainer documentation &#8212; simtools v0.1.dev1+g1d0f969 Manual</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=6f35a010"></script>
+    <script src="../_static/documentation_options.js?v=7c0a783f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">simtools v0.1.dev1+g872b4e6 Manual</p>
+    <p class="title logo__title">simtools v0.1.dev1+g1d0f969 Manual</p>
   
 </a></div>
         <div class="sidebar-primary-item"><ul class="navbar-icon-links"
@@ -512,7 +512,9 @@ The change files in the <code class="docutils literal notranslate"><span class="
 <h2>Conda feedstock<a class="headerlink" href="#conda-feedstock" title="Link to this heading">#</a></h2>
 <p>The conda feedstock for gammasimtools is <a class="reference external" href="https://github.com/conda-forge/gammasimtools-feedstock">this repository</a>.
 A new merge request is automatically created for new releases on pypi.</p>
-<p>New, updated, or removed command-line tools require manual modifications in the <code class="docutils literal notranslate"><span class="pre">recipe/meta.yaml</span></code> file.</p>
+<p>New, updated, or removed command-line tools require manual modifications in the <code class="docutils literal notranslate"><span class="pre">recipe/meta.yaml</span></code> file.
+Changed dependencies require manual modifications in a similar way.
+A template for the required changes can be obtained using the <a class="reference external" href="https://pypi.org/project/grayskull/">grayskull</a> tool: <code class="docutils literal notranslate"><span class="pre">grayskull</span> <span class="pre">pypi</span> <span class="pre">gammasimtools</span></code> generates a <code class="docutils literal notranslate"><span class="pre">meta.yaml</span></code> file with the required changes.</p>
 </section>
 </section>
 
